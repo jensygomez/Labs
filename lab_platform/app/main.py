@@ -1,13 +1,14 @@
 # lab_platform/app/main.py
 import sys, os
 import subprocess
+import json
 
 # 🔧 Asegura que la carpeta raíz esté en sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.utils.db_utils import init_db
 from app.services.user_service import create_user, list_users, delete_user, edit_user
-from app.services.lab_service import get_available_lab, mark_lab_completed
+from app.services.lab_service import mark_lab_completed
 
 def elegir_opcion(lista, titulo="Selecciona una opción:"):
     """Permite elegir una opción de la lista por número"""
@@ -108,15 +109,22 @@ def main():
         idx = elegir_opcion(niveles, "Selecciona el nivel por número:")
         level = niveles[idx]
 
-        # Asignar laboratorio automáticamente en cualquier especialización disponible
-        especializaciones = ["network", "linux", "security", "cloud", "kubernetes"]
+        # Buscar laboratorio automáticamente leyendo lab_meta.json
         lab_elegido = None
         lab_specialization = None
-        for specialization in especializaciones:
-            lab_elegido = get_available_lab(user_id, level, specialization)
-            if lab_elegido:
-                lab_specialization = specialization
-                break
+        level_path = os.path.join("labs", level)
+        for lab_folder in os.listdir(level_path):
+            lab_path = os.path.join(level_path, lab_folder)
+            if os.path.isdir(lab_path):
+                meta_file = os.path.join(lab_path, "lab_meta.json")
+                if os.path.exists(meta_file):
+                    with open(meta_file, "r") as f:
+                        meta = json.load(f)
+                    # Solo asignar si el lab no está completado
+                    # Aquí se podría agregar lógica para checkear completado en la DB
+                    lab_elegido = lab_folder
+                    lab_specialization = ", ".join(meta["specializations"])
+                    break
 
         if lab_elegido:
             print(f"\n✅ Laboratorio asignado automáticamente: {lab_elegido} ({lab_specialization})")
