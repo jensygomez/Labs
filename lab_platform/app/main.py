@@ -68,6 +68,7 @@ def preparar_sistema():
         install("docker.io" if gestor == "apt" else "docker")
 
     # Detectar Docker Compose
+    dc_path = "/usr/local/bin/docker-compose"
     compose_cmd = None
     if shutil.which("docker-compose"):
         compose_cmd = ["docker-compose"]
@@ -76,8 +77,24 @@ def preparar_sistema():
     ).returncode == 0:
         compose_cmd = ["docker", "compose"]
 
+    # Instalar Docker Compose si no existe
     if compose_cmd is None:
-        print("⚠️ Docker Compose no encontrado. Instálalo manualmente.")
+        print("⚠️ Docker Compose no encontrado. Instalando versión oficial...")
+        if os.path.exists(dc_path):
+            os.remove(dc_path)
+
+        url = f"https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)"
+        subprocess.run(f"sudo curl -L {url} -o {dc_path}", shell=True, check=True)
+        subprocess.run(f"sudo chmod +x {dc_path}", shell=True, check=True)
+
+        # Verificar instalación
+        result = subprocess.run([dc_path, "version"], capture_output=True, text=True)
+        if result.returncode == 0:
+            print(f"✅ Docker Compose instalado correctamente: {result.stdout.strip()}")
+            compose_cmd = [dc_path]
+        else:
+            print("❌ Error al instalar Docker Compose. Instálalo manualmente.")
+            compose_cmd = None
     else:
         print(f"✅ Docker Compose detectado: {' '.join(compose_cmd)}")
 
