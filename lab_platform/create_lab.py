@@ -144,7 +144,7 @@ CMD ["/bin/bash", "-c", "/setup.sh && /bin/bash"]
         create_ticket(lab_folder_name, level, ticket_description)
 
     # Automatizar build y levantamiento
-    build_and_start_lab(lab_path)
+    # build_and_start_lab(lab_path)
 
 if __name__ == "__main__":
     create_lab("level_1", 1, "Problema de disco", ["linux", "security"], with_fault=True)
