@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.utils.db_utils import init_db
 from app.services.user_service import create_user, list_users, delete_user, edit_user
-from app.services.lab_service import get_available_lab, mark_lab_completed
+from app.services.lab_service import get_available_lab_general, mark_lab_completed
 
 def elegir_opcion(lista, titulo="Selecciona una opción:"):
     """Permite elegir una opción de la lista por número"""
@@ -67,7 +67,6 @@ def iniciar_lab_docker(lab_path):
         except KeyboardInterrupt:
             print("\n⏹️ Laboratorio detenido por el usuario.")
         finally:
-            # Preguntar si quiere hacer cleanup
             opcion = input("¿Deseas detener y eliminar los contenedores de este laboratorio? (s/n): ").lower()
             if opcion == "s":
                 subprocess.run(["docker", "compose", "-f", dc_file, "down"])
@@ -141,20 +140,11 @@ def main():
         idx = elegir_opcion(niveles, "Selecciona el nivel por número:")
         level = niveles[idx]
 
-        # Asignar laboratorio automáticamente en cualquier especialización disponible
-        especializaciones = ["network", "linux", "security", "cloud", "kubernetes"]
-        lab_elegido = None
-        lab_specialization = None
-        for specialization in especializaciones:
-            lab_elegido = get_available_lab(user_id, level, specialization)
-            if lab_elegido:
-                lab_specialization = specialization
-                break
+        # Buscar laboratorio disponible en cualquier carpeta de level_X
+        lab_elegido, lab_specialization = get_available_lab_general(user_id, level)
 
         if lab_elegido:
-            print(f"\n✅ Laboratorio asignado automáticamente: {lab_elegido} ({lab_specialization})")
-
-            # Construir ruta completa del lab
+            print(f"\n✅ Laboratorio asignado automáticamente: {lab_elegido} ({', '.join(lab_specialization)})")
             lab_path = os.path.join("labs", level, lab_elegido)
 
             # Iniciar Docker del laboratorio

@@ -46,3 +46,47 @@ def mark_lab_completed(user_id, lab_name):
     conn.commit()
     conn.close()
 
+
+import os
+import json
+from app.utils.db_utils import connect_db
+
+def get_available_lab_general(user_id, level):
+    """
+    Busca laboratorios disponibles directamente en labs/level_X/
+    y retorna un lab aleatorio que el usuario no haya completado,
+    junto con sus especializaciones.
+    """
+    level_path = os.path.join("labs", level)
+    if not os.path.exists(level_path):
+        return None, []
+
+    labs = [d for d in os.listdir(level_path)
+            if os.path.isdir(os.path.join(level_path, d))]
+
+    # Conectar a la DB para saber qué labs ya completó el usuario
+    conn = connect_db()
+    cur = conn.cursor()
+    cur.execute("SELECT lab_code FROM user_labs WHERE user_id = ? AND completed = 1", (user_id,))
+    labs_completados = {row[0] for row in cur.fetchall()}
+    conn.close()
+
+    # Filtrar labs no completados
+    labs_disponibles = []
+    for lab in labs:
+        if lab in labs_completados:
+            continue
+        meta_file = os.path.join(level_path, lab, "lab_meta.json")
+        if os.path.exists(meta_file):
+            with open(meta_file) as f:
+                meta = json.load(f)
+            specializations = meta.get("specializations", [])
+        else:
+            specializations = []
+        labs_disponibles.append((lab, specializations))
+
+    if not labs_disponibles:
+        return None, []
+
+    # Elegir uno al azar
+    return random.choice(labs_disponibles)
