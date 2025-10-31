@@ -1,13 +1,15 @@
 # lab_platform/app/main.py
 import sys, os
 
+# 🔧 Asegura que la carpeta raíz esté en sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.utils.db_utils import init_db
-from app.services.user_service import create_user, select_user, list_users, delete_user, edit_user
+from app.services.user_service import create_user, list_users, delete_user, edit_user
 from app.services.lab_service import get_available_lab, mark_lab_completed
 
 def elegir_opcion(lista, titulo="Selecciona una opción:"):
+    """Permite elegir una opción de la lista por número"""
     if not lista:
         print("⚠️ No hay opciones disponibles.")
         return None
@@ -85,19 +87,22 @@ def main():
         idx = elegir_opcion(niveles, "Selecciona el nivel por número:")
         level = niveles[idx]
 
-        # Elegir especialización
+        # Asignar laboratorio automáticamente en cualquier especialización disponible
         especializaciones = ["network", "linux", "security", "cloud", "kubernetes"]
-        print("\n--- Selección de laboratorio ---")
-        idx2 = elegir_opcion(especializaciones, "Selecciona la especialización por número:")
-        specialization = especializaciones[idx2]
+        lab_elegido = None
+        lab_specialization = None
+        for specialization in especializaciones:
+            lab_elegido = get_available_lab(user_id, level, specialization)
+            if lab_elegido:
+                lab_specialization = specialization
+                break
 
-        # Asignar laboratorio automáticamente
-        lab_elegido = get_available_lab(user_id, level, specialization)
         if lab_elegido:
-            print(f"\n✅ Laboratorio asignado automáticamente: {lab_elegido}")
-            # mark_lab_completed(user_id, lab_elegido)  # descomentar cuando el usuario finalice el lab
+            print(f"\n✅ Laboratorio asignado automáticamente: {lab_elegido} ({lab_specialization})")
+            # ⚠️ Descomentar la siguiente línea cuando el usuario termine el laboratorio
+            # mark_lab_completed(user_id, lab_elegido)
         else:
-            print("⚠️ Ya completaste todos los laboratorios disponibles en esta categoría.")
+            print("⚠️ Ya completaste todos los laboratorios disponibles en este nivel.")
 
 if __name__ == "__main__":
     main()
