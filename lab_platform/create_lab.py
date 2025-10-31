@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 import os
 import json
+import sqlite3
+
+DB_PATH = os.path.join("data", "database", "lab_platform.db")
+
+def connect_db():
+    return sqlite3.connect(DB_PATH)
 
 def create_lab(level, lab_number, lab_name, specializations):
     base_path = os.path.join("labs", level)
@@ -27,6 +33,9 @@ def create_lab(level, lab_number, lab_name, specializations):
 ## Objetivo
 Explicación del laboratorio: {lab_name}
 
+## Especializaciones
+{', '.join(specializations)}
+
 ## Tareas
 - Tarea 1
 - Tarea 2
@@ -40,14 +49,11 @@ Explicación del laboratorio: {lab_name}
 # Setup inicial para el laboratorio
 # =================================================
 
-# Actualizar sistema
 apt update && apt upgrade -y
 
-# Crear carpeta de prueba
 mkdir -p /tmp/lab
 cd /tmp/lab
 
-# Archivos de prueba
 touch file1 file2
 chmod 600 file1
 
@@ -72,10 +78,26 @@ CMD ["/bin/bash"]
 
     print(f"✅ Laboratorio '{lab_folder_name}' creado correctamente en {lab_path}")
 
+    # Registrar laboratorio en la base de datos
+    conn = connect_db()
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS labs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            lab_code TEXT UNIQUE,
+            name TEXT,
+            level TEXT,
+            specializations TEXT
+        )
+    """)
+    cur.execute("""
+        INSERT OR IGNORE INTO labs (lab_code, name, level, specializations)
+        VALUES (?, ?, ?, ?)
+    """, (lab_folder_name, lab_name, level, json.dumps(specializations)))
+    conn.commit()
+    conn.close()
+    print(f"📚 Laboratorio '{lab_folder_name}' registrado en la base de datos.")
+
 # Ejemplo de uso
 if __name__ == "__main__":
-    # Nivel: level_1
-    # Número: 1
-    # Nombre: Problema de disco
-    # Especializaciones: linux y security
     create_lab("level_1", 1, "Problema de disco", ["linux", "security"])
