@@ -1,0 +1,6 @@
+{
+    "lab_code": "001_problema_de_disco",
+    "level": "level_1",
+    "description": "El servicio falla porque el archivo 'important_file' tiene permisos incorrectos (sin permiso de lectura o escritura). El t\u00e9cnico debe corregir estos permisos.",
+    "status": "open"
+}
