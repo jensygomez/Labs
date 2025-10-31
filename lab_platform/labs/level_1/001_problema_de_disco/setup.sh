@@ -1,14 +1,12 @@
 #!/bin/bash
-# =================================================
-# Setup inicial para el laboratorio
-# =================================================
+# Setup con falla intencional: archivo con permiso incorrecto
 
 apt update && apt upgrade -y
 
 mkdir -p /tmp/lab
 cd /tmp/lab
 
-touch file1 file2
-chmod 600 file1
+touch important_file
+chmod 000 important_file  # Permisos que bloquean acceso
 
-echo "✅ Setup completado."
+echo "✅ Setup completado con fallo intencional: archivo con permisos 000"

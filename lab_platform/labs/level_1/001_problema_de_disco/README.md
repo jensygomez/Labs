@@ -7,5 +7,4 @@ Explicación del laboratorio: Problema de disco
 linux, security
 
 ## Tareas
-- Tarea 1
-- Tarea 2
+- Diagnosticar y resolver el problema reportado en el ticket.
