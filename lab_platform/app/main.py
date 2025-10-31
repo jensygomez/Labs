@@ -157,6 +157,8 @@ def main():
             # Si finalizó correctamente, marcar como completado
             if terminado:
                 mark_lab_completed(user_id, level, lab_elegido)
+                print(f"\n🎉 Laboratorio '{lab_elegido}' marcado como completado.")
+
         else:
             print("⚠️ Ya completaste todos los laboratorios disponibles en este nivel.")
 

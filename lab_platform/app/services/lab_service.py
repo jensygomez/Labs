@@ -35,16 +35,21 @@ def get_available_lab(user_id, level, specialization):
     return random.choice(remaining)
 
 
-def mark_lab_completed(user_id, lab_name):
+# lab_platform/app/services/lab_service.py
+def mark_lab_completed(user_id, level, lab_name):
     """Marca un laboratorio como completado por el usuario"""
     conn = get_connection()
     cur = conn.cursor()
+    
+    lab_code = f"{level}_{lab_name}"  # Ej: level_1_001_problema_de_disco
+
     cur.execute(
-        "INSERT INTO user_labs (user_id, lab_name, completed) VALUES (?, ?, 1)",
-        (user_id, lab_name)
+        "INSERT OR IGNORE INTO user_labs (user_id, lab_code, lab_name, completed) VALUES (?, ?, ?, 1)",
+        (user_id, lab_code, lab_name)
     )
     conn.commit()
     conn.close()
+
 
 
 import os
