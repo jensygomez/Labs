@@ -1,5 +1,6 @@
 # lab_platform/app/main.py
 import sys, os
+import subprocess
 
 # 🔧 Asegura que la carpeta raíz esté en sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -21,6 +22,26 @@ def elegir_opcion(lista, titulo="Selecciona una opción:"):
             return int(eleccion) - 1
         else:
             print("❌ Opción no válida, intenta de nuevo.")
+
+def iniciar_lab_docker(lab_path):
+    """Inicia docker-compose del laboratorio y espera a que el usuario finalice"""
+    dc_file = os.path.join(lab_path, "docker-compose.yml")
+    if os.path.exists(dc_file):
+        print(f"\n🚀 Iniciando laboratorio en {lab_path}...")
+        print("⚠️ Para salir del laboratorio, presiona Ctrl+C o finaliza la sesión dentro de Docker.\n")
+        try:
+            subprocess.run(["docker-compose", "-f", dc_file, "up"])
+        except KeyboardInterrupt:
+            print("\n⏹️ Laboratorio detenido por el usuario.")
+        finally:
+            # Preguntar si quiere hacer cleanup
+            opcion = input("¿Deseas detener y eliminar los contenedores de este laboratorio? (s/n): ").lower()
+            if opcion == "s":
+                subprocess.run(["docker-compose", "-f", dc_file, "down"])
+            return True
+    else:
+        print("⚠️ No se encontró docker-compose.yml en este laboratorio")
+        return False
 
 def main():
     init_db()
@@ -99,8 +120,17 @@ def main():
 
         if lab_elegido:
             print(f"\n✅ Laboratorio asignado automáticamente: {lab_elegido} ({lab_specialization})")
-            # ⚠️ Descomentar la siguiente línea cuando el usuario termine el laboratorio
-            # mark_lab_completed(user_id, lab_elegido)
+
+            # Construir ruta completa del lab
+            lab_path = os.path.join("labs", level, lab_elegido)
+
+            # Iniciar Docker del laboratorio
+            terminado = iniciar_lab_docker(lab_path)
+
+            # Si finalizó correctamente, marcar como completado
+            if terminado:
+                mark_lab_completed(user_id, lab_elegido)
+                print(f"\n🎉 Laboratorio '{lab_elegido}' marcado como completado para el usuario.")
         else:
             print("⚠️ Ya completaste todos los laboratorios disponibles en este nivel.")
 
