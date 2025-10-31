@@ -1,8 +1,8 @@
-# lab_platform/app/services/lab_service.py
 import os
 import json
-from app.utils.db_utils import get_connection
 import random
+from app.utils.db_utils import get_connection
+
 
 def get_available_lab_general(user_id, level):
     """
@@ -49,3 +49,27 @@ def get_available_lab_general(user_id, level):
 
     # Elegir uno al azar
     return random.choice(labs_disponibles)
+
+
+def mark_lab_completed(user_id, lab_id):
+    """
+    Marca un laboratorio como completado por el usuario.
+    user_id: ID del usuario
+    lab_id: ID del laboratorio (entero, referencia a la tabla labs)
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT OR IGNORE INTO user_labs (user_id, lab_id, completed)
+        VALUES (?, ?, 1)
+    """, (user_id, lab_id))
+
+    # Si ya existía la fila y no estaba completada, la actualizamos a completada
+    cur.execute("""
+        UPDATE user_labs SET completed = 1
+        WHERE user_id = ? AND lab_id = ?
+    """, (user_id, lab_id))
+
+    conn.commit()
+    conn.close()
