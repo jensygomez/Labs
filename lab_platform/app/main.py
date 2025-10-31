@@ -1,5 +1,6 @@
 # lab_platform/app/main.py
 # lab_platform/app/main.py
+import shutil
 import sys
 import os
 import subprocess
@@ -26,36 +27,51 @@ def elegir_opcion(lista, titulo="Selecciona una opción:"):
         else:
             print("❌ Opción no válida, intenta de nuevo.")
 
+
 def preparar_sistema():
-    """Detecta la distro y versión de Linux y actualiza paquetes e instala Docker si hace falta"""
-    distro_info = {}
-    if os.path.exists("/etc/os-release"):
-        with open("/etc/os-release") as f:
-            for line in f:
-                if "=" in line:
-                    key, val = line.strip().split("=", 1)
-                    distro_info[key] = val.strip('"')
-    nombre = distro_info.get("NAME", platform.system())
-    version = distro_info.get("VERSION_ID", platform.release())
-
-    print(f"🔍 Sistema detectado: {nombre} {version}")
-
-    if "Ubuntu" in nombre or "Debian" in nombre:
-        print("⚙️ Actualizando sistema y dependencias...")
-        subprocess.run(["sudo", "apt", "update"])
-        subprocess.run(["sudo", "apt", "upgrade", "-y"])
-
-        # Instalar Docker si no está
-        if subprocess.run(["which", "docker"], capture_output=True).returncode != 0:
-            print("🐳 Docker no encontrado. Instalando Docker...")
-            subprocess.run(["sudo", "apt", "install", "-y", "docker.io"])
-
-        # Instalar Docker Compose si no está
-        if subprocess.run(["docker", "compose", "version"], capture_output=True).returncode != 0:
-            print("🔧 Docker Compose no encontrado. Instalando plugin...")
-            subprocess.run(["sudo", "apt", "install", "-y", "docker-compose-plugin"])
+    """Detecta el gestor de paquetes y asegura que Docker y Docker Compose estén instalados"""
+    # Detectar gestor de paquetes
+    if shutil.which("apt"):
+        pkg_mgr = "apt"
+        update_cmd = ["sudo", "apt", "update"]
+        upgrade_cmd = ["sudo", "apt", "upgrade", "-y"]
+        install_cmd = lambda pkg: ["sudo", "apt", "install", "-y", pkg]
+    elif shutil.which("dnf"):
+        pkg_mgr = "dnf"
+        update_cmd = ["sudo", "dnf", "check-update"]
+        upgrade_cmd = ["sudo", "dnf", "upgrade", "-y"]
+        install_cmd = lambda pkg: ["sudo", "dnf", "install", "-y", pkg]
+    elif shutil.which("yum"):
+        pkg_mgr = "yum"
+        update_cmd = ["sudo", "yum", "check-update"]
+        upgrade_cmd = ["sudo", "yum", "update", "-y"]
+        install_cmd = lambda pkg: ["sudo", "yum", "install", "-y", pkg]
+    elif shutil.which("pacman"):
+        pkg_mgr = "pacman"
+        update_cmd = ["sudo", "pacman", "-Sy"]
+        upgrade_cmd = ["sudo", "pacman", "-Syu", "--noconfirm"]
+        install_cmd = lambda pkg: ["sudo", "pacman", "-S", pkg, "--noconfirm"]
     else:
-        print("⚠️ Sistema no reconocido. Asegúrate de tener Docker y Docker Compose instalados.")
+        print("⚠️ No se detectó un gestor de paquetes conocido. Instala Docker y Docker Compose manualmente.")
+        return
+
+    print(f"🔍 Gestor de paquetes detectado: {pkg_mgr}")
+    subprocess.run(update_cmd)
+    subprocess.run(upgrade_cmd)
+
+    # Instalar Docker si no está
+    if shutil.which("docker") is None:
+        print("🐳 Docker no encontrado. Instalando Docker...")
+        subprocess.run(install_cmd("docker.io" if pkg_mgr == "apt" else "docker"))
+
+    # Instalar Docker Compose si no está
+    if subprocess.run(["docker", "compose", "version"], capture_output=True).returncode != 0:
+        print("🔧 Docker Compose no encontrado. Instalando plugin...")
+        subprocess.run(install_cmd("docker-compose-plugin" if pkg_mgr == "apt" else "docker-compose"))
+
+
+
+
 
 def iniciar_lab_docker(lab_path):
     """Inicia docker-compose del laboratorio y espera a que el usuario finalice"""
