@@ -109,8 +109,16 @@ def main():
         level = niveles[idx]
 
         # Aquí llamamos a tu función para ejecutar el script del laboratorio
-        lab_path = os.path.join("labs", level)
-        exito = llamar_run_lab(lab_path)
+        lab_elegido, lab_specializations = get_available_lab_general(user_id, level)
+        if lab_elegido is None:
+            print("⚠️ Ya completaste todos los laboratorios disponibles en este nivel.")
+            continue
+
+        lab_path = os.path.join("labs", level, lab_elegido)
+        print(f"\n✅ Laboratorio asignado automáticamente: {lab_elegido} ({', '.join(lab_specializations)})")
+
+        exito = llamar_run_lab(lab_path)        
+        
         if exito:
             # Marcar laboratorio como completo
             lab_elegido, _ = get_available_lab_general(user_id, level) # O lo que utilizas para asignar lab
