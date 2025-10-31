@@ -34,7 +34,7 @@ def main():
             # Simular ejecución
             print(f"Simulando ejecución de {lab}...")
             # Marcar como completado
-            mark_lab_completed(user_id, level, lab)
+            mark_lab_completed(user_id, lab)
             print(f"🎉 Laboratorio '{lab}' marcado como completado.\n")
         else:
             print("⚠️ No hay laboratorios disponibles o ya completados.\n")
