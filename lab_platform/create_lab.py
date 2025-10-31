@@ -24,39 +24,26 @@ def create_lab(level, lab_number, lab_name, specializations):
         "lab_code": lab_folder_name,
         "name": lab_name,
         "level": level,
-        "specializations": specializations,
-        "lab_type": "performance_troubleshooting",
-        "performance_issues": [
-            "Alta latencia de disco (200ms simulados)",
-            "Proceso consumiendo 100% CPU",
-            "Memoria SWAP excesiva",
-            "Procesos zombies"
-        ]
+        "specializations": specializations
     }
     with open(os.path.join(lab_path, "lab_meta.json"), "w") as f:
         json.dump(meta, f, indent=4)
 
-    # Crear README.md - CORREGIDO
+    # Crear README.md
     readme_content = f"""# {lab_folder_name}
 
 ## Objetivo
-Diagnosticar y resolver problemas de performance en un servidor Linux. Los usuarios reportan lentitud extrema, aplicaciones congeladas y inestabilidad del sistema después de una actualización reciente.
+Diagnosticar problemas de performance en un servidor Linux. Identificar procesos que consumen excesivos recursos del sistema.
 
 ## Especializaciones
 {', '.join(specializations)}
 
-## Problemas Simulados
-1. **Alta Latencia de Disco**: Disco configurado con 200ms de latencia (como HDD viejo)
-2. **CPU Sobreutilizado**: Proceso mal comportado consumiendo 100% de CPU
-3. **Memoria SWAP**: Consumo agresivo de memoria forzando swapping
-4. **Procesos Zombies**: Procesos defuntos afectando el sistema
-
 ## Tareas
-- Identificar el proceso que consume 100% CPU usando `top` y `ps`
-- Detectar alta latencia de disco con `iostat -x 1`
-- Encontrar procesos zombies con `ps aux | grep defunct`
-- Verificar uso de swap con `free -h` y `vmstat`
-- Documentar cada problema encontrado y su solución
+- Identificar el proceso que consume 100% de CPU
+- Detectar alta latencia en operaciones de disco
+- Encontrar procesos zombies en el sistema
+- Verificar uso excesivo de memoria swap
+- Documentar cada problema encontrado
 
 ## Comandos Útiles
 ```bash
@@ -77,6 +64,3 @@ vmstat 1 5
 ps aux --sort=-%cpu | head -5
 ps aux --sort=-%mem | head -5
 ps aux | grep defunct
-
-# Logs del sistema
-dmesg | tail -20
