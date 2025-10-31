@@ -1,9 +1,8 @@
-
-# lab_platform/create_lab.py
 #!/usr/bin/env python3
 import os
 import json
 import sqlite3
+import subprocess
 
 DB_PATH = os.path.join("data", "database", "lab_platform.db")
 TICKETS_PATH = os.path.join("tickets", "active_tickets")
@@ -12,7 +11,6 @@ def connect_db():
     return sqlite3.connect(DB_PATH)
 
 def create_ticket(lab_code, level, description):
-    # Asegurar carpeta de tickets
     os.makedirs(TICKETS_PATH, exist_ok=True)
     ticket = {
         "lab_code": lab_code,
@@ -25,16 +23,21 @@ def create_ticket(lab_code, level, description):
         json.dump(ticket, f, indent=4)
     print(f"🎫 Ticket creado en {ticket_filename}")
 
+def build_and_start_lab(lab_path):
+    print("🔨 Construyendo la imagen Docker...")
+    subprocess.run(["docker-compose", "build"], cwd=lab_path, check=True)
+    print("🚀 Levantando el contenedor Docker...")
+    subprocess.run(["docker-compose", "up", "-d"], cwd=lab_path, check=True)
+    print(f"✅ Laboratorio iniciado en {lab_path}")
+
 def create_lab(level, lab_number, lab_name, specializations, with_fault=False):
     base_path = os.path.join("labs", level)
     lab_folder_name = f"{lab_number:03d}_{lab_name.replace(' ', '_').lower()}"
     lab_path = os.path.join(base_path, lab_folder_name)
 
-    # Crear carpetas
     os.makedirs(lab_path, exist_ok=True)
     os.makedirs(os.path.join(lab_path, "configs"), exist_ok=True)
 
-    # Crear lab_meta.json
     meta = {
         "lab_code": lab_folder_name,
         "name": lab_name,
@@ -44,7 +47,6 @@ def create_lab(level, lab_number, lab_name, specializations, with_fault=False):
     with open(os.path.join(lab_path, "lab_meta.json"), "w") as f:
         json.dump(meta, f, indent=4)
 
-    # Crear README.md
     readme_content = f"""# {lab_folder_name}
 
 ## Objetivo
@@ -59,9 +61,7 @@ Explicación del laboratorio: {lab_name}
     with open(os.path.join(lab_path, "README.md"), "w") as f:
         f.write(readme_content)
 
-    # Crear setup.sh con o sin fallo intencional
     if with_fault:
-        # Falla de permiso erróneo para archivo crítico
         setup_content = """#!/bin/bash
 # Setup con falla intencional: archivo con permiso incorrecto
 
@@ -80,7 +80,6 @@ echo "✅ Setup completado con fallo intencional: archivo con permisos 000"
             "(sin permiso de lectura o escritura). El técnico debe corregir estos permisos."
         )
     else:
-        # Setup normal
         setup_content = """#!/bin/bash
 # Setup inicial para el laboratorio
 
@@ -96,27 +95,22 @@ echo "✅ Setup completado."
 """
         ticket_description = None
 
-    setup_path = os.path.join(lab_path, "setup.sh")
-    with open(setup_path, "w") as f:
+    with open(os.path.join(lab_path, "setup.sh"), "w") as f:
         f.write(setup_content)
-    os.chmod(setup_path, 0o755)
+    os.chmod(os.path.join(lab_path, "setup.sh"), 0o755)
 
-    # Crear Dockerfile
     dockerfile_content = f"""FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 COPY setup.sh /setup.sh
 RUN chmod +x /setup.sh
-RUN /setup.sh
 
-CMD ["/bin/bash"]
+CMD ["/bin/bash", "-c", "/setup.sh && /bin/bash"]
 """
     with open(os.path.join(lab_path, "Dockerfile"), "w") as f:
         f.write(dockerfile_content)
 
-    # Crear docker-compose minimalista
-    docker_compose_content = f"""version: '3.9'
-services:
+    docker_compose_content = f"""services:
   {lab_folder_name}:
     build: .
     container_name: {lab_folder_name}_container
@@ -127,7 +121,6 @@ services:
 
     print(f"✅ Laboratorio '{lab_folder_name}' creado correctamente en {lab_path}")
 
-    # Registrar laboratorio en base de datos
     conn = connect_db()
     cur = conn.cursor()
     cur.execute("""
@@ -147,10 +140,11 @@ services:
     conn.close()
     print(f"📚 Laboratorio '{lab_folder_name}' registrado en la base de datos.")
 
-    # Crear ticket si lab con falla
     if with_fault:
         create_ticket(lab_folder_name, level, ticket_description)
 
-# Ejemplo de uso
+    # Automatizar build y levantamiento
+    build_and_start_lab(lab_path)
+
 if __name__ == "__main__":
     create_lab("level_1", 1, "Problema de disco", ["linux", "security"], with_fault=True)
