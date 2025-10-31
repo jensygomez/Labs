@@ -1,0 +1,46 @@
+from app.utils.db_utils import init_db
+from app.services.user_service import create_user, select_user
+from app.services.lab_service import list_labs
+
+
+def main():
+    init_db()
+    print("===================================")
+    print("  🧠 Plataforma de Laboratorios IT ")
+    print("===================================")
+
+    print("\n1️⃣ Crear nuevo usuario")
+    print("2️⃣ Seleccionar usuario existente")
+    option = input("\nSelecciona una opción: ")
+
+    if option == "1":
+        name = input("Nombre del usuario: ")
+        email = input("Email: ")
+        create_user(name, email)
+        return
+
+    elif option == "2":
+        user_id = select_user()
+        if user_id:
+            print("\n--- Selección de nivel ---")
+            print("1️⃣ level_1\n2️⃣ level_2\n3️⃣ level_3")
+            lvl_choice = input("Nivel: ")
+            levels = {"1": "level_1", "2": "level_2", "3": "level_3"}
+            level = levels.get(lvl_choice, "level_1")
+
+            print("\n--- Tipo de laboratorio ---")
+            print("network | linux | security | cloud | kubernetes")
+            specialization = input("Tipo: ").lower()
+
+            labs = list_labs(level, specialization)
+            if labs:
+                print("\n📦 Laboratorios disponibles:")
+                for i, lab in enumerate(labs, 1):
+                    print(f"{i}. {lab}")
+            else:
+                print("⚠️ No hay laboratorios disponibles.")
+    else:
+        print("❌ Opción no válida.")
+
+if __name__ == "__main__":
+    main()
