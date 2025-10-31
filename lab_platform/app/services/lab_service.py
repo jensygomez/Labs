@@ -1,3 +1,4 @@
+# lab_platform/app/services/lab_service.py
 import os
 import json
 import random
@@ -49,6 +50,27 @@ def get_available_lab_general(user_id, level):
 
     # Elegir uno al azar
     return random.choice(labs_disponibles)
+
+import subprocess
+
+def obtener_contenedor_id(nombre_contenedor):
+    """
+    Devuelve el ID completo de un contenedor Docker dado su nombre.
+    Retorna None si no encuentra el contenedor.
+    """
+    try:
+        resultado = subprocess.run(
+            ["docker", "ps", "-q", "-f", f"name={nombre_contenedor}"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        container_id = resultado.stdout.strip()
+        return container_id if container_id else None
+    except subprocess.CalledProcessError:
+        return None
+
+
 
 
 def mark_lab_completed(user_id, lab_id):
