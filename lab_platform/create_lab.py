@@ -1,3 +1,4 @@
+
 # lab_platform/create_lab.py
 #!/usr/bin/env python3
 import os
@@ -35,7 +36,7 @@ def create_lab(level, lab_number, lab_name, specializations):
     with open(os.path.join(lab_path, "lab_meta.json"), "w") as f:
         json.dump(meta, f, indent=4)
 
-    # Crear README.md
+    # Crear README.md - CORREGIDO
     readme_content = f"""# {lab_folder_name}
 
 ## Objetivo
