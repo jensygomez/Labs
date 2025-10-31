@@ -1,5 +1,0 @@
-services:
-  001_problema_de_disco:
-    build: .
-    container_name: 001_problema_de_disco_container
-    tty: true
