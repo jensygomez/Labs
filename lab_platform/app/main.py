@@ -14,7 +14,6 @@ from app.services.user_service import create_user, list_users, delete_user, edit
 from app.services.lab_service import get_available_lab_general, mark_lab_completed
 
 def elegir_opcion(lista, titulo="Selecciona una opción:"):
-    """Permite elegir una opción de la lista por número"""
     if not lista:
         print("⚠️ No hay opciones disponibles.")
         return None
@@ -27,71 +26,87 @@ def elegir_opcion(lista, titulo="Selecciona una opción:"):
         else:
             print("❌ Opción no válida, intenta de nuevo.")
 
+def detectar_gestor_paquetes():
+    """Detecta el gestor de paquetes disponible en Linux"""
+    if shutil.which("apt"):
+        return "apt"
+    elif shutil.which("dnf"):
+        return "dnf"
+    elif shutil.which("yum"):
+        return "yum"
+    elif shutil.which("pacman"):
+        return "pacman"
+    else:
+        return None
 
 def preparar_sistema():
-    """Detecta el gestor de paquetes y asegura que Docker y Docker Compose estén instalados"""
-    # Detectar gestor de paquetes
-    if shutil.which("apt"):
-        pkg_mgr = "apt"
-        update_cmd = ["sudo", "apt", "update"]
-        upgrade_cmd = ["sudo", "apt", "upgrade", "-y"]
-        install_cmd = lambda pkg: ["sudo", "apt", "install", "-y", pkg]
-    elif shutil.which("dnf"):
-        pkg_mgr = "dnf"
-        update_cmd = ["sudo", "dnf", "check-update"]
-        upgrade_cmd = ["sudo", "dnf", "upgrade", "-y"]
-        install_cmd = lambda pkg: ["sudo", "dnf", "install", "-y", pkg]
-    elif shutil.which("yum"):
-        pkg_mgr = "yum"
-        update_cmd = ["sudo", "yum", "check-update"]
-        upgrade_cmd = ["sudo", "yum", "update", "-y"]
-        install_cmd = lambda pkg: ["sudo", "yum", "install", "-y", pkg]
-    elif shutil.which("pacman"):
-        pkg_mgr = "pacman"
-        update_cmd = ["sudo", "pacman", "-Sy"]
-        upgrade_cmd = ["sudo", "pacman", "-Syu", "--noconfirm"]
-        install_cmd = lambda pkg: ["sudo", "pacman", "-S", pkg, "--noconfirm"]
-    else:
+    """Detecta Linux, actualiza repositorios e instala Docker y Docker Compose si hace falta"""
+    print(f"🔍 Sistema detectado: {platform.system()} {platform.release()}")
+    gestor = detectar_gestor_paquetes()
+    if gestor is None:
         print("⚠️ No se detectó un gestor de paquetes conocido. Instala Docker y Docker Compose manualmente.")
-        return
+        return None
 
-    print(f"🔍 Gestor de paquetes detectado: {pkg_mgr}")
-    subprocess.run(update_cmd)
-    subprocess.run(upgrade_cmd)
+    print(f"🔧 Gestor de paquetes detectado: {gestor}")
 
-    # Instalar Docker si no está
+    # Comandos según gestor de paquetes
+    if gestor == "apt":
+        subprocess.run(["sudo", "apt", "update"])
+        subprocess.run(["sudo", "apt", "upgrade", "-y"])
+        install = lambda pkg: subprocess.run(["sudo", "apt", "install", "-y", pkg])
+    elif gestor in ["dnf", "yum"]:
+        subprocess.run(["sudo", gestor, "check-update"])
+        subprocess.run(["sudo", gestor, "upgrade", "-y"])
+        install = lambda pkg: subprocess.run(["sudo", gestor, "install", "-y", pkg])
+    elif gestor == "pacman":
+        subprocess.run(["sudo", "pacman", "-Syu", "--noconfirm"])
+        install = lambda pkg: subprocess.run(["sudo", "pacman", "-S", pkg, "--noconfirm"])
+
+    # Instalar Docker si no existe
     if shutil.which("docker") is None:
-        print("🐳 Docker no encontrado. Instalando Docker...")
-        subprocess.run(install_cmd("docker.io" if pkg_mgr == "apt" else "docker"))
+        print("🐳 Docker no encontrado. Instalando...")
+        install("docker.io" if gestor == "apt" else "docker")
 
-    # Instalar Docker Compose si no está
-    if subprocess.run(["docker", "compose", "version"], capture_output=True).returncode != 0:
-        print("🔧 Docker Compose no encontrado. Instalando plugin...")
-        subprocess.run(install_cmd("docker-compose-plugin" if pkg_mgr == "apt" else "docker-compose"))
+    # Detectar Docker Compose
+    compose_cmd = None
+    if shutil.which("docker-compose"):
+        compose_cmd = ["docker-compose"]
+    elif shutil.which("docker") and subprocess.run(
+        ["docker", "compose", "version"], capture_output=True
+    ).returncode == 0:
+        compose_cmd = ["docker", "compose"]
 
+    if compose_cmd is None:
+        print("⚠️ Docker Compose no encontrado. Instálalo manualmente.")
+    else:
+        print(f"✅ Docker Compose detectado: {' '.join(compose_cmd)}")
 
-
-
+    return compose_cmd
 
 def iniciar_lab_docker(lab_path):
-    """Inicia docker-compose del laboratorio y espera a que el usuario finalice"""
-    preparar_sistema()  # Detecta Linux y asegura dependencias
+    """Inicia Docker Compose del laboratorio y espera a que el usuario finalice"""
+    compose_cmd = preparar_sistema()
+    if compose_cmd is None:
+        print("❌ No se puede iniciar el laboratorio sin Docker Compose.")
+        return False
+
     dc_file = os.path.join(lab_path, "docker-compose.yml")
-    if os.path.exists(dc_file):
-        print(f"\n🚀 Iniciando laboratorio en {lab_path}...")
-        print("⚠️ Para salir del laboratorio, presiona Ctrl+C o finaliza la sesión dentro de Docker.\n")
-        try:
-            subprocess.run(["docker", "compose", "-f", dc_file, "up"])
-        except KeyboardInterrupt:
-            print("\n⏹️ Laboratorio detenido por el usuario.")
-        finally:
-            opcion = input("¿Deseas detener y eliminar los contenedores de este laboratorio? (s/n): ").lower()
-            if opcion == "s":
-                subprocess.run(["docker", "compose", "-f", dc_file, "down"])
-            return True
-    else:
+    if not os.path.exists(dc_file):
         print("⚠️ No se encontró docker-compose.yml en este laboratorio")
         return False
+
+    print(f"\n🚀 Iniciando laboratorio en {lab_path}...")
+    print("⚠️ Para salir del laboratorio, presiona Ctrl+C o finaliza la sesión dentro de Docker.\n")
+
+    try:
+        subprocess.run(compose_cmd + ["-f", dc_file, "up"])
+    except KeyboardInterrupt:
+        print("\n⏹️ Laboratorio detenido por el usuario.")
+    finally:
+        opcion = input("¿Deseas detener y eliminar los contenedores de este laboratorio? (s/n): ").lower()
+        if opcion == "s":
+            subprocess.run(compose_cmd + ["-f", dc_file, "down"])
+        return True
 
 def main():
     init_db()
@@ -114,7 +129,6 @@ def main():
             print(f"[{n+4}] Salir del sistema")
 
             opcion = input("\nSelecciona una opción: ")
-
             if opcion.isdigit():
                 opcion = int(opcion)
                 if 1 <= opcion <= n:
@@ -125,14 +139,12 @@ def main():
                     create_user(name, email)
                     continue
                 elif opcion == n+2:
-                    idx = elegir_opcion([f"{u['name']} - {u['email']}" for u in usuarios],
-                                        "Selecciona usuario a editar:")
+                    idx = elegir_opcion([f"{u['name']} - {u['email']}" for u in usuarios], "Selecciona usuario a editar:")
                     if idx is not None:
                         edit_user(usuarios[idx]['id'])
                     continue
                 elif opcion == n+3:
-                    idx = elegir_opcion([f"{u['name']} - {u['email']}" for u in usuarios],
-                                        "Selecciona usuario a eliminar:")
+                    idx = elegir_opcion([f"{u['name']} - {u['email']}" for u in usuarios], "Selecciona usuario a eliminar:")
                     if idx is not None:
                         delete_user(usuarios[idx]['id'])
                     continue
@@ -158,23 +170,15 @@ def main():
         idx = elegir_opcion(niveles, "Selecciona el nivel por número:")
         level = niveles[idx]
 
-        # Asignar laboratorio automáticamente en cualquier especialización disponible
+        # Asignar laboratorio automáticamente
         lab_elegido, lab_specializations = get_available_lab_general(user_id, level)
-
         if lab_elegido:
             print(f"\n✅ Laboratorio asignado automáticamente: {lab_elegido} ({', '.join(lab_specializations)})")
-
-            # Construir ruta completa del lab
             lab_path = os.path.join("labs", level, lab_elegido)
-
-            # Iniciar Docker del laboratorio
             terminado = iniciar_lab_docker(lab_path)
-
-            # Si finalizó correctamente, marcar como completado
             if terminado:
-                mark_lab_completed(user_id, level, lab_elegido)
+                mark_lab_completed(user_id, lab_elegido)
                 print(f"\n🎉 Laboratorio '{lab_elegido}' marcado como completado.")
-
         else:
             print("⚠️ Ya completaste todos los laboratorios disponibles en este nivel.")
 
