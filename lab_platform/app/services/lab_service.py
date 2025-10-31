@@ -65,7 +65,7 @@ def get_available_lab_general(user_id, level):
             if os.path.isdir(os.path.join(level_path, d))]
 
     # Conectar a la DB para saber qué labs ya completó el usuario
-    conn = connect_db()
+    conn = get_connection()
     cur = conn.cursor()
     cur.execute("SELECT lab_code FROM user_labs WHERE user_id = ? AND completed = 1", (user_id,))
     labs_completados = {row[0] for row in cur.fetchall()}
