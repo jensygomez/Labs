@@ -57,6 +57,33 @@ def llamar_run_lab(lab_path):
         print("❌ Error ejecutando la apertura del laboratorio.")
         return False
 
+import json
+
+def mostrar_ticket_en_pantalla(ticket_path):
+    try:
+        with open(ticket_path, "r") as f:
+            ticket = json.load(f)
+        print("\n===== Información del Ticket =====")
+        print(f"Ticket ID: {ticket.get('ticket_id')}")
+        print(f"Fecha creación: {ticket.get('fecha_creacion')}")
+        colaborador = ticket.get('colaborador', {})
+        print(f"Colaborador: {colaborador.get('nombre')} ({colaborador.get('email')})")
+        print(f"Nivel: {colaborador.get('nivel')}")
+        print(f"Descripción: {ticket.get('descripcion')}")
+        print(f"Tipo equipo simulado: {ticket.get('tipo_equipo_simulado')}")
+        acceso = ticket.get('datos_acceso', {})
+        print(f"Contenedor ID: {acceso.get('contenedor_id')}")
+        print(f"Nombre contenedor: {acceso.get('nombre_contenedor')}")
+        print(f"Comando acceso: {acceso.get('comando_acceso')}")
+        print(f"Estado: {ticket.get('estado')}")
+        print(f"Prioridad: {ticket.get('prioridad')}")
+        print("================================\n")
+    except Exception as e:
+        print(f"No se pudo cargar o mostrar el ticket: {e}")
+
+
+
+
 def main():
     init_db()
     print("===================================")
@@ -131,13 +158,31 @@ def main():
         exito = llamar_run_lab(lab_path)        
         
         if exito:
-            # Marcar laboratorio como completo
-            lab_elegido, _ = get_available_lab_general(user_id, level) # O lo que utilizas para asignar lab
-            if lab_elegido:
-                mark_lab_completed(user_id, level, lab_elegido)
-                print(f"\n🎉 Laboratorio '{lab_elegido}' marcado como completado.")
-        else:
-            print("Fallo al iniciar el laboratorio.")
+            nombre_contenedor = f"{lab_elegido}_container"
+            container_id = obtener_contenedor_id(nombre_contenedor)
+
+            # Crear ticket JSON en carpeta tickets/active_tickets
+            tm.crear_ticket(
+                lab_elegido,
+                usuario=user_name,
+                email=user_email,
+                nivel=level,
+                container_id=container_id or "Desconocido",
+                container_name=nombre_contenedor
+            )
+
+            # Mostrar el contenido del ticket en pantalla
+            ticket_path = os.path.join("tickets", "active_tickets", f"{lab_elegido}_ticket.json")
+            mostrar_ticket_en_pantalla(ticket_path)
+
+            # Marcar laboratorio como completado
+            mark_lab_completed(user_id, level, lab_elegido)
+            print(f"\n🎉 Laboratorio '{lab_elegido}' marcado como completado y ticket generado.")
+
+        
+        
+        
+       
 
 if __name__ == "__main__":
     main()
