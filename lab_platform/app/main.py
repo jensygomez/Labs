@@ -14,6 +14,7 @@ import subprocess
 import shutil
 import platform
 from app.utils.db_utils import init_db
+from app.utils.db_utils import init_db, agregar_columna_si_falta
 from app.services.user_service import create_user, list_users, delete_user, edit_user
 from app.services.lab_service import get_available_lab_general, mark_lab_completed
 
@@ -86,6 +87,7 @@ def mostrar_ticket_en_pantalla(ticket_path):
 
 def main():
     init_db()
+    agregar_columna_si_falta()
     print("===================================")
     print("  🧠 Plataforma de Laboratorios IT ")
     print("===================================")
