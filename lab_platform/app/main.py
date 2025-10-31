@@ -1,5 +1,7 @@
 # lab_platform/app/main.py
-import sys, os
+# lab_platform/app/main.py
+import sys
+import os
 import subprocess
 import platform
 
@@ -57,7 +59,7 @@ def preparar_sistema():
 
 def iniciar_lab_docker(lab_path):
     """Inicia docker-compose del laboratorio y espera a que el usuario finalice"""
-    preparar_sistema()  # <-- Detecta Linux y asegura dependencias
+    preparar_sistema()  # Detecta Linux y asegura dependencias
     dc_file = os.path.join(lab_path, "docker-compose.yml")
     if os.path.exists(dc_file):
         print(f"\n🚀 Iniciando laboratorio en {lab_path}...")
@@ -140,11 +142,13 @@ def main():
         idx = elegir_opcion(niveles, "Selecciona el nivel por número:")
         level = niveles[idx]
 
-        # Buscar laboratorio disponible en cualquier carpeta de level_X
-        lab_elegido, lab_specialization = get_available_lab_general(user_id, level)
+        # Asignar laboratorio automáticamente en cualquier especialización disponible
+        lab_elegido, lab_specializations = get_available_lab_general(user_id, level)
 
         if lab_elegido:
-            print(f"\n✅ Laboratorio asignado automáticamente: {lab_elegido} ({', '.join(lab_specialization)})")
+            print(f"\n✅ Laboratorio asignado automáticamente: {lab_elegido} ({', '.join(lab_specializations)})")
+
+            # Construir ruta completa del lab
             lab_path = os.path.join("labs", level, lab_elegido)
 
             # Iniciar Docker del laboratorio
@@ -152,8 +156,7 @@ def main():
 
             # Si finalizó correctamente, marcar como completado
             if terminado:
-                mark_lab_completed(user_id, lab_elegido)
-                print(f"\n🎉 Laboratorio '{lab_elegido}' marcado como completado para el usuario.")
+                mark_lab_completed(user_id, level, lab_elegido)
         else:
             print("⚠️ Ya completaste todos los laboratorios disponibles en este nivel.")
 
