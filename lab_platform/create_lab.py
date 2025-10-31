@@ -1,3 +1,4 @@
+# lab_platform/create_lab.py
 #!/usr/bin/env python3
 import os
 import json
@@ -59,9 +60,10 @@ chmod 600 file1
 
 echo "✅ Setup completado."
 """
-    with open(os.path.join(lab_path, "setup.sh"), "w") as f:
+    setup_path = os.path.join(lab_path, "setup.sh")
+    with open(setup_path, "w") as f:
         f.write(setup_content)
-    os.chmod(os.path.join(lab_path, "setup.sh"), 0o755)
+    os.chmod(setup_path, 0o755)
 
     # Crear Dockerfile
     dockerfile_content = f"""FROM ubuntu:24.04
@@ -75,6 +77,17 @@ CMD ["/bin/bash"]
 """
     with open(os.path.join(lab_path, "Dockerfile"), "w") as f:
         f.write(dockerfile_content)
+
+    # Crear docker-compose.yml minimalista
+    docker_compose_content = f"""version: '3.9'
+services:
+  {lab_folder_name}:
+    build: .
+    container_name: {lab_folder_name}_container
+    tty: true
+"""
+    with open(os.path.join(lab_path, "docker-compose.yml"), "w") as f:
+        f.write(docker_compose_content)
 
     print(f"✅ Laboratorio '{lab_folder_name}' creado correctamente en {lab_path}")
 
