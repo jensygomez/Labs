@@ -194,7 +194,7 @@ def main():
             lab_path = os.path.join("labs", level, lab_elegido)
             terminado = iniciar_lab_docker(lab_path)
             if terminado:
-                mark_lab_completed(user_id, lab_elegido)
+                mark_lab_completed(user_id, level, lab_elegido)
                 print(f"\n🎉 Laboratorio '{lab_elegido}' marcado como completado.")
         else:
             print("⚠️ Ya completaste todos los laboratorios disponibles en este nivel.")
