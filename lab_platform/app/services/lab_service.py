@@ -49,7 +49,7 @@ def mark_lab_completed(user_id, lab_name):
 
 import os
 import json
-from app.utils.db_utils import connect_db
+from app.utils.db_utils import get_connection
 
 def get_available_lab_general(user_id, level):
     """
