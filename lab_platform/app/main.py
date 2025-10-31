@@ -1,12 +1,23 @@
 # lab_platform/app/main.py
-import os
 import sys
+import os
+
+# Añade la ruta absoluta de la carpeta 'modules' al sys.path
+modules_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'modules'))
+if modules_path not in sys.path:
+    sys.path.insert(0, modules_path)
+
+# Ahora puedes importar tu módulo
+import ticket_manager as tm
+
 import subprocess
 import shutil
 import platform
 from app.utils.db_utils import init_db
 from app.services.user_service import create_user, list_users, delete_user, edit_user
 from app.services.lab_service import get_available_lab_general, mark_lab_completed
+
+
 
 def elegir_opcion(lista, titulo="Selecciona una opción:"):
     if not lista:
