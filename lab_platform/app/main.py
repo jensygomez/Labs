@@ -1,14 +1,14 @@
 # lab_platform/app/main.py
 import sys, os
 import subprocess
-import json
+import platform
 
 # 🔧 Asegura que la carpeta raíz esté en sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.utils.db_utils import init_db
 from app.services.user_service import create_user, list_users, delete_user, edit_user
-from app.services.lab_service import mark_lab_completed
+from app.services.lab_service import get_available_lab, mark_lab_completed
 
 def elegir_opcion(lista, titulo="Selecciona una opción:"):
     """Permite elegir una opción de la lista por número"""
@@ -24,21 +24,53 @@ def elegir_opcion(lista, titulo="Selecciona una opción:"):
         else:
             print("❌ Opción no válida, intenta de nuevo.")
 
+def preparar_sistema():
+    """Detecta la distro y versión de Linux y actualiza paquetes e instala Docker si hace falta"""
+    distro_info = {}
+    if os.path.exists("/etc/os-release"):
+        with open("/etc/os-release") as f:
+            for line in f:
+                if "=" in line:
+                    key, val = line.strip().split("=", 1)
+                    distro_info[key] = val.strip('"')
+    nombre = distro_info.get("NAME", platform.system())
+    version = distro_info.get("VERSION_ID", platform.release())
+
+    print(f"🔍 Sistema detectado: {nombre} {version}")
+
+    if "Ubuntu" in nombre or "Debian" in nombre:
+        print("⚙️ Actualizando sistema y dependencias...")
+        subprocess.run(["sudo", "apt", "update"])
+        subprocess.run(["sudo", "apt", "upgrade", "-y"])
+
+        # Instalar Docker si no está
+        if subprocess.run(["which", "docker"], capture_output=True).returncode != 0:
+            print("🐳 Docker no encontrado. Instalando Docker...")
+            subprocess.run(["sudo", "apt", "install", "-y", "docker.io"])
+
+        # Instalar Docker Compose si no está
+        if subprocess.run(["docker", "compose", "version"], capture_output=True).returncode != 0:
+            print("🔧 Docker Compose no encontrado. Instalando plugin...")
+            subprocess.run(["sudo", "apt", "install", "-y", "docker-compose-plugin"])
+    else:
+        print("⚠️ Sistema no reconocido. Asegúrate de tener Docker y Docker Compose instalados.")
+
 def iniciar_lab_docker(lab_path):
     """Inicia docker-compose del laboratorio y espera a que el usuario finalice"""
+    preparar_sistema()  # <-- Detecta Linux y asegura dependencias
     dc_file = os.path.join(lab_path, "docker-compose.yml")
     if os.path.exists(dc_file):
         print(f"\n🚀 Iniciando laboratorio en {lab_path}...")
         print("⚠️ Para salir del laboratorio, presiona Ctrl+C o finaliza la sesión dentro de Docker.\n")
         try:
-            subprocess.run(["docker-compose", "-f", dc_file, "up"])
+            subprocess.run(["docker", "compose", "-f", dc_file, "up"])
         except KeyboardInterrupt:
             print("\n⏹️ Laboratorio detenido por el usuario.")
         finally:
             # Preguntar si quiere hacer cleanup
             opcion = input("¿Deseas detener y eliminar los contenedores de este laboratorio? (s/n): ").lower()
             if opcion == "s":
-                subprocess.run(["docker-compose", "-f", dc_file, "down"])
+                subprocess.run(["docker", "compose", "-f", dc_file, "down"])
             return True
     else:
         print("⚠️ No se encontró docker-compose.yml en este laboratorio")
@@ -109,22 +141,15 @@ def main():
         idx = elegir_opcion(niveles, "Selecciona el nivel por número:")
         level = niveles[idx]
 
-        # Buscar laboratorio automáticamente leyendo lab_meta.json
+        # Asignar laboratorio automáticamente en cualquier especialización disponible
+        especializaciones = ["network", "linux", "security", "cloud", "kubernetes"]
         lab_elegido = None
         lab_specialization = None
-        level_path = os.path.join("labs", level)
-        for lab_folder in os.listdir(level_path):
-            lab_path = os.path.join(level_path, lab_folder)
-            if os.path.isdir(lab_path):
-                meta_file = os.path.join(lab_path, "lab_meta.json")
-                if os.path.exists(meta_file):
-                    with open(meta_file, "r") as f:
-                        meta = json.load(f)
-                    # Solo asignar si el lab no está completado
-                    # Aquí se podría agregar lógica para checkear completado en la DB
-                    lab_elegido = lab_folder
-                    lab_specialization = ", ".join(meta["specializations"])
-                    break
+        for specialization in especializaciones:
+            lab_elegido = get_available_lab(user_id, level, specialization)
+            if lab_elegido:
+                lab_specialization = specialization
+                break
 
         if lab_elegido:
             print(f"\n✅ Laboratorio asignado automáticamente: {lab_elegido} ({lab_specialization})")
