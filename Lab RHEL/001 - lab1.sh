@@ -55,3 +55,23 @@ echo "" | tee -a "$NOTES"
 # 3.3 Guardando la salida exacta
 echo "$RECENT_5_FILES" | tee /root/lastlogs.txt
 echo "" | tee -a "$NOTES"
+
+# 4.1 Buscando un archivo llamado passwd
+echo "Buscando en el directorio / un archivo llamado passwd" | tee -a "$NOTES"
+PASSWORD_FILE=$(find / -type f -iname "passwd" 2>/dev/null)
+echo "$PASSWORD_FILE" | tee -a "$NOTES"
+echo "" | tee -a "$NOTES"
+
+# 4.2 buscar en /etc archivos .conf que pesen mas de 20k
+echo "Buscando en /etc archivos .conf que pesen más de 20k" | tee -a "$NOTES"
+CONF_FILES=$(find /etc -type f -name "*.conf" -size +20k 2> /dev/null) 
+echo "$CONF_FILES" | tee -a "$NOTES"
+echo "" | tee -a "$NOTES"
+
+# 4.3 REgistrar cuantos archivos encontró
+CONF_COUNT=$(echo $CONF_FILES | wc -l)
+echo "La cantidad de archivos .conf que pesan más de 20k en /etc es: $CONF_COUNT" | tee -a "$NOTES"
+echo "" | tee -a "$NOTES"
+
+# 5.0 Inspecionando el directorio /usr/bin
+echo "5.0 Inspeccionando el directorio /usr/bin" | tee -a "$NOTES"
