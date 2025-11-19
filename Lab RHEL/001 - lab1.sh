@@ -24,7 +24,8 @@ echo "Regresé a mi $(pwd), usando la ruta relativa cd ../../home/$TARGET_USER" 
 echo "" | tee -a "$NOTES"
 
 # 2.1 Listar contenido de /etc
-ls -l /etc | tee -a "$NOTES"
+ls -l /etc | head -n 10 | tee -a "$NOTES"
+echo "2.1 Listado del contenido del directorio /etc:" | tee -a "$NOTES"
 echo "" | tee -a "$NOTES"
 echo "Usé el comando ls -l /etc para listar el contenido de este directorio" | tee -a "$NOTES"
 echo "" | tee -a "$NOTES"
@@ -69,9 +70,24 @@ echo "$CONF_FILES" | tee -a "$NOTES"
 echo "" | tee -a "$NOTES"
 
 # 4.3 REgistrar cuantos archivos encontró
-CONF_COUNT=$(echo $CONF_FILES | wc -l)
+CONF_COUNT=$(echo "$CONF_FILES" | wc -l)
 echo "La cantidad de archivos .conf que pesan más de 20k en /etc es: $CONF_COUNT" | tee -a "$NOTES"
 echo "" | tee -a "$NOTES"
 
-# 5.0 Inspecionando el directorio /usr/bin
-echo "5.0 Inspeccionando el directorio /usr/bin" | tee -a "$NOTES"
+# 5.1 Archivo mas grade dentro de  /usr/bin
+LARGEST_FILE=$(find /usr/bin -type f -printf "%s %p\n" 2>/dev/null | sort -nr | head -n 1)
+echo "5.1 El archivo más grande en /usr/bin es:" | tee -a "$NOTES"
+echo "$LARGEST_FILE" | tee -a "$NOTES"
+echo "" | tee -a "$NOTES"
+
+# 5.2 Archivo mas pequeño dentro de /usr/bin
+SMALLEST_FILE=$(find /usr/bin -type f -printf "%s %p\n" 2>/dev/null | sort -n | head -n 1)
+echo "5.2 El archivo más pequeño en /usr/bin es:" | tee -a "$NOTES" 
+echo "$SMALLEST_FILE" | tee -a "$NOTES"
+echo "" | tee -a "$NOTES"   
+
+# 5.3 Buscar un archivo que no sea regular (symlink, pipe, socket, etc)
+NON_REGULAR_FILE=$(find /usr/bin ! -type f | head -n 1)
+echo "5.3 Un archivo que no es regular en /usr/bin es:" | tee -a "$NOTES"
+echo "$NON_REGULAR_FILE" | tee -a "$NOTES"
+echo "" | tee -a "$NOTES"   
