@@ -1,93 +1,132 @@
 #!/bin/bash
 
-# Este es mi Laboratorio LAB1
-# Mi nombre es Jensy Gomez
-# Variable donde se guardarán las notas
-NOTES="/root/lab-notes.txt"
+# ============================================
+# LABORATORIO LAB1 – SCRIPT OPTIMIZADO
+# Autor: Jensy Gomez
+# ============================================
 
-# Determinar cuál es el usuario actual
+NOTES="/root/lab-notes.txt"
 TARGET_USER="${SUDO_USER:-$USER}"
 
-# 1.1 Registrando la ruta absoluta
-echo "1.1 Esta es la ruta absoluta inicial" | tee -a "$NOTES"
+# -------------------------
+# Funciones reutilizables
+# -------------------------
+
+# Función para registrar texto en pantalla y archivo
+log() {
+    echo "$1" | tee -a "$NOTES"
+}
+
+# Línea en blanco (para no repetir echo "")
+blank() {
+    echo "" | tee -a "$NOTES"
+}
+
+# --------------------------------------------
+# 1.1 Ruta absoluta inicial
+# --------------------------------------------
+log "1.1 Esta es la ruta absoluta inicial"
 pwd | tee -a "$NOTES"
-echo "" | tee -a "$NOTES"
+blank
 
-# 1.2 Cambiando al directorio /usr/share
+# --------------------------------------------
+# 1.2 Cambiar a /usr/share
+# --------------------------------------------
 cd /usr/share
-echo "Estoy en el directorio $(pwd) gracias a que usé la ruta absoluta cd /usr/share" | tee -a "$NOTES"
-echo "" | tee -a "$NOTES"
+log "Estoy en el directorio $(pwd) gracias a que usé la ruta absoluta cd /usr/share"
+blank
 
-# 1.2 Volver a HOME con ruta relativa
+# --------------------------------------------
+# 1.3 Volver al HOME con ruta relativa
+# --------------------------------------------
 cd ../../home/$TARGET_USER
-echo "Regresé a mi $(pwd), usando la ruta relativa cd ../../home/$TARGET_USER" | tee -a "$NOTES"
-echo "" | tee -a "$NOTES"
+log "Regresé a mi $(pwd), usando la ruta relativa cd ../../home/$TARGET_USER"
+blank
 
-# 2.1 Listar contenido de /etc
+# --------------------------------------------
+# 2.1 Listar contenido /etc
+# --------------------------------------------
 ls -l /etc | head -n 10 | tee -a "$NOTES"
-echo "2.1 Listado del contenido del directorio /etc:" | tee -a "$NOTES"
-echo "" | tee -a "$NOTES"
-echo "Usé el comando ls -l /etc para listar el contenido de este directorio" | tee -a "$NOTES"
-echo "" | tee -a "$NOTES"
+log "2.1 Listado del contenido del directorio /etc:"
+blank
+log "Usé el comando ls -l /etc para listar el contenido de este directorio"
+blank
 
-# 2.2 Buscar archivo que contenga 'release'
+# --------------------------------------------
+# 2.2 Buscar archivo con 'release'
+# --------------------------------------------
 RELEASE_FILE=$(find /etc -name "*release*")
-echo "2.2 Archivos encontrados que contienen la palabra 'release':" | tee -a "$NOTES"
-echo "$RELEASE_FILE" | tee -a "$NOTES"
-echo "" | tee -a "$NOTES"
+log "2.2 Archivos encontrados que contienen la palabra 'release':"
+log "$RELEASE_FILE"
+blank
 
-# 2.3 Registrar la ruta completa
-echo "2.3 Registrando rutas completas de archivos 'release':" | tee -a "$NOTES"
-echo "$RELEASE_FILE" | tee -a "$NOTES"
-echo "" | tee -a "$NOTES"
+# 2.3 Registrar rutas completas
+log "2.3 Registrando rutas completas de archivos 'release':"
+log "$RELEASE_FILE"
+blank
 
-# 3.1 Archivos modificados en últimas 24h
+# --------------------------------------------
+# 3.1 Archivos modificados últimas 24h
+# --------------------------------------------
 FIND_FILES=$(find /var/log -type f -mtime -1)
-echo "3.1 Archivos modificados en las últimas 24 horas en /var/log:" | tee -a "$NOTES"
-echo "$FIND_FILES" | tee -a "$NOTES"
-echo "" | tee -a "$NOTES"
+log "3.1 Archivos modificados en las últimas 24 horas en /var/log:"
+log "$FIND_FILES"
+blank
 
-# 3.2 Mostrar los 5 archivos más recientes
+# --------------------------------------------
+# 3.2 5 archivos más recientes
+# --------------------------------------------
 RECENT_5_FILES=$(find /var/log -type f -printf "%T@ %p\n" | sort -nr | head -n 5)
-echo "3.2 Los 5 archivos más recientes en /var/log son:" | tee -a "$NOTES"
-echo "$RECENT_5_FILES" | tee -a "$NOTES"
-echo "" | tee -a "$NOTES"
+log "3.2 Los 5 archivos más recientes en /var/log son:"
+log "$RECENT_5_FILES"
+blank
 
-# 3.3 Guardando la salida exacta
+# 3.3 Guardar salida exacta
 echo "$RECENT_5_FILES" | tee /root/lastlogs.txt
-echo "" | tee -a "$NOTES"
+blank
 
-# 4.1 Buscando un archivo llamado passwd
-echo "Buscando en el directorio / un archivo llamado passwd" | tee -a "$NOTES"
+# --------------------------------------------
+# 4.1 Buscar archivo llamado passwd
+# --------------------------------------------
+log "Buscando en el directorio / un archivo llamado passwd"
 PASSWORD_FILE=$(find / -type f -iname "passwd" 2>/dev/null)
-echo "$PASSWORD_FILE" | tee -a "$NOTES"
-echo "" | tee -a "$NOTES"
+log "$PASSWORD_FILE"
+blank
 
-# 4.2 buscar en /etc archivos .conf que pesen mas de 20k
-echo "Buscando en /etc archivos .conf que pesen más de 20k" | tee -a "$NOTES"
-CONF_FILES=$(find /etc -type f -name "*.conf" -size +20k 2> /dev/null) 
-echo "$CONF_FILES" | tee -a "$NOTES"
-echo "" | tee -a "$NOTES"
+# --------------------------------------------
+# 4.2 Archivos .conf > 20K
+# --------------------------------------------
+log "Buscando en /etc archivos .conf que pesen más de 20k"
+CONF_FILES=$(find /etc -type f -name "*.conf" -size +20k 2>/dev/null)
+log "$CONF_FILES"
+blank
 
-# 4.3 REgistrar cuantos archivos encontró
+# 4.3 Contar archivos encontrados
 CONF_COUNT=$(echo "$CONF_FILES" | wc -l)
-echo "La cantidad de archivos .conf que pesan más de 20k en /etc es: $CONF_COUNT" | tee -a "$NOTES"
-echo "" | tee -a "$NOTES"
+log "La cantidad de archivos .conf que pesan más de 20k en /etc es: $CONF_COUNT"
+blank
 
-# 5.1 Archivo mas grade dentro de  /usr/bin
+# --------------------------------------------
+# 5.1 Archivo más grande en /usr/bin
+# --------------------------------------------
 LARGEST_FILE=$(find /usr/bin -type f -printf "%s %p\n" 2>/dev/null | sort -nr | head -n 1)
-echo "5.1 El archivo más grande en /usr/bin es:" | tee -a "$NOTES"
-echo "$LARGEST_FILE" | tee -a "$NOTES"
-echo "" | tee -a "$NOTES"
+log "5.1 El archivo más grande en /usr/bin es:"
+log "$LARGEST_FILE"
+blank
 
-# 5.2 Archivo mas pequeño dentro de /usr/bin
+# --------------------------------------------
+# 5.2 Archivo más pequeño en /usr/bin
+# --------------------------------------------
 SMALLEST_FILE=$(find /usr/bin -type f -printf "%s %p\n" 2>/dev/null | sort -n | head -n 1)
-echo "5.2 El archivo más pequeño en /usr/bin es:" | tee -a "$NOTES" 
-echo "$SMALLEST_FILE" | tee -a "$NOTES"
-echo "" | tee -a "$NOTES"   
+log "5.2 El archivo más pequeño en /usr/bin es:"
+log "$SMALLEST_FILE"
+blank
 
-# 5.3 Buscar un archivo que no sea regular (symlink, pipe, socket, etc)
+# --------------------------------------------
+# 5.3 Archivo que NO es regular
+# --------------------------------------------
 NON_REGULAR_FILE=$(find /usr/bin ! -type f | head -n 1)
-echo "5.3 Un archivo que no es regular en /usr/bin es:" | tee -a "$NOTES"
-echo "$NON_REGULAR_FILE" | tee -a "$NOTES"
-echo "" | tee -a "$NOTES"   
+log "5.3 Un archivo que no es regular en /usr/bin es:"
+log "$NON_REGULAR_FILE"
+blank
+
