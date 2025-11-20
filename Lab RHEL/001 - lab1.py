@@ -32,7 +32,7 @@ def main():
     
     # Volver al directorio HOME usando ruta relativa y validar
     usuario = ejecutar_comando("echo $USER")
-    ejecutar_comando(f"cd ../../home/{usuario}")
+    os.chdir(f"../../home/{usuario}")
     ruta_home = ejecutar_comando("pwd")
     anadir_a_archivo(f"volvi al HOME usando ruta relativa : {ruta_home}\n")
     
