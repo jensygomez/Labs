@@ -31,10 +31,11 @@ def main():
     anadir_a_archivo(f"cambié a: {ruta_actual}")
     
     # Volver al directorio HOME usando ruta relativa y validar
-    usuario = ejecutar_comando("echo $USER")
-    os.chdir(f"../../home/{usuario}")
+    usuario = os.environ.get('SUDO_USER') or os.environ.get('USER')
+    ruta_relativa = f"../../home/{usuario}"
+    os.chdir(ruta_relativa)
     ruta_home = ejecutar_comando("pwd")
-    anadir_a_archivo(f"volvi al HOME usando ruta relativa : {ruta_home}\n")
+    anadir_a_archivo(f"volvi al HOME usando ruta relativa {ruta_relativa} : {ruta_home}\n")
     
 if __name__ == "__main__":
     main()
