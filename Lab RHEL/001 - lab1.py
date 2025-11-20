@@ -26,7 +26,7 @@ def main():
     anadir_a_archivo(f"Ruta absoluta del script: {ruta_script}")
     
     # cambiar al /usr/shaere usando ruta absoluta y validar
-    os.chdir("cd /usr/share")
+    os.chdir("/usr/share")
     ruta_actual = ejecutar_comando("pwd")
     anadir_a_archivo(f"cambié a: {ruta_actual}")
     
