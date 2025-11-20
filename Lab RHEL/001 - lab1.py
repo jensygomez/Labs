@@ -17,26 +17,26 @@ def ejecutar_comando(comando):
 # Funcion para añadir texto a un archivo
 def anadir_a_archivo(texto):
     with open(NOTAS, "a") as archivo:
-        archivo.write(texto + "\n")
-        
-        
-# Defnir una funcion para Validar el Sistema
-def validacion_inicial():
-    anadir_a_archivo("=== 1. Validacion Inicial del Sistema ===")
+        archivo.write(texto + "\n")  
+
+# Definiendo el main
+def main():
+    anadir_a_archivo("=== Inicio de la Laboratorio 1 ===\n")
+    ruta_script = os.path.abspath(__file__)
+    anadir_a_archivo(f"Ruta absoluta del script: {ruta_script}")
     
-ruta_script = os.path.abspath(__file__)
-print(f"Ruta absoluta del script: {ruta_script}")
-anadir_a_archivo(f"Ruta absoluta del script: {ruta_script}")
+    # cambiar al /usr/shaere usando ruta absoluta y validar
+    os.chdir("cd /usr/share")
+    ruta_actual = ejecutar_comando("pwd")
+    anadir_a_archivo(f"cambié a: {ruta_actual}")
+    
+    # Volver al directorio HOME usando ruta relativa y validar
+    usuario = ejecutar_comando("echo $USER")
+    ejecutar_comando(f"cd ../../home/{usuario}")
+    ruta_home = ejecutar_comando("pwd")
+    anadir_a_archivo(f"volvi al HOME usando ruta relativa : {ruta_home}\n")
+    
+if __name__ == "__main__":
+    main()
+    
 
-
-# cambiar al /usr/shaere usando ruta absoluta y validar
-ejecutar_comando("cd /usr/share")
-ruta_actual = ejecutar_comando("pwd")
-anadir_a_archivo(f"cambié a: {ruta_actual}")
-
-
-# Volver al directorio HOME usando ruta relativa y validar
-usuario = ejecutar_comando("echo $USER")
-ejecutar_comando(f"cd ../../home/{usuario}")
-ruta_home = ejecutar_comando("pwd")
-anadir_a_archivo(f"volvi al HOME usando ruta relativa : {ruta_home}\n")
