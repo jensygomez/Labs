@@ -18,16 +18,17 @@ LARGEBINS="/root/lab2-largebins.txt"
 
 run_and_log() {
     local comment="$1"    # Primer argumento: Comentario
-    shift                 # Quitamos el comentario de la lista de argumentos
+    shift                 # Quitamos el comentario
+
+    # 🔥 Si el comentario está vacío → NO hacer nada
+    [ -z "$comment" ] && return
 
     echo -e "\n[+] $comment" | tee -a "$NOTES"
     echo "=========================================" | tee -a "$NOTES"
 
-    # Si quedan argumentos → ejecutar comando
+    # Si hay comando → ejecutarlo
     if [ $# -gt 0 ]; then
         "$@" 2>&1 | tee -a "$NOTES"
-    else
-        echo "(Sin comando para ejecutar)" | tee -a "$NOTES"
     fi
 
     echo "" >> "$NOTES"
@@ -40,6 +41,8 @@ run_and_log() {
 > "$NOTES"
 
 # Objetivo 1.1 - Registrar ruta absoluta actual
+run_and_log " ==== Objetivo 1.1 - Registrando Ruta absoluta  Actual ===="
+run_and_log ""
 run_and_log "Mostrando ruta absoluta actual" pwd
 
 # Objetivo 1.2 - Solo comentario, sin comando
