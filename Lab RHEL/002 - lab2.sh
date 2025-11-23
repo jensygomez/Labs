@@ -56,11 +56,11 @@ log "Me cambié al directorio /usr/share usando rutas absolutas"
 run pwd
 
 log "Objetivo 1.2 - Debo Regresar al HOME mediante ruta relativa (no cd ~, ni cd)."
-run cd ../../home$USER
+run cd ../../home/$USER
 
 log "==== Ejercicio 2. Estructura del sistema ===="
 log "Objetivo 2.1 - Listar el contenido de /etc mostrando permisos, dueño y tamaño."
-run ls -lh /etc
+run ls -lh /etc | heaad -10
 
 log "Objetivo 2.2 - Buscar dentro de /etc un archivo que contenga la palabra “release”."
 run find /etc -type f -name "*release*" 2>/dev/null
