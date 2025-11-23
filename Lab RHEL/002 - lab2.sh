@@ -7,25 +7,21 @@
 
 NOTES="/root/lab2-notes.txt"
 LARGEBINS="/root/lab2-largebins.txt"
+REAL_USER="${SUDO_USER:-${USER:-${LOGNAME}}}"
 
 # -------------------------------------------------
-# Función 1: Solo escribe comentarios/títulos bonitos
+# Funciones SILENCIOSAS (solo escriben en el archivo)
 # -------------------------------------------------
 log() {
-    echo -e "\n[+] $1" | tee -a "$NOTES"
-    echo "----------------------------------------" | tee -a "$NOTES"
+    echo -e "\n[+] $1" >> "$NOTES"
+    echo "----------------------------------------" >> "$NOTES"
     echo "" >> "$NOTES"
 }
 
-# -------------------------------------------------
-# Función 2: Ejecuta cualquier comando COMO SI ESTUVIERAS EN EL SHELL
-#            (cd funciona, export funciona, todo afecta el script)
-# -------------------------------------------------
 run() {
-    echo "\$ $*" >> "$NOTES"                  # Muestra el comando
-    "$@" 2>&1 | tee -a "$NOTES"                # Lo ejecuta y guarda salida
-    echo "" >> "$NOTES"                        # Línea en blanco al final
-    sleep 2
+    echo "\$ $*" >> "$NOTES"
+    "$@" 2>&1 >> "$NOTES"
+    echo "" >> "$NOTES"
 }
 
 # ===================================
@@ -38,7 +34,7 @@ run() {
 log "TechNova - Laboratorio 2 - Verificación del Sistema"
 log "Autor: Jensy Gómez"
 log "Fecha y hora: $(date '+%d-%m-%Y %H:%M:%S')"
-log "Host: $(hostname) | Usuario: $(whoami)"
+log "Host: $(hostname) | Usuario real: $SUDO_USER (o $(whoami) si no hay sudo)"
 
 # ===================================
 # Ahora sí: todo funciona perfecto
@@ -55,8 +51,8 @@ run cd /usr/share
 log "Me cambié al directorio /usr/share usando rutas absolutas"
 run pwd
 
-log "Objetivo 1.2 - Debo Regresar al HOME mediante ruta relativa (no cd ~, ni cd)."
-run cd ../../home/$USER
+log "Objetivo 1.2 - Regreso al HOME del usuario real ($REAL_USER) usando ruta relativa"
+run cd ../../home/$REAL_USER
 
 log "==== Ejercicio 2. Estructura del sistema ===="
 log "Objetivo 2.1 - Listar el contenido de /etc mostrando permisos, dueño y tamaño."
@@ -74,9 +70,20 @@ log "===== RUTA COMPLETA DEL ARCHIVO ENCONTRADO (para entrega) ====="
 run echo "Ruta completa guardada por el comando de arriba:"
 run find /etc -type f -name "*release*" 2>/dev/null | head -1
 
-log "¡Objetivo 2.2 completado! La ruta está justo arriba"
 
-log "Fin del laboratorio 2 - Todo ejecutado correctamente"
 
+# ===================================
+# AL FINAL: mostramos todo el reporte bonito de una vez
+# ===================================
+echo
+echo "=========================================="
+echo "   LABORATORIO 2 COMPLETADO"
+echo "   Mostrando reporte generado..."
+echo "=========================================="
+echo
+cat "$NOTES"
+echo
+echo "Reporte también guardado en: $NOTES"
+echo
 
 
