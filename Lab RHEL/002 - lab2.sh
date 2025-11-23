@@ -50,7 +50,7 @@ log "Mostrando el directorio Actual"
 run pwd
 
 log "Objetivo 1.1 -  Cambiar al directorio /usr/share usando sólo rutas absolutas."
-run cd /usr/shar
+run cd /usr/share
 
 log "Me cambié al directorio /usr/share usando rutas absolutas"
 run pwd
