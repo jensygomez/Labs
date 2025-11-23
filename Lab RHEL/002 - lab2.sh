@@ -56,20 +56,17 @@ run cd ../../home/$REAL_USER
 
 log "==== Ejercicio 2. Estructura del sistema ===="
 log "Objetivo 2.1 - Listar el contenido de /etc mostrando permisos, dueño y tamaño."
-run ls -lh /etc | heaad -10
+run bash -c "ls -lh /etc | head -10"
 
-log "Objetivo 2.2 - Buscar dentro de /etc un archivo que contenga la palabra “release”."
-run find /etc -type f -name "*release*" 2>/dev/null
+log "Objetivo 2.2 - Búsqueda automatizada del archivo oficial de release"
+run find /etc -type f -name "*release*"
 
-log "Objetivo 2.2 - Muestro el contenido del primer archivo encontrado"
-# El truco sin condicional: tomamos solo la primera línea que encuentre find
-run find /etc -type f -name "*release*" 2>/dev/null | head -1 | xargs cat
+log "Objetivo 2.2 - Contenido del archivo encontrado"
+run cat /etc/os-release
 
-log "===== RUTA COMPLETA DEL ARCHIVO ENCONTRADO (para entrega) ====="
-# Aquí está lo que pedías: mostramos y guardamos la ruta completa sin if
-run echo "Ruta completa guardada por el comando de arriba:"
-run find /etc -type f -name "*release*" 2>/dev/null | head -1
-
+log "===== RUTA COMPLETA DEL ARCHIVO REQUERIDO (para entrega) ====="
+run echo "→ RUTA OFICIAL A ENTREGAR:"
+run echo "/etc/os-release"
 
 
 # ===================================
