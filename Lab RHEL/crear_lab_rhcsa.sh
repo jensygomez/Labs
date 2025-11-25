@@ -1,199 +1,128 @@
 #!/bin/bash
 
-echo "======================================="
-echo "  LABORATORIO RHCSA - INSTALADOR TOTAL"
-echo "======================================="
+# ================================
+#  LABORATORIO RHCSA - AUTOSETUP
+#  Versión optimizada para PODMAN
+# ================================
 
-#-------------------------------------------------------
-# 1. Crear estructura de carpetas
-#-------------------------------------------------------
+set -e  # Detener el script si ocurre un error
 
-echo "[+] Creando estructura del laboratorio..."
+GREEN="\e[32m"
+BLUE="\e[34m"
+YELLOW="\e[33m"
+RESET="\e[0m"
 
-mkdir -p lab-rh/{scripts,docs,ejercicios,notas}
-mkdir -p lab-rh/ejercicios/{dia1,dia2,dia3,dia4,dia5,dia6,dia7,dia8,dia9}
+echo -e "${BLUE}======================================="
+echo -e "  LABORATORIO RHCSA - INSTALADOR TOTAL"
+echo -e "=======================================${RESET}"
 
-#-------------------------------------------------------
-# 2. Dockerfile
-#-------------------------------------------------------
+# -------------------------------
+# 1. DETECTAR O INSTALAR PODMAN
+# -------------------------------
+echo -e "${YELLOW}[+] Verificando si podman está instalado...${RESET}"
 
-echo "[+] Creando Dockerfile..."
+if ! command -v podman &> /dev/null; then
+    echo -e "${YELLOW}[+] Podman no encontrado. Instalando...${RESET}"
+    sudo apt update
+    sudo apt install -y podman podman-docker
+else
+    echo -e "${GREEN}[✔] Podman ya está instalado.${RESET}"
+fi
 
-cat << 'EOF' > lab-rh/Dockerfile
+# PODMAN listo
+echo -e "${GREEN}[✔] Motor de contenedores listo.${RESET}"
+
+# -------------------------------
+# 2. CREAR ESTRUCTURA DE CARPETAS
+# -------------------------------
+echo -e "${YELLOW}[+] Creando estructura del laboratorio...${RESET}"
+
+LAB_DIR="RHEL-LAB"
+mkdir -p $LAB_DIR/{dia1,dia2,docs,notas,scripts,imagenes}
+
+# -------------------------------
+# 3. CREAR DOCKERFILE (PODMANFILE)
+# -------------------------------
+echo -e "${YELLOW}[+] Creando Podmanfile...${RESET}"
+
+cat << 'EOF' > $LAB_DIR/Podmanfile
 FROM rockylinux:9
 
-# Crear usuario del examen
+# Usuario del examen
 RUN useradd -m phoenix && \
     echo "phoenix:lab123" | chpasswd
 
-# Instalar utilidades necesarias
-RUN dnf install -y procps-ng iproute hostname iputils net-tools vim nano \
-    passwd man-db sudo which tar zip unzip && \
+# Utilidades típicas RHCSA
+RUN dnf install -y procps-ng iproute hostname iputils vim nano && \
     dnf clean all
-
-# Permitir sudo al usuario phoenix
-RUN echo "phoenix ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 USER phoenix
 WORKDIR /home/phoenix
 EOF
 
-#-------------------------------------------------------
-# 3. README.md
-#-------------------------------------------------------
+# -------------------------------
+# 4. CREAR README
+# -------------------------------
+echo -e "${YELLOW}[+] Creando README.md...${RESET}"
 
-echo "[+] Creando README.md..."
-
-cat << 'EOF' > lab-rh/README.md
-# Laboratorio RHCSA en Docker
-
-## 🚀 Crear imagen
-docker build -t phoenix-lab .
-
-## 🚀 Crear contenedores
-docker run -d --name node1 phoenix-lab tail -f /dev/null
-docker run -d --name node2 phoenix-lab tail -f /dev/null
-docker run -d --name node3 phoenix-lab tail -f /dev/null
-docker run -d --name node4 phoenix-lab tail -f /dev/null
-
-## 🚀 Acceder a un nodo
-docker exec -it node1 bash
-docker exec -it node2 bash
-
-## ❌ Borrar contenedores
-docker rm -f node1 node2 node3 node4
+cat << 'EOF' > $LAB_DIR/README.md
+# RHCSA Mini-Lab con Podman
+Incluye 4 nodos tipo Rocky Linux 9 para practicar tareas del examen RHCSA.
 EOF
 
-#-------------------------------------------------------
-# 4. Scripts internos
-#-------------------------------------------------------
+# -------------------------------
+# 5. CONSTRUIR IMAGEN
+# -------------------------------
+echo -e "${YELLOW}[+] Construyendo imagen podman phoenix-lab...${RESET}"
 
-echo "[+] Creando scripts..."
+cd $LAB_DIR
+podman build -t phoenix-lab -f Podmanfile .
 
-cat << 'EOF' > lab-rh/scripts/setup.sh
-#!/bin/bash
-echo "[+] Inicializando entorno del laboratorio..."
+# -------------------------------
+# 6. CREAR RED (solo una vez)
+# -------------------------------
+echo -e "${YELLOW}[+] Verificando red del laboratorio...${RESET}"
 
-mkdir -p /home/phoenix/reportes
-mkdir -p /home/phoenix/pruebas
+if ! podman network exists rhel_lab_net; then
+    podman network create rhel_lab_net
+    echo -e "${GREEN}[✔] Red creada: rhel_lab_net${RESET}"
+else
+    echo -e "${GREEN}[✔] La red rhel_lab_net ya existe${RESET}"
+fi
 
-echo "[+] Carpetas creadas."
-EOF
+# -------------------------------
+# 7. CREAR 4 CONTENEDORES
+# -------------------------------
+echo -e "${YELLOW}[+] Creando contenedores node1..node4${RESET}"
 
-cat << 'EOF' > lab-rh/scripts/test-user.sh
-#!/bin/bash
-echo "Usuario actual:"
-whoami
-echo "Información del usuario:"
-id
-EOF
-
-cat << 'EOF' > lab-rh/scripts/check-system.sh
-#!/bin/bash
-echo "=== Estado del Sistema ==="
-hostname
-uname -r
-df -h
-free -m
-ps aux | head
-EOF
-
-chmod +x lab-rh/scripts/*.sh
-
-#-------------------------------------------------------
-# 5. Documentación día por día
-#-------------------------------------------------------
-
-echo "[+] Creando documentación..."
-
-declare -A docs=(
-  ["dia1-comandos-basicos.md"]="# Día 1 — Comandos básicos\n\npwd\nls -l\nwhoami\nid\nps aux\ndf -h"
-  ["dia2-permisos-y-procesos.md"]="# Día 2 — Permisos y procesos\n\nchmod\nchown\nps\nkill"
-  ["dia3-storage-lvm.md"]="# Día 3 — Storage y LVM\n\nlsblk\npvcreate\nvgcreate\nlvcreate"
-  ["dia4-selinux.md"]="# Día 4 — SELinux\n\ngetenforce\nsetenforce\nsemanage"
-  ["dia5-networking.md"]="# Día 5 — Networking\n\nnmcli\nip a\nping"
-  ["dia6-firewalld.md"]="# Día 6 — firewalld\n\nfirewall-cmd"
-  ["dia7-scripting.md"]="# Día 7 — Scripting"
-  ["dia8-lab-mixto.md"]="# Día 8 — Lab mixto"
-  ["dia9-simulacro.md"]="# Día 9 — Simulacro RHCSA"
-)
-
-for file in "${!docs[@]}"; do
-    echo -e "${docs[$file]}" > "lab-rh/docs/$file"
+for i in 1 2 3 4; do
+    if podman ps -a --format "{{.Names}}" | grep -q "node${i}"; then
+        echo -e "${GREEN}[✔] node${i} ya existe (no se recrea)${RESET}"
+    else
+        podman run -d --name node${i} --network rhel_lab_net phoenix-lab sleep infinity
+        echo -e "${GREEN}[✔] node${i} creado${RESET}"
+    fi
 done
 
-#-------------------------------------------------------
-# 6. Ejercicios básicos
-#-------------------------------------------------------
+# -------------------------------
+# 8. FINAL
+# -------------------------------
+echo -e "${BLUE}======================================="
+echo -e "  LABORATORIO RHCSA INSTALADO"
+echo -e "=======================================${RESET}"
 
-echo "[+] Creando ejercicios..."
+echo -e "${GREEN}✔ Para entrar a un nodo:${RESET}"
+echo -e "    podman exec -it node1 bash"
+echo -e "    podman exec -it node2 bash"
+echo -e "    podman exec -it node3 bash"
+echo -e "    podman exec -it node4 bash"
 
-cat << 'EOF' > lab-rh/ejercicios/dia1/ejercicio1.md
-# Ejercicio Día 1 — Básicos
+echo -e "${GREEN}✔ Ver contenedores:${RESET}"
+echo -e "    podman ps"
 
-1. Mostrar ruta actual.
-2. Crear carpeta /home/phoenix/prueba1
-3. Crear archivo info.txt
-4. Listar procesos (ps aux)
-5. Guardar reporte en /home/phoenix/reportes/dia1.txt
-EOF
+echo -e "${GREEN}✔ Borrar todo:${RESET}"
+echo -e "    podman rm -f node1 node2 node3 node4"
+echo -e "    podman network rm rhel_lab_net"
 
-#-------------------------------------------------------
-# 7. Notas personales
-#-------------------------------------------------------
-
-echo "[+] Creando notas..."
-
-cat << 'EOF' > lab-rh/notas/comandos-importantes.md
-journalctl -xe
-nmcli device status
-lsblk
-systemctl status
-firewall-cmd --list-all
-EOF
-
-cat << 'EOF' > lab-rh/notas/errores-comunes.md
-- Olvidar habilitar servicios
-- No montar sistemas de archivos
-EOF
-
-cat << 'EOF' > lab-rh/notas/soluciones-rapidas.md
-systemctl restart servicio
-journalctl -u servicio
-EOF
-
-#-------------------------------------------------------
-# 8. Construir imagen Docker automáticamente
-#-------------------------------------------------------
-
-echo "[+] Construyendo la imagen Docker phoenix-lab..."
-cd lab-rh
-docker build -t phoenix-lab .
-
-#-------------------------------------------------------
-# 9. Crear 4 contenedores automáticamente
-#-------------------------------------------------------
-
-echo "[+] Creando contenedores node1, node2, node3, node4..."
-
-docker run -d --name node1 phoenix-lab tail -f /dev/null
-docker run -d --name node2 phoenix-lab tail -f /dev/null
-docker run -d --name node3 phoenix-lab tail -f /dev/null
-docker run -d --name node4 phoenix-lab tail -f /dev/null
-
-echo "======================================="
-echo "  LABORATORIO INSTALADO CORRECTAMENTE"
-echo "======================================="
-echo ""
-echo "✔ Para entrar a un nodo:"
-echo "    docker exec -it node1 bash"
-echo "    docker exec -it node2 bash"
-echo ""
-echo "✔ Para ver los contenedores:"
-echo "    docker ps"
-echo ""
-echo "✔ Para borrar todo:"
-echo "    docker rm -f node1 node2 node3 node4"
-echo ""
-echo "Listo, Jensy. ¡A estudiar como en el examen!"
+echo -e "${GREEN}Listo, Jensy. ¡Tu laboratorio RHCSA está funcionando!${RESET}"
 
