@@ -1,0 +1,2 @@
+- Olvidar habilitar servicios.
+- No montar particiones después de crearlas.
