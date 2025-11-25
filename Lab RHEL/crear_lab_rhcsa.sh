@@ -1,14 +1,23 @@
 #!/bin/bash
 
-echo "[+] Creando estructura del laboratorio RHCSA..."
+echo "======================================="
+echo "  LABORATORIO RHCSA - INSTALADOR TOTAL"
+echo "======================================="
 
-# Carpeta principal
+#-------------------------------------------------------
+# 1. Crear estructura de carpetas
+#-------------------------------------------------------
+
+echo "[+] Creando estructura del laboratorio..."
+
 mkdir -p lab-rh/{scripts,docs,ejercicios,notas}
 mkdir -p lab-rh/ejercicios/{dia1,dia2,dia3,dia4,dia5,dia6,dia7,dia8,dia9}
 
-#########################
-# Crear Dockerfile
-#########################
+#-------------------------------------------------------
+# 2. Dockerfile
+#-------------------------------------------------------
+
+echo "[+] Creando Dockerfile..."
 
 cat << 'EOF' > lab-rh/Dockerfile
 FROM rockylinux:9
@@ -19,7 +28,7 @@ RUN useradd -m phoenix && \
 
 # Instalar utilidades necesarias
 RUN dnf install -y procps-ng iproute hostname iputils net-tools vim nano \
-    passwd man-db sudo && \
+    passwd man-db sudo which tar zip unzip && \
     dnf clean all
 
 # Permitir sudo al usuario phoenix
@@ -29,46 +38,37 @@ USER phoenix
 WORKDIR /home/phoenix
 EOF
 
-#########################
-# Crear README.md
-#########################
+#-------------------------------------------------------
+# 3. README.md
+#-------------------------------------------------------
+
+echo "[+] Creando README.md..."
 
 cat << 'EOF' > lab-rh/README.md
 # Laboratorio RHCSA en Docker
 
-Este proyecto contiene un laboratorio completo para practicar RHCSA usando contenedores Rocky Linux 9.
-
-## 🚀 Cómo construir la imagen
-
+## 🚀 Crear imagen
 docker build -t phoenix-lab .
 
-## 🚀 Ejecutar un contenedor
+## 🚀 Crear contenedores
+docker run -d --name node1 phoenix-lab tail -f /dev/null
+docker run -d --name node2 phoenix-lab tail -f /dev/null
+docker run -d --name node3 phoenix-lab tail -f /dev/null
+docker run -d --name node4 phoenix-lab tail -f /dev/null
 
-docker run -it --name node1 phoenix-lab bash
+## 🚀 Acceder a un nodo
+docker exec -it node1 bash
+docker exec -it node2 bash
 
-## 🚀 Crear varios nodos
-
-docker run -it --name node1 phoenix-lab bash
-docker run -it --name node2 phoenix-lab bash
-docker run -it --name node3 phoenix-lab bash
-docker run -it --name node4 phoenix-lab bash
-
-## 🚀 Ingresar a un nodo ya existente
-docker start -ai node1
-
-## 🧹 Contenedor que se borra al salir
-docker run --rm -it phoenix-lab bash
-
-## Carpetas
-- /docs → Teoría día por día
-- /ejercicios → Tareas por día
-- /scripts → Scripts automáticos
-- /notas → Apuntes personales
+## ❌ Borrar contenedores
+docker rm -f node1 node2 node3 node4
 EOF
 
-#########################
-# Scripts
-#########################
+#-------------------------------------------------------
+# 4. Scripts internos
+#-------------------------------------------------------
+
+echo "[+] Creando scripts..."
 
 cat << 'EOF' > lab-rh/scripts/setup.sh
 #!/bin/bash
@@ -100,73 +100,49 @@ EOF
 
 chmod +x lab-rh/scripts/*.sh
 
-#########################
-# Docs
-#########################
+#-------------------------------------------------------
+# 5. Documentación día por día
+#-------------------------------------------------------
+
+echo "[+] Creando documentación..."
 
 declare -A docs=(
-  ["dia1-comandos-basicos.md"]="# Día 1 — Comandos básicos
-
-- pwd
-- ls -l
-- whoami
-- id
-- ps aux
-- df -h"
-  ["dia2-permisos-y-procesos.md"]="# Día 2 — Permisos y procesos
-
-- chmod
-- chown
-- ps
-- kill"
-  ["dia3-storage-lvm.md"]="# Día 3 — Storage y LVM
-
-- lsblk
-- pvcreate
-- vgcreate
-- lvcreate"
-  ["dia4-selinux.md"]="# Día 4 — SELinux
-
-- getenforce
-- setenforce
-- semanage"
-  ["dia5-networking.md"]="# Día 5 — Networking
-
-- nmcli
-- ip a
-- ping"
-  ["dia6-firewalld.md"]="# Día 6 — firewalld
-
-- firewall-cmd"
-  ["dia7-scripting.md"]="# Día 7 — Bash scripting
-
-- variables
-- loops"
-  ["dia8-lab-mixto.md"]="# Día 8 — Laboratorio mixto"
-  ["dia9-simulacro.md"]="# Día 9 — Simulacro RHCSA real"
+  ["dia1-comandos-basicos.md"]="# Día 1 — Comandos básicos\n\npwd\nls -l\nwhoami\nid\nps aux\ndf -h"
+  ["dia2-permisos-y-procesos.md"]="# Día 2 — Permisos y procesos\n\nchmod\nchown\nps\nkill"
+  ["dia3-storage-lvm.md"]="# Día 3 — Storage y LVM\n\nlsblk\npvcreate\nvgcreate\nlvcreate"
+  ["dia4-selinux.md"]="# Día 4 — SELinux\n\ngetenforce\nsetenforce\nsemanage"
+  ["dia5-networking.md"]="# Día 5 — Networking\n\nnmcli\nip a\nping"
+  ["dia6-firewalld.md"]="# Día 6 — firewalld\n\nfirewall-cmd"
+  ["dia7-scripting.md"]="# Día 7 — Scripting"
+  ["dia8-lab-mixto.md"]="# Día 8 — Lab mixto"
+  ["dia9-simulacro.md"]="# Día 9 — Simulacro RHCSA"
 )
 
 for file in "${!docs[@]}"; do
-    echo "${docs[$file]}" > "lab-rh/docs/$file"
+    echo -e "${docs[$file]}" > "lab-rh/docs/$file"
 done
 
-#########################
-# Ejercicios día 1
-#########################
+#-------------------------------------------------------
+# 6. Ejercicios básicos
+#-------------------------------------------------------
+
+echo "[+] Creando ejercicios..."
 
 cat << 'EOF' > lab-rh/ejercicios/dia1/ejercicio1.md
 # Ejercicio Día 1 — Básicos
 
-1. Mostrar la ruta actual.
-2. Crear la carpeta /home/phoenix/prueba1
-3. Crear un archivo info.txt dentro.
-4. Listar procesos con ps aux.
+1. Mostrar ruta actual.
+2. Crear carpeta /home/phoenix/prueba1
+3. Crear archivo info.txt
+4. Listar procesos (ps aux)
 5. Guardar reporte en /home/phoenix/reportes/dia1.txt
 EOF
 
-#########################
-# Notas
-#########################
+#-------------------------------------------------------
+# 7. Notas personales
+#-------------------------------------------------------
+
+echo "[+] Creando notas..."
 
 cat << 'EOF' > lab-rh/notas/comandos-importantes.md
 journalctl -xe
@@ -177,8 +153,8 @@ firewall-cmd --list-all
 EOF
 
 cat << 'EOF' > lab-rh/notas/errores-comunes.md
-- Olvidar habilitar servicios.
-- No montar particiones después de crearlas.
+- Olvidar habilitar servicios
+- No montar sistemas de archivos
 EOF
 
 cat << 'EOF' > lab-rh/notas/soluciones-rapidas.md
@@ -186,4 +162,38 @@ systemctl restart servicio
 journalctl -u servicio
 EOF
 
-echo "[✔] Laboratorio creado en la carpeta lab-rh/"
+#-------------------------------------------------------
+# 8. Construir imagen Docker automáticamente
+#-------------------------------------------------------
+
+echo "[+] Construyendo la imagen Docker phoenix-lab..."
+cd lab-rh
+docker build -t phoenix-lab .
+
+#-------------------------------------------------------
+# 9. Crear 4 contenedores automáticamente
+#-------------------------------------------------------
+
+echo "[+] Creando contenedores node1, node2, node3, node4..."
+
+docker run -d --name node1 phoenix-lab tail -f /dev/null
+docker run -d --name node2 phoenix-lab tail -f /dev/null
+docker run -d --name node3 phoenix-lab tail -f /dev/null
+docker run -d --name node4 phoenix-lab tail -f /dev/null
+
+echo "======================================="
+echo "  LABORATORIO INSTALADO CORRECTAMENTE"
+echo "======================================="
+echo ""
+echo "✔ Para entrar a un nodo:"
+echo "    docker exec -it node1 bash"
+echo "    docker exec -it node2 bash"
+echo ""
+echo "✔ Para ver los contenedores:"
+echo "    docker ps"
+echo ""
+echo "✔ Para borrar todo:"
+echo "    docker rm -f node1 node2 node3 node4"
+echo ""
+echo "Listo, Jensy. ¡A estudiar como en el examen!"
+
