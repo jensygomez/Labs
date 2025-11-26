@@ -100,7 +100,7 @@ for i in 1 2 3 4; do
     if docker ps -a --format "{{.Names}}" | grep -q "node${i}"; then
         echo -e "${GREEN}[✔] node${i} ya existe${RESET}"
     else
-        docker run -d --name node${i} --network rhel_lab_net phoenix-lab sleep infinity
+        docker run -d --restart unless-stopped --name node${i} --network rhel_lab_net phoenix-lab sleep infinity
         echo -e "${GREEN}[✔] node${i} creado${RESET}"
     fi
 done
