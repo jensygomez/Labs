@@ -2,7 +2,7 @@
 
 # ================================
 #  LABORATORIO RHCSA - AUTOSETUP
-#  100% DOCKER – SIN PODMAN
+#  100% DOCKER
 # ================================
 
 set -e
