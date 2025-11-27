@@ -1,69 +1,72 @@
 #!/bin/bash
-# Laboratorio 001 - Búsqueda de archivos + Tarea 4 añadida
+# Laboratorio FIND – Tareas 1, 2 y 3 completas
 # Autor: Jensy Gómez
 # Curso: Red Hat System Administration I (RH124)
 
-OUTPUT="lab.txt"
-> "$OUTPUT"  # Borra el archivo si ya existe
+OUTPUT="lab_find_report.txt"
+> "$OUTPUT"
 
-# Colores (opcional, queda lindo)
 GREEN='\033[0;32m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 log() {
     echo -e "${GREEN}$1${NC}" | tee -a "$OUTPUT"
+    echo "$1" >> "$OUTPUT"
 }
 
 log "=================================================================="
-log " LABORATORIO 002 - find Nivel Dios"
-log " Curso: Red Hat System Administration I (RH124)"
-log " Autor: Jensy Gómez"
-log " Fecha: $(date)"
-log " Host: $(hostname)"
-log " Usuario: $(whoami)"
+log "           LABORATORIO FIND - Tareas 1 a 3"
+log " Curso   : Red Hat System Administration I (RH124)"
+log " Autor   : Jensy Gómez"
+log " Fecha   : $(date '+%Y-%m-%d %H:%M:%S')"
+log " Host    : $(hostname)"
 log "=================================================================="
+log ""
 
-# ==================== TAREA 1 ====================
-log "Tarea 1 – Lista todos los archivos > 10 MB en todo el sistema"
-log "Comando utilizado:"
-log "find / -type f -size +10M ! -path "/proc/*" ! -path "/sys/*" ! -path "/dev/*" \
-     ! -path "/tmp/*" ! -path "/run/*" 2>/dev/null"
+# ==================== TAREA 1 – Archivos mayores de 10 MiB ====================
+log "TAREA 1 – Listar todos los archivos regulares mayores de 10 MiB"
+log "Comando: find / -type f -size +10M 2>/dev/null"
+log ""
 log "Resultado:"
+find / -type f -size +10M 2>/dev/null | tee -a "$OUTPUT" | nl
+log ""
+if find / -type f -size +10M 2>/dev/null | grep -q .; then
+    log "Se encontraron archivos mayores de 10 MiB (ver listado arriba)."
+else
+    log "Conclusión: En este sistema NO existen archivos regulares mayores de 10 MiB."
+fi
+log ""
+log "=================================================================="
+log ""
 
-find / -type f -size +10M ! -path "/proc/*" ! -path "/sys/*" ! -path "/dev/*" \
-     ! -path "/tmp/*" ! -path "/run/*" 2>/dev/null
-
+# ==================== TAREA 2 – Archivos del usuario phoenix ====================
+log "TAREA 2 – Todos los objetos que pertenecen al usuario phoenix (UID 1000)"
+log "Comando: find / -user phoenix 2>/dev/null"
+log ""
+log "Resultado:"
+find / -user phoenix 2>/dev/null | tee -a "$OUTPUT"
 log ""
 log "Conclusión:"
-log "En el sistema actual no existe ningún archivo regular mayor de 10 MiB."
-log "=================================================================="
-
-# ==================== TAREA 2 ====================
-log "Tarea 2 – Encuentra todos los archivos que pertenecen al usuario phoenix (UID 1000)"
-log "Comando utilizado:"
-log "find /usr/share -type f | wc -l"
-count2=$(find /usr/share -type f | wc -l)
-
-log "Resultado:"
-log "$count2"
-
-log "=================================================================="
-
-# ==================== TAREA 3 ====================
-log "Tarea 3 – Listar todos los archivos ocultos (que empiecen por .) en /etc"
-log "Comando utilizado:"
-log "find /etc -type f -name '.*' | sort"
-log "Resultado:"
-
-find /etc -type f -name ".*" | sort | tee -a "$OUTPUT"
-count3=$(find /etc -type f -name ".*" | wc -l)
-
+log "Se muestran archivos, directorios y pseudo-archivos del kernel. La gran"
+log "cantidad de entradas en /proc es normal en contenedores que corren como phoenix."
 log ""
-log "Total de archivos ocultos encontrados: $count3"
 log "=================================================================="
+log ""
 
-
-log " LABORATORIO COMPLETADO CORRECTAMENTE"
-log " Script ejecutado el $(date '+%Y-%m-%d %H:%M:%S %Z')"
+# ==================== TAREA 3 – Contar archivos con bit SUID ====================
+log "TAREA 3 – Contar archivos con el bit SUID activado"
+log "Comando: find / -type f -perm -4000 2>/dev/null | wc -l"
+log ""
+SUID_COUNT=$(find / -type f -perm -4000 2>/dev/null | wc -l)
+log "Resultado: $SUID_COUNT archivos tienen el bit SUID activado"
+log ""
+log "Conclusión:"
+log "El bit SUID (4xxx) permite que un ejecutable corra con los privilegios del"
+log "propietario (normalmente root). Tener solo $SUID_COUNT es un número típico"
+log "y seguro en sistemas RHEL/Rocky/AlmaLinux mínimos."
+log ""
 log "=================================================================="
-
+log ""
+log "¡LABORATORIO COMPLETADO CON ÉXITO!"
+log "Reporte guardado en: $OUTPUT"
+log "=================================================================="
