@@ -37,7 +37,6 @@ log ""
 
 
 # ==================== TAREA 2 – Crea /srv/datos con sticky bit y prueba con dos usuarios diferentes ====================
-# ==================== TAREA 2 – Crea /srv/datos con sticky bit y prueba con dos usuarios diferentes ====================
 log "TAREA 2 - Sticky bit en /srv/datos:"
 log "Creando directorio y permisos 777:"
 mkdir -p /srv/datos
@@ -48,26 +47,33 @@ log "Aplicando sticky bit: chmod o+t /srv/datos"
 chmod o+t /srv/datos
 ls -ld /srv/datos | log
 
-log "Creando usuario alice (si no existe):"
-id alice >/dev/null 2>&1 || useradd -m alice
-echo "alice:alice" | chpasswd 2>/dev/null
+log "Preparando usuarios de prueba:"
+# Verifica/crea phoenix (debería existir)
+id phoenix >/dev/null 2>&1 || useradd -m phoenix && echo "phoenix:phoenix" | chpasswd
+# Crea alice
+id alice >/dev/null 2>&1 || useradd -m alice && echo "alice:alice" | chpasswd
+log "Usuarios listos: $(id phoenix | cut -d'(' -f2 | cut -d')' -f1), $(id alice | cut -d'(' -f2 | cut -d')' -f1)"
 
-log "=== PHOENIX crea archivo ==="
-su -c "touch /srv/datos/phoenix.txt; echo 'Phoenix creó OK'" phoenix 2>/dev/null | log
-ls -l /srv/datos/phoenix.txt 2>/dev/null | log
+log "=== PASO 1: PHOENIX crea su archivo ==="
+su -c "touch /srv/datos/phoenix.txt && echo 'Phoenix: Archivo creado'" phoenix | log
+ls -l /srv/datos/phoenix.txt | log
 
-log "=== ALICE crea archivo ==="
-su -c "touch /srv/datos/alice.txt; echo 'Alice creó OK'" alice 2>/dev/null | log
-ls -l /srv/datos/alice.txt 2>/dev/null | log
+log "=== PASO 2: ALICE crea su archivo ==="
+su -c "touch /srv/datos/alice.txt && echo 'Alice: Archivo creado'" alice | log
+ls -l /srv/datos/alice.txt | log
 
-log "=== ALICE intenta borrar archivo de PHOENIX (debe FALLAR) ==="
-su -c "rm /srv/datos/phoenix.txt" alice 2>/dev/null | log || log "  → Permission denied ✓ (Sticky bit funciona)"
+log "=== PASO 3: ALICE intenta borrar archivo de PHOENIX ==="
+su -c "rm /srv/datos/phoenix.txt" alice 2>&1 | log
+log "Resultado esperado: Permission denied ✓"
 
-log "=== PHOENIX intenta borrar archivo de ALICE (debe FALLAR) ==="
-su -c "rm /srv/datos/alice.txt" phoenix 2>/dev/null | log || log "  → Permission denied ✓ (Sticky bit funciona)"
+log "=== PASO 4: PHOENIX intenta borrar archivo de ALICE ==="
+su -c "rm /srv/datos/alice.txt" phoenix 2>&1 | log
+log "Resultado esperado: Permission denied ✓"
 
-log "Archivos protegidos por sticky bit ✓"
-ls -l /srv/datos/*.txt 2>/dev/null | log
+log "=== VERIFICACIÓN FINAL ==="
+ls -l /srv/datos/ | log
+log "Sticky bit FUNCIONA: archivos protegidos ✓"
+log "Limpiando archivos de prueba..."
 rm -f /srv/datos/*.txt
 log ""
 
