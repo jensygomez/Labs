@@ -132,3 +132,40 @@ DÍA 26–30 [ ] – REPETIR DÍAS FAVORITOS O MINI-EXÁMENES COMPLETOS
 (Repite los días que más te costaron o haz 3 mini-exámenes cronometrados)
 
 ¡30 días después estarás listo para RHCSA y cualquier entrevista técnica junior-mid!
+
+
+
+
+=====================================
+=================================
+🎯 Distribución recomendada por módulo
+🟦 MÓDULO 1 — Navegación, archivos, filtros, permisos
+
+Duración: 1 mes (30 labs)
+Nivel final: Pleno básico
+
+🟩 MÓDULO 2 — Usuarios, grupos, seguridad básica, sudo, ACL
+
+Duración: 1 mes (30 labs)
+Nivel final: Pleno seguro
+
+🟧 MÓDULO 3 — Paquetes, servicios, systemd, journald
+
+Duración: 1 mes (30 labs)
+Nivel final: Pleno real (trabajable en empresas)
+
+🟨 MÓDULO 4 — Storage, LVM, fstab, swap, loop devices
+
+Duración: 1 mes (30 labs)
+Nivel final: Pleno avanzado (RHCSA core)
+
+🟥 MÓDULO 5 — Redes, nmcli, firewall, SSH, servicios básicos
+
+Duración: 1 mes (30 labs)
+Nivel final: Pleno Avanzado / Senior Jr
+
+🟪 MÓDULO 6 — Scripting, automatización y Bash profesional
+
+Duración: 1 mes (30 labs)
+Nivel final: Senior Jr (automatización + administración)
+
