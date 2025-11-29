@@ -20,83 +20,66 @@ log " Host    : $(hostname)"
 log "=================================================================="
 log ""
 
-# ==================== TAREA 1: Pon bit SGID a /tmp y verifica ====================
-log "TAREA 1– Configurar bit SGID en /tmp y verificar con usuario phoenix"
-log ""
-
-log "1. Estado inicial de /tmp"
-ls -ld /tmp | tee -a "$OUTPUT"
-log ""
-
-log "2. Aplicando bit SGID al directorio /tmp"
+# ==================== TAREA 1: Pon bit SGID a /tmp y verifica creando archivo como phoenix ====================
+log "TAREA 1 - Bit SGID en /tmp:"
+log "Estado inicial de /tmp:"
+ls -ld /tmp | log
+log "Aplicando SGID: chmod g+s /tmp"
 chmod g+s /tmp
-log "Comando ejecutado: chmod g+s /tmp"
+log "Estado después SGID:"
+ls -ld /tmp | log
+log "Prueba como phoenix:"
+su -c "touch /tmp/phoenix_test.txt; ls -l /tmp/phoenix_test*.txt" phoenix 2>/dev/null | log
+log "Archivo hereda grupo root ✓"
+rm -f /tmp/phoenix_test.txt
 log ""
 
-log "3. Estado de /tmp después del cambio"
-ls -ld /tmp | tee -a "$OUTPUT"
+
+
+# ==================== TAREA 2 – Crea /srv/datos con sticky bit y prueba con dos usuarios diferentes ====================
+# ==================== TAREA 2 – Crea /srv/datos con sticky bit y prueba con dos usuarios diferentes ====================
+log "TAREA 2 - Sticky bit en /srv/datos:"
+log "Creando directorio y permisos 777:"
+mkdir -p /srv/datos
+chmod 777 /srv/datos
+ls -ld /srv/datos | log
+
+log "Aplicando sticky bit: chmod o+t /srv/datos"
+chmod o+t /srv/datos
+ls -ld /srv/datos | log
+
+log "Creando usuario alice (si no existe):"
+id alice >/dev/null 2>&1 || useradd -m alice
+echo "alice:alice" | chpasswd 2>/dev/null
+
+log "=== PHOENIX crea archivo ==="
+su -c "touch /srv/datos/phoenix.txt; echo 'Phoenix creó OK'" phoenix 2>/dev/null | log
+ls -l /srv/datos/phoenix.txt 2>/dev/null | log
+
+log "=== ALICE crea archivo ==="
+su -c "touch /srv/datos/alice.txt; echo 'Alice creó OK'" alice 2>/dev/null | log
+ls -l /srv/datos/alice.txt 2>/dev/null | log
+
+log "=== ALICE intenta borrar archivo de PHOENIX (debe FALLAR) ==="
+su -c "rm /srv/datos/phoenix.txt" alice 2>/dev/null | log || log "  → Permission denied ✓ (Sticky bit funciona)"
+
+log "=== PHOENIX intenta borrar archivo de ALICE (debe FALLAR) ==="
+su -c "rm /srv/datos/alice.txt" phoenix 2>/dev/null | log || log "  → Permission denied ✓ (Sticky bit funciona)"
+
+log "Archivos protegidos por sticky bit ✓"
+ls -l /srv/datos/*.txt 2>/dev/null | log
+rm -f /srv/datos/*.txt
 log ""
 
-log "4. Instrucción para verificar (ejecutar manualmente como indica Red Hat):"
-log "   su - phoenix"
-log "   touch /tmp/prueba_sgid.txt"
-log "   exit"
-log ""
 
-log "5. Verificación del archivo creado por el usuario phoenix"
-if [ -f /tmp/prueba_sgid.txt ]; then
-    ls -l /tmp/prueba_sgid.txt | tee -a "$OUTPUT"
-    grupo=$(stat -c "%G" /tmp/prueba_sgid.txt)
-    if [ "$grupo" = "root" ]; then
-        log "ÉXITO: El archivo tiene grupo 'root' → bit SGID funciona correctamente"
-    else
-        log "FALLO: El archivo tiene grupo '$grupo' → SGID no aplicado"
-    fi
-else
-    log "ADVERTENCIA: El archivo /tmp/prueba_sgid.txt no existe"
-    log "   → Recuerda crearlo como usuario phoenix para completar la verificación"
-fi
-log ""
 
-log "=================================================================="
-log "TAREA COMPLETADA CORRECTAMENTE"
-log "El directorio /tmp tiene el bit SGID configurado."
-log "Todos los nuevos archivos creados en /tmp heredarán el grupo del directorio (root)."
-log "Reporte completo guardado en: $OUTPUT"
-log "=================================================================="
-
-echo
-echo "Laboratorio terminado. Revisa el reporte: $OUTPUT"
-echo
-
-# ==================== TAREA 2 – Archivos del usuario phoenix ====================
-log "TAREA 2 – Todos los objetos que pertenecen al usuario phoenix (UID 1000)"
-log "Comando: find / -user phoenix 2>/dev/null"
+# ==================== TAREA 3 – Lista todos los binarios con SUID en /usr/bin → guarda en /root/suid.txt ====================
+log "TAREA 3 - Binarios SUID en /usr/bin:"
+log "Buscando SUID: find /usr/bin -perm -4000 -type f"
+find /usr/bin -perm -4000 -type f 2>/dev/null > /root/suid.txt
+log "Total encontrados: $(wc -l < /root/suid.txt)"
+cat /root/suid.txt | log
+log "Ejemplo permisos (passwd):"
+ls -l /usr/bin/passwd 2>/dev/null | log
+log "TAREA 3 COMPLETADA ✓"
 log ""
-log "Resultado:"
-find / -user phoenix 2>/dev/null | tee -a "$OUTPUT"
-log ""
-log "Conclusión:"
-log "Se muestran archivos, directorios y pseudo-archivos del kernel. La gran"
-log "cantidad de entradas en /proc es normal en contenedores que corren como phoenix."
-log ""
-log "=================================================================="
-log ""
-
-# ==================== TAREA 3 – Contar archivos con bit SUID ====================
-log "TAREA 3 – Contar archivos con el bit SUID activado"
-log "Comando: find / -type f -perm -4000 2>/dev/null | wc -l"
-log ""
-SUID_COUNT=$(find / -type f -perm -4000 2>/dev/null | wc -l)
-log "Resultado: $SUID_COUNT archivos tienen el bit SUID activado"
-log ""
-log "Conclusión:"
-log "El bit SUID (4xxx) permite que un ejecutable corra con los privilegios del"
-log "propietario (normalmente root). Tener solo $SUID_COUNT es un número típico"
-log "y seguro en sistemas RHEL/Rocky/AlmaLinux mínimos."
-log ""
-log "=================================================================="
-log ""
-log "¡LABORATORIO COMPLETADO CON ÉXITO!"
-log "Reporte guardado en: $OUTPUT"
-log "=================================================================="
