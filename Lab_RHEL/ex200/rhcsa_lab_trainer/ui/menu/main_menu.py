@@ -13,7 +13,7 @@ class MainMenu:
             "4": self.config_menu,
             "5": self.cleanup_labs,
             "6": self.new_exercise,
-            "7": lambda: sys.exit(0),  # ← SALIR ahora es 7
+            "7": lambda: sys.exit(0),  
         }
 
     def run(self):
@@ -52,11 +52,6 @@ class MainMenu:
         print(f"\n{Color.RED}Próximamente disponible{Color.RESET}\n")
         pause()
 
-    def show_progress(self):
-        clear_screen(); show_banner("PROGRESO")
-        print(f"\n{Color.CYAN}Sistema de progreso en desarrollo{Color.RESET}\n")
-        pause()
-
     def config_menu(self):
         clear_screen(); show_banner("CONFIGURACIÓN")
         print(f"\n{Color.CYAN}Configuración en desarrollo{Color.RESET}\n")
@@ -80,3 +75,123 @@ class MainMenu:
             print(f"{Color.RED}❌ Primero crea core/scenario_creator.py{Color.RESET}")
             print(f"{Color.YELLOW}Ejecuta: python create_database.py primero{Color.RESET}")
             pause()
+
+    def show_progress(self):
+        from core.database_manager import DatabaseManager
+        import time
+        from datetime import datetime
+        
+        clear_screen()
+        show_banner("📊 PROGRESO")
+        
+        db = DatabaseManager()
+        cursor = db.cursor
+        
+        # 1. RESUMEN GENERAL
+        cursor.execute("""
+            SELECT COUNT(DISTINCT s.id), COUNT(DISTINCT s.module),
+                COALESCE(SUM(CASE WHEN p.score>=80 THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(s.repetitions_required), 0),
+                ROUND(COALESCE(AVG(p.score), 0), 0),
+                COALESCE(SUM(p.time_seconds), 0)
+            FROM scenarios s LEFT JOIN progress p ON s.id = p.scenario_id
+        """)
+        total_ex, total_mod, comp, req, avg_score, total_time = cursor.fetchone() or (0,0,0,0,0,0)
+        
+        progress_pct = int((comp / max(req, 1)) * 100)
+        bar_global = "█" * (progress_pct // 10) + "░" * (10 - progress_pct // 10)
+        time_str = self.format_time(total_time)
+        
+        print(f"{Color.CYAN}{'═'*78}{Color.RESET}")
+        print(f"{Color.YELLOW}{'📊 RESUMEN GENERAL':<28}{'│':'<1}{'📊 POR DIFICULTAD':<25}{Color.RESET}")
+        
+        print(f" Ejercicios: {total_ex}/{total_mod} módulos{' ':<12}│", end="")
+        
+        # DIFICULTAD con repeticiones TOTALES
+        cursor.execute("""
+            SELECT s.difficulty,
+                SUM(s.repetitions_required),
+                COUNT(CASE WHEN p.score>=80 THEN 1 ELSE 0 END)
+            FROM scenarios s LEFT JOIN progress p ON s.id = p.scenario_id 
+            GROUP BY s.difficulty
+        """)
+        diffs_data = cursor.fetchall()
+        
+        diff_names = {1: "Básico", 2: "Intermedio", 3: "Avanzado"}
+        for diff_num in [1, 2, 3]:
+            row = next((r for r in diffs_data if r[0] == diff_num), (diff_num, 0, 0))
+            total_rep, comp_rep = row[1], row[2]
+            pct = int((comp_rep / max(total_rep, 1)) * 100)
+            bar = "█" * (pct // 20) + "░" * (5 - pct // 20)
+            urg = "🔴" if pct == 0 else "🟢" if pct >= 80 else "🟡"
+            print(f"\n {diff_names[diff_num]:<10} {bar} {comp_rep}/{total_rep} ({pct}%) {urg}")
+        
+        print(f"\n Progreso:  {bar_global} {progress_pct}%{' ':<15}│", end="")
+        print(f"\n Puntaje:   {avg_score}%{' ':<23}│ Total rep: {comp}/{req} ({int((comp/max(req,1))*100)}%)")
+        print(f" Tiempo:    {time_str}{' ':<22}│")
+        print(f"{Color.CYAN}{'─'*78}{Color.RESET}")
+        
+        # 2. MÓDULOS (ordenados por urgencia)
+        cursor.execute("""
+            SELECT s.module, s.id, s.name, s.repetitions_required,
+                COUNT(CASE WHEN p.score>=80 THEN 1 END),
+                ROUND(COALESCE(AVG(p.score),0),0)
+            FROM scenarios s LEFT JOIN progress p ON s.id = p.scenario_id
+            GROUP BY s.id ORDER BY s.module, 
+                    s.repetitions_required - COUNT(CASE WHEN p.score>=80 THEN 1 END) DESC
+        """)
+        
+        modules = {}
+        for module, sid, name, req, comp, avg_score in cursor.fetchall():
+            if module not in modules: modules[module] = []
+            faltan = req - comp
+            pct = int((comp / max(req, 1)) * 100)
+            bar = "█" * (pct // 20) + "░" * (5 - pct // 20)
+            urg = "🔴" if faltan > 3 else "🟡" if faltan > 0 else "🟢"
+            modules[module].append(f"{sid} {name[:25]:<25} {bar} {comp}/{req} {urg}")
+        
+        # Mostrar en 2 columnas
+        mod_list = list(modules.items())
+        for i in range(0, len(mod_list), 2):
+            left_mod, left_items = mod_list[i]
+            right_mod = mod_list[i+1][0] if i+1 < len(mod_list) else ""
+            right_items = modules.get(right_mod, [])
+            
+            print(f"\n{left_mod.replace('_',' ').title():<28}│{right_mod.replace('_',' ').title():<25}")
+            print(f"{''.join(['─']*28)}│{''.join(['─']*25)}")
+            
+            for j in range(max(len(left_items), len(right_items))):
+                left = left_items[j] if j < len(left_items) else " " * 40
+                right = right_items[j] if j < len(right_items) else " " * 35
+                print(f" {left:<40}│{right}")
+        
+        # 3. ÚLTIMOS INTENTOS
+        cursor.execute("""
+            SELECT s.name[:30], p.time_seconds, p.score, 
+                CASE s.difficulty WHEN 1 THEN 'Básico' WHEN 2 THEN 'Intermedio' WHEN 3 THEN 'Avanzado' END,
+                datetime(p.completed_at)
+            FROM progress p JOIN scenarios s ON p.scenario_id = s.id
+            ORDER BY p.completed_at DESC LIMIT 5
+        """)
+        
+        print(f"\n{Color.CYAN}{'⏰ ÚLTIMOS INTENTOS':<78}{Color.RESET}")
+        print(f"{''.join(['─']*78)}")
+        attempts = cursor.fetchall()
+        if attempts:
+            for name, secs, score, diff, date in attempts:
+                time_str = self.format_time(secs)
+                print(f" {date[-8:]:<8} │ {name:<25} │ {time_str:<7} │ {score}pts │ {diff}")
+        else:
+            print(" Ningún intento registrado aún. ¡Practica tu primer ejercicio!")
+        
+        db.close()
+        print(f"\n{Color.CYAN}{'─'*78}{Color.RESET}")
+        print(f"{Color.YELLOW}⌨️  [P]racticar urgentes  [B]ásico  [I]ntermedio  [A]vanzado  [V]olver{Color.RESET}")
+        pause()
+
+    def format_time(self, seconds):
+        """Formato hh:mm:ss"""
+        hours, rem = divmod(seconds, 3600)
+        mins, secs = divmod(rem, 60)
+        return f"{hours:01d}h{ mins:02d}m" if hours else f"{mins:02d}m{secs:02d}s"
+
