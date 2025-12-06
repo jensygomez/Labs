@@ -103,37 +103,48 @@ class MainMenu:
                     pause(f"{Color.YELLOW}Todavía no hay ejercicios dinámicos creados.{Color.RESET}")
                     continue
 
-                clear_screen()
-                show_banner("EJERCICIOS DINÁMICOS EXISTENTES")
-                print(f"{Color.CYAN}Selecciona con número:\n{Color.RESET}")
-                for i, folder in enumerate(exercises, 1):
-                    rel_path = folder.relative_to("scenarios")
-                    print(f" {Color.YELLOW}{i:2d}{Color.RESET} → {rel_path}")
+                while True:
+                    clear_screen()
+                    show_banner("EJERCICIOS DINÁMICOS EXISTENTES")
+                    print(f"{Color.CYAN}Selecciona el ejercicio:\n{Color.RESET}")
+                    for i, folder in enumerate(exercises, 1):
+                        rel_path = folder.relative_to("scenarios")
+                        print(f" {Color.YELLOW}{i:2d}{Color.RESET} → {rel_path}")
+                    print(f"\n {Color.YELLOW}b{Color.RESET} → Volver atrás")
 
-                print(f"\n {Color.YELLOW}b{Color.RESET} → Volver atrás")
-                subchoice = get_menu_choice("b" + "".join(str(i) for i in range(1, len(exercises)+1)))
+                    # Aceptamos número o 'b'/'back'
+                    user_input = input(f"\n{Color.CYAN}Opción → {Color.RESET}").strip().lower()
+                    if user_input in ("b", "back", "q", "quit"):
+                        break
 
-                if subchoice == "b":
-                    continue
+                    try:
+                        idx = int(user_input) - 1
+                        if idx < 1 or idx > len(exercises):
+                            raise ValueError
+                        selected_folder = exercises[idx]
+                    except ValueError:
+                        print(f"{Color.RED}Opción inválida{Color.RESET}")
+                        pause()
+                        continue
 
-                selected_folder = exercises[int(subchoice)-1]
+                    # Acción: editar o eliminar
+                    if choice == "2":
+                        editor = os.getenv("EDITOR", "nano")
+                        print(f"\n{Color.CYAN}Abriendo {selected_folder / 'globals.yaml'} con {editor}...{Color.RESET}")
+                        subprocess.call([editor, str(selected_folder / "globals.yaml")])
+                        input(f"\n{Color.GREEN}Archivo editado. Pulsa Enter para continuar...{Color.RESET}")
 
-                if choice == "2":  # EDITAR
-                    import subprocess
-                    import os
-                    editor = os.getenv("EDITOR", "nano")
-                    print(f"\n{Color.CYAN}Abriendo carpeta con {editor}...{Color.RESET}")
-                    subprocess.call([editor, str(selected_folder / "globals.yaml")])
-                    pause(f"{Color.GREEN}globals.yaml editado. Puedes seguir editando los demás YAML si quieres.{Color.RESET}")
-
-                elif choice == "3":  # ELIMINAR
-                    confirm = input(f"\n{Color.RED}¿Eliminar COMPLETAMENTE {selected_folder}? (s/N): {Color.RESET}").strip().lower()
-                    if confirm == "s":
-                        shutil.rmtree(selected_folder)
-                        pause(f"{Color.GREEN}Ejercicio eliminado.{Color.RESET}")
-                    else:
-                        pause(f"{Color.BLUE}Operación cancelada.{Color.RESET}")
-
+                    elif choice == "3":
+                        confirm = input(f"\n{Color.RED}¿Eliminar COMPLETAMENTE {selected_folder}? (escribir 'borrar'): {Color.RESET}").strip()
+                        if confirm == "borrar":
+                            shutil.rmtree(selected_folder)
+                            print(f"{Color.GREEN}Ejercicio eliminado.{Color.RESET}")
+                            exercises.pop(idx)  # quitamos de la lista para que no aparezca más
+                            input("Pulsa Enter para continuar...")
+                        else:
+                            print(f"{Color.BLUE}Operación cancelada.{Color.RESET}")
+                            input("Pulsa Enter para continuar...")
+                    break  # vuelve a la lista después de editar/eliminar
 
 
         
