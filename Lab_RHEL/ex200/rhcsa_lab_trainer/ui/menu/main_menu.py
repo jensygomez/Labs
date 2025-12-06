@@ -66,15 +66,37 @@ class MainMenu:
             print(f"\n{Color.BLUE}Cancelado{Color.RESET}")
         pause()
 
+
+        
     def new_exercise(self):
-        try:
-            from core.scenario_creator import ScenarioCreator
-            ScenarioCreator().run()
-        except ImportError:
-            clear_screen(); show_banner("NUEVO EJERCICIO")
-            print(f"{Color.RED}❌ Primero crea core/scenario_creator.py{Color.RESET}")
-            print(f"{Color.YELLOW}Ejecuta: python create_database.py primero{Color.RESET}")
-            pause()
+        while True:  # ← añadido para que vuelva al submenú si hay error o después de crear
+            clear_screen()
+            show_banner("NUEVO EJERCICIO")
+            print(f"{Color.CYAN}Elige el tipo de ejercicio que quieres crear:\n{Color.RESET}")
+            print(f" {Color.YELLOW}1{Color.RESET} → Ejercicio clásico (un solo archivo YAML)")
+            print(f" {Color.YELLOW}2{Color.RESET} → Ejercicio DINÁMICO con variaciones infinitas ← RECOMENDADO")
+            print(f" {Color.YELLOW}b{Color.RESET} → Volver al menú principal\n")
+
+            choice = get_menu_choice("12b")
+
+            if choice == "1":
+                try:
+                    from core.scenario_creator import ScenarioCreator
+                    ScenarioCreator().run()
+                    break  # sale del bucle y vuelve al menú principal tras crear
+                except Exception as e:
+                    pause(f"{Color.RED}Error al cargar creador clásico: {e}{Color.RESET}")
+
+            elif choice == "2":
+                try:
+                    from core.scenario_creator import create_dynamic_exercise_interactive
+                    create_dynamic_exercise_interactive()
+                    break  # vuelve al menú principal tras crear el ejercicio dinámico
+                except Exception as e:
+                    pause(f"{Color.RED}Error: {e}{Color.RESET}")
+
+            elif choice == "b":
+                break
 
     def show_progress(self):
         from core.database_manager import DatabaseManager
