@@ -1,1 +1,1 @@
-# Auto-generated
+# ui.menu package

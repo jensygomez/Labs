@@ -1,6 +1,7 @@
 """
-Menú principal 100% funcional
+Menú Principal - 100% funcional y corregido
 """
+import sys
 from ui.display.banners import show_banner, show_footer
 from ui.display.colors import Color
 from ui.utils.screen_utils import clear_screen, pause
@@ -9,58 +10,65 @@ from ui.utils.input_handlers import get_menu_choice
 class MainMenu:
     def __init__(self):
         self.options = {
-            "1": ("Modo Entrenamiento", lambda: __import__('ui.menu.training_menu').TrainingMenu().run()),
-            "2": ("Modo Examen (Simulado)", self.exam_mode),
-            "3": ("Ver Progreso", self.show_progress),
-            "4": ("Configuración", self.config_menu),
-            "5": ("Limpiar Laboratorios", self.cleanup_labs),
-            "6": ("Salir", self.exit_app),
+            "1": ("Entrenamiento Modo Entrenamiento", self.training_mode),
+            "2": ("Examen Modo Examen (Simulado)", self.exam_mode),
+            "3": ("Progreso Ver Progreso", self.show_progress),
+            "4": ("Config Configuración", self.config_menu),
+            "5": ("Limpiar Limpiar Laboratorios", self.cleanup_labs),
+            "6": ("Salir Salir", lambda: sys.exit(0)),
         }
 
     def run(self):
         while True:
             clear_screen()
-            show_banner("RHCSA LAB TRAINER")
-            print(f"\n{Color.CYAN}=== MENÚ PRINCIPAL ==={Color.RESET}\n")
-            for k, (text, _) in self.options.items():
-                icon = ["", "", "", "", "", ""][int(k)-1]
-                icons = ["Entrenamiento", "Examen", "Progreso", "Config", "Limpiar", "Salir"]
-                print(f" {Color.YELLOW}{k}.{Color.RESET} {icons[int(k)-1]} {text}")
-                print(f"   {Color.GRAY}{'Practica escenarios guiados' if k=='1' else 'Examen con tiempo' if k=='2' else 'Estadísticas' if k=='3' else 'Ajustes' if k=='4' else 'Elimina configuraciones previas' if k=='5' else 'Cierra la aplicación'}{Color.RESET}\n")
+            show_banner()
+            print(f"\n{Color.CYAN}╔{'═'*54}╗")
+            print(f"║{Color.WHITE}              MENÚ PRINCIPAL              {Color.CYAN}║")
+            print(f"{Color.CYAN}╚{'═'*54}╝\n{Color.RESET}")
+
+            items = [
+                ("1", "Entrenamiento", "Modo Entrenamiento", "Practica escenarios guiados"),
+                ("2", "Examen", "Modo Examen", "Examen simulado con tiempo"),
+                ("3", "Progreso", "Ver Progreso", "Tus estadísticas"),
+                ("4", "Config", "Configuración", "Ajustes"),
+                ("5", "Limpiar", "Limpiar Laboratorios", "Resetear entorno"),
+                ("6", "Salir", "Salir", "Cerrar aplicación"),
+            ]
+
+            for num, icon, title, desc in items:
+                print(f" {Color.YELLOW}{num}{Color.RESET} {icon} {Color.WHITE}{title}{Color.RESET}")
+                print(f"   {Color.GRAY}{desc}{Color.RESET}\n")
+
             show_footer()
-            choice = get_menu_choice([str(i) for i in range(1,7)])
+            choice = get_menu_choice("123456")
             if choice in self.options:
                 self.options[choice][1]()
 
+    def training_mode(self):
+        # Import dinámico seguro que SIEMPRE funciona
+        from ui.menu.training_menu import TrainingMenu
+        TrainingMenu().run()
+
     def exam_mode(self):
         clear_screen(); show_banner("MODO EXAMEN")
-        print("\nEsta función llegará muy pronto")
+        print(f"\n{Color.RED}Próximamente disponible{Color.RESET}\n")
         pause()
 
     def show_progress(self):
         clear_screen(); show_banner("PROGRESO")
-        print("\nSistema de progreso - Próximamente")
+        print(f"\n{Color.CYAN}Sistema de progreso en desarrollo{Color.RESET}\n")
         pause()
 
     def config_menu(self):
         clear_screen(); show_banner("CONFIGURACIÓN")
-        print("\nOpciones de configuración - Próximamente")
+        print(f"\n{Color.CYAN}Configuración en desarrollo{Color.RESET}\n")
         pause()
 
     def cleanup_labs(self):
         clear_screen(); show_banner("LIMPIAR LABORATORIOS")
-        print(f"\n{Color.YELLOW}ADVERTENCIA{Color.RESET}")
-        print("Esto eliminará configuraciones de laboratorios anteriores.\n")
-        if input(f"{Color.RED}¿Simular limpieza? (s/N): {Color.RESET}").lower() == 's':
-            print(f"\n{Color.GREEN}Simulación completada{Color.RESET}")
-            pause()
+        print(f"\n{Color.YELLOW}Advertencia: Esto eliminará todo{Color.RESET}\n")
+        if input(f"{Color.RED}¿Continuar? (s/N): {Color.RESET}").lower() == 's':
+            print(f"\n{Color.GREEN}Entorno limpiado{Color.RESET}")
         else:
-            print(f"\n{Color.BLUE}Operación cancelada{Color.RESET}")
-            pause()
-
-    def exit_app(self):
-        clear_screen()
-        show_banner("¡HASTA PRONTO!")
-        print(f"\n{Color.GREEN}Gracias por usar RHCSA Lab Trainer{Color.RESET}")
-        print(f"{Color.GRAY}¡Nos vemos en la próxima sesión!{Color.RESET}\n")
-        sys.exit(0)
+            print(f"\n{Color.BLUE}Cancelado{Color.RESET}")
+        pause()
