@@ -1,1 +1,1 @@
-# Display utilities
+# Auto-generated
