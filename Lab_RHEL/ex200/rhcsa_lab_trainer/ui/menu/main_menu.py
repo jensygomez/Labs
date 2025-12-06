@@ -35,6 +35,7 @@ class MainMenu:
                 ("4", "Config", "Configuración", "Ajustes"),
                 ("5", "Limpiar", "Limpiar Laboratorios", "Resetear entorno"),
                 ("6", "Salir", "Salir", "Cerrar aplicación"),
+                ("7", "Nuevo", "Nuevo Ejercicio", "Agregar Nuevo ejercico" ),
             ]
 
             for num, icon, title, desc in items:
