@@ -1,6 +1,3 @@
-"""
-Menú Principal - 100% funcional y corregido
-"""
 import sys
 from ui.display.banners import show_banner, show_footer
 from ui.display.colors import Color
@@ -10,14 +7,13 @@ from ui.utils.input_handlers import get_menu_choice
 class MainMenu:
     def __init__(self):
         self.options = {
-            "1": ("Entrenamiento Modo Entrenamiento", self.training_mode),
-            "2": ("Examen Modo Examen (Simulado)", self.exam_mode),
-            "3": ("Progreso Ver Progreso", self.show_progress),
-            "4": ("Config Configuración", self.config_menu),
-            "5": ("Limpiar Limpiar Laboratorios", self.cleanup_labs),
-            "6": ("Salir Salir", lambda: sys.exit(0)),
-            "7": ("Nuevo", "Nuevo Ejercicio", self.new_exercise),
-
+            "1": self.training_mode,
+            "2": self.exam_mode,
+            "3": self.show_progress,
+            "4": self.config_menu,
+            "5": self.cleanup_labs,
+            "6": self.new_exercise,
+            "7": lambda: sys.exit(0),  # ← SALIR ahora es 7
         }
 
     def run(self):
@@ -34,8 +30,8 @@ class MainMenu:
                 ("3", "Progreso", "Ver Progreso", "Tus estadísticas"),
                 ("4", "Config", "Configuración", "Ajustes"),
                 ("5", "Limpiar", "Limpiar Laboratorios", "Resetear entorno"),
-                ("6", "Salir", "Salir", "Cerrar aplicación"),
-                ("7", "Nuevo", "Nuevo Ejercicio", "Agregar Nuevo ejercico" ),
+                ("6", "Nuevo", "Nuevo Ejercicio", "Agregar nuevo ejercicio RHCSA"),
+                ("7", "Salir", "Salir", "Cerrar aplicación"),  # ← SALIR al FINAL
             ]
 
             for num, icon, title, desc in items:
@@ -45,10 +41,9 @@ class MainMenu:
             show_footer()
             choice = get_menu_choice("1234567")
             if choice in self.options:
-                self.options[choice][1]()
+                self.options[choice]()
 
     def training_mode(self):
-        # Import dinámico seguro que SIEMPRE funciona
         from ui.menu.training_menu import TrainingMenu
         TrainingMenu().run()
 
@@ -77,6 +72,11 @@ class MainMenu:
         pause()
 
     def new_exercise(self):
-        from core.scenario_creator import ScenarioCreator
-        ScenarioCreator().run()
-
+        try:
+            from core.scenario_creator import ScenarioCreator
+            ScenarioCreator().run()
+        except ImportError:
+            clear_screen(); show_banner("NUEVO EJERCICIO")
+            print(f"{Color.RED}❌ Primero crea core/scenario_creator.py{Color.RESET}")
+            print(f"{Color.YELLOW}Ejecuta: python create_database.py primero{Color.RESET}")
+            pause()
