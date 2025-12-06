@@ -16,6 +16,8 @@ class MainMenu:
             "4": ("Config Configuración", self.config_menu),
             "5": ("Limpiar Limpiar Laboratorios", self.cleanup_labs),
             "6": ("Salir Salir", lambda: sys.exit(0)),
+            "7": ("Nuevo", "Nuevo Ejercicio", self.new_exercise),
+
         }
 
     def run(self):
@@ -72,3 +74,8 @@ class MainMenu:
         else:
             print(f"\n{Color.BLUE}Cancelado{Color.RESET}")
         pause()
+
+    def new_exercise(self):
+        from core.scenario_creator import ScenarioCreator
+        ScenarioCreator().run()
+
