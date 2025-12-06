@@ -67,36 +67,77 @@ class MainMenu:
         pause()
 
 
-        
     def new_exercise(self):
-        while True:  # ← añadido para que vuelva al submenú si hay error o después de crear
+        from pathlib import Path
+        import shutil
+
+        while True:
             clear_screen()
-            show_banner("NUEVO EJERCICIO")
-            print(f"{Color.CYAN}Elige el tipo de ejercicio que quieres crear:\n{Color.RESET}")
-            print(f" {Color.YELLOW}1{Color.RESET} → Ejercicio clásico (un solo archivo YAML)")
-            print(f" {Color.YELLOW}2{Color.RESET} → Ejercicio DINÁMICO con variaciones infinitas ← RECOMENDADO")
+            show_banner("GESTIÓN DE EJERCICIOS DINÁMICOS")
+            print(f"{Color.CYAN}¿Qué quieres hacer:\n{Color.RESET}")
+            print(f" {Color.YELLOW}1{Color.RESET} → Crear nuevo ejercicio dinámico")
+            print(f" {Color.YELLOW}2{Color.RESET} → Editar ejercicio existente")
+            print(f" {Color.YELLOW}3{Color.RESET} → Eliminar ejercicio")
             print(f" {Color.YELLOW}b{Color.RESET} → Volver al menú principal\n")
 
-            choice = get_menu_choice("12b")
+            choice = get_menu_choice("123b")
 
-            if choice == "1":
-                try:
-                    from core.scenario_creator import ScenarioCreator
-                    ScenarioCreator().run()
-                    break  # sale del bucle y vuelve al menú principal tras crear
-                except Exception as e:
-                    pause(f"{Color.RED}Error al cargar creador clásico: {e}{Color.RESET}")
-
-            elif choice == "2":
-                try:
-                    from core.scenario_creator import create_dynamic_exercise_interactive
-                    create_dynamic_exercise_interactive()
-                    break  # vuelve al menú principal tras crear el ejercicio dinámico
-                except Exception as e:
-                    pause(f"{Color.RED}Error: {e}{Color.RESET}")
-
-            elif choice == "b":
+            if choice == "b":
                 break
+
+            elif choice == "1":
+                from core.scenario_creator import create_dynamic_exercise_interactive
+                create_dynamic_exercise_interactive()
+
+            elif choice == "2" or choice == "3":
+                # Listar todos los ejercicios dinámicos existentes
+                exercises = []
+                base_path = Path("scenarios")
+                if base_path.exists():
+                    for folder in base_path.rglob("*"):
+                        if (folder / "globals.yaml").exists() and folder.is_dir():
+                            rel = folder.relative_to(base_path)
+                            exercises.append(folder)
+
+                if not exercises:
+                    pause(f"{Color.YELLOW}Todavía no hay ejercicios dinámicos creados.{Color.RESET}")
+                    continue
+
+                clear_screen()
+                show_banner("EJERCICIOS DINÁMICOS EXISTENTES")
+                print(f"{Color.CYAN}Selecciona con número:\n{Color.RESET}")
+                for i, folder in enumerate(exercises, 1):
+                    rel_path = folder.relative_to("scenarios")
+                    print(f" {Color.YELLOW}{i:2d}{Color.RESET} → {rel_path}")
+
+                print(f"\n {Color.YELLOW}b{Color.RESET} → Volver atrás")
+                subchoice = get_menu_choice("b" + "".join(str(i) for i in range(1, len(exercises)+1)))
+
+                if subchoice == "b":
+                    continue
+
+                selected_folder = exercises[int(subchoice)-1]
+
+                if choice == "2":  # EDITAR
+                    import subprocess
+                    import os
+                    editor = os.getenv("EDITOR", "nano")
+                    print(f"\n{Color.CYAN}Abriendo carpeta con {editor}...{Color.RESET}")
+                    subprocess.call([editor, str(selected_folder / "globals.yaml")])
+                    pause(f"{Color.GREEN}globals.yaml editado. Puedes seguir editando los demás YAML si quieres.{Color.RESET}")
+
+                elif choice == "3":  # ELIMINAR
+                    confirm = input(f"\n{Color.RED}¿Eliminar COMPLETAMENTE {selected_folder}? (s/N): {Color.RESET}").strip().lower()
+                    if confirm == "s":
+                        shutil.rmtree(selected_folder)
+                        pause(f"{Color.GREEN}Ejercicio eliminado.{Color.RESET}")
+                    else:
+                        pause(f"{Color.BLUE}Operación cancelada.{Color.RESET}")
+
+
+
+        
+       
 
     def show_progress(self):
         from core.database_manager import DatabaseManager
