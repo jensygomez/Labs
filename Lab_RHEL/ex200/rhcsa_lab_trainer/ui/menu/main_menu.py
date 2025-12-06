@@ -43,7 +43,7 @@ class MainMenu:
                 print(f"   {Color.GRAY}{desc}{Color.RESET}\n")
 
             show_footer()
-            choice = get_menu_choice("123456")
+            choice = get_menu_choice("1234567")
             if choice in self.options:
                 self.options[choice][1]()
 
