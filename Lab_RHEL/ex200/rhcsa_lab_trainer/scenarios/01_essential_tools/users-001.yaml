@@ -23,19 +23,52 @@ globals:
   Departamento:
   - IT
   - HR
-  - Aadmin
+  - Admin
   - Finance
   grupo:
   - Dev
   - HR
   - Wheel
   - Docker
+  shell:
+  - "/bin/bash"
+  - "/bin/zsh"
+  - "/usr/bin/git-shell"
+  comando:
+  - "dnf"
+  - "systemctl"
+  - "firewall-cmd"
+  selinux_user:
+  - "staff_u"
+  - "user_u"
+  - "sysadm_u"
+  host:
+  - "workstation.redhat.com"
+  - "server01.local"
+  - "backup-server"
+  backup_path:
+  - "/backup/users"
+  - "/var/backups/home"
 scenarios:
-- Crear los usuarios {{nombre}} {{apellido}} y {{nombre}} {{apellido}} del departamento {{Departamento}} con grupo secundario {{grupo}}
-- 'El jefe de {{Departamento}} necesita 2 nuevos empleados: {{nombre}} {{apellido}} y {{nombre}} {{apellido}} con acceso al grupo {{grupo}}'
-- Añadir los usuarios {{nombre}} {{apellido}} al grupo wheel con permiso sudo sin contraseña
-- Crear usuario {{nombre}} {{apellido}} con caducidad de cuenta en 90 días y contraseña mínima de 12 caracteres
-- Generar clave SSH para {{nombre}} {{apellido}} y colocarla en authorized_keys
+  # BÁSICO (0-1): 2 escenarios
+  - "Crear usuario {{nombre}} {{apellido}} con directorio home en {{Departamento}}"
+  - "Crear grupo {{grupo}} y añadir usuario {{nombre}} {{apellido}} como miembro secundario"
+  
+  # INTERMEDIO (2-5): 4 escenarios
+  - "Añadir usuario {{nombre}} {{apellido}} al grupo {{grupo}} existente (usermod -aG)"
+  - "Configurar caducidad 90 días para usuario {{nombre}} {{apellido}}"
+  - "Configurar sudo sin contraseña para {{nombre}} en grupo {{grupo}}"
+  - "Cambiar shell de {{nombre}} {{apellido}} a {{shell}}"
+  
+  # AVANZADO (6-13): 8 escenarios
+  - "Configurar sudoers: {{nombre}} NOPASSWD solo para {{comando}}"
+  - "Generar SSH key para {{nombre}} desde {{host}} y autorizar login"
+  - "Mapear usuario {{nombre}} a contexto SELinux {{selinux_user}}"
+  - "Configurar cuota 100M para {{nombre}} {{apellido}} en /home"
+  - "Migrar usuario {{nombre}} preservando home y grupos"
+  - "Auditar comandos de {{nombre}} {{apellido}} con auditd"
+  - "Backup completo de {{nombre}} a {{backup_path}}"
+  - "Restaurar usuario {{nombre}} desde {{backup_path}}"
 levels:
   basic:
     repetitions: 4
@@ -49,17 +82,18 @@ levels:
     repetitions: 6
     points_per_rep: 35
     pre_setup: ["userdel -r {{nombre}} 2>/dev/null || true"]
-    allowed_scenarios: [0, 1, 2]
+    allowed_scenarios: [2, 3, 4, 5]
     validation:
       - "id {{nombre}}"
       - "groups {{nombre}} | grep {{grupo}}"
-      - "getent passwd {{nombre}} | cut -d: -f6 | grep /home"
+      - "getent passwd {{nombre}} | cut -d: -f7 | grep {{shell}}"
   advanced:
     repetitions: 8
     points_per_rep: 45
     pre_setup: ["useradd -m -G {{grupo}} {{nombre}}"]
-    allowed_scenarios: [2, 3, 4]
+    allowed_scenarios: [6, 7, 8, 9, 10, 11, 12, 13]
     validation:
-      - "sudo -l -U {{nombre}} | grep -q {{grupo}} || sudo -l -U {{nombre}} | grep NOPASSWD"
-      - "chage -l {{nombre}} | grep '90'"
-      - "test -d /home/{{nombre}}/.ssh && echo 'SSH OK'"
+      - "sudo -l -U {{nombre}} | grep {{comando}}"
+      - "semanage user -l | grep {{selinux_user}}"
+      - "test -d /home/{{nombre}}/.ssh"
+
