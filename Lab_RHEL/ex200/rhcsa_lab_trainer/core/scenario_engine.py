@@ -32,18 +32,38 @@ class UniversalEngine:
             self.exercise = yaml.safe_load(f)
 
     def select_level(self):
-        """Menú interactivo de niveles"""
-        clear_screen()
-        print(f"{Color.CYAN}🚀 {self.exercise['name']} — Elige dificultad{Color.RESET}")
-        print(f"{Color.YELLOW}📊 Total reps: {self.exercise['repetitions_required']}{Color.RESET}\n")
-        
-        levels = ["basic", "intermediate", "advanced"]
-        for i, lvl in enumerate(levels, 1):
-            level_data = self.exercise["levels"][lvl]
-            print(f"   {i}. {lvl.title()} ({level_data['repetitions']} reps, {level_data['points_per_rep']}pts)")
-        
-        choice = get_menu_choice(["1", "2", "3"])
-        self.level = levels[int(choice)-1]
+        """Menú interactivo de niveles con 'b' para volver"""
+        while True:
+            clear_screen()
+            print(f"{Color.CYAN}🚀 {self.exercise['name']} — Elige dificultad{Color.RESET}")
+            print(f"{Color.YELLOW}📊 Total reps: {self.exercise['repetitions_required']}{Color.RESET}\n")
+            print(f"{Color.RED}b{Color.RESET} → Volver al menú de entrenamiento")
+            print()
+            
+            levels = ["basic", "intermediate", "advanced"]
+            level_names = ["🔵 Básico", "🟡 Intermedio", "🔴 Avanzado"]
+            
+            for i, lvl in enumerate(levels, 1):
+                level_data = self.exercise["levels"][lvl]
+                print(f"   {i}. {level_names[i-1]} ({level_data['repetitions']} reps, {level_data['points_per_rep']}pts)")
+            
+            choice = input(f"{Color.CYAN}Opción → {Color.RESET}").strip().lower()
+
+            if choice in ("b", "back"):
+                print(f"{Color.YELLOW}Volviendo al menú de entrenamiento...{Color.RESET}")
+                pause()
+                return None  # ← Indica cancelar
+            
+            try:
+                choice_num = int(choice)
+                if 1 <= choice_num <= 3:
+                    self.level = levels[choice_num-1]
+                    print(f"{Color.GREEN}✓ Nivel {level_names[choice_num-1]} seleccionado{Color.RESET}")
+                    pause()
+                    return self.level
+            except:
+                pause(f"{Color.RED}Opción inválida{Color.RESET}")
+
 
     def generate(self):
         """TU LÓGICA ORIGINAL - SIN CAMBIOS"""
