@@ -8,13 +8,13 @@ repetitions_required: 20
 difficulty: 1
 
 globals:
-  disk: ["/dev/loop1", "/dev/loop2"]
-  disk_extra: ["/dev/loop3"]
-  vg_name: ["vgdata", "vgapps", "vgbackup"]
-  lv_name: ["lvdata", "lvhome", "lvlogs"]
+  disk: ["/dev/loop1", "/dev/loop2", "/dev/loop3", "/dev/loop4", "/dev/loop5"]
+  pv_name: ["pv_geral"]
+  vg_name: ["vg_data", "vg_apps", "vg_backup", "vg_logs"]
+  lv_name: ["lv_data", "lv_home", "lv_logs"]
   size: ["500M", "1G", "2G"]
   fs: ["xfs", "ext4"]
-  mount_point: ["/mnt/data", "/mnt/storage", "/mnt/backup"]
+  mount_point: ["/mnt/data", "/mnt/storage", "/mnt/backup", "/mnt/logs"]
   extend_size: ["+200M", "+500M", "+1G"]
 
 scenarios:
@@ -28,17 +28,49 @@ scenarios:
       **Tarea del jefe:** “Antes de continuar con el despliegue del servidor, necesito que prepares el disco inicial. Convierte {{disk}} en un Physical Volume para que podamos empezar a trabajar con LVM.”
       **Resultado esperado:** `pvs` muestra {{disk}} como un PV válido y activo.
 
+      **Setup de la máquina (via SSH):**
+        # Crear carpeta donde estarán los discos loop
+        mkdir -p /root/disks
+        dd if=/dev/zero of=/root/disks/{{disk | replace('/dev/','') }}.img bs=1M count=2048
+        losetup {{disk}} /root/disks/{{disk | replace('/dev/','') }}.img
+        wipefs -a {{disk}} || true
+
   - |
       **Escenario:** El sistema tiene disponibles los discos {{disk}} y {{disk_extra}}, ambos sin particiones ni configuración previa.
       **Tarea del jefe:** “Vamos a consolidar el almacenamiento del servidor. Usa los discos disponibles para crear un nuevo Volume Group llamado {{vg_name}}.”
       **Resultado esperado:** `vgs` lista {{vg_name}} mostrando 2 PVs asignados correctamente.
+
+      **Setup de la máquina (via SSH):**
+        mkdir -p /root/disks
+        dd if=/dev/zero of=/root/disks/{{disk | replace('/dev/','')}}.img bs=1M count=2048
+        losetup {{disk}} /root/disks/{{disk | replace('/dev/','')}}.img
+        wipefs -a {{disk}} || true
+        dd if=/dev/zero of=/root/disks/{{disk_extra | replace('/dev/','')}}.img bs=1M count=2048
+        losetup {{disk_extra}} /root/disks/{{disk_extra | replace('/dev/','')}}.img
+        wipefs -a {{disk_extra}} || true
 
   - |
       **Escenario:** Ya existe el Volume Group {{vg_name}} y cuenta con espacio libre suficiente para crear un volumen lógico.
       **Tarea del jefe:** “Necesito un Logical Volume dentro de {{vg_name}} para comenzar a organizar los datos. Crea un LV llamado {{lv_name}} con un tamaño de {{size}}.”
       **Resultado esperado:** `lvs` muestra {{lv_name}} con el tamaño solicitado ({{size}}).
 
-      
+      **Setup de la máquina (via SSH):**
+        mkdir -p /root/disks
+
+        # Crear 2 discos loop para formar un VG
+        # (solo si el VG no está aún creado)
+        for d in loop1 loop2; do
+            dd if=/dev/zero of=/root/disks/$d.img bs=1M count=2048
+            losetup /dev/$d /root/disks/$d.img
+            wipefs -a /dev/$d || true
+        done
+
+        # Crear el VG requerido
+        pvcreate /dev/loop1
+        pvcreate /dev/loop2
+        vgcreate {{vg_name}} /dev/loop1 /dev/loop2
+
+
   # ────────────────────────────────
   # 📌 INTERMEDIO (3–11)
   # ────────────────────────────────
