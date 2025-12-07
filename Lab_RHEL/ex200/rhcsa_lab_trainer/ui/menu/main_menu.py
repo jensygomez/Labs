@@ -30,8 +30,8 @@ class MainMenu:
                 ("3", "Progreso", "Ver Progreso", "Tus estadísticas"),
                 ("4", "Config", "Configuración", "Ajustes"),
                 ("5", "Limpiar", "Limpiar Laboratorios", "Resetear entorno"),
-                ("6", "Nuevo", "Nuevo Ejercicio", "Agregar nuevo ejercicio RHCSA"),
-                ("7", "Salir", "Salir", "Cerrar aplicación"),  # ← SALIR al FINAL
+                ("6", "Base de Datos", "Gestión de Ejercicios RHCSA", "Crear • Editar • Eliminar ejercicios"),
+                ("7", "Salir", "Salir", "Cerrar aplicación"),
             ]
 
             for num, icon, title, desc in items:
