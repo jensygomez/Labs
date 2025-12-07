@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-UniversalEngine RHCSA - Motor definitivo para TODOS los niveles
-Lee levels dinámicos del YAML • Pre_setup automático • Escenarios aleatorios
+UniversalEngine FINAL - Tu lógica PURA + 3 NIVELES dinámicos
+NO inventa variables. Usa SOLO tus globals. Si falta → avisa.
 """
 import yaml
 import re
 from pathlib import Path
-from random import choice, randint
+from random import choice
 from datetime import datetime
-from subprocess import check_output, CalledProcessError
+from subprocess import check_output
 from core.database_manager import DatabaseManager
 from ui.display.colors import Color
 from ui.utils.screen_utils import clear_screen, pause
@@ -21,141 +21,102 @@ class UniversalEngine:
         self.load_exercise()
 
     def load_exercise(self):
-        """Carga YAML desde DB y valida estructura levels"""
         db = DatabaseManager()
         c = db.cursor
         c.execute("SELECT path FROM scenarios WHERE id = ?", (self.id,))
         row = c.fetchone()
         db.close()
-        
         if not row:
-            raise ValueError(f"❌ Ejercicio '{self.id}' no encontrado en DB")
-        
-        yaml_path = Path(row[0])
-        if not yaml_path.exists():
-            raise ValueError(f"❌ Archivo YAML no encontrado: {yaml_path}")
-            
-        with open(yaml_path, "r", encoding="utf-8") as f:
+            raise ValueError(f"Ejercicio '{self.id}' no encontrado")
+        with open(row[0], "r", encoding="utf-8") as f:
             self.exercise = yaml.safe_load(f)
-        
-        # Validar estructura levels
-        if "levels" not in self.exercise:
-            raise ValueError("❌ YAML sin estructura 'levels'")
 
     def select_level(self):
-        """Selecciona nivel interactivamente"""
+        """Menú interactivo de niveles"""
         clear_screen()
         print(f"{Color.CYAN}🚀 {self.exercise['name']} — Elige dificultad{Color.RESET}")
-        print(f"{Color.YELLOW}📊 Total reps requeridas: {self.exercise['repetitions_required']}{Color.RESET}\n")
+        print(f"{Color.YELLOW}📊 Total reps: {self.exercise['repetitions_required']}{Color.RESET}\n")
         
         levels = ["basic", "intermediate", "advanced"]
-        level_names = ["🔵 Básico", "🟡 Intermedio", "🔴 Avanzado"]
-        
-        for i, lvl in enumerate(levels):
+        for i, lvl in enumerate(levels, 1):
             level_data = self.exercise["levels"][lvl]
-            reps = level_data["repetitions"]
-            print(f"   {i+1}. {level_names[i]} ({reps} reps, {level_data['points_per_rep']}pts/rep)")
+            print(f"   {i}. {lvl.title()} ({level_data['repetitions']} reps, {level_data['points_per_rep']}pts)")
         
         choice = get_menu_choice(["1", "2", "3"])
         self.level = levels[int(choice)-1]
-        print(f"{Color.GREEN}✓ Nivel {level_names[int(choice)-1]} seleccionado{Color.RESET}")
 
     def generate(self):
-        """Genera tarea aleatoria del nivel seleccionado"""
-        level_data = self.exercise["levels"][self.level]
-        allowed_scenarios = level_data.get("allowed_scenarios", list(range(len(self.exercise["scenarios"]))))
+        """TU LÓGICA ORIGINAL - SIN CAMBIOS"""
+        level = self.exercise["levels"][self.level]  # ← CAMBIO: self.level
         
-        # Escenario aleatorio del nivel
-        scenario_idx = choice(allowed_scenarios)
-        template = self.exercise["scenarios"][scenario_idx]
-        
-        # Sustituir variables {{var}}
+        # allowed_scenarios si existe, sino todos
+        allowed = level.get("allowed_scenarios", list(range(len(self.exercise["scenarios"]))))
+        template = choice([self.exercise["scenarios"][i] for i in allowed])
+
+        # Extraer todas las variables {{...}}
         placeholders = re.findall(r"{{([^}]+)}}", template)
         values = {}
+
         missing = []
-        
         for var in placeholders:
             var = var.strip()
             if var in self.exercise["globals"] and self.exercise["globals"][var]:
                 values[var] = choice(self.exercise["globals"][var])
             else:
                 missing.append(var)
-                values[var] = f"❓{var}❓"
-        
+                values[var] = f"???{var}???"
+
         # Texto final
         task = template
         for var, val in values.items():
             task = task.replace(f"{{{{{var}}}}}", str(val))
-        
-        if missing:
-            print(f"{Color.YELLOW}⚠️ Variables faltantes: {', '.join(missing)}{Color.RESET}")
-        
-        return task, values, level_data
 
-    def execute_pre_setup(self, values):
-        """Ejecuta pre_setup del nivel (intermedio/avanzado)"""
-        level_data = self.exercise["levels"][self.level]
-        pre_setup = level_data.get("pre_setup", [])
-        
-        if not pre_setup:
-            return
-            
-        print(f"{Color.CYAN}🔧 Ejecutando pre_setup ({len(pre_setup)} comandos)...{Color.RESET}")
-        for i, cmd_tmpl in enumerate(pre_setup, 1):
+        # Avisar si faltó algo
+        if missing:
+            print(f"{Color.YELLOW}Advertencia: Variables no definidas en globals: {', '.join(missing)}{Color.RESET}")
+
+        # pre_setup (opcional) - TU LÓGICA ORIGINAL
+        for cmd_tmpl in level.get("pre_setup", []):
             cmd = cmd_tmpl
             for var, val in values.items():
                 cmd = cmd.replace(f"{{{{{var}}}}}", str(val))
-            
             try:
-                print(f"   {i}. {Color.GREEN}{cmd}{Color.RESET}")
-                check_output(cmd, shell=True, executable="/bin/bash", timeout=10)
-                print(f"   {Color.GREEN}✓{Color.RESET}")
-            except CalledProcessError as e:
-                print(f"   {Color.YELLOW}⚠️ (continúa: {e.returncode}){Color.RESET}")
-            except Exception:
-                print(f"   {Color.RED}✗ (ignorado){Color.RESET}")
+                check_output(cmd, shell=True, executable="/bin/bash")
+            except:
+                pass
+
+        return task, values
 
     def run(self):
-        """Ejecuta entrenamiento completo"""
-        self.select_level()
+        """Flujo completo con selección de nivel"""
+        self.select_level()  # ← NUEVO
+        
         clear_screen()
-        
-        print(f"{Color.CYAN}🎯 ENTRENAMIENTO RHCSA{Color.RESET}")
-        print(f"{Color.YELLOW}📋 {self.exercise['name']}{Color.RESET}")
-        print(f"{Color.BLUE}📂 Nivel: {self.level.title()} | Reps: {self.exercise['levels'][self.level]['repetitions']}{Color.RESET}\n")
-        
+        print(f"{Color.CYAN}🎯 ENTRENAMIENTO: {self.exercise['name']}{Color.RESET}")
+        print(f"{Color.YELLOW}📂 Nivel: {self.level.title()} | Reps: {self.exercise['levels'][self.level]['repetitions']}{Color.RESET}\n")
+
         start = datetime.now()
-        task, values, level_data = self.generate()
-        
-        print(f"{Color.CYAN}📝 TAREA ALEATORIA:{Color.RESET}")
-        print(f"{Color.WHITE}{task}{Color.RESET}\n")
-        
-        # Pre_setup
-        self.execute_pre_setup(values)
-        print()
-        
-        # Tiempo de ejecución
-        input(f"{Color.GREEN}⏱️ Ejecuta y presiona Enter → {Color.RESET}")
+        task, _ = self.generate()
+
+        print(f"{Color.YELLOW}Tarea:{Color.RESET} {task}\n")
+        input(f"{Color.GREEN}Realiza la tarea y pulsa Enter cuando termines →{Color.RESET}")
+
         elapsed = (datetime.now() - start).total_seconds()
-        
-        # Guardar progreso
+        score = self.exercise["levels"][self.level]["points_per_rep"]  # ← Puntos por nivel
+
+        # Guardar progreso - TU LÓGICA ORIGINAL
         db = DatabaseManager()
         c = db.conn.cursor()
-        c.execute("""
-            INSERT INTO progress (scenario_id, completed_at, time_seconds, attempts, score)
-            VALUES (?, datetime('now'), ?, 1, ?)
-        """, (self.id, elapsed, level_data["points_per_rep"]))
+        c.execute(
+            "INSERT INTO progress (scenario_id, completed_at, time_seconds, attempts, score) VALUES (?, datetime('now'), ?, 1, ?)",
+            (self.id, elapsed, score)
+        )
         db.conn.commit()
         db.close()
-        
-        print(f"\n{Color.GREEN}✅ Completado!")
-        print(f"   ⏱️ Tiempo: {elapsed:.1f}s")
-        print(f"   ⭐ Puntos: {level_data['points_per_rep']}pts")
+
+        print(f"\n{Color.GREEN}Tiempo: {elapsed:.1f}s | ⭐ {score}pts{Color.RESET}")
         pause("\nEnter para continuar...")
 
-# Prueba interactiva
+# Prueba
 if __name__ == "__main__":
-    clear_screen()
-    print(f"{Color.CYAN}🧪 MODO PRUEBA UniversalEngine{Color.RESET}")
-    engine = UniversalEngine("users-001")
-    engine.run()
+    UniversalEngine("users-001").run()
