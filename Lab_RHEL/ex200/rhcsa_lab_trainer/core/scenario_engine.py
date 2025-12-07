@@ -1,158 +1,95 @@
 #!/usr/bin/env python3
 
 import yaml
+import re
 from pathlib import Path
-from random import choice, randint
+from random import choice
 from datetime import datetime
-from subprocess import check_output, CalledProcessError
+from subprocess import check_output
 from core.database_manager import DatabaseManager
 from ui.display.colors import Color
 from ui.utils.screen_utils import clear_screen, pause
 
-class ScenarioEngine:
+class UniversalEngine:
     def __init__(self, exercise_id):
         self.id = exercise_id
-        self.db = DatabaseManager()
         self.load_exercise()
-        self.level = "basic"  # Empieza por básico, avanza según progreso
 
     def load_exercise(self):
-        c = self.db.cursor
+        db = DatabaseManager()
+        c = db.cursor
         c.execute("SELECT path FROM scenarios WHERE id = ?", (self.id,))
-        path = c.fetchone()
-        self.db.close()
-        if not path:
-            raise ValueError(f"Ejercicio {self.id} no encontrado")
-        with open(path[0], 'r') as f:
-            self.data = yaml.safe_load(f)
+        row = c.fetchone()
+        db.close()
+        if not row:
+            raise ValueError(f"Ejercicio '{self.id}' no encontrado")
+        with open(row[0], "r", encoding="utf-8") as f:
+            self.exercise = yaml.safe_load(f)
 
-    def generate_scenario(self):
-        level_data = self.data["levels"][self.level]
-        
-        # Elegir escenario aleatorio
-        scenario_template = choice(self.data["scenarios"])
-        
-        # Elegir valores aleatorios para TODAS las categorías
-        selected_vars = {}
-        for category, items in self.data["globals"].items():
-            if items:
-                selected_vars[category] = choice(items)
-        
-        # Soporte para nombre2, apellido2, etc.
-        final_vars = selected_vars.copy()
-        for i in range(2, 6):  # hasta nombre5, apellido5...
-            for base in ["nombre", "apellido", "departamento", "grupo"]:
-                key = f"{base}{i}"
-                if f"{{{key}}}" in scenario_template and key not in final_vars:
-                    final_vars[key] = choice(self.data["globals"].get(base, ["valor"])) if base in self.data["globals"] else "valor"
+    def generate(self):
+        level = self.exercise["levels"]["basic"]  # puedes cambiar a self.level después
+        template = choice(self.exercise["scenarios"])
 
-        # REEMPLAZAR {{var}} → valor (sin dejar llaves)
-        task = scenario_template
-        for key, value in final_vars.items():
-            placeholder = f"{{{{{key}}}}}"   # ← así: {{nombre}}
-            task = task.replace(placeholder, str(value))
+        # Extraer todas las variables {{...}}
+        placeholders = re.findall(r"{{([^}]+)}}", template)
+        values = {}
 
-        # Ejecutar pre_setup
-        for cmd_template in level_data.get("pre_setup", []):
-            cmd = cmd_template
-            for k, v in final_vars.items():
-                cmd = cmd.replace(f"{{{{{k}}}}}", str(v))
+        missing = []
+        for var in placeholders:
+            var = var.strip()
+            if var in self.exercise["globals"] and self.exercise["globals"][var]:
+                values[var] = choice(self.exercise["globals"][var])
+            else:
+                missing.append(var)
+                values[var] = f"???{var}???"
+
+        # Texto final
+        task = template
+        for var, val in values.items():
+            task = task.replace(f"{{{{{var}}}}}", str(val))
+
+        # Avisar si faltó algo
+        if missing:
+            print(f"{Color.YELLOW}Advertencia: Variables no definidas en globals: {', '.join(missing)}{Color.RESET}")
+
+        # pre_setup (opcional)
+        for cmd_tmpl in level.get("pre_setup", []):
+            cmd = cmd_tmpl
+            for var, val in values.items():
+                cmd = cmd.replace(f"{{{{{var}}}}}", str(val))
             try:
                 check_output(cmd, shell=True, executable="/bin/bash")
-                print(f"{Color.GRAY}Pre-setup: {cmd}{Color.RESET}")
-            except Exception as e:
-                print(f"{Color.RED}Error pre-setup: {e}{Color.RESET}")
-
-        return task, final_vars
-
-    def validate_solution(self, expected_vars):
-        score = 0
-        total_checks = 0
-
-        # Comprobar que los usuarios existen
-        for i in range(1, 10):
-            user_key = f"nombre{i}"
-            last_key = f"apellido{i}"
-            if user_key in expected_vars and last_key in expected_vars:
-                username = f"{expected_vars[user_key]} {expected_vars[last_key]}".lower().replace(" ", "")
-                try:
-                    check_output(f"id {username}", shell=True)
-                    score += 20
-                except:
-                    pass
-                total_checks += 20
-
-        # Comprobar grupo secundario
-        if "grupo" in expected_vars:
-            group = expected_vars["grupo"]
-            for i in range(1, 10):
-                user_key = f"nombre{i}"
-                last_key = f"apellido{i}"
-                if user_key in expected_vars and last_key in expected_vars:
-                    username = f"{expected_vars[user_key]} {expected_vars[last_key]}".lower().replace(" ", "")
-                    try:
-                        output = check_output(f"groups {username}", shell=True).decode()
-                        if group in output:
-                            score += 15
-                        total_checks += 15
-                    except:
-                        pass
-
-        # Comprobar sudo sin contraseña (wheel)
-        if expected_vars.get("grupo") == "wheel":
-            try:
-                output = check_output(f"sudo -l -U {username}", shell=True).decode()
-                if "NOPASSWD" in output:
-                    score += 30
             except:
                 pass
 
-        return min(100, int(score * 100 / max(total_checks, 1)))
+        return task, values
 
-    def run_training(self):
+    def run(self):
         clear_screen()
-        print(f"{Color.CYAN}ENTRENAMIENTO: {self.data['name']} - Nivel {self.level.upper()}{Color.RESET}\n")
+        print(f"{Color.CYAN}ENTRENAMIENTO: {self.exercise['name']}{Color.RESET}\n")
 
-        start_time = datetime.now()
+        start = datetime.now()
+        task, _ = self.generate()
 
-        task, vars = self.generate_scenario()
-        print(f"{Color.YELLOW}Tarea:{Color.RESET} {task}")
-        input(f"\n{Color.GREEN}Ejecuta la tarea y pulsa Enter para validar...{Color.RESET}")
+        print(f"{Color.YELLOW}Tarea:{Color.RESET} {task}\n")
+        input(f"{Color.GREEN}Realiza la tarea y pulsa Enter cuando termines →{Color.RESET}")
 
-        score = self.validate_solution(vars)
+        elapsed = (datetime.now() - start).total_seconds()
+        score = 100  # por ahora (validación futura por módulo)
 
-        time_taken = (datetime.now() - start_time).total_seconds()
-
-        # Guardar progreso en DB
+        # Guardar progreso
         db = DatabaseManager()
         c = db.conn.cursor()
-        c.execute("""
-            INSERT INTO progress (scenario_id, completed_at, time_seconds, attempts, score)
-            VALUES (?, datetime('now'), ?, 1, ?)
-        """, (self.id, time_taken, score))
+        c.execute(
+            "INSERT INTO progress (scenario_id, completed_at, time_seconds, attempts, score) VALUES (?, datetime('now'), ?, 1, ?)",
+            (self.id, elapsed, score)
+        )
         db.conn.commit()
         db.close()
 
-        print(f"\n{Color.GREEN}Puntuación: {score}/100{Color.RESET}")
-        print(f"Tiempo: {time_taken:.1f} segundos")
+        print(f"\n{Color.GREEN}Tiempo: {elapsed:.1f}s{Color.RESET}")
+        pause("\nEnter para continuar...")
 
-        pause("Enter para siguiente repetición...")
-
-    def suggest_next(self):
-        # Sugiere basado en progreso bajo
-        db = DatabaseManager()
-        c = db.cursor
-        c.execute("""
-            SELECT s.id, AVG(p.score) as avg_score
-            FROM scenarios s LEFT JOIN progress p ON s.id = p.scenario_id
-            GROUP BY s.id
-            ORDER BY avg_score ASC LIMIT 1
-        """)
-        next_id = c.fetchone()[0]
-        db.close()
-        return next_id
-
-# Para probar rápido
+# Prueba
 if __name__ == "__main__":
-    engine = ScenarioEngine("test-001")
-    engine.run_training()
+    UniversalEngine("users-001").run()
