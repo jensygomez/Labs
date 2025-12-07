@@ -1,0 +1,34 @@
+id: test-001
+name: Prueba final
+module: Essential Tools
+type: dynamic
+description: 'Ejercicio dinámico RHCSA: Prueba final'
+points: 150
+repetitions_required: 18
+globals:
+  usuarios:
+  - pepe
+  - ana
+  - luis
+  grupos:
+  - wheel
+  - developers
+  escenario:
+  - Crear al usuario {{user}} y meterlo en el grupo {{group}}
+scenarios:
+- Realiza la configuración requerida para {{var}}
+levels:
+  basic:
+    repetitions: 4
+    points_per_rep: 25
+    pre_setup: []
+    allowed_scenarios:
+    - 0
+  intermediate:
+    repetitions: 6
+    points_per_rep: 35
+    pre_setup: []
+  advanced:
+    repetitions: 8
+    points_per_rep: 45
+    pre_setup: []
