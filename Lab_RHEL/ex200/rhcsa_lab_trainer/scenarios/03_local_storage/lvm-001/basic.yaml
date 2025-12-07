@@ -1,8 +1,0 @@
-id: lvm-001-basic
-level: basic
-title: Gestion de LV en Produccion – Nivel Básico
-repetitions_required: 4
-quantity_range: [2, 4]
-pre_setup: []
-allowed_scenarios: []
-points_per_rep: 25

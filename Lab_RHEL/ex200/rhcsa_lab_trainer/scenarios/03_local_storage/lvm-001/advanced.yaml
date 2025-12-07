@@ -1,7 +1,0 @@
-id: lvm-001-advanced
-level: advanced
-title: Gestion de LV en Produccion – Nivel Avanzado
-repetitions_required: 8
-pre_setup: []
-allowed_scenarios: []
-points_per_rep: 45
