@@ -1,3 +1,4 @@
+# Lab_RHEL/ex200/rhcsa_lab_trainer/ui/menu/main_menu.py
 import sys
 from ui.display.banners import show_banner, show_footer
 from ui.display.colors import Color
@@ -69,108 +70,14 @@ class MainMenu:
 
 
     def new_exercise(self):
-        import os
-        import subprocess
-        from pathlib import Path
-        from core.database_manager import DatabaseManager
-
-        while True:
-            clear_screen()
-            show_banner("GESTIÓN DE EJERCICIOS RHCSA")
-            print(f"{Color.CYAN}Base de datos de ejercicios dinámicos:\n{Color.RESET}")
-
-            # Cargar y mostrar tabla bonita
-            db = DatabaseManager()
-            c = db.cursor
-            c.execute("""
-                SELECT id, name, module, points, repetitions_required 
-                FROM scenarios 
-                WHERE type = 'dynamic' OR type IS NULL
-                ORDER BY module, id
-            """)
-            exercises = c.fetchall()
-            db.close()
-
-            if not exercises:
-                print(f"{Color.YELLOW}Aún no hay ejercicios creados.{Color.RESET}\n")
-            else:
-                # Cabecera
-                print(f"{Color.CYAN}{'ID':<12} {'NOMBRE':<35} {'MÓDULO':<20} {'PUNTOS':<8} {'REPS':<6}{Color.RESET}")
-                print(f"{Color.CYAN}{'─'*12} {'─'*35} {'─'*20} {'─'*8} {'─'*6}{Color.RESET}")
-                for sid, name, module, points, reps in exercises:
-                    mod_name = module.replace("_", " ").title()
-                    print(f" {Color.YELLOW}{sid:<11}{Color.RESET} {name:<35.34} {mod_name:<20} {points:<8} {reps:<6}")
-                print()
-
-            # Menú de acciones
-            print(f"{Color.CYAN}Opciones disponibles:{Color.RESET}")
-            print(f" {Color.GREEN}1{Color.RESET} → Crear nuevo ejercicio dinámico")
-            print(f" {Color.GREEN}2{Color.RESET} → Editar ejercicio existente (por ID)")
-            print(f" {Color.GREEN}3{Color.RESET} → Eliminar ejercicio (por ID)")
-            print(f" {Color.RED}b{Color.RESET} → Volver al menú principal\n")
-
-            choice = input(f"{Color.CYAN}Opción → {Color.RESET}").strip().lower()
-
-            if choice in ("b", "back", "7"):
-                break
-
-            elif choice == "1":
-                from core.scenario_creator import create_dynamic_exercise
-                create_dynamic_exercise()
-                continue
-
-            elif choice in ("2", "3"):
-                eid = input(f"\n{Color.CYAN}Escribe el ID del ejercicio → {Color.RESET}").strip()
-                if not eid:
-                    pause("ID requerido")
-                    continue
-
-                # Buscar en DB
-                db = DatabaseManager()
-                c = db.cursor
-                c.execute("SELECT path FROM scenarios WHERE id = ?", (eid,))
-                row = c.fetchone()
-                db.close()
-
-                if not row or not row[0]:
-                    pause(f"{Color.RED}Ejercicio con ID '{eid}' no encontrado{Color.RESET}")
-                    continue
-
-                file_path = Path(row[0])
-
-                if choice == "2":  # EDITAR
-                    if file_path.exists():
-                        editor = os.getenv("EDITOR", "nano")
-                        print(f"\n{Color.CYAN}Abriendo {file_path} con {editor}...{Color.RESET}")
-                        subprocess.call([editor, str(file_path)])
-                        input(f"\n{Color.GREEN}Archivo editado – pulsa Enter{Color.RESET}")
-                    else:
-                        pause(f"{Color.RED}Archivo no encontrado en disco{Color.RESET}")
-
-                elif choice == "3":  # ELIMINAR
-                    confirm = input(f"{Color.RED}¿Eliminar '{eid}' permanentemente? (escribir 'borrar') → {Color.RESET}")
-                    if confirm == "borrar":
-                        if file_path.exists():
-                            file_path.unlink()
-                        db = DatabaseManager()
-                        db.cursor.execute("DELETE FROM scenarios WHERE id = ?", (eid,))
-                        db.conn.commit()
-                        db.close()
-                        print(f"{Color.GREEN}Ejercicio {eid} eliminado de disco y base de datos{Color.RESET}")
-                        input("Pulsa Enter...")
-                    else:
-                        print(f"{Color.BLUE}Operación cancelada{Color.RESET}")
-                        input("Enter...")
-
-            else:
-                print(f"{Color.RED}Opción no válida{Color.RESET}")
-                pause()
-
-
-
-
+        """Gestión de Ejercicios RHCSA - YAML → DB Automático"""
+        from ui.menu.exercises_menu import ExercisesMenu  # ← IMPORTA NUEVO
         
-       
+        exercises_menu = ExercisesMenu()
+        exercises_menu.run()
+
+
+
 
     def show_progress(self):
         from core.database_manager import DatabaseManager
