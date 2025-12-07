@@ -32,36 +32,36 @@ class ScenarioEngine:
         # Elegir escenario aleatorio
         scenario_template = choice(self.data["scenarios"])
         
-        # Elegir valores aleatorios para TODAS las categorías de globals
+        # Elegir valores aleatorios para TODAS las categorías
         selected_vars = {}
         for category, items in self.data["globals"].items():
-            if items:  # evitar categorías vacías
+            if items:
                 selected_vars[category] = choice(items)
         
-        # Si el escenario usa variables que no existen en globals, las inventamos
-        # (por si pones {{nombre2}} pero no tienes categoría "nombre2")
+        # Soporte para nombre2, apellido2, etc.
         final_vars = selected_vars.copy()
-        for i in range(1, 10):  # soporte para {{nombre2}}, {{nombre3}}...
+        for i in range(2, 6):  # hasta nombre5, apellido5...
             for base in ["nombre", "apellido", "departamento", "grupo"]:
                 key = f"{base}{i}"
-                if key not in final_vars and f"{{{key}}}" in scenario_template:
-                    final_vars[key] = choice(self.data["globals"].get(base, ["usuario"])) if base in self.data["globals"] else "usuario"
-        
-        # Reemplazar todas las variables {{var}} en el texto
+                if f"{{{key}}}" in scenario_template and key not in final_vars:
+                    final_vars[key] = choice(self.data["globals"].get(base, ["valor"])) if base in self.data["globals"] else "valor"
+
+        # REEMPLAZAR {{var}} → valor (sin dejar llaves)
         task = scenario_template
         for key, value in final_vars.items():
-            task = task.replace(f"{{{key}}}", str(value))
-        
-        # Ejecutar pre_setup del nivel (si existe)
+            placeholder = f"{{{{{key}}}}}"   # ← así: {{nombre}}
+            task = task.replace(placeholder, str(value))
+
+        # Ejecutar pre_setup
         for cmd_template in level_data.get("pre_setup", []):
             cmd = cmd_template
             for k, v in final_vars.items():
-                cmd = cmd.replace(f"{{{k}}}", str(v))
+                cmd = cmd.replace(f"{{{{{k}}}}}", str(v))
             try:
                 check_output(cmd, shell=True, executable="/bin/bash")
                 print(f"{Color.GRAY}Pre-setup: {cmd}{Color.RESET}")
             except Exception as e:
-                print(f"{Color.RED}Error en pre-setup: {cmd}{Color.RESET}")
+                print(f"{Color.RED}Error pre-setup: {e}{Color.RESET}")
 
         return task, final_vars
 
