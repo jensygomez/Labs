@@ -1,88 +1,85 @@
 # Lab_RHEL/ex200/rhcsa_lab_trainer/ui/menu/training_menu.py
 #!/usr/bin/env python3
-
 from ui.display.banners import show_banner
 from ui.display.colors import Color
 from ui.utils.screen_utils import clear_screen, pause
 from ui.utils.input_handlers import get_menu_choice
+from core.scenario_engine import UniversalEngine  # ← FALTABA
 from core.database_manager import DatabaseManager
-from pathlib import Path
 
-class ExercisesMenu:
+
+class TrainingMenu:  # ← CAMBIAR DE ExercisesMenu → TrainingMenu
     def run(self):
         while True:
             clear_screen()
-            show_banner("GESTIÓN DE EJERCICIOS RHCSA")
-            
-            print(f"{Color.CYAN}1.{Color.RESET} Crear nuevo → scenarios/MODULO/id.yaml")
-            print(f"{Color.CYAN}2.{Color.RESET} Importar YAML → Auto DB")
-            print(f"{Color.CYAN}3.{Color.RESET} Editar existente")
-            print(f"{Color.RED}4.{Color.RESET} Eliminar")
+            show_banner("MODO ENTRENAMIENTO")
+            print(f"{Color.CYAN}Elige el ejercicio que quieres practicar:\n{Color.RESET}")
+
+            # Consulta ejercicios dinámicos
+            db = DatabaseManager()
+            c = db.cursor
+            c.execute("""
+                SELECT DISTINCT s.id, s.name, s.module
+                FROM scenarios s 
+                WHERE s.type = 'dynamic'
+                ORDER BY s.module, s.id
+            """)
+            exercises = c.fetchall()
+            db.close()
+
+            if not exercises:
+                print(f"{Color.YELLOW}No hay ejercicios dinámicos aún.{Color.RESET}")
+                print(f"{Color.CYAN}Ve a 'Gestión de Ejercicios' y crea uno primero.{Color.RESET}")
+                pause()
+                return
+
+            # Header
+            print(f"{Color.CYAN}{'':<3} {'ID':<12} {'NOMBRE':<35} {'MÓDULO':<18} {'PROGRESO':<20}{Color.RESET}")
+            print(f"{Color.CYAN}{'─'*3} {'─'*12} {'─'*35} {'─'*18} {'─'*20}{Color.RESET}")
+
+            exercise_list = []
+            for i, (sid, name, module) in enumerate(exercises, 1):
+                # Progreso
+                db = DatabaseManager()
+                c = db.cursor
+                c.execute("SELECT COUNT(*), AVG(score) FROM progress WHERE scenario_id = ?", (sid,))
+                stats = c.fetchone()
+                db.close()
+                
+                attempts, avg_score = stats if stats and stats[0] > 0 else (0, 0)
+                prog_str = f"{attempts} intentos | {avg_score:.0f}%" if attempts else "Nuevo"
+                
+                mod_clean = module.replace("_", " ").title()
+                print(f" {Color.YELLOW}{i:<2}{Color.RESET}  {sid:<12} {name[:34]:<35} {mod_clean:<18} {prog_str:<20}")
+                exercise_list.append((sid, name))
+
+            print(f"\n{Color.GREEN}s{Color.RESET} → Sugerirme el más débil")
             print(f"{Color.RED}b{Color.RESET} → Volver al menú principal\n")
 
-            choice = get_menu_choice(["1", "2", "3", "4"])
+            choice = input(f"{Color.CYAN}Opción → {Color.RESET}").strip().lower()
 
-            if choice == "b":
+            if choice in ("b", "back"):
                 return
-            
-            if choice == "1":
-                self.create_new()
-            elif choice == "2":
-                self.import_yaml()
-            elif choice == "3":
-                self.edit_existing()
-            elif choice == "4":
-                self.delete_exercise()
 
-    def create_new(self):
-        """Crea estructura nueva YAML"""
-        clear_screen()
-        print(f"{Color.CYAN}📁 Estructura nueva:{Color.RESET}")
-        print(f"   Ejemplo: scenarios/02_storage/lvm-001.yaml")
-        path = input(f"{Color.YELLOW}Ruta completa → {Color.RESET}").strip()
-        
-        full_path = Path(path)
-        full_path.parent.mkdir(parents=True, exist_ok=True)
-        
-        print(f"{Color.GREEN}✅ Carpeta creada: {full_path.parent}{Color.RESET}")
-        print(f"{Color.YELLOW}Copia/pega YAML completo en: {full_path}{Color.RESET}")
-        pause()
+            selected_id = None
+            if choice == "s":
+                selected_id = exercise_list[0][0]
+                print(f"\n{Color.GREEN}Te sugiero: {selected_id} – {exercise_list[0][1]}{Color.RESET}")
+                pause("Pulsa Enter para empezar...")
+            else:
+                try:
+                    idx = int(choice) - 1
+                    if 0 <= idx < len(exercise_list):
+                        selected_id = exercise_list[idx][0]
+                    else:
+                        raise ValueError
+                except:
+                    pause(f"{Color.RED}Opción inválida{Color.RESET}")
+                    continue
 
-    def import_yaml(self):
-        """IMPORTA YAML → DB (FASE 2)"""
-        clear_screen()
-        print(f"{Color.CYAN}📥 Importar YAML → DB{Color.RESET}")
-        yaml_path = input(f"{Color.YELLOW}Ruta al archivo YAML → {Color.RESET}").strip()
-        
-        db = DatabaseManager()
-        success = db.import_yaml_scenario(yaml_path)
-        db.close()
-        
-        if success:
-            print(f"{Color.GREEN}🎉 Listo! Aparece en Entrenamiento automáticamente{Color.RESET}")
-        pause()
-
-    def edit_existing(self):
-        """Lista ejercicios para editar"""
-        db = DatabaseManager()
-        c = db.cursor
-        c.execute("SELECT id, name, path FROM scenarios WHERE type = 'dynamic'")
-        exercises = c.fetchall()
-        db.close()
-        
-        if not exercises:
-            print(f"{Color.YELLOW}No hay ejercicios aún{Color.RESET}")
-            pause()
-            return
-            
-        for i, (sid, name, path) in enumerate(exercises):
-            print(f"{i+1}. {sid} - {name} → {path}")
-        
-        choice = input(f"{Color.CYAN}Editar (número) → {Color.RESET}")
-        pause(f"{Color.YELLOW}nano {exercises[int(choice)-1][2]}{Color.RESET}")
-
-    def delete_exercise(self):
-        """Elimina ejercicio"""
-        print(f"{Color.YELLOW}Función pendiente{Color.RESET}")
-        pause()
-
+            # Lanzar UniversalEngine
+            try:
+                engine = UniversalEngine(selected_id)
+                engine.run()
+            except Exception as e:
+                pause(f"{Color.RED}Error al cargar: {e}{Color.RESET}")
