@@ -41,17 +41,25 @@ levels:
     repetitions: 4
     points_per_rep: 25
     pre_setup: []
-    allowed_scenarios:
-    - 0
-    - 1
-    - 2
-    - 3
-    - 4
+    allowed_scenarios: [0, 1]
+    validation:
+      - "id {{nombre}}"
+      - "getent group {{grupo}}"
   intermediate:
     repetitions: 6
     points_per_rep: 35
-    pre_setup: []
+    pre_setup: ["userdel -r {{nombre}} 2>/dev/null || true"]
+    allowed_scenarios: [0, 1, 2]
+    validation:
+      - "id {{nombre}}"
+      - "groups {{nombre}} | grep {{grupo}}"
+      - "getent passwd {{nombre}} | cut -d: -f6 | grep /home"
   advanced:
     repetitions: 8
     points_per_rep: 45
-    pre_setup: []
+    pre_setup: ["useradd -m -G {{grupo}} {{nombre}}"]
+    allowed_scenarios: [2, 3, 4]
+    validation:
+      - "sudo -l -U {{nombre}} | grep -q {{grupo}} || sudo -l -U {{nombre}} | grep NOPASSWD"
+      - "chage -l {{nombre}} | grep '90'"
+      - "test -d /home/{{nombre}}/.ssh && echo 'SSH OK'"

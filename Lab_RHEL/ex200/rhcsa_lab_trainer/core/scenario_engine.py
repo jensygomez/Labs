@@ -88,23 +88,25 @@ class UniversalEngine:
         return task, values
 
     def run(self):
-        """Flujo completo con selección de nivel"""
-        self.select_level()  # ← NUEVO
+        """Flujo completo con VALIDACIÓN AUTOMÁTICA"""
+        self.select_level()  
         
         clear_screen()
         print(f"{Color.CYAN}🎯 ENTRENAMIENTO: {self.exercise['name']}{Color.RESET}")
         print(f"{Color.YELLOW}📂 Nivel: {self.level.title()} | Reps: {self.exercise['levels'][self.level]['repetitions']}{Color.RESET}\n")
 
         start = datetime.now()
-        task, _ = self.generate()
+        task, values = self.generate()  # ← RECIBE values también
 
         print(f"{Color.YELLOW}Tarea:{Color.RESET} {task}\n")
         input(f"{Color.GREEN}Realiza la tarea y pulsa Enter cuando termines →{Color.RESET}")
 
         elapsed = (datetime.now() - start).total_seconds()
-        score = self.exercise["levels"][self.level]["points_per_rep"]  # ← Puntos por nivel
+        
+        # 🔥 VALIDACIÓN REAL (reemplaza puntos fijos)
+        score = self.validate(values)  # ← ¡LO NUEVO!
 
-        # Guardar progreso - TU LÓGICA ORIGINAL
+        # Guardar progreso
         db = DatabaseManager()
         c = db.conn.cursor()
         c.execute(
@@ -116,6 +118,41 @@ class UniversalEngine:
 
         print(f"\n{Color.GREEN}Tiempo: {elapsed:.1f}s | ⭐ {score}pts{Color.RESET}")
         pause("\nEnter para continuar...")
+
+
+
+
+
+
+
+# =====================================================
+# VALIDACION
+# =====================================================
+
+    def validate(self, values):
+        level = self.exercise["levels"][self.level]
+        validation_cmds = level.get("validation", [])
+        
+        if not validation_cmds:
+            return 100  # Sin validación = 100pts
+        
+        score = 100
+        print(f"{Color.CYAN}🔍 Validando...{Color.RESET}")
+        
+        for i, cmd_tmpl in enumerate(validation_cmds, 1):
+            cmd = cmd_tmpl
+            for var, val in values.items():
+                cmd = cmd.replace(f"{{{{{var}}}}}", str(val))
+            
+            try:
+                result = check_output(cmd, shell=True, executable="/bin/bash", timeout=5)
+                print(f"   {i}. {Color.GREEN}✓ {cmd}{Color.RESET}")
+            except:
+                print(f"   {i}. {Color.RED}✗ {cmd}{Color.RESET}")
+                score -= 20  # -20pts por fallo
+        
+        return max(0, score)
+ 
 
 # Prueba
 if __name__ == "__main__":
