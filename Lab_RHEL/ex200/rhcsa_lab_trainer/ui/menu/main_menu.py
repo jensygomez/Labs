@@ -67,84 +67,93 @@ class MainMenu:
         pause()
 
 
+
     def new_exercise(self):
         from pathlib import Path
         import shutil
+        import subprocess
+        import os
 
         while True:
             clear_screen()
             show_banner("GESTIÓN DE EJERCICIOS DINÁMICOS")
-            print(f"{Color.CYAN}¿Qué quieres hacer:\n{Color.RESET}")
+            print(f"{Color.CYAN}¿Qué quieres hacer?:\n{Color.RESET}")
             print(f" {Color.YELLOW}1{Color.RESET} → Crear nuevo ejercicio dinámico")
             print(f" {Color.YELLOW}2{Color.RESET} → Editar ejercicio existente")
             print(f" {Color.YELLOW}3{Color.RESET} → Eliminar ejercicio")
             print(f" {Color.YELLOW}b{Color.RESET} → Volver al menú principal\n")
 
-            choice = get_menu_choice("123b")
+            choice = get_menu_choice("123b")          # ← devuelve "1","2","3" o "back"
 
-            if choice == "b":
+            if choice == "back":                       # ← ¡¡AQUÍ ESTABA EL ERROR!!
                 break
 
-            elif choice == "1":
+            # ================================================================
+            # 1 → CREAR NUEVO
+            # ================================================================
+            if choice == "1":
                 from core.scenario_creator import create_dynamic_exercise_interactive
                 create_dynamic_exercise_interactive()
+                continue
 
-            elif choice == "2" or choice == "3":
-                # Listar todos los ejercicios dinámicos existentes
-                exercises = []
-                base_path = Path("scenarios")
-                if base_path.exists():
-                    for folder in base_path.rglob("*"):
-                        if (folder / "globals.yaml").exists() and folder.is_dir():
-                            rel = folder.relative_to(base_path)
-                            exercises.append(folder)
+            # ================================================================
+            # 2 y 3 → EDITAR / ELIMINAR
+            # ================================================================
+            exercises = []
+            base_path = Path("scenarios")
+            if base_path.exists():
+                for folder in base_path.rglob("*"):
+                    if (folder / "globals.yaml").exists() and folder.is_dir():
+                        exercises.append(folder)
 
-                if not exercises:
-                    pause(f"{Color.YELLOW}Todavía no hay ejercicios dinámicos creados.{Color.RESET}")
+            if not exercises:
+                pause(f"{Color.YELLOW}No hay ejercicios dinámicos aún.{Color.RESET}")
+                continue
+
+            # Mostrar lista y elegir
+            while True:
+                clear_screen()
+                show_banner("EJERCICIOS DISPONIBLES")
+                for i, folder in enumerate(exercises, 1):
+                    print(f" {Color.YELLOW}{i:2d}{Color.RESET} → {folder.relative_to('scenarios')}")
+                print(f"\n {Color.YELLOW}b{Color.RESET} → Volver atrás")
+
+                sel = input(f"\n{Color.CYAN}Opción → {Color.RESET}").strip().lower()
+                if sel in ("b", "back"):
+                    break
+
+                try:
+                    idx = int(sel) - 1
+                    if not (0 <= idx < len(exercises)):
+                        raise ValueError
+                    selected = exercises[idx]
+                except:
+                    print(f"{Color.RED}Número inválido{Color.RESET}")
+                    pause()
                     continue
 
-                while True:
-                    clear_screen()
-                    show_banner("EJERCICIOS DINÁMICOS EXISTENTES")
-                    print(f"{Color.CYAN}Selecciona el ejercicio:\n{Color.RESET}")
-                    for i, folder in enumerate(exercises, 1):
-                        rel_path = folder.relative_to("scenarios")
-                        print(f" {Color.YELLOW}{i:2d}{Color.RESET} → {rel_path}")
-                    print(f"\n {Color.YELLOW}b{Color.RESET} → Volver atrás")
+                # EDITAR
+                if choice == "2":
+                    editor = os.getenv("EDITOR", "nano")
+                    subprocess.call([editor, str(selected / "globals.yaml")])
+                    input(f"\n{Color.GREEN}globals.yaml editado – pulsa Enter{Color.RESET}")
 
-                    # Aceptamos número o 'b'/'back'
-                    user_input = input(f"\n{Color.CYAN}Opción → {Color.RESET}").strip().lower()
-                    if user_input in ("b", "back", "q", "quit"):
-                        break
+                # ELIMINAR
+                elif choice == "3":
+                    confirm = input(f"\n{Color.RED}Escribir 'borrar' para eliminar {selected}: {Color.RESET}")
+                    if confirm == "borrar":
+                        shutil.rmtree(selected)
+                        exercises.pop(idx)
+                        print(f"{Color.GREEN}Ejercicio eliminado{Color.RESET}")
+                        input("Pulsa Enter...")
+                    else:
+                        print(f"{Color.BLUE}Cancelado{Color.RESET}")
+                        input("Pulsa Enter...")
+                break  # vuelve al menú principal de gestión
 
-                    try:
-                        idx = int(user_input) - 1
-                        if idx < 1 or idx > len(exercises):
-                            raise ValueError
-                        selected_folder = exercises[idx]
-                    except ValueError:
-                        print(f"{Color.RED}Opción inválida{Color.RESET}")
-                        pause()
-                        continue
 
-                    # Acción: editar o eliminar
-                    if choice == "2":
-                        editor = os.getenv("EDITOR", "nano")
-                        print(f"\n{Color.CYAN}Abriendo {selected_folder / 'globals.yaml'} con {editor}...{Color.RESET}")
-                        subprocess.call([editor, str(selected_folder / "globals.yaml")])
-                        input(f"\n{Color.GREEN}Archivo editado. Pulsa Enter para continuar...{Color.RESET}")
 
-                    elif choice == "3":
-                        confirm = input(f"\n{Color.RED}¿Eliminar COMPLETAMENTE {selected_folder}? (escribir 'borrar'): {Color.RESET}").strip()
-                        if confirm == "borrar":
-                            shutil.rmtree(selected_folder)
-                            print(f"{Color.GREEN}Ejercicio eliminado.{Color.RESET}")
-                            exercises.pop(idx)  # quitamos de la lista para que no aparezca más
-                            input("Pulsa Enter para continuar...")
-                        else:
-                            print(f"{Color.BLUE}Operación cancelada.{Color.RESET}")
-                            input("Pulsa Enter para continuar...")
-                    break  # vuelve a la lista después de editar/eliminar
+
 
 
         
