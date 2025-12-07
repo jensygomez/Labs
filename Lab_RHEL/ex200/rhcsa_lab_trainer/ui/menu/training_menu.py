@@ -3,7 +3,7 @@
 from ui.display.banners import show_banner
 from ui.display.colors import Color
 from ui.utils.screen_utils import clear_screen, pause
-from core.scenario_engine import ScenarioEngine
+from core.scenario_engine import UniversalEngine
 from core.database_manager import DatabaseManager
 
 class TrainingMenu:
