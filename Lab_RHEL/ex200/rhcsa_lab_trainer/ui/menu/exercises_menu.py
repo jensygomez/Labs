@@ -47,13 +47,24 @@ class ExercisesMenu:
             "6": ("06_networking", "Networking")
         }
         
-        clear_screen()
-        print(f"{Color.CYAN}📂 Elige módulo RHCSA:{Color.RESET}")
-        for num, (path, name) in modules.items():
-            print(f" {num}. {name}")
-        
-        mod_choice = get_menu_choice(list(modules.keys()))
-        module_path, module_name = modules[mod_choice]
+        while True:  # ← LOOP hasta elegir válido
+            clear_screen()
+            print(f"{Color.CYAN}📂 Elige módulo RHCSA:{Color.RESET}")
+            print(f"{Color.RED}b{Color.RESET} → Volver")
+            print()
+            for num, (path, name) in modules.items():
+                print(f" {num}. {name}")
+            
+            choice = input(f"{Color.CYAN}Opción → {Color.RESET}").strip().lower()
+
+            if choice in ("b", "back"):
+                return  # ← REGRESA a menú principal
+            
+            if choice in modules:
+                module_path, module_name = modules[choice]
+                break  # ← SALE del loop
+            else:
+                pause(f"{Color.RED}Opción inválida{Color.RESET}")
         
         # 🔥 2. ID AUTOMÁTICO (nuevo)
         db = DatabaseManager()
