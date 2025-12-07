@@ -69,88 +69,81 @@ class MainMenu:
 
 
     def new_exercise(self):
-        from pathlib import Path
-        import shutil
-        import subprocess
         import os
+        import subprocess
+        from pathlib import Path
+        from core.database_manager import DatabaseManager
 
         while True:
             clear_screen()
-            show_banner("GESTIÓN DE EJERCICIOS DINÁMICOS")
-            print(f"{Color.CYAN}¿Qué quieres hacer?:\n{Color.RESET}")
-            print(f" {Color.YELLOW}1{Color.RESET} → Crear nuevo ejercicio dinámico")
-            print(f" {Color.YELLOW}2{Color.RESET} → Editar ejercicio existente")
-            print(f" {Color.YELLOW}3{Color.RESET} → Eliminar ejercicio")
-            print(f" {Color.YELLOW}b{Color.RESET} → Volver al menú principal\n")
+            show_banner("GESTIÓN DE EJERCICIOS")
+            print(" 1 → Crear nuevo ejercicio dinámico (1 archivo YAML)")
+            print(" 2 → Editar ejercicio existente")
+            print(" 3 → Eliminar ejercicio")
+            print(" b → Volver\n")
 
-            choice = get_menu_choice("123b")          # ← devuelve "1","2","3" o "back"
-
-            if choice == "back":                       # ← ¡¡AQUÍ ESTABA EL ERROR!!
+            choice = get_menu_choice("123b")
+            if choice == "back":
                 break
 
-            # ================================================================
-            # 1 → CREAR NUEVO
-            # ================================================================
+            # CREAR
             if choice == "1":
-                from core.scenario_creator import create_dynamic_exercise_interactive
-                create_dynamic_exercise_interactive()
+                from core.scenario_creator import create_dynamic_exercise_single_file
+                create_dynamic_exercise_single_file()
                 continue
 
-            # ================================================================
-            # 2 y 3 → EDITAR / ELIMINAR
-            # ================================================================
-            exercises = []
-            base_path = Path("scenarios")
-            if base_path.exists():
-                for folder in base_path.rglob("*"):
-                    if (folder / "globals.yaml").exists() and folder.is_dir():
-                        exercises.append(folder)
+            # LISTAR desde DB
+            db = DatabaseManager()
+            c = db.cursor
+            c.execute("SELECT id, name, module, path FROM scenarios WHERE type='dynamic' ORDER BY module, name")
+            exercises = c.fetchall()
+            db.close()
 
             if not exercises:
-                pause(f"{Color.YELLOW}No hay ejercicios dinámicos aún.{Color.RESET}")
+                pause("Aún no hay ejercicios dinámicos.")
                 continue
 
-            # Mostrar lista y elegir
+            # EDITAR / ELIMINAR
             while True:
                 clear_screen()
-                show_banner("EJERCICIOS DISPONIBLES")
-                for i, folder in enumerate(exercises, 1):
-                    print(f" {Color.YELLOW}{i:2d}{Color.RESET} → {folder.relative_to('scenarios')}")
-                print(f"\n {Color.YELLOW}b{Color.RESET} → Volver atrás")
+                show_banner("EJERCICIOS DINÁMICOS")
+                for i, (sid, name, mod, path) in enumerate(exercises, 1):
+                    print(f" {Color.YELLOW}{i:2d}{Color.RESET} → {sid} | {name}")
+                print(f"\n b → Volver")
 
-                sel = input(f"\n{Color.CYAN}Opción → {Color.RESET}").strip().lower()
+                sel = input(f"\nOpción → ").strip().lower()
                 if sel in ("b", "back"):
                     break
-
                 try:
                     idx = int(sel) - 1
-                    if not (0 <= idx < len(exercises)):
-                        raise ValueError
-                    selected = exercises[idx]
+                    sid, name, mod, path = exercises[idx]
+                    file_path = Path(path) if path else None
                 except:
-                    print(f"{Color.RED}Número inválido{Color.RESET}")
-                    pause()
+                    pause("Inválido")
                     continue
 
-                # EDITAR
-                if choice == "2":
-                    editor = os.getenv("EDITOR", "nano")
-                    subprocess.call([editor, str(selected / "globals.yaml")])
-                    input(f"\n{Color.GREEN}globals.yaml editado – pulsa Enter{Color.RESET}")
-
-                # ELIMINAR
-                elif choice == "3":
-                    confirm = input(f"\n{Color.RED}Escribir 'borrar' para eliminar {selected}: {Color.RESET}")
-                    if confirm == "borrar":
-                        shutil.rmtree(selected)
-                        exercises.pop(idx)
-                        print(f"{Color.GREEN}Ejercicio eliminado{Color.RESET}")
-                        input("Pulsa Enter...")
+                if choice == "2":  # EDITAR
+                    if file_path and file_path.exists():
+                        editor = os.getenv("EDITOR", "nano")
+                        subprocess.call([editor, str(file_path)])
+                        input("Editado – Enter")
                     else:
-                        print(f"{Color.BLUE}Cancelado{Color.RESET}")
-                        input("Pulsa Enter...")
-                break  # vuelve al menú principal de gestión
+                        pause("Archivo no encontrado")
 
+                elif choice == "3":  # BORRAR
+                    if input(f"Escribir 'borrar' para eliminar {sid}: ") == "borrar":
+                        if file_path and file_path.exists():
+                            file_path.unlink()
+                        db = DatabaseManager()
+                        db.cursor.execute("DELETE FROM scenarios WHERE id=?", (sid,))
+                        db.conn.commit()
+                        db.close()
+                        print("Eliminado")
+                        exercises.pop(idx)
+                        input("Enter...")
+                    else:
+                        input("Cancelado – Enter")
+                break
 
 
 
