@@ -89,7 +89,7 @@ class MainMenu:
             # CREAR
             if choice == "1":
                 from core.scenario_creator import create_dynamic_exercise
-                create_dynamic_exercise_single_file()
+                create_dynamic_exercise()
                 continue
 
             # LISTAR desde DB
