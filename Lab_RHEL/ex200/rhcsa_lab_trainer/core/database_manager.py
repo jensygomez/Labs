@@ -26,20 +26,27 @@ class DatabaseManager:
         if self.conn:
             self.conn.close()
     
+
+
     def import_yaml_scenario(self, yaml_path):
         """Importa YAML completo → DB automáticamente"""
         try:
             with open(yaml_path, 'r', encoding='utf-8') as f:
                 data = yaml.safe_load(f)
             
+            # AGREGAR difficulty por defecto si no existe
+            if 'difficulty' not in data:
+                data['difficulty'] = 1  # Básico por defecto
+            
             c = self.cursor
             c.execute("""
                 INSERT OR REPLACE INTO scenarios 
-                (id, name, module, type, path, description, points, repetitions_required)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (id, name, module, type, path, description, points, repetitions_required, difficulty)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 data['id'], data['name'], data['module'], data['type'],
-                str(yaml_path), data['description'], data['points'], data['repetitions_required']
+                str(yaml_path), data['description'], data['points'], 
+                data['repetitions_required'], data.get('difficulty', 1)
             ))
             self.conn.commit()
             print(f"{Color.GREEN}✅ {data['id']} importado desde {yaml_path}{Color.RESET}")

@@ -1,0 +1,155 @@
+id: lvm-001
+name: Administración Lógica de Volúmenes (LVM)
+module: Local Storage
+type: dynamic
+description: "Ejercicio dinámico RHCSA: Administración de LVM (escenarios completos)"
+points: 220
+repetitions_required: 20
+
+globals:
+  disk:
+    - "/dev/vdb"
+    - "/dev/vdc"
+    - "/dev/vdd"
+    - "/dev/loop1"
+    - "/dev/loop2"
+  disk_extra:
+    - "/dev/vde"
+    - "/dev/loop3"
+  vg_name:
+    - "vgdata"
+    - "vgapps"
+    - "vgbackup"
+  lv_name:
+    - "lvdata"
+    - "lvhome"
+    - "lvlogs"
+  size:
+    - "500M"
+    - "1G"
+    - "2G"
+    - "250M"
+  fs:
+    - "xfs"
+    - "ext4"
+  mount_point:
+    - "/mnt/data"
+    - "/mnt/storage"
+    - "/mnt/backup"
+  extend_size:
+    - "+200M"
+    - "+500M"
+    - "+1G"
+
+scenarios:
+  # BÁSICO (0–2)
+  - |
+      **Escenario:** El disco {{disk}} está vacío y sin particiones.
+      **Tarea:** Crear un Physical Volume (PV) en {{disk}}.
+      **Resultado esperado:** `pvs` muestra {{disk}} como PV válido.
+
+  - |
+      **Escenario:** Existen dos discos sin uso: {{disk}} y {{disk_extra}}.
+      **Tarea:** Crear un Volume Group (VG) llamado {{vg_name}} usando ambos discos.
+      **Resultado esperado:** `vgs` lista {{vg_name}} con dos PVs activos.
+
+  - |
+      **Escenario:** Ya existe un VG funcional llamado {{vg_name}} creado sobre {{disk}}.
+      **Tarea:** Crear un Logical Volume llamado {{lv_name}} con tamaño {{size}} dentro del VG.
+      **Resultado esperado:** `lvs` muestra el LV con tamaño {{size}}.
+
+  # INTERMEDIO (3–7)
+  - |
+      **Escenario:** Existe un LV llamado {{lv_name}} dentro del VG {{vg_name}}, sin filesystem.
+      **Tarea:** Crear filesystem {{fs}} y montarlo permanentemente en {{mount_point}}.
+      **Resultado esperado:** `df -h` muestra {{mount_point}} y /etc/fstab contiene la entrada correcta.
+
+  - |
+      **Escenario:** VG {{vg_name}} contiene el LV {{lv_name}}, montado en {{mount_point}}.
+      **Tarea:** Extender el LV {{lv_name}} en {{extend_size}} y redimensionar el filesystem.
+      **Resultado esperado:** `lvs` muestra el tamaño actualizado y `df -h` refleja el cambio.
+
+  - |
+      **Escenario:** El VG {{vg_name}} está creado solo con el disco {{disk}}.
+      **Tarea:** Agregar el disco extra {{disk_extra}} al VG existente.
+      **Resultado esperado:** `vgs -o +pv_count` muestra mayor cantidad de PVs.
+
+  - |
+      **Escenario:** LV {{lv_name}} (ext4) existe dentro del VG {{vg_name}}, desmontado.
+      **Tarea:** Reducir el tamaño del LV en {{extend_size}} de forma segura.
+      **Resultado esperado:** Tamaño reducido, filesystem funcional.
+
+  # AVANZADO (8–15)
+  - |
+      **Escenario:** El LV {{lv_name}} está en uso dentro del VG {{vg_name}}.
+      **Tarea:** Crear un snapshot llamado snap_{{lv_name}} con tamaño {{size}}.
+      **Resultado esperado:** `lvs` muestra snapshot tipo `S`.
+
+  - |
+      **Escenario:** Existe un snapshot snap_{{lv_name}} del LV principal.
+      **Tarea:** Restaurar el contenido del snapshot sobre el LV original.
+      **Resultado esperado:** LV vuelve al estado del snapshot.
+
+  - |
+      **Escenario:** El LV {{lv_name}} ocupa un PV que será retirado.
+      **Tarea:** Usar `pvmove` para migrarlo completamente a otro PV disponible.
+      **Resultado esperado:** `pvs -v` muestra el PV origen vacío.
+
+  - |
+      **Escenario:** VG {{vg_name}} dispone de espacio libre.
+      **Tarea:** Crear un thin pool llamado pool_{{vg_name}} y un thin LV llamado thin_{{lv_name}}.
+      **Resultado esperado:** `lvs` muestra los dos LVs con tipo `t` y `V`.
+
+  - |
+      **Escenario:** Existe un LV cacheable y un disco rápido {{disk_extra}}.
+      **Tarea:** Crear un LV de caché y asociarlo al LV {{lv_name}}.
+      **Resultado esperado:** `lvs -o lv_name,cache_mode` muestra cache activo.
+
+  - |
+      **Escenario:** VG {{vg_name}} y LV {{lv_name}} existen y están sin montar.
+      **Tarea:** Clonar LV en un nuevo LV llamado clone_{{lv_name}}.
+      **Resultado esperado:** `lvs` muestra clone_{{lv_name}} con mismo tamaño.
+
+  - |
+      **Escenario:** VG {{vg_name}} contiene PVs y LVs activos.
+      **Tarea:** Eliminar completamente todos los LVs, luego el VG y luego cada PV.
+      **Resultado esperado:** `pvs`, `vgs`, `lvs` ya no muestran recursos asociados.
+
+levels:
+  basic:
+    repetitions: 5
+    points_per_rep: 25
+    pre_setup: []
+    allowed_scenarios: [0, 1, 2]
+    validation:
+      - "pvs | grep {{disk}}"
+      - "vgs | grep {{vg_name}}"
+      - "lvs | grep {{lv_name}}"
+
+  intermediate:
+    repetitions: 7
+    points_per_rep: 35
+    pre_setup:
+      - "umount -R {{mount_point}} 2>/dev/null || true"
+      - "lvremove -fy /dev/{{vg_name}}/{{lv_name}} 2>/dev/null || true"
+      - "vgremove -fy {{vg_name}} 2>/dev/null || true"
+      - "pvremove -fy {{disk}} 2>/dev/null || true"
+    allowed_scenarios: [3, 4, 5, 6]
+    validation:
+      - "df -h | grep {{mount_point}}"
+      - "grep '{{mount_point}}' /etc/fstab"
+      - "vgs | grep {{vg_name}}"
+      - "lvs /dev/{{vg_name}}/{{lv_name}}"
+
+  advanced:
+    repetitions: 8
+    points_per_rep: 45
+    pre_setup:
+      - "pvcreate {{disk}} 2>/dev/null || true"
+      - "vgcreate {{vg_name}} {{disk}} 2>/dev/null || true"
+      - "lvcreate -n {{lv_name}} -L {{size}} {{vg_name}} 2>/dev/null || true"
+    allowed_scenarios: [8, 9, 10, 11, 12, 13, 14]
+    validation:
+      - "lvs | grep {{lv_name}}"
+      - "vgs | grep {{vg_name}}"
+      - "pvs | grep {{disk}}"
