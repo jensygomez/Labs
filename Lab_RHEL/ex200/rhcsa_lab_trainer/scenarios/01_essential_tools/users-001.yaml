@@ -21,14 +21,18 @@ globals:
   - Martinez
   - Sanchez
   Departamento:
-  - Developers
+  - IT
   - HR
+  - Aadmin
   - Finance
+  grupo:
+  - Dev
+  - HR
   - Wheel
   - Docker
 scenarios:
-- Crear los usuarios {{nombre}} {{apellido}} y {{nombre}} {{apellido}} del departamento {{departamento}} con grupo secundario {{grupo}}
-- 'El jefe de {{departamento}} necesita 2 nuevos empleados: {{nombre}} {{apellido}} y {{nombre}} {{apellido}} con acceso al grupo {{grupo}}'
+- Crear los usuarios {{nombre}} {{apellido}} y {{nombre}} {{apellido}} del departamento {{Departamento}} con grupo secundario {{grupo}}
+- 'El jefe de {{Departamento}} necesita 2 nuevos empleados: {{nombre}} {{apellido}} y {{nombre}} {{apellido}} con acceso al grupo {{grupo}}'
 - Añadir los usuarios {{nombre}} {{apellido}} al grupo wheel con permiso sudo sin contraseña
 - Crear usuario {{nombre}} {{apellido}} con caducidad de cuenta en 90 días y contraseña mínima de 12 caracteres
 - Generar clave SSH para {{nombre}} {{apellido}} y colocarla en authorized_keys
