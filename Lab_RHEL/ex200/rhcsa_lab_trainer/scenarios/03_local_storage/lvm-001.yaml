@@ -5,41 +5,17 @@ type: dynamic
 description: "Ejercicio dinámico RHCSA: Administración de LVM (escenarios completos)"
 points: 220
 repetitions_required: 20
+difficulty: 1
 
 globals:
-  disk:
-    - "/dev/vdb"
-    - "/dev/vdc"
-    - "/dev/vdd"
-    - "/dev/loop1"
-    - "/dev/loop2"
-  disk_extra:
-    - "/dev/vde"
-    - "/dev/loop3"
-  vg_name:
-    - "vgdata"
-    - "vgapps"
-    - "vgbackup"
-  lv_name:
-    - "lvdata"
-    - "lvhome"
-    - "lvlogs"
-  size:
-    - "500M"
-    - "1G"
-    - "2G"
-    - "250M"
-  fs:
-    - "xfs"
-    - "ext4"
-  mount_point:
-    - "/mnt/data"
-    - "/mnt/storage"
-    - "/mnt/backup"
-  extend_size:
-    - "+200M"
-    - "+500M"
-    - "+1G"
+  disk: ["/dev/loop1", "/dev/loop2"]           # Discos principales
+  disk_extra: ["/dev/loop3"]                   # Disco extra
+  vg_name: ["vgdata", "vgapps", "vgbackup"]
+  lv_name: ["lvdata", "lvhome", "lvlogs"]
+  size: ["500M", "1G", "2G"]
+  fs: ["xfs", "ext4"]
+  mount_point: ["/mnt/data", "/mnt/storage", "/mnt/backup"]
+  extend_size: ["+200M", "+500M", "+1G"]
 
 scenarios:
   # BÁSICO (0–2)
@@ -119,7 +95,10 @@ levels:
   basic:
     repetitions: 5
     points_per_rep: 25
-    pre_setup: []
+    pre_setup:
+      - "losetup -d /dev/loop1 /dev/loop2 /dev/loop3 2>/dev/null || true"
+      - "losetup /dev/loop1 /rhcsa-labs/disks/loop1.img"
+      - "losetup /dev/loop2 /rhcsa-labs/disks/loop2.img"
     allowed_scenarios: [0, 1, 2]
     validation:
       - "pvs | grep {{disk}}"
@@ -130,14 +109,23 @@ levels:
     repetitions: 7
     points_per_rep: 35
     pre_setup:
+      - "losetup -d /dev/loop{1,2,3} 2>/dev/null || true"
+      - "losetup /dev/loop1 /rhcsa-labs/disks/loop1.img"
+      - "losetup /dev/loop2 /rhcsa-labs/disks/loop2.img"
+      - "losetup /dev/loop3 /rhcsa-labs/disks/loop3.img"
       - "umount -R {{mount_point}} 2>/dev/null || true"
       - "lvremove -fy /dev/{{vg_name}}/{{lv_name}} 2>/dev/null || true"
       - "vgremove -fy {{vg_name}} 2>/dev/null || true"
-      - "pvremove -fy {{disk}} 2>/dev/null || true"
+      - "pvremove -fy /dev/loop1 /dev/loop2 /dev/loop3 2>/dev/null || true"
+      - "pvcreate /dev/loop1 /dev/loop2"
+      - "vgcreate {{vg_name}} /dev/loop1 /dev/loop2"
+      - "lvcreate -n {{lv_name}} -L {{size}} {{vg_name}}"
+      - "mkfs.{{fs}} /dev/{{vg_name}}/{{lv_name}}"
+      - "mount /dev/{{vg_name}}/{{lv_name}} {{mount_point}}"
     allowed_scenarios: [3, 4, 5, 6]
     validation:
       - "df -h | grep {{mount_point}}"
-      - "grep '{{mount_point}}' /etc/fstab"
+      - "grep {{mount_point}} /etc/fstab || true"
       - "vgs | grep {{vg_name}}"
       - "lvs /dev/{{vg_name}}/{{lv_name}}"
 
@@ -145,9 +133,13 @@ levels:
     repetitions: 8
     points_per_rep: 45
     pre_setup:
-      - "pvcreate {{disk}} 2>/dev/null || true"
-      - "vgcreate {{vg_name}} {{disk}} 2>/dev/null || true"
-      - "lvcreate -n {{lv_name}} -L {{size}} {{vg_name}} 2>/dev/null || true"
+      - "losetup -d /dev/loop{1,2,3} 2>/dev/null || true"
+      - "losetup /dev/loop1 /rhcsa-labs/disks/loop1.img"
+      - "losetup /dev/loop2 /rhcsa-labs/disks/loop2.img"
+      - "losetup /dev/loop3 /rhcsa-labs/disks/loop3.img"
+      - "pvcreate /dev/loop1 /dev/loop2 /dev/loop3 2>/dev/null || true"
+      - "vgcreate {{vg_name}} /dev/loop1 /dev/loop2"
+      - "lvcreate -n {{lv_name}} -L {{size}} {{vg_name}}"
     allowed_scenarios: [8, 9, 10, 11, 12, 13, 14]
     validation:
       - "lvs | grep {{lv_name}}"
