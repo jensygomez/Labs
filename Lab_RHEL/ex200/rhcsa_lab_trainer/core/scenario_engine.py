@@ -67,17 +67,49 @@ class ScenarioEngine:
 
         return task, final_vars
 
-    def validate_solution(self, expected):
-        # Validación básica - personalízala por módulo (ej: LVM = lvdisplay, users = id -u)
-        # Ejemplo para LVM
-        try:
-            output = check_output("lvdisplay", shell=True).decode()
-            if expected["lv"] in output:
-                return 100
-            else:
-                return 0
-        except:
-            return 0
+    def validate_solution(self, expected_vars):
+        score = 0
+        total_checks = 0
+
+        # Comprobar que los usuarios existen
+        for i in range(1, 10):
+            user_key = f"nombre{i}"
+            last_key = f"apellido{i}"
+            if user_key in expected_vars and last_key in expected_vars:
+                username = f"{expected_vars[user_key]} {expected_vars[last_key]}".lower().replace(" ", "")
+                try:
+                    check_output(f"id {username}", shell=True)
+                    score += 20
+                except:
+                    pass
+                total_checks += 20
+
+        # Comprobar grupo secundario
+        if "grupo" in expected_vars:
+            group = expected_vars["grupo"]
+            for i in range(1, 10):
+                user_key = f"nombre{i}"
+                last_key = f"apellido{i}"
+                if user_key in expected_vars and last_key in expected_vars:
+                    username = f"{expected_vars[user_key]} {expected_vars[last_key]}".lower().replace(" ", "")
+                    try:
+                        output = check_output(f"groups {username}", shell=True).decode()
+                        if group in output:
+                            score += 15
+                        total_checks += 15
+                    except:
+                        pass
+
+        # Comprobar sudo sin contraseña (wheel)
+        if expected_vars.get("grupo") == "wheel":
+            try:
+                output = check_output(f"sudo -l -U {username}", shell=True).decode()
+                if "NOPASSWD" in output:
+                    score += 30
+            except:
+                pass
+
+        return min(100, int(score * 100 / max(total_checks, 1)))
 
     def run_training(self):
         clear_screen()
