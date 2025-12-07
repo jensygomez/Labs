@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Motor de escenarios RHCSA - Genera, valida y puntúa ejercicios dinámicos
-"""
+
 import yaml
 from pathlib import Path
 from random import choice, randint
