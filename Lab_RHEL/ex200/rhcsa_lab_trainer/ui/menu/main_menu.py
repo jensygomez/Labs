@@ -45,8 +45,9 @@ class MainMenu:
                 self.options[choice]()
 
     def training_mode(self):
-        from ui.menu.training_menu import TrainingMenu
+        from ui.menu.training_menu import TrainingMenu  # ← AGREGAR ESTA LÍNEA
         TrainingMenu().run()
+
 
     def exam_mode(self):
         clear_screen(); show_banner("MODO EXAMEN")

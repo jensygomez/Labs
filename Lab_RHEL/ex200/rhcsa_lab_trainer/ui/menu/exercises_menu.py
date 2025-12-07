@@ -1,5 +1,8 @@
 # Lab_RHEL/ex200/rhcsa_lab_trainer/ui/menu/exercises_menu.py
 #!/usr/bin/env python3
+"""
+Gestión de Ejercicios RHCSA - YAML → DB Automático
+"""
 from ui.display.banners import show_banner
 from ui.display.colors import Color
 from ui.utils.screen_utils import clear_screen, pause
@@ -9,6 +12,7 @@ from pathlib import Path
 import subprocess
 import os
 
+
 class ExercisesMenu:
     def run(self):
         while True:
@@ -17,7 +21,7 @@ class ExercisesMenu:
             
             print(f"{Color.CYAN}1.{Color.RESET} Nuevo ejercicio (elige módulo)")
             print(f"{Color.CYAN}2.{Color.RESET} Lista ejercicios")
-            print(f"{Color.RED}b{Color.RESET} → Volver\n")
+            print(f"{Color.RED}b{Color.RESET} → Volver al menú principal\n")
 
             choice = get_menu_choice(["1", "2", "b"])
 
@@ -29,7 +33,7 @@ class ExercisesMenu:
                 self.list_exercises()
 
     def new_exercise_full(self):
-        """1️⃣ Elige módulo → 2️⃣ Abre nano → 3️⃣ Auto-import DB"""
+        """1️⃣ Módulo → 2️⃣ ID auto → 3️⃣ nano → 4️⃣ DB"""
         # 1. LISTA MÓDULOS RHCSA
         modules = {
             "1": ("01_essential_tools", "Essential Tools"),
@@ -48,17 +52,20 @@ class ExercisesMenu:
         mod_choice = get_menu_choice(list(modules.keys()))
         module_path, module_name = modules[mod_choice]
         
-        # 2. NOMBRE ARCHIVO
-        exercise_id = input(f"{Color.YELLOW}{module_name} → ID (ej: lvm-001) → {Color.RESET}").strip()
-        if not exercise_id:
-            pause("ID requerido")
-            return
-            
+        # 🔥 2. ID AUTOMÁTICO (nuevo)
+        db = DatabaseManager()
+        c = db.cursor
+        c.execute("SELECT COUNT(*) FROM scenarios WHERE module = ?", (module_path,))
+        count = c.fetchone()[0] + 1
+        exercise_id = f"{module_path.split('_')[-1][:3]}-{count:03d}"  # lvm-001
+        db.close()
+        
+        print(f"{Color.YELLOW}{module_name} → {Color.GREEN}{exercise_id}{Color.RESET}")
         yaml_path = Path(f"scenarios/{module_path}/{exercise_id}.yaml")
         
         # 3. CREAR CARPETA + ABRIR NANO
         yaml_path.parent.mkdir(parents=True, exist_ok=True)
-        print(f"{Color.GREEN}✅ {yaml_path} creado{Color.RESET}")
+        print(f"{Color.GREEN}✅ {yaml_path} listo para editar{Color.RESET}")
         
         editor = os.getenv("EDITOR", "nano")
         subprocess.call([editor, str(yaml_path)])
