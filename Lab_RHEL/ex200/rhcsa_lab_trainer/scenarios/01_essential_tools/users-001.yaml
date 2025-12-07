@@ -6,7 +6,7 @@ description: 'Ejercicio dinámico RHCSA: Gestión de usuarios y grupos'
 points: 150
 repetitions_required: 18
 globals:
-  nombres:
+  nombre:
   - ana
   - carlos
   - Laura
@@ -14,13 +14,13 @@ globals:
   - Pedro
   - Sofia
   - Jose
-  apellidos:
+  apellido:
   - Gomez
   - Rodriguez
   - Fernandez
   - Martinez
   - Sanchez
-  Departamentos:
+  Departamento:
   - Developers
   - HR
   - Finance
