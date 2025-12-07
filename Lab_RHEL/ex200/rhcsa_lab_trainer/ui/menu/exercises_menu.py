@@ -21,16 +21,19 @@ class ExercisesMenu:
             
             print(f"{Color.CYAN}1.{Color.RESET} Nuevo ejercicio (elige módulo)")
             print(f"{Color.CYAN}2.{Color.RESET} Lista ejercicios")
-            print(f"{Color.RED}b{Color.RESET} → Volver al menú principal\n")
+            print(f"{Color.RED}b{Color.RESET} → Volver al menú principal")
+            print()
+            
+            choice = input(f"{Color.CYAN}Opción → {Color.RESET}").strip().lower()
 
-            choice = get_menu_choice(["1", "2", "b"])
-
-            if choice == "b":
+            if choice in ("b", "back"):
                 return
             elif choice == "1":
                 self.new_exercise_full()
             elif choice == "2":
                 self.list_exercises()
+            else:
+                pause(f"{Color.RED}Opción inválida{Color.RESET}")
 
     def new_exercise_full(self):
         """1️⃣ Módulo → 2️⃣ ID auto → 3️⃣ nano → 4️⃣ DB"""
