@@ -1,0 +1,53 @@
+id: users-001
+name: Gestión de usuarios y grupos
+module: Essential Tools
+type: dynamic
+description: 'Ejercicio dinámico RHCSA: Gestión de usuarios y grupos'
+points: 150
+repetitions_required: 18
+globals:
+  nombres:
+  - ana
+  - carlos
+  - Laura
+  - Maria
+  - Pedro
+  - Sofia
+  - Jose
+  apellidos:
+  - Gomez
+  - Rodriguez
+  - Fernandez
+  - Martinez
+  - Sanchez
+  Departamentos:
+  - Developers
+  - HR
+  - Finance
+  - Wheel
+  - Docker
+scenarios:
+- Crear los usuarios {{nombre}} {{apellido}} y {{nombre2}} {{apellido2}} del departamento {{departamento}} con grupo secundario {{grupo}}
+- 'El jefe de {{departamento}} necesita 2 nuevos empleados: {{nombre}} {{apellido}} y {{nombre2}} {{apellido2}} con acceso al grupo {{grupo}}'
+- Añadir los usuarios {{nombre}} {{apellido}} al grupo wheel con permiso sudo sin contraseña
+- Crear usuario {{nombre}} {{apellido}} con caducidad de cuenta en 90 días y contraseña mínima de 12 caracteres
+- Generar clave SSH para {{nombre}} {{apellido}} y colocarla en authorized_keys
+levels:
+  basic:
+    repetitions: 4
+    points_per_rep: 25
+    pre_setup: []
+    allowed_scenarios:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+  intermediate:
+    repetitions: 6
+    points_per_rep: 35
+    pre_setup: []
+  advanced:
+    repetitions: 8
+    points_per_rep: 45
+    pre_setup: []
