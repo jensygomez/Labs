@@ -74,7 +74,7 @@ class TrainingMenu:
 
             # Lanzar el motor
             try:
-                engine = ScenarioEngine(selected_id)
-                engine.run_training()
+                engine = UniversalEngine(selected_id)
+                engine.run()
             except Exception as e:
                 pause(f"{Color.RED}Error al cargar el ejercicio: {e}{Color.RESET}")
