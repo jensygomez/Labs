@@ -76,75 +76,95 @@ class MainMenu:
 
         while True:
             clear_screen()
-            show_banner("GESTIÓN DE EJERCICIOS")
-            print(" 1 → Crear nuevo ejercicio dinámico (1 archivo YAML)")
-            print(" 2 → Editar ejercicio existente")
-            print(" 3 → Eliminar ejercicio")
-            print(" b → Volver\n")
+            show_banner("GESTIÓN DE EJERCICIOS RHCSA")
+            print(f"{Color.CYAN}Base de datos de ejercicios dinámicos:\n{Color.RESET}")
 
-            choice = get_menu_choice("123b")
-            if choice == "back":
-                break
-
-            # CREAR
-            if choice == "1":
-                from core.scenario_creator import create_dynamic_exercise
-                create_dynamic_exercise()
-                continue
-
-            # LISTAR desde DB
+            # Cargar y mostrar tabla bonita
             db = DatabaseManager()
             c = db.cursor
-            c.execute("SELECT id, name, module, path FROM scenarios WHERE type='dynamic' ORDER BY module, name")
+            c.execute("""
+                SELECT id, name, module, points, repetitions_required 
+                FROM scenarios 
+                WHERE type = 'dynamic' OR type IS NULL
+                ORDER BY module, id
+            """)
             exercises = c.fetchall()
             db.close()
 
             if not exercises:
-                pause("Aún no hay ejercicios dinámicos.")
-                continue
+                print(f"{Color.YELLOW}Aún no hay ejercicios creados.{Color.RESET}\n")
+            else:
+                # Cabecera
+                print(f"{Color.CYAN}{'ID':<12} {'NOMBRE':<35} {'MÓDULO':<20} {'PUNTOS':<8} {'REPS':<6}{Color.RESET}")
+                print(f"{Color.CYAN}{'─'*12} {'─'*35} {'─'*20} {'─'*8} {'─'*6}{Color.RESET}")
+                for sid, name, module, points, reps in exercises:
+                    mod_name = module.replace("_", " ").title()
+                    print(f" {Color.YELLOW}{sid:<11}{Color.RESET} {name:<35.34} {mod_name:<20} {points:<8} {reps:<6}")
+                print()
 
-            # EDITAR / ELIMINAR
-            while True:
-                clear_screen()
-                show_banner("EJERCICIOS DINÁMICOS")
-                for i, (sid, name, mod, path) in enumerate(exercises, 1):
-                    print(f" {Color.YELLOW}{i:2d}{Color.RESET} → {sid} | {name}")
-                print(f"\n b → Volver")
+            # Menú de acciones
+            print(f"{Color.CYAN}Opciones disponibles:{Color.RESET}")
+            print(f" {Color.GREEN}1{Color.RESET} → Crear nuevo ejercicio dinámico")
+            print(f" {Color.GREEN}2{Color.RESET} → Editar ejercicio existente (por ID)")
+            print(f" {Color.GREEN}3{Color.RESET} → Eliminar ejercicio (por ID)")
+            print(f" {Color.RED}b{Color.RESET} → Volver al menú principal\n")
 
-                sel = input(f"\nOpción → ").strip().lower()
-                if sel in ("b", "back"):
-                    break
-                try:
-                    idx = int(sel) - 1
-                    sid, name, mod, path = exercises[idx]
-                    file_path = Path(path) if path else None
-                except:
-                    pause("Inválido")
-                    continue
+            choice = input(f"{Color.CYAN}Opción → {Color.RESET}").strip().lower()
 
-                if choice == "2":  # EDITAR
-                    if file_path and file_path.exists():
-                        editor = os.getenv("EDITOR", "nano")
-                        subprocess.call([editor, str(file_path)])
-                        input("Editado – Enter")
-                    else:
-                        pause("Archivo no encontrado")
-
-                elif choice == "3":  # BORRAR
-                    if input(f"Escribir 'borrar' para eliminar {sid}: ") == "borrar":
-                        if file_path and file_path.exists():
-                            file_path.unlink()
-                        db = DatabaseManager()
-                        db.cursor.execute("DELETE FROM scenarios WHERE id=?", (sid,))
-                        db.conn.commit()
-                        db.close()
-                        print("Eliminado")
-                        exercises.pop(idx)
-                        input("Enter...")
-                    else:
-                        input("Cancelado – Enter")
+            if choice in ("b", "back", "7"):
                 break
 
+            elif choice == "1":
+                from core.scenario_creator import create_dynamic_exercise
+                create_dynamic_exercise()
+                continue
+
+            elif choice in ("2", "3"):
+                eid = input(f"\n{Color.CYAN}Escribe el ID del ejercicio → {Color.RESET}").strip()
+                if not eid:
+                    pause("ID requerido")
+                    continue
+
+                # Buscar en DB
+                db = DatabaseManager()
+                c = db.cursor
+                c.execute("SELECT path FROM scenarios WHERE id = ?", (eid,))
+                row = c.fetchone()
+                db.close()
+
+                if not row or not row[0]:
+                    pause(f"{Color.RED}Ejercicio con ID '{eid}' no encontrado{Color.RESET}")
+                    continue
+
+                file_path = Path(row[0])
+
+                if choice == "2":  # EDITAR
+                    if file_path.exists():
+                        editor = os.getenv("EDITOR", "nano")
+                        print(f"\n{Color.CYAN}Abriendo {file_path} con {editor}...{Color.RESET}")
+                        subprocess.call([editor, str(file_path)])
+                        input(f"\n{Color.GREEN}Archivo editado – pulsa Enter{Color.RESET}")
+                    else:
+                        pause(f"{Color.RED}Archivo no encontrado en disco{Color.RESET}")
+
+                elif choice == "3":  # ELIMINAR
+                    confirm = input(f"{Color.RED}¿Eliminar '{eid}' permanentemente? (escribir 'borrar') → {Color.RESET}")
+                    if confirm == "borrar":
+                        if file_path.exists():
+                            file_path.unlink()
+                        db = DatabaseManager()
+                        db.cursor.execute("DELETE FROM scenarios WHERE id = ?", (eid,))
+                        db.conn.commit()
+                        db.close()
+                        print(f"{Color.GREEN}Ejercicio {eid} eliminado de disco y base de datos{Color.RESET}")
+                        input("Pulsa Enter...")
+                    else:
+                        print(f"{Color.BLUE}Operación cancelada{Color.RESET}")
+                        input("Enter...")
+
+            else:
+                print(f"{Color.RED}Opción no válida{Color.RESET}")
+                pause()
 
 
 
