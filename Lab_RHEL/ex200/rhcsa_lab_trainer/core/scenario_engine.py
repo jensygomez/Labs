@@ -108,23 +108,26 @@ class UniversalEngine:
         return task, values
 
     def run(self):
-        """Flujo completo con VALIDACIÓN AUTOMÁTICA"""
-        self.select_level()  
+        """Flujo completo con VALIDACIÓN AUTOMÁTICA + 'b' cancelar"""
+        level = self.select_level()  # ← RECIBE return value
+        
+        if level is None:  # ← CANCELADO con "b"
+            return
         
         clear_screen()
         print(f"{Color.CYAN}🎯 ENTRENAMIENTO: {self.exercise['name']}{Color.RESET}")
-        print(f"{Color.YELLOW}📂 Nivel: {self.level.title()} | Reps: {self.exercise['levels'][self.level]['repetitions']}{Color.RESET}\n")
+        print(f"{Color.YELLOW}📂 Nivel: {level.title()} | Reps: {self.exercise['levels'][level]['repetitions']}{Color.RESET}\n")
 
         start = datetime.now()
-        task, values = self.generate()  # ← RECIBE values también
+        task, values = self.generate()
 
         print(f"{Color.YELLOW}Tarea:{Color.RESET} {task}\n")
         input(f"{Color.GREEN}Realiza la tarea y pulsa Enter cuando termines →{Color.RESET}")
 
         elapsed = (datetime.now() - start).total_seconds()
         
-        # 🔥 VALIDACIÓN REAL (reemplaza puntos fijos)
-        score = self.validate(values)  # ← ¡LO NUEVO!
+        # 🔥 VALIDACIÓN REAL
+        score = self.validate(values)
 
         # Guardar progreso
         db = DatabaseManager()
@@ -138,6 +141,7 @@ class UniversalEngine:
 
         print(f"\n{Color.GREEN}Tiempo: {elapsed:.1f}s | ⭐ {score}pts{Color.RESET}")
         pause("\nEnter para continuar...")
+
 
 
 
