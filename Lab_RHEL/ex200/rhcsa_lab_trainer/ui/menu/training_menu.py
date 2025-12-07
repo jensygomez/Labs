@@ -1,4 +1,3 @@
-# Lab_RHEL/ex200/rhcsa_lab_trainer/ui/menu/training_menu.py
 #!/usr/bin/env python3
 from ui.display.banners import show_banner
 from ui.display.colors import Color
@@ -13,18 +12,40 @@ class TrainingMenu:
             show_banner("MODO ENTRENAMIENTO")
             print(f"{Color.CYAN}Elige el ejercicio que quieres practicar:\n{Color.RESET}")
 
-            # Cargar ejercicios desde la base de datos
+            # Cargar ejercicios DINÁMICOS con progreso por NIVEL
             db = DatabaseManager()
             c = db.cursor
+            
             c.execute("""
-                SELECT s.id, s.name, s.module,
-                       COUNT(p.id) as intentos,
-                       ROUND(AVG(p.score),1) as promedio
+                SELECT 
+                    s.id, s.name, s.module, s.path,
+                    s1.reps_req as basic_reps, COALESCE(s1.completed, 0) as basic_done,
+                    s2.reps_req as inter_reps, COALESCE(s2.completed, 0) as inter_done,
+                    s3.reps_req as adv_reps, COALESCE(s3.completed, 0) as adv_done
                 FROM scenarios s
-                LEFT JOIN progress p ON s.id = p.scenario_id
+                LEFT JOIN (
+                    SELECT scenario_id, repetitions_required as reps_req, 
+                           COUNT(*) as completed
+                    FROM progress p JOIN scenarios s ON p.scenario_id = s.id 
+                    WHERE s.type = 'dynamic' AND s.difficulty = 1
+                    GROUP BY scenario_id
+                ) s1 ON s.id = s1.scenario_id
+                LEFT JOIN (
+                    SELECT scenario_id, repetitions_required as reps_req, 
+                           COUNT(*) as completed
+                    FROM progress p JOIN scenarios s ON p.scenario_id = s.id 
+                    WHERE s.type = 'dynamic' AND s.difficulty = 2
+                    GROUP BY scenario_id
+                ) s2 ON s.id = s2.scenario_id
+                LEFT JOIN (
+                    SELECT scenario_id, repetitions_required as reps_req, 
+                           COUNT(*) as completed
+                    FROM progress p JOIN scenarios s ON p.scenario_id = s.id 
+                    WHERE s.type = 'dynamic' AND s.difficulty = 3
+                    GROUP BY scenario_id
+                ) s3 ON s.id = s3.scenario_id
                 WHERE s.type = 'dynamic'
-                GROUP BY s.id
-                ORDER BY s.module, promedio ASC NULLS FIRST, s.id
+                ORDER BY s.module, s.id
             """)
             exercises = c.fetchall()
             db.close()
@@ -35,16 +56,22 @@ class TrainingMenu:
                 pause()
                 return
 
-            # Mostrar lista bonita
-            print(f"{Color.CYAN}{'':<3} {'ID':<12} {'NOMBRE':<35} {'MÓDULO':<18} {'INTENTOS':<8} {'PROMEDIO':<8}{Color.RESET}")
-            print(f"{Color.CYAN}{'─'*3} {'─'*12} {'─'*35} {'─'*18} {'─'*8} {'─'*8}{Color.RESET}")
+            # Header con columnas más anchas
+            print(f"{Color.CYAN}{'':<3} {'ID':<12} {'NOMBRE':<32} {'MÓDULO':<16} {'BÁSICO':<8} {'INTER':<8} {'AVANZADO':<10}{Color.RESET}")
+            print(f"{Color.CYAN}{'─'*3} {'─'*12} {'─'*32} {'─'*16} {'─'*8} {'─'*8} {'─'*10}{Color.RESET}")
 
-            for i, (sid, name, module, attempts, avg_score) in enumerate(exercises, 1):
-                mod_clean = module.replace("_", " ").replace("_", " ").title()
-                score_str = f"{avg_score or 0:.1f}%" if avg_score else "-"
-                print(f" {Color.YELLOW}{i:<2}{Color.RESET}  {sid:<12} {name:<35.34} {mod_clean:<18} {attempts:<8} {score_str:<8}")
+            for i, row in enumerate(exercises, 1):
+                sid, name, module, path, b_reps, b_done, i_reps, i_done, a_reps, a_done = row
+                
+                # Progreso por nivel con colores
+                b_prog = f"{Color.GREEN}{b_done}/{b_reps}{Color.RESET}" if b_reps else "-"
+                i_prog = f"{Color.YELLOW}{i_done}/{i_reps}{Color.RESET}" if i_reps else "-"
+                a_prog = f"{Color.RED}{a_done}/{a_reps}{Color.RESET}" if a_reps else "-"
+                
+                mod_clean = module.replace("_", " ").title()
+                print(f" {Color.YELLOW}{i:<2}{Color.RESET}  {sid:<12} {name[:31]:<32} {mod_clean:<16} {b_prog:<8} {i_prog:<8} {a_prog:<10}")
 
-            print(f"\n{Color.GREEN}s{Color.RESET} → Sugerirme el ejercicio más débil")
+            print(f"\n{Color.GREEN}s{Color.RESET} → Sugerirme el más urgente (más reps restantes)")
             print(f"{Color.RED}b{Color.RESET} → Volver al menú principal\n")
 
             choice = input(f"{Color.CYAN}Opción → {Color.RESET}").strip().lower()
@@ -55,26 +82,9 @@ class TrainingMenu:
             selected_id = None
 
             if choice == "s":
-                # Sugiere el que tenga peor promedio (o el primero si todos son nuevos)
-                selected_id = exercises[0][0]
-                print(f"\n{Color.GREEN}Te sugiero practicar: {selected_id} – {exercises[0][1]}{Color.RESET}")
-                print(f"{Color.YELLOW}Es el que peor promedio tienes (o el más nuevo){Color.RESET}")
-                input("\nPulsa Enter para empezar...")
-
-            else:
-                try:
-                    idx = int(choice) - 1
-                    if 0 <= idx < len(exercises):
-                        selected_id = exercises[idx][0]
-                    else:
-                        raise ValueError
-                except:
-                    pause(f"{Color.RED}Opción inválida{Color.RESET}")
-                    continue
-
-            # Lanzar el motor
-            try:
-                engine = UniversalEngine(selected_id)
-                engine.run()
-            except Exception as e:
-                pause(f"{Color.RED}Error al cargar el ejercicio: {e}{Color.RESET}")
+                # Más urgente: suma reps restantes totales
+                most_urgent = max(exercises, key=lambda x: 
+                    (x[5] or 0) + (x[7] or 0) + (x[9] or 0)  # reps restantes
+                )
+                selected_id = most_urgent[0]
+                print
