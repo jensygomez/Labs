@@ -21,7 +21,7 @@ class TrainingMenu:
 
             if not labs:
                 print(f"{Color.YELLOW}No hay laboratorios aún.{Color.RESET}")
-                print(f"{Color.CYAN}Ve a 'Gestión de Ejercicios' → Importa YAML LVM.{Color.RESET}")
+                print(f"{Color.CYAN}Ve a 'Gestión de Ejercicios' → Importa YAML.{Color.RESET}")
                 pause()
                 return
 

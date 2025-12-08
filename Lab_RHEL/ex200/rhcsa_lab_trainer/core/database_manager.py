@@ -26,7 +26,7 @@ class DatabaseManager:
             self.conn.close()
 
     def import_lab_yaml(self, yaml_path):
-        """🚀 NUEVO: Importa TU YAML MAESTRO LVM → labs DB"""
+        """🚀 NUEVO: Importa TU YAML MAESTRO → labs DB"""
         try:
             with open(yaml_path, 'r', encoding='utf-8') as f:
                 data = yaml.safe_load(f)
