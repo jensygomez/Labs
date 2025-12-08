@@ -497,95 +497,97 @@ class DatabaseManager:
             return stats
 
 
-    def import_master_yaml(self, yaml_path: str) → int:
-        """Importa un -master.yaml con múltiples labs (compatible con esquema v2.0)"""
-        import yaml
-        from pathlib import Path
+def import_master_yaml(self, yaml_path: str) -> int:
+    """Importa un -master.yaml con múltiples labs (compatible con esquema v2.0)"""
+    import yaml
+    from pathlib import Path
+    
+    path = Path(yaml_path)
+    if not path.exists():
+        print(f"{Color.RED}Archivo no encontrado: {yaml_path}{Color.RESET}")
+        return 0
         
-        path = Path(yaml_path)
-        if not path.exists():
-            print(f"{Color.RED}Archivo no encontrado: {yaml_path}{Color.RESET}")
-            return 0
-            
-        try:
-            data = yaml.safe_load(path.read_text(encoding="utf-8"))
-        except Exception as e:
-            print(f"{Color.RED}Error leyendo YAML: {e}{Color.RESET}")
-            return 0
-            
-        if not data or 'labs' not in data:
-            print(f"{Color.YELLOW}No se encontraron labs en el YAML{Color.RESET}")
-            return 0
-            
-        count = 0
-        with self.get_connection() as conn:
-            c = conn.cursor()
-            
-            # Obtener o crear module_id (solo por name)
-            module_name = data.get('module', 'Unknown Module')
-            c.execute("SELECT id FROM modules WHERE name LIKE ?", (f"%{module_name}%",))
-            module_row = c.fetchone()
-            if module_row:
-                module_id = module_row[0]
-            else:
-                # Fallback: crea módulo si no existe
-                c.execute("INSERT INTO modules (name, is_active) VALUES (?, 1)", (module_name,))
-                module_id = c.lastrowid
-            
-            for lab in data['labs']:
-                try:
-                    lab_id = lab['id']
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except Exception as e:
+        print(f"{Color.RED}Error leyendo YAML: {e}{Color.RESET}")
+        return 0
+        
+    if not data or 'labs' not in data:
+        print(f"{Color.YELLOW}No se encontraron labs en el YAML{Color.RESET}")
+        return 0
+        
+    count = 0
+    with self.get_connection() as conn:
+        c = conn.cursor()
+        
+        # Obtener o crear module_id (solo por name)
+        module_name = data.get('module', 'Unknown Module')
+        c.execute("SELECT id FROM modules WHERE name LIKE ?", (f"%{module_name}%",))
+        module_row = c.fetchone()
+        if module_row:
+            module_id = module_row[0]
+        else:
+            # Fallback: crea módulo si no existe
+            c.execute("INSERT INTO modules (name, is_active) VALUES (?, 1)", (module_name,))
+            module_id = c.lastrowid
+        
+        for lab in data['labs']:
+            try:
+                lab_id = lab['id']
 
-                    # INSERT ajustado a tu esquema
+                # INSERT ajustado a tu esquema
+                c.execute("""
+                    INSERT OR REPLACE INTO labs 
+                    (id, module_id, title, subtitle, difficulty, points,
+                     scenario_text, setup_ssh)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    lab_id,
+                    module_id,
+                    lab.get('title', 'Sin título'),
+                    lab.get('subtitle', ''),
+                    lab.get('difficulty', 1),
+                    lab.get('points', 30),
+                    lab.get('scenario', ''),
+                    lab.get('setup', '')
+                ))
+
+                # Borrar validaciones anteriores
+                c.execute("DELETE FROM lab_validations WHERE lab_id = ?", (lab_id,))
+
+                # Insertar validaciones
+                for i, v in enumerate(lab.get('validations', []), 1):
+                    expected_values = ','.join(v.get('expected_values', [])) if isinstance(v.get('expected_values'), list) else None
                     c.execute("""
-                        INSERT OR REPLACE INTO labs 
-                        (id, module_id, title, subtitle, difficulty, points,
-                         scenario_text, setup_ssh)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO lab_validations 
+                        (lab_id, order_index, validation_type, command, expected_output,
+                         expected_range_min, expected_range_max, expected_values,
+                         match_type, description, weight)
+                        VALUES (?, ?, 'command_check', ?, ?, ?, ?, ?, ?, ?, ?)
                     """, (
-                        lab_id,
-                        module_id,
-                        lab.get('title', 'Sin título'),
-                        lab.get('subtitle', ''),
-                        lab.get('difficulty', 1),
-                        lab.get('points', 30),
-                        lab.get('scenario', ''),
-                        lab.get('setup', '')
+                        lab_id, i,
+                        v.get('command'),
+                        v.get('expected_output'),
+                        v.get('expected_range', {}).get('min'),
+                        v.get('expected_range', {}).get('max'),
+                        expected_values,
+                        v.get('match_type', 'exact'),
+                        v.get('description', ''),
+                        v.get('weight', 5)
                     ))
+                
+                count += 1
+                print(f"{Color.GREEN}✓ Lab '{lab_id}' importado{Color.RESET}")
 
-                    # Borrar validaciones anteriores
-                    c.execute("DELETE FROM lab_validations WHERE lab_id = ?", (lab_id,))
+            except Exception as e:
+                print(f"{Color.RED}Error con lab {lab.get('id', '?')}: {e}{Color.RESET}")
+                continue
 
-                    # Insertar validaciones
-                    for i, v in enumerate(lab.get('validations', []), 1):
-                        expected_values = ','.join(v.get('expected_values', [])) if isinstance(v.get('expected_values'), list) else None
-                        c.execute("""
-                            INSERT INTO lab_validations 
-                            (lab_id, order_index, validation_type, command, expected_output,
-                             expected_range_min, expected_range_max, expected_values,
-                             match_type, description, weight)
-                            VALUES (?, ?, 'command_check', ?, ?, ?, ?, ?, ?, ?, ?)
-                        """, (
-                            lab_id, i,
-                            v.get('command'),
-                            v.get('expected_output'),
-                            v.get('expected_range', {}).get('min'),
-                            v.get('expected_range', {}).get('max'),
-                            expected_values,
-                            v.get('match_type', 'exact'),
-                            v.get('description', ''),
-                            v.get('weight', 5)
-                        ))
-                    
-                    count += 1
-                    print(f"{Color.GREEN}✓ Lab '{lab_id}' importado{Color.RESET}")
+    print(f"{Color.GREEN}¡ÉXITO! Importados {count} labs de {path.name}{Color.RESET}")
+    return count
 
-                except Exception as e:
-                    print(f"{Color.RED}Error con lab {lab.get('id', '?')}: {e}{Color.RESET}")
-                    continue
 
-        print(f"{Color.GREEN}¡ÉXITO! Importados {count} labs de {path.name}{Color.RESET}")
-        return count
 
 
 
