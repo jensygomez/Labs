@@ -40,7 +40,7 @@ class ExercisesMenu:
     def import_yaml_master(self):
         """🚀 IMPORTA TU YAML LVM → 16 labs DB"""
         clear_screen()
-        print(f"{Color.YELLOW}📤 IMPORTAR YAML MAESTRO (16 labs por subtema){Color.RESET}")
+        yaml_path = input("Ruta YAML → ")
         print(f"\n{Color.CYAN}Ejemplos:{Color.RESET}")
         print(f"  scenarios/03_local_storage/lvm-master.yaml")
         print(f"  scenarios/01_essential_tools/users-master.yaml")
@@ -132,7 +132,7 @@ class ExercisesMenu:
             pause()
 
     def new_exercise_full(self):
-        """1. Elegir módulo → 2. Abrir YAML con nano → 3. Importar todo a DB"""
+        """🎮 1️⃣ Módulo → 2️⃣ Nano YAML → 3️⃣ Importar múltiples labs DB"""
         modules = {
             "1": ("01_essential_tools", "Essential Tools"),
             "2": ("02_running_systems", "Running Systems"), 
@@ -141,43 +141,47 @@ class ExercisesMenu:
             "5": ("05_deploy_systems", "Deploy Systems"),
             "6": ("06_networking", "Networking")
         }
-
+        
+        # 1️⃣ ELEGIR MÓDULO
         while True:
             clear_screen()
-            print(f"{Color.CYAN}📂 Elige módulo RHCSA para importar YAML:{Color.RESET}")
-            print(f"{Color.RED}b{Color.RESET} → Volver")
-            print()
+            print(f"{Color.CYAN}📂 Elige módulo RHCSA para YAML:{Color.RESET}")
+            print(f"{Color.RED}b → Volver{Color.RESET}")
             for num, (path, name) in modules.items():
-                print(f" {num}. {name}")
+                print(f"  {num}. {name}")
             
             choice = input(f"{Color.CYAN}Opción → {Color.RESET}").strip().lower()
-
+            
             if choice in ("b", "back"):
                 return
-            
             if choice in modules:
                 module_path, module_name = modules[choice]
                 break
-            else:
-                pause(f"{Color.RED}Opción inválida{Color.RESET}")
+            pause(f"{Color.RED}Opción inválida{Color.RESET}")
         
-        # Ruta YAML para ese módulo siguiendo estructura
+        # 2️⃣ RUTA AUTOMÁTICA + NANO
         yaml_path = Path(f"scenarios/{module_path}/{module_path}-master.yaml")
         yaml_path.parent.mkdir(parents=True, exist_ok=True)
         
-        # Abre nano para editar/pegar labs completos (pueden ser muchos labs)
-        print(f"{Color.GREEN}📂 Abriendo archivo para edición: {yaml_path}{Color.RESET}")
+        print(f"{Color.GREEN}📝 Editando: {yaml_path}{Color.RESET}")
+        print(f"{Color.YELLOW}💡 Pega labs YAML → Ctrl+O → Enter → Ctrl+X{Color.RESET}")
+        
+        import subprocess
+        import os
         editor = os.getenv("EDITOR", "nano")
         subprocess.call([editor, str(yaml_path)])
-
-        # Importar YAML (TODO todos los labs dentro)
-        print(f"{Color.CYAN}📥 Importando labs desde YAML a la base de datos...{Color.RESET}")
+        
+        # 3️⃣ IMPORTAR MÚLTIPLES LABS
+        print(f"{Color.CYAN}📥 Importando labs desde {yaml_path.name}...{Color.RESET}")
         try:
             with DatabaseManager() as db:
                 count = db.import_lab_yaml(yaml_path)
-            print(f"{Color.GREEN}🎉 {count} labs importados de {module_name}!{Color.RESET}")
+            if count > 0:
+                print(f"{Color.GREEN}🎉 {count} labs de {module_name} → DB ✓{Color.RESET}")
+                print(f"{Color.CYAN}→ Training (Opción 1) listo!{Color.RESET}")
+            else:
+                print(f"{Color.YELLOW}⚠️ No se encontraron labs en YAML{Color.RESET}")
         except Exception as e:
-            print(f"{Color.RED}❌ Error importando YAML: {e}{Color.RESET}")
+            print(f"{Color.RED}❌ Error: {e}{Color.RESET}")
         
         pause()
-
