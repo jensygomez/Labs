@@ -209,7 +209,7 @@ class UniversalEngine:
             db.cursor.execute("""
                 UPDATE labs SET
                     repetitions_completed = ?,
-                    best_score = GREATEST(?, best_score),
+                    best_score = MAX(?, best_score),
                     avg_time_seconds = ((avg_time_seconds * total_attempts + ?) / (total_attempts + 1)),
                     total_attempts = total_attempts + 1,
                     last_reviewed = CURRENT_TIMESTAMP,
