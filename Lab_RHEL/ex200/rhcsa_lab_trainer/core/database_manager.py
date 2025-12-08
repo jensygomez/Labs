@@ -496,90 +496,91 @@ class DatabaseManager:
             
             return stats
 
+
     def import_master_yaml(self, yaml_path: str) -> int:
-        """
-        Importa un archivo master YAML con múltiples labs (como el que me mostraste)
-        Devuelve cuántos labs se insertaron correctamente
-        """
+        """Importa un -master.yaml con múltiples labs (formato 2025)"""
         import yaml
         from pathlib import Path
-
-        if not Path(yaml_path).exists():
-            print(f"{Color.RED}Archivo no encontrado: {yaml_path}{Color.RESET}")
+        
+        path = Path(yaml_path)
+        if not path.exists():
             return 0
-
+            
         try:
-            with open(yaml_path, 'r', encoding='utf-8') as f:
-                data = yaml.safe_load(f)
+            data = yaml.safe_load(path.read_text(encoding="utf-8"))
         except Exception as e:
             print(f"{Color.RED}Error leyendo YAML: {e}{Color.RESET}")
             return 0
-
+            
         if not data or 'labs' not in data:
-            print(f"{Color.YELLOW}No se encontraron labs en el archivo{Color.RESET}")
             return 0
-
-        labs_inserted = 0
+            
+        count = 0
         with self.get_connection() as conn:
-            cursor = conn.cursor()
-
-            for lab_data in data['labs']:
+            c = conn.cursor()
+            for lab in data['labs']:
                 try:
-                    lab_id = lab_data['id']
+                    lab_id = lab['id']
 
-                    # Insertar lab principal
-                    cursor.execute("""
+                    # Resolver module_id de forma segura
+                    module_name = data.get('module', 'Unknown')
+                    c.execute("SELECT id FROM modules WHERE name LIKE ?", (f"%{module_name}%",))
+                    module_row = c.fetchone()
+                    module_id = module_row[0] if module_row else 1
+
+                    # Insertar lab (sin repetitions_required)
+                    c.execute("""
                         INSERT OR REPLACE INTO labs 
-                        (id, module_id, title, subtitle, difficulty, points, repetitions_required,
+                        (id, module_id, title, subtitle, difficulty, points,
                          setup_script, scenario_text, yaml_file, is_published)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
                     """, (
                         lab_id,
-                        self._get_module_id_by_name(data.get('module', 'Unknown')),
-                        lab_data.get('title', 'Sin título'),
-                        lab_data.get('subtitle', ''),
-                        lab_data.get('difficulty', 1),
-                        lab_data.get('points', 30),
-                        lab_data.get('repetitions_required', 5),
-                        lab_data.get('setup', ''),
-                        lab_data.get('scenario', ''),
-                        str(yaml_path)
+                        module_id,
+                        lab.get('title', 'Sin título'),
+                        lab.get('subtitle', ''),
+                        lab.get('difficulty', 1),
+                        lab.get('points', 30),
+                        lab.get('setup', ''),
+                        lab.get('scenario', ''),
+                        str(path)
                     ))
 
-                    # Limpiar validaciones anteriores (por si se reimporta)
-                    cursor.execute("DELETE FROM lab_validations WHERE lab_id = ?", (lab_id,))
+                    # Borrar validaciones anteriores
+                    c.execute("DELETE FROM lab_validations WHERE lab_id = ?", (lab_id,))
 
                     # Insertar validaciones
-                    order_index = 0
-                    for val in lab_data.get('validations', []):
-                        order_index += 1
-                        cursor.execute("""
+                    for i, v in enumerate(lab.get('validations', []), 1):
+                        c.execute("""
                             INSERT INTO lab_validations 
                             (lab_id, order_index, validation_type, command, expected_output,
                              expected_range_min, expected_range_max, expected_values,
                              match_type, description, weight)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            VALUES (?, ?, 'command_check', ?, ?, ?, ?, ?, ?, ?, ?)
                         """, (
-                            lab_id,
-                            order_index,
-                            'command_check',  # tipo genérico
-                            val.get('command'),
-                            val.get('expected_output'),
-                            val.get('expected_range', {}).get('min'),
-                            val.get('expected_range', {}).get('max'),
-                            ','.join(val.get('expected_values', [])) if val.get('expected_values') else None,
-                            val.get('match_type', 'exact'),
-                            val.get('description', ''),
-                            val.get('weight', 5)
+                            lab_id, i,
+                            v.get('command'),
+                            v.get('expected_output'),
+                            v.get('expected_range', {}).get('min'),
+                            v.get('expected_range', {}).get('max'),
+                            ','.join(v.get('expected_values', [])) if v.get('expected_values') else None,
+                            v.get('match_type', 'exact'),
+                            v.get('description', ''),
+                            v.get('weight', 5)
                         ))
-
-                    labs_inserted += 1
+                    count += 1
 
                 except Exception as e:
-                    print(f"{Color.RED}Error insertando lab {lab_data.get('id', '?')}: {e}{Color.RESET}")
+                    print(f"{Color.RED}Error con lab {lab.get('id', '?')}: {e}{Color.RESET}")
 
-        print(f"{Color.GREEN}Importados {labs_inserted} labs desde {Path(yaml_path).name}{Color.RESET}")
-        return labs_inserted
+        print(f"{Color.GREEN}Importados {count} labs correctamente{Color.RESET}")
+        return count
+    
+    
+
+
+
+
 
     def _get_module_id_by_name(self, module_name: str) -> int:
             """Helper interno para obtener module_id por nombre"""
