@@ -132,7 +132,7 @@ class ExercisesMenu:
             pause()
 
     def new_exercise_full(self):
-        """🎮 1️⃣ Módulo → 2️⃣ Nano YAML → 3️⃣ Importar múltiples labs DB"""
+        """1 Módulo → 2 Nano YAML → 3 Importar múltiples labs DB (v2.0)"""
         modules = {
             "1": ("01_essential_tools", "Essential Tools"),
             "2": ("02_running_systems", "Running Systems"), 
@@ -142,10 +142,10 @@ class ExercisesMenu:
             "6": ("06_networking", "Networking")
         }
         
-        # 1️⃣ ELEGIR MÓDULO
+        # 1 ELEGIR MÓDULO (igual que antes)
         while True:
             clear_screen()
-            print(f"{Color.CYAN}📂 Elige módulo RHCSA para YAML:{Color.RESET}")
+            print(f"{Color.CYAN}Elige módulo RHCSA para YAML:{Color.RESET}")
             print(f"{Color.RED}b → Volver{Color.RESET}")
             for num, (path, name) in modules.items():
                 print(f"  {num}. {name}")
@@ -159,29 +159,31 @@ class ExercisesMenu:
                 break
             pause(f"{Color.RED}Opción inválida{Color.RESET}")
         
-        # 2️⃣ RUTA AUTOMÁTICA + NANO
+        # 2 RUTA AUTOMÁTICA + NANO (igual que antes)
         yaml_path = Path(f"scenarios/{module_path}/{module_path}-master.yaml")
         yaml_path.parent.mkdir(parents=True, exist_ok=True)
         
-        print(f"{Color.GREEN}📝 Editando: {yaml_path}{Color.RESET}")
-        print(f"{Color.YELLOW}💡 Pega labs YAML → Ctrl+O → Enter → Ctrl+X{Color.RESET}")
+        print(f"{Color.GREEN}Editando: {yaml_path}{Color.RESET}")
+        print(f"{Color.YELLOW}Pega labs YAML → Ctrl+O → Enter → Ctrl+X{Color.RESET}")
         
         import subprocess
         import os
         editor = os.getenv("EDITOR", "nano")
         subprocess.call([editor, str(yaml_path)])
         
-        # 3️⃣ IMPORTAR MÚLTIPLES LABS
-        print(f"{Color.CYAN}📥 Importando labs desde {yaml_path.name}...{Color.RESET}")
+        # 3 IMPORTAR MÚLTIPLES LABS (AQUÍ ESTÁ EL ÚNICO CAMBIO REAL)
+        print(f"{Color.CYAN}Importando labs desde {yaml_path.name}...{Color.RESET}")
         try:
-            with DatabaseManager() as db:
-                count = db.import_lab_yaml(yaml_path)
+            # ← CAMBIO 1: Ya no usamos "with DatabaseManager()"
+            db = DatabaseManager()                                      # ← nueva línea
+            count = db.import_master_yaml(str(yaml_path))               # ← nueva línea (método nuevo)
+            
             if count > 0:
-                print(f"{Color.GREEN}🎉 {count} labs de {module_name} → DB ✓{Color.RESET}")
+                print(f"{Color.GREEN}{count} labs de {module_name} → DB ✓{Color.RESET}")
                 print(f"{Color.CYAN}→ Training (Opción 1) listo!{Color.RESET}")
             else:
-                print(f"{Color.YELLOW}⚠️ No se encontraron labs en YAML{Color.RESET}")
+                print(f"{Color.YELLOW}No se encontraron labs en YAML{Color.RESET}")
         except Exception as e:
-            print(f"{Color.RED}❌ Error: {e}{Color.RESET}")
+            print(f"{Color.RED}Error: {e}{Color.RESET}")
         
         pause()
