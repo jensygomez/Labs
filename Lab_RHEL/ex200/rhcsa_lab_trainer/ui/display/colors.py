@@ -8,3 +8,4 @@ class Color:
     GRAY = "\033[90m"
     WHITE = "\033[97m"
     BLUE = "\033[94m"
+    MAGENTA = "\033[35m"
