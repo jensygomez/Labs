@@ -8,6 +8,9 @@ from pathlib import Path
 from ui.display.colors import Color
 from ui.utils.screen_utils import clear_screen, pause
 from core.database_manager import DatabaseManager
+from core.ssh_config import SSHConfig  # ← AGREGAR
+
+
 
 class UniversalEngine:
     def __init__(self, lab_id):
