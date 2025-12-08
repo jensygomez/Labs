@@ -1,0 +1,1191 @@
+module: "3. Local Storage"
+submodule: "3.2 Administración Lógica de Volúmenes (LVM)"
+labs_count: 16
+type: "static"
+version: "2025.1"
+
+labs:
+
+  # ────────────────────────────────
+  # LAB 001 — Crear Physical Volume
+  # ────────────────────────────────
+  - id: lab-lvm-001
+    title: "Crear Physical Volume (PV)"
+    subtitle: "Fundamentos iniciales de LVM"
+    difficulty: 1
+    points: 20
+    repetitions_required: 5
+
+    setup: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop1.img bs=1M count=2048
+      losetup /dev/loop1 /root/disks/loop1.img
+      wipefs -a /dev/loop1 || true
+
+    scenario: |
+      El servidor acaba de llegar del proveedor. El disco /dev/loop1 está totalmente limpio.
+      El jefe solicita:
+      "Convierte /dev/loop1 en un Physical Volume para preparar el almacenamiento."
+
+    validations:
+      # Validación 1: PV existe
+      - command: "pvs /dev/loop1 --noheadings -o pv_name 2>/dev/null || echo 'NO_ES_PV'"
+        expected_output: "/dev/loop1"
+        match_type: "exact"
+        description: "/dev/loop1 existe como Physical Volume"
+        weight: 3
+      
+      # Validación 2: Tamaño aproximado 2GB
+      - command: "pvs /dev/loop1 --noheadings --units m -o pv_size 2>/dev/null || echo '0'"
+        expected_range:
+          min: "1800"
+          max: "2200"
+        match_type: "range_numeric"
+        description: "Tamaño aproximado 2GB (±100MB)"
+        weight: 2
+      
+      # Validación 3: Formato LVM2
+      - command: "pvs /dev/loop1 --noheadings -o pv_fmt 2>/dev/null || echo 'NO_FMT'"
+        expected_output: "lvm2"
+        match_type: "exact"
+        description: "Formato LVM2 correcto"
+        weight: 2
+      
+      # Validación 4: Estado válido
+      - command: "pvs /dev/loop1 --noheadings -o pv_attr 2>/dev/null || echo 'NO_ATTR'"
+        expected_values:
+          - "---"
+          - "a--"
+        match_type: "in_list"
+        description: "PV en estado válido (--- o a--)"
+        weight: 1
+      
+      # Validación 5: No está en VG
+      - command: "pvs /dev/loop1 --noheadings -o vg_name 2>/dev/null"
+        expected_output: ""
+        match_type: "exact"
+        description: "PV no está en ningún Volume Group (aún)"
+        weight: 2
+
+  # ────────────────────────────────
+  # LAB 002 — Crear VG con dos discos
+  # ────────────────────────────────
+  - id: lab-lvm-002
+    title: "Crear Volume Group (VG) con 2 discos"
+    subtitle: "Agrupación de almacenamiento"
+    difficulty: 2
+    points: 40
+    repetitions_required: 5
+
+    setup: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop2.img bs=1M count=2048
+      losetup /dev/loop2 /root/disks/loop2.img
+      wipefs -a /dev/loop2 || true
+      dd if=/dev/zero of=/root/disks/loop3.img bs=1M count=2048
+      losetup /dev/loop3 /root/disks/loop3.img
+      wipefs -a /dev/loop3 || true
+
+    scenario: |
+      El sistema dispone de dos discos nuevos: /dev/loop2 y /dev/loop3.
+      El jefe ordena:
+      "Crea un Volume Group llamado vg_data usando ambos discos."
+
+    validations:
+      # Validación 1: VG existe
+      - command: "vgs vg_data --noheadings -o vg_name 2>/dev/null || echo 'NO_VG'"
+        expected_output: "vg_data"
+        match_type: "exact"
+        description: "Volume Group 'vg_data' existe"
+        weight: 3
+      
+      # Validación 2: 2 PVs en VG
+      - command: "vgs vg_data --noheadings -o pv_count 2>/dev/null || echo '0'"
+        expected_output: "2"
+        match_type: "exact"
+        description: "VG tiene exactamente 2 PVs"
+        weight: 4
+      
+      # Validación 3: Tamaño total ~4GB
+      - command: "vgs vg_data --noheadings --units m -o vg_size 2>/dev/null || echo '0'"
+        expected_range:
+          min: "3500"
+          max: "4500"
+        match_type: "range_numeric"
+        description: "Tamaño total ~4GB (2 discos de ~2GB)"
+        weight: 2
+      
+      # Validación 4: /dev/loop2 en vg_data
+      - command: "pvs /dev/loop2 --noheadings -o vg_name 2>/dev/null"
+        expected_output: "vg_data"
+        match_type: "exact"
+        description: "/dev/loop2 está en vg_data"
+        weight: 2
+      
+      # Validación 5: /dev/loop3 en vg_data
+      - command: "pvs /dev/loop3 --noheadings -o vg_name 2>/dev/null"
+        expected_output: "vg_data"
+        match_type: "exact"
+        description: "/dev/loop3 está en vg_data"
+        weight: 2
+      
+      # Validación 6: VG activo
+      - command: "vgs vg_data --noheadings -o vg_attr 2>/dev/null || echo 'NO_ATTR'"
+        expected_output: "wz"
+        match_type: "contains"
+        description: "VG está activo (writable, resizeable)"
+        weight: 1
+
+  # ────────────────────────────────
+  # LAB 003 — Crear LV dentro de un VG
+  # ────────────────────────────────
+  - id: lab-lvm-003
+    title: "Crear Logical Volume (LV)"
+    subtitle: "Administración básica de volúmenes"
+    difficulty: 2
+    points: 50
+    repetitions_required: 5
+
+    setup: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop4.img bs=1M count=2048
+      losetup /dev/loop4 /root/disks/loop4.img
+      wipefs -a /dev/loop4 || true
+      dd if=/dev/zero of=/root/disks/loop5.img bs=1M count=2048
+      losetup /dev/loop5 /root/disks/loop5.img
+      wipefs -a /dev/loop5 || true
+      pvcreate /dev/loop4
+      pvcreate /dev/loop5
+      vgcreate vg_apps /dev/loop4 /dev/loop5
+
+    scenario: |
+      Ya existe el Volume Group vg_apps con suficiente espacio disponible.
+      El jefe pide:
+      "Crea un Logical Volume llamado lv_home con tamaño 1G dentro del VG vg_apps."
+
+    validations:
+      # Validación 1: LV existe
+      - command: "lvs vg_apps/lv_home --noheadings -o lv_name 2>/dev/null || echo 'NO_LV'"
+        expected_output: "lv_home"
+        match_type: "exact"
+        description: "Logical Volume 'lv_home' existe"
+        weight: 3
+      
+      # Validación 2: LV en VG correcto
+      - command: "lvs vg_apps/lv_home --noheadings -o vg_name 2>/dev/null || echo 'NO_VG'"
+        expected_output: "vg_apps"
+        match_type: "exact"
+        description: "lv_home está en el VG vg_apps"
+        weight: 3
+      
+      # Validación 3: Tamaño ~1GB
+      - command: "lvs vg_apps/lv_home --noheadings --units m -o lv_size 2>/dev/null || echo '0'"
+        expected_range:
+          min: "900"
+          max: "1100"
+        match_type: "range_numeric"
+        description: "Tamaño aproximado 1GB (±50MB)"
+        weight: 4
+      
+      # Validación 4: Estado del LV
+      - command: "lvs vg_apps/lv_home --noheadings -o lv_attr 2>/dev/null || echo 'NO_ATTR'"
+        expected_values:
+          - "-wi-------"
+          - "-wi-a-----"
+          - "-wi-ao----"
+        match_type: "in_list"
+        description: "LV en estado válido"
+        weight: 2
+      
+      # Validación 5: Dispositivo existe
+      - command: "test -b /dev/vg_apps/lv_home && echo 'EXISTE' || echo 'NO_EXISTE'"
+        expected_output: "EXISTE"
+        match_type: "exact"
+        description: "Dispositivo /dev/vg_apps/lv_home creado"
+        weight: 2
+      
+      # Validación 6: Espacio libre disminuyó
+      - command: "vgs vg_apps --noheadings --units m -o vg_free 2>/dev/null || echo '0'"
+        expected_range:
+          min: "2500"
+          max: "3500"
+        match_type: "range_numeric"
+        description: "Espacio libre disminuyó apropiadamente (~1GB usado)"
+        weight: 1
+
+  # ────────────────────────────────
+  # 📌 INTERMEDIO (4–11)
+  # ────────────────────────────────
+
+  # ────────────────────────────────
+  # LAB 004 — Crear filesystem y montar permanentemente
+  # ────────────────────────────────
+  - id: lab-lvm-004
+    title: "Crear filesystem y montar un LV"
+    subtitle: "Creación de filesystem y persistencia"
+    difficulty: 3
+    points: 60
+    repetitions_required: 5
+
+    setup: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop6.img bs=1M count=2048
+      losetup /dev/loop6 /root/disks/loop6.img
+      wipefs -a /dev/loop6 || true
+      dd if=/dev/zero of=/root/disks/loop7.img bs=1M count=2048
+      losetup /dev/loop7 /root/disks/loop7.img
+      wipefs -a /dev/loop7 || true
+      pvcreate /dev/loop6
+      pvcreate /dev/loop7
+      vgcreate vg_storage /dev/loop6 /dev/loop7
+      lvcreate -n lv_data -L 800M vg_storage
+
+    scenario: |
+      El LV lv_data existe dentro del VG vg_storage, pero aún no tiene filesystem.
+      El jefe ordena:
+      "Crea un filesystem ext4 y móntalo permanentemente en /mnt/data."
+
+    validations:
+      # Validación 1: Filesystem ext4 creado
+      - command: "blkid -s TYPE -o value /dev/vg_storage/lv_data 2>/dev/null || echo 'NO_FS'"
+        expected_output: "ext4"
+        match_type: "exact"
+        description: "Filesystem ext4 creado en el LV"
+        weight: 3
+      
+      # Validación 2: Montado en /mnt/data
+      - command: "mount | grep '/dev/mapper/vg_storage-lv_data' | grep '/mnt/data' && echo 'MONTADO' || echo 'NO_MONTADO'"
+        expected_output: "MONTADO"
+        match_type: "exact"
+        description: "LV montado en /mnt/data"
+        weight: 3
+      
+      # Validación 3: Espacio usado aprox 800MB
+      - command: "df -B1M /mnt/data 2>/dev/null | tail -1 | awk '{print $2}' || echo '0'"
+        expected_range:
+          min: "750"  # 750MB
+          max: "850"  # 850MB
+        match_type: "range_numeric"
+        description: "Tamaño del filesystem ~800MB"
+        weight: 2
+      
+      # Validación 4: Entrada en /etc/fstab
+      - command: "grep '/mnt/data' /etc/fstab | grep -q 'vg_storage' && echo 'EN_FSTAB' || echo 'NO_FSTAB'"
+        expected_output: "EN_FSTAB"
+        match_type: "exact"
+        description: "Entrada correcta en /etc/fstab"
+        weight: 4
+      
+      # Validación 5: Persistencia después de desmontar/remontar
+      - command: "umount /mnt/data 2>/dev/null; mount -a 2>&1 | grep -q '/mnt/data' || echo 'OK'; mount | grep '/mnt/data' && echo 'PERSISTENTE' || echo 'NO_PERSISTENTE'"
+        expected_output: "PERSISTENTE"
+        match_type: "exact"
+        description: "Montaje persistente (sobrevive a mount -a)"
+        weight: 3
+
+
+  # ────────────────────────────────
+  # LAB 005 — Extender LV en caliente
+  # ────────────────────────────────
+  - id: lab-lvm-005
+    title: "Extender Logical Volume en caliente"
+    subtitle: "Administración dinámica de capacidad"
+    difficulty: 4
+    points: 70
+    repetitions_required: 5
+
+    setup: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop8.img bs=1M count=2048
+      losetup /dev/loop8 /root/disks/loop8.img
+      wipefs -a /dev/loop8 || true
+      dd if=/dev/zero of=/root/disks/loop9.img bs=1M count=2048
+      losetup /dev/loop9 /root/disks/loop9.img
+      wipefs -a /dev/loop9 || true
+      pvcreate /dev/loop8
+      pvcreate /dev/loop9
+      vgcreate vg_logs /dev/loop8 /dev/loop9
+      lvcreate -n lv_logs -L 600M vg_logs
+      mkfs.xfs /dev/vg_logs/lv_logs
+      mkdir -p /mnt/logs
+      mount /dev/vg_logs/lv_logs /mnt/logs
+
+    scenario: |
+      El LV lv_logs está montado en /mnt/logs y empieza a quedarse sin espacio.
+      El jefe indica:
+      "Extiende lv_logs en 400M y redimensiona el filesystem en línea."
+
+    validations:
+      # Validación 1: Tamaño LV aumentado a ~1GB
+      - command: "lvs vg_logs/lv_logs --noheadings --units m -o lv_size 2>/dev/null || echo '0'"
+        expected_range:
+          min: "950"   # 950MB
+          max: "1050"  # 1050MB
+        match_type: "range_numeric"
+        description: "LV extendido a ~1GB (600M + 400M)"
+        weight: 4
+      
+      # Validación 2: Filesystem XFS extendido
+      - command: "df -B1M /mnt/logs 2>/dev/null | tail -1 | awk '{print $2}' || echo '0'"
+        expected_range:
+          min: "950"   # 950MB
+          max: "1050"  # 1050MB
+        match_type: "range_numeric"
+        description: "Filesystem XFS redimensionado en línea"
+        weight: 4
+      
+      # Validación 3: Filesystem sigue montado durante extensión
+      - command: "mount | grep '/mnt/logs' && echo 'MONTADO_DURANTE' || echo 'DESMONTADO'"
+        expected_output: "MONTADO_DURANTE"
+        match_type: "exact"
+        description: "Filesystem permaneció montado durante extensión"
+        weight: 3
+      
+      # Validación 4: Filesystem sigue siendo XFS
+      - command: "blkid -s TYPE -o value /dev/vg_logs/lv_logs 2>/dev/null || echo 'NO_FS'"
+        expected_output: "xfs"
+        match_type: "exact"
+        description: "Filesystem sigue siendo XFS después de extender"
+        weight: 2
+      
+      # Validación 5: Datos preservados (verificar algún archivo de prueba)
+      - command: "test -d /mnt/logs && echo 'DATOS_OK' || echo 'DATOS_PERDIDOS'"
+        expected_output: "DATOS_OK"
+        match_type: "exact"
+        description: "Datos preservados después de extender"
+        weight: 2
+
+
+
+  # ────────────────────────────────
+  # LAB 006 — Agregar Physical Volume a un VG
+  # ────────────────────────────────
+  - id: lab-lvm-006
+    title: "Agregar Physical Volume a un VG"
+    subtitle: "Ampliación de grupos de volúmenes"
+    difficulty: 3
+    points: 60
+    repetitions_required: 5
+
+    setup: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop10.img bs=1M count=2048
+      losetup /dev/loop10 /root/disks/loop10.img
+      wipefs -a /dev/loop10 || true
+      pvcreate /dev/loop10
+      vgcreate vg_main /dev/loop10
+      dd if=/dev/zero of=/root/disks/loop11.img bs=1M count=2048
+      losetup /dev/loop11 /root/disks/loop11.img
+      wipefs -a /dev/loop11 || true
+
+    scenario: |
+      El Volume Group vg_main está funcionando con un único disco (PV).
+      El jefe ordena:
+      "Agrega el disco /dev/loop11 al VG vg_main."
+
+    validations:
+      # Validación 1: /dev/loop11 es un PV
+      - command: "pvs /dev/loop11 --noheadings -o pv_name 2>/dev/null || echo 'NO_PV'"
+        expected_output: "/dev/loop11"
+        match_type: "exact"
+        description: "/dev/loop11 es un Physical Volume"
+        weight: 3
+      
+      # Validación 2: VG tiene 2 PVs
+      - command: "vgs vg_main --noheadings -o pv_count 2>/dev/null || echo '1'"
+        expected_output: "2"
+        match_type: "exact"
+        description: "VG vg_main tiene 2 PVs"
+        weight: 4
+      
+      # Validación 3: /dev/loop11 está en vg_main
+      - command: "pvs /dev/loop11 --noheadings -o vg_name 2>/dev/null"
+        expected_output: "vg_main"
+        match_type: "exact"
+        description: "/dev/loop11 pertenece a vg_main"
+        weight: 3
+      
+      # Validación 4: Tamaño total aumentó a ~4GB
+      - command: "vgs vg_main --noheadings --units m -o vg_size 2>/dev/null || echo '0'"
+        expected_range:
+          min: "3800"  # 3.8GB
+          max: "4200"  # 4.2GB
+        match_type: "range_numeric"
+        description: "Tamaño total del VG ~4GB (2 discos de ~2GB)"
+        weight: 2
+      
+      # Validación 5: VG sigue activo
+      - command: "vgs vg_main --noheadings -o vg_attr 2>/dev/null || echo 'INACTIVO'"
+        expected_output: "wz"
+        match_type: "contains"
+        description: "VG sigue activo después de agregar PV"
+        weight: 2
+
+
+
+  # ────────────────────────────────
+  # LAB 007 — Reducir un LV ext4 desmontado
+  # ────────────────────────────────
+  - id: lab-lvm-007
+    title: "Reducir Logical Volume (EXT4)"
+    subtitle: "Reducción segura de un LV"
+    difficulty: 5
+    points: 80
+    repetitions_required: 5
+
+    setup: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop12.img bs=1M count=2048
+      losetup /dev/loop12 /root/disks/loop12.img
+      wipefs -a /dev/loop12 || true
+      dd if=/dev/zero of=/root/disks/loop13.img bs=1M count=2048
+      losetup /dev/loop13 /root/disks/loop13.img
+      wipefs -a /dev/loop13 || true
+      pvcreate /dev/loop12
+      pvcreate /dev/loop13
+      vgcreate vg_ext /dev/loop12 /dev/loop13
+      lvcreate -n lv_home -L 1G vg_ext
+      mkfs.ext4 /dev/vg_ext/lv_home
+      mkdir -p /mnt/home_ext
+      mount /dev/vg_ext/lv_home /mnt/home_ext
+      umount /mnt/home_ext
+
+    scenario: |
+      El LV lv_home (EXT4) está desmontado y tiene espacio libre.
+      El jefe solicita:
+      "Reduce lv_home en 300M de forma segura."
+
+    validations:
+      # Validación 1: LV reducido a ~700MB
+      - command: "lvs vg_ext/lv_home --noheadings --units m -o lv_size 2>/dev/null || echo '0'"
+        expected_range:
+          min: "650"   # 650MB
+          max: "750"   # 750MB
+        match_type: "range_numeric"
+        description: "LV reducido de 1GB a ~700MB"
+        weight: 4
+      
+      # Validación 2: Filesystem EXT4 íntegro
+      - command: "fsck.ext4 -n /dev/vg_ext/lv_home 2>&1 | grep -q 'clean' && echo 'FS_OK' || echo 'FS_CORRUPTO'"
+        expected_output: "FS_OK"
+        match_type: "exact"
+        description: "Filesystem EXT4 íntegro después de reducir"
+        weight: 5
+      
+      # Validación 3: Se puede montar después de reducir
+      - command: "mount /dev/vg_ext/lv_home /mnt/home_ext 2>&1 && echo 'MONTABLE' || echo 'NO_MONTABLE'; umount /mnt/home_ext 2>/dev/null"
+        expected_output: "MONTABLE"
+        match_type: "exact"
+        description: "LV montable después de reducción"
+        weight: 4
+      
+      # Validación 4: Filesystem usa tamaño reducido
+      - command: "mount /dev/vg_ext/lv_home /mnt/home_ext 2>/dev/null; df -B1M /mnt/home_ext 2>/dev/null | tail -1 | awk '{print $2}' || echo '0'; umount /mnt/home_ext 2>/dev/null"
+        expected_range:
+          min: "650"
+          max: "750"
+        match_type: "range_numeric"
+        description: "Filesystem usa el nuevo tamaño reducido"
+        weight: 3
+      
+      # Validación 5: Datos preservados (archivo de prueba)
+      - command: "mount /dev/vg_ext/lv_home /mnt/home_ext 2>/dev/null; test -d /mnt/home_ext/lost+found && echo 'DATOS_OK' || echo 'DATOS_PERDIDOS'; umount /mnt/home_ext 2>/dev/null"
+        expected_output: "DATOS_OK"
+        match_type: "exact"
+        description: "Estructura de datos básica preservada"
+        weight: 2
+
+
+  # ────────────────────────────────
+  # LAB 008 — Extender un LV lleno al 100%
+  # ────────────────────────────────
+  - id: lab-lvm-008
+    title: "Extender LV lleno"
+    subtitle: "Recuperación de espacio en escenarios críticos"
+    difficulty: 4
+    points: 70
+    repetitions_required: 5
+
+    setup: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop14.img bs=1M count=2048
+      losetup /dev/loop14 /root/disks/loop14.img
+      wipefs -a /dev/loop14 || true
+      dd if=/dev/zero of=/root/disks/loop15.img bs=1M count=2048
+      losetup /dev/loop15 /root/disks/loop15.img
+      wipefs -a /dev/loop15 || true
+      pvcreate /dev/loop14
+      pvcreate /dev/loop15
+      vgcreate vg_full /dev/loop14 /dev/loop15
+      lvcreate -n lv_full -L 300M vg_full
+      mkfs.xfs /dev/vg_full/lv_full
+      mkdir -p /mnt/full
+      mount /dev/vg_full/lv_full /mnt/full
+      dd if=/dev/zero of=/mnt/full/bigfile.bin bs=1M || true
+
+    scenario: |
+      El LV lv_full está completamente lleno.
+      El jefe indica:
+      "Extiende lv_full y luego el filesystem hasta recuperar espacio disponible."
+
+    validations:
+      # Validación 1: LV extendido más allá de 300MB
+      - command: "lvs vg_full/lv_full --noheadings --units m -o lv_size 2>/dev/null || echo '0'"
+        expected_range:
+          min: "350"   # >300MB
+          max: "1000"  # Hasta 1GB
+        match_type: "range_numeric"
+        description: "LV extendido más allá del tamaño original (300MB)"
+        weight: 4
+      
+      # Validación 2: Filesystem extendido
+      - command: "df -B1M /mnt/full 2>/dev/null | tail -1 | awk '{print $2}' || echo '0'"
+        expected_range:
+          min: "350"   # >300MB
+          max: "1000"  # Hasta 1GB
+        match_type: "range_numeric"
+        description: "Filesystem extendido"
+        weight: 4
+      
+      # Validación 3: Espacio disponible > 0%
+      - command: "df /mnt/full 2>/dev/null | tail -1 | awk '{print $5}' | sed 's/%//' || echo '100'"
+        expected_range:
+          min: "0"
+          max: "95"   # Menos del 95% usado
+        match_type: "range_numeric"
+        description: "Espacio disponible recuperado (<95% usado)"
+        weight: 3
+      
+      # Validación 4: Filesystem sigue siendo XFS
+      - command: "blkid -s TYPE -o value /dev/vg_full/lv_full 2>/dev/null || echo 'NO_FS'"
+        expected_output: "xfs"
+        match_type: "exact"
+        description: "Filesystem sigue siendo XFS"
+        weight: 2
+      
+      # Validación 5: Se pueden escribir nuevos datos
+      - command: "dd if=/dev/zero of=/mnt/full/testfile.bin bs=1M count=10 2>&1 && echo 'ESCRIBIBLE' || echo 'NO_ESCRIBIBLE'"
+        expected_output: "ESCRIBIBLE"
+        match_type: "exact"
+        description: "Se pueden escribir nuevos datos después de extender"
+        weight: 2
+
+
+
+  # ────────────────────────────────
+  # LAB 009 — Corregir entrada incorrecta en /etc/fstab
+  # ────────────────────────────────
+  - id: lab-lvm-009
+    title: "Corregir entrada incorrecta en /etc/fstab"
+    subtitle: "Solución de problemas de montaje"
+    difficulty: 3
+    points: 60
+    repetitions_required: 4
+
+    setup: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop16.img bs=1M count=2048
+      losetup /dev/loop16 /root/disks/loop16.img
+      wipefs -a /dev/loop16 || true
+      pvcreate /dev/loop16
+      vgcreate vg_fstab /dev/loop16
+      lvcreate -n lv_cfg -L 400M vg_fstab
+      mkfs.ext4 /dev/vg_fstab/lv_cfg
+      mkdir -p /mnt/cfg
+      echo "UUID=WRONG-UUID /mnt/cfg ext4 defaults 0 0" >> /etc/fstab
+
+    scenario: |
+      Una entrada incorrecta en /etc/fstab impide el montaje automático.
+      El jefe ordena:
+      "Corrige la entrada para que /mnt/cfg monte correctamente."
+
+    validations:
+      # Validación 1: mount -a no produce errores
+      - command: "mount -a 2>&1 | grep -v 'already mounted' | wc -l"
+        expected_range:
+          min: "0"
+          max: "1"  # Permite algún warning menor
+        match_type: "range_numeric"
+        description: "mount -a no produce errores significativos"
+        weight: 3
+      
+      # Validación 2: /mnt/cfg montado correctamente
+      - command: "mount | grep '/mnt/cfg' | grep -q 'vg_fstab' && echo 'MONTADO_OK' || echo 'NO_MONTADO'"
+        expected_output: "MONTADO_OK"
+        match_type: "exact"
+        description: "/mnt/cfg montado correctamente"
+        weight: 4
+      
+      # Validación 3: Entrada en fstab no usa UUID incorrecto
+      - command: "grep '/mnt/cfg' /etc/fstab | grep -q 'WRONG-UUID' && echo 'UUID_MALO' || echo 'UUID_OK'"
+        expected_output: "UUID_OK"
+        match_type: "exact"
+        description: "Entrada en fstab no usa UUID incorrecto"
+        weight: 3
+      
+      # Validación 4: Entrada en fstab es válida (usa dispositivo o UUID correcto)
+      - command: "grep '/mnt/cfg' /etc/fstab | egrep -q '(^/dev/|UUID=[a-f0-9-]+)' && echo 'ENTRADA_VALIDA' || echo 'ENTRADA_INVALIDA'"
+        expected_output: "ENTRADA_VALIDA"
+        match_type: "exact"
+        description: "Entrada en fstab es válida (dispositivo o UUID)"
+        weight: 4
+      
+      # Validación 5: Persistencia después de reboot simulado
+      - command: "umount /mnt/cfg 2>/dev/null; mount -a 2>&1; mount | grep '/mnt/cfg' && echo 'PERSISTENTE' || echo 'NO_PERSISTENTE'"
+        expected_output: "PERSISTENTE"
+        match_type: "exact"
+        description: "Montaje persistente (sobrevive a umount + mount -a)"
+        weight: 2
+
+
+  # ────────────────────────────────
+  # LAB 010 — Extender LV con XFS en un VG grande
+  # ────────────────────────────────
+  - id: lab-lvm-010
+    title: "Extender filesystem XFS"
+    subtitle: "Redimensionamiento online en XFS"
+    difficulty: 4
+    points: 75
+    repetitions_required: 5
+
+    setup: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop17.img bs=1M count=2048
+      losetup /dev/loop17 /root/disks/loop17.img
+      wipefs -a /dev/loop17 || true
+      dd if=/dev/zero of=/root/disks/loop18.img bs=1M count=2048
+      losetup /dev/loop18 /root/disks/loop18.img
+      wipefs -a /dev/loop18 || true
+      pvcreate /dev/loop17
+      pvcreate /dev/loop18
+      vgcreate vg_xfs /dev/loop17 /dev/loop18
+      lvcreate -n lv_xdata -L 500M vg_xfs
+      mkfs.xfs /dev/vg_xfs/lv_xdata
+      mkdir -p /mnt/xdata
+      mount /dev/vg_xfs/lv_xdata /mnt/xdata
+
+    scenario: |
+      El filesystem XFS existe en el LV lv_xdata, pero el VG vg_xfs tiene mucho espacio libre.
+      El jefe solicita:
+      "Extiende lv_xdata y luego ejecuta xfs_growfs."
+
+    validations:
+      # Validación 1: LV extendido (>500MB)
+      - command: "lvs vg_xfs/lv_xdata --noheadings --units m -o lv_size 2>/dev/null || echo '0'"
+        expected_range:
+          min: "550"   # >500MB
+          max: "1500"  # Hasta 1.5GB
+        match_type: "range_numeric"
+        description: "LV extendido más allá de 500MB"
+        weight: 3
+      
+      # Validación 2: xfs_growfs ejecutado (filesystem extendido)
+      - command: "df -B1M /mnt/xdata 2>/dev/null | tail -1 | awk '{print $2}' || echo '0'"
+        expected_range:
+          min: "550"   # >500MB
+          max: "1500"  # Hasta 1.5GB
+        match_type: "range_numeric"
+        description: "Filesystem XFS redimensionado con xfs_growfs"
+        weight: 4
+      
+      # Validación 3: xfs_growfs no produjo errores (filesystem montado)
+      - command: "mount | grep '/mnt/xdata' && echo 'MONTADO_DURANTE' || echo 'DESMONTADO'"
+        expected_output: "MONTADO_DURANTE"
+        match_type: "exact"
+        description: "Filesystem permaneció montado durante xfs_growfs"
+        weight: 3
+      
+      # Validación 4: Filesystem sigue siendo XFS
+      - command: "blkid -s TYPE -o value /dev/vg_xfs/lv_xdata 2>/dev/null || echo 'NO_FS'"
+        expected_output: "xfs"
+        match_type: "exact"
+        description: "Filesystem sigue siendo XFS"
+        weight: 2
+      
+      # Validación 5: Datos preservados
+      - command: "test -d /mnt/xdata && echo 'DATOS_OK' || echo 'DATOS_PERDIDOS'"
+        expected_output: "DATOS_OK"
+        match_type: "exact"
+        description: "Datos preservados después de extender XFS"
+        weight: 2
+      
+      # Validación 6: Se puede escribir después de extender
+      - command: "touch /mnt/xdata/test_after_grow && echo 'ESCRIBIBLE' || echo 'NO_ESCRIBIBLE'"
+        expected_output: "ESCRIBIBLE"
+        match_type: "exact"
+        description: "Se puede escribir después de xfs_growfs"
+        weight: 1
+
+
+
+  # ────────────────────────────────
+  # LAB 011 — Actualizar UUID en fstab sin desmontar
+  # ────────────────────────────────
+  - id: lab-lvm-011
+    title: "Actualizar UUID en /etc/fstab"
+    subtitle: "Gestión de montajes y persistencia"
+    difficulty: 3
+    points: 60
+    repetitions_required: 4
+
+    setup: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop19.img bs=1M count=2048
+      losetup /dev/loop19 /root/disks/loop19.img
+      wipefs -a /dev/loop19 || true
+      pvcreate /dev/loop19
+      vgcreate vg_uuid /dev/loop19
+      lvcreate -n lv_uuid -L 450M vg_uuid
+      mkfs.ext4 /dev/vg_uuid/lv_uuid
+      mkdir -p /mnt/uuidtest
+      mount /dev/vg_uuid/lv_uuid /mnt/uuidtest
+      ORIGINAL_UUID=$(blkid -s UUID -o value /dev/vg_uuid/lv_uuid)
+      mkfs.ext4 -F /dev/vg_uuid/lv_uuid
+      NEW_UUID=$(blkid -s UUID -o value /dev/vg_uuid/lv_uuid)
+      echo "UUID=${ORIGINAL_UUID} /mnt/uuidtest ext4 defaults 0 0" >> /etc/fstab
+
+    scenario: |
+      El filesystem del LV lv_uuid fue recreado y ahora tiene un UUID diferente,
+      pero /etc/fstab aún contiene el UUID anterior.
+      El jefe indica:
+      "Actualiza el UUID en fstab sin desmontar el filesystem."
+
+    validations:
+      # Validación 1: Filesystem actualmente montado
+      - command: "mount | grep '/mnt/uuidtest' && echo 'MONTADO' || echo 'DESMONTADO'"
+        expected_output: "MONTADO"
+        match_type: "exact"
+        description: "Filesystem permanece montado durante el ejercicio"
+        weight: 3
+      
+      # Validación 2: UUID en fstab coincide con UUID actual
+      - command: "CURRENT_UUID=$(blkid -s UUID -o value /dev/vg_uuid/lv_uuid 2>/dev/null); grep '/mnt/uuidtest' /etc/fstab | grep -q \"UUID=${CURRENT_UUID}\" && echo 'UUID_CORRECTO' || echo 'UUID_INCORRECTO'"
+        expected_output: "UUID_CORRECTO"
+        match_type: "exact"
+        description: "UUID en fstab coincide con UUID actual del filesystem"
+        weight: 5
+      
+      # Validación 3: mount -a funciona sin errores
+      - command: "mount -a 2>&1 | grep -v 'already mounted' | wc -l"
+        expected_range:
+          min: "0"
+          max: "1"
+        match_type: "range_numeric"
+        description: "mount -a no produce errores"
+        weight: 3
+      
+      # Validación 4: Persistencia después de reboot simulado
+      - command: "umount /mnt/uuidtest 2>/dev/null; mount -a 2>&1; mount | grep '/mnt/uuidtest' && echo 'PERSISTENTE' || echo 'NO_PERSISTENTE'"
+        expected_output: "PERSISTENTE"
+        match_type: "exact"
+        description: "Montaje funciona después de umount + mount -a"
+        weight: 3
+      
+      # Validación 5: UUID antiguo NO está en fstab
+      - command: "OLD_UUID=$(grep 'WRONG-UUID\|ORIGINAL' /etc/fstab 2>/dev/null | head -1 | grep -o 'UUID=[^ ]*' | cut -d= -f2); if [ -z \"$OLD_UUID\" ]; then echo 'UUID_ANTIGUO_ELIMINADO'; else echo 'UUID_ANTIGUO_PRESENTE'; fi"
+        expected_output: "UUID_ANTIGUO_ELIMINADO"
+        match_type: "exact"
+        description: "UUID antiguo no está presente en fstab"
+        weight: 2
+
+
+
+
+  # ────────────────────────────────
+  # LAB 012 — Migración de datos con pvmove
+  # ────────────────────────────────
+  - id: lab-lvm-012
+    title: "LVM Avanzado – Migración de datos con pvmove"
+    subtitle: "Movimiento de datos sin downtime"
+    difficulty: 4
+    points: 350
+    repetitions_required: 10
+
+    setup: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop10.img bs=1M count=2048
+      losetup /dev/loop10 /root/disks/loop10.img
+      wipefs -a /dev/loop10 || true
+      dd if=/dev/zero of=/root/disks/loop11.img bs=1M count=2048
+      losetup /dev/loop11 /root/disks/loop11.img
+      wipefs -a /dev/loop11 || true
+      pvcreate /dev/loop10
+      pvcreate /dev/loop11
+      vgcreate vg_migracao /dev/loop10 /dev/loop11
+      lvcreate -n lv_mover -L 800M vg_migracao
+      mkfs.xfs /dev/vg_migracao/lv_mover
+      mkdir -p /mnt/mover
+      mount /dev/vg_migracao/lv_mover /mnt/mover
+      dd if=/dev/urandom of=/mnt/mover/testfile.bin bs=5M count=20
+
+    scenario: |
+      Tienes un VG con dos PVs y un LV con datos importantes.
+      El disco /dev/loop10 necesita ser reemplazado por mantenimiento.
+      El jefe ordena:
+      "Migra todos los datos de /dev/loop10 a /dev/loop11 usando pvmove sin downtime."
+
+    validations:
+      # Validación 1: Datos migrados de loop10 a loop11
+      - command: "pvs /dev/loop10 --noheadings --units m -o pv_used 2>/dev/null | awk '{print int(\$1)}' || echo '9999'"
+        expected_range:
+          min: "0"
+          max: "50"  # Casi 0MB usados (tolerancia)
+        match_type: "range_numeric"
+        description: "/dev/loop10 con menos de 50MB usados (datos migrados)"
+        weight: 5
+      
+      # Validación 2: Datos ahora en loop11
+      - command: "pvs /dev/loop11 --noheadings --units m -o pv_used 2>/dev/null | awk '{print int(\$1)}' || echo '0'"
+        expected_range:
+          min: "700"  # ~800MB usados
+          max: "900"
+        match_type: "range_numeric"
+        description: "/dev/loop11 con ~800MB usados (datos migrados aquí)"
+        weight: 5
+      
+      # Validación 3: Filesystem sigue montado y accesible durante migración
+      - command: "mount | grep '/mnt/mover' && echo 'MONTADO_DURANTE' || echo 'DESMONTADO'"
+        expected_output: "MONTADO_DURANTE"
+        match_type: "exact"
+        description: "Filesystem permaneció montado durante pvmove"
+        weight: 4
+      
+      # Validación 4: Datos preservados (archivo testfile.bin)
+      - command: "test -f /mnt/mover/testfile.bin && echo 'DATOS_PRESERVADOS' || echo 'DATOS_PERDIDOS'"
+        expected_output: "DATOS_PRESERVADOS"
+        match_type: "exact"
+        description: "Archivo de datos preservado después de migración"
+        weight: 4
+      
+      # Validación 5: Filesystem sigue siendo XFS y funcional
+      - command: "blkid -s TYPE -o value /dev/vg_migracao/lv_mover 2>/dev/null || echo 'NO_FS'"
+        expected_output: "xfs"
+        match_type: "exact"
+        description: "Filesystem sigue siendo XFS después de migración"
+        weight: 3
+      
+      # Validación 6: Tamaño del LV se mantiene
+      - command: "lvs vg_migracao/lv_mover --noheadings --units m -o lv_size 2>/dev/null | awk '{print int(\$1)}' || echo '0'"
+        expected_range:
+          min: "700"
+          max: "900"
+        match_type: "range_numeric"
+        description: "LV mantiene tamaño ~800MB después de migración"
+        weight: 3  
+
+   # ────────────────────────────────
+  # LAB 013 — Remover un PV de un Volume Group
+  # ────────────────────────────────
+  - id: lab-lvm-013
+    title: "LVM Avanzado – Remover un PV de un Volume Group"
+    subtitle: "Reducción segura de VG"
+    difficulty: 4
+    points: 350
+    repetitions_required: 10
+
+    setup: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop12.img bs=1M count=2048
+      losetup /dev/loop12 /root/disks/loop12.img
+      wipefs -a /dev/loop12 || true
+      dd if=/dev/zero of=/root/disks/loop13.img bs=1M count=2048
+      losetup /dev/loop13 /root/disks/loop13.img
+      wipefs -a /dev/loop13 || true
+      pvcreate /dev/loop12
+      pvcreate /dev/loop13
+      vgcreate vg_remocao /dev/loop12 /dev/loop13
+      lvcreate -n lv_remo -L 500M vg_remocao
+      mkfs.ext4 /dev/vg_remocao/lv_remo
+      mkdir -p /mnt/remo
+      mount /dev/vg_remocao/lv_remo /mnt/remo
+
+    scenario: |
+      El VG vg_remocao tiene dos PVs, pero necesitas retirar /dev/loop13
+      para usarlo en otro proyecto.
+      El jefe indica:
+      "Remueve /dev/loop13 del VG usando vgreduce, asegurando que el LV siga funcionando."
+
+    validations:
+      # Validación 1: VG ahora tiene solo 1 PV
+      - command: "vgs vg_remocao --noheadings -o pv_count 2>/dev/null || echo '2'"
+        expected_output: "1"
+        match_type: "exact"
+        description: "VG reducido a 1 PV"
+        weight: 5
+      
+      # Validación 2: /dev/loop13 NO está en el VG
+      - command: "pvs /dev/loop13 --noheadings -o vg_name 2>/dev/null"
+        expected_output: ""
+        match_type: "exact"
+        description: "/dev/loop13 ya no está en vg_remocao"
+        weight: 5
+      
+      # Validación 3: /dev/loop12 SÍ está en el VG
+      - command: "pvs /dev/loop12 --noheadings -o vg_name 2>/dev/null"
+        expected_output: "vg_remocao"
+        match_type: "exact"
+        description: "/dev/loop12 sigue en vg_remocao"
+        weight: 3
+      
+      # Validación 4: LV sigue montado y funcionando
+      - command: "mount | grep '/mnt/remo' && echo 'LV_ACTIVO' || echo 'LV_INACTIVO'"
+        expected_output: "LV_ACTIVO"
+        match_type: "exact"
+        description: "LV sigue montado después de remover PV"
+        weight: 4
+      
+      # Validación 5: Tamaño del VG reducido apropiadamente
+      - command: "vgs vg_remocao --noheadings --units m -o vg_size 2>/dev/null | awk '{print int(\$1)}' || echo '0'"
+        expected_range:
+          min: "1800"  # ~2GB (1 disco)
+          max: "2200"
+        match_type: "range_numeric"
+        description: "Tamaño del VG reducido a ~2GB (1 disco)"
+        weight: 3
+      
+      # Validación 6: Datos preservados en el LV
+      - command: "test -d /mnt/remo/lost+found && echo 'DATOS_OK' || echo 'DATOS_PERDIDOS'"
+        expected_output: "DATOS_OK"
+        match_type: "exact"
+        description: "Estructura de datos preservada"
+        weight: 4       
+
+
+  # ────────────────────────────────
+  # LAB 014 — Reparación de un VG degradado
+  # ────────────────────────────────
+  - id: lab-lvm-014
+    title: "LVM Avanzado – Reparación de un VG degradado"
+    subtitle: "Recuperación de fallos de disco"
+    difficulty: 5
+    points: 380
+    repetitions_required: 10
+
+    setup: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop14.img bs=1M count=2048
+      losetup /dev/loop14 /root/disks/loop14.img
+      wipefs -a /dev/loop14 || true
+      dd if=/dev/zero of=/root/disks/loop15.img bs=1M count=2048
+      losetup /dev/loop15 /root/disks/loop15.img
+      wipefs -a /dev/loop15 || true
+      pvcreate /dev/loop14
+      pvcreate /dev/loop15
+      vgcreate vg_degradado /dev/loop14 /dev/loop15
+      lvcreate -n lv_dados -L 600M vg_degradado
+      mkfs.xfs /dev/vg_degradado/lv_dados
+      mkdir -p /mnt/dados
+      mount /dev/vg_degradado/lv_dados /mnt/dados
+      losetup -d /dev/loop15  # Simular pérdida de disco
+
+    scenario: |
+      Uno de los discos del VG vg_degradado ha fallado (/dev/loop15 desapareció).
+      El sistema reporta el VG como degradado.
+      El jefe ordena:
+      "Repara el VG eliminando el PV faltante y deja el sistema funcional con el disco restante."
+
+    validations:
+      # Validación 1: VG reporta solo 1 PV (el que sigue disponible)
+      - command: "vgs vg_degradado --noheadings -o pv_count 2>/dev/null || echo '2'"
+        expected_output: "1"
+        match_type: "exact"
+        description: "VG reparado con 1 PV (eliminado el faltante)"
+        weight: 5
+      
+      # Validación 2: vgdisplay no muestra errores críticos
+      - command: "vgdisplay vg_degradado 2>&1 | grep -i 'error\\|fault\\|missing' | wc -l"
+        expected_range:
+          min: "0"
+          max: "1"  # Permite warnings menores
+        match_type: "range_numeric"
+        description: "VG sin errores críticos después de reparación"
+        weight: 4
+      
+      # Validación 3: LV sigue activo y montado
+      - command: "lvs vg_degradado/lv_dados --noheadings -o lv_attr 2>/dev/null | grep -q '^...a' && echo 'LV_ACTIVO' || echo 'LV_INACTIVO'"
+        expected_output: "LV_ACTIVO"
+        match_type: "exact"
+        description: "LV activo después de reparar VG"
+        weight: 5
+      
+      # Validación 4: Filesystem montado y accesible
+      - command: "mount | grep '/mnt/dados' && echo 'MONTADO' || echo 'DESMONTADO'"
+        expected_output: "MONTADO"
+        match_type: "exact"
+        description: "Filesystem sigue montado después de reparación"
+        weight: 4
+      
+      # Validación 5: Tamaño del VG ajustado (~2GB de 1 disco)
+      - command: "vgs vg_degradado --noheadings --units m -o vg_size 2>/dev/null | awk '{print int(\$1)}' || echo '0'"
+        expected_range:
+          min: "1800"
+          max: "2200"
+        match_type: "range_numeric"
+        description: "Tamaño del VG ajustado a ~2GB (1 disco)"
+        weight: 3
+      
+      # Validación 6: Se puede escribir en el filesystem
+      - command: "touch /mnt/dados/test_reparacion && echo 'ESCRIBIBLE' || echo 'NO_ESCRIBIBLE'"
+        expected_output: "ESCRIBIBLE"
+        match_type: "exact"
+        description: "Filesystem escribible después de reparación"
+        weight: 3
+
+
+  # ────────────────────────────────
+  # LAB 015 — Conversión de partición estándar a LVM
+  # ────────────────────────────────
+  - id: lab-lvm-015
+    title: "LVM Avanzado – Conversión de partición estándar a LVM"
+    subtitle: "Migración a LVM sin pérdida de datos"
+    difficulty: 5
+    points: 400
+    repetitions_required: 12
+
+    setup: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop16.img bs=1M count=2048
+      losetup /dev/loop16 /root/disks/loop16.img
+      wipefs -a /dev/loop16 || true
+      parted -s /dev/loop16 mklabel gpt
+      parted -s /dev/loop16 mkpart primary ext4 1MiB 2000MiB
+      mkfs.ext4 /dev/loop16p1
+      mkdir -p /mnt/legacy
+      mount /dev/loop16p1 /mnt/legacy
+      dd if=/dev/urandom of=/mnt/legacy/data.bin bs=5M count=10
+
+    scenario: |
+      Tienes un disco con una partición EXT4 tradicional que contiene datos importantes.
+      Necesitas migrar a LVM para tener más flexibilidad.
+      El jefe indica:
+      "Convierte /dev/loop16p1 a LVM sin perder datos, creando un nuevo punto de montaje /mnt/nuevo_legacy."
+
+    validations:
+      # Validación 1: /dev/loop16p1 ahora es un PV
+      - command: "pvs /dev/loop16p1 --noheadings -o pv_name 2>/dev/null || echo 'NO_PV'"
+        expected_output: "/dev/loop16p1"
+        match_type: "exact"
+        description: "/dev/loop16p1 convertido a Physical Volume"
+        weight: 4
+      
+      # Validación 2: VG creado con el PV
+      - command: "pvs /dev/loop16p1 --noheadings -o vg_name 2>/dev/null"
+        expected_output: "vg_convertido"
+        match_type: "contains"  # El nombre exacto puede variar
+        description: "PV asignado a un Volume Group"
+        weight: 3
+      
+      # Validación 3: LV creado con tamaño similar
+      - command: "lvs --noheadings --units m -o lv_size 2>/dev/null | head -1 | awk '{print int(\$1)}' || echo '0'"
+        expected_range:
+          min: "1800"  # ~2GB
+          max: "2200"
+        match_type: "range_numeric"
+        description: "LV creado con tamaño ~2GB"
+        weight: 4
+      
+      # Validación 4: Nuevo punto de montaje /mnt/nuevo_legacy creado
+      - command: "test -d /mnt/nuevo_legacy && echo 'DIR_EXISTE' || echo 'DIR_NO_EXISTE'"
+        expected_output: "DIR_EXISTE"
+        match_type: "exact"
+        description: "Nuevo directorio de montaje /mnt/nuevo_legacy creado"
+        weight: 3
+      
+      # Validación 5: Datos migrados (archivo data.bin presente)
+      - command: "test -f /mnt/nuevo_legacy/data.bin && echo 'DATOS_MIGRADOS' || echo 'DATOS_FALTANTES'"
+        expected_output: "DATOS_MIGRADOS"
+        match_type: "exact"
+        description: "Archivo data.bin migrado al nuevo filesystem"
+        weight: 5
+      
+      # Validación 6: Tamaño del archivo preservado (~50MB)
+      - command: "test -f /mnt/nuevo_legacy/data.bin && du -m /mnt/nuevo_legacy/data.bin | cut -f1 || echo '0'"
+        expected_range:
+          min: "40"  # ~50MB
+          max: "60"
+        match_type: "range_numeric"
+        description: "Archivo data.bin mantiene tamaño ~50MB"
+        weight: 4
+      
+      # Validación 7: Filesystem montado y accesible
+      - command: "mount | grep '/mnt/nuevo_legacy' && echo 'MONTADO' || echo 'DESMONTADO'"
+        expected_output: "MONTADO"
+        match_type: "exact"
+        description: "Nuevo filesystem montado"
+        weight: 3
+
+
+  # ────────────────────────────────
+  # LAB 016 — LV dividido en varias particiones (striped LV)
+  # ────────────────────────────────
+  - id: lab-lvm-016
+    title: "LVM Avanzado – LV dividido en varias particiones (striped LV)"
+    subtitle: "Striping para mejor performance"
+    difficulty: 5
+    points: 420
+    repetitions_required: 12
+
+    setup: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop17.img bs=1M count=2048
+      losetup /dev/loop17 /root/disks/loop17.img
+      wipefs -a /dev/loop17 || true
+      dd if=/dev/zero of=/root/disks/loop18.img bs=1M count=2048
+      losetup /dev/loop18 /root/disks/loop18.img
+      wipefs -a /dev/loop18 || true
+      pvcreate /dev/loop17
+      pvcreate /dev/loop18
+      vgcreate vg_rapido /dev/loop17 /dev/loop18
+
+    scenario: |
+      Tienes dos discos idénticos y necesitas crear un LV de alto rendimiento
+      para una base de datos crítica.
+      El jefe ordena:
+      "Crea un Logical Volume de 1.5G en modo striped (-i2) sobre ambos discos y formatealo con XFS."
+
+    validations:
+      # Validación 1: LV creado en modo striped
+      - command: "lvs --noheadings -o segtype 2>/dev/null | grep -i 'striped' | head -1 || echo 'NO_STRIPED'"
+        expected_output: "striped"
+        match_type: "contains"
+        description: "LV creado en modo striped"
+        weight: 5
+      
+      # Validación 2: LV con 2 stripes
+      - command: "lvs --noheadings -o stripes 2>/dev/null | head -1 || echo '0'"
+        expected_output: "2"
+        match_type: "exact"
+        description: "LV con 2 stripes (uno por disco)"
+        weight: 5
+      
+      # Validación 3: Tamaño ~1.5GB
+      - command: "lvs --noheadings --units m -o lv_size 2>/dev/null | head -1 | awk '{print int(\$1)}' || echo '0'"
+        expected_range:
+          min: "1300"  # 1.4GB
+          max: "1700"  # 1.6GB
+        match_type: "range_numeric"
+        description: "LV con tamaño ~1.5GB"
+        weight: 4
+      
+      # Validación 4: Filesystem XFS creado
+      - command: "blkid -s TYPE -o value $(lvs --noheadings -o lv_path 2>/dev/null | head -1) 2>/dev/null || echo 'NO_FS'"
+        expected_output: "xfs"
+        match_type: "exact"
+        description: "Filesystem XFS creado en el LV"
+        weight: 4
+      
+      # Validación 5: LV montado (si se pidió montar)
+      - command: "mount | grep 'vg_rapido' && echo 'MONTADO' || echo 'NO_MONTADO'"
+        expected_output: "MONTADO"
+        match_type: "exact"
+        description: "LV striped montado y listo para usar"
+        weight: 3
+      
+      # Validación 6: Datos distribuidos en ambos discos (verificación indirecta)
+      - command: "pvs --noheadings --units m -o pv_used /dev/loop17 2>/dev/null | awk '{print int(\$1)}' || echo '0'"
+        expected_range:
+          min: "450"  # ~750MB por disco (1.5GB/2)
+          max: "950"
+        match_type: "range_numeric"
+        description: "Datos distribuidos en /dev/loop17"
+        weight: 3

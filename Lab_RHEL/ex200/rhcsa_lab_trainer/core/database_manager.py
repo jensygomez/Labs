@@ -10,6 +10,7 @@ from datetime import datetime, date
 from typing import Dict, List, Any, Optional, Tuple
 from contextlib import contextmanager
 from pathlib import Path
+from ui.display.colors import Color
 
 class DatabaseManager:
     """Gestor de base de datos para estructura completa"""
