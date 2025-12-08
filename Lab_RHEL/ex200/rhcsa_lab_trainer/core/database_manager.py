@@ -523,7 +523,7 @@ class DatabaseManager:
             
             # Obtener o crear module_id (como TEXT: nombre del módulo)
             module_name = data.get('module', 'Unknown Module')
-            c.execute("SELECT id FROM modules WHERE name = ? OR folder = ?", (module_name, module_name))
+            c.execute("SELECT id FROM modules WHERE name LIKE ?", (f"%{module_name}%",))
             module_row = c.fetchone()
             if module_row:
                 module_id = module_row[0]
