@@ -132,6 +132,52 @@ class ExercisesMenu:
             pause()
 
     def new_exercise_full(self):
-        """🗑️ OBSOLETO: Reemplazado por import_yaml_master()"""
-        print(f"{Color.YELLOW}🗑️ Función obsoleta → Usa '1. Importar YAML maestro'{Color.RESET}")
+        """1. Elegir módulo → 2. Abrir YAML con nano → 3. Importar todo a DB"""
+        modules = {
+            "1": ("01_essential_tools", "Essential Tools"),
+            "2": ("02_running_systems", "Running Systems"), 
+            "3": ("03_local_storage", "Local Storage"),
+            "4": ("04_file_systems", "File Systems"),
+            "5": ("05_deploy_systems", "Deploy Systems"),
+            "6": ("06_networking", "Networking")
+        }
+
+        while True:
+            clear_screen()
+            print(f"{Color.CYAN}📂 Elige módulo RHCSA para importar YAML:{Color.RESET}")
+            print(f"{Color.RED}b{Color.RESET} → Volver")
+            print()
+            for num, (path, name) in modules.items():
+                print(f" {num}. {name}")
+            
+            choice = input(f"{Color.CYAN}Opción → {Color.RESET}").strip().lower()
+
+            if choice in ("b", "back"):
+                return
+            
+            if choice in modules:
+                module_path, module_name = modules[choice]
+                break
+            else:
+                pause(f"{Color.RED}Opción inválida{Color.RESET}")
+        
+        # Ruta YAML para ese módulo siguiendo estructura
+        yaml_path = Path(f"scenarios/{module_path}/{module_path}-master.yaml")
+        yaml_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Abre nano para editar/pegar labs completos (pueden ser muchos labs)
+        print(f"{Color.GREEN}📂 Abriendo archivo para edición: {yaml_path}{Color.RESET}")
+        editor = os.getenv("EDITOR", "nano")
+        subprocess.call([editor, str(yaml_path)])
+
+        # Importar YAML (TODO todos los labs dentro)
+        print(f"{Color.CYAN}📥 Importando labs desde YAML a la base de datos...{Color.RESET}")
+        try:
+            with DatabaseManager() as db:
+                count = db.import_lab_yaml(yaml_path)
+            print(f"{Color.GREEN}🎉 {count} labs importados de {module_name}!{Color.RESET}")
+        except Exception as e:
+            print(f"{Color.RED}❌ Error importando YAML: {e}{Color.RESET}")
+        
         pause()
+
