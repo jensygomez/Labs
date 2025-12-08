@@ -76,11 +76,19 @@ class UniversalEngine:
     def run_setup_ssh(self):
         """Ejecuta setup_ssh línea por línea via SSH"""
         try:
+            # 🔧 SSH CONFIG INTERACTIVA
+            config = SSHConfig()
+            config.ask_config()
+            
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(self.vm_ip, username=self.vm_user, timeout=10)
+            if config.config['auth'] == 'key':
+                ssh.connect(config.config['host'], username=config.config['user'], timeout=10)
+            else:
+                ssh.connect(config.config['host'], username=config.config['user'], 
+                        password=config.config['password'], timeout=10)
             
-            print(f"{Color.GRAY}📡 Conectando {self.vm_user}@{self.vm_ip}...{Color.RESET}")
+            print(f"{Color.GRAY}📡 Conectando {config.config['user']}@{config.config['host']}...{Color.RESET}")
             
             # Ejecutar cada línea del setup_ssh
             for i, cmd in enumerate(self.setup_ssh.strip().split('\n'), 1):
@@ -96,6 +104,7 @@ class UniversalEngine:
                         return False
             
             ssh.close()
+            print(f"{Color.GREEN}✅ Setup VM completado ✓{Color.RESET}")
             return True
             
         except Exception as e:
@@ -105,9 +114,17 @@ class UniversalEngine:
     def validate(self):
         """Valida expected_text → Devuelve score 0-100"""
         try:
+            # 🔧 SSH CONFIG INTERACTIVA
+            config = SSHConfig()
+            config.ask_config()
+            
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(self.vm_ip, username=self.vm_user, timeout=10)
+            if config.config['auth'] == 'key':
+                ssh.connect(config.config['host'], username=config.config['user'], timeout=10)
+            else:
+                ssh.connect(config.config['host'], username=config.config['user'], 
+                        password=config.config['password'], timeout=10)
             
             total_checks = 0
             passed_checks = 0
@@ -133,6 +150,7 @@ class UniversalEngine:
         except Exception as e:
             print(f"{Color.RED}❌ Validación falló: {e}{Color.RESET}")
             return 0
+
 
     def parse_expected_text(self):
         """Parsea expected_text → lista comandos validación"""
