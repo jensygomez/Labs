@@ -1,11 +1,10 @@
 # Lab_RHEL/ex200/rhcsa_lab_trainer/core/database_manager.py
 #!/usr/bin/env python3
-
 import sqlite3
 import yaml
 from pathlib import Path
 from ui.display.colors import Color
-
+from datetime import datetime, date, timedelta
 
 class DatabaseManager:
     def __init__(self, db_path="data/database/rhcsa_trainer.db"):
@@ -25,32 +24,59 @@ class DatabaseManager:
     def close(self):
         if self.conn:
             self.conn.close()
-    
 
-
-    def import_yaml_scenario(self, yaml_path):
-        """Importa YAML completo → DB automáticamente"""
+    def import_lab_yaml(self, yaml_path):
+        """🚀 NUEVO: Importa TU YAML MAESTRO LVM → labs DB"""
         try:
             with open(yaml_path, 'r', encoding='utf-8') as f:
                 data = yaml.safe_load(f)
             
-            # AGREGAR difficulty por defecto si no existe
-            if 'difficulty' not in data:
-                data['difficulty'] = 1  # Básico por defecto
+            labs_imported = 0
+            for lab in data.get('labs', []):
+                self.cursor.execute("""
+                    INSERT OR REPLACE INTO labs (
+                        id, module, submodule, title, subtitle, 
+                        difficulty, points, repetitions_required,
+                        scenario_text, expected_text, setup_ssh
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    lab['id'],
+                    lab.get('module', '3.2'),  # LVM por defecto
+                    lab.get('submodule', 'Administración LVM'),
+                    lab['title'],
+                    lab.get('subtitle', ''),
+                    lab['difficulty'],
+                    lab['points'],
+                    lab.get('repetitions_required', 5),
+                    lab['scenario'],
+                    lab['expected'],
+                    lab['setup']
+                ))
+                labs_imported += 1
             
-            c = self.cursor
-            c.execute("""
-                INSERT OR REPLACE INTO scenarios 
-                (id, name, module, type, path, description, points, repetitions_required, difficulty)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                data['id'], data['name'], data['module'], data['type'],
-                str(yaml_path), data['description'], data['points'], 
-                data['repetitions_required'], data.get('difficulty', 1)
-            ))
-            self.conn.commit()
-            print(f"{Color.GREEN}✅ {data['id']} importado desde {yaml_path}{Color.RESET}")
-            return True
+            # Actualizar modules
+            self.cursor.execute("""
+                INSERT OR REPLACE INTO modules 
+                (id, name, order_num, labs_count)
+                VALUES ('3.2_lvm', 'Administración LVM', 3.2, ?)
+            """, (labs_imported,))
+            
+            self.commit()
+            print(f"{Color.GREEN}✅ {labs_imported} LABS LVM importados desde {yaml_path}{Color.RESET}")
+            return labs_imported
         except Exception as e:
-            print(f"{Color.RED}❌ Error importando {yaml_path}: {e}{Color.RESET}")
-            return False
+            print(f"{Color.RED}❌ Error: {e}{Color.RESET}")
+            return 0
+
+    def get_labs_by_module(self, module='3.2'):
+        """Lista labs por módulo (para menú opción 6)"""
+        self.cursor.execute("""
+            SELECT id, title, difficulty, points, repetitions_completed, repetitions_required
+            FROM labs WHERE module=? ORDER BY difficulty, id
+        """, (module,))
+        return self.cursor.fetchall()
+
+    def get_lab_by_id(self, lab_id):
+        """Obtiene lab completo por ID"""
+        self.cursor.execute("SELECT * FROM labs WHERE id=?", (lab_id,))
+        return self.cursor.fetchone()
