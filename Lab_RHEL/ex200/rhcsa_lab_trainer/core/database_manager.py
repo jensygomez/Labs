@@ -85,3 +85,17 @@ class DatabaseManager:
         """, (lab_id,))
         return self.cursor.fetchone()
 
+
+
+    def get_modules_progress(self):
+        """Progreso por módulo para menú"""
+        self.cursor.execute("""
+            SELECT 
+                module,
+                COUNT(*) as total_labs,
+                SUM(CASE WHEN repetitions_completed >= repetitions_required THEN 1 ELSE 0 END) as completed,
+                AVG(best_score) as avg_score,
+                (SELECT title FROM labs l2 WHERE l2.module = l1.module ORDER BY best_score DESC LIMIT 1) as best_lab
+            FROM labs l1 GROUP BY module ORDER BY module
+        """)
+        return self.cursor.fetchall()
