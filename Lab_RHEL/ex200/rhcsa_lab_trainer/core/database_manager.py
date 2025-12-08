@@ -76,7 +76,12 @@ class DatabaseManager:
         """, (module,))
         return self.cursor.fetchall()
 
+    
     def get_lab_by_id(self, lab_id):
         """Obtiene lab completo por ID"""
-        self.cursor.execute("SELECT * FROM labs WHERE id=?", (lab_id,))
+        self.cursor.execute("""
+            SELECT * FROM labs WHERE id=? 
+            ORDER BY created_at DESC LIMIT 1
+        """, (lab_id,))
         return self.cursor.fetchone()
+

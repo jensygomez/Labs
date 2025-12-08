@@ -1,183 +1,211 @@
+# Lab_RHEL/ex200/rhcsa_lab_trainer/core/scenario_engine.py
 #!/usr/bin/env python3
-"""
-UniversalEngine FINAL - Tu lógica PURA + 3 NIVELES dinámicos
-NO inventa variables. Usa SOLO tus globals. Si falta → avisa.
-"""
-import yaml
+import time
+import paramiko
 import re
+from datetime import datetime, date, timedelta
 from pathlib import Path
-from random import choice
-from datetime import datetime
-from subprocess import check_output
-from core.database_manager import DatabaseManager
 from ui.display.colors import Color
 from ui.utils.screen_utils import clear_screen, pause
-from ui.utils.input_handlers import get_menu_choice
+from core.database_manager import DatabaseManager
 
 class UniversalEngine:
-    def __init__(self, exercise_id):
-        self.id = exercise_id
-        self.level = None
-        self.load_exercise()
-
-    def load_exercise(self):
-        db = DatabaseManager()
-        c = db.cursor
-        c.execute("SELECT path FROM scenarios WHERE id = ?", (self.id,))
-        row = c.fetchone()
-        db.close()
-        if not row:
-            raise ValueError(f"Ejercicio '{self.id}' no encontrado")
-        with open(row[0], "r", encoding="utf-8") as f:
-            self.exercise = yaml.safe_load(f)
-
-    def select_level(self):
-        """Menú interactivo de niveles con 'b' para volver"""
-        while True:
-            clear_screen()
-            print(f"{Color.CYAN}🚀 {self.exercise['name']} — Elige dificultad{Color.RESET}")
-            print(f"{Color.YELLOW}📊 Total reps: {self.exercise['repetitions_required']}{Color.RESET}\n")
-            print(f"{Color.RED}b{Color.RESET} → Volver al menú de entrenamiento")
-            print()
-            
-            levels = ["basic", "intermediate", "advanced"]
-            level_names = ["🔵 Básico", "🟡 Intermedio", "🔴 Avanzado"]
-            
-            for i, lvl in enumerate(levels, 1):
-                level_data = self.exercise["levels"][lvl]
-                print(f"   {i}. {level_names[i-1]} ({level_data['repetitions']} reps, {level_data['points_per_rep']}pts)")
-            
-            choice = input(f"{Color.CYAN}Opción → {Color.RESET}").strip().lower()
-
-            if choice in ("b", "back"):
-                print(f"{Color.YELLOW}Volviendo al menú de entrenamiento...{Color.RESET}")
-                pause()
-                return None  # ← Indica cancelar
-            
-            try:
-                choice_num = int(choice)
-                if 1 <= choice_num <= 3:
-                    self.level = levels[choice_num-1]
-                    print(f"{Color.GREEN}✓ Nivel {level_names[choice_num-1]} seleccionado{Color.RESET}")
-                    pause()
-                    return self.level
-            except:
-                pause(f"{Color.RED}Opción inválida{Color.RESET}")
-
-
-    def generate(self):
-        """TU LÓGICA ORIGINAL - SIN CAMBIOS"""
-        level = self.exercise["levels"][self.level]  # ← CAMBIO: self.level
+    def __init__(self, lab_id):
+        """Inicializa lab completo desde DB nueva"""
+        self.lab_id = lab_id
+        self.vm_ip = "192.168.1.100"
+        self.vm_user = "rhcsa_lab"
         
-        # allowed_scenarios si existe, sino todos
-        allowed = level.get("allowed_scenarios", list(range(len(self.exercise["scenarios"]))))
-        template = choice([self.exercise["scenarios"][i] for i in allowed])
-
-        # Extraer todas las variables {{...}}
-        placeholders = re.findall(r"{{([^}]+)}}", template)
-        values = {}
-
-        missing = []
-        for var in placeholders:
-            var = var.strip()
-            if var in self.exercise["globals"] and self.exercise["globals"][var]:
-                values[var] = choice(self.exercise["globals"][var])
-            else:
-                missing.append(var)
-                values[var] = f"???{var}???"
-
-        # Texto final
-        task = template
-        for var, val in values.items():
-            task = task.replace(f"{{{{{var}}}}}", str(val))
-
-        # Avisar si faltó algo
-        if missing:
-            print(f"{Color.YELLOW}Advertencia: Variables no definidas en globals: {', '.join(missing)}{Color.RESET}")
-
-        # pre_setup (opcional) - TU LÓGICA ORIGINAL
-        for cmd_tmpl in level.get("pre_setup", []):
-            cmd = cmd_tmpl
-            for var, val in values.items():
-                cmd = cmd.replace(f"{{{{{var}}}}}", str(val))
-            try:
-                check_output(cmd, shell=True, executable="/bin/bash")
-            except:
-                pass
-
-        return task, values
+        # Cargar TODO del lab desde DB
+        with DatabaseManager() as db:
+            lab = db.get_lab_by_id(lab_id)
+            if not lab:
+                raise Exception(f"❌ Lab {lab_id} no encontrado en BD")
+            
+            # Desempaquetar columnas DB → atributos
+            (self.id, self.module, self.submodule, self.title, self.subtitle,
+             self.difficulty, self.points, self.repetitions_required, self.repetitions_completed,
+             self.last_reviewed, self.next_review, self.interval_days, self.ease_factor,
+             self.best_score, self.avg_time_seconds, self.total_attempts, self.mastery_level,
+             self.streak, self.badges, self.scenario_text, self.expected_text,
+             self.setup_ssh, vm_ip, vm_user, self.created_at, self.updated_at) = lab
+            
+            self.vm_ip = vm_ip or self.vm_ip
+            self.vm_user = vm_user or self.vm_user
+        
+        print(f"🎯 Cargado: {self.title} (D{self.difficulty}) {self.points}pts")
 
     def run(self):
-        """Flujo completo con VALIDACIÓN AUTOMÁTICA + 'b' cancelar"""
-        level = self.select_level()  # ← RECIBE return value
+        """Flujo completo: setup → Jensy → validate → Anki update"""
+        clear_screen()
+        print_banner()
         
-        if level is None:  # ← CANCELADO con "b"
+        print(f"{Color.CYAN}{'='*60}{Color.RESET}")
+        print(f"🔬 LABORATORIO: {self.title}")
+        print(f"📂 Módulo: {self.module} | Dificultad: D{self.difficulty}")
+        print(f"📊 Progreso: {self.repetitions_completed}/{self.repetitions_required}")
+        print(f"{Color.CYAN}{'='*60}{Color.RESET}\n")
+        
+        print(f"{Color.BLUE}📋 ESCENARIO:{Color.RESET}")
+        print(self.scenario_text)
+        print(f"\n{Color.YELLOW}🔧 Preparando VM...{Color.RESET}")
+        
+        # 1. SETUP VM via SSH
+        if self.run_setup_ssh():
+            print(f"{Color.GREEN}✅ VM lista!{Color.RESET}")
+        else:
+            pause("❌ Error setup VM. Enter para continuar...")
             return
         
-        clear_screen()
-        print(f"{Color.CYAN}🎯 ENTRENAMIENTO: {self.exercise['name']}{Color.RESET}")
-        print(f"{Color.YELLOW}📂 Nivel: {level.title()} | Reps: {self.exercise['levels'][level]['repetitions']}{Color.RESET}\n")
-
-        start = datetime.now()
-        task, values = self.generate()
-
-        print(f"{Color.YELLOW}Tarea:{Color.RESET} {task}\n")
-        input(f"{Color.GREEN}Realiza la tarea y pulsa Enter cuando termines →{Color.RESET}")
-
-        elapsed = (datetime.now() - start).total_seconds()
+        # 2. JENSY TRABAJA
+        print(f"\n{Color.CYAN}💻 ssh {self.vm_user}@{self.vm_ip}{Color.RESET}")
+        start_time = time.time()
+        input(f"{Color.MAGENTA}⏱️  Realiza la tarea → [ENTER] para validar...{Color.RESET}")
+        elapsed = int(time.time() - start_time)
         
-        # 🔥 VALIDACIÓN REAL
-        score = self.validate(values)
-
-        # Guardar progreso
-        db = DatabaseManager()
-        c = db.conn.cursor()
-        c.execute(
-            "INSERT INTO progress (scenario_id, completed_at, time_seconds, attempts, score) VALUES (?, datetime('now'), ?, 1, ?)",
-            (self.id, elapsed, score)
-        )
-        db.conn.commit()
-        db.close()
-
-        print(f"\n{Color.GREEN}Tiempo: {elapsed:.1f}s | ⭐ {score}pts{Color.RESET}")
+        # 3. VALIDAR
+        score = self.validate()
+        print(f"\n{Color.CYAN}📊 VALIDACIÓN FINAL:{Color.RESET}")
+        print(f"Tiempo: {elapsed}s | Puntaje: {score}/{self.points}")
+        
+        # 4. ACTUALIZAR PROGRESO ANKI
+        self.update_progress(score, elapsed)
+        
         pause("\nEnter para continuar...")
 
-
-
-
-
-
-
-
-# =====================================================
-# VALIDACION
-# =====================================================
-
-    def validate(self, values):
-        level = self.exercise["levels"][self.level]
-        validation_cmds = level.get("validation", [])
-        
-        if not validation_cmds:
-            return 100  # Sin validación = 100pts
-        
-        score = 100
-        print(f"{Color.CYAN}🔍 Validando...{Color.RESET}")
-        
-        for i, cmd_tmpl in enumerate(validation_cmds, 1):
-            cmd = cmd_tmpl
-            for var, val in values.items():
-                cmd = cmd.replace(f"{{{{{var}}}}}", str(val))
+    def run_setup_ssh(self):
+        """Ejecuta setup_ssh línea por línea via SSH"""
+        try:
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(self.vm_ip, username=self.vm_user, timeout=10)
             
-            try:
-                result = check_output(cmd, shell=True, executable="/bin/bash", timeout=5)
-                print(f"   {i}. {Color.GREEN}✓ {cmd}{Color.RESET}")
-            except:
-                print(f"   {i}. {Color.RED}✗ {cmd}{Color.RESET}")
-                score -= 20  # -20pts por fallo
-        
-        return max(0, score)
- 
+            print(f"{Color.GRAY}📡 Conectando {self.vm_user}@{self.vm_ip}...{Color.RESET}")
+            
+            # Ejecutar cada línea del setup_ssh
+            for i, cmd in enumerate(self.setup_ssh.strip().split('\n'), 1):
+                cmd = cmd.strip()
+                if cmd and not cmd.startswith('#'):
+                    print(f"  {i}. {Color.GRAY}{cmd[:60]}...{Color.RESET}")
+                    stdin, stdout, stderr = ssh.exec_command(f"sudo bash -c '{cmd}'")
+                    exit_code = stdout.channel.recv_exit_status()
+                    if exit_code != 0:
+                        error = stderr.read().decode().strip()
+                        print(f"  {Color.RED}❌ Error: {error[:100]}{Color.RESET}")
+                        ssh.close()
+                        return False
+            
+            ssh.close()
+            return True
+            
+        except Exception as e:
+            print(f"{Color.RED}❌ SSH Error: {e}{Color.RESET}")
+            return False
 
-# Prueba
-if __name__ == "__main__":
-    UniversalEngine("users-001").run()
+    def validate(self):
+        """Valida expected_text → Devuelve score 0-100"""
+        try:
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(self.vm_ip, username=self.vm_user, timeout=10)
+            
+            total_checks = 0
+            passed_checks = 0
+            
+            # Parsear expected_text → comandos de validación
+            validation_cmds = self.parse_expected_text()
+            
+            for cmd in validation_cmds:
+                stdin, stdout, stderr = ssh.exec_command(cmd)
+                output = stdout.read().decode().strip()
+                exit_code = stdout.channel.recv_exit_status()
+                
+                total_checks += 1
+                if exit_code == 0 and output:
+                    passed_checks += 1
+                    print(f"  {Color.GREEN}✓{Color.RESET} {cmd[:50]:<50} OK")
+                else:
+                    print(f"  {Color.RED}✗{Color.RESET} {cmd[:50]:<50} FAIL")
+            
+            ssh.close()
+            return int((passed_checks / total_checks) * self.points)
+            
+        except Exception as e:
+            print(f"{Color.RED}❌ Validación falló: {e}{Color.RESET}")
+            return 0
+
+    def parse_expected_text(self):
+        """Parsea expected_text → lista comandos validación"""
+        cmds = []
+        
+        # Regex común para extraer comandos de expected_text
+        patterns = [
+            r'`([^`]+)`',  # `lvs` → lvs
+            r'(\w+\s+\w+(?:\s+\S+)*)',  # comandos sueltos
+        ]
+        
+        for pattern in patterns:
+            matches = re.findall(pattern, self.expected_text, re.IGNORECASE)
+            cmds.extend(matches)
+        
+        # Comandos comunes LVM
+        lvm_cmds = ['pvs', 'vgs', 'lvs', 'df -h', 'mount | grep mnt']
+        cmds.extend([cmd for cmd in lvm_cmds if cmd in self.expected_text.lower()])
+        
+        return list(set(cmds))[:10]  # Max 10 checks
+
+    def update_progress(self, score, elapsed_time):
+        """Actualiza DB: reps, Anki, gamificación"""
+        with DatabaseManager() as db:
+            # Incrementar repeticiones
+            new_reps = self.repetitions_completed + 1
+            
+            # Calcular nuevo interval (Anki)
+            if score >= 90:
+                interval_days = min(self.interval_days * 2.5, 30)
+                ease_factor = min(self.ease_factor + 0.15, 4.0)
+            elif score >= 70:
+                interval_days = self.interval_days * 1.8
+                ease_factor = self.ease_factor + 0.10
+            else:
+                interval_days = max(self.interval_days * 0.8, 1)
+                ease_factor = max(self.ease_factor - 0.20, 1.3)
+            
+            next_review = date.today() + timedelta(days=interval_days)
+            
+            # Mastery level
+            mastery = 'novato'
+            if new_reps >= self.repetitions_required and score >= 90:
+                mastery = 'maestro'
+            elif new_reps >= self.repetitions_required * 0.8 and score >= 80:
+                mastery = 'proficiente'
+            elif new_reps >= self.repetitions_required * 0.5:
+                mastery = 'aprendiendo'
+            
+            # Streak
+            streak = self.streak + 1 if score >= 70 else 0
+            
+            db.cursor.execute("""
+                UPDATE labs SET
+                    repetitions_completed = ?,
+                    best_score = GREATEST(?, best_score),
+                    avg_time_seconds = ((avg_time_seconds * total_attempts + ?) / (total_attempts + 1)),
+                    total_attempts = total_attempts + 1,
+                    last_reviewed = CURRENT_TIMESTAMP,
+                    next_review = ?,
+                    interval_days = ?,
+                    ease_factor = ?,
+                    mastery_level = ?,
+                    streak = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            """, (new_reps, score, elapsed_time, next_review, interval_days,
+                  ease_factor, mastery, streak, self.lab_id))
+            
+            db.commit()
+            print(f"{Color.GREEN}📈 Progreso actualizado: {new_reps}/{self.repetitions_required} | {mastery}{Color.RESET}")
+
+def print_banner():
+    print(f"{Color.MAGENTA}{'='*70}{Color.RESET}")
+    print(f"  🎯 {Color.WHITE}RHCSA LAB TRAINER - {Color.CYAN}{Color.BOLD}{time.strftime('%Y-%m-%d %H:%M')}{Color.RESET}")
+    print(f"{Color.MAGENTA}{'='*70}{Color.RESET}")
