@@ -1,214 +1,596 @@
-id: lvm-001
-name: Administración Lógica de Volúmenes (LVM)
-module: Local Storage
-type: dynamic
-description: "Ejercicio dinámico RHCSA: Administración completa de LVM (EX200)"
-points: 220
-repetitions_required: 20
-difficulty: 1
+module: "3. Local Storage"
+submodule: "3.2 Administración Lógica de Volúmenes (LVM)"
+labs_count: 16
+type: "static"
+version: "2025.1"
 
-globals:
-  disk: ["/dev/loop1", "/dev/loop2", "/dev/loop3", "/dev/loop4", "/dev/loop5"]
-  pv_name: ["pv_geral"]
-  vg_name: ["vg_data", "vg_apps", "vg_backup", "vg_logs"]
-  lv_name: ["lv_data", "lv_home", "lv_logs"]
-  size: ["500M", "1G", "2G"]
-  fs: ["xfs", "ext4"]
-  mount_point: ["/mnt/data", "/mnt/storage", "/mnt/backup", "/mnt/logs"]
-  extend_size: ["+200M", "+500M", "+1G"]
-
-scenarios:
+labs:
 
   # ────────────────────────────────
-  # 📌 BÁSICO (0–2)
+  # LAB 001 — Crear Physical Volume
   # ────────────────────────────────
+  - id: lab-lvm-001
+    title: "Crear Physical Volume (PV)"
+    subtitle: "Fundamentos iniciales de LVM"
+    difficulty: 1
+    points: 20
+    repetitions_required: 5
 
-  - |
-      **Escenario:** El equipo acaba de llegar del proveedor y solo cuenta con el disco {{disk}}, totalmente limpio y sin uso previo.
-      **Tarea del jefe:** “Antes de continuar con el despliegue del servidor, necesito que prepares el disco inicial. Convierte {{disk}} en un Physical Volume para que podamos empezar a trabajar con LVM.”
-      **Resultado esperado:** `pvs` muestra {{disk}} como un PV válido y activo.
+    setup: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop1.img bs=1M count=2048
+      losetup /dev/loop1 /root/disks/loop1.img
+      wipefs -a /dev/loop1 || true
 
-      **Setup de la máquina (via SSH):**
-        # Crear carpeta donde estarán los discos loop
-        mkdir -p /root/disks
-        dd if=/dev/zero of=/root/disks/{{disk | replace('/dev/','') }}.img bs=1M count=2048
-        losetup {{disk}} /root/disks/{{disk | replace('/dev/','') }}.img
-        wipefs -a {{disk}} || true
+    scenario: |
+      El servidor acaba de llegar del proveedor. El disco /dev/loop1 está totalmente limpio.
+      El jefe solicita:
+      "Convierte /dev/loop1 en un Physical Volume para preparar el almacenamiento."
 
-  - |
-      **Escenario:** El sistema tiene disponibles los discos {{disk}} y {{disk_extra}}, ambos sin particiones ni configuración previa.
-      **Tarea del jefe:** “Vamos a consolidar el almacenamiento del servidor. Usa los discos disponibles para crear un nuevo Volume Group llamado {{vg_name}}.”
-      **Resultado esperado:** `vgs` lista {{vg_name}} mostrando 2 PVs asignados correctamente.
+    expected: |
+      El comando `pvs` debe mostrar /dev/loop1 como un PV válido y activo.
 
-      **Setup de la máquina (via SSH):**
-        mkdir -p /root/disks
-        dd if=/dev/zero of=/root/disks/{{disk | replace('/dev/','')}}.img bs=1M count=2048
-        losetup {{disk}} /root/disks/{{disk | replace('/dev/','')}}.img
-        wipefs -a {{disk}} || true
-        dd if=/dev/zero of=/root/disks/{{disk_extra | replace('/dev/','')}}.img bs=1M count=2048
-        losetup {{disk_extra}} /root/disks/{{disk_extra | replace('/dev/','')}}.img
-        wipefs -a {{disk_extra}} || true
-
-  - |
-      **Escenario:** Ya existe el Volume Group {{vg_name}} y cuenta con espacio libre suficiente para crear un volumen lógico.
-      **Tarea del jefe:** “Necesito un Logical Volume dentro de {{vg_name}} para comenzar a organizar los datos. Crea un LV llamado {{lv_name}} con un tamaño de {{size}}.”
-      **Resultado esperado:** `lvs` muestra {{lv_name}} con el tamaño solicitado ({{size}}).
-
-      **Setup de la máquina (via SSH):**
-        mkdir -p /root/disks
-
-        # Crear 2 discos loop para formar un VG
-        # (solo si el VG no está aún creado)
-        for d in loop1 loop2; do
-            dd if=/dev/zero of=/root/disks/$d.img bs=1M count=2048
-            losetup /dev/$d /root/disks/$d.img
-            wipefs -a /dev/$d || true
-        done
-
-        # Crear el VG requerido
-        pvcreate /dev/loop1
-        pvcreate /dev/loop2
-        vgcreate {{vg_name}} /dev/loop1 /dev/loop2
 
 
   # ────────────────────────────────
-  # 📌 INTERMEDIO (3–11)
+  # LAB 002 — Crear VG con dos discos
   # ────────────────────────────────
+  - id: lab-lvm-002
+    title: "Crear Volume Group (VG) con 2 discos"
+    subtitle: "Agrupación de almacenamiento"
+    difficulty: 2
+    points: 40
+    repetitions_required: 5
 
-  - |
-      **Escenario:** Existe un LV {{lv_name}} sin filesystem.
-      **Tarea:** Crear filesystem {{fs}} y montarlo permanentemente en {{mount_point}}.
-      **Resultado esperado:** `df -h` muestra {{mount_point}} y /etc/fstab contiene la entrada correcta.
+    setup: |
+      mkdir -p /root/disks
 
-  - |
-      **Escenario:** LV {{lv_name}} está montado y en uso en {{mount_point}}.
-      **Tarea:** Extender {{lv_name}} en {{extend_size}} y redimensionar el filesystem online.
-      **Resultado esperado:** `lvs` muestra el aumento de tamaño y `df -h` refleja el cambio.
+      dd if=/dev/zero of=/root/disks/loop2.img bs=1M count=2048
+      losetup /dev/loop2 /root/disks/loop2.img
+      wipefs -a /dev/loop2 || true
 
-  - |
-      **Escenario:** VG {{vg_name}} actualmente utiliza solo {{disk}}.
-      **Tarea:** Agregar {{disk_extra}} al VG.
-      **Resultado esperado:** `vgs -o +pv_count` muestra mayor cantidad de PVs.
+      dd if=/dev/zero of=/root/disks/loop3.img bs=1M count=2048
+      losetup /dev/loop3 /root/disks/loop3.img
+      wipefs -a /dev/loop3 || true
 
-  - |
-      **Escenario:** LV {{lv_name}} (ext4) está desmontado y tiene espacio libre.
-      **Tarea:** Reducir su tamaño en {{extend_size}} de forma segura.
-      **Resultado esperado:** Tamaño reducido sin corrupción del filesystem.
+    scenario: |
+      El sistema dispone de dos discos nuevos: /dev/loop2 y /dev/loop3.
+      El jefe ordena:
+      "Crea un Volume Group llamado vg_data usando ambos discos."
 
-  - |
-      **Escenario:** Existe un LV lleno (100% en uso).
-      **Tarea:** Extender el LV y el filesystem hasta recuperar espacio disponible.
-      **Resultado esperado:** `df -h` muestra menor porcentaje de uso.
+    expected: |
+      `vgs` debe mostrar vg_data con 2 PVs asignados correctamente.
 
-  - |
-      **Escenario:** Entrada incorrecta en /etc/fstab impide el montaje automático.
-      **Tarea:** Corregir la entrada y montar correctamente en {{mount_point}}.
-      **Resultado esperado:** `mount -a` no produce errores.
 
-  - |
-      **Escenario:** Existe un filesystem XFS en el LV {{lv_name}}, pero el tamaño del VG es mayor.
-      **Tarea:** Extender el LV y redimensionar el XFS.
-      **Resultado esperado:** `xfs_growfs` ejecutado correctamente.
-
-  - |
-      **Escenario:** El LV {{lv_name}} está formateado y montado; se verifica UUID nuevo tras formateo.
-      **Tarea:** Actualizar el nuevo UUID en /etc/fstab sin desmontar.
-      **Resultado esperado:** Montaje persistente funciona tras `reboot`.
 
   # ────────────────────────────────
-  # 📌 AVANZADO (12–20)
+  # LAB 003 — Crear LV dentro de un VG
+  # ────────────────────────────────
+  - id: lab-lvm-003
+    title: "Crear Logical Volume (LV)"
+    subtitle: "Administración básica de volúmenes"
+    difficulty: 2
+    points: 50
+    repetitions_required: 5
+
+    setup: |
+      mkdir -p /root/disks
+
+      dd if=/dev/zero of=/root/disks/loop4.img bs=1M count=2048
+      losetup /dev/loop4 /root/disks/loop4.img
+      wipefs -a /dev/loop4 || true
+
+      dd if=/dev/zero of=/root/disks/loop5.img bs=1M count=2048
+      losetup /dev/loop5 /root/disks/loop5.img
+      wipefs -a /dev/loop5 || true
+
+      pvcreate /dev/loop4
+      pvcreate /dev/loop5
+      vgcreate vg_apps /dev/loop4 /dev/loop5
+
+    scenario: |
+      Ya existe el Volume Group vg_apps con suficiente espacio disponible.
+      El jefe pide:
+      "Crea un Logical Volume llamado lv_home con tamaño 1G dentro del VG vg_apps."
+
+    expected: |
+      `lvs` debe listar lv_home con un tamaño de 1G.
+
+
+  # ────────────────────────────────
+  # 📌 INTERMEDIO (4–11)
   # ────────────────────────────────
 
-  - |
-      **Escenario:** El LV {{lv_name}} está activo en {{vg_name}}.
-      **Tarea:** Crear un snapshot llamado snap_{{lv_name}} con tamaño {{size}}.
-      **Resultado esperado:** `lvs` muestra snapshot tipo `S`.
+  # ────────────────────────────────
+  # LAB 004 — Crear filesystem y montar permanentemente
+  # ────────────────────────────────
+  - id: lab-lvm-004
+    title: "Crear filesystem y montar un LV"
+    subtitle: "Creación de filesystem y persistencia"
+    difficulty: 3
+    points: 60
+    repetitions_required: 5
 
-  - |
-      **Escenario:** Existe un snapshot snap_{{lv_name}}.
-      **Tarea:** Restaurar snapshot sobre el LV original.
-      **Resultado esperado:** LV regresa al estado anterior.
+    setup: |
+      mkdir -p /root/disks
 
-  - |
-      **Escenario:** El PV {{disk}} debe ser retirado del sistema.
-      **Tarea:** Migrar todo el LV con `pvmove` hacia {{disk_extra}}.
-      **Resultado esperado:** `pvs` muestra {{disk}} sin asignaciones.
+      # Discos para crear el VG y LV base
+      dd if=/dev/zero of=/root/disks/loop6.img bs=1M count=2048
+      losetup /dev/loop6 /root/disks/loop6.img
+      wipefs -a /dev/loop6 || true
 
-  - |
-      **Escenario:** El VG {{vg_name}} dispone de espacio libre.
-      **Tarea:** Crear un thin pool pool_{{vg_name}} y un thin LV thin_{{lv_name}}.
-      **Resultado esperado:** `lvs` muestra tipos `t` y `V`.
+      dd if=/dev/zero of=/root/disks/loop7.img bs=1M count=2048
+      losetup /dev/loop7 /root/disks/loop7.img
+      wipefs -a /dev/loop7 || true
 
-  - |
-      **Escenario:** Existe un disco rápido {{disk_extra}} para caching.
-      **Tarea:** Crear y asociar un LV de caché al LV {{lv_name}}.
-      **Resultado esperado:** `lvs -o lv_name,cache_mode` muestra caché activo.
+      pvcreate /dev/loop6
+      pvcreate /dev/loop7
+      vgcreate vg_storage /dev/loop6 /dev/loop7
 
-  - |
-      **Escenario:** Se necesita clonar el LV para pruebas.
-      **Tarea:** Crear clone_{{lv_name}} con mismo tamaño que el original.
-      **Resultado esperado:** `lvs` lista clone_{{lv_name}}.
+      lvcreate -n lv_data -L 800M vg_storage
 
-  - |
-      **Escenario:** Se requiere limpiar la infraestructura LVM para reprovisionar.
-      **Tarea:** Eliminar todos los LVs del VG {{vg_name}}, luego el VG completo y finalmente los PV.
-      **Resultado esperado:** `pvs`, `lvs`, `vgs` no muestran recursos asociados.
+    scenario: |
+      El LV lv_data existe dentro del VG vg_storage, pero aún no tiene filesystem.
+      El jefe ordena:
+      "Crea un filesystem ext4 y móntalo permanentemente en /mnt/data."
 
-  - |
-      **Escenario:** Disco {{disk}} tiene una partición LVM2 antigua que causa advertencias.
-      **Tarea:** Reescribir partición LVM, actualizar firma y reactivar el PV.
-      **Resultado esperado:** No aparecen “unknown metadata” ni “ignored PV”.
+    expected: |
+      - `df -h` debe mostrar /mnt/data montado.
+      - /etc/fstab debe contener la entrada correcta.
 
-  - |
-      **Escenario:** El sistema contiene un LV que no puede montarse por corrupción.
-      **Tarea:** Reparar el filesystem usando herramientas apropiadas (fsck para ext4, xfs_repair para xfs).
-      **Resultado esperado:** LV vuelve a montarse correctamente.
 
-levels:
 
-  basic:
-    repetitions: 5
-    points_per_rep: 25
-    pre_setup:
-      - "losetup -d /dev/loop1 /dev/loop2 /dev/loop3 2>/dev/null || true"
-      - "losetup /dev/loop1 /rhcsa-labs/disks/loop1.img"
-      - "losetup /dev/loop2 /rhcsa-labs/disks/loop2.img"
-    allowed_scenarios: [0, 1, 2]
-    validation:
-      - "pvs"
-      - "vgs"
-      - "lvs"
+  # ────────────────────────────────
+  # LAB 005 — Extender LV en caliente
+  # ────────────────────────────────
+  - id: lab-lvm-005
+    title: "Extender Logical Volume en caliente"
+    subtitle: "Administración dinámica de capacidad"
+    difficulty: 4
+    points: 70
+    repetitions_required: 5
 
-  intermediate:
-    repetitions: 7
-    points_per_rep: 35
-    pre_setup:
-      - "losetup -d /dev/loop{1,2,3} 2>/dev/null || true"
-      - "losetup /dev/loop1 /rhcsa-labs/disks/loop1.img"
-      - "losetup /dev/loop2 /rhcsa-labs/disks/loop2.img"
-      - "losetup /dev/loop3 /rhcsa-labs/disks/loop3.img"
-      - "pvcreate /dev/loop1 /dev/loop2"
-      - "vgcreate {{vg_name}} /dev/loop1 /dev/loop2"
-      - "lvcreate -n {{lv_name}} -L {{size}} {{vg_name}}"
-    allowed_scenarios: [3, 4, 5, 6, 7, 8, 9, 10]
-    validation:
-      - "df -h"
-      - "vgs | grep {{vg_name}}"
-      - "lvs /dev/{{vg_name}}/{{lv_name}}"
+    setup: |
+      mkdir -p /root/disks
 
-  advanced:
-    repetitions: 8
-    points_per_rep: 45
-    pre_setup:
-      - "losetup -d /dev/loop{1,2,3} 2>/dev/null || true"
-      - "losetup /dev/loop1 /rhcsa-labs/disks/loop1.img"
-      - "losetup /dev/loop2 /rhcsa-labs/disks/loop2.img"
-      - "losetup /dev/loop3 /rhcsa-labs/disks/loop3.img"
-      - "pvcreate /dev/loop1 /dev/loop2 /dev/loop3"
-      - "vgcreate {{vg_name}} /dev/loop1 /dev/loop2 /dev/loop3"
-      - "lvcreate -n {{lv_name}} -L {{size}} {{vg_name}}"
-    allowed_scenarios: [11, 12, 13, 14, 15, 16, 17, 18, 19]
-    validation:
-      - "lvs"
-      - "pvs"
-      - "vgs"
+      # Crear discos para el VG
+      dd if=/dev/zero of=/root/disks/loop8.img bs=1M count=2048
+      losetup /dev/loop8 /root/disks/loop8.img
+      wipefs -a /dev/loop8 || true
+
+      dd if=/dev/zero of=/root/disks/loop9.img bs=1M count=2048
+      losetup /dev/loop9 /root/disks/loop9.img
+      wipefs -a /dev/loop9 || true
+
+      pvcreate /dev/loop8
+      pvcreate /dev/loop9
+      vgcreate vg_logs /dev/loop8 /dev/loop9
+
+      lvcreate -n lv_logs -L 600M vg_logs
+      mkfs.xfs /dev/vg_logs/lv_logs
+      mkdir -p /mnt/logs
+      mount /dev/vg_logs/lv_logs /mnt/logs
+
+    scenario: |
+      El LV lv_logs está montado en /mnt/logs y empieza a quedarse sin espacio.
+      El jefe indica:
+      "Extiende lv_logs en 400M y redimensiona el filesystem en línea."
+
+    expected: |
+      - `lvs` debe mostrar el tamaño aumentado.
+      - `df -h` debe reflejar el aumento del filesystem XFS.
+
+
+
+  # ────────────────────────────────
+  # LAB 006 — Agregar un PV extra al VG
+  # ────────────────────────────────
+  - id: lab-lvm-006
+    title: "Agregar Physical Volume a un VG"
+    subtitle: "Ampliación de grupos de volúmenes"
+    difficulty: 3
+    points: 60
+    repetitions_required: 5
+
+    setup: |
+      mkdir -p /root/disks
+
+      # Crear disco para el VG base
+      dd if=/dev/zero of=/root/disks/loop10.img bs=1M count=2048
+      losetup /dev/loop10 /root/disks/loop10.img
+      wipefs -a /dev/loop10 || true
+
+      pvcreate /dev/loop10
+      vgcreate vg_main /dev/loop10
+
+      # Crear el disco adicional que el estudiante deberá agregar
+      dd if=/dev/zero of=/root/disks/loop11.img bs=1M count=2048
+      losetup /dev/loop11 /root/disks/loop11.img
+      wipefs -a /dev/loop11 || true
+
+    scenario: |
+      El Volume Group vg_main está funcionando con un único disco (PV).
+      El jefe ordena:
+      "Agrega el disco /dev/loop11 al VG vg_main."
+
+    expected: |
+      - `vgs -o +pv_count` debe mostrar 2 PVs en el VG.
+
+
+
+  # ────────────────────────────────
+  # LAB 007 — Reducir un LV ext4 desmontado
+  # ────────────────────────────────
+  - id: lab-lvm-007
+    title: "Reducir Logical Volume (EXT4)"
+    subtitle: "Reducción segura de un LV"
+    difficulty: 5
+    points: 80
+    repetitions_required: 5
+
+    setup: |
+      mkdir -p /root/disks
+
+      # Discos para crear el VG y LV base
+      dd if=/dev/zero of=/root/disks/loop12.img bs=1M count=2048
+      losetup /dev/loop12 /root/disks/loop12.img
+      wipefs -a /dev/loop12 || true
+
+      dd if=/dev/zero of=/root/disks/loop13.img bs=1M count=2048
+      losetup /dev/loop13 /root/disks/loop13.img
+      wipefs -a /dev/loop13 || true
+
+      pvcreate /dev/loop12
+      pvcreate /dev/loop13
+      vgcreate vg_ext /dev/loop12 /dev/loop13
+
+      lvcreate -n lv_home -L 1G vg_ext
+      mkfs.ext4 /dev/vg_ext/lv_home
+
+      mkdir -p /mnt/home_ext
+      mount /dev/vg_ext/lv_home /mnt/home_ext
+
+      # Desmontarlo porque la tarea es de reducción
+      umount /mnt/home_ext
+
+    scenario: |
+      El LV lv_home (EXT4) está desmontado y tiene espacio libre.
+      El jefe solicita:
+      "Reduce lv_home en 300M de forma segura."
+
+    expected: |
+      - El tamaño del LV debe ser menor.
+      - El filesystem debe estar íntegro y montable.
+
+
+
+  # ────────────────────────────────
+  # LAB 008 — Extender un LV lleno al 100%
+  # ────────────────────────────────
+  - id: lab-lvm-008
+    title: "Extender LV lleno"
+    subtitle: "Recuperación de espacio en escenarios críticos"
+    difficulty: 4
+    points: 70
+    repetitions_required: 5
+
+    setup: |
+      mkdir -p /root/disks
+
+      # Discos para VG/LV
+      dd if=/dev/zero of=/root/disks/loop14.img bs=1M count=2048
+      losetup /dev/loop14 /root/disks/loop14.img
+      wipefs -a /dev/loop14 || true
+
+      dd if=/dev/zero of=/root/disks/loop15.img bs=1M count=2048
+      losetup /dev/loop15 /root/disks/loop15.img
+      wipefs -a /dev/loop15 || true
+
+      pvcreate /dev/loop14
+      pvcreate /dev/loop15
+      vgcreate vg_full /dev/loop14 /dev/loop15
+
+      lvcreate -n lv_full -L 300M vg_full
+      mkfs.xfs /dev/vg_full/lv_full
+
+      mkdir -p /mnt/full
+      mount /dev/vg_full/lv_full /mnt/full
+
+      # Llenar el LV al 100%
+      dd if=/dev/zero of=/mnt/full/bigfile.bin bs=1M || true
+
+    scenario: |
+      El LV lv_full está completamente lleno.
+      El jefe indica:
+      "Extiende lv_full y luego el filesystem hasta recuperar espacio disponible."
+
+    expected: |
+      - `df -h` debe mostrar menor uso.
+      - lvs debe reflejar el tamaño aumentado.
+
+
+
+  # ────────────────────────────────
+  # LAB 009 — Corregir fstab roto
+  # ────────────────────────────────
+  - id: lab-lvm-009
+    title: "Corregir entrada incorrecta en /etc/fstab"
+    subtitle: "Solución de problemas de montaje"
+    difficulty: 3
+    points: 60
+    repetitions_required: 4
+
+    setup: |
+      mkdir -p /root/disks
+
+      dd if=/dev/zero of=/root/disks/loop16.img bs=1M count=2048
+      losetup /dev/loop16 /root/disks/loop16.img
+      wipefs -a /dev/loop16 || true
+
+      pvcreate /dev/loop16
+      vgcreate vg_fstab /dev/loop16
+      lvcreate -n lv_cfg -L 400M vg_fstab
+      mkfs.ext4 /dev/vg_fstab/lv_cfg
+
+      mkdir -p /mnt/cfg
+      echo "UUID=WRONG-UUID /mnt/cfg ext4 defaults 0 0" >> /etc/fstab
+
+    scenario: |
+      Una entrada incorrecta en /etc/fstab impide el montaje automático.
+      El jefe ordena:
+      "Corrige la entrada para que /mnt/cfg monte correctamente."
+
+    expected: |
+      - `mount -a` no debe mostrar errores.
+      - /mnt/cfg debe montarse correctamente.
+
+
+
+  # ────────────────────────────────
+  # LAB 010 — Extender LV con XFS en un VG grande
+  # ────────────────────────────────
+  - id: lab-lvm-010
+    title: "Extender filesystem XFS"
+    subtitle: "Redimensionamiento online en XFS"
+    difficulty: 4
+    points: 75
+    repetitions_required: 5
+
+    setup: |
+      mkdir -p /root/disks
+
+      dd if=/dev/zero of=/root/disks/loop17.img bs=1M count=2048
+      losetup /dev/loop17 /root/disks/loop17.img
+      wipefs -a /dev/loop17 || true
+
+      dd if=/dev/zero of=/root/disks/loop18.img bs=1M count=2048
+      losetup /dev/loop18 /root/disks/loop18.img
+      wipefs -a /dev/loop18 || true
+
+      pvcreate /dev/loop17
+      pvcreate /dev/loop18
+      vgcreate vg_xfs /dev/loop17 /dev/loop18
+
+      lvcreate -n lv_xdata -L 500M vg_xfs
+      mkfs.xfs /dev/vg_xfs/lv_xdata
+
+      mkdir -p /mnt/xdata
+      mount /dev/vg_xfs/lv_xdata /mnt/xdata
+
+    scenario: |
+      El filesystem XFS existe en el LV lv_xdata, pero el VG vg_xfs tiene mucho espacio libre.
+      El jefe solicita:
+      "Extiende lv_xdata y luego ejecuta xfs_growfs."
+
+    expected: |
+      - xfs_growfs debe ejecutar sin errores.
+      - `df -h` debe reflejar el nuevo tamaño.
+
+
+
+  # ────────────────────────────────
+  # LAB 011 — Actualizar UUID en fstab sin desmontar
+  # ────────────────────────────────
+  - id: lab-lvm-011
+    title: "Actualizar UUID en /etc/fstab"
+    subtitle: "Gestión de montajes y persistencia"
+    difficulty: 3
+    points: 60
+    repetitions_required: 4
+
+    setup: |
+      mkdir -p /root/disks
+
+      dd if=/dev/zero of=/root/disks/loop19.img bs=1M count=2048
+      losetup /dev/loop19 /root/disks/loop19.img
+      wipefs -a /dev/loop19 || true
+
+      pvcreate /dev/loop19
+      vgcreate vg_uuid /dev/loop19
+      lvcreate -n lv_uuid -L 450M vg_uuid
+      mkfs.ext4 /dev/vg_uuid/lv_uuid
+
+      mkdir -p /mnt/uuidtest
+      mount /dev/vg_uuid/lv_uuid /mnt/uuidtest
+
+      ORIGINAL_UUID=$(blkid -s UUID -o value /dev/vg_uuid/lv_uuid)
+
+      # Simular que el admin cambió el filesystem accidentalmente
+      mkfs.ext4 -F /dev/vg_uuid/lv_uuid
+
+      NEW_UUID=$(blkid -s UUID -o value /dev/vg_uuid/lv_uuid)
+
+      echo "UUID=${ORIGINAL_UUID} /mnt/uuidtest ext4 defaults 0 0" >> /etc/fstab
+
+    scenario: |
+      El filesystem del LV lv_uuid fue recreado y ahora tiene un UUID diferente,
+      pero /etc/fstab aún contiene el UUID anterior.
+      El jefe indica:
+      "Actualiza el UUID en fstab sin desmontar el filesystem."
+
+    expected: |
+      - /etc/fstab debe contener el UUID correcto.
+      - Tras `reboot`, el montaje debe funcionar correctamente.
+
+
+  # ────────────────────────────────
+  # 📌 AVANZADO (12–16)
+  # ────────────────────────────────
+
+  - id: lvm-012
+    title: "LVM Avanzado – Migración de datos con pvmove"
+    difficulty: 4
+    repetitions: 10
+    points: 350
+    description: >
+      Mover datos de un Physical Volume a otro sin downtime usando pvmove.
+    setup_ssh: |
+      mkdir -p /root/disks
+      # Crear dos discos loop
+      dd if=/dev/zero of=/root/disks/loop10.img bs=1M count=2048
+      losetup /dev/loop10 /root/disks/loop10.img
+      wipefs -a /dev/loop10 || true
+
+      dd if=/dev/zero of=/root/disks/loop11.img bs=1M count=2048
+      losetup /dev/loop11 /root/disks/loop11.img
+      wipefs -a /dev/loop11 || true
+
+      # Crear PVs y VG
+      pvcreate /dev/loop10
+      pvcreate /dev/loop11
+      vgcreate vg_migracao /dev/loop10 /dev/loop11
+
+      # Crear LV para tener datos
+      lvcreate -n lv_mover -L 800M vg_migracao
+      mkfs.xfs /dev/vg_migracao/lv_mover
+      mkdir -p /mnt/mover
+      mount /dev/vg_migracao/lv_mover /mnt/mover
+      dd if=/dev/urandom of=/mnt/mover/testfile.bin bs=5M count=20
+    task: >
+      Migrar toda la data desde /dev/loop10 hacia /dev/loop11 usando pvmove.
+    expected: >
+      El comando `pvs -o pv_name,pv_used` debe mostrar loop10 con 0 bytes usados.
+
+  # ────────────────────────────────
+
+  - id: lvm-013
+    title: "LVM Avanzado – Remover un PV de un Volume Group"
+    difficulty: 4
+    repetitions: 10
+    points: 350
+    description: >
+      Quitar un PV sano del VG sin afectar los LVs existentes.
+    setup_ssh: |
+      mkdir -p /root/disks
+      # Crear dos discos loop
+      dd if=/dev/zero of=/root/disks/loop12.img bs=1M count=2048
+      losetup /dev/loop12 /root/disks/loop12.img
+      wipefs -a /dev/loop12 || true
+
+      dd if=/dev/zero of=/root/disks/loop13.img bs=1M count=2048
+      losetup /dev/loop13 /root/disks/loop13.img
+      wipefs -a /dev/loop13 || true
+
+      pvcreate /dev/loop12
+      pvcreate /dev/loop13
+      vgcreate vg_remocao /dev/loop12 /dev/loop13
+
+      lvcreate -n lv_remo -L 500M vg_remocao
+      mkfs.ext4 /dev/vg_remocao/lv_remo
+      mkdir -p /mnt/remo
+      mount /dev/vg_remocao/lv_remo /mnt/remo
+    task: >
+      Remover /dev/loop13 del Volume Group usando `vgreduce`.
+    expected: >
+      `vgs -o +pv_count` debe mostrar solo 1 PV en vg_remocao.
+
+  # ────────────────────────────────
+
+  - id: lvm-014
+    title: "LVM Avanzado – Reparación de un VG degradado"
+    difficulty: 5
+    repetitions: 10
+    points: 380
+    description: >
+      El sistema perdió uno de los PVs y el administrador debe reparar el grupo.
+    setup_ssh: |
+      mkdir -p /root/disks
+      # Crear 2 discos
+      dd if=/dev/zero of=/root/disks/loop14.img bs=1M count=2048
+      losetup /dev/loop14 /root/disks/loop14.img
+      wipefs -a /dev/loop14 || true
+
+      dd if=/dev/zero of=/root/disks/loop15.img bs=1M count=2048
+      losetup /dev/loop15 /root/disks/loop15.img
+      wipefs -a /dev/loop15 || true
+
+      pvcreate /dev/loop14
+      pvcreate /dev/loop15
+      vgcreate vg_degradado /dev/loop14 /dev/loop15
+
+      lvcreate -n lv_dados -L 600M vg_degradado
+      mkfs.xfs /dev/vg_degradado/lv_dados
+      mkdir -p /mnt/dados
+      mount /dev/vg_degradado/lv_dados /mnt/dados
+
+      # Simular pérdida del disco
+      losetup -d /dev/loop15
+    task: >
+      Reparar vg_degradado removiendo el PV faltante y dejar el VG funcional.
+    expected: >
+      `vgdisplay` no debe mostrar errores y el LV debe seguir activo.
+
+  # ────────────────────────────────
+
+  - id: lvm-015
+    title: "LVM Avanzado – Conversión de una partición estándar a LVM"
+    difficulty: 5
+    repetitions: 12
+    points: 400
+    description: >
+      Convertir un disco con partición ext4 en un Physical Volume sin perder datos (snapshot + migración).
+    setup_ssh: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop16.img bs=1M count=2048
+      losetup /dev/loop16 /root/disks/loop16.img
+      wipefs -a /dev/loop16 || true
+
+      # Crear partición estándar ext4
+      parted -s /dev/loop16 mklabel gpt
+      parted -s /dev/loop16 mkpart primary ext4 1MiB 2000MiB
+      mkfs.ext4 /dev/loop16p1
+      mkdir -p /mnt/legacy
+      mount /dev/loop16p1 /mnt/legacy
+      dd if=/dev/urandom of=/mnt/legacy/data.bin bs=5M count=10
+    task: >
+      Convertir /dev/loop16p1 en un PV sin pérdida de datos (copiar datos → crear LV → restaurar).
+    expected: >
+      /mnt/nuevo_legacy debe contener exactamente los mismos datos que /mnt/legacy.
+
+  # ────────────────────────────────
+
+  - id: lvm-016
+    title: "LVM Avanzado – LV dividido en varias particiones (striped LV)"
+    difficulty: 5
+    repetitions: 12
+    points: 420
+    description: >
+      Crear un LV en modo striped sobre dos discos para mejorar la performance.
+    setup_ssh: |
+      mkdir -p /root/disks
+
+      dd if=/dev/zero of=/root/disks/loop17.img bs=1M count=2048
+      losetup /dev/loop17 /root/disks/loop17.img
+      wipefs -a /dev/loop17 || true
+
+      dd if=/dev/zero of=/root/disks/loop18.img bs=1M count=2048
+      losetup /dev/loop18 /root/disks/loop18.img
+      wipefs -a /dev/loop18 || true
+
+      pvcreate /dev/loop17
+      pvcreate /dev/loop18
+      vgcreate vg_rapido /dev/loop17 /dev/loop18
+    task: >
+      Crear un LV de 1.5G en modo striped (-i2) y formatearlo con XFS.
+    expected: >
+      `lvs -o name,segtype` debe mostrar segtype "striped".
