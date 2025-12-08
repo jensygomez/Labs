@@ -136,7 +136,7 @@ class UniversalEngine:
             validation_cmds = self.parse_expected_text()
             
             for cmd in validation_cmds:
-                stdin, stdout, stderr = ssh.exec_command(cmd)
+                stdin, stdout, stderr = ssh.exec_command(f"sudo {cmd}")
                 output = stdout.read().decode().strip()
                 exit_code = stdout.channel.recv_exit_status()
                 
