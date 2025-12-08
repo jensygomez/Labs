@@ -1,55 +1,69 @@
-#!/usr/bin/env python3
-"""
-SCRIPT ÚNICO - Crea COMPLETA la base de datos RHCSA Lab Trainer
-"""
+import os
 import sqlite3
-from pathlib import Path
 
-def create_complete_database():
-    db_path = Path("data/database/rhcsa_trainer.db")
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-    
-    conn = sqlite3.connect(db_path)
+DB_PATH = './data/database/rhcsa_trainer.db'
+
+def create_database():
+    # Elimina DB anterior si existe
+    if os.path.exists(DB_PATH):
+        print(f"Eliminando base de datos existente: {DB_PATH}")
+        os.remove(DB_PATH)
+
+    # Crear nueva DB y tablas
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    
-    print("🗄️  Creando base de datos RHCSA Lab Trainer...")
-    
-    # Tabla scenarios
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS scenarios (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            module TEXT NOT NULL,
-            difficulty INTEGER NOT NULL CHECK (difficulty IN (1,2,3)),
-            points INTEGER NOT NULL,
-            description TEXT,
-            repetitions_required INTEGER DEFAULT 1,
-            created_at TEXT DEFAULT (datetime('now'))
-        )
-    ''')
-    
-    # Tabla progress
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS progress (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            scenario_id TEXT NOT NULL,
-            completed_at TEXT NOT NULL DEFAULT (datetime('now')),
-            time_seconds INTEGER NOT NULL,
-            attempts INTEGER DEFAULT 1,
-            score INTEGER NOT NULL CHECK (score >= 0 AND score <= 100),
-            FOREIGN KEY (scenario_id) REFERENCES scenarios(id)
-        )
-    ''')
-    
-    # Índices
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_progress_scenario ON progress(scenario_id)')
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_progress_date ON progress(completed_at)')
-    
+
+    # Crear tabla labs
+    cursor.execute("""
+    CREATE TABLE labs (
+      id TEXT PRIMARY KEY,
+      module TEXT,
+      submodule TEXT,
+      title TEXT,
+      subtitle TEXT,
+      difficulty INTEGER,
+      points INTEGER,
+      repetitions_required INTEGER,
+      repetitions_completed INTEGER DEFAULT 0,
+      
+      last_reviewed DATETIME,
+      next_review DATE,
+      interval_days INTEGER DEFAULT 1,
+      ease_factor REAL DEFAULT 2.5,
+      
+      best_score REAL DEFAULT 0,
+      avg_time_seconds INTEGER DEFAULT 0,
+      total_attempts INTEGER DEFAULT 0,
+      mastery_level TEXT DEFAULT 'novato',
+      streak INTEGER DEFAULT 0,
+      badges TEXT,
+      
+      scenario_text TEXT,
+      expected_text TEXT,
+      setup_ssh TEXT,
+      
+      vm_ip TEXT DEFAULT '192.168.1.100',
+      vm_user TEXT DEFAULT 'rhcsa_lab',
+      
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    # Crear tabla modules para jerarquía
+    cursor.execute("""
+    CREATE TABLE modules (
+      id TEXT PRIMARY KEY,
+      name TEXT,
+      order_num REAL,
+      labs_count INTEGER
+    )
+    """)
+
     conn.commit()
     conn.close()
-    
-    print(f"✅ ¡BASE DE DATOS CREADA EXITOSAMENTE!")
-    print(f"📁 Ubicación: {db_path.absolute()}")
+    print("Base de datos creada correctamente.")
 
 if __name__ == "__main__":
-    create_complete_database()
+    create_database()
+
