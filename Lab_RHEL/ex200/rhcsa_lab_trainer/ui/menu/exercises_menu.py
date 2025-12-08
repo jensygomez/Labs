@@ -77,10 +77,7 @@ class ExercisesMenu:
                 if not labs:
                     print(f"{Color.YELLOW}📭 No hay laboratorios importados{Color.RESET}")
                     print(f"\n{Color.CYAN}🚀 PRIMEROS PASOS:{Color.RESET}")
-                    print(f"  1. Opción 1 → Importar YAML LVM")
-                    print(f"  2. scenarios/03_local_storage/lvm.yaml")
-                    print(f"  3. 16 labs LVM → DB automáticamente")
-                    print(f"  4. Training → ¡Practica!")
+                    print(f"  1. Opción 1 → Importar YAML")
                     pause()
                     return
                 
