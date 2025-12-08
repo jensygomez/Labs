@@ -29,7 +29,7 @@ class ExercisesMenu:
             if choice in ("b", "back"):
                 return
             elif choice == "1":
-                self.import_yaml_master()
+                self.new_exercise_full()
             elif choice == "2":
                 self.list_laboratories()
             elif choice == "3":
