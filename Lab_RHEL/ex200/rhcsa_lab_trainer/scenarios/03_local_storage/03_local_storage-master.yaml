@@ -30,6 +30,21 @@ labs:
     expected: |
       El comando `pvs` debe mostrar /dev/loop1 como un PV válido y activo.
 
+    validations:
+      - command: "pvs | grep '/dev/loop1'"
+        expected_output: "/dev/loop1"
+        match_type: "contains"
+        description: "/dev/loop1 aparece como PV"
+      
+      - command: "pvs --noheadings -o pv_attr /dev/loop1"
+        expected_output: "---"
+        match_type: "contains"
+        description: "PV en estado disponible (--- significa disponible para usar)"
+      
+      - command: "pvs --noheadings -o pv_fmt /dev/loop1"
+        expected_output: "lvm2"
+        match_type: "exact"
+        description: "Formato LVM2 correcto"
 
 
   # ────────────────────────────────
@@ -44,11 +59,9 @@ labs:
 
     setup: |
       mkdir -p /root/disks
-
       dd if=/dev/zero of=/root/disks/loop2.img bs=1M count=2048
       losetup /dev/loop2 /root/disks/loop2.img
       wipefs -a /dev/loop2 || true
-
       dd if=/dev/zero of=/root/disks/loop3.img bs=1M count=2048
       losetup /dev/loop3 /root/disks/loop3.img
       wipefs -a /dev/loop3 || true
@@ -61,6 +74,36 @@ labs:
     expected: |
       `vgs` debe mostrar vg_data con 2 PVs asignados correctamente.
 
+    validations:
+      - command: "vgs | grep 'vg_data'"
+        expected_output: "vg_data"
+        match_type: "contains"
+        description: "VG vg_data existe"
+      
+      - command: "vgs --noheadings -o pv_count vg_data"
+        expected_output: "2"
+        match_type: "exact"
+        description: "VG tiene 2 PVs"
+      
+      - command: "pvs | grep '/dev/loop2'"
+        expected_output: "vg_data"
+        match_type: "contains"
+        description: "/dev/loop2 está en vg_data"
+      
+      - command: "pvs | grep '/dev/loop3'"
+        expected_output: "vg_data"
+        match_type: "contains"
+        description: "/dev/loop3 está en vg_data"
+      
+      - command: "pvdisplay /dev/loop2 | grep 'VG Name'"
+        expected_output: "vg_data"
+        match_type: "contains"
+        description: "PV /dev/loop2 pertenece a vg_data"
+      
+      - command: "pvdisplay /dev/loop3 | grep 'VG Name'"
+        expected_output: "vg_data"
+        match_type: "contains"
+        description: "PV /dev/loop3 pertenece a vg_data"
 
 
   # ────────────────────────────────
@@ -75,15 +118,12 @@ labs:
 
     setup: |
       mkdir -p /root/disks
-
       dd if=/dev/zero of=/root/disks/loop4.img bs=1M count=2048
       losetup /dev/loop4 /root/disks/loop4.img
       wipefs -a /dev/loop4 || true
-
       dd if=/dev/zero of=/root/disks/loop5.img bs=1M count=2048
       losetup /dev/loop5 /root/disks/loop5.img
       wipefs -a /dev/loop5 || true
-
       pvcreate /dev/loop4
       pvcreate /dev/loop5
       vgcreate vg_apps /dev/loop4 /dev/loop5
@@ -96,6 +136,32 @@ labs:
     expected: |
       `lvs` debe listar lv_home con un tamaño de 1G.
 
+    validations:
+      - command: "lvs | grep 'lv_home'"
+        expected_output: "lv_home"
+        match_type: "contains"
+        description: "LV lv_home existe"
+      
+      - command: "lvs --noheadings -o vg_name lv_home"
+        expected_output: "vg_apps"
+        match_type: "exact"
+        description: "lv_home pertenece a vg_apps"
+      
+      - command: "lvs --noheadings --units g -o lv_size lv_home"
+        expected_output: "1.00g"
+        match_type: "exact"
+        description: "lv_home tiene tamaño 1G exacto"
+
+      
+      - command: "lvs --noheadings -o lv_attr lv_home"
+        expected_output: "-wi"
+        match_type: "contains"
+        description: "LV está escrito/inactivo (esperando formatear)"
+      
+      - command: "lvs vg_apps --noheadings | wc -l"
+        expected_output: "1"
+        match_type: "exact"
+        description: "Solo existe 1 LV en vg_apps (lv_home)"
 
   # ────────────────────────────────
   # 📌 INTERMEDIO (4–11)
