@@ -1,6 +1,7 @@
 
 """🔐 Configuración SSH VM - Persistente"""
 from pathlib import Path
+from ui.display.colors import Color
 import json
 import os
 
