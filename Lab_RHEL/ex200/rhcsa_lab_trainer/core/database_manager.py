@@ -497,7 +497,7 @@ class DatabaseManager:
             return stats
 
 
-    def import_master_yaml(self, yaml_path: str) -> int:
+    def import_master_yaml(self, yaml_path: str) → int:
         """Importa un -master.yaml con múltiples labs (compatible con esquema v2.0)"""
         import yaml
         from pathlib import Path
@@ -521,22 +521,22 @@ class DatabaseManager:
         with self.get_connection() as conn:
             c = conn.cursor()
             
-            # Obtener o crear module_id (como TEXT: nombre del módulo)
+            # Obtener o crear module_id (solo por name)
             module_name = data.get('module', 'Unknown Module')
             c.execute("SELECT id FROM modules WHERE name LIKE ?", (f"%{module_name}%",))
             module_row = c.fetchone()
             if module_row:
                 module_id = module_row[0]
             else:
-                # Si no existe el módulo, creamos uno básico (fallback)
-                c.execute("INSERT INTO modules (name, folder, is_active) VALUES (?, ?, 1)", (module_name, module_name))
+                # Fallback: crea módulo si no existe
+                c.execute("INSERT INTO modules (name, is_active) VALUES (?, 1)", (module_name,))
                 module_id = c.lastrowid
             
             for lab in data['labs']:
                 try:
                     lab_id = lab['id']
 
-                    # INSERT ajustado AL 100 % a tu esquema de labs
+                    # INSERT ajustado a tu esquema
                     c.execute("""
                         INSERT OR REPLACE INTO labs 
                         (id, module_id, title, subtitle, difficulty, points,
@@ -544,20 +544,21 @@ class DatabaseManager:
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     """, (
                         lab_id,
-                        module_id,  # TEXT: ID o nombre del módulo
+                        module_id,
                         lab.get('title', 'Sin título'),
                         lab.get('subtitle', ''),
                         lab.get('difficulty', 1),
                         lab.get('points', 30),
-                        lab.get('scenario', ''),  # → scenario_text
-                        lab.get('setup', '')      # → setup_ssh
+                        lab.get('scenario', ''),
+                        lab.get('setup', '')
                     ))
 
-                    # Borrar validaciones anteriores del mismo lab
+                    # Borrar validaciones anteriores
                     c.execute("DELETE FROM lab_validations WHERE lab_id = ?", (lab_id,))
 
-                    # Insertar validaciones (ajustado a tu esquema)
+                    # Insertar validaciones
                     for i, v in enumerate(lab.get('validations', []), 1):
+                        expected_values = ','.join(v.get('expected_values', [])) if isinstance(v.get('expected_values'), list) else None
                         c.execute("""
                             INSERT INTO lab_validations 
                             (lab_id, order_index, validation_type, command, expected_output,
@@ -570,7 +571,7 @@ class DatabaseManager:
                             v.get('expected_output'),
                             v.get('expected_range', {}).get('min'),
                             v.get('expected_range', {}).get('max'),
-                            ','.join(v.get('expected_values', [])) if isinstance(v.get('expected_values'), list) else None,
+                            expected_values,
                             v.get('match_type', 'exact'),
                             v.get('description', ''),
                             v.get('weight', 5)
@@ -581,12 +582,10 @@ class DatabaseManager:
 
                 except Exception as e:
                     print(f"{Color.RED}Error con lab {lab.get('id', '?')}: {e}{Color.RESET}")
-                    continue  # Sigue con el siguiente lab
+                    continue
 
         print(f"{Color.GREEN}¡ÉXITO! Importados {count} labs de {path.name}{Color.RESET}")
         return count
-    
-    
 
 
 
