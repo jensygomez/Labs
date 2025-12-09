@@ -1,0 +1,137 @@
+module: "3. Local Storage"
+submodule: "3.2 Administración Lógica de Volúmenes (LVM)"
+labs_count: 16
+type: "static"
+version: "2025.1"
+
+labs:
+
+  # ────────────────────────────────
+  # LAB 001 — Crear Physical Volume
+  # ────────────────────────────────
+  - id: lab-lvm-001
+    title: "Crear Physical Volume (PV)"
+    subtitle: "Fundamentos iniciales de LVM"
+    difficulty: 1
+    points: 20
+    repetitions_required: 5
+
+    setup: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop1.img bs=1M count=2048
+      losetup /dev/loop1 /root/disks/loop1.img
+      wipefs -a /dev/loop1 || true
+
+    scenario: |
+      El servidor acaba de llegar del proveedor. El disco /dev/loop1 está totalmente limpio.
+      El jefe solicita:
+      "Convierte /dev/loop1 en un Physical Volume para preparar el almacenamiento."
+
+    validations:
+      # Validación 1: PV existe
+      - command: "pvs /dev/loop1 --noheadings -o pv_name 2>/dev/null || echo 'NO_ES_PV'"
+        expected_output: "/dev/loop1"
+        match_type: "exact"
+        description: "/dev/loop1 existe como Physical Volume"
+        weight: 3
+      
+      # Validación 2: Tamaño aproximado 2GB
+      - command: "pvs /dev/loop1 --noheadings --units m -o pv_size 2>/dev/null || echo '0'"
+        expected_range:
+          min: "1800"
+          max: "2200"
+        match_type: "range_numeric"
+        description: "Tamaño aproximado 2GB (±100MB)"
+        weight: 2
+      
+      # Validación 3: Formato LVM2
+      - command: "pvs /dev/loop1 --noheadings -o pv_fmt 2>/dev/null || echo 'NO_FMT'"
+        expected_output: "lvm2"
+        match_type: "exact"
+        description: "Formato LVM2 correcto"
+        weight: 2
+      
+      # Validación 4: Estado válido
+      - command: "pvs /dev/loop1 --noheadings -o pv_attr 2>/dev/null || echo 'NO_ATTR'"
+        expected_values:
+          - "---"
+          - "a--"
+        match_type: "in_list"
+        description: "PV en estado válido (--- o a--)"
+        weight: 1
+      
+      # Validación 5: No está en VG
+      - command: "pvs /dev/loop1 --noheadings -o vg_name 2>/dev/null"
+        expected_output: ""
+        match_type: "exact"
+        description: "PV no está en ningún Volume Group (aún)"
+        weight: 2
+
+  # ────────────────────────────────
+  # LAB 002 — Crear VG con dos discos
+  # ────────────────────────────────
+  - id: lab-lvm-002
+    title: "Crear Volume Group (VG) con 2 discos"
+    subtitle: "Agrupación de almacenamiento"
+    difficulty: 2
+    points: 40
+    repetitions_required: 5
+
+    setup: |
+      mkdir -p /root/disks
+      dd if=/dev/zero of=/root/disks/loop2.img bs=1M count=2048
+      losetup /dev/loop2 /root/disks/loop2.img
+      wipefs -a /dev/loop2 || true
+      dd if=/dev/zero of=/root/disks/loop3.img bs=1M count=2048
+      losetup /dev/loop3 /root/disks/loop3.img
+      wipefs -a /dev/loop3 || true
+
+    scenario: |
+      El sistema dispone de dos discos nuevos: /dev/loop2 y /dev/loop3.
+      El jefe ordena:
+      "Crea un Volume Group llamado vg_data usando ambos discos."
+
+    validations:
+      # Validación 1: VG existe
+      - command: "vgs vg_data --noheadings -o vg_name 2>/dev/null || echo 'NO_VG'"
+        expected_output: "vg_data"
+        match_type: "exact"
+        description: "Volume Group 'vg_data' existe"
+        weight: 3
+      
+      # Validación 2: 2 PVs en VG
+      - command: "vgs vg_data --noheadings -o pv_count 2>/dev/null || echo '0'"
+        expected_output: "2"
+        match_type: "exact"
+        description: "VG tiene exactamente 2 PVs"
+        weight: 4
+      
+      # Validación 3: Tamaño total ~4GB
+      - command: "vgs vg_data --noheadings --units m -o vg_size 2>/dev/null || echo '0'"
+        expected_range:
+          min: "3500"
+          max: "4500"
+        match_type: "range_numeric"
+        description: "Tamaño total ~4GB (2 discos de ~2GB)"
+        weight: 2
+      
+      # Validación 4: /dev/loop2 en vg_data
+      - command: "pvs /dev/loop2 --noheadings -o vg_name 2>/dev/null"
+        expected_output: "vg_data"
+        match_type: "exact"
+        description: "/dev/loop2 está en vg_data"
+        weight: 2
+      
+      # Validación 5: /dev/loop3 en vg_data
+      - command: "pvs /dev/loop3 --noheadings -o vg_name 2>/dev/null"
+        expected_output: "vg_data"
+        match_type: "exact"
+        description: "/dev/loop3 está en vg_data"
+        weight: 2
+      
+      # Validación 6: VG activo
+      - command: "vgs vg_data --noheadings -o vg_attr 2>/dev/null || echo 'NO_ATTR'"
+        expected_output: "wz"
+        match_type: "contains"
+        description: "VG está activo (writable, resizeable)"
+        weight: 1
