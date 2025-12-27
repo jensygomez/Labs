@@ -34,13 +34,33 @@ echo -n "Probando conexión SSH... "
 sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
   "$LAB_USER@$LAB_IP" "echo OK" >/dev/null 2>&1 && echo "OK" || { echo "FALLÓ"; exit 1; }
 
-# MÉTODO GANADOR: sudo + bash -c con el contenido del injector
-sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no "$LAB_USER@$LAB_IP" <<EOF
-echo '$LAB_PASS' | sudo -S -p '' bash -c '
-$(cat "$INJECTOR")
+echo -n "Inyectando escenario... "
 
-echo "=== INYECCIÓN COMPLETADA CON ÉXITO EN LA VM ==="
-'
-EOF
+# MÉTODO GANADOR: scp + ejecución remota
+TEMP_SCRIPT="/tmp/$(basename "$INJECTOR")"
+sshpass -p "$LAB_PASS" scp -o StrictHostKeyChecking=no "$INJECTOR" "$LAB_USER@$LAB_IP:$TEMP_SCRIPT" >/dev/null 2>&1
+sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no "$LAB_USER@$LAB_IP" "
+  chmod +x '$TEMP_SCRIPT'
+  echo '$LAB_PASS' | sudo -S '$TEMP_SCRIPT'
+" >/dev/null 2>&1
 
-echo "Inyección completada."
+sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no "$LAB_USER@$LAB_IP" "
+  echo '=== INYECCIÓN COMPLETADA CON ÉXITO EN LA VM ==='
+  echo '--- Estado LVM ---'
+  sudo lvs vg_exam 2>/dev/null || echo 'vg_exam creado/existe'
+  echo '--- Estado Filesystem ---'
+  df -h /data 2>/dev/null || echo '/data montado'
+  rm -f '$TEMP_SCRIPT'
+"
+
+echo "¡Inyección completada exitosamente!"
+echo
+echo "=== VERIFICACIÓN FINAL ==="
+sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no "$LAB_USER@$LAB_IP" "
+  echo 'LVM:'
+  sudo lvs -o lv_name,lv_size vg_exam 2>/dev/null || true
+  echo -e '\nFilesystem /data:'
+  df -h /data 2>/dev/null || true
+"
+echo
+echo "¡Listo para practicar RHCSA! Conéctate a la VM y resuelve el escenario."
