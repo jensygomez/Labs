@@ -68,7 +68,7 @@ if ! sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no \
 fi
 
 ### === Inyección real (como root) ===
-sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no \
+sshpass -p "$LAB_PASS" ssh -t -o StrictHostKeyChecking=no \
   "$LAB_USER@$LAB_IP" <<EOF
 echo "$LAB_PASS" | sudo -S bash /dev/stdin <<'INJECTOR'
 $(cat "$INJECTOR")
