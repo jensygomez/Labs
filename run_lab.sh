@@ -18,7 +18,7 @@ for var in LAB_USER LAB_PASS LAB_IP; do
   if [[ -z "${!var}" ]]; then
     echo "ERROR: Variable $var no definida en lab.conf"
     exit 1
-  done
+  fi
 done
 
 DOMAIN_KEY="$1"   # storage, users, selinux, etc
