@@ -3,66 +3,93 @@
 set -euo pipefail
 
 LABS_DIR="$HOME/GitHub/Labs"
+CONF_FILE="$LABS_DIR/config/lab.conf"
 
 THEME_KEY="${1:-}"
 SLOT="${2:-}"
+MODE="${3:-}"
 
 if [[ -z "$THEME_KEY" || -z "$SLOT" ]]; then
-    echo "Uso: $0 <tema> <slot>"
-    echo "Ejemplo: $0 storage 05"
+    echo "Uso: $0 <tema> <slot> [--random]"
     exit 1
 fi
 
 # ─────────────────────────────────────────────
-# 1. Resolver TEMA (ej: storage → '1 Storage')
+# 0. Cargar configuración VM
+# ─────────────────────────────────────────────
+if [[ ! -f "$CONF_FILE" ]]; then
+    echo "No se encontró $CONF_FILE"
+    exit 1
+fi
+
+# shellcheck disable=SC1090
+source "$CONF_FILE"
+
+: "${VM_HOST:?VM_HOST no definido}"
+: "${VM_USER:?VM_USER no definido}"
+VM_PORT="${VM_PORT:-22}"
+
+# ─────────────────────────────────────────────
+# 1. Resolver tema
 # ─────────────────────────────────────────────
 THEME_DIR=$(find "$LABS_DIR" -maxdepth 1 -type d \
     | grep -Ei "/[0-9]+[[:space:]]+.*${THEME_KEY}" \
     | head -n 1)
 
-if [[ -z "$THEME_DIR" ]]; then
-    echo "No se encontró el tema para: $THEME_KEY"
-    exit 1
-fi
+[[ -z "$THEME_DIR" ]] && { echo "Tema no encontrado"; exit 1; }
 
 # ─────────────────────────────────────────────
-# 2. Resolver SLOT exacto (05 → '05  ...')
+# 2. Resolver slot
 # ─────────────────────────────────────────────
 SLOT_DIR=$(find "$THEME_DIR" -maxdepth 1 -type d \
     | grep -E "/${SLOT}[[:space:]]+" \
     | head -n 1)
 
-if [[ -z "$SLOT_DIR" ]]; then
-    echo "No se encontró el slot $SLOT en $(basename "$THEME_DIR")"
-    exit 1
-fi
+[[ -z "$SLOT_DIR" ]] && { echo "Slot $SLOT no encontrado"; exit 1; }
 
 # ─────────────────────────────────────────────
-# 3. Detectar niveles disponibles (inject*.sh)
+# 3. Detectar injectores
 # ─────────────────────────────────────────────
 mapfile -t LEVELS < <(find "$SLOT_DIR" -maxdepth 1 -type f -name "inject*.sh" | sort)
 
-if [[ "${#LEVELS[@]}" -eq 0 ]]; then
-    echo "No hay scripts inject*.sh en $(basename "$SLOT_DIR")"
-    exit 1
+[[ "${#LEVELS[@]}" -eq 0 ]] && { echo "No hay injectores"; exit 1; }
+
+# ─────────────────────────────────────────────
+# 4. Selección
+# ─────────────────────────────────────────────
+if [[ "$MODE" == "--random" ]]; then
+    LEVEL="${LEVELS[RANDOM % ${#LEVELS[@]}]}"
+    echo "Modo RANDOM seleccionado"
+else
+    echo
+    echo "Tema     : $(basename "$THEME_DIR")"
+    echo "Ejercicio: $(basename "$SLOT_DIR")"
+    echo
+    PS3="Selecciona el nivel: "
+    select LEVEL in "${LEVELS[@]}"; do
+        [[ -n "${LEVEL:-}" ]] && break
+        echo "Selección inválida"
+    done
 fi
 
 echo
-echo "Tema     : $(basename "$THEME_DIR")"
-echo "Ejercicio: $(basename "$SLOT_DIR")"
-echo
-echo "Niveles disponibles:"
-echo
+echo "Injector : $(basename "$LEVEL")"
+echo "VM       : $VM_USER@$VM_HOST:$VM_PORT"
+echo "----------------------------------------"
 
-PS3="Selecciona el nivel a ejecutar: "
-select LEVEL in "${LEVELS[@]}"; do
-    if [[ -n "${LEVEL:-}" ]]; then
-        echo
-        echo "Ejecutando: $(basename "$LEVEL")"
-        echo "----------------------------------------"
-        bash "$LEVEL"
-        break
-    else
-        echo "Selección inválida"
-    fi
-done
+# ─────────────────────────────────────────────
+# 5. Verificar conexión SSH
+# ─────────────────────────────────────────────
+ssh -p "$VM_PORT" \
+    -o BatchMode=yes \
+    -o ConnectTimeout=5 \
+    "$VM_USER@$VM_HOST" "true" 2>/dev/null \
+    || { echo "No se pudo conectar por SSH a la VM"; exit 1; }
+
+# ─────────────────────────────────────────────
+# 6. Ejecutar injector en la VM
+# ─────────────────────────────────────────────
+ssh -p "$VM_PORT" "$VM_USER@$VM_HOST" "bash -s" < "$LEVEL"
+
+echo
+echo "Inyección completada"
