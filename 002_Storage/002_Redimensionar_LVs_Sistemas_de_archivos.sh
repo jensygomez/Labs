@@ -1,0 +1,1 @@
+# /home/jensy/GitHub/Labs/002_Storage/002_Redimensionar_LVs_Sistemas_de_archivos.sh
