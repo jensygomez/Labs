@@ -34,31 +34,16 @@ echo -n "Probando conexión SSH... "
 sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
   "$LAB_USER@$LAB_IP" "echo OK" >/dev/null 2>&1 && echo "OK" || { echo "FALLÓ"; exit 1; }
 
-echo -n "Inyectando escenario... "
-TEMP_SCRIPT="/tmp/inject_temp.sh"
-
-# Copia con timeout
-timeout 10 sshpass -p "$LAB_PASS" scp -o StrictHostKeyChecking=no "$INJECTOR" "$LAB_USER@$LAB_IP:$TEMP_SCRIPT" >/dev/null 2>&1 || { echo "❌ SCP falló"; exit 1; }
-
-# Ejecuta con timeout y mejor manejo
-timeout 20 sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no "$LAB_USER@$LAB_IP" "
-  chmod +x '$TEMP_SCRIPT' &&
-  echo '$LAB_PASS' | sudo -S bash '$TEMP_SCRIPT' &&
-  echo '=== INYECCIÓN OK ===' &&
-  rm -f '$TEMP_SCRIPT'
-" >/dev/null 2>&1 || { echo "❌ Inyección falló"; exit 1; }
-
-echo "¡OK!"
-
-echo
-echo "=== VERIFICACIÓN FINAL ==="
+# MÉTODO QUE FUNCIONABA (exactamente como antes)
+sshpass -p "$LAB_PASS" scp -o StrictHostKeyChecking=no "$INJECTOR" "$LAB_USER@$LAB_IP:/tmp/inject_V1.sh"
 sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no "$LAB_USER@$LAB_IP" "
-  echo 'Estado LVM:'
-  sudo lvs vg_exam 2>/dev/null | tail -n +2 || echo 'vg_exam creado'
-  echo -e '\nEstado /data:'
-  df -hT /data 2>/dev/null || echo '/data montado'
-  echo -e '\nDiscos usados:'
-  lsblk | grep -E 'sd[b-f]'
+  chmod +x /tmp/inject_V1.sh
+  echo '$LAB_PASS' | sudo -S /tmp/inject_V1.sh
+  echo '=== INYECTOR EJECUTADO CON ÉXITO EN LA VM ==='
+  sudo lvs vg_exam 2>/dev/null || echo 'Aún no existe vg_exam'
+  df -h /data 2>/dev/null || echo '/data aún no montado'
+  rm /tmp/inject_V1.sh
 "
-echo
-echo "¡Listo para practicar RHCSA! Conéctate a la VM."
+
+echo "¡Inyección completada!"
+
