@@ -35,32 +35,30 @@ sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
   "$LAB_USER@$LAB_IP" "echo OK" >/dev/null 2>&1 && echo "OK" || { echo "FALLÓ"; exit 1; }
 
 echo -n "Inyectando escenario... "
+TEMP_SCRIPT="/tmp/inject_temp.sh"
 
-# MÉTODO GANADOR: scp + ejecución remota
-TEMP_SCRIPT="/tmp/$(basename "$INJECTOR")"
-sshpass -p "$LAB_PASS" scp -o StrictHostKeyChecking=no "$INJECTOR" "$LAB_USER@$LAB_IP:$TEMP_SCRIPT" >/dev/null 2>&1
-sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no "$LAB_USER@$LAB_IP" "
-  chmod +x '$TEMP_SCRIPT'
-  echo '$LAB_PASS' | sudo -S '$TEMP_SCRIPT'
-" >/dev/null 2>&1
+# Copia con timeout
+timeout 10 sshpass -p "$LAB_PASS" scp -o StrictHostKeyChecking=no "$INJECTOR" "$LAB_USER@$LAB_IP:$TEMP_SCRIPT" >/dev/null 2>&1 || { echo "❌ SCP falló"; exit 1; }
 
-sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no "$LAB_USER@$LAB_IP" "
-  echo '=== INYECCIÓN COMPLETADA CON ÉXITO EN LA VM ==='
-  echo '--- Estado LVM ---'
-  sudo lvs vg_exam 2>/dev/null || echo 'vg_exam creado/existe'
-  echo '--- Estado Filesystem ---'
-  df -h /data 2>/dev/null || echo '/data montado'
+# Ejecuta con timeout y mejor manejo
+timeout 20 sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no "$LAB_USER@$LAB_IP" "
+  chmod +x '$TEMP_SCRIPT' &&
+  echo '$LAB_PASS' | sudo -S bash '$TEMP_SCRIPT' &&
+  echo '=== INYECCIÓN OK ===' &&
   rm -f '$TEMP_SCRIPT'
-"
+" >/dev/null 2>&1 || { echo "❌ Inyección falló"; exit 1; }
 
-echo "¡Inyección completada exitosamente!"
+echo "¡OK!"
+
 echo
 echo "=== VERIFICACIÓN FINAL ==="
 sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no "$LAB_USER@$LAB_IP" "
-  echo 'LVM:'
-  sudo lvs -o lv_name,lv_size vg_exam 2>/dev/null || true
-  echo -e '\nFilesystem /data:'
-  df -h /data 2>/dev/null || true
+  echo 'Estado LVM:'
+  sudo lvs vg_exam 2>/dev/null | tail -n +2 || echo 'vg_exam creado'
+  echo -e '\nEstado /data:'
+  df -hT /data 2>/dev/null || echo '/data montado'
+  echo -e '\nDiscos usados:'
+  lsblk | grep -E 'sd[b-f]'
 "
 echo
-echo "¡Listo para practicar RHCSA! Conéctate a la VM y resuelve el escenario."
+echo "¡Listo para practicar RHCSA! Conéctate a la VM."
