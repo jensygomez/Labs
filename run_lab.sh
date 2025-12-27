@@ -31,22 +31,13 @@ fi
 
 ### === Resolver paths ===
 DOMAIN_DIR=$(find "$BASE_DIR" -maxdepth 1 -type d -iname "*$DOMAIN_KEY*" | head -n1)
-if [[ -z "$DOMAIN_DIR" ]]; then
-  echo "No se encontró el dominio: $DOMAIN_KEY"
-  exit 1
-fi
+[[ -z "$DOMAIN_DIR" ]] && { echo "No se encontró dominio: $DOMAIN_KEY"; exit 1; }
 
 LAB_DIR=$(find "$DOMAIN_DIR" -maxdepth 1 -type d -iname "$SLOT*" | head -n1)
-if [[ -z "$LAB_DIR" ]]; then
-  echo "No se encontró el ejercicio $SLOT en $DOMAIN_DIR"
-  exit 1
-fi
+[[ -z "$LAB_DIR" ]] && { echo "No se encontró ejercicio $SLOT"; exit 1; }
 
 INJECTOR=$(ls "$LAB_DIR"/inject_V*.sh 2>/dev/null | shuf -n1)
-if [[ -z "$INJECTOR" ]]; then
-  echo "No hay injectores en $LAB_DIR"
-  exit 1
-fi
+[[ -z "$INJECTOR" ]] && { echo "No hay injectores"; exit 1; }
 
 echo
 echo "Tema     : $(basename "$DOMAIN_DIR")"
@@ -55,24 +46,25 @@ echo "Injector : $(basename "$INJECTOR")"
 echo "VM       : $LAB_USER@$LAB_IP"
 echo "----------------------------------------"
 
-### === 1. Validar conexión SSH ===
+### === 1. Validar conexión ===
 echo -n "Probando conexión SSH... "
 if sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
      "$LAB_USER@$LAB_IP" "echo OK" >/dev/null 2>&1; then
   echo "OK"
 else
-  echo "FALLÓ"
-  exit 1
+  echo "FALLÓ"; exit 1
 fi
 
-### === 2. Inyección real (como root) - VERSIÓN ROBUSTA ===
-# Usamos un comando remoto explícito con sudo dentro de bash -s
-# y redirigimos stderr a stdout para ver posibles errores
+### === 2. Inyección real (versión que SÍ funciona) ===
 sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no \
   "$LAB_USER@$LAB_IP" \
-  "echo '$LAB_PASS' | sudo -S -p '' bash -s --" <<'EOF' 2>&1
+  "echo '$LAB_PASS' | sudo -S -p '' bash -s" <<EOF
+#!/bin/bash
+set -e
+
 $(cat "$INJECTOR")
-echo "=== INYECTOR EJECUTADO CON ÉXITO ==="
+
+echo "=== INYECTOR EJECUTADO CON ÉXITO EN LA VM ==="
 EOF
 
 echo "Inyección completada."
