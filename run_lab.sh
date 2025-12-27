@@ -1,43 +1,68 @@
-#!/bin/bash
-# Launcher universal para todos los laboratorios RHCSA EX200
-# Uso: bash run_lab.sh <dominio> <slot>
-# Ejemplo: bash run_lab.sh storage 05
 
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-DOMAIN="$1"   # e.g., storage, users, selinux
-SLOT="$2"     # e.g., 05
+LABS_DIR="$HOME/GitHub/Labs"
 
-if [ -z "$DOMAIN" ] || [ -z "$SLOT" ]; then
-    echo "Uso: bash $0 <dominio> <slot>"
+THEME_KEY="${1:-}"
+SLOT="${2:-}"
+
+if [[ -z "$THEME_KEY" || -z "$SLOT" ]]; then
+    echo "Uso: $0 <tema> <slot>"
+    echo "Ejemplo: $0 storage 05"
     exit 1
 fi
 
-# Configuración de la VM
-VM_USER="student"
-VM_PASS="redhat"
-VM_IP="192.168.122.231"
+# ─────────────────────────────────────────────
+# 1. Resolver TEMA (ej: storage → '1 Storage')
+# ─────────────────────────────────────────────
+THEME_DIR=$(find "$LABS_DIR" -maxdepth 1 -type d \
+    | grep -Ei "/[0-9]+[[:space:]]+.*${THEME_KEY}" \
+    | head -n 1)
 
-# Carpeta raíz de todos los labs
-LAB_ROOT="$HOME/GitHub/Labs"
-
-# Buscar la carpeta exacta del slot/subtema dentro del dominio
-SLOT_DIR=$(find "$LAB_ROOT/$DOMAIN" -maxdepth 1 -type d -name "$SLOT*" | head -n1)
-
-if [ -z "$SLOT_DIR" ]; then
-    echo "No se encontró la carpeta para $DOMAIN slot $SLOT"
+if [[ -z "$THEME_DIR" ]]; then
+    echo "No se encontró el tema para: $THEME_KEY"
     exit 1
 fi
 
-# Seleccionar aleatoriamente un script de nivel/version disponible (inject_V*.sh)
-LAB_SCRIPT=$(find "$SLOT_DIR" -maxdepth 1 -type f -name "inject*.sh" | shuf -n1)
+# ─────────────────────────────────────────────
+# 2. Resolver SLOT exacto (05 → '05  ...')
+# ─────────────────────────────────────────────
+SLOT_DIR=$(find "$THEME_DIR" -maxdepth 1 -type d \
+    | grep -E "/${SLOT}[[:space:]]+" \
+    | head -n 1)
 
-if [ -z "$LAB_SCRIPT" ]; then
-    echo "No se encontró ningún script inject*.sh en $SLOT_DIR"
+if [[ -z "$SLOT_DIR" ]]; then
+    echo "No se encontró el slot $SLOT en $(basename "$THEME_DIR")"
     exit 1
 fi
 
-echo "Ejecutando lab: $LAB_SCRIPT en la VM $VM_IP..."
+# ─────────────────────────────────────────────
+# 3. Detectar niveles disponibles (inject*.sh)
+# ─────────────────────────────────────────────
+mapfile -t LEVELS < <(find "$SLOT_DIR" -maxdepth 1 -type f -name "inject*.sh" | sort)
 
-# Ejecutar remotamente en la VM
-sshpass -p "$VM_PASS" ssh -o StrictHostKeyChecking=no "$VM_USER@$VM_IP" 'bash -s' < "$LAB_SCRIPT"
+if [[ "${#LEVELS[@]}" -eq 0 ]]; then
+    echo "No hay scripts inject*.sh en $(basename "$SLOT_DIR")"
+    exit 1
+fi
+
+echo
+echo "Tema     : $(basename "$THEME_DIR")"
+echo "Ejercicio: $(basename "$SLOT_DIR")"
+echo
+echo "Niveles disponibles:"
+echo
+
+PS3="Selecciona el nivel a ejecutar: "
+select LEVEL in "${LEVELS[@]}"; do
+    if [[ -n "${LEVEL:-}" ]]; then
+        echo
+        echo "Ejecutando: $(basename "$LEVEL")"
+        echo "----------------------------------------"
+        bash "$LEVEL"
+        break
+    else
+        echo "Selección inválida"
+    fi
+done
