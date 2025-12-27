@@ -1,4 +1,3 @@
-
 #!/bin/bash
 set -e
 
@@ -19,7 +18,7 @@ for var in LAB_USER LAB_PASS LAB_IP; do
   if [[ -z "${!var}" ]]; then
     echo "ERROR: Variable $var no definida en lab.conf"
     exit 1
-  fi
+  done
 done
 
 DOMAIN_KEY="$1"   # storage, users, selinux, etc
@@ -69,11 +68,11 @@ if ! sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no \
 fi
 
 ### === Inyección real (como root) ===
-sshpass -p "$LAB_PASS" ssh -tt -o StrictHostKeyChecking=no \
+sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no \
   "$LAB_USER@$LAB_IP" <<EOF
-sudo -S bash <<'ROOT'
+echo "$LAB_PASS" | sudo -S bash /dev/stdin <<'INJECTOR'
 $(cat "$INJECTOR")
-ROOT
+INJECTOR
 EOF
 
 echo "Inyección completada."
