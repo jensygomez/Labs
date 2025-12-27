@@ -69,10 +69,8 @@ fi
 
 ### === Inyección real (como root) ===
 sshpass -p "$LAB_PASS" ssh -t -o StrictHostKeyChecking=no \
-  "$LAB_USER@$LAB_IP" <<EOF
-echo "$LAB_PASS" | sudo -S bash /dev/stdin <<'INJECTOR'
+  "$LAB_USER@$LAB_IP" "echo '$LAB_PASS' | sudo -S bash -s" <<EOF
 $(cat "$INJECTOR")
-INJECTOR
 EOF
 
 echo "Inyección completada."
