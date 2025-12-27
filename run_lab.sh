@@ -34,16 +34,16 @@ echo -n "Probando conexión SSH... "
 sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
   "$LAB_USER@$LAB_IP" "echo OK" >/dev/null 2>&1 && echo "OK" || { echo "FALLÓ"; exit 1; }
 
-# MÉTODO QUE FUNCIONABA (exactamente como antes)
-sshpass -p "$LAB_PASS" scp -o StrictHostKeyChecking=no "$INJECTOR" "$LAB_USER@$LAB_IP:/tmp/inject_V1.sh"
+# MÉTODO SIMPLE (VM limpia)
+sshpass -p "$LAB_PASS" scp -o StrictHostKeyChecking=no "$INJECTOR" "$LAB_USER@$LAB_IP:/tmp/inject.sh"
 sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no "$LAB_USER@$LAB_IP" "
-  chmod +x /tmp/inject_V1.sh
-  echo '$LAB_PASS' | sudo -S /tmp/inject_V1.sh
-  echo '=== INYECTOR EJECUTADO CON ÉXITO EN LA VM ==='
-  sudo lvs vg_exam 2>/dev/null || echo 'Aún no existe vg_exam'
-  df -h /data 2>/dev/null || echo '/data aún no montado'
-  rm /tmp/inject_V1.sh
+  chmod +x /tmp/inject.sh
+  echo '$LAB_PASS' | sudo -S /tmp/inject.sh
+  echo '=== INYECCIÓN COMPLETADA ==='
+  sudo lvs vg_exam
+  df -h /data
+  rm /tmp/inject.sh
 "
 
-echo "¡Inyección completada!"
+echo "¡Listo para RHCSA!"
 
