@@ -21,33 +21,28 @@ for var in LAB_USER LAB_PASS LAB_IP; do
   fi
 done
 
-DOMAIN_KEY="$1"   # storage, users, selinux, etc
-SLOT="$2"         # 05, 01, etc
+DOMAIN_KEY="$1"
+SLOT="$2"
 
 if [[ -z "$DOMAIN_KEY" || -z "$SLOT" ]]; then
   echo "Uso: run_lab.sh <dominio> <slot>"
   exit 1
 fi
 
-### === Resolver dominio real (ej: '1 Storage') ===
+### === Resolver paths ===
 DOMAIN_DIR=$(find "$BASE_DIR" -maxdepth 1 -type d -iname "*$DOMAIN_KEY*" | head -n1)
-
 if [[ -z "$DOMAIN_DIR" ]]; then
   echo "No se encontró el dominio: $DOMAIN_KEY"
   exit 1
 fi
 
-### === Resolver ejercicio ===
 LAB_DIR=$(find "$DOMAIN_DIR" -maxdepth 1 -type d -iname "$SLOT*" | head -n1)
-
 if [[ -z "$LAB_DIR" ]]; then
   echo "No se encontró el ejercicio $SLOT en $DOMAIN_DIR"
   exit 1
 fi
 
-### === Seleccionar injector aleatorio ===
 INJECTOR=$(ls "$LAB_DIR"/inject_V*.sh 2>/dev/null | shuf -n1)
-
 if [[ -z "$INJECTOR" ]]; then
   echo "No hay injectores en $LAB_DIR"
   exit 1
@@ -60,16 +55,19 @@ echo "Injector : $(basename "$INJECTOR")"
 echo "VM       : $LAB_USER@$LAB_IP"
 echo "----------------------------------------"
 
-### === Test de conectividad ===
-if ! sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no \
-     -o ConnectTimeout=5 "$LAB_USER@$LAB_IP" "echo OK" >/dev/null 2>&1; then
-  echo "ERROR: No se pudo conectar por SSH a la VM"
+### === 1. Validar conexión SSH (limpio y sin ruido) ===
+echo -n "Probando conexión SSH... "
+if sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+     "$LAB_USER@$LAB_IP" "echo OK" >/dev/null 2>&1; then
+  echo "OK"
+else
+  echo "FALLÓ"
   exit 1
 fi
 
-### === Inyección real (como root) ===
-sshpass -p "$LAB_PASS" ssh -t -o StrictHostKeyChecking=no \
-  "$LAB_USER@$LAB_IP" "echo '$LAB_PASS' | sudo -S bash -s" <<EOF
+### === 2. Inyección real (como root, sin prompts ni warnings visibles) ===
+sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no \
+  "$LAB_USER@$LAB_IP" "echo '$LAB_PASS' | sudo -S -p '' bash -s" <<EOF
 $(cat "$INJECTOR")
 EOF
 
