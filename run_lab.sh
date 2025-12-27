@@ -55,7 +55,7 @@ else
   echo "FALLÓ"; exit 1
 fi
 
-### === 2. Inyección real (versión que SÍ funciona) ===
+### === 2. Inyección real (versión definitiva) ===
 sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no \
   "$LAB_USER@$LAB_IP" \
   "echo '$LAB_PASS' | sudo -S -p '' bash -s" <<EOF
