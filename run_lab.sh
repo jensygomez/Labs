@@ -15,35 +15,32 @@ if [[ -z "$THEME_KEY" || -z "$SLOT" ]]; then
 fi
 
 # ─────────────────────────────────────────────
-# 0. Cargar configuración VM
+# 0. Cargar configuración
 # ─────────────────────────────────────────────
-if [[ ! -f "$CONF_FILE" ]]; then
-    echo "No se encontró $CONF_FILE"
-    exit 1
-fi
-
+[[ -f "$CONF_FILE" ]] || { echo "Falta $CONF_FILE"; exit 1; }
 # shellcheck disable=SC1090
 source "$CONF_FILE"
 
-: "${VM_HOST:?VM_HOST no definido}"
-: "${VM_USER:?VM_USER no definido}"
+: "${VM_HOST:?}"
+: "${VM_USER:?}"
+: "${VM_PASS:?}"
 VM_PORT="${VM_PORT:-22}"
 
 # ─────────────────────────────────────────────
-# 1. Resolver tema
+# 1. Resolver tema (storage, users, etc.)
 # ─────────────────────────────────────────────
 THEME_DIR=$(find "$LABS_DIR" -maxdepth 1 -type d \
-    | grep -Ei "/[0-9]+[[:space:]]+.*${THEME_KEY}" \
-    | head -n 1)
+  | grep -Ei "/[0-9]+[[:space:]]+.*${THEME_KEY}" \
+  | head -n1)
 
 [[ -z "$THEME_DIR" ]] && { echo "Tema no encontrado"; exit 1; }
 
 # ─────────────────────────────────────────────
-# 2. Resolver slot
+# 2. Resolver slot (05, 01, etc.)
 # ─────────────────────────────────────────────
 SLOT_DIR=$(find "$THEME_DIR" -maxdepth 1 -type d \
-    | grep -E "/${SLOT}[[:space:]]+" \
-    | head -n 1)
+  | grep -E "/${SLOT}[[:space:]]+" \
+  | head -n1)
 
 [[ -z "$SLOT_DIR" ]] && { echo "Slot $SLOT no encontrado"; exit 1; }
 
@@ -78,18 +75,22 @@ echo "VM       : $VM_USER@$VM_HOST:$VM_PORT"
 echo "----------------------------------------"
 
 # ─────────────────────────────────────────────
-# 5. Verificar conexión SSH
+# 5. Verificar SSH (con password)
 # ─────────────────────────────────────────────
-ssh -p "$VM_PORT" \
-    -o BatchMode=yes \
+sshpass -p "$VM_PASS" ssh \
+    -p "$VM_PORT" \
+    -o StrictHostKeyChecking=no \
     -o ConnectTimeout=5 \
-    "$VM_USER@$VM_HOST" "true" 2>/dev/null \
+    "$VM_USER@$VM_HOST" "echo OK" >/dev/null \
     || { echo "No se pudo conectar por SSH a la VM"; exit 1; }
 
 # ─────────────────────────────────────────────
-# 6. Ejecutar injector en la VM
+# 6. Ejecutar injector COMO ROOT
 # ─────────────────────────────────────────────
-ssh -p "$VM_PORT" "$VM_USER@$VM_HOST" "bash -s" < "$LEVEL"
+sshpass -p "$VM_PASS" ssh \
+    -p "$VM_PORT" \
+    -o StrictHostKeyChecking=no \
+    "$VM_USER@$VM_HOST" "sudo -S bash -s" <<<"$VM_PASS" < "$LEVEL"
 
 echo
-echo "Inyección completada"
+echo "Inyección completada correctamente"
