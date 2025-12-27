@@ -1,98 +1,79 @@
 
-#!/usr/bin/env bash
-source lab.conf
+#!/bin/bash
+set -e
 
-set -euo pipefail
+### === Configuración central ===
+BASE_DIR="$HOME/GitHub/Labs"
+CONF_FILE="$BASE_DIR/config/lab.conf"
 
-LABS_DIR="$HOME/GitHub/Labs"
-CONF_FILE="$LABS_DIR/config/lab.conf"
-
-THEME_KEY="${1:-}"
-SLOT="${2:-}"
-MODE="${3:-}"
-
-if [[ -z "$THEME_KEY" || -z "$SLOT" ]]; then
-    echo "Uso: $0 <tema> <slot> [--random]"
-    exit 1
+# Cargar configuración
+if [[ ! -f "$CONF_FILE" ]]; then
+  echo "ERROR: No existe $CONF_FILE"
+  exit 1
 fi
 
-# ─────────────────────────────────────────────
-# 0. Cargar configuración
-# ─────────────────────────────────────────────
-[[ -f "$CONF_FILE" ]] || { echo "Falta $CONF_FILE"; exit 1; }
-# shellcheck disable=SC1090
 source "$CONF_FILE"
 
-: "${VM_HOST:?}"
-: "${VM_USER:?}"
-: "${VM_PASS:?}"
-VM_PORT="${VM_PORT:-22}"
+# Validación básica
+for var in LAB_USER LAB_PASS LAB_IP; do
+  if [[ -z "${!var}" ]]; then
+    echo "ERROR: Variable $var no definida en lab.conf"
+    exit 1
+  fi
+done
 
-# ─────────────────────────────────────────────
-# 1. Resolver tema (storage, users, etc.)
-# ─────────────────────────────────────────────
-THEME_DIR=$(find "$LABS_DIR" -maxdepth 1 -type d \
-  | grep -Ei "/[0-9]+[[:space:]]+.*${THEME_KEY}" \
-  | head -n1)
+DOMAIN_KEY="$1"   # storage, users, selinux, etc
+SLOT="$2"         # 05, 01, etc
 
-[[ -z "$THEME_DIR" ]] && { echo "Tema no encontrado"; exit 1; }
+if [[ -z "$DOMAIN_KEY" || -z "$SLOT" ]]; then
+  echo "Uso: run_lab.sh <dominio> <slot>"
+  exit 1
+fi
 
-# ─────────────────────────────────────────────
-# 2. Resolver slot (05, 01, etc.)
-# ─────────────────────────────────────────────
-SLOT_DIR=$(find "$THEME_DIR" -maxdepth 1 -type d \
-  | grep -E "/${SLOT}[[:space:]]+" \
-  | head -n1)
+### === Resolver dominio real (ej: '1 Storage') ===
+DOMAIN_DIR=$(find "$BASE_DIR" -maxdepth 1 -type d -iname "*$DOMAIN_KEY*" | head -n1)
 
-[[ -z "$SLOT_DIR" ]] && { echo "Slot $SLOT no encontrado"; exit 1; }
+if [[ -z "$DOMAIN_DIR" ]]; then
+  echo "No se encontró el dominio: $DOMAIN_KEY"
+  exit 1
+fi
 
-# ─────────────────────────────────────────────
-# 3. Detectar injectores
-# ─────────────────────────────────────────────
-mapfile -t LEVELS < <(find "$SLOT_DIR" -maxdepth 1 -type f -name "inject*.sh" | sort)
+### === Resolver ejercicio ===
+LAB_DIR=$(find "$DOMAIN_DIR" -maxdepth 1 -type d -iname "$SLOT*" | head -n1)
 
-[[ "${#LEVELS[@]}" -eq 0 ]] && { echo "No hay injectores"; exit 1; }
+if [[ -z "$LAB_DIR" ]]; then
+  echo "No se encontró el ejercicio $SLOT en $DOMAIN_DIR"
+  exit 1
+fi
 
-# ─────────────────────────────────────────────
-# 4. Selección
-# ─────────────────────────────────────────────
-if [[ "$MODE" == "--random" ]]; then
-    LEVEL="${LEVELS[RANDOM % ${#LEVELS[@]}]}"
-    echo "Modo RANDOM seleccionado"
-else
-    echo
-    echo "Tema     : $(basename "$THEME_DIR")"
-    echo "Ejercicio: $(basename "$SLOT_DIR")"
-    echo
-    PS3="Selecciona el nivel: "
-    select LEVEL in "${LEVELS[@]}"; do
-        [[ -n "${LEVEL:-}" ]] && break
-        echo "Selección inválida"
-    done
+### === Seleccionar injector aleatorio ===
+INJECTOR=$(ls "$LAB_DIR"/inject_V*.sh 2>/dev/null | shuf -n1)
+
+if [[ -z "$INJECTOR" ]]; then
+  echo "No hay injectores en $LAB_DIR"
+  exit 1
 fi
 
 echo
-echo "Injector : $(basename "$LEVEL")"
-echo "VM       : $VM_USER@$VM_HOST:$VM_PORT"
+echo "Tema     : $(basename "$DOMAIN_DIR")"
+echo "Ejercicio: $(basename "$LAB_DIR")"
+echo "Injector : $(basename "$INJECTOR")"
+echo "VM       : $LAB_USER@$LAB_IP"
 echo "----------------------------------------"
 
-# ─────────────────────────────────────────────
-# 5. Verificar SSH (con password)
-# ─────────────────────────────────────────────
-sshpass -p "$VM_PASS" ssh \
-    -p "$VM_PORT" \
-    -o StrictHostKeyChecking=no \
-    -o ConnectTimeout=5 \
-    "$VM_USER@$VM_HOST" "echo OK" >/dev/null \
-    || { echo "No se pudo conectar por SSH a la VM"; exit 1; }
+### === Test de conectividad ===
+if ! sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no \
+     -o ConnectTimeout=5 "$LAB_USER@$LAB_IP" "echo OK" >/dev/null 2>&1; then
+  echo "ERROR: No se pudo conectar por SSH a la VM"
+  exit 1
+fi
 
-# ─────────────────────────────────────────────
-# 6. Ejecutar injector COMO ROOT
-# ─────────────────────────────────────────────
-sshpass -p "$VM_PASS" ssh \
-    -p "$VM_PORT" \
-    -o StrictHostKeyChecking=no \
-    "$VM_USER@$VM_HOST" "sudo -S bash -s" <<<"$VM_PASS" < "$LEVEL"
+### === Inyección real (como root) ===
+sshpass -p "$LAB_PASS" ssh -tt -o StrictHostKeyChecking=no \
+  "$LAB_USER@$LAB_IP" <<EOF
+sudo -S bash <<'ROOT'
+$(cat "$INJECTOR")
+ROOT
+EOF
 
-echo
-echo "Inyección completada correctamente"
+echo "Inyección completada."
