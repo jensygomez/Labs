@@ -1,33 +1,42 @@
-#!/bin/bash
 # /home/jensy/GitHub/Labs/002_Storage/Partitioning_Filesystems.sh
-# RHCSA EX200 - Storage: Partitioning & Filesystems (Troubleshooting - Basic)
+#!/bin/bash
+# RHCSA EX200 - Storage Troubleshooting Injection
 
-source ./lab.conf
+set -e
 
-sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no ${LAB_USER}@${LAB_IP} <<'EOF'
+CHECK_SCRIPT="/home/jensy/GitHub/Labs/config/check_lab.sh"
+CONF_FILE="/home/jensy/GitHub/Labs/config/lab.conf"
 
-# Create mount points
-mkdir -p /mnt/data_ext4
-mkdir -p /mnt/data_xfs
+# Validación previa
+bash "$CHECK_SCRIPT"
 
-# Partition disks
-parted -s /dev/sdb mklabel gpt
-parted -s /dev/sdb mkpart primary 1MiB 1GiB
+source "$CONF_FILE"
 
-parted -s /dev/sde mklabel gpt
-parted -s /dev/sde mkpart primary 1MiB 100%
+sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no ${LAB_USER}@${LAB_IP} << 'EOF'
+set -e
 
-# Create filesystems (silent)
-mkfs.ext4 -F /dev/sdb1 > /dev/null 2>&1
-mkfs.xfs  -f /dev/sde1 > /dev/null 2>&1
+DISK1=/dev/sdc
+DISK2=/dev/sde
 
-# Inject persistent configuration (do not validate)
-cat <<EOT >> /etc/fstab
-/dev/sdb1  /mnt/data_ext4  xfs   defaults  0 0
-/dev/sde1  /mnt/data_xfs   ext4  defaults  0 0
-EOT
+wipefs -a $DISK1 >/dev/null 2>&1 || true
+wipefs -a $DISK2 >/dev/null 2>&1 || true
 
-exit 0
+parted -s $DISK1 mklabel gpt
+parted -s $DISK1 mkpart primary 1MiB 100%
+
+parted -s $DISK2 mklabel gpt
+parted -s $DISK2 mkpart primary 1MiB 100%
+
+mkfs.ext4 -F ${DISK1}1 >/dev/null
+mkfs.xfs -f ${DISK2}1 >/dev/null
+
+mkdir -p /data_ext4 /data_xfs
+
+echo "${DISK1}1  /data_ext4  ext4  defaults  0 0" >> /etc/fstab
+echo "${DISK2}1  /data_xfs   xfs   defaults  0 0" >> /etc/fstab
+
+mount -a || true
 EOF
 
-echo "Scenario injected successfully."
+echo "[DONE] Laboratorio inyectado"
+
