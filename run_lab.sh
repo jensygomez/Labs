@@ -1,5 +1,7 @@
 
 #!/usr/bin/env bash
+source lab.conf
+
 set -euo pipefail
 
 LABS_DIR="$HOME/GitHub/Labs"
