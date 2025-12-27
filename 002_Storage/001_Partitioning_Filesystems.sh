@@ -1,4 +1,4 @@
-# /home/jensy/GitHub/Labs/002_Storage/Partitioning_Filesystems.sh
+# /home/jensy/GitHub/Labs/002_Storage/001_Partitioning_Filesystems.sh
 #!/bin/bash
 # RHCSA EX200 - Storage Troubleshooting Injection
 
