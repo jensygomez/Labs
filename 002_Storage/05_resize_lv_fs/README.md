@@ -1,20 +1,10 @@
-========================================================
-RHCSA EX200 – Storage Task
-========================================================
+LAB RULES
 
-A logical volume is mounted under /data.
+- Do not inspect inject.sh
+- Do not recreate volumes or filesystems
+- Do not delete existing data
+- Do not use unsafe shortcuts
+- Always verify your changes
+- Assume this is a production system
 
-The system storage configuration was recently modified by another administrator.
-
-Your task is to ensure that:
-
-- The available storage under /data reflects the expected capacity
-- No data is lost
-- The configuration remains functional after a system reboot
-
-You must use standard system tools.
-Do not remove existing data.
-Do not reinstall or recreate volumes.
-
-This task must be completed using best practices.
-========================================================
+Focus on diagnosis, not speed.
