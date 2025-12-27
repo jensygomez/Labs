@@ -55,7 +55,7 @@ echo "Injector : $(basename "$INJECTOR")"
 echo "VM       : $LAB_USER@$LAB_IP"
 echo "----------------------------------------"
 
-### === 1. Validar conexión SSH (limpio y sin ruido) ===
+### === 1. Validar conexión SSH ===
 echo -n "Probando conexión SSH... "
 if sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
      "$LAB_USER@$LAB_IP" "echo OK" >/dev/null 2>&1; then
@@ -65,10 +65,14 @@ else
   exit 1
 fi
 
-### === 2. Inyección real (como root, sin prompts ni warnings visibles) ===
+### === 2. Inyección real (como root) - VERSIÓN ROBUSTA ===
+# Usamos un comando remoto explícito con sudo dentro de bash -s
+# y redirigimos stderr a stdout para ver posibles errores
 sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no \
-  "$LAB_USER@$LAB_IP" "echo '$LAB_PASS' | sudo -S -p '' bash -s" <<EOF
+  "$LAB_USER@$LAB_IP" \
+  "echo '$LAB_PASS' | sudo -S -p '' bash -s --" <<'EOF' 2>&1
 $(cat "$INJECTOR")
+echo "=== INYECTOR EJECUTADO CON ÉXITO ==="
 EOF
 
 echo "Inyección completada."
