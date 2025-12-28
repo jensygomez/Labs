@@ -73,11 +73,6 @@ TICKET_FILE="/tmp/current_lab_ticket.txt"
     echo "  Logical Volume:        $LV"
     echo "  Punto de montaje:      $MNT"
     echo
-    echo "Estado actual (investiga):"
-    echo "  Tamaño actual del LV:   $(lvs -o lv_size --noheadings --units g /dev/$VG/$LV | xargs)"
-    echo "  Espacio libre en VG:    $(vgs -o vg_free --noheadings --units g $VG | xargs) ← ¿útil?"
-    echo "  Uso actual en /data:    $(df -h $MNT | tail -1 | awk '{print $2 " usado de " $1}')"
-    echo
     echo "Pistas para resolver:"
     echo "  • Hay un VG con espacio libre no utilizado."
     echo "  • El LV actual no ocupa todo el disco disponible."

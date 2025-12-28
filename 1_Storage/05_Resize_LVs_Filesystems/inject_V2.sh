@@ -121,12 +121,7 @@ ${CYAN}Información del sistema:${RESET}
   Volume Group:          $VG
   Logical Volume:        $LV
   Punto de montaje:      $MNT
-  Tipo de filesystem:    XFS
 
-${CYAN}Estado actual (investiga):${RESET}
-  Tamaño actual del LV:   $(lvs -o lv_size --noheadings --units g /dev/$VG/$LV | xargs)
-  Espacio libre en VG:    $(vgs -o vg_free --noheadings --units g $VG | xargs) ← ¿puedes aprovecharlo?
-  Uso actual en /data:    $(df -h $MNT | tail -1 | awk '{print $2 " usado de " $1}')
 
 ${GREEN}Pistas para resolver:${RESET}
   • El VG tiene espacio sin asignar.
