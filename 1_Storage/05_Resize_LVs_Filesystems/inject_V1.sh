@@ -4,6 +4,10 @@
 # Modular version: setup + ticket
 
 set -e
+if [[ $EUID -ne 0 ]]; then
+  echo "ERROR: Este script debe ejecutarse como root."
+  exit 1
+fi
 
 # Colores para ticket
 RED="\033[1;31m"
