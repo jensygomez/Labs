@@ -74,15 +74,28 @@ source_patch() {
 }
 
 # ==============================================
-# 5. Inyectar setup en la VM
+# 5. Inyectar setup en la VM (corregido)
 # ==============================================
 inject_setup_vm() {
     echo -e "${CYAN}Inyectando setup en la VM...${RESET}"
 
-    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no \
-        "$VM_USER@$VM_HOST" \
-        "sudo bash -c '$(declare -f setup_storage); setup_storage'"
+    # Ruta completa del patch en host
+    PATCH_PATH="$BASE_DIR/$SELECTED_LAB.sh"
+
+    # Copiar patch a VM (temporalmente)
+    scp -i "$SSH_KEY" -o StrictHostKeyChecking=no "$PATCH_PATH" "$VM_USER@$VM_HOST:/tmp/$SELECTED_LAB.sh"
+
+    # Ejecutar patch en la VM como root
+    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" bash << EOF
+        sudo bash /tmp/$SELECTED_LAB.sh
+EOF
+
+    # Opcional: eliminar el patch temporal de la VM
+    ssh -i "$SSH_KEY" "$VM_USER@$VM_HOST" "rm -f /tmp/$SELECTED_LAB.sh"
+
+    echo -e "${GREEN}Setup inyectado en la VM correctamente.${RESET}"
 }
+
 
 # ==============================================
 # 6. Verificar inyección
