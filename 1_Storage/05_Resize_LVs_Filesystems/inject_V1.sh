@@ -53,7 +53,7 @@ sync
 echo "==> Setup completado"
 
 # ========================
-# GENERAR TICKET Y ENVIARLO AL HOST
+# GENERAR TICKET
 # ========================
 
 TICKET_FILE="/tmp/current_lab_ticket.txt"
@@ -68,10 +68,10 @@ TICKET_FILE="/tmp/current_lab_ticket.txt"
     echo "                  Parece que el trabajo quedó a medias."
     echo
     echo "Información del sistema:"
-    echo "  Disco físico usado:     $DISK"
-    echo "  Volume Group:          $VG"
-    echo "  Logical Volume:        $LV"
-    echo "  Punto de montaje:      $MNT"
+    echo "  Disco físico usado: _____ $DISK"
+    echo "  Volume Group: ___________ $VG"
+    echo "  Logical Volume: _________ $LV"
+    echo "  Punto de montaje: _______ $MNT"
     echo
     echo "Pistas para resolver:"
     echo "  • Hay un VG con espacio libre no utilizado."
@@ -90,44 +90,4 @@ TICKET_FILE="/tmp/current_lab_ticket.txt"
 cp "$TICKET_FILE" /home/student/lab_ticket.txt
 chmod 644 /home/student/lab_ticket.txt
 
-# ENVIAR EL TICKET AL HOST (con colores)
-echo
-echo "=== TICKET DEL LABORATORIO (visible en tu host) ==="
-YELLOW="\033[1;33m"
-BLUE="\033[1;34m"
-GREEN="\033[1;32m"
-CYAN="\033[1;36m"
-RESET="\033[0m"
-
-cat << EOF
-${YELLOW}==================================================${RESET}
-${BLUE}     RHCSA EX200 - Storage Troubleshooting Lab     ${RESET}
-${YELLOW}==================================================${RESET}
-${CYAN}Variación:${RESET}        Resize LVs & Filesystems - Básico
-${CYAN}Escenario:${RESET}        Un administrador anterior configuró almacenamiento adicional
-                  en /data, pero los usuarios reportan falta de espacio.
-                  Parece que el trabajo quedó a medias.
-
-${CYAN}Información del sistema:${RESET}
-  Disco físico usado:     $DISK
-  Volume Group:          $VG
-  Logical Volume:        $LV
-  Punto de montaje:      $MNT
-
-
-${GREEN}Pistas para resolver:${RESET}
-  • Hay un VG con espacio libre no utilizado.
-  • El LV actual no ocupa todo el disco disponible.
-  • El filesystem montado podría no reflejar el tamaño real del LV.
-  • Investiga comandos para extender volúmenes lógicos sin perder datos.
-  • Luego, actualiza el sistema de archivos para usar el nuevo espacio.
-
-${GREEN}Objetivo final:${RESET}
-  El directorio /data debe usar prácticamente todo el espacio del disco físico asignado.
-  Verifica con: df -h /data
-${YELLOW}==================================================${RESET}
-EOF
-
-echo
-echo "¡Laboratorio inyectado! Ticket mostrado arriba."
-echo "También guardado en la VM: /home/student/lab_ticket_V1.txt"
+echo "Ticket V1 generado correctamente"
