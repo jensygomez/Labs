@@ -21,7 +21,9 @@ RESET="\033[0m"
 
 # --- Funciones ---
 
+# ==============================================
 # 1. Leer base de datos
+# ==============================================
 read_lab_db() {
     if [[ ! -f "$DB_FILE" ]]; then
         echo -e "${RED}Archivo de base de datos no encontrado: $DB_FILE${RESET}"
@@ -30,19 +32,25 @@ read_lab_db() {
     mapfile -t LABS < "$DB_FILE"                                    # Carga todas las líneas en un array
 }
 
+# ==============================================
 # 2. Randomizar y escoger un laboratorio
+# ==============================================
 choose_lab() {
     RANDOM_INDEX=$(( RANDOM % ${#LABS[@]} ))
     SELECTED_LAB="${LABS[$RANDOM_INDEX]}"
     echo -e "${GREEN}Laboratorio seleccionado: $SELECTED_LAB${RESET}"
 }
 
+# ==============================================
 # 3. Borrar la línea escogida de la base de datos
+# ==============================================
 remove_lab_from_db() {
     grep -vFx "$SELECTED_LAB" "$DB_FILE" > "${DB_FILE}.tmp" && mv "${DB_FILE}.tmp" "$DB_FILE"
 }
 
+# ==============================================
 # 4. Source del patch seleccionado
+# ==============================================
 source_patch() {
     PATCH_PATH="./$SELECTED_LAB.sh"
     if [[ ! -f "$PATCH_PATH" ]]; then
@@ -52,20 +60,22 @@ source_patch() {
     source "$PATCH_PATH"
 }
 
+# ==============================================
 # 5. Conectar a la VM y ejecutar setup_storage()
+# ==============================================
+
 inject_setup_vm() {
     echo -e "${CYAN}Conectando a la VM y ejecutando setup...${RESET}"
-    
-    # Usando sshpass para simplificar login con contraseña
-    sshpass -p "$VM_PASS" ssh -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" bash << EOF
-        # Elevar a root
+
+    ssh -i /home/jensy/GitHub/Labs/.ssh/id_rhcsalabs -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" bash << 'EOF'
         sudo -i
-        # Llamar la función setup_storage que ya está definida en el patch
         setup_storage
 EOF
 }
 
+# ==============================================
 # 6. Verificar inyección (ejemplo simple: verificar LV)
+# ==============================================
 verify_injection() {
     # Aquí podrías hacer un SSH y comprobar el LV, ejemplo simple:
     INJECTED=$(sshpass -p "$VM_PASS" ssh -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" "sudo lvdisplay /dev/vg_exam/lv_data >/dev/null 2>&1 && echo OK || echo FAIL")
@@ -77,7 +87,9 @@ verify_injection() {
     fi
 }
 
+# ==============================================
 # 7. Mostrar ticket
+# ==============================================
 show_ticket() {
     ticket_storage  # La función ticket_storage se debe definir en el patch
 }
