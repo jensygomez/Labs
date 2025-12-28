@@ -1,48 +1,54 @@
 #!/bin/bash
-# RHCSA EX200 – Storage Slot 05 – Variation 1
-# Solo setup: LV extendido pero filesystem NO actualizado
+# inject_V1.sh - Variación 1: LV extendido, filesystem NO actualizado (ext4)
 
 set -e
+
 if [[ $EUID -ne 0 ]]; then
-  echo "ERROR: Este script debe ejecutarse como root."
-  exit 1
+    echo "ERROR: Este script debe ejecutarse como root."
+    exit 1
 fi
 
-echo "==> Ejecutando setup del laboratorio Resize LV (ext4)..."
+echo "==> Configurando laboratorio Resize LV (V1)..."
 
-# Discos disponibles para labs (excluimos sda y vda)
-DISK=$(lsblk -dn -o NAME,SIZE,TYPE | grep 'disk' | grep -E 'sd[b-f]' | sort -k2 -hr | head -n1 | awk '{print $1}')
-# Alternativa aleatoria: shuf -n1 en vez de head
+# Selección ALEATORIA de disco entre sdb, sdc, sdd, sde, sdf
+DISK=$(lsblk -dn -o NAME,TYPE | awk '$2=="disk" && $1 ~ /^sd[b-f]$/ {print $1}' | shuf -n1)
 
-[ -z "$DISK" ] && { echo "No se encontraron discos sd[b-f]"; exit 1; }
+[ -z "$DISK" ] && { echo "ERROR: No se encontraron discos sd[b-f] disponibles"; exit 1; }
 
 DEVICE="/dev/$DISK"
 VG="vg_exam"
 LV="lv_data"
 MNT="/data"
 
-wipefs -a "$DEVICE" &>/dev/null
+echo "Disco seleccionado aleatoriamente: $DEVICE"
+
+# Limpieza y creación PV
+wipefs -af "$DEVICE" &>/dev/null
 pvcreate -ff -y "$DEVICE" &>/dev/null
 
+# VG: crear o extender
 if ! vgdisplay "$VG" >/dev/null 2>&1; then
     vgcreate "$VG" "$DEVICE" &>/dev/null
 else
     vgextend "$VG" "$DEVICE" &>/dev/null
 fi
 
+# LV: crear si no existe
 if ! lvdisplay "/dev/$VG/$LV" >/dev/null 2>&1; then
     lvcreate -L 1G -n "$LV" "$VG" &>/dev/null
     mkfs.ext4 -F "/dev/$VG/$LV" &>/dev/null
 fi
 
+# Montaje persistente
 mkdir -p "$MNT"
 mount "/dev/$VG/$LV" "$MNT"
 
 UUID=$(blkid -s UUID -o value "/dev/$VG/$LV")
-grep -q "$MNT" /etc/fstab || echo "UUID=$UUID $MNT ext4 defaults 0 0" >> /etc/fstab
+grep -q "^UUID=$UUID" /etc/fstab || echo "UUID=$UUID $MNT ext4 defaults 0 0" >> /etc/fstab
 
-# Aquí viene el "fallo" del lab: extendemos LV pero NO resizeamos FS
+# ¡Aquí está el "fallo" del laboratorio!
 lvextend -L +1G "/dev/$VG/$LV" &>/dev/null
 
 sync
-echo "==> Setup completado. Disco usado: $DEVICE (LV ahora ~2G, FS sigue ~1G)"
+echo "==> Laboratorio listo: LV extendido a ~2G, filesystem sigue en ~1G"
+echo "    Usa: resize2fs /dev/vg_exam/lv_data para solucionarlo"
