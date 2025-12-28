@@ -1,49 +1,62 @@
 #!/bin/bash
+# /home/jensy/GitHub/Labs/run_lab.sh
+# Script principal para ejecutar labs RHCSA con randomización controlada
+
 set -e
 
-BASE_DIR="$HOME/GitHub/Labs"
-CONF_FILE="$BASE_DIR/config/lab.conf"
+# Configuración de paths
+LAB_DIR="/home/jensy/GitHub/Labs/1_Storage/05_Resize_LVs_Filesystems"
+DONE_FILE="$LAB_DIR/labs_done.txt"
+ACTIVE_LAB_FILE="$LAB_DIR/active_lab.tmp"
 
-[[ -f "$CONF_FILE" ]] && source "$CONF_FILE" || { echo "ERROR: No $CONF_FILE"; exit 1; }
+# 1. Detectamos labs disponibles (inject_*.sh)
+AVAILABLE_LABS=($(ls "$LAB_DIR"/inject_*.sh 2>/dev/null))
+if [[ ${#AVAILABLE_LABS[@]} -eq 0 ]]; then
+    echo "[ERROR] No se encontraron labs disponibles en $LAB_DIR"
+    exit 1
+fi
 
-for var in LAB_USER LAB_PASS LAB_IP; do
-  [[ -z "${!var}" ]] && { echo "ERROR: Variable $var no definida"; exit 1; }
+# 2. Inicializamos el archivo de labs ya practicados si no existe
+if [[ ! -f "$DONE_FILE" ]]; then
+    touch "$DONE_FILE"
+fi
+
+# 3. Construimos array de labs pendientes
+PENDING_LABS=()
+for lab in "${AVAILABLE_LABS[@]}"; do
+    LAB_NAME=$(basename "$lab")
+    if ! grep -qx "$LAB_NAME" "$DONE_FILE"; then
+        PENDING_LABS+=("$LAB_NAME")
+    fi
 done
 
-DOMAIN_KEY="$1"
-SLOT="$2"
-[[ -z "$DOMAIN_KEY" || -z "$SLOT" ]] && { echo "Uso: $0 <dominio> <slot>"; exit 1; }
+# 4. Si todos los labs ya se practicaron, reiniciamos la lista
+if [[ ${#PENDING_LABS[@]} -eq 0 ]]; then
+    echo "[INFO] Todos los labs ya se practicaron. Reiniciando lista..."
+    > "$DONE_FILE"
+    for lab in "${AVAILABLE_LABS[@]}"; do
+        PENDING_LABS+=("$(basename "$lab")")
+    done
+fi
 
-DOMAIN_DIR=$(find "$BASE_DIR" -maxdepth 1 -type d -iname "*$DOMAIN_KEY*" | head -n1)
-[[ -z "$DOMAIN_DIR" ]] && { echo "Dominio no encontrado"; exit 1; }
+# 5. Seleccionamos aleatoriamente un lab pendiente
+RANDOM_INDEX=$((RANDOM % ${#PENDING_LABS[@]}))
+SELECTED_LAB=${PENDING_LABS[$RANDOM_INDEX]}
 
-LAB_DIR=$(find "$DOMAIN_DIR" -maxdepth 1 -type d -iname "$SLOT*" | head -n1)
-[[ -z "$LAB_DIR" ]] && { echo "Ejercicio no encontrado"; exit 1; }
+# 6. Guardamos el lab activo
+echo "$SELECTED_LAB" > "$ACTIVE_LAB_FILE"
 
-INJECTOR=$(ls "$LAB_DIR"/inject_V*.sh 2>/dev/null | shuf -n1)
-[[ -z "$INJECTOR" ]] && { echo "No hay injectores"; exit 1; }
+# 7. Ejecutamos el lab
+echo "[INFO] Lab seleccionado: $SELECTED_LAB"
+echo "[INFO] Inyectando el lab en la VM..."
 
-echo
-echo "Tema     : $(basename "$DOMAIN_DIR")"
-echo "Ejercicio: $(basename "$LAB_DIR")"
-echo "Injector : $(basename "$INJECTOR")"
-echo "VM       : $LAB_USER@$LAB_IP"
-echo "----------------------------------------"
+bash "$LAB_DIR/$SELECTED_LAB"
 
-echo -n "Probando conexión SSH... "
-sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
-  "$LAB_USER@$LAB_IP" "echo OK" >/dev/null 2>&1 && echo "OK" || { echo "FALLÓ"; exit 1; }
+# 8. Marcamos este lab como practicado
+echo "$SELECTED_LAB" >> "$DONE_FILE"
 
-# MÉTODO SIMPLE (VM limpia)
-sshpass -p "$LAB_PASS" scp -o StrictHostKeyChecking=no "$INJECTOR" "$LAB_USER@$LAB_IP:/tmp/inject.sh"
-sshpass -p "$LAB_PASS" ssh -o StrictHostKeyChecking=no "$LAB_USER@$LAB_IP" "
-  chmod +x /tmp/inject.sh
-  echo '$LAB_PASS' | sudo -S /tmp/inject.sh
-  echo '=== INYECCIÓN COMPLETADA ==='
-  sudo lvs vg_exam
-  df -h /data
-  rm /tmp/inject.sh
-"
+# 9. Mensaje final
+echo "[DONE] Lab inyectado correctamente."
+echo "[INFO] Lab activo registrado en $ACTIVE_LAB_FILE"
 
-echo "¡Listo para RHCSA!"
 
