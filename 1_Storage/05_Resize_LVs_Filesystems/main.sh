@@ -95,8 +95,7 @@ ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" bash << 'EOF'
     echo "   → Ejecutando el laboratorio..."
     echo "$SUDO_PASS" | sudo -S bash /tmp/lab_setup.sh
 
-    echo "   → Limpiando archivo temporal..."
-    echo "$SUDO_PASS" | sudo -S rm -f /tmp/lab_setup.sh
+
 
     # Si el script generó un ticket en /tmp/current_lab_ticket.txt, mostrarlo con colores
     if [[ -f /tmp/current_lab_ticket.txt ]]; then
@@ -107,6 +106,9 @@ ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" bash << 'EOF'
     else
         echo "   → Laboratorio ejecutado, pero no se encontró ticket (revisa inject script)"
     fi
+
+    echo "   → Limpiando archivo temporal..."
+    echo "$SUDO_PASS" | sudo -S rm -f /tmp/lab_setup.sh
 EOF
 
 # ==============================================================================
