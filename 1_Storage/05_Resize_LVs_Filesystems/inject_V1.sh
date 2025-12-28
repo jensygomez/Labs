@@ -53,61 +53,90 @@ sync
 echo "==> Setup completado"
 
 # ========================
-# TICKET PERSONALIZADO V1 CON COLORES Y LIMPIEZA DE PANTALLA
+# GENERAR TICKET Y ENVIARLO AL HOST
 # ========================
-clear  # Limpia la pantalla antes de mostrar el ticket
 
-# Colores ANSI
-RED="\033[1;31m"
-GREEN="\033[1;32m"
+TICKET_FILE="/tmp/current_lab_ticket.txt"
+
+{
+    echo "=================================================="
+    echo "     RHCSA EX200 - Storage Troubleshooting Lab     "
+    echo "=================================================="
+    echo "Variación:        Resize LVs & Filesystems - Básico"
+    echo "Escenario:        Un administrador anterior configuró almacenamiento adicional"
+    echo "                  en /data, pero los usuarios reportan falta de espacio."
+    echo "                  Parece que el trabajo quedó a medias."
+    echo
+    echo "Información del sistema:"
+    echo "  Disco físico usado:     $DISK"
+    echo "  Volume Group:          $VG"
+    echo "  Logical Volume:        $LV"
+    echo "  Punto de montaje:      $MNT"
+    echo
+    echo "Estado actual (investiga):"
+    echo "  Tamaño actual del LV:   $(lvs -o lv_size --noheadings --units g /dev/$VG/$LV | xargs)"
+    echo "  Espacio libre en VG:    $(vgs -o vg_free --noheadings --units g $VG | xargs) ← ¿útil?"
+    echo "  Uso actual en /data:    $(df -h $MNT | tail -1 | awk '{print $2 " usado de " $1}')"
+    echo
+    echo "Pistas para resolver:"
+    echo "  • Hay un VG con espacio libre no utilizado."
+    echo "  • El LV actual no ocupa todo el disco disponible."
+    echo "  • El filesystem montado podría no reflejar el tamaño real del LV."
+    echo "  • Investiga comandos para extender volúmenes lógicos sin perder datos."
+    echo "  • Luego, actualiza el sistema de archivos para usar el nuevo espacio."
+    echo
+    echo "Objetivo final:"
+    echo "  El directorio /data debe usar prácticamente todo el espacio del disco físico asignado."
+    echo "  Verifica con: df -h /data"
+    echo "=================================================="
+} > "$TICKET_FILE"
+
+# Copiar para el estudiante
+cp "$TICKET_FILE" /home/student/lab_ticket_V1.txt
+chmod 644 /home/student/lab_ticket_V1.txt
+
+# ENVIAR EL TICKET AL HOST (con colores)
+echo
+echo "=== TICKET DEL LABORATORIO (visible en tu host) ==="
 YELLOW="\033[1;33m"
 BLUE="\033[1;34m"
+GREEN="\033[1;32m"
 CYAN="\033[1;36m"
 RESET="\033[0m"
 
-# Ticket con colores y pistas (sin comandos directos)
-echo -e "${YELLOW}==================================================${RESET}" | tee /home/student/lab_ticket_V1.txt
-echo -e "${BLUE}     RHCSA EX200 - Storage Troubleshooting Lab     ${RESET}" | tee -a /home/student/lab_ticket_V1.txt
-echo -e "${YELLOW}==================================================${RESET}" | tee -a /home/student/lab_ticket_V1.txt
-echo -e "${CYAN}Variación:${RESET}        Resize LVs & Filesystems - Básico" | tee -a /home/student/lab_ticket_V1.txt
-echo -e "${CYAN}Escenario:${RESET}        Parece que un administrador anterior comenzó a configurar un volumen lógico" | tee -a /home/student/lab_ticket_V1.txt
-echo -e "                  para almacenamiento de datos, pero dejó el trabajo incompleto." | tee -a /home/student/lab_ticket_V1.txt
-echo -e "                  El punto de montaje /data está activo, pero el tamaño parece" | tee -a /home/student/lab_ticket_V1.txt
-echo -e "                  insuficiente para las necesidades reportadas. Un usuario ha" | tee -a /home/student/lab_ticket_V1.txt
-echo -e "                  mencionado problemas de espacio, posiblemente por una extensión" | tee -a /home/student/lab_ticket_V1.txt
-echo -e "                  fallida o no completada." | tee -a /home/student/lab_ticket_V1.txt
-echo | tee -a /home/student/lab_ticket_V1.txt
+cat << EOF
+${YELLOW}==================================================${RESET}
+${BLUE}     RHCSA EX200 - Storage Troubleshooting Lab     ${RESET}
+${YELLOW}==================================================${RESET}
+${CYAN}Variación:${RESET}        Resize LVs & Filesystems - Básico
+${CYAN}Escenario:${RESET}        Un administrador anterior configuró almacenamiento adicional
+                  en /data, pero los usuarios reportan falta de espacio.
+                  Parece que el trabajo quedó a medias.
 
-# Info real
-CURRENT_LV_SIZE=$(lvs -o lv_size --noheadings --units g "/dev/$VG/$LV" | xargs)
-VG_FREE=$(vgs -o vg_free --noheadings --units g "$VG" | xargs)
+${CYAN}Información del sistema:${RESET}
+  Disco físico usado:     $DISK
+  Volume Group:          $VG
+  Logical Volume:        $LV
+  Punto de montaje:      $MNT
 
-echo -e "${CYAN}Disco físico:${RESET}     $DISK" | tee -a /home/student/lab_ticket_V1.txt
-echo -e "${CYAN}Volume Group:${RESET}     $VG" | tee -a /home/student/lab_ticket_V1.txt
-echo -e "${CYAN}Logical Volume:${RESET}   $LV" | tee -a /home/student/lab_ticket_V1.txt
-echo -e "${CYAN}Punto de montaje:${RESET} $MNT" | tee -a /home/student/lab_ticket_V1.txt
-echo | tee -a /home/student/lab_ticket_V1.txt
-echo -e "${CYAN}Estado actual:${RESET}" | tee -a /home/student/lab_ticket_V1.txt
-echo -e "  Tamaño del LV:     $CURRENT_LV_SIZE" | tee -a /home/student/lab_ticket_V1.txt
-echo -e "  Espacio libre VG:  $VG_FREE (¿puedes usarlo?)" | tee -a /home/student/lab_ticket_V1.txt
-echo -e "  Filesystem:        ~1G (ext4, verifica con df -h /data)" | tee -a /home/student/lab_ticket_V1.txt
-echo | tee -a /home/student/lab_ticket_V1.txt
-echo -e "${GREEN}PISTAS PARA INVESTIGAR:${RESET}" | tee -a /home/student/lab_ticket_V1.txt
-echo -e "  1. Revisa el espacio disponible en el VG y PVs asociados." | tee -a /home/student/lab_ticket_V1.txt
-echo -e "     ¿Hay espacio libre que no se está usando?" | tee -a /home/student/lab_ticket_V1.txt
-echo -e "  2. Evalúa el tamaño actual del LV y compara con el disco físico." | tee -a /home/student/lab_ticket_V1.txt
-echo -e "     ¿Parece que alguien intentó extenderlo pero falló?" | tee -a /home/student/lab_ticket_V1.txt
-echo -e "  3. Verifica el filesystem montado en /data." | tee -a /home/student/lab_ticket_V1.txt
-echo -e "     ¿El tamaño coincide con el LV? Si no, ¿por qué?" | tee -a /home/student/lab_ticket_V1.txt
-echo -e "  4. Deduce cómo usar el espacio libre para aumentar el almacenamiento" | tee -a /home/student/lab_ticket_V1.txt
-echo -e "     sin perder datos, y asegúrate de que el cambio sea persistente." | tee -a /home/student/lab_ticket_V1.txt
-echo | tee -a /home/student/lab_ticket_V1.txt
-echo -e "${GREEN}Verificación final:${RESET}" | tee -a /home/student/lab_ticket_V1.txt
-echo -e "     Usa comandos para ver el espacio en /data – debe usar todo el disco disponible." | tee -a /home/student/lab_ticket_V1.txt
-echo -e "${YELLOW}==================================================${RESET}" | tee -a /home/student/lab_ticket_V1.txt
+${CYAN}Estado actual (investiga):${RESET}
+  Tamaño actual del LV:   $(lvs -o lv_size --noheadings --units g /dev/$VG/$LV | xargs)
+  Espacio libre en VG:    $(vgs -o vg_free --noheadings --units g $VG | xargs) ← ¿útil?
+  Uso actual en /data:    $(df -h $MNT | tail -1 | awk '{print $2 " usado de " $1}')
 
-chmod 644 /home/student/lab_ticket_V1.txt
+${GREEN}Pistas para resolver:${RESET}
+  • Hay un VG con espacio libre no utilizado.
+  • El LV actual no ocupa todo el disco disponible.
+  • El filesystem montado podría no reflejar el tamaño real del LV.
+  • Investiga comandos para extender volúmenes lógicos sin perder datos.
+  • Luego, actualiza el sistema de archivos para usar el nuevo espacio.
 
-echo "¡Ticket generado con pistas! El estudiante puede verlo con:"
-echo "    cat /home/student/lab_ticket_V1.txt"
-echo "==> Laboratorio V1 listo para investigar y resolver"
+${GREEN}Objetivo final:${RESET}
+  El directorio /data debe usar prácticamente todo el espacio del disco físico asignado.
+  Verifica con: df -h /data
+${YELLOW}==================================================${RESET}
+EOF
+
+echo
+echo "¡Laboratorio inyectado! Ticket mostrado arriba."
+echo "También guardado en la VM: /home/student/lab_ticket_V1.txt"
