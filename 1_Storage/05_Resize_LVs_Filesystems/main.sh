@@ -57,19 +57,23 @@ remove_lab_from_db() {
 inject_patch_to_vm() {
     local patch_path="$BASE_DIR/${SELECTED_LAB}.sh"
     
-    if [[ ! -f "$patch_path" ]]; then
-        echo -e "${RED}ERROR: No se encuentra el archivo $patch_path${RESET}"
+    [[ -f "$patch_path" ]] || { echo -e "${RED}ERROR: No existe $patch_path${RESET}"; exit 1; }
+
+    echo -e "${CYAN}Copiando archivo...${RESET}"
+    if ! scp -i "$SSH_KEY" -o StrictHostKeyChecking=no "$patch_path" "$VM_USER@$VM_HOST:/tmp/lab_setup.sh"; then
+        echo -e "${RED}Fallo al copiar archivo a la VM${RESET}"
         exit 1
     fi
 
-    echo -e "${CYAN}Copiando $SELECTED_LAB.sh a la VM...${RESET}"
-    scp -i "$SSH_KEY" -o StrictHostKeyChecking=no "$patch_path" "$VM_USER@$VM_HOST:/tmp/lab_setup.sh"
-
-    echo -e "${CYAN}Ejecutando setup como root en la VM...${RESET}"
-    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" << 'EOF'
-        sudo bash /tmp/lab_setup.sh
+    echo -e "${CYAN}Ejecutando en VM...${RESET}"
+    if ! ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" << 'EOF'
+        sudo bash /tmp/lab_setup.sh || { echo "Error al ejecutar el script"; exit 1; }
         sudo rm -f /tmp/lab_setup.sh
 EOF
+    then
+        echo -e "${RED}Fallo al ejecutar comandos en la VM${RESET}"
+        exit 1
+    fi
 
     echo -e "${GREEN}Inyección completada${RESET}"
 }
