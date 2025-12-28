@@ -5,11 +5,11 @@
 set -e
 
 # --- Configuración ---
-DB_FILE="./labs_database.txt"  # Archivo que contiene lista de injects
-VM_USER="usuario"              # Usuario normal para SSH
-VM_HOST="192.168.100.10"       # IP de la VM
-VM_PASS="password"             # Contraseña de SSH (si usas sshpass)
-VM_ROOT="root"                 # Usuario root dentro de la VM
+DB_FILE="./1_Storage/05_Resize_LVs_Filesystems/labs_database.txt"   # Archivo que contiene lista de injects
+VM_USER="usuario"                                                   # Usuario normal para SSH
+VM_HOST="192.168.100.10"                                            # IP de la VM
+VM_PASS="redhat"                                                    # Contraseña de SSH (si usas sshpass)
+VM_ROOT="root"                                                      # Usuario root dentro de la VM
 
 # Colores para ticket
 RED="\033[1;31m"
@@ -27,7 +27,7 @@ read_lab_db() {
         echo -e "${RED}Archivo de base de datos no encontrado: $DB_FILE${RESET}"
         exit 1
     fi
-    mapfile -t LABS < "$DB_FILE"  # Carga todas las líneas en un array
+    mapfile -t LABS < "$DB_FILE"                                    # Carga todas las líneas en un array
 }
 
 # 2. Randomizar y escoger un laboratorio
