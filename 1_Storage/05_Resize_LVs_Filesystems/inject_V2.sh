@@ -51,9 +51,8 @@ fi
 
 sync
 echo "==> Setup completado"
-
 # ========================
-# GENERAR TICKET Y ENVIARLO AL HOST
+# GENERAR TICKET
 # ========================
 
 TICKET_FILE="/tmp/current_lab_ticket.txt"
@@ -63,10 +62,12 @@ TICKET_FILE="/tmp/current_lab_ticket.txt"
     echo "     RHCSA EX200 - Storage Troubleshooting Lab     "
     echo "=================================================="
     echo "Variación:        Resize LVs & Filesystems - Básico (XFS)"
-    echo "Escenario:        Un administrador anterior preparó un volumen para datos"
-    echo "                  usando XFS en /data, pero los usuarios se quejan"
-    echo "                  de que rápidamente se llena el espacio."
-    echo "                  Parece que no se completó la configuración final."
+    echo
+    echo "Escenario:"
+    echo "  Un administrador anterior preparó un volumen para datos"
+    echo "  usando XFS en /data, pero los usuarios se quejan"
+    echo "  de que rápidamente se llena el espacio."
+    echo "  Parece que no se completó la configuración final."
     echo
     echo "Información del sistema:"
     echo "  Disco físico usado:     $DISK"
@@ -75,13 +76,12 @@ TICKET_FILE="/tmp/current_lab_ticket.txt"
     echo "  Punto de montaje:      $MNT"
     echo "  Tipo de filesystem:    XFS"
     echo
-    echo
     echo "Pistas para resolver:"
-    echo "  • El VG tiene espacio sin asignar."
-    echo "  • El LV actual es más pequeño que el disco físico disponible."
-    echo "  • XFS permite crecer online, sin desmontar."
-    echo "  • Investiga cómo extender un LV y luego hacer que XFS use el nuevo espacio."
-    echo "  • Recuerda que el comando para XFS es diferente al de ext4."
+    echo "  - El VG tiene espacio sin asignar."
+    echo "  - El LV actual es más pequeño que el disco físico disponible."
+    echo "  - XFS permite crecer online, sin desmontar."
+    echo "  - Investiga cómo extender un LV y luego hacer que XFS use el nuevo espacio."
+    echo "  - El comando para XFS es diferente al de ext4."
     echo
     echo "Objetivo final:"
     echo "  El directorio /data debe aprovechar casi todo el espacio del disco asignado."
@@ -93,45 +93,11 @@ TICKET_FILE="/tmp/current_lab_ticket.txt"
 cp "$TICKET_FILE" /home/student/lab_ticket.txt
 chmod 644 /home/student/lab_ticket.txt
 
-# ENVIAR EL TICKET AL HOST CON COLORES
+# Mostrar ticket en el host (sin colores)
 echo
 echo "=== TICKET DEL LABORATORIO (visible en tu host) ==="
-YELLOW="\033[1;33m"
-BLUE="\033[1;34m"
-GREEN="\033[1;32m"
-CYAN="\033[1;36m"
-RESET="\033[0m"
-
-cat << EOF
-${YELLOW}==================================================${RESET}
-${BLUE}     RHCSA EX200 - Storage Troubleshooting Lab     ${RESET}
-${YELLOW}==================================================${RESET}
-${CYAN}Variación:${RESET}        Resize LVs & Filesystems - Básico (XFS)
-${CYAN}Escenario:${RESET}        Un administrador anterior preparó un volumen para datos
-                  usando XFS en /data, pero los usuarios se quejan
-                  de que rápidamente se llena el espacio.
-                  Parece que no se completó la configuración final.
-
-${CYAN}Información del sistema:${RESET}
-  Disco físico usado:     $DISK
-  Volume Group:          $VG
-  Logical Volume:        $LV
-  Punto de montaje:      $MNT
-
-
-${GREEN}Pistas para resolver:${RESET}
-  • El VG tiene espacio sin asignar.
-  • El LV actual es más pequeño que el disco físico disponible.
-  • XFS permite crecer online, sin desmontar.
-  • Investiga cómo extender un LV y luego hacer que XFS use el nuevo espacio.
-  • Recuerda que el comando para XFS es diferente al de ext4.
-
-${GREEN}Objetivo final:${RESET}
-  El directorio /data debe aprovechar casi todo el espacio del disco asignado.
-  Verifica con: df -h /data
-${YELLOW}==================================================${RESET}
-EOF
+cat "$TICKET_FILE"
 
 echo
-echo "¡Laboratorio V2 (XFS) inyectado! Ticket mostrado arriba."
-echo "También guardado en la VM: /home/student/lab_ticket_V2.txt"
+echo "¡Laboratorio V2 (XFS) inyectado!"
+echo "Ticket guardado en la VM: /home/student/lab_ticket.txt"
