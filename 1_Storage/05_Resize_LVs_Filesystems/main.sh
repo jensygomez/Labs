@@ -98,7 +98,7 @@ ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" bash << 'EOF'
 
 
     # Si el script generó un ticket en /tmp/current_lab_ticket.txt, mostrarlo con colores
-    if if echo "$SUDO_PASS" | sudo -S test -f /home/student/lab_ticket.txt; then
+    if echo "$SUDO_PASS" | sudo -S test -f /home/student/lab_ticket.txt; then
 
         echo
         echo "=== TICKET DEL LABORATORIO GENERADO ==="
