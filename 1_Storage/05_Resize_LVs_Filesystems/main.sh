@@ -1,18 +1,33 @@
 #!/bin/bash
-set -euo pipefail
+# ==============================================================================
+# RHCSA EX200 - Generador automático de laboratorios Storage
+# Módulo principal: selecciona, borra de DB e inyecta el laboratorio en la VM
+# Autor: Jensy
+# Fecha: 2025
+# ==============================================================================
 
+set -euo pipefail   # Seguridad: falla en errores, variables no definidas, etc.
+
+# ==============================================================================
+# CONFIGURACIÓN GLOBAL
+# ==============================================================================
 BASE_DIR="/home/jensy/GitHub/Labs/1_Storage/05_Resize_LVs_Filesystems"
 DB_FILE="$BASE_DIR/labs_database.txt"
 SSH_KEY="/home/jensy/GitHub/Labs/.ssh/id_rhcsalabs"
 VM_USER="student"
 VM_HOST="192.168.122.231"
-SUDO_PASS="redhat"   # ← Contraseña de sudo (student)
+SUDO_PASS="redhat"                  # Contraseña de sudo para student
 
+# Colores para mensajes bonitos
 GREEN='\033[1;32m'
 CYAN='\033[1;36m'
-RED='\033[1;31m'
 YELLOW='\033[1;33m'
+RED='\033[1;31m'
 RESET='\033[0m'
+
+# ==============================================================================
+# PASO 1: Leer la base de datos de laboratorios
+# ==============================================================================
 
 echo -e "${CYAN}=== Iniciando generador de laboratorios RHCSA ===${RESET}"
 sleep 0.5
@@ -26,6 +41,10 @@ sleep 0.5
 
 echo -e "${YELLOW}Paso 2: Escogiendo uno al azar...${RESET}"
 sleep 0.5
+
+# ==============================================================================
+# PASO 2: Seleccionar un laboratorio al azar
+# ==============================================================================
 index=$(( RANDOM % ${#LABS[@]} ))
 SELECTED_LAB="${LABS[index]}"
 echo -e "${GREEN}Laboratorio seleccionado: $SELECTED_LAB${RESET}"
@@ -40,29 +59,68 @@ sleep 0.5
 
 echo -e "${YELLOW}Paso 4: Preparando inyección en VM ($VM_HOST)...${RESET}"
 sleep 0.5
+
+# ==============================================================================
+# PASO 4: Verificar existencia del script patch
+# ==============================================================================
 patch_path="$BASE_DIR/${SELECTED_LAB}.sh"
 [[ -f "$patch_path" ]] || { echo -e "${RED}ERROR: No existe $patch_path${RESET}"; exit 1; }
 echo -e "${GREEN}Encontrado: $patch_path${RESET}"
 sleep 0.5
 
+
+# ==============================================================================
+# PASO 5: Copiar el script a la VM
+# ==============================================================================
 echo -e "${CYAN}Paso 5: Copiando script a la VM...${RESET}"
 sleep 0.5
+
+
 scp -i "$SSH_KEY" -o StrictHostKeyChecking=no "$patch_path" "$VM_USER@$VM_HOST:/tmp/lab_setup.sh" >/dev/null 2>&1
 echo -e "${GREEN}✓ Archivo copiado correctamente${RESET}"
 sleep 0.5
 
-echo -e "${CYAN}Paso 6: Ejecutando setup como root en la VM...${RESET}"
+# ==============================================================================
+# PASO 6: Ejecutar el setup en la VM y mostrar el ticket en el host
+# ==============================================================================
+
+echo -e "${CYAN}Paso 6: Ejecutando setup y generando ticket en la VM...${RESET}"
 sleep 0.5
-ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" bash << EOF
-    echo "   → Entrando como $VM_USER..."
-    echo "   → Ejecutando script con sudo (suministrando contraseña automáticamente)..."
+
+ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" bash << 'EOF'
+    # Suministrar contraseña de sudo automáticamente
+    SUDO_PASS="redhat"
+
+    echo "   → Entrando como student..."
+    echo "   → Ejecutando el laboratorio..."
     echo "$SUDO_PASS" | sudo -S bash /tmp/lab_setup.sh
+
     echo "   → Limpiando archivo temporal..."
     echo "$SUDO_PASS" | sudo -S rm -f /tmp/lab_setup.sh
-    echo "   → ¡Laboratorio inyectado correctamente en la VM!"
+
+    # Si el script generó un ticket en /tmp/current_lab_ticket.txt, mostrarlo con colores
+    if [[ -f /tmp/current_lab_ticket.txt ]]; then
+        echo
+        echo "=== TICKET DEL LABORATORIO GENERADO ==="
+        cat /tmp/current_lab_ticket.txt
+        echo "=== FIN DEL TICKET ==="
+    else
+        echo "   → Laboratorio ejecutado, pero no se encontró ticket (revisa inject script)"
+    fi
 EOF
 
-echo -e "${GREEN}✓ ¡Todo completado perfectamente!${RESET}"
-echo -e "${CYAN}=== Laboratorio $SELECTED_LAB listo para resolver ===${RESET}"
-echo -e "${CYAN}Conéctate ahora:${RESET} ssh -i $SSH_KEY $VM_USER@$VM_HOST"
-echo -e "${GREEN}¡Éxito total! Ahora ve y resuelve el lab con resize2fs 🚀${RESET}"
+# ==============================================================================
+# FINAL: Mensaje de éxito en el host
+# ==============================================================================
+
+echo
+echo -e "${CYAN}==================================================${RESET}"
+echo -e "${GREEN}¡LABORATORIO $SELECTED_LAB INYECTADO CON ÉXITO!${RESET}"
+echo -e "${GREEN}El ticket con pistas apareció arriba (directo desde la VM)${RESET}"
+echo -e "${CYAN}También está guardado en la VM para el estudiante:${RESET}"
+echo -e "${YELLOW}    /home/student/lab_ticket_V1.txt${RESET}"
+echo
+echo -e "${CYAN}Conéctate y resuelve como administrador real:${RESET}"
+echo -e "${YELLOW}    ssh -i $SSH_KEY $VM_USER@$VM_HOST${RESET}"
+echo -e "${CYAN}==================================================${RESET}"
+echo -e "${GREEN}¡Listo para practicar troubleshooting RHCSA! 🚀${RESET}"
