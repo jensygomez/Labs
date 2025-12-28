@@ -11,10 +11,10 @@ fi
 echo "==> Ejecutando setup del laboratorio Resize LV (ext4)..."
 
 # Discos disponibles para labs (excluimos sda y vda)
-DISK=$(lsblk -dn -o NAME,SIZE,TYPE | grep 'disk' | grep -E 'sd[b-f]' | sort -k2 -hr | head -n1 | awk '{print $1}')
+DISK=$(lsblk -dn -o NAME,SIZE,TYPE | grep 'disk' | grep -E 'sd[a-f]' | sort -k2 -hr | head -n1 | awk '{print $1}')
 # Alternativa aleatoria: shuf -n1 en vez de head
 
-[ -z "$DISK" ] && { echo "No se encontraron discos sd[b-f]"; exit 1; }
+[ -z "$DISK" ] && { echo "No se encontraron discos sd[a-f]"; exit 1; }
 
 DEVICE="/dev/$DISK"
 VG="vg_exam"
