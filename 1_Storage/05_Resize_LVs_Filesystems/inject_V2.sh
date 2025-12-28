@@ -90,8 +90,8 @@ TICKET_FILE="/tmp/current_lab_ticket.txt"
 } > "$TICKET_FILE"
 
 # Copiar para el estudiante
-cp "$TICKET_FILE" /home/student/lab_ticket_V2.txt
-chmod 644 /home/student/lab_ticket_V2.txt
+cp "$TICKET_FILE" /home/student/lab_ticket.txt
+chmod 644 /home/student/lab_ticket.txt
 
 # ENVIAR EL TICKET AL HOST CON COLORES
 echo
