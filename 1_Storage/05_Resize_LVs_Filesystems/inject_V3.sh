@@ -128,11 +128,6 @@ ${CYAN}Información del sistema:${RESET}
   Logical Volume:        $LV
   Punto de montaje:      $MNT
 
-${CYAN}Estado actual (investiga):${RESET}
-  Tamaño actual del LV:   $(lvs -o lv_size --noheadings --units g /dev/$VG/$LV | xargs)
-  Espacio libre en VG:    $(vgs -o vg_free --noheadings --units g $VG | xargs) ← ¿puedes usarlo?
-  Uso actual en /data:    $(df -h $MNT | tail -1 | awk '{print $2 " usado de " $1}')
-  Tipo de filesystem:     $(df -T $MNT | tail -1 | awk '{print $2}') ← ¡importante!
 
 ${GREEN}Pistas para resolver:${RESET}
   • Hay espacio libre en el Volume Group que no está asignado.
