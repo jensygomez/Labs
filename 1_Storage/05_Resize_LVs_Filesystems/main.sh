@@ -1,13 +1,12 @@
 #!/bin/bash
 # RHCSA EX200 – Storage Labs
-# Main Controller (Linux philosophy: simple, explicit, modular)
+# Main Controller (Linux philosophy: modular, seguro, absoluto)
 
 set -euo pipefail
 
 # ==============================================
 # CONFIGURACIÓN GLOBAL
 # ==============================================
-
 BASE_DIR="/home/jensy/GitHub/Labs/1_Storage/05_Resize_LVs_Filesystems"
 DB_FILE="$BASE_DIR/labs_database.txt"
 SSH_KEY="/home/jensy/GitHub/Labs/.ssh/id_rhcsalabs"
@@ -15,10 +14,7 @@ SSH_KEY="/home/jensy/GitHub/Labs/.ssh/id_rhcsalabs"
 VM_USER="student"
 VM_HOST="192.168.122.231"
 
-# ==============================================
-# COLORES
-# ==============================================
-
+# Colores
 RED="\033[1;31m"
 GREEN="\033[1;32m"
 YELLOW="\033[1;33m"
@@ -30,17 +26,9 @@ RESET="\033[0m"
 # 1. Leer base de datos
 # ==============================================
 read_lab_db() {
-    [[ -f "$DB_FILE" ]] || {
-        echo -e "${RED}ERROR: DB no encontrada: $DB_FILE${RESET}"
-        exit 1
-    }
-
+    [[ -f "$DB_FILE" ]] || { echo -e "${RED}ERROR: DB no encontrada: $DB_FILE${RESET}"; exit 1; }
     mapfile -t LABS < "$DB_FILE"
-
-    [[ ${#LABS[@]} -gt 0 ]] || {
-        echo -e "${RED}ERROR: DB vacía${RESET}"
-        exit 1
-    }
+    [[ ${#LABS[@]} -gt 0 ]] || { echo -e "${RED}ERROR: DB vacía${RESET}"; exit 1; }
 }
 
 # ==============================================
@@ -64,25 +52,19 @@ remove_lab_from_db() {
 # ==============================================
 source_patch() {
     PATCH_PATH="$BASE_DIR/$SELECTED_LAB.sh"
-
-    [[ -f "$PATCH_PATH" ]] || {
-        echo -e "${RED}ERROR: Patch no encontrado: $PATCH_PATH${RESET}"
-        exit 1
-    }
-
+    [[ -f "$PATCH_PATH" ]] || { echo -e "${RED}ERROR: Patch no encontrado: $PATCH_PATH${RESET}"; exit 1; }
     source "$PATCH_PATH"
 }
 
 # ==============================================
-# 5. Inyectar setup en la VM (corregido)
+# 5. Inyectar setup en la VM
 # ==============================================
 inject_setup_vm() {
     echo -e "${CYAN}Inyectando setup en la VM...${RESET}"
 
-    # Ruta completa del patch en host
     PATCH_PATH="$BASE_DIR/$SELECTED_LAB.sh"
 
-    # Copiar patch a VM (temporalmente)
+    # Copiar patch a VM
     scp -i "$SSH_KEY" -o StrictHostKeyChecking=no "$PATCH_PATH" "$VM_USER@$VM_HOST:/tmp/$SELECTED_LAB.sh"
 
     # Ejecutar patch en la VM como root
@@ -90,25 +72,32 @@ inject_setup_vm() {
         sudo bash /tmp/$SELECTED_LAB.sh
 EOF
 
-    # Opcional: eliminar el patch temporal de la VM
+    # Borrar patch temporal
     ssh -i "$SSH_KEY" "$VM_USER@$VM_HOST" "rm -f /tmp/$SELECTED_LAB.sh"
 
     echo -e "${GREEN}Setup inyectado en la VM correctamente.${RESET}"
 }
 
-
 # ==============================================
 # 6. Verificar inyección
 # ==============================================
 verify_injection() {
-    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no \
-        "$VM_USER@$VM_HOST" \
-        "sudo lvdisplay /dev/vg_exam/lv_data >/dev/null 2>&1" \
-        && echo -e "${GREEN}Setup inyectado correctamente.${RESET}" \
-        || {
-            echo -e "${RED}ERROR: Setup no inyectado.${RESET}"
-            exit 1
-        }
+    echo -e "${CYAN}Verificando inyección del setup en la VM...${RESET}"
+
+    RESULT=$(ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" bash << 'EOF'
+        if sudo lvdisplay /dev/vg_exam/lv_data >/dev/null 2>&1; then
+            echo "OK"
+        else
+            echo "FAIL"
+        fi
+EOF
+)
+    if [[ "$RESULT" == "OK" ]]; then
+        echo -e "${GREEN}Setup inyectado correctamente.${RESET}"
+    else
+        echo -e "${RED}ERROR: Setup no inyectado.${RESET}"
+        exit 1
+    fi
 }
 
 # ==============================================
