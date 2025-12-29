@@ -43,8 +43,9 @@ vgcreate "$VG" "$DISK1" "$DISK2" &>/dev/null
 echo "VG $VG creado con dos discos"
 
 lvremove -f "$VG/$LV" &>/dev/null || true
-lvcreate -L 4G -n "$LV" "$VG" &>/dev/null
-echo "LV $LV creado (4G)"
+lvcreate -l 30%VG -n "$LV" "$VG" &>/dev/null
+echo "LV $LV creado (30% del VG)"
+
 
 # ============================================
 # Crear LUKS sobre el LV
