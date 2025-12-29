@@ -48,9 +48,9 @@ echo "VG $VG creado con $DISK1 y $DISK2"
 
 # Simular que el LV se creó originalmente con stripe sobre los 2 primeros discos
 lvremove -f "/dev/$VG/$LV" &>/dev/null || true
-lvcreate -L 1G -i 2 -I 64 -n "$LV" "$VG" &>/dev/null   # striped sobre 2 discos
+lvcreate -l 30%VG -i 2 -I 64 -n "$LV" "$VG" &>/dev/null   # striped sobre 2 discos
 mkfs.xfs -f "/dev/$VG/$LV" &>/dev/null
-echo "LV $LV creado (1G striped sobre 2 discos) y formateado con XFS"
+echo "LV $LV creado (30%VG striped sobre 2 discos) y formateado con XFS"
 
 # Montar temporalmente para poblar datos
 mkdir -p "$MNT"
@@ -71,8 +71,12 @@ for i in {1..20}; do
 done
 
 # Archivo grande para llenar casi todo el LV
-dd if=/dev/zero of="$MNT/backup/full_backup.img" bs=1M count=850 status=none
+FS_SIZE_MB=$(df -m "$MNT" | awk 'NR==2 {print $2}')
+FILL_MB=$(( FS_SIZE_MB * 90 / 100 ))
+
+dd if=/dev/zero of="$MNT/backup/full_backup.img" bs=1M count=$FILL_MB status=none
 sync
+
 
 umount "$MNT"
 
@@ -149,4 +153,5 @@ echo "Discos: $DISK1, $DISK2 (originales, striped), $DISK3 (nuevo añadido)"
 echo "VG: $VG"
 echo "LV: $LV (1G inicial, striped sobre 2 discos, XFS)"
 echo "Montaje: $MNT con datos reales y ~850M usados"
-echo "El estudiante debe usar: lvextend ... + xfs_growfs $MNT"
+echo "El estudiante debe extender el LV con el espacio libre del VG y luego"
+echo "crecer el filesystem XFS en línea (lvextend + xfs_growfs)."
