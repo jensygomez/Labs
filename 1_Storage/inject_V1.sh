@@ -1,42 +1,68 @@
 #!/bin/bash
 # inject_V1.sh - Resize LVs & Filesystems - Variación 1
-# Escenario: LV creado (1G), hay espacio libre en VG, pero LV NO extendido aún
-# Tarea: Extender el LV usando el espacio libre y actualizar el filesystem
+# Copiar TODO este código en la VM y ejecutar: sudo bash inject_V1.sh
 
 set -euo pipefail
 
 echo "==> Iniciando setup del laboratorio Resize LVs & Filesystems (V1)"
 
-# Selección aleatoria de disco sd[b-f]
-AVAILABLE_DISKS=$(lsblk -dn -o NAME,TYPE | awk '$2=="disk" && $1 ~ /^sd[b-f]$/ {print "/dev/" $1}')
-DISK=$(echo "$AVAILABLE_DISKS" | shuf -n1)
+# ============================================
+# MODIFICACIÓN: Seleccionar 2 discos aleatorios
+# ============================================
+AVAILABLE_DISKS=($(lsblk -dn -o NAME,TYPE | awk '$2=="disk" && $1 ~ /^sd[b-f]$/ {print "/dev/"$1}'))
 
-[[ -z "$DISK" ]] && { echo "ERROR: No hay discos sd[b-f] disponibles"; exit 1; }
+if [[ ${#AVAILABLE_DISKS[@]} -lt 2 ]]; then
+    echo "ERROR: Se requieren al menos 2 discos sd[b-f] disponibles"
+    exit 1
+fi
 
-echo "Disco seleccionado aleatoriamente: $DISK"
+# Mezclar y tomar 2 discos
+SHUFFLED_DISKS=($(printf "%s\n" "${AVAILABLE_DISKS[@]}" | shuf))
+DISK1="${SHUFFLED_DISKS[0]}"
+DISK2="${SHUFFLED_DISKS[1]}"
+
+echo "Discos seleccionados aleatoriamente:"
+echo "  - $DISK1"
+echo "  - $DISK2"
 
 VG="vg_exam"
 LV="lv_data"
 MNT="/data"
 
-# PV + VG
-wipefs -af "$DISK" &>/dev/null
-pvcreate -ff -y "$DISK" &>/dev/null
+# ============================================
+# MODIFICACIÓN: Usar ambos discos para VG
+# ============================================
+
+# Limpiar discos
+wipefs -af "$DISK1" &>/dev/null
+wipefs -af "$DISK2" &>/dev/null
+
+# Crear PVs
+pvcreate -ff -y "$DISK1" &>/dev/null
+pvcreate -ff -y "$DISK2" &>/dev/null
+
+# Crear o extender VG
 if ! vgdisplay "$VG" &>/dev/null; then
-    vgcreate "$VG" "$DISK" &>/dev/null
-    echo "VG $VG creado"
+    vgcreate "$VG" "$DISK1" &>/dev/null
+    echo "VG $VG creado con $DISK1"
 else
-    vgextend "$VG" "$DISK" &>/dev/null
-    echo "VG $VG extendido"
+    vgremove -f "$VG" &>/dev/null 2>&1 || true
+    vgcreate "$VG" "$DISK1" &>/dev/null
 fi
 
-# LV: crear 1G si no existe
+# Agregar segundo disco al VG
+vgextend "$VG" "$DISK2" &>/dev/null
+echo "VG $VG extendido con $DISK2"
+
+# LV: crear 1G (mucho menos que el espacio total)
 if ! lvdisplay "/dev/$VG/$LV" &>/dev/null; then
     lvcreate -L 1G -n "$LV" "$VG" &>/dev/null
     mkfs.ext4 -F "/dev/$VG/$LV" &>/dev/null
     echo "LV $LV creado (1G) y formateado con ext4"
 else
-    echo "LV $LV ya existe"
+    lvremove -f "/dev/$VG/$LV" &>/dev/null 2>&1 || true
+    lvcreate -L 1G -n "$LV" "$VG" &>/dev/null
+    mkfs.ext4 -F "/dev/$VG/$LV" &>/dev/null
 fi
 
 # Montaje persistente
@@ -53,36 +79,54 @@ sync
 echo "==> Setup completado"
 
 # ========================
-# GENERAR TICKET
+# GENERAR TICKET REALISTA (SIN SPOILERS)
 # ========================
 
 TICKET_FILE="/tmp/current_lab_ticket.txt"
+
+# No necesitamos exponer valores internos en el ticket ahora
 
 {
     echo "=================================================="
     echo "     RHCSA EX200 - Storage Troubleshooting Lab     "
     echo "=================================================="
     echo "Variación:        Resize LVs & Filesystems - Básico"
-    echo "Escenario:        Un administrador anterior configuró almacenamiento adicional"
-    echo "                  en /data, pero los usuarios reportan falta de espacio."
-    echo "                  Parece que el trabajo quedó a medias."
+    echo "Escenario:        Un usuario reporta que el directorio /data se está quedando sin espacio,"
+    echo "                  pero cree que debería haber más capacidad disponible ya que se añadió hardware recientemente."
     echo
-    echo "Información del sistema:"
-    echo "  Disco físico usado: _____ $DISK"
-    echo "  Volume Group: ___________ $VG"
-    echo "  Logical Volume: _________ $LV"
-    echo "  Punto de montaje: _______ $MNT"
+    echo "DESCRIPCIÓN DEL PROBLEMA:"
+    echo "  - El equipo de desarrollo no puede guardar más archivos en /data porque aparece lleno."
+    echo "  - Un administrador previo mencionó que añadió un disco adicional para expandir el almacenamiento,"
+    echo "    pero posiblemente no finalizó la configuración."
     echo
-    echo "Pistas para resolver:"
-    echo "  • Hay un VG con espacio libre no utilizado."
-    echo "  • El LV actual no ocupa todo el disco disponible."
-    echo "  • El filesystem montado podría no reflejar el tamaño real del LV."
-    echo "  • Investiga comandos para extender volúmenes lógicos sin perder datos."
-    echo "  • Luego, actualiza el sistema de archivos para usar el nuevo espacio."
+    echo "TAREA:"
+    echo "  1. Investigar la configuración de almacenamiento actual de /data."
+    echo "  2. Identificar y utilizar cualquier espacio disponible no asignado para expandir el almacenamiento."
+    echo "  3. Asegurar que el filesystem refleje el nuevo tamaño sin pérdida de datos."
+    echo "  4. Verificar que el montaje persista después de un reinicio."
+    echo "  5. Confirmar que /data ahora tiene acceso al espacio total disponible (aprox. tamaño esperado basado en hardware)."
     echo
-    echo "Objetivo final:"
-    echo "  El directorio /data debe usar prácticamente todo el espacio del disco físico asignado."
-    echo "  Verifica con: df -h /data"
+    echo "=================================================="
+    echo "CRITERIOS DE EVALUACIÓN (estilo Red Hat):"
+    echo
+    echo "✓ El almacenamiento subyacente debe ser extendido para usar al menos el 90% del espacio disponible."
+    echo
+    echo "✓ El filesystem debe ser redimensionado para usar todo el espacio extendido."
+    echo
+    echo "✓ El montaje debe persistir después de reinicio (configurado en /etc/fstab)."
+    echo
+    echo "✓ No debe haber pérdida de datos (verificar archivos existentes en /data)."
+    echo
+    echo "PISTAS PARA INVESTIGACIÓN:"
+    echo "  - Usa comandos como df, lsblk, mount para empezar a mapear el almacenamiento."
+    echo "  - Si es LVM: pvs, vgs, lvs para detalles profundos."
+    echo "  - Comandos de verificación generales: df -h /data, mount | grep /data, cat /etc/fstab."
+    echo
+    echo "PUNTOS A CONSIDERAR:"
+    echo "  • ¿Cómo identificar si hay espacio no utilizado en la capa de almacenamiento?"
+    echo "  • ¿Qué pasos seguir para expandir sin downtime ni pérdida de datos?"
+    echo "  • ¿En qué orden: hardware > volumen > filesystem?"
+    echo "  • ¿Cómo probar la solución sin reiniciar inmediatamente?"
     echo "=================================================="
 } > "$TICKET_FILE"
 
@@ -90,4 +134,12 @@ TICKET_FILE="/tmp/current_lab_ticket.txt"
 cp "$TICKET_FILE" /home/student/lab_ticket.txt
 chmod 644 /home/student/lab_ticket.txt
 
-echo "Ticket V1 generado correctamente"
+echo "Ticket realista generado correctamente"
+echo
+echo "=== RESUMEN DEL SETUP (solo para admin, no para estudiante) ==="
+echo "Discos usados:     $DISK1, $DISK2"
+echo "VG:               $VG (${VG_SIZE}G total, ${VG_FREE}G libre)"
+echo "LV:               $LV (${LV_SIZE}G actual)"
+echo "Montaje:          $MNT ($FS_SIZE visible)"
+echo
+echo "El estudiante debe descubrir la estructura LVM y extender LV/FS."
