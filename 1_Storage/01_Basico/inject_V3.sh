@@ -10,7 +10,7 @@ echo "==> Iniciando setup del laboratorio V3 - Thin LV + Snapshot (Intermedio)"
 # ============================================
 # Seleccionar 4 discos aleatorios
 # ============================================
-AVAILABLE_DISKS=($(lsblk -dn -o NAME,TYPE | awk '$2=="disk" && $1 ~ /^sd[b-f]$/ {print "/dev/"$1}'))
+AVAILABLE_DISKS=($(lsblk -dn -o NAME,TYPE | awk '$2=="disk" && $1 ~ /^sd[a-f]$/ {print "/dev/"$1}'))
 
 if [[ ${#AVAILABLE_DISKS[@]} -lt 4 ]]; then
     echo "ERROR: V3 requiere al menos 4 discos sd[b-f] disponibles"

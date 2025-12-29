@@ -9,7 +9,7 @@ echo "==> Iniciando setup del laboratorio Resize LVs & Filesystems (V1)"
 # ============================================
 # MODIFICACIÓN: Seleccionar 2 discos aleatorios
 # ============================================
-AVAILABLE_DISKS=($(lsblk -dn -o NAME,TYPE | awk '$2=="disk" && $1 ~ /^sd[b-f]$/ {print "/dev/"$1}'))
+AVAILABLE_DISKS=($(lsblk -dn -o NAME,TYPE | awk '$2=="disk" && $1 ~ /^sd[a-f]$/ {print "/dev/"$1}'))
 
 if [[ ${#AVAILABLE_DISKS[@]} -lt 2 ]]; then
     echo "ERROR: Se requieren al menos 2 discos sd[b-f] disponibles"

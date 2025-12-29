@@ -9,7 +9,7 @@ echo "==> Iniciando setup del laboratorio Resize LVs & Filesystems (V2 - XFS)"
 # ============================================
 # Seleccionar 3 discos aleatorios sd[b-f]
 # ============================================
-AVAILABLE_DISKS=($(lsblk -dn -o NAME,TYPE | awk '$2=="disk" && $1 ~ /^sd[b-f]$/ {print "/dev/"$1}'))
+AVAILABLE_DISKS=($(lsblk -dn -o NAME,TYPE | awk '$2=="disk" && $1 ~ /^sd[a-f]$/ {print "/dev/"$1}'))
 
 if [[ ${#AVAILABLE_DISKS[@]} -lt 3 ]]; then
     echo "ERROR: Se requieren al menos 3 discos sd[b-f] disponibles para V2"

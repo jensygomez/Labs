@@ -10,7 +10,7 @@ echo "==> Iniciando setup del laboratorio V4 - LUKS sobre LVM + Resize"
 # ============================================
 # Seleccionar 3 discos aleatorios
 # ============================================
-AVAILABLE_DISKS=($(lsblk -dn -o NAME,TYPE | awk '$2=="disk" && $1 ~ /^sd[b-f]$/ {print "/dev/"$1}'))
+AVAILABLE_DISKS=($(lsblk -dn -o NAME,TYPE | awk '$2=="disk" && $1 ~ /^sd[a-f]$/ {print "/dev/"$1}'))
 
 if [[ ${#AVAILABLE_DISKS[@]} -lt 3 ]]; then
     echo "ERROR: V4 requiere al menos 3 discos sd[b-f]"
