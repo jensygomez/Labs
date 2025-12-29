@@ -75,7 +75,20 @@ if ! grep -q "$MNT" /etc/fstab; then
     echo "Montaje persistente configurado"
 fi
 
+
+echo "==> Simulando uso real en /data para hacer el problema creíble"
+
+# Crear algunos archivos de prueba para que no esté vacío
+touch /data/file{1..10}.txt
+echo "Archivo de prueba para verificar integridad post-resize" > /data/integrity_check.txt
+date > /data/fecha_creacion.txt
+
+# Ocupar ~700-800M para que quede poco espacio libre (simular queja real)
+echo "    Generando archivo grande para simular uso (~750M)..."
+dd if=/dev/zero of=/data/bigfile.dat bs=1M count=750 status=none
 sync
+
+
 echo "==> Setup completado"
 
 # ========================
