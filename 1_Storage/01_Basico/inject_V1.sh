@@ -56,12 +56,12 @@ echo "VG $VG extendido con $DISK2"
 
 # LV: crear 30%VG (mucho menos que el espacio total)
 if ! lvdisplay "/dev/$VG/$LV" &>/dev/null; then
-    lvcreate -L 30%VG -n "$LV" "$VG" &>/dev/null
+    lvcreate -l 30%VG -n "$LV" "$VG" &>/dev/null
     mkfs.ext4 -F "/dev/$VG/$LV" &>/dev/null
     echo "LV $LV creado (30%VG) y formateado con ext4"
 else
     lvremove -f "/dev/$VG/$LV" &>/dev/null 2>&1 || true
-    lvcreate -L 30%VG -n "$LV" "$VG" &>/dev/null
+    lvcreate -l 30%VG -n "$LV" "$VG" &>/dev/null
     mkfs.ext4 -F "/dev/$VG/$LV" &>/dev/null
 fi
 
@@ -70,7 +70,7 @@ mkdir -p "$MNT"
 mount "/dev/$VG/$LV" "$MNT" 2>/dev/null || true
 
 UUID=$(blkid -s UUID -o value "/dev/$VG/$LV")
-if ! grep -q "$MNT" /etc/fstab; then
+if ! grep -q " $MNT " /etc/fstab; then
     echo "UUID=$UUID $MNT ext4 defaults 0 0" >> /etc/fstab
     echo "Montaje persistente configurado"
 fi
@@ -152,11 +152,5 @@ cp "$TICKET_FILE" /home/student/lab_ticket.txt
 chmod 644 /home/student/lab_ticket.txt
 
 echo "Ticket realista generado correctamente"
-echo
-echo "=== RESUMEN DEL SETUP (solo para admin, no para estudiante) ==="
-echo "Discos usados:     $DISK1, $DISK2"
-echo "VG:               $VG (${VG_SIZE}G total, ${VG_FREE}G libre)"
-echo "LV:               $LV (${LV_SIZE}G actual)"
-echo "Montaje:          $MNT ($FS_SIZE visible)"
 echo
 echo "El estudiante debe descubrir la estructura LVM y extender LV/FS."
