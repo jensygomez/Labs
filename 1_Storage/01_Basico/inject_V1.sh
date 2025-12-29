@@ -54,14 +54,14 @@ fi
 vgextend "$VG" "$DISK2" &>/dev/null
 echo "VG $VG extendido con $DISK2"
 
-# LV: crear 1G (mucho menos que el espacio total)
+# LV: crear 30%VG (mucho menos que el espacio total)
 if ! lvdisplay "/dev/$VG/$LV" &>/dev/null; then
-    lvcreate -L 1G -n "$LV" "$VG" &>/dev/null
+    lvcreate -L 30%VG -n "$LV" "$VG" &>/dev/null
     mkfs.ext4 -F "/dev/$VG/$LV" &>/dev/null
-    echo "LV $LV creado (1G) y formateado con ext4"
+    echo "LV $LV creado (30%VG) y formateado con ext4"
 else
     lvremove -f "/dev/$VG/$LV" &>/dev/null 2>&1 || true
-    lvcreate -L 1G -n "$LV" "$VG" &>/dev/null
+    lvcreate -L 30%VG -n "$LV" "$VG" &>/dev/null
     mkfs.ext4 -F "/dev/$VG/$LV" &>/dev/null
 fi
 
@@ -83,10 +83,14 @@ touch /data/file{1..10}.txt
 echo "Archivo de prueba para verificar integridad post-resize" > /data/integrity_check.txt
 date > /data/fecha_creacion.txt
 
-# Ocupar ~700-800M para que quede poco espacio libre (simular queja real)
-echo "    Generando archivo grande para simular uso (~750M)..."
-dd if=/dev/zero of=/data/bigfile.dat bs=1M count=750 status=none
+# Ocupar ~85% del filesystem del LV para simular llenado real
+LV_SIZE_MB=$(df -m /data | awk 'NR==2 {print $2}')
+FILE_SIZE_MB=$(( LV_SIZE_MB * 85 / 100 ))
+
+echo "    Generando archivo grande para ocupar ~85% del filesystem..."
+dd if=/dev/zero of=/data/bigfile.dat bs=1M count=$FILE_SIZE_MB status=none
 sync
+
 
 
 echo "==> Setup completado"

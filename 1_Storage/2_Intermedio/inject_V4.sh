@@ -1,102 +1,174 @@
 #!/bin/bash
-# inject_V4.sh - Resize LVs & Filesystems - Variación 4 (Intermedio)
-# Escenario: LV y FS pueden crecer correctamente, pero el montaje persistente está roto
-# Tarea: Diagnosticar resize + corregir fstab para persistencia
+# inject_V4.sh - LUKS over LVM + Resize Encrypted Volume - Nivel 4 (Intermedio)
+# Ejecutar: sudo bash inject_V4.sh
+# Requiere al menos 3 discos sd[b-f] disponibles
 
 set -euo pipefail
 
-echo "==> Iniciando setup Resize LVs & Filesystems (V4 - Persistencia)"
+echo "==> Iniciando setup del laboratorio V4 - LUKS sobre LVM + Resize"
 
-AVAILABLE_DISKS=$(lsblk -dn -o NAME,TYPE | awk '$2=="disk" && $1 ~ /^sd[b-f]$/ {print "/dev/" $1}')
-DISK=$(echo "$AVAILABLE_DISKS" | shuf -n1)
+# ============================================
+# Seleccionar 3 discos aleatorios
+# ============================================
+AVAILABLE_DISKS=($(lsblk -dn -o NAME,TYPE | awk '$2=="disk" && $1 ~ /^sd[b-f]$/ {print "/dev/"$1}'))
 
-[[ -z "$DISK" ]] && { echo "ERROR: No hay discos sd[b-f] disponibles"; exit 1; }
-
-VG="vg_exam"
-LV="lv_data"
-MNT="/data"
-
-echo "Disco seleccionado: $DISK"
-
-# Preparar disco
-wipefs -af "$DISK" &>/dev/null
-pvcreate -ff -y "$DISK" &>/dev/null
-
-if ! vgdisplay "$VG" &>/dev/null; then
-    vgcreate "$VG" "$DISK" &>/dev/null
-else
-    vgextend "$VG" "$DISK" &>/dev/null
+if [[ ${#AVAILABLE_DISKS[@]} -lt 3 ]]; then
+    echo "ERROR: V4 requiere al menos 3 discos sd[b-f]"
+    exit 1
 fi
 
-# LV inicial pequeño
-if ! lvdisplay "/dev/$VG/$LV" &>/dev/null; then
-    lvcreate -L 1G -n "$LV" "$VG" &>/dev/null
-fi
+SHUFFLED_DISKS=($(printf "%s\n" "${AVAILABLE_DISKS[@]}" | shuf))
+DISK1="${SHUFFLED_DISKS[0]}"
+DISK2="${SHUFFLED_DISKS[1]}"
+DISK3="${SHUFFLED_DISKS[2]}"   # Disco nuevo añadido pero no usado
 
-# FS aleatorio
-if (( RANDOM % 2 == 0 )); then
-    FS_TYPE="ext4"
-    mkfs.ext4 -F "/dev/$VG/$LV" &>/dev/null
-else
-    FS_TYPE="xfs"
-    mkfs.xfs -f "/dev/$VG/$LV" &>/dev/null
-fi
+echo "Discos seleccionados:"
+echo "  - $DISK1 y $DISK2 → originales en el VG"
+echo "  - $DISK3 → nuevo añadido recientemente"
 
+VG="vg_secure"
+LV="lv_encrypted"
+CRYPT_NAME="crypt_data"
+MNT="/var/sensitive"
+PASS_PHRASE="ex200lab"   # Contraseña fija para el lab (en producción nunca así)
+
+# ============================================
+# Limpiar y preparar LVM
+# ============================================
+wipefs -af "$DISK1" "$DISK2" "$DISK3" &>/dev/null
+pvcreate -ff -y "$DISK1" "$DISK2" &>/dev/null
+
+vgremove -f "$VG" &>/dev/null || true
+vgcreate "$VG" "$DISK1" "$DISK2" &>/dev/null
+echo "VG $VG creado con dos discos"
+
+lvremove -f "$VG/$LV" &>/dev/null || true
+lvcreate -L 4G -n "$LV" "$VG" &>/dev/null
+echo "LV $LV creado (4G)"
+
+# ============================================
+# Crear LUKS sobre el LV
+# ============================================
+echo "$PASS_PHRASE" | cryptsetup luksFormat -q --type luks2 "/dev/$VG/$LV" -
+echo "$PASS_PHRASE" | cryptsetup open "/dev/$VG/$LV" "$CRYPT_NAME" -
+
+mkfs.xfs "/dev/mapper/$CRYPT_NAME" &>/dev/null
+echo "Contenedor LUKS creado y formateado con XFS"
+
+# ============================================
+# Montar y poblar con datos sensibles realistas
+# ============================================
 mkdir -p "$MNT"
-mount "/dev/$VG/$LV" "$MNT" &>/dev/null || true
+mount "/dev/mapper/$CRYPT_NAME" "$MNT"
 
-# === fstab INCORRECTO A PROPÓSITO ===
-REAL_UUID=$(blkid -s UUID -o value "/dev/$VG/$LV")
-FAKE_UUID=$(uuidgen)
+echo "==> Simulando datos regulados/sensibles"
+mkdir -p "$MNT"/{patient_records,financial,logs,backup}
 
-# Usamos UUID incorrecto o FS incorrecto
-if (( RANDOM % 2 == 0 )); then
-    echo "UUID=$FAKE_UUID $MNT $FS_TYPE defaults 0 0" >> /etc/fstab
-    BROKEN_REASON="UUID incorrecto"
-else
-    WRONG_FS=$([[ "$FS_TYPE" == "ext4" ]] && echo "xfs" || echo "ext4")
-    echo "UUID=$REAL_UUID $MNT $WRONG_FS defaults 0 0" >> /etc/fstab
-    BROKEN_REASON="Tipo de filesystem incorrecto"
+echo "GDPR_COMPLIANT=true" > "$MNT/config/compliance.conf"
+echo "Patient ID,Name,Diagnosis" > "$MNT/patient_records/patients.csv"
+for i in {1..500}; do
+    echo "$i,Patient_$i,Condition_$(shuf -i 1-20 -n 1)" >> "$MNT/patient_records/patients.csv"
+done
+
+# Llenar casi todo el espacio
+dd if=/dev/zero of="$MNT/backup/large_encrypted_backup.img" bs=1M count=3200 status=none
+sync
+
+umount "$MNT"
+cryptsetup close "$CRYPT_NAME"
+
+# ============================================
+# Simular admin anterior: añadió disco nuevo pero no extendió nada
+# ============================================
+pvcreate -ff -y "$DISK3" &>/dev/null
+vgextend "$VG" "$DISK3" &>/dev/null
+echo "Disco nuevo $DISK3 añadido al VG (pero ni LV ni LUKS extendidos)"
+
+# ============================================
+# Configurar apertura automática al boot (con passphrase en archivo para lab)
+# ============================================
+mkdir -p /etc/luks
+echo "$PASS_PHRASE" > /etc/luks/crypt_data.key
+chmod 600 /etc/luks/crypt_data.key
+
+# Añadir a /etc/crypttab
+if ! grep -q "$CRYPT_NAME" /etc/crypttab; then
+    echo "$CRYPT_NAME UUID=$(blkid -s UUID -o value /dev/$VG/$LV) /etc/luks/crypt_data.key luks" >> /etc/crypttab
 fi
 
-sync
-echo "fstab configurado con error: $BROKEN_REASON"
+# Añadir montaje persistente en fstab
+UUID_FS=$(blkid -s UUID -o value "/dev/mapper/$CRYPT_NAME")
+if ! grep -q "$MNT" /etc/fstab; then
+    echo "UUID=$UUID_FS $MNT xfs defaults 0 0" >> /etc/fstab
+fi
 
-# ========================
-# GENERAR TICKET
-# ========================
+# Abrir y montar para dejar el sistema listo
+echo "$PASS_PHRASE" | cryptsetup open "/dev/$VG/$LV" "$CRYPT_NAME" -
+mount "/dev/mapper/$CRYPT_NAME" "$MNT"
 
+echo "==> Setup V4 completado"
+
+# ============================================
+# Ticket realista V4
+# ============================================
 TICKET_FILE="/tmp/current_lab_ticket.txt"
 
 {
     echo "=================================================="
-    echo "     RHCSA EX200 - Storage Troubleshooting Lab     "
+    echo "     RHCSA EX200 - Storage Lab - Nivel 4 (Intermedio)     "
     echo "=================================================="
-    echo "Variación:        Resize LVs & Filesystems - Intermedio"
-    echo "Escenario:        Se amplió el almacenamiento para /data,"
-    echo "                  pero tras reiniciar el sistema, el punto"
-    echo "                  de montaje no se comporta como se espera."
+    echo "Variación:        LUKS Encrypted LVM Resize"
+    echo "Escenario:        El sistema de datos sensibles regulados está reportando"
+    echo "                  errores de espacio insuficiente en /var/sensitive."
+    echo "                  La aplicación asociada está fallando al guardar nuevos registros."
+    echo "                  Se añadió capacidad física adicional hace una semana."
     echo
-    echo "Información del sistema:"
-    echo "  Disco físico usado: _____ $DISK"
-    echo "  Volume Group: ___________ $VG"
-    echo "  Logical Volume: _________ $LV"
-    echo "  Punto de montaje: _______ $MNT"
+    echo "DESCRIPCIÓN DEL PROBLEMA:"
+    echo "  - df -h /var/sensitive muestra casi lleno (~90-95%)."
+    echo "  - Los logs de la aplicación muestran 'No space left on device'."
+    echo "  - Los datos son sensibles y deben permanecer encriptados."
     echo
-    echo "Pistas:"
-    echo "  • El Volume Group tiene espacio libre disponible."
-    echo "  • El Logical Volume puede crecer sin problema."
-    echo "  • El problema NO está solo en el tamaño."
-    echo "  • Verifica el montaje persistente."
+    echo "TAREA:"
+    echo "  1. Diagnosticar el stack de almacenamiento completo de /var/sensitive."
+    echo "  2. Extender el almacenamiento disponible manteniendo el cifrado."
+    echo "  3. Asegurar que el volumen encriptado use la nueva capacidad."
+    echo "  4. Verificar integridad de los datos existentes y funcionamiento post-expansión."
     echo
-    echo "Objetivo final:"
-    echo "  • /data debe usar casi todo el espacio disponible."
-    echo "  • El sistema debe montar /data correctamente tras reiniciar."
-    echo "  • Verifica con: mount -a y df -h /data"
+    echo "=================================================="
+    echo "CRITERIOS DE EVALUACIÓN (estilo Red Hat):"
+    echo
+    echo "✓ LV subyacente extendido usando el nuevo espacio del VG"
+    echo "✓ Contenedor LUKS redimensionado correctamente"
+    echo "✓ Filesystem XFS crecido para usar todo el espacio nuevo"
+    echo "✓ Operación realizada online (sin desmontar ni cerrar LUKS si es posible)"
+    echo "✓ Datos sensibles intactos"
+    echo "✓ Apertura y montaje persisten tras reinicio"
+    echo
+    echo "PISTAS PARA INVESTIGACIÓN:"
+    echo "  - lsblk, df -h, mount, cryptsetup status, dmsetup table"
+    echo "  - lvs, vgs, pvs"
+    echo "  - /etc/crypttab y /etc/fstab"
+    echo
+    echo "PUNTOS A CONSIDERAR:"
+    echo "  • ¿En qué orden se extiende: LV → LUKS → FS o viceversa?"
+    echo "  • ¿Se puede hacer todo online?"
+    echo "  • ¿Qué comando redimensiona un contenedor LUKS abierto?"
+    echo "  • ¿Cómo verificar que el cifrado sigue activo?"
     echo "=================================================="
 } > "$TICKET_FILE"
 
 cp "$TICKET_FILE" /home/student/lab_ticket.txt
 chmod 644 /home/student/lab_ticket.txt
 
-echo "==> Ticket V4 generado correctamente"
+echo "Ticket V4 generado en /home/student/lab_ticket.txt"
+echo
+echo "=== RESUMEN DEL SETUP (solo para ti) ==="
+echo "VG: $VG (original: $DISK1+$DISK2, nuevo: +$DISK3)"
+echo "LV: $LV (4G inicial)"
+echo "LUKS: /dev/mapper/$CRYPT_NAME (casi lleno)"
+echo "Montaje: $MNT con datos sensibles y ~3.2G usados"
+echo "Passphrase: ex200lab (en /etc/luks/crypt_data.key)"
+echo "Solución típica:"
+echo "  lvextend -l +100%FREE /dev/$VG/$LV"
+echo "  cryptsetup resize $CRYPT_NAME"
+echo "  xfs_growfs $MNT"
