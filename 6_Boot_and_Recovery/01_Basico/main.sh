@@ -101,14 +101,14 @@ echo -e "${GREEN}✓ Archivo copiado correctamente${RESET}"
 sleep 0.5
 
 
-## ==============================================================================
+# ==============================================================================
 # PASO 6: Mostrar ticket en el HOST y luego ejecutar inyección en la VM
 # ==============================================================================
 
 echo -e "${CYAN}Paso 6: Mostrando ticket del laboratorio...${RESET}"
 sleep 0.5
 
-TICKET_HOST="$BASE_DIR/inject_${LAB_SELECTED}_ticket.txt"
+TICKET_HOST="$BASE_DIR/${SELECTED_LAB}_ticket.txt"
 
 if [[ -f "$TICKET_HOST" ]]; then
     echo
@@ -128,7 +128,7 @@ echo -e "${CYAN}Paso 7: Ejecutando inyección en la VM...${RESET}"
 sleep 0.5
 
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" << EOF
-    echo "→ Ejecutando inject_${LAB_SELECTED} en la VM..."
+    echo "→ Ejecutando ${SELECTED_LAB} en la VM..."
     sudo bash /tmp/lab_setup.sh
 EOF
 
