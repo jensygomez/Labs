@@ -101,27 +101,26 @@ echo -e "${GREEN}✓ Archivo copiado correctamente${RESET}"
 sleep 0.5
 
 
-
 # ==============================================================================
-# PASO 6: Ejecutar el setup en la VM y mostrar el ticket en el host
+# PASO 6: Mostrar el ticket en la VM antes de inyectar el fallo
 # ==============================================================================
-echo -e "${CYAN}Paso 6: Ejecutando setup y mostrando ticket directamente desde la VM...${RESET}"
+echo -e "${CYAN}Paso 6: Mostrando ticket directamente desde la VM...${RESET}"
 sleep 0.5
 
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" bash << 'EOF'
-    # Contraseña sudo
-    SUDO_PASS="redhat"
+    TICKET_FILE="/home/student/lab_ticket.txt"
 
-    echo "   → Entrando como student..."
-    echo "   → Ejecutando el laboratorio..."
-    echo "$SUDO_PASS" | sudo -S bash /tmp/lab_setup.sh
-
-    # El inject imprime su ticket directamente en stdout
-    # No se necesita test ni cat adicional
-
-    echo "   → Limpiando archivo temporal..."
-    echo "$SUDO_PASS" | sudo -S rm -f /tmp/lab_setup.sh
+    if [[ -f "$TICKET_FILE" ]]; then
+        echo
+        echo "=== TICKET DEL LABORATORIO ==="
+        cat "$TICKET_FILE"
+        echo "=== FIN DEL TICKET ==="
+    else
+        echo "No se encontró ticket. Genera primero el inject_Vx correspondiente."
+    fi
 EOF
+
+echo -e "${CYAN}Ticket mostrado. Ahora el estudiante puede ejecutar el laboratorio manualmente.${RESET}"
 
 
 # ==============================================================================
