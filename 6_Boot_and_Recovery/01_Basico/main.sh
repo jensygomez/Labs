@@ -1,6 +1,6 @@
 #!/bin/bash
 # ==============================================================================
-# RHCSA EX200 - Generador automático de laboratorios Storage
+# RHCSA EX200 - Generador automático de laboratorios Boot & Recovery
 # Módulo principal: selecciona, borra de DB e inyecta el laboratorio en la VM
 # Autor: Jensy
 # Fecha: 2025
@@ -49,16 +49,13 @@ sleep 0.5
 # PASO 2: Seleccionar laboratorio con menor contador (azar controlado)
 # ==============================================================================
 
-# Obtener el menor contador
 MIN_COUNT=$(printf "%s\n" "${LAB_COUNTERS[@]}" | sort -n | head -1)
 
-# Construir lista de candidatos
 CANDIDATES=()
 for lab in "${!LAB_COUNTERS[@]}"; do
     [[ "${LAB_COUNTERS[$lab]}" -eq "$MIN_COUNT" ]] && CANDIDATES+=("$lab")
 done
 
-# Selección aleatoria entre los menos usados
 index=$(( RANDOM % ${#CANDIDATES[@]} ))
 SELECTED_LAB="${CANDIDATES[index]}"
 
@@ -95,37 +92,33 @@ sleep 0.5
 echo -e "${CYAN}Paso 5: Copiando script a la VM...${RESET}"
 sleep 0.5
 
-
 scp -i "$SSH_KEY" -o StrictHostKeyChecking=no "$patch_path" "$VM_USER@$VM_HOST:/tmp/lab_setup.sh" >/dev/null 2>&1
 echo -e "${GREEN}✓ Archivo copiado correctamente${RESET}"
 sleep 0.5
 
 
 # ==============================================================================
-# PASO 6: Ejecutar el setup en la VM y mostrar el ticket en la pantalla
+# PASO 6: Ejecutar el setup en la VM y mostrar el ticket directamente
 # ==============================================================================
 echo -e "${CYAN}Paso 6: Ejecutando setup y mostrando ticket directamente desde la VM...${RESET}"
 sleep 0.5
 
-ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" bash << 'EOF'
-    # Entrar como student y ejecutar el laboratorio
-    echo "   → Entrando como student..."
-    echo "   → Ejecutando el laboratorio..."
+ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" bash << EOF
+    echo "   → Conectado como $VM_USER"
+    echo "   → Ejecutando el laboratorio con privilegios de root..."
 
-    # Ejecutar el inject_Vx; el ticket se mostrará directamente
-    bash /tmp/lab_setup.sh
+    # Ejecutamos el script inject con sudo para que pueda hacer cambios reales
+    echo "$SUDO_PASS" | sudo -S bash /tmp/lab_setup.sh
 
-    echo "   → Laboratorio ejecutado (ticket mostrado arriba)"
+    echo "   → Laboratorio inyectado correctamente"
+    echo "   → Limpiando archivo temporal..."
+    echo "$SUDO_PASS" | sudo -S rm -f /tmp/lab_setup.sh
 EOF
-
-
 
 
 # ==============================================================================
 # FINAL: Mensaje de éxito en el host
 # ==============================================================================
-
-
 
 echo
 echo -e "${CYAN}==================================================${RESET}"
@@ -135,4 +128,4 @@ echo
 echo -e "${CYAN}Conéctate y resuelve como administrador real:${RESET}"
 echo -e "${YELLOW}    ssh -i $SSH_KEY $VM_USER@$VM_HOST${RESET}"
 echo -e "${CYAN}==================================================${RESET}"
-echo -e "${GREEN}¡Listo para practicar troubleshooting RHCSA! 🚀${RESET}"
+echo -e "${GREEN}¡Listo para practicar troubleshooting Boot & Recovery RHCSA! 🚀${RESET}"

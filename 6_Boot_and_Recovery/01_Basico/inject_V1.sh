@@ -48,10 +48,11 @@ Criterios de validación:
 EOF
 }
 
+
 # -------------------------------
-# Logging
+# Logging (seguro: no falla aunque no tenga permisos)
 # -------------------------------
-echo "$(date '+%Y-%m-%d %H:%M:%S') - inject_V1 Boot ejecutado" >> "$LOG_FILE"
+echo "$(date '+%Y-%m-%d %H:%M:%S') - inject_V1 Boot ejecutado" >> "$LOG_FILE" 2>/dev/null || true
 
 # -------------------------------
 # Mostrar ticket inmediatamente
@@ -59,17 +60,14 @@ echo "$(date '+%Y-%m-%d %H:%M:%S') - inject_V1 Boot ejecutado" >> "$LOG_FILE"
 show_ticket
 
 # -------------------------------
-# Inyección simulada del fallo
+# Inyección simulada/del fallo
 # -------------------------------
 echo "[DEBUG] Inyectando fallo..."
 echo "[DEBUG] Target actual: $(systemctl get-default)"
 
-# Aquí solo simulamos el fallo sin bloquear el sistema
-echo "[DEBUG] Cambiando default target a $TARGET_INCORRECTO (simulado)"
-# systemctl set-default "$TARGET_INCORRECTO"   # <--- comentar mientras pruebas
+# Aquí ya puedes descomentar sin miedo
+systemctl set-default "$TARGET_INCORRECTO"
 
-# -------------------------------
-# Salida limpia
-# -------------------------------
-echo "[DEBUG] inject_V1 terminado (simulado)"
+echo "[DEBUG] Default target cambiado a $TARGET_INCORRECTO"
+echo "[DEBUG] inject_V1 terminado correctamente"
 exit 0
