@@ -1,47 +1,24 @@
 #!/bin/bash
 # ============================================================
 # RHCSA EX200 – Boot & Recovery
-# Slot: 01
+# Slot: 01 (BÁSICO)
 # Scenario: Default target incorrecto
 # Impact: Sistema no alcanza estado operativo normal
 # Author: Jensy Gomez
-# Version: Standalone – Reproducible – Silencioso
 # ============================================================
 
 set -euo pipefail
 
-# -------------------------------
-# Variables internas
-# -------------------------------
+# ------------------------------------------------------------
+# Variables
+# ------------------------------------------------------------
 TARGET_INCORRECTO="rescue.target"
-TARGET_CORRECTO="multi-user.target"
-
 LOG_FILE="/var/log/inject_boot.log"
 TICKET_FILE="/home/student/lab_ticket.txt"
 
-# -------------------------------
-# Función de logging silencioso
-# -------------------------------
-log_injection() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - Inject V1 Boot executed" >> "$LOG_FILE"
-}
-
-# -------------------------------
-# Validaciones básicas
-# -------------------------------
-if ! command -v systemctl &>/dev/null; then
-    echo "ERROR: systemctl no encontrado"
-    exit 1
-fi
-
-if ! systemctl list-unit-files | grep -q "^${TARGET_INCORRECTO}"; then
-    echo "ERROR: target incorrecto no existe en el sistema"
-    exit 1
-fi
-
-# -------------------------------
-# Creación del ticket antes de cualquier cambio
-# -------------------------------
+# ------------------------------------------------------------
+# 1. CREAR TICKET (SIEMPRE)
+# ------------------------------------------------------------
 cat << 'EOF' > "$TICKET_FILE"
 ==================================================
         INCIDENTE – SISTEMA NO ARRANCA EN MODO NORMAL
@@ -71,34 +48,34 @@ Criterios de validación:
   ✓ El sistema arranca en multi-user.target
   ✓ El default target es el correcto
   ✓ El cambio persiste tras reboot
-
 ==================================================
 EOF
 
-# Ajustar permisos y propiedad
 chmod 644 "$TICKET_FILE"
 chown student:student "$TICKET_FILE"
 
-# -------------------------------
-# Logging
-# -------------------------------
-log_injection
-
-# -------------------------------
-# Inyección del fallo
-# -------------------------------
-systemctl set-default "$TARGET_INCORRECTO"
-
-# -------------------------------
-# Mostrar ticket en stdout
-# -------------------------------
+# ------------------------------------------------------------
+# 2. MOSTRAR TICKET EN STDOUT (PARA EL HOST)
+# ------------------------------------------------------------
 echo
 echo "=== TICKET DEL LABORATORIO ==="
 cat "$TICKET_FILE"
 echo "=== FIN DEL TICKET ==="
 echo
 
-# -------------------------------
-# Salida limpia
-# -------------------------------
+# ------------------------------------------------------------
+# 3. INYECTAR FALLO (SIN BLOQUEAR EL LAB)
+# ------------------------------------------------------------
+if systemctl list-unit-files | grep -q "^${TARGET_INCORRECTO}"; then
+    systemctl set-default "$TARGET_INCORRECTO"
+else
+    # Fallback seguro (si rescue.target no existe)
+    systemctl set-default multi-user.target
+fi
+
+# ------------------------------------------------------------
+# 4. LOG SILENCIOSO
+# ------------------------------------------------------------
+echo "$(date '+%F %T') - inject_V1 ejecutado" >> "$LOG_FILE"
+
 exit 0
