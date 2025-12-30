@@ -3,73 +3,73 @@
 # RHCSA EX200 – Boot & Recovery
 # Slot: 01
 # Scenario: Default target incorrecto
-# Impact: Sistema no alcanza estado operativo normal
 # ============================================================
 
 set -euo pipefail
 
 TARGET_INCORRECTO="rescue.target"
+TARGET_CORRECTO="multi-user.target"
 LOG_FILE="/var/log/inject_boot.log"
-TICKET_FILE="/home/student/lab_ticket.txt"
 
-echo "=== [INJECT_V1] Inicio ==="
-
-# ------------------------------------------------
-# 1. Crear ticket SIEMPRE (antes de romper nada)
-# ------------------------------------------------
-cat << 'EOF' > "$TICKET_FILE"
+# -------------------------------
+# Función para mostrar el ticket
+# -------------------------------
+show_ticket() {
+    cat << 'EOF'
 ==================================================
-        INCIDENTE – SISTEMA NO ARRANCA NORMALMENTE
+        INCIDENTE – SISTEMA NO ARRANCA EN MODO NORMAL
 ==================================================
 
 Escenario:
   Tras un reinicio programado, el sistema no alcanza
-  el estado operativo esperado.
+  el estado operativo esperado. No hay servicios
+  disponibles para los usuarios.
 
-Síntomas reportados:
+Síntomas observados:
   - El sistema arranca, pero no presenta login normal
-  - No se levantan servicios de usuario
-  - No hay errores de hardware reportados
+  - No se levantan servicios de aplicación
+  - No se reportan errores de hardware ni filesystem
 
-Tarea del administrador:
-  1. Identificar por qué el sistema no alcanza el estado normal.
-  2. Corregir la configuración de arranque.
-  3. Verificar que el sistema arranca correctamente tras reinicio.
+Tarea:
+  1. Determinar por qué el sistema no alcanza el estado operativo normal.
+  2. Restaurar el comportamiento correcto de arranque.
+  3. Verificar que el cambio sea persistente tras reinicio.
 
 Restricciones:
   - No reinstalar el sistema
   - No modificar servicios innecesarios
+  - No afectar datos existentes
 
 Criterios de validación:
+  ✓ El sistema arranca en multi-user.target
   ✓ El default target es el correcto
-  ✓ El sistema arranca en modo multi-user
   ✓ El cambio persiste tras reboot
-
 ==================================================
 EOF
+}
 
-chmod 644 "$TICKET_FILE"
-chown student:student "$TICKET_FILE"
+# -------------------------------
+# Logging
+# -------------------------------
+echo "$(date '+%Y-%m-%d %H:%M:%S') - inject_V1 Boot ejecutado" >> "$LOG_FILE"
 
-# Mostrar ticket en stdout (para el host)
-echo
-echo "=== TICKET DEL LABORATORIO ==="
-cat "$TICKET_FILE"
-echo "=== FIN DEL TICKET ==="
-echo
+# -------------------------------
+# Mostrar ticket inmediatamente
+# -------------------------------
+show_ticket
 
-# ------------------------------------------------
-# 2. Inyectar el fallo REAL (sin validaciones)
-# ------------------------------------------------
-echo "[INJECT] Cambiando default target a $TARGET_INCORRECTO"
+# -------------------------------
+# Inyección simulada del fallo
+# -------------------------------
+echo "[DEBUG] Inyectando fallo..."
+echo "[DEBUG] Target actual: $(systemctl get-default)"
 
-systemctl set-default "$TARGET_INCORRECTO"
+# Aquí solo simulamos el fallo sin bloquear el sistema
+echo "[DEBUG] Cambiando default target a $TARGET_INCORRECTO (simulado)"
+# systemctl set-default "$TARGET_INCORRECTO"   # <--- comentar mientras pruebas
 
-# ------------------------------------------------
-# 3. Logging silencioso
-# ------------------------------------------------
-echo "$(date '+%F %T') - Inject V1 aplicado: default=$TARGET_INCORRECTO" \
-    >> "$LOG_FILE"
-
-echo "=== [INJECT_V1] Finalizado ==="
+# -------------------------------
+# Salida limpia
+# -------------------------------
+echo "[DEBUG] inject_V1 terminado (simulado)"
 exit 0

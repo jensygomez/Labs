@@ -102,40 +102,22 @@ sleep 0.5
 
 
 # ==============================================================================
-# PASO 6: Mostrar ticket en el HOST y luego ejecutar inyección en la VM
+# PASO 6: Ejecutar el setup en la VM y mostrar el ticket en la pantalla
 # ==============================================================================
-
-echo -e "${CYAN}Paso 6: Mostrando ticket del laboratorio...${RESET}"
+echo -e "${CYAN}Paso 6: Ejecutando setup y mostrando ticket directamente desde la VM...${RESET}"
 sleep 0.5
 
-TICKET_HOST="$BASE_DIR/${SELECTED_LAB}_ticket.txt"
+ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" bash << 'EOF'
+    # Entrar como student y ejecutar el laboratorio
+    echo "   → Entrando como student..."
+    echo "   → Ejecutando el laboratorio..."
 
-if [[ -f "$TICKET_HOST" ]]; then
-    echo
-    echo "=================================================="
-    echo "            TICKET DEL LABORATORIO"
-    echo "=================================================="
-    cat "$TICKET_HOST"
-    echo "=================================================="
-    echo
-else
-    echo "ERROR: No se encontró el ticket en el host:"
-    echo "  $TICKET_HOST"
-    exit 1
-fi
+    # Ejecutar el inject_Vx; el ticket se mostrará directamente
+    bash /tmp/lab_setup.sh
 
-echo -e "${CYAN}Paso 7: Ejecutando inyección en la VM...${RESET}"
-sleep 0.5
-
-ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" << EOF
-    echo "→ Ejecutando ${SELECTED_LAB} en la VM..."
-    sudo bash /tmp/lab_setup.sh
+    echo "   → Laboratorio ejecutado (ticket mostrado arriba)"
 EOF
 
-echo
-echo "✓ Inyección ejecutada correctamente."
-echo "✓ El sistema NO se rompe hasta el reinicio."
-echo
 
 
 
