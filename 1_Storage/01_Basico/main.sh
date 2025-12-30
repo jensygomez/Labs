@@ -13,10 +13,10 @@ set -euo pipefail   # Seguridad: falla en errores, variables no definidas, etc.
 # ==============================================================================
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-CONFIG_FILE="$BASE_DIR/config.conf"
+CONFIG_FILE="$BASE_DIR/config/lab.conf"
 
 [[ -f "$CONFIG_FILE" ]] || {
-    echo "ERROR: Falta config.conf"
+    echo "ERROR: Falta $CONFIG_FILE"
     exit 1
 }
 
