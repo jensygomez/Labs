@@ -17,7 +17,7 @@ TARGET_INCORRECTO="rescue.target"
 TARGET_CORRECTO="multi-user.target"
 
 LOG_FILE="/var/log/inject_boot.log"
-TICKET_FILE="/root/TICKET_BOOT_01.txt"
+TICKET_FILE="/home/student/lab_ticket.txt"
 
 # -------------------------------
 # Función de logging silencioso
@@ -38,13 +38,7 @@ if ! systemctl list-unit-files | grep -q "^${TARGET_INCORRECTO}"; then
 fi
 
 # -------------------------------
-# Inyección del fallo
-# -------------------------------
-# Se cambia el default target sin afectar el target activo
-systemctl set-default "$TARGET_INCORRECTO"
-
-# -------------------------------
-# Creación del ticket (offline)
+# Creación del ticket antes de cualquier cambio
 # -------------------------------
 cat << 'EOF' > "$TICKET_FILE"
 ==================================================
@@ -79,12 +73,20 @@ Criterios de validación:
 ==================================================
 EOF
 
-chmod 600 "$TICKET_FILE"
+# Ajustar permisos y propiedad para que main.sh y el estudiante puedan leerlo
+chmod 644 "$TICKET_FILE"
+chown student:student "$TICKET_FILE"
 
 # -------------------------------
 # Logging
 # -------------------------------
 log_injection
+
+# -------------------------------
+# Inyección del fallo
+# -------------------------------
+# Cambiar el default target sin afectar el target activo
+systemctl set-default "$TARGET_INCORRECTO"
 
 # -------------------------------
 # Salida limpia
