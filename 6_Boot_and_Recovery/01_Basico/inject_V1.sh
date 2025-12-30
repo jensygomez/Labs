@@ -1,24 +1,60 @@
 #!/bin/bash
 # ============================================================
 # RHCSA EX200 – Boot & Recovery
-# Slot: 01 (BÁSICO)
+# Slot: 01
 # Scenario: Default target incorrecto
 # Impact: Sistema no alcanza estado operativo normal
 # Author: Jensy Gomez
+# Version: Standalone – Debug/Trace Enabled
 # ============================================================
 
 set -euo pipefail
 
-# ------------------------------------------------------------
-# Variables
-# ------------------------------------------------------------
+# -------------------------------
+# Variables internas
+# -------------------------------
 TARGET_INCORRECTO="rescue.target"
+TARGET_CORRECTO="multi-user.target"
+
 LOG_FILE="/var/log/inject_boot.log"
+DEBUG_LOG="/tmp/inject_V1.debug"
 TICKET_FILE="/home/student/lab_ticket.txt"
 
-# ------------------------------------------------------------
-# 1. CREAR TICKET (SIEMPRE)
-# ------------------------------------------------------------
+# Redirigir stdout y stderr a debug log para trazabilidad
+exec > >(tee -a "$DEBUG_LOG") 2>&1
+
+echo "=== [DEBUG] Inicio inject_V1 ==="
+date
+hostname
+whoami
+pwd
+
+# -------------------------------
+# Función de logging silencioso
+# -------------------------------
+log_injection() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - Inject V1 Boot executed" >> "$LOG_FILE"
+}
+
+# -------------------------------
+# Validaciones básicas
+# -------------------------------
+echo "[STEP 1] Verificando existencia de systemctl..."
+if ! command -v systemctl &>/dev/null; then
+    echo "[ERROR] systemctl no encontrado"
+    exit 1
+fi
+
+echo "[STEP 2] Comprobando target a inyectar: $TARGET_INCORRECTO"
+if ! systemctl list-unit-files | grep -q "^${TARGET_INCORRECTO}"; then
+    echo "[ERROR] Target $TARGET_INCORRECTO no existe en el sistema"
+    exit 1
+fi
+
+# -------------------------------
+# Creación del ticket
+# -------------------------------
+echo "[STEP 3] Creando ticket en $TICKET_FILE..."
 cat << 'EOF' > "$TICKET_FILE"
 ==================================================
         INCIDENTE – SISTEMA NO ARRANCA EN MODO NORMAL
@@ -48,34 +84,38 @@ Criterios de validación:
   ✓ El sistema arranca en multi-user.target
   ✓ El default target es el correcto
   ✓ El cambio persiste tras reboot
+
 ==================================================
 EOF
 
 chmod 644 "$TICKET_FILE"
 chown student:student "$TICKET_FILE"
+echo "[OK] Ticket creado correctamente"
 
-# ------------------------------------------------------------
-# 2. MOSTRAR TICKET EN STDOUT (PARA EL HOST)
-# ------------------------------------------------------------
+# -------------------------------
+# Logging
+# -------------------------------
+log_injection
+
+# -------------------------------
+# Mostrar ticket antes de cualquier cambio
+# -------------------------------
 echo
-echo "=== TICKET DEL LABORATORIO ==="
+echo "=== [TICKET] Inicio ==="
 cat "$TICKET_FILE"
-echo "=== FIN DEL TICKET ==="
+echo "=== [TICKET] Fin ==="
 echo
 
-# ------------------------------------------------------------
-# 3. INYECTAR FALLO (SIN BLOQUEAR EL LAB)
-# ------------------------------------------------------------
-if systemctl list-unit-files | grep -q "^${TARGET_INCORRECTO}"; then
-    systemctl set-default "$TARGET_INCORRECTO"
-else
-    # Fallback seguro (si rescue.target no existe)
-    systemctl set-default multi-user.target
-fi
+# -------------------------------
+# Inyección del fallo
+# -------------------------------
+echo "[STEP 4] Cambiando default target a $TARGET_INCORRECTO..."
+systemctl set-default "$TARGET_INCORRECTO" && echo "[OK] Default target cambiado a $TARGET_INCORRECTO"
 
-# ------------------------------------------------------------
-# 4. LOG SILENCIOSO
-# ------------------------------------------------------------
-echo "$(date '+%F %T') - inject_V1 ejecutado" >> "$LOG_FILE"
+# -------------------------------
+# Estado final para verificación
+# -------------------------------
+echo "[STEP 5] Estado final del default target:"
+systemctl get-default
 
-exit 0
+echo "=== [DEBUG] Fin inject_V1 ==="
