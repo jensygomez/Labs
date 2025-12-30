@@ -1,81 +1,97 @@
 #!/bin/bash
 # ============================================================
 # RHCSA EX200 – Boot & Recovery
-# Slot: 03
-# Scenario: /etc/fstab bloqueando el boot
-# Nivel: Producción realista
-# Author: Jensy Gomez
+# Slot: 03 (Básico)
+# Scenario: Root filesystem montado como read-only
 # ============================================================
 
 set -euo pipefail
 
-# -------------------------------
-# Variables
-# -------------------------------
-VG_NAME="vg_data"
-LV_NAME="lv_app"
-MNT_POINT="/mnt/fake"
-LOG_FILE="/var/log/inject_fstab.log"
-TICKET_FILE="/root/TICKET_BOOT_03.txt"
+
+LOG_FILE="/var/log/inject_boot.log"
 
 # -------------------------------
-# Logging silencioso
+# Función para mostrar el ticket con colores
 # -------------------------------
-log_injection() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - Inject V3 Boot executed" >> "$LOG_FILE"
+show_ticket() {
+    clear
+    cat << 'EOF'
+
+${CYAN}==================================================${RESET}
+${CYAN}     INCIDENTE – ROOT FILESYSTEM EN READ-ONLY${RESET}
+${CYAN}==================================================${RESET}
+
+${YELLOW}Escenario:${RESET}
+  Tras un mantenimiento reciente, el sistema arranca
+  aparentemente normal, pero no permite realizar
+  cambios en el sistema de archivos raíz.
+
+${YELLOW}Síntomas observados:${RESET}
+  ${RED}- El sistema permite login normal como usuario${RESET}
+  ${RED}- Comandos como touch, mkdir, yum, dnf fallan con:${RESET}
+  ${RED}  "Read-only file system"${RESET}
+  ${RED}- El montaje de / muestra "ro" en lugar de "rw"${RESET}
+  ${RED}- No se pueden crear ni modificar archivos en /${RESET}
+
+${YELLOW}Tarea:${RESET}
+  1. Identificar por qué el root filesystem está en modo read-only.
+  2. Restaurar el montaje correcto en read-write.
+  3. Asegurar que el cambio sea persistente tras reinicio.
+
+${YELLOW}Restricciones:${RESET}
+  - No reinstalar el sistema
+  - No usar live CD/ISO si no es estrictamente necesario
+  - Mantener todos los datos existentes
+
+${YELLOW}Criterios de validación:${RESET}
+  ${GREEN}✓${RESET} El root filesystem está montado como rw
+  ${GREEN}✓${RESET} Se pueden crear/modificar archivos en /
+  ${GREEN}✓${RESET} El cambio persiste tras reboot
+  ${GREEN}✓${RESET} El sistema arranca en multi-user.target
+
+${CYAN}==================================================${RESET}
+EOF
 }
 
 # -------------------------------
-# Preparar mount “falso”
+# Logging (tolerante)
 # -------------------------------
-# No se crea directorio ni dispositivo: fallará en boot
-# Esto simula fstab realista roto en producción
-
-FAKE_UUID=$(uuidgen)
-
-echo "UUID=$FAKE_UUID $MNT_POINT xfs defaults 0 0" >> /etc/fstab
-log_injection
+{
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - inject_V3 Boot ejecutado (root read-only)"
+    echo "   → Forzando parámetro 'ro' en GRUB"
+} >> "$LOG_FILE" 2>/dev/null || true
 
 # -------------------------------
-# Ticket de incidente
+# Mostrar ticket
 # -------------------------------
-cat << 'EOF' > "$TICKET_FILE"
-==================================================
-        INCIDENTE – SISTEMA NO FINALIZA EL ARRANQUE
-==================================================
+show_ticket
 
-Escenario:
-  Tras un reinicio, el sistema queda detenido durante
-  el proceso de arranque y no alcanza el estado operativo.
+# -------------------------------
+# Inyección del fallo
+# -------------------------------
+echo -e "${CYAN}[INFO] Inyectando fallo: root filesystem en read-only...${RESET}"
 
-Síntomas observados:
-  - multi-user.target no alcanzado
-  - Boot interrumpido por error de montaje
-  - Mensajes de “cannot find filesystem” o “mount failed”
+# Añadimos "ro" al final de GRUB_CMDLINE_LINUX si no está ya
+if ! grep -q " ro$" /etc/default/grub; then
+    sed -i 's/GRUB_CMDLINE_LINUX="/GRUB_CMDLINE_LINUX="ro /' /etc/default/grub
+else
+    echo -e "${YELLOW}[INFO] Ya existe 'ro' al final, asegurando...${RESET}"
+fi
 
-Tarea:
-  1. Identificar qué línea de /etc/fstab provoca el fallo.
-  2. Determinar la causa del error (UUID o dispositivo inexistente).
-  3. Corregir /etc/fstab para permitir arranque normal.
-  4. Verificar persistencia tras reboot.
-  5. Confirmar que todos los demás mounts y servicios funcionan.
+# Regeneramos grub.cfg
+grub2-mkconfig -o /boot/grub2/grub.cfg >/dev/null 2>&1
 
-Restricciones:
-  - No eliminar servicios ni desinstalar paquetes
-  - Mantener consistencia del sistema
-  - Evitar pérdida de datos
+echo -e "${GREEN}[OK] Parámetro 'ro' añadido a GRUB_CMDLINE_LINUX${RESET}"
+echo -e "${GREEN}[OK] grub2-mkconfig ejecutado${RESET}"
 
-Criterios de validación:
-  ✓ Boot completo sin bloqueos
-  ✓ multi-user.target alcanzado
-  ✓ Montajes válidos y persistentes
-  ✓ Datos existentes intactos
+echo
+echo -e "${YELLOW}[ADVERTENCIA] En el próximo reinicio, / estará montado como read-only.${RESET}"
+echo -e "${YELLOW}[ADVERTENCIA] Podrás loguearte, pero no modificar nada en raíz.${RESET}"
+echo -e "${YELLOW}[SUGERENCIA] Prueba editar la línea de GRUB temporalmente (tecla 'e') o corrige /etc/default/grub${RESET}"
+echo
 
-==================================================
-EOF
-
-chmod 600 "$TICKET_FILE"
-
-echo "Ticket V3 generado en $TICKET_FILE"
-echo "==> Setup V3 (fstab roto) completado"
+# -------------------------------
+# Salida limpia
+# -------------------------------
+echo -e "${GREEN}[OK] inject_V3 terminado correctamente.${RESET}"
 exit 0

@@ -2,113 +2,94 @@
 # ============================================================
 # RHCSA EX200 – Boot & Recovery
 # Slot: 02
-# Scenario: Servicio crítico bloqueando el boot
-# Nivel: Producción realista
-# Author: Jensy Gomez
+# Scenario: Entrada incorrecta en /etc/fstab → emergency mode
 # ============================================================
 
 set -euo pipefail
 
-# -------------------------------
-# Variables
-# -------------------------------
-SERVICE_NAME="app-critical.service"
-MOUNT_POINT="/data/app"
 
+
+# Variables del escenario
+BAD_UUID="12345678-1234-1234-1234-123456789abc"   # UUID inventado que no existe
+BAD_MOUNTPOINT="/mnt/datos_criticos"
 LOG_FILE="/var/log/inject_boot.log"
-TICKET_FILE="/root/TICKET_BOOT_02.txt"
 
 # -------------------------------
-# Logging silencioso
+# Función para mostrar el ticket con colores
 # -------------------------------
-log_injection() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - Inject V2 Boot executed" >> "$LOG_FILE"
+show_ticket() {
+    clear
+    cat << 'EOF'
+
+${CYAN}==================================================${RESET}
+${CYAN}       INCIDENTE – SISTEMA ENTRA EN MODO EMERGENCIA${RESET}
+${CYAN}==================================================${RESET}
+
+${YELLOW}Escenario:${RESET}
+  Tras un reinicio rutinario, el sistema no completa
+  el arranque normal. Se detiene en modo emergencia
+  y solicita la contraseña de root.
+
+${YELLOW}Síntomas observados:${RESET}
+  ${RED}- El sistema entra directamente en emergency mode${RESET}
+  ${RED}- Aparece el mensaje: "Give root password for maintenance"${RESET}
+  ${RED}- No se montan todos los filesystems esperados${RESET}
+  ${RED}- No hay acceso normal al login de usuarios${RESET}
+
+${YELLOW}Tarea:${RESET}
+  1. Identificar la causa del fallo de arranque.
+  2. Corregir la configuración responsable.
+  3. Asegurar que el sistema arranque correctamente de forma persistente.
+  4. Verificar el arranque normal tras reinicio.
+
+${YELLOW}Restricciones:${RESET}
+  - No reinstalar el sistema
+  - No eliminar datos existentes
+  - No modificar configuraciones innecesarias
+
+${YELLOW}Criterios de validación:${RESET}
+  ${GREEN}✓${RESET} El sistema arranca en multi-user.target (modo normal)
+  ${GREEN}✓${RESET} No se solicita contraseña de mantenimiento
+  ${GREEN}✓${RESET} El archivo /etc/fstab es válido
+  ${GREEN}✓${RESET} El cambio persiste tras reboot
+
+${CYAN}==================================================${RESET}
+EOF
 }
 
 # -------------------------------
-# Crear servicio crítico
+# Logging (tolerante a errores)
 # -------------------------------
-cat << EOF > /etc/systemd/system/${SERVICE_NAME}
-[Unit]
-Description=Critical Application Service
-Requires=${MOUNT_POINT}.mount
-After=${MOUNT_POINT}.mount
-DefaultDependencies=no
-
-[Service]
-Type=simple
-ExecStart=/bin/sleep infinity
-
-[Install]
-WantedBy=multi-user.target
-EOF
+{
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - inject_V2 Boot ejecutado (fstab corrupto)" 
+    echo "   → UUID falso añadido: $BAD_UUID → $BAD_MOUNTPOINT"
+} >> "$LOG_FILE" 2>/dev/null || true
 
 # -------------------------------
-# Crear unidad mount inexistente
+# Mostrar ticket inmediatamente
 # -------------------------------
-cat << EOF > /etc/systemd/system/${MOUNT_POINT//\//-}.mount
-[Unit]
-Description=Application Data Mount
-
-[Mount]
-What=/dev/mapper/vg_data-lv_app
-Where=${MOUNT_POINT}
-Type=xfs
-
-[Install]
-WantedBy=multi-user.target
-EOF
+show_ticket
 
 # -------------------------------
-# NO crear el directorio ni validar el mount
-# Esto provoca el bloqueo real del boot
+# Inyección del fallo
 # -------------------------------
+echo -e "${CYAN}[INFO] Inyectando fallo en /etc/fstab...${RESET}"
 
-systemctl daemon-reexec
-systemctl enable ${SERVICE_NAME}
-systemctl enable ${MOUNT_POINT}.mount
+# Añadimos una línea incorrecta al final de fstab
+cat << BADENTRY >> /etc/fstab
+UUID=$BAD_UUID  $BAD_MOUNTPOINT  xfs  defaults  0 0
+BADENTRY
 
-# -------------------------------
-# Ticket de incidente
-# -------------------------------
-cat << 'EOF' > "$TICKET_FILE"
-==================================================
-        INCIDENTE – SISTEMA NO FINALIZA EL ARRANQUE
-==================================================
+echo -e "${GREEN}[INFO] Línea añadida a /etc/fstab:${RESET}"
+echo "UUID=$BAD_UUID  $BAD_MOUNTPOINT  xfs  defaults  0 0"
 
-Escenario:
-  Tras un reinicio, el sistema queda detenido durante
-  el proceso de arranque y no alcanza el estado operativo.
-
-Síntomas observados:
-  - Boot incompleto
-  - systemd esperando una dependencia
-  - No se alcanza multi-user.target
-
-Tarea:
-  1. Identificar qué unidad está bloqueando el arranque.
-  2. Determinar por qué la dependencia no se cumple.
-  3. Restaurar el arranque normal del sistema.
-  4. Verificar persistencia tras reboot.
-
-Restricciones:
-  - No reinstalar
-  - No deshabilitar servicios sin análisis
-  - Mantener consistencia del sistema
-
-Criterios de validación:
-  ✓ Boot completo sin bloqueos
-  ✓ multi-user.target alcanzado
-  ✓ Servicio crítico manejado correctamente
-
-==================================================
-EOF
-
-chmod 600 "$TICKET_FILE"
+echo
+echo -e "${YELLOW}[ADVERTENCIA] El sistema entrará en emergency mode en el próximo reinicio.${RESET}"
+echo -e "${YELLOW}[ADVERTENCIA] Usa la contraseña de root para entrar y arreglarlo.${RESET}"
+echo
 
 # -------------------------------
-# Logging
+# Salida limpia
 # -------------------------------
-log_injection
-
+echo -e "${GREEN}[OK] inject_V2 terminado correctamente.${RESET}"
 exit 0
