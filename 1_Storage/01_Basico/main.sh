@@ -12,18 +12,15 @@ set -euo pipefail   # Seguridad: falla en errores, variables no definidas, etc.
 # CONFIGURACIÓN GLOBAL
 # ==============================================================================
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DB_FILE="$BASE_DIR/labs_database.txt"
-SSH_KEY="/home/jensy/GitHub/Labs/.ssh/id_rhcsalabs"
-VM_USER="student"
-VM_HOST="192.168.122.231"
-SUDO_PASS="redhat"                  # Contraseña de sudo para student
 
-# Colores para mensajes bonitos
-GREEN='\033[1;32m'
-CYAN='\033[1;36m'
-YELLOW='\033[1;33m'
-RED='\033[1;31m'
-RESET='\033[0m'
+CONFIG_FILE="$BASE_DIR/config.conf"
+
+[[ -f "$CONFIG_FILE" ]] || {
+    echo "ERROR: Falta config.conf"
+    exit 1
+}
+
+source "$CONFIG_FILE"
 
 
 # ==============================================================================
