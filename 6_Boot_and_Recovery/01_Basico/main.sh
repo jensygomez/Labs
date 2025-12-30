@@ -101,26 +101,42 @@ echo -e "${GREEN}✓ Archivo copiado correctamente${RESET}"
 sleep 0.5
 
 
+## ==============================================================================
+# PASO 6: Mostrar ticket en el HOST y luego ejecutar inyección en la VM
 # ==============================================================================
-# PASO 6: Mostrar el ticket en la VM antes de inyectar el fallo
-# ==============================================================================
-echo -e "${CYAN}Paso 6: Mostrando ticket directamente desde la VM...${RESET}"
+
+echo -e "${CYAN}Paso 6: Mostrando ticket del laboratorio...${RESET}"
 sleep 0.5
 
-ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" bash << 'EOF'
-    TICKET_FILE="/home/student/lab_ticket.txt"
+TICKET_HOST="$BASE_DIR/inject_${LAB_SELECTED}_ticket.txt"
 
-    if [[ -f "$TICKET_FILE" ]]; then
-        echo
-        echo "=== TICKET DEL LABORATORIO ==="
-        cat "$TICKET_FILE"
-        echo "=== FIN DEL TICKET ==="
-    else
-        echo "No se encontró ticket. Genera primero el inject_Vx correspondiente."
-    fi
+if [[ -f "$TICKET_HOST" ]]; then
+    echo
+    echo "=================================================="
+    echo "            TICKET DEL LABORATORIO"
+    echo "=================================================="
+    cat "$TICKET_HOST"
+    echo "=================================================="
+    echo
+else
+    echo "ERROR: No se encontró el ticket en el host:"
+    echo "  $TICKET_HOST"
+    exit 1
+fi
+
+echo -e "${CYAN}Paso 7: Ejecutando inyección en la VM...${RESET}"
+sleep 0.5
+
+ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" << EOF
+    echo "→ Ejecutando inject_${LAB_SELECTED} en la VM..."
+    sudo bash /tmp/lab_setup.sh
 EOF
 
-echo -e "${CYAN}Ticket mostrado. Ahora el estudiante puede ejecutar el laboratorio manualmente.${RESET}"
+echo
+echo "✓ Inyección ejecutada correctamente."
+echo "✓ El sistema NO se rompe hasta el reinicio."
+echo
+
 
 
 # ==============================================================================
