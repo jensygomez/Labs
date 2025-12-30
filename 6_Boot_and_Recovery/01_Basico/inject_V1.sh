@@ -5,7 +5,7 @@
 # Scenario: Default target incorrecto
 # Impact: Sistema no alcanza estado operativo normal
 # Author: Jensy Gomez
-# Version: Standalone – Debug/Trace Enabled
+# Version: Standalone – Ticket first
 # ============================================================
 
 set -euo pipefail
@@ -20,7 +20,7 @@ LOG_FILE="/var/log/inject_boot.log"
 DEBUG_LOG="/tmp/inject_V1.debug"
 TICKET_FILE="/home/student/lab_ticket.txt"
 
-# Redirigir stdout y stderr a debug log para trazabilidad
+# Redirigir stdout y stderr a debug log
 exec > >(tee -a "$DEBUG_LOG") 2>&1
 
 echo "=== [DEBUG] Inicio inject_V1 ==="
@@ -93,11 +93,6 @@ chown student:student "$TICKET_FILE"
 echo "[OK] Ticket creado correctamente"
 
 # -------------------------------
-# Logging
-# -------------------------------
-log_injection
-
-# -------------------------------
 # Mostrar ticket antes de cualquier cambio
 # -------------------------------
 echo
@@ -107,7 +102,12 @@ echo "=== [TICKET] Fin ==="
 echo
 
 # -------------------------------
-# Inyección del fallo
+# Logging
+# -------------------------------
+log_injection
+
+# -------------------------------
+# Inyección del fallo (después de mostrar ticket)
 # -------------------------------
 echo "[STEP 4] Cambiando default target a $TARGET_INCORRECTO..."
 systemctl set-default "$TARGET_INCORRECTO" && echo "[OK] Default target cambiado a $TARGET_INCORRECTO"
