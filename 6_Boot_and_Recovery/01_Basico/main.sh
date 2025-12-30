@@ -133,10 +133,7 @@ EOF
 echo
 echo -e "${CYAN}==================================================${RESET}"
 echo -e "${GREEN}¡LABORATORIO $SELECTED_LAB INYECTADO CON ÉXITO!${RESET}"
-echo -e "${GREEN}El ticket con pistas apareció arriba (directo desde la VM)${RESET}"
-echo -e "${CYAN}También está guardado en la VM para el estudiante:${RESET}"
-echo -e "${YELLOW}    /home/student/lab_ticket.txt${RESET}"
-
+echo -e "${GREEN}El ticket con pistas apareció arriba ${RESET}"
 echo
 echo -e "${CYAN}Conéctate y resuelve como administrador real:${RESET}"
 echo -e "${YELLOW}    ssh -i $SSH_KEY $VM_USER@$VM_HOST${RESET}"
