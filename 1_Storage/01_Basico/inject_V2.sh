@@ -56,45 +56,7 @@ echo "LV $LV creado (30%VG striped sobre 2 discos) y formateado con XFS"
 mkdir -p "$MNT"
 mount "/dev/$VG/$LV" "$MNT"
 
-# ============================================
-# Simular uso real y datos importantes
-# ============================================
-echo "==> Simulando datos de aplicación en $MNT"
-mkdir -p "$MNT"/{logs,uploads,config,backup}
 
-echo "Aplicación XYZ - Datos críticos" > "$MNT/config/app.conf"
-echo "$(date) - Sistema iniciado" > "$MNT/logs/startup.log"
-
-# Crear varios archivos para simular uso real
-for i in {1..20}; do
-    dd if=/dev/urandom of="$MNT/uploads/file_$i.dat" bs=1M count=$((RANDOM % 30 + 10)) status=none 2>/dev/null
-done
-
-# Archivo grande para llenar casi todo el LV
-FS_SIZE_MB=$(df -m "$MNT" | awk 'NR==2 {print $2}')
-FILL_MB=$(( FS_SIZE_MB * 90 / 100 ))
-
-dd if=/dev/zero of="$MNT/backup/full_backup.img" bs=1M count=$FILL_MB status=none
-sync
-
-
-umount "$MNT"
-
-# ============================================
-# Simular el "administrador anterior" que añadió el tercer disco pero no terminó
-# ============================================
-vgextend "$VG" "$DISK3" &>/dev/null
-echo "VG $VG extendido con $DISK3 (disco nuevo añadido, pero LV no tocado)"
-
-# Montaje persistente
-mount "/dev/$VG/$LV" "$MNT"
-UUID=$(blkid -s UUID -o value "/dev/$VG/$LV")
-if ! grep -q "$MNT" /etc/fstab; then
-    echo "UUID=$UUID $MNT xfs defaults 0 0" >> /etc/fstab
-    echo "Montaje persistente configurado en /etc/fstab"
-fi
-
-echo "==> Setup V2 completado"
 
 # ============================================
 # Ticket realista V2
@@ -155,3 +117,44 @@ echo "LV: $LV (1G inicial, striped sobre 2 discos, XFS)"
 echo "Montaje: $MNT con datos reales y ~850M usados"
 echo "El estudiante debe extender el LV con el espacio libre del VG y luego"
 echo "crecer el filesystem XFS en línea (lvextend + xfs_growfs)."
+
+
+# ============================================
+# Simular uso real y datos importantes
+# ============================================
+echo "==> Simulando datos de aplicación en $MNT"
+mkdir -p "$MNT"/{logs,uploads,config,backup}
+
+echo "Aplicación XYZ - Datos críticos" > "$MNT/config/app.conf"
+echo "$(date) - Sistema iniciado" > "$MNT/logs/startup.log"
+
+# Crear varios archivos para simular uso real
+for i in {1..20}; do
+    dd if=/dev/urandom of="$MNT/uploads/file_$i.dat" bs=1M count=$((RANDOM % 30 + 10)) status=none 2>/dev/null
+done
+
+# Archivo grande para llenar casi todo el LV
+FS_SIZE_MB=$(df -m "$MNT" | awk 'NR==2 {print $2}')
+FILL_MB=$(( FS_SIZE_MB * 90 / 100 ))
+
+dd if=/dev/zero of="$MNT/backup/full_backup.img" bs=1M count=$FILL_MB status=none
+sync
+
+
+umount "$MNT"
+
+# ============================================
+# Simular el "administrador anterior" que añadió el tercer disco pero no terminó
+# ============================================
+vgextend "$VG" "$DISK3" &>/dev/null
+echo "VG $VG extendido con $DISK3 (disco nuevo añadido, pero LV no tocado)"
+
+# Montaje persistente
+mount "/dev/$VG/$LV" "$MNT"
+UUID=$(blkid -s UUID -o value "/dev/$VG/$LV")
+if ! grep -q "$MNT" /etc/fstab; then
+    echo "UUID=$UUID $MNT xfs defaults 0 0" >> /etc/fstab
+    echo "Montaje persistente configurado en /etc/fstab"
+fi
+
+echo "==> Setup V2 completado"
