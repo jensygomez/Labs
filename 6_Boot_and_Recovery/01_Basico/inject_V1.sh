@@ -30,10 +30,12 @@ log_injection() {
 # Validaciones básicas
 # -------------------------------
 if ! command -v systemctl &>/dev/null; then
+    echo "ERROR: systemctl no encontrado"
     exit 1
 fi
 
 if ! systemctl list-unit-files | grep -q "^${TARGET_INCORRECTO}"; then
+    echo "ERROR: target incorrecto no existe en el sistema"
     exit 1
 fi
 
@@ -73,7 +75,7 @@ Criterios de validación:
 ==================================================
 EOF
 
-# Ajustar permisos y propiedad para que main.sh y el estudiante puedan leerlo
+# Ajustar permisos y propiedad
 chmod 644 "$TICKET_FILE"
 chown student:student "$TICKET_FILE"
 
@@ -85,8 +87,16 @@ log_injection
 # -------------------------------
 # Inyección del fallo
 # -------------------------------
-# Cambiar el default target sin afectar el target activo
 systemctl set-default "$TARGET_INCORRECTO"
+
+# -------------------------------
+# Mostrar ticket en stdout
+# -------------------------------
+echo
+echo "=== TICKET DEL LABORATORIO ==="
+cat "$TICKET_FILE"
+echo "=== FIN DEL TICKET ==="
+echo
 
 # -------------------------------
 # Salida limpia

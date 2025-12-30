@@ -100,43 +100,35 @@ scp -i "$SSH_KEY" -o StrictHostKeyChecking=no "$patch_path" "$VM_USER@$VM_HOST:/
 echo -e "${GREEN}✓ Archivo copiado correctamente${RESET}"
 sleep 0.5
 
+
+
 # ==============================================================================
 # PASO 6: Ejecutar el setup en la VM y mostrar el ticket en el host
 # ==============================================================================
-
-echo -e "${CYAN}Paso 6: Ejecutando setup y generando ticket en la VM...${RESET}"
+echo -e "${CYAN}Paso 6: Ejecutando setup y mostrando ticket directamente desde la VM...${RESET}"
 sleep 0.5
 
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" bash << 'EOF'
-    # Suministrar contraseña de sudo automáticamente
+    # Contraseña sudo
     SUDO_PASS="redhat"
 
     echo "   → Entrando como student..."
     echo "   → Ejecutando el laboratorio..."
     echo "$SUDO_PASS" | sudo -S bash /tmp/lab_setup.sh
 
-
-
-    # Si el script generó un ticket en /tmp/current_lab_ticket.txt, mostrarlo con colores
-    if echo "$SUDO_PASS" | sudo -S test -f /home/student/lab_ticket.txt; then
-
-        echo
-        echo "=== TICKET DEL LABORATORIO GENERADO ==="
-        echo "$SUDO_PASS" | sudo -S cat /home/student/lab_ticket.txt
-
-        echo "=== FIN DEL TICKET ==="
-    else
-        echo "   → Laboratorio ejecutado, pero no se encontró ticket"
-    fi
-
+    # El inject imprime su ticket directamente en stdout
+    # No se necesita test ni cat adicional
 
     echo "   → Limpiando archivo temporal..."
     echo "$SUDO_PASS" | sudo -S rm -f /tmp/lab_setup.sh
 EOF
 
+
 # ==============================================================================
 # FINAL: Mensaje de éxito en el host
 # ==============================================================================
+
+
 
 echo
 echo -e "${CYAN}==================================================${RESET}"
