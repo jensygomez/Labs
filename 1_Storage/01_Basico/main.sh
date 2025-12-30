@@ -11,7 +11,7 @@ set -euo pipefail   # Seguridad: falla en errores, variables no definidas, etc.
 # ==============================================================================
 # CONFIGURACIÓN GLOBAL
 # ==============================================================================
-BASE_DIR="/home/jensy/GitHub/Labs/1_Storage/01_Basico"
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DB_FILE="$BASE_DIR/labs_database.txt"
 SSH_KEY="/home/jensy/GitHub/Labs/.ssh/id_rhcsalabs"
 VM_USER="student"
