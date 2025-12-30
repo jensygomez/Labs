@@ -25,40 +25,63 @@ YELLOW='\033[1;33m'
 RED='\033[1;31m'
 RESET='\033[0m'
 
-# ==============================================================================
-# PASO 1: Leer la base de datos de laboratorios
-# ==============================================================================
-
-echo -e "${CYAN}=== Iniciando generador de laboratorios RHCSA ===${RESET}"
-sleep 0.5
-
-echo -e "${YELLOW}Paso 1: Leyendo la base de datos...${RESET}"
-sleep 0.5
-mapfile -t LABS < <(grep -v '^$' "$DB_FILE" | tr -d '\r')
-[[ ${#LABS[@]} -eq 0 ]] && { echo -e "${RED}ERROR: No hay laboratorios${RESET}"; exit 1; }
-echo -e "${GREEN}OK - Encontré ${#LABS[@]} laboratorio(s)${RESET}"
-sleep 0.5
-
-echo -e "${YELLOW}Paso 2: Escogiendo uno al azar...${RESET}"
-sleep 0.5
 
 # ==============================================================================
-# PASO 2: Seleccionar un laboratorio al azar
+# PASO 1: Leer la base de datos de laboratorios con contadores
 # ==============================================================================
-index=$(( RANDOM % ${#LABS[@]} ))
-SELECTED_LAB="${LABS[index]}"
-echo -e "${GREEN}Laboratorio seleccionado: $SELECTED_LAB${RESET}"
+
+echo -e "${YELLOW}Paso 1: Leyendo la base de datos con contadores...${RESET}"
 sleep 0.5
 
-echo -e "${YELLOW}Paso 3: Borrando de la base de datos...${RESET}"
-sleep 0.5
-SELECTED_LAB_CLEAN=$(echo "$SELECTED_LAB" | tr -d '\r')
-sed "/^${SELECTED_LAB_CLEAN}$/d" "$DB_FILE" > "$DB_FILE.tmp" && mv "$DB_FILE.tmp" "$DB_FILE"
-echo -e "${GREEN}OK - Laboratorio borrado${RESET}"
+declare -A LAB_COUNTERS
+
+while IFS='=' read -r lab count; do
+    [[ -z "$lab" ]] && continue
+    LAB_COUNTERS["$lab"]="$count"
+done < "$DB_FILE"
+
+[[ ${#LAB_COUNTERS[@]} -eq 0 ]] && {
+    echo -e "${RED}ERROR: Base de datos vacía${RESET}"
+    exit 1
+}
+
+echo -e "${GREEN}OK - Encontré ${#LAB_COUNTERS[@]} laboratorio(s)${RESET}"
 sleep 0.5
 
-echo -e "${YELLOW}Paso 4: Preparando inyección en VM ($VM_HOST)...${RESET}"
+# ==============================================================================
+# PASO 2: Seleccionar laboratorio con menor contador (azar controlado)
+# ==============================================================================
+
+# Obtener el menor contador
+MIN_COUNT=$(printf "%s\n" "${LAB_COUNTERS[@]}" | sort -n | head -1)
+
+# Construir lista de candidatos
+CANDIDATES=()
+for lab in "${!LAB_COUNTERS[@]}"; do
+    [[ "${LAB_COUNTERS[$lab]}" -eq "$MIN_COUNT" ]] && CANDIDATES+=("$lab")
+done
+
+# Selección aleatoria entre los menos usados
+index=$(( RANDOM % ${#CANDIDATES[@]} ))
+SELECTED_LAB="${CANDIDATES[index]}"
+
+echo -e "${GREEN}Laboratorio seleccionado: $SELECTED_LAB (uso=$MIN_COUNT)${RESET}"
 sleep 0.5
+
+# ==============================================================================
+# PASO 3: Incrementar contador del laboratorio seleccionado
+# ==============================================================================
+
+echo -e "${YELLOW}Paso 3: Actualizando contador en la base de datos...${RESET}"
+sleep 0.5
+
+NEW_COUNT=$(( LAB_COUNTERS["$SELECTED_LAB"] + 1 ))
+
+sed -i "s/^${SELECTED_LAB}=${LAB_COUNTERS[$SELECTED_LAB]}/${SELECTED_LAB}=${NEW_COUNT}/" "$DB_FILE"
+
+echo -e "${GREEN}OK - $SELECTED_LAB ahora tiene contador $NEW_COUNT${RESET}"
+sleep 0.5
+
 
 # ==============================================================================
 # PASO 4: Verificar existencia del script patch
