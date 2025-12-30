@@ -48,7 +48,7 @@ echo "VG $VG creado con $DISK1 y $DISK2"
 
 # Simular que el LV se creó originalmente con stripe sobre los 2 primeros discos
 lvremove -f "/dev/$VG/$LV" &>/dev/null || true
-lvcreate -l 30%VG -i 2 -I 64 -n "$LV" "$VG" &>/dev/null   # striped sobre 2 discos
+lvcreate -l 90%VG -i 2 -I 64 -n "$LV" "$VG" &>/dev/null   # striped sobre 2 discos
 mkfs.xfs -f "/dev/$VG/$LV" &>/dev/null
 echo "LV $LV creado (30%VG striped sobre 2 discos) y formateado con XFS"
 
@@ -86,7 +86,7 @@ TICKET_FILE="/tmp/current_lab_ticket.txt"
     echo "=================================================="
     echo "CRITERIOS DE EVALUACIÓN (estilo Red Hat):"
     echo
-    echo "✓ El volumen lógico debe usar al menos el 90% del espacio total del VG"
+    echo "✓ El volumen lógico debe consumir prácticamente todo el espacio disponible del VG"
     echo "✓ El filesystem XFS debe reflejar el tamaño completo del LV extendido"
     echo "✓ Operación realizada online (sin desmontar /app)"
     echo "✓ Datos existentes en /app intactos (archivos, logs, backups)"
