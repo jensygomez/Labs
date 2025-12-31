@@ -48,32 +48,32 @@ apply_lab() {
     # Backup defensivo
     cp /etc/default/grub /etc/default/grub.bak.lab5
 
-    # Verificar parámetro root original
-    if ! grep -q 'root=/dev/mapper/' /etc/default/grub; then
-        echo "ERROR: No se encontró parámetro root= esperado" >> "$LOG"
+    # Verificación previa
+    if ! grep -q 'rd.lvm.lv=rhel/root' /etc/default/grub; then
+        echo "ERROR: Estado inicial inesperado (rd.lvm.lv=rhel/root no encontrado)" >> "$LOG"
         exit 1
     fi
 
-    # Romper root=
-    sed -i 's#root=/dev/mapper/\([^ ]*\)#root=/dev/mapper/\1_BROKEN#g' /etc/default/grub
+    # Inyección de la falla
+    sed -i 's/rd.lvm.lv=rhel\/root/rd.lvm.lv=rhel\/rooot/' /etc/default/grub
 
-    # Regenerar grub
+    # Regenerar GRUB
     grub2-mkconfig -o /boot/grub2/grub.cfg &>> "$LOG"
 
-    # Verificación 1: /etc/default/grub
-    if ! grep -q 'root=/dev/mapper/.*_BROKEN' /etc/default/grub; then
+    # Verificación 1: fuente
+    if ! grep -q 'rd.lvm.lv=rhel/rooot' /etc/default/grub; then
         echo "ERROR: Falló modificación en /etc/default/grub" >> "$LOG"
         exit 1
     fi
 
-    # Verificación 2: grub.cfg
-    if ! grep -q 'root=/dev/mapper/.*_BROKEN' /boot/grub2/grub.cfg; then
+    # Verificación 2: configuración activa
+    if ! grep -q 'rd.lvm.lv=rhel/rooot' /boot/grub2/grub.cfg; then
         echo "ERROR: Falló propagación a grub.cfg" >> "$LOG"
         exit 1
     fi
 
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB_V5: Inyección completada exitosamente" >> "$LOG"
-    echo "   → root filesystem no podrá montarse" >> "$LOG"
+    echo "   → rd.lvm.lv roto (root filesystem no montará)" >> "$LOG"
 }
 
 
