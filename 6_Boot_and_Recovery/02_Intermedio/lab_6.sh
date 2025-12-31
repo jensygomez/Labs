@@ -78,6 +78,12 @@ apply_lab() {
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Inyección completada"
         echo "   → Próximo boot fallará"
     } >> "$LOG"
+
+    # 4. Reinicio (SIEMPRE AL FINAL)
+    echo
+    echo "El sistema necesita reiniciarse para aplicar los cambios..."
+    sleep 3
+    reboot
 }
 
 # ==============================================================================
