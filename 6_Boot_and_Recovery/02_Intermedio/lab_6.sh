@@ -57,58 +57,74 @@ apply_lab() {
         echo "   → Contexto: kernel reciente defectuoso tras actualización"
     } >> "$LOG"
 
-    # Obtener kernels reales (excluyendo rescue)
-    mapfile -t KERNELS < <(
-        grubby --info=ALL | awk -F= '/^kernel=/{print $2}' | grep -v rescue
-    )
-
-    if [ "${#KERNELS[@]}" -lt 2 ]; then
-        echo "ERROR: Se requieren al menos dos kernels instalados" >> "$LOG"
+    # Validación: debe ejecutarse como root
+    if [ "$EUID" -ne 0 ]; then
+        echo "ERROR: Este laboratorio debe ejecutarse como root" >> "$LOG"
         exit 1
     fi
 
-    local BAD_KERNEL="${KERNELS[0]}"
-    local GOOD_KERNEL="${KERNELS[1]}"
+    # Kernel por defecto actual (será el defectuoso)
+    local BAD_KERNEL
+    BAD_KERNEL=$(grubby --default-kernel)
 
-    # Backup completo
+    # Kernel alternativo funcional (no rescue)
+    local GOOD_KERNEL
+    GOOD_KERNEL=$(grubby --info=ALL \
+        | awk -F= '/^kernel=/{gsub(/"/,"",$2); print $2}' \
+        | grep -v rescue \
+        | grep -v "$BAD_KERNEL" \
+        | head -n1)
+
+    if [ -z "$GOOD_KERNEL" ]; then
+        echo "ERROR: No se encontró un kernel alternativo funcional" >> "$LOG"
+        exit 1
+    fi
+
+    # Backup completo del estado de grubby
     {
+        echo "=== DEFAULT KERNEL ==="
         grubby --default-kernel
+        echo
+        echo "=== KERNELS INFO ==="
         grubby --info=ALL
     } > "$BACKUP"
 
-    # Inyectar parámetro inválido SOLO en el kernel más reciente
+    # Inyección: romper root LVM SOLO en el kernel defectuoso
     grubby --update-kernel="$BAD_KERNEL" \
-           --args="rd.lvm.lv=rhel/roooot" \
-           --remove-args="rd.lvm.lv=rhel/root"
+           --remove-args="rd.lvm.lv=rhel/root" \
+           --args="rd.lvm.lv=rhel/roooot"
 
     # Forzar kernel defectuoso como default
     grubby --set-default "$BAD_KERNEL"
 
     {
-        echo "   → Kernel defectuoso:"
+        echo "   → Kernel defectuoso (default):"
         echo "     $BAD_KERNEL"
         echo "   → Kernel funcional disponible:"
         echo "     $GOOD_KERNEL"
-        echo "   → Parámetro inválido inyectado: rd.lvm.lv=rhel/roooot"
+        echo "   → Parámetro inválido inyectado:"
+        echo "     rd.lvm.lv=rhel/roooot"
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB 6: Inyección completada"
-        echo "   → Próximo arranque caerá en dracut"
+        echo "   → Próximo arranque caerá en dracut / emergency"
     } >> "$LOG"
 
-# ==============================================================================
-# REINICIO FORZADO (ROBUSTO)
-# ==============================================================================
-echo
-echo "Reiniciando el sistema para activar el laboratorio..."
+    # ==============================================================================
+    # REINICIO FORZADO (ROBUSTO)
+    # ==============================================================================
+    echo
+    echo "Reiniciando el sistema para activar el laboratorio..."
 
-set +e
+    sync
+    sleep 2
 
-systemctl reboot --force --no-wall 2>/dev/null || \
-reboot -f 2>/dev/null || \
-shutdown -r now 2>/dev/null
+    set +e
+    systemctl reboot -i --force --no-wall 2>/dev/null || \
+    reboot -f 2>/dev/null || \
+    shutdown -r now 2>/dev/null
 
-sleep 5
-
+    sleep 5
 }
+
 
 # ==============================================================================
 # Ejecución
