@@ -23,22 +23,25 @@ RED='\033[1;31m'
 RESET='\033[0m'
 
 # ==============================================================================
-# Verificación previa de conexión SSH + sudo
+# Verificación previa de conexión SSH + sudo (silenciosa y robusta)
 # ==============================================================================
 verify_connection() {
     echo -e "${CYAN}Verificando conexión a la VM y acceso sudo...${RESET}"
-    
-    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
-        "$VM_USER@$VM_HOST" "echo 'SSH OK'" >/dev/null 2>&1 || {
+
+    # Prueba SSH sin mensajes innecesarios
+    if ! ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+             -o BatchMode=yes -q "$VM_USER@$VM_HOST" exit 2>/dev/null; then
         echo -e "${RED}✗ Error: No se puede conectar por SSH a $VM_HOST${RESET}"
         exit 1
-    }
+    fi
 
-    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" \
-        "echo '$SUDO_PASS' | sudo -S whoami" 2>/dev/null | grep -q "^root$" || {
+    # Prueba sudo (con pipe de password y silencioso)
+    if ! ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o BatchMode=yes -q \
+             "$VM_USER@$VM_HOST" "echo '$SUDO_PASS' | sudo -S whoami" 2>/dev/null | \
+             grep -q "^root$"; then
         echo -e "${RED}✗ Error: sudo falla (password incorrecta o configuración)${RESET}"
         exit 1
-    }
+    fi
 
     echo -e "${GREEN}✓ Conexión SSH y sudo verificados correctamente${RESET}"
     sleep 0.5
@@ -126,20 +129,21 @@ read -r
 # ==============================================================================
 verify_connection
 
-
 # ==============================================================================
-# PASO 5 y 6: Copiar y aplicar en VM
+# PASO 5 y 6: Copiar y aplicar laboratorio en la VM (silencioso total)
 # ==============================================================================
 echo -e "${CYAN}Copiando y aplicando laboratorio en la VM...${RESET}"
 sleep 0.5
 
-scp -i "$SSH_KEY" -o StrictHostKeyChecking=no "$patch_path" \
-    "$VM_USER@$VM_HOST:/tmp/lab_setup.sh" >/dev/null 2>&1
+# Copiar el script de forma silenciosa
+scp -q -i "$SSH_KEY" -o StrictHostKeyChecking=no \
+    "$patch_path" "$VM_USER@$VM_HOST:/tmp/lab_setup.sh" >/dev/null 2>&1
 
-ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" << EOF
-    echo '$SUDO_PASS' | sudo -S chmod +x /tmp/lab_setup.sh
-    echo '$SUDO_PASS' | sudo -S /tmp/lab_setup.sh --apply
-    echo '$SUDO_PASS' | sudo -S rm -f /tmp/lab_setup.sh
+# Ejecutar todo en la VM de forma completamente silenciosa
+ssh -T -q -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" << EOF
+echo '$SUDO_PASS' | sudo -S chmod +x /tmp/lab_setup.sh >/dev/null 2>&1
+echo '$SUDO_PASS' | sudo -S /tmp/lab_setup.sh --apply >/dev/null 2>&1
+echo '$SUDO_PASS' | sudo -S rm -f /tmp/lab_setup.sh >/dev/null 2>&1
 EOF
 
 echo -e "${GREEN}¡Laboratorio $SELECTED_LAB inyectado con éxito!${RESET}"

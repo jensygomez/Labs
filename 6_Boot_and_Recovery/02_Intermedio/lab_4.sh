@@ -42,17 +42,14 @@ show_ticket() {
 # Función 2: Aplicar el laboratorio en la VM (silencioso + log)
 # ==============================================================================
 apply_lab() {
-    local LOG="/var/log/lab_4.log"
-    local BAD_PASS="bad_$(openssl rand -hex 12)"
+    local LOG="/var/log/lab_boot.log"
+    local BAD_PASS="bad_$(openssl rand -hex 16)"
 
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Laboratorio 4 iniciado" >> "$LOG"
-
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Cambiando contraseña de root a valor inválido..." >> "$LOG"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Laboratorio 4: iniciando" >> "$LOG"
     echo "root:$BAD_PASS" | chpasswd
-
-    echo "[$(ddate '+%Y-%m-%d %H:%M:%S')] Contraseña de root corrompida exitosamente" >> "$LOG"
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Laboratorio 4 aplicado correctamente" >> "$LOG"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Laboratorio 4: contraseña root corrompida" >> "$LOG"
 }
+
 
 # ==============================================================================
 # Ejecución según argumento (para uso remoto)
