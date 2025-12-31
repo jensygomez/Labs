@@ -1,7 +1,7 @@
 #!/bin/bash
 # ==============================================================================
-# Laboratorio 6 - RHCSA Boot & Recovery (Nivel Intermedio)
-# Scenario: Kernel por defecto no funcional tras actualización
+# LABORATORIO 6 – RHCSA EX200 – Boot & Recovery (Intermedio)
+# Scenario: Kernel defectuoso tras actualización
 # ==============================================================================
 
 set -euo pipefail
@@ -12,90 +12,103 @@ set -euo pipefail
 show_ticket() {
     clear
     printf "\033[1;36m==================================================\033[0m\n"
-    printf "\033[1;36m   LABORATORIO 6 – FALLA TRAS ACTUALIZACIÓN\033[0m\n"
+    printf "\033[1;36m     LABORATORIO 6 – FALLA DE ARRANQUE POR KERNEL\033[0m\n"
     printf "\033[1;36m==================================================\033[0m\n\n"
 
     printf "\033[1;33mContexto:\033[0m\n"
-    printf "  El servidor recibió una actualización automática del sistema.\n"
-    printf "  Tras reiniciar, el arranque dejó de completarse correctamente.\n"
-    printf "  No se reportaron cambios manuales recientes.\n\n"
+    printf "  Durante una actualización del sistema se instaló\n"
+    printf "  un kernel nuevo. Posteriormente se aplicaron cambios\n"
+    printf "  automáticos (Ansible / tuning) sobre los parámetros\n"
+    printf "  de arranque.\n\n"
+
+    printf "\033[1;33mProblema:\033[0m\n"
+    printf "  El kernel más reciente no logra montar el root filesystem\n"
+    printf "  debido a un parámetro rd.lvm.lv incorrecto.\n\n"
 
     printf "\033[1;33mSíntomas:\033[0m\n"
-    printf "  \033[1;31m- El sistema no arranca con normalidad\033[0m\n"
-    printf "  \033[1;31m- El fallo ocurre poco después de iniciar el kernel\033[0m\n"
-    printf "  \033[1;31m- No hay acceso al sistema operativo\033[0m\n\n"
+    printf "  \033[1;31m- El sistema no completa el arranque\033[0m\n"
+    printf "  \033[1;31m- dracut-initqueue timeout\033[0m\n"
+    printf "  \033[1;31m- Emergency mode / dracut shell\033[0m\n\n"
 
-    printf "\033[1;33mObjetivo:\033[0m\n"
-    printf "  Recuperar el sistema para que arranque correctamente\n"
-    printf "  y asegurar un arranque estable en reinicios futuros.\n\n"
+    printf "\033[1;33mTarea:\033[0m\n"
+    printf "  Recuperar el sistema arrancando con un kernel funcional\n"
+    printf "  o corrigiendo los parámetros de arranque.\n\n"
 
     printf "\033[1;33mPistas útiles:\033[0m\n"
-    printf "  • Revisa las opciones disponibles en el menú de arranque\n"
-    printf "  • Considera el impacto de actualizaciones recientes\n"
-    printf "  • El sistema podría tener alternativas funcionales instaladas\n\n"
+    printf "  • En GRUB: presiona 'e'\n"
+    printf "  • Revisa rd.lvm.lv y root=\n"
+    printf "  • Corrige o elimina el parámetro incorrecto\n"
+    printf "  • Arranca con Ctrl+X\n"
+    printf "  • Persiste el cambio tras recuperar el sistema\n\n"
 
     printf "\033[1;36m==================================================\033[0m\n"
+    printf "\nEl sistema se reiniciará para aplicar el laboratorio...\n"
 }
 
 # ==============================================================================
-# Función 2: Aplicar laboratorio en la VM (inyección)
+# Función 2: Aplicar laboratorio en la VM
 # ==============================================================================
 apply_lab() {
     local LOG="/var/log/lab_boot.log"
     local BACKUP="/root/grubby.bak.v6"
 
     {
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Laboratorio 6: iniciando inyección"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB 6: Iniciando inyección"
         echo "   → Contexto: kernel reciente defectuoso tras actualización"
     } >> "$LOG"
 
-    # Obtener lista de kernels
-    mapfile -t KERNELS < <(grubby --info=ALL | awk -F= '/^kernel=/{print $2}')
+    # Obtener kernels reales (excluyendo rescue)
+    mapfile -t KERNELS < <(
+        grubby --info=ALL | awk -F= '/^kernel=/{print $2}' | grep -v rescue
+    )
 
     if [ "${#KERNELS[@]}" -lt 2 ]; then
         echo "ERROR: Se requieren al menos dos kernels instalados" >> "$LOG"
         exit 1
     fi
 
-    # Asumimos:
-    # KERNELS[0] = kernel más reciente (defectuoso)
-    # KERNELS[1] = kernel anterior (funcional)
     local BAD_KERNEL="${KERNELS[0]}"
     local GOOD_KERNEL="${KERNELS[1]}"
 
-    # Backup del estado actual
-    grubby --default-kernel > "$BACKUP"
-    grubby --info=ALL >> "$BACKUP"
+    # Backup completo
+    {
+        grubby --default-kernel
+        grubby --info=ALL
+    } > "$BACKUP"
+
+    # Inyectar parámetro inválido SOLO en el kernel más reciente
+    grubby --update-kernel="$BAD_KERNEL" \
+           --args="rd.lvm.lv=rhel/roooot" \
+           --remove-args="rd.lvm.lv=rhel/root"
 
     # Forzar kernel defectuoso como default
     grubby --set-default "$BAD_KERNEL"
 
     {
-        echo "   → Kernel defectuoso establecido como default:"
+        echo "   → Kernel defectuoso:"
         echo "     $BAD_KERNEL"
         echo "   → Kernel funcional disponible:"
         echo "     $GOOD_KERNEL"
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Inyección completada"
-        echo "   → Próximo boot fallará"
+        echo "   → Parámetro inválido inyectado: rd.lvm.lv=rhel/roooot"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB 6: Inyección completada"
+        echo "   → Próximo arranque caerá en dracut"
     } >> "$LOG"
 
-    # 4. Reinicio (SIEMPRE AL FINAL)
+    # Reinicio forzado (CRÍTICO)
     echo
-    echo "El sistema necesita reiniciarse para aplicar los cambios..."
+    echo "Reiniciando el sistema para activar el laboratorio..."
     sleep 3
-    reboot
+    systemctl reboot --force
 }
 
 # ==============================================================================
-# Ejecución según argumento
+# Ejecución
 # ==============================================================================
 case "${1:-}" in
-    --ticket)
-        show_ticket
-        ;;
     --apply)
         apply_lab
         ;;
     *)
+        show_ticket
         ;;
 esac
