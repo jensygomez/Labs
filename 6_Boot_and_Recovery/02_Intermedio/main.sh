@@ -104,18 +104,6 @@ scp -i "$SSH_KEY" -o StrictHostKeyChecking=no "$patch_path" "$VM_USER@$VM_HOST:/
 echo -e "${GREEN}✓ Archivo copiado correctamente${RESET}"
 sleep 0.5
 
-
-
-# Selector de ticket según laboratorio (fácil de extender)
-case "$SELECTED_LAB" in
-    inject_V4)
-        show_ticket_inject_V4
-        ;;
-    *)
-        echo -e "${YELLOW}Advertencia: Aún no hay ticket definido para $SELECTED_LAB${RESET}"
-        ;;
-esac
-
 echo -e "${GREEN}¡Ticket mostrado arriba! Ahora inyectando el fallo en la VM...${RESET}"
 sleep 1.5
 
