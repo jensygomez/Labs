@@ -45,11 +45,30 @@ apply_lab() {
     local LOG="/var/log/lab_boot.log"
     local BAD_PASS="bad_$(openssl rand -hex 16)"
 
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Laboratorio 4: iniciando" >> "$LOG"
-    echo "root:$BAD_PASS" | chpasswd
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Laboratorio 4: contraseña root corrompida" >> "$LOG"
-}
+    {
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Laboratorio 4: iniciando inyección"
+        echo "   → Corrompiendo contraseña de root"
+        echo "   → Deshabilitando sudo para grupo wheel"
+    } >> "$LOG"
 
+    # 1. Corromper contraseña de root
+    echo "root:$BAD_PASS" | chpasswd
+
+    # 2. Comentar la línea de wheel en sudoers (la más común)
+    # Usamos sed para comentar cualquier línea que tenga %wheel y NOPASSWD o ALL
+    sed -i '/^%wheel.*NOPASSWD:/s/^/#/' /etc/sudoers
+    sed -i '/^%wheel.*ALL=(ALL)/s/^/#/' /etc/sudoers
+
+    # Si no existe NOPASSWD, comentamos la estándar
+    sed -i '/^%wheel/s/^/#/' /etc/sudoers
+
+    {
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Laboratorio 4: inyección completada"
+        echo "   → root bloqueado"
+        echo "   → sudo deshabilitado para student"
+        echo "   → Recuperación requiere rd.break o single-user mode"
+    } >> "$LOG"
+}
 
 # ==============================================================================
 # Ejecución según argumento (para uso remoto)
