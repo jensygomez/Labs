@@ -48,15 +48,34 @@ apply_lab() {
     # Backup defensivo
     cp /etc/default/grub /etc/default/grub.bak.lab5
 
-    # Corromper parámetro rd.lvm.lv
-    sed -i 's/rd.lvm.lv=\([^ ]*\/\)root/rd.lvm.lv=\1rooot/' /etc/default/grub
+    # Verificar parámetro root original
+    if ! grep -q 'root=/dev/mapper/' /etc/default/grub; then
+        echo "ERROR: No se encontró parámetro root= esperado" >> "$LOG"
+        exit 1
+    fi
 
-    # Regenerar grub.cfg
+    # Romper root=
+    sed -i 's#root=/dev/mapper/\([^ ]*\)#root=/dev/mapper/\1_BROKEN#g' /etc/default/grub
+
+    # Regenerar grub
     grub2-mkconfig -o /boot/grub2/grub.cfg &>> "$LOG"
 
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB_V5: Parámetro rd.lvm.lv corrompido" >> "$LOG"
-    echo "   → El sistema no podrá montar root filesystem" >> "$LOG"
+    # Verificación 1: /etc/default/grub
+    if ! grep -q 'root=/dev/mapper/.*_BROKEN' /etc/default/grub; then
+        echo "ERROR: Falló modificación en /etc/default/grub" >> "$LOG"
+        exit 1
+    fi
+
+    # Verificación 2: grub.cfg
+    if ! grep -q 'root=/dev/mapper/.*_BROKEN' /boot/grub2/grub.cfg; then
+        echo "ERROR: Falló propagación a grub.cfg" >> "$LOG"
+        exit 1
+    fi
+
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB_V5: Inyección completada exitosamente" >> "$LOG"
+    echo "   → root filesystem no podrá montarse" >> "$LOG"
 }
+
 
 # ==============================================================================
 # Ejecución
