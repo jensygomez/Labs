@@ -1,6 +1,7 @@
 #!/bin/bash
 # ==============================================================================
-# Laboratorio 4 - RHCSA Boot & Recovery
+# RHCSA EX200 – Boot & Recovery
+# Lab 4 - Intermediario
 # Escenario: Contraseña de root olvidada / bloqueada
 # ==============================================================================
 

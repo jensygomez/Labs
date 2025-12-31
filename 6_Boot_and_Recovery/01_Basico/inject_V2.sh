@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================================================
 # RHCSA EX200 – Boot & Recovery
-# Slot: 02
+# Lab: 02 Basico
 # Scenario: Entrada incorrecta en /etc/fstab → emergency mode
 # ============================================================
 

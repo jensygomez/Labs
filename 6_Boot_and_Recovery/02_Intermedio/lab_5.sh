@@ -1,6 +1,7 @@
 #!/bin/bash
 # ==============================================================================
-# Laboratorio 5 - RHCSA Boot & Recovery
+# RHCSA EX200 – Boot & Recovery
+# Lab 5 - Intermediario
 # Scenario: Parámetro de kernel incorrecto en GRUB
 # ==============================================================================
 

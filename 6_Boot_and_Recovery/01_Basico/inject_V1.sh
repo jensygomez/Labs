@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================================================
 # RHCSA EX200 – Boot & Recovery
-# Slot: 01
+# Lab: 01 Basico
 # Scenario: Default target incorrecto
 # ============================================================
 

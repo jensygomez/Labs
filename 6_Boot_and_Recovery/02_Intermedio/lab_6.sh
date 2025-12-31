@@ -1,6 +1,7 @@
 #!/bin/bash
 # ==============================================================================
-# LABORATORIO 6 – RHCSA EX200 – Boot & Recovery (Intermedio)
+# RHCSA EX200 – Boot & Recovery
+# Lab 6 - Intermediario
 # Scenario: Kernel defectuoso tras actualización
 # ==============================================================================
 

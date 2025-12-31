@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================================================
 # RHCSA EX200 – Boot & Recovery
-# Slot: 03 (Básico)
+# Lab: 03 Básico
 # Scenario: Root filesystem montado como read-only
 # ============================================================
 
