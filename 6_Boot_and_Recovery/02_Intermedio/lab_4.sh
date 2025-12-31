@@ -11,36 +11,31 @@ set -euo pipefail
 # ==============================================================================
 show_ticket() {
     clear
-    cat << 'EOF'
+    printf "\033[1;36m==================================================\033[0m\n"
+    printf "\033[1;36m     LABORATORIO 4 – CONTRASEÑA DE ROOT OLVIDADA\033[0m\n"
+    printf "\033[1;36m==================================================\033[0m\n\n"
 
-\033[1;36m==================================================\033[0m
-\033[1;36m     LABORATORIO 4 – CONTRASEÑA DE ROOT OLVIDADA\033[0m
-\033[1;36m==================================================\033[0m
+    printf "\033[1;33mEscenario:\033[0m\n"
+    printf "  Un compañero cambió la contraseña de root hace semanas\n"
+    printf "  y nadie la recuerda. El acceso sudo también falla.\n\n"
 
-\033[1;33mEscenario:\033[0m
-  Un compañero cambió la contraseña de root hace semanas
-  y nadie la recuerda. El acceso sudo también falla porque
-  depende de autenticación de root.
+    printf "\033[1;33mSíntomas:\033[0m\n"
+    printf "  \033[1;31m- Login como root: denegado\033[0m\n"
+    printf "  \033[1;31m- sudo: Authentication failure\033[0m\n"
+    printf "  \033[1;31m- Sistema arranca normal hasta login\033[0m\n\n"
 
-\033[1;33mSíntomas:\033[0m
-  \033[1;31m- Login directo como root: denegado\033[0m
-  \033[1;31m- sudo desde usuarios: Authentication failure\033[0m
-  \033[1;31m- El sistema arranca normalmente hasta el login\033[0m
-  \033[1;31m- Solo acceso por SSH como usuario normal\033[0m
+    printf "\033[1;33mTarea:\033[0m\n"
+    printf "  Recuperar acceso root usando rd.break en GRUB.\n\n"
 
-\033[1;33mTarea:\033[0m
-  Recuperar acceso administrativo completo usando técnicas
-  de recuperación de GRUB (rd.break).
+    printf "\033[1;33mPistas útiles:\033[0m\n"
+    printf "  • En GRUB: edita línea → añade rd.break → Ctrl+X\n"
+    printf "  • mount -o remount,rw /sysroot\n"
+    printf "  • chroot /sysroot\n"
+    printf "  • passwd\n"
+    printf "  • touch /.autorelabel (si SELinux enabled)\n"
+    printf "  • exit → exit → reboot\n\n"
 
-\033[1;33mPistas útiles:\033[0m
-  • Edita la línea de GRUB y añade rd.break
-  • Monta /sysroot, chroot, cambia passwd
-  • touch /.autorelabel si usas SELinux
-  • exit y reboot
-
-\033[1;36m==================================================\033[0m
-
-EOF
+    printf "\033[1;36m==================================================\033[0m\n"
 }
 
 # ==============================================================================
