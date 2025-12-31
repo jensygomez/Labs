@@ -22,6 +22,14 @@ CONFIG_FILE="$BASE_DIR/config/lab.conf"
 
 source "$CONFIG_FILE"
 
+# ==============================================================================
+# COLORES (para usar en el host)
+# ==============================================================================
+GREEN='\033[1;32m'
+CYAN='\033[1;36m'
+YELLOW='\033[1;33m'
+RED='\033[1;31m'
+RESET='\033[0m'
 
 # ==============================================================================
 # PASO 1: Leer la base de datos de laboratorios con contadores
@@ -97,24 +105,41 @@ echo -e "${GREEN}✓ Archivo copiado correctamente${RESET}"
 sleep 0.5
 
 
+
+# Selector de ticket según laboratorio (fácil de extender)
+case "$SELECTED_LAB" in
+    inject_V4)
+        show_ticket_inject_V4
+        ;;
+    *)
+        echo -e "${YELLOW}Advertencia: Aún no hay ticket definido para $SELECTED_LAB${RESET}"
+        ;;
+esac
+
+echo -e "${GREEN}¡Ticket mostrado arriba! Ahora inyectando el fallo en la VM...${RESET}"
+sleep 1.5
+
 # ==============================================================================
-# PASO 6: Ejecutar el setup en la VM y mostrar el ticket directamente
+# PASO 6: Mostrar ticket y ejecutar inyección
 # ==============================================================================
-echo -e "${CYAN}Paso 6: Ejecutando setup y mostrando ticket directamente desde la VM...${RESET}"
+echo -e "${CYAN}Paso 6: Mostrando ticket y ejecutando setup en la VM...${RESET}"
 sleep 0.5
 
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" bash << EOF
     echo "   → Conectado como $VM_USER"
-    echo "   → Ejecutando el laboratorio con privilegios de root..."
 
-    # Ejecutamos el script inject con sudo para que pueda hacer cambios reales
-    echo "$SUDO_PASS" | sudo -S bash /tmp/lab_setup.sh
+    # 1. Mostrar el ticket (salida visible en el host)
+    echo "   → Mostrando ticket del laboratorio..."
+    sudo -S bash /tmp/lab_setup.sh --show-ticket
+
+    echo
+    echo "   → Ejecutando inyección del fallo con privilegios de root..."
+    echo "$SUDO_PASS" | sudo -S bash /tmp/lab_setup.sh --inject
 
     echo "   → Laboratorio inyectado correctamente"
     echo "   → Limpiando archivo temporal..."
     echo "$SUDO_PASS" | sudo -S rm -f /tmp/lab_setup.sh
 EOF
-
 
 # ==============================================================================
 # FINAL: Mensaje de éxito en el host
@@ -123,7 +148,6 @@ EOF
 echo
 echo -e "${CYAN}==================================================${RESET}"
 echo -e "${GREEN}¡LABORATORIO $SELECTED_LAB INYECTADO CON ÉXITO!${RESET}"
-echo -e "${GREEN}El ticket con pistas apareció arriba ${RESET}"
 echo
 echo -e "${CYAN}Conéctate y resuelve como administrador real:${RESET}"
 echo -e "${YELLOW}    ssh -i $SSH_KEY $VM_USER@$VM_HOST${RESET}"
