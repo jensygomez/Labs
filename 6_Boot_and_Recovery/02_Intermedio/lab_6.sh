@@ -4,7 +4,7 @@
 # Scenario: Kernel defectuoso tras actualización
 # ==============================================================================
 
-set -euo pipefail
+set -uo pipefail
 
 # ==============================================================================
 # Función 1: Mostrar ticket (HOST)
@@ -94,11 +94,20 @@ apply_lab() {
         echo "   → Próximo arranque caerá en dracut"
     } >> "$LOG"
 
-    # Reinicio forzado (CRÍTICO)
-    echo
-    echo "Reiniciando el sistema para activar el laboratorio..."
-    sleep 3
-    systemctl reboot --force
+# ==============================================================================
+# REINICIO FORZADO (ROBUSTO)
+# ==============================================================================
+echo
+echo "Reiniciando el sistema para activar el laboratorio..."
+
+set +e
+
+systemctl reboot --force --no-wall 2>/dev/null || \
+reboot -f 2>/dev/null || \
+shutdown -r now 2>/dev/null
+
+sleep 5
+
 }
 
 # ==============================================================================
