@@ -119,27 +119,37 @@ esac
 echo -e "${GREEN}¡Ticket mostrado arriba! Ahora inyectando el fallo en la VM...${RESET}"
 sleep 1.5
 
+
+
 # ==============================================================================
-# PASO 6: Mostrar ticket y ejecutar inyección
+# PASO 6: Mostrar ticket (local) y ejecutar inyección en VM con progreso
 # ==============================================================================
-echo -e "${CYAN}Paso 6: Mostrando ticket y ejecutando setup en la VM...${RESET}"
+echo -e "${CYAN}Paso 6: Mostrando ticket y ejecutando inyección en la VM...${RESET}"
 sleep 0.5
 
-ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" bash << EOF
+ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" bash << 'EOF'
     echo "   → Conectado como $VM_USER"
 
-    # 1. Mostrar el ticket (salida visible en el host)
-    echo "   → Mostrando ticket del laboratorio..."
-    sudo -S bash /tmp/lab_setup.sh --show-ticket
+    # 1. Mostrar ticket (visible en host, con clear y colores)
+    echo "   → Ejecutando visualización del ticket..."
+    sudo bash /tmp/lab_setup.sh --show-ticket
 
     echo
-    echo "   → Ejecutando inyección del fallo con privilegios de root..."
+    # 2. Inyectar fallo (con progreso detallado)
+    echo "   → Inyectando fallo en el sistema (requiere root)..."
     echo "$SUDO_PASS" | sudo -S bash /tmp/lab_setup.sh --inject
 
+    echo
     echo "   → Laboratorio inyectado correctamente"
     echo "   → Limpiando archivo temporal..."
-    echo "$SUDO_PASS" | sudo -S rm -f /tmp/lab_setup.sh
+    sudo rm -f /tmp/lab_setup.sh
+
+    echo "   → Todo completado en la VM"
 EOF
+
+
+
+
 
 # ==============================================================================
 # FINAL: Mensaje de éxito en el host

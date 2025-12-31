@@ -1,18 +1,42 @@
 #!/bin/bash
 # ============================================================
-# RHCSA EX200 – Boot & Recovery
-# Slot: 04 (Intermedio)
-# Scenario: Contraseña de root olvidada / bloqueada
-# Archivo: inject_V4.sh
+# RHCSA EX200 – Boot & Recovery - inject_V4
+# Contraseña de root olvidada / bloqueada
 # ============================================================
 
 set -euo pipefail
 
+# Colores (solo para cuando se muestre algo visible)
+GREEN='\033[1;32m'
+CYAN='\033[1;36m'
+YELLOW='\033[1;33m'
+RED='\033[1;31m'
+RESET='\033[0m'
+
+LOG_FILE="/var/log/inject_boot.log"
+
 # ============================================================
-# Función: Mostrar el ticket (bonito, con colores y clear)
+# Función de progreso (con timestamp)
+# ============================================================
+log_step() {
+    echo -e "${CYAN}[$(date '+%H:%M:%S')] → $1${RESET}"
+}
+
+log_success() {
+    echo -e "${GREEN}[$(date '+%H:%M:%S')] ✓ $1${RESET}"
+}
+
+log_error() {
+    echo -e "${RED}[$(date '+%H:%M:%S')] ✗ $1${RESET}"
+}
+
+# ============================================================
+# 1. Mostrar ticket bonito (solo salida visible)
 # ============================================================
 show_ticket() {
     clear
+    log_step "Mostrando ticket del laboratorio inject_V4"
+
     cat << 'EOF'
 
 \033[1;36m==================================================\033[0m
@@ -51,31 +75,39 @@ show_ticket() {
 \033[1;36m==================================================\033[0m
 
 EOF
+
+    log_success "Ticket mostrado correctamente"
 }
 
 # ============================================================
-# Función: Inyectar el fallo (silenciosa, solo cambios + log)
+# 2. Inyectar fallo (con progreso visible y log)
 # ============================================================
 inject_fault() {
-    local LOG_FILE="/var/log/inject_boot.log"
+    log_step "Iniciando inyección del fallo: contraseña root corrupta"
+
     local NEW_BAD_PASS="wrong_$(openssl rand -hex 12)"
 
     {
         echo "============================================================"
-        echo "$(date '+%Y-%m-%d %H:%M:%S') - inject_V4: inyectando fallo"
-        echo "   → Escenario: Contraseña de root olvidada/bloqueada"
-        echo "   → Cambiando contraseña de root a valor inválido"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] inject_V4 - Inyección iniciada"
+        echo "   → Contraseña de root será cambiada a valor inválido"
         echo "============================================================"
-    } >> "$LOG_FILE" 2>/dev/null || true
+    } >> "$LOG_FILE"
 
-    # Cambiar contraseña de root
+    log_step "Cambiando contraseña de root..."
     echo "root:$NEW_BAD_PASS" | chpasswd
 
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - Contraseña de root corrompida exitosamente" >> "$LOG_FILE" 2>/dev/null || true
+    {
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Contraseña de root modificada exitosamente"
+        echo "   → Nuevo hash inválido aplicado"
+        echo "============================================================"
+    } >> "$LOG_FILE"
+
+    log_success "Fallo inyectado correctamente: acceso root bloqueado"
 }
 
 # ============================================================
-# Lógica principal: ¿qué queremos hacer?
+# Ejecución según argumento
 # ============================================================
 
 case "${1:-}" in
@@ -85,13 +117,8 @@ case "${1:-}" in
     --inject)
         inject_fault
         ;;
-    "")
-        echo "Error: Debe especificar --show-ticket o --inject" >&2
-        exit 1
-        ;;
     *)
-        echo "Opción desconocida: $1" >&2
-        echo "Uso: $0 [--show-ticket | --inject]" >&2
+        echo "Uso interno: --show-ticket o --inject"
         exit 1
         ;;
 esac
