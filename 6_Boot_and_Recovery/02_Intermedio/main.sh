@@ -1,30 +1,21 @@
 #!/bin/bash
 # ==============================================================================
 # RHCSA EX200 - Generador automático de laboratorios Boot & Recovery
-# Módulo principal: selecciona, borra de DB e inyecta el laboratorio en la VM
-# Autor: Jensy
-# Fecha: 2025
+# Módulo principal: selecciona, actualiza DB e inyecta el laboratorio en la VM
+# Autor: Jensy - 2025
 # ==============================================================================
 
-set -euo pipefail   # Seguridad: falla en errores, variables no definidas, etc.
+set -euo pipefail
 
 # ==============================================================================
 # CONFIGURACIÓN GLOBAL
 # ==============================================================================
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 CONFIG_FILE="$BASE_DIR/config/lab.conf"
 
-[[ -f "$CONFIG_FILE" ]] || {
-    echo "ERROR: Falta $CONFIG_FILE"
-    exit 1
-}
-
+[[ -f "$CONFIG_FILE" ]] || { echo "ERROR: Falta $CONFIG_FILE"; exit 1; }
 source "$CONFIG_FILE"
 
-# ==============================================================================
-# COLORES (para usar en el host)
-# ==============================================================================
 GREEN='\033[1;32m'
 CYAN='\033[1;36m'
 YELLOW='\033[1;33m'
@@ -32,21 +23,41 @@ RED='\033[1;31m'
 RESET='\033[0m'
 
 # ==============================================================================
-# PASO 1: Leer la base de datos de laboratorios con contadores
+# Verificación previa de conexión SSH + sudo
 # ==============================================================================
+verify_connection() {
+    echo -e "${CYAN}Verificando conexión a la VM y acceso sudo...${RESET}"
+    
+    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+        "$VM_USER@$VM_HOST" "echo 'SSH OK'" >/dev/null 2>&1 || {
+        echo -e "${RED}✗ Error: No se puede conectar por SSH a $VM_HOST${RESET}"
+        exit 1
+    }
 
+    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" \
+        "echo '$SUDO_PASS' | sudo -S whoami" 2>/dev/null | grep -q "^root$" || {
+        echo -e "${RED}✗ Error: sudo falla (password incorrecta o configuración)${RESET}"
+        exit 1
+    }
+
+    echo -e "${GREEN}✓ Conexión SSH y sudo verificados correctamente${RESET}"
+    sleep 0.5
+}
+
+# ==============================================================================
+# PASO 1: Leer base de datos
+# ==============================================================================
 echo -e "${YELLOW}Paso 1: Leyendo la base de datos con contadores...${RESET}"
 sleep 0.5
 
 declare -A LAB_COUNTERS
-
 while IFS='=' read -r lab count; do
-    [[ -z "$lab" ]] && continue
+    [[ -z "$lab" || "$lab" == "#"* ]] && continue
     LAB_COUNTERS["$lab"]="$count"
 done < "$DB_FILE"
 
 [[ ${#LAB_COUNTERS[@]} -eq 0 ]] && {
-    echo -e "${RED}ERROR: Base de datos vacía${RESET}"
+    echo -e "${RED}ERROR: Base de datos vacía o sin laboratorios${RESET}"
     exit 1
 }
 
@@ -54,11 +65,9 @@ echo -e "${GREEN}OK - Encontré ${#LAB_COUNTERS[@]} laboratorio(s)${RESET}"
 sleep 0.5
 
 # ==============================================================================
-# PASO 2: Seleccionar laboratorio con menor contador (azar controlado)
+# PASO 2: Seleccionar laboratorio (menor contador + azar)
 # ==============================================================================
-
 MIN_COUNT=$(printf "%s\n" "${LAB_COUNTERS[@]}" | sort -n | head -1)
-
 CANDIDATES=()
 for lab in "${!LAB_COUNTERS[@]}"; do
     [[ "${LAB_COUNTERS[$lab]}" -eq "$MIN_COUNT" ]] && CANDIDATES+=("$lab")
@@ -71,83 +80,78 @@ echo -e "${GREEN}Laboratorio seleccionado: $SELECTED_LAB (uso=$MIN_COUNT)${RESET
 sleep 0.5
 
 # ==============================================================================
-# PASO 3: Incrementar contador del laboratorio seleccionado
+# PASO 3: Actualizar contador
 # ==============================================================================
-
 echo -e "${YELLOW}Paso 3: Actualizando contador en la base de datos...${RESET}"
 sleep 0.5
 
 NEW_COUNT=$(( LAB_COUNTERS["$SELECTED_LAB"] + 1 ))
-
-sed -i "s/^${SELECTED_LAB}=${LAB_COUNTERS[$SELECTED_LAB]}/${SELECTED_LAB}=${NEW_COUNT}/" "$DB_FILE"
+sed -i "s/^${SELECTED_LAB}=.*$/${SELECTED_LAB}=$NEW_COUNT/" "$DB_FILE"
 
 echo -e "${GREEN}OK - $SELECTED_LAB ahora tiene contador $NEW_COUNT${RESET}"
 sleep 0.5
 
-
 # ==============================================================================
-# PASO 4: Verificar existencia del script patch
+# PASO 4: Verificar script
 # ==============================================================================
 patch_path="$BASE_DIR/${SELECTED_LAB}.sh"
-[[ -f "$patch_path" ]] || { echo -e "${RED}ERROR: No existe $patch_path${RESET}"; exit 1; }
+[[ -f "$patch_path" ]] || {
+    echo -e "${RED}ERROR: No existe el script $patch_path${RESET}"
+    exit 1
+}
 echo -e "${GREEN}Encontrado: $patch_path${RESET}"
 sleep 0.5
 
+# ==============================================================================
+# Verificamos conexión ANTES de continuar
+# ==============================================================================
+verify_connection
 
 # ==============================================================================
-# PASO 5: Copiar el script a la VM
+# Mostrar ticket LOCAL (source + función)
 # ==============================================================================
-echo -e "${CYAN}Paso 5: Copiando script a la VM...${RESET}"
+echo -e "${CYAN}Mostrando ticket del laboratorio $SELECTED_LAB...${RESET}"
+sleep 1
+
+source "$patch_path"  # Cargamos las funciones del lab seleccionado
+show_ticket           # Ejecutamos localmente en el host
+
+echo
+echo -e "${YELLOW}Presiona Enter para inyectar el laboratorio en la VM...${RESET}"
+read -r
+
+
+# ==============================================================================
+# Verificamos conexión ANTES de continuar
+# ==============================================================================
+verify_connection
+
+
+# ==============================================================================
+# PASO 5 y 6: Copiar y aplicar en VM
+# ==============================================================================
+echo -e "${CYAN}Copiando y aplicando laboratorio en la VM...${RESET}"
 sleep 0.5
 
-scp -i "$SSH_KEY" -o StrictHostKeyChecking=no "$patch_path" "$VM_USER@$VM_HOST:/tmp/lab_setup.sh" >/dev/null 2>&1
-echo -e "${GREEN}✓ Archivo copiado correctamente${RESET}"
-sleep 0.5
+scp -i "$SSH_KEY" -o StrictHostKeyChecking=no "$patch_path" \
+    "$VM_USER@$VM_HOST:/tmp/lab_setup.sh" >/dev/null 2>&1
 
-echo -e "${GREEN}¡Ticket mostrado arriba! Ahora inyectando el fallo en la VM...${RESET}"
-sleep 1.5
-
-
-
-# ==============================================================================
-# PASO 6: Mostrar ticket (local) y ejecutar inyección en VM con progreso
-# ==============================================================================
-echo -e "${CYAN}Paso 6: Mostrando ticket y ejecutando inyección en la VM...${RESET}"
-sleep 0.5
-
-ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" bash << 'EOF'
-    echo "   → Conectado como $VM_USER"
-
-    # 1. Mostrar ticket (visible en host, con clear y colores)
-    echo "   → Ejecutando visualización del ticket..."
-    sudo bash /tmp/lab_setup.sh --show-ticket
-
-    echo
-    # 2. Inyectar fallo (con progreso detallado)
-    echo "   → Inyectando fallo en el sistema (requiere root)..."
-    echo "$SUDO_PASS" | sudo -S bash /tmp/lab_setup.sh --inject
-
-    echo
-    echo "   → Laboratorio inyectado correctamente"
-    echo "   → Limpiando archivo temporal..."
-    sudo rm -f /tmp/lab_setup.sh
-
-    echo "   → Todo completado en la VM"
+ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" << EOF
+    echo '$SUDO_PASS' | sudo -S chmod +x /tmp/lab_setup.sh
+    echo '$SUDO_PASS' | sudo -S /tmp/lab_setup.sh --apply
+    echo '$SUDO_PASS' | sudo -S rm -f /tmp/lab_setup.sh
 EOF
 
-
-
-
+echo -e "${GREEN}¡Laboratorio $SELECTED_LAB inyectado con éxito!${RESET}"
 
 # ==============================================================================
-# FINAL: Mensaje de éxito en el host
+# Mensaje final
 # ==============================================================================
-
 echo
 echo -e "${CYAN}==================================================${RESET}"
-echo -e "${GREEN}¡LABORATORIO $SELECTED_LAB INYECTADO CON ÉXITO!${RESET}"
+echo -e "${GREEN}¡LABORATORIO $SELECTED_LAB LISTO!${RESET}"
 echo
-echo -e "${CYAN}Conéctate y resuelve como administrador real:${RESET}"
+echo -e "${CYAN}Conéctate y resuélvelo:${RESET}"
 echo -e "${YELLOW}    ssh -i $SSH_KEY $VM_USER@$VM_HOST${RESET}"
 echo -e "${CYAN}==================================================${RESET}"
-echo -e "${GREEN}¡Listo para practicar troubleshooting Boot & Recovery RHCSA! 🚀${RESET}"
+echo -e "${GREEN}¡A practicar Boot & Recovery RHCSA! 🚀${RESET}"
