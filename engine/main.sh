@@ -121,10 +121,11 @@ show_lab_ticket() {
 # ------------------------------------------------------------------------------
 # Aplicar laboratorio usando la función definida en el lab
 # ------------------------------------------------------------------------------
+apply_lab_remote() {
 echo -e "${CYAN}Ejecutando función apply_lab() del laboratorio $SELECTED_LAB...${RESET}"
 sleep 0.5
 apply_lab --apply   # Llama directamente a la función del lab inyectando el fallo
-
+}
 
 
 # ------------------------------------------------------------------------------
