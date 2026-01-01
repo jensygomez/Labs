@@ -151,8 +151,20 @@ echo "Selecionando la Base de datos"
 select_lab
 sleep 0.5
 update_lab_counter
+sleep 0.5
+echo "actualizando el contador"
 build_patch_path
+sleep 0.5
+echo "construyendo el path"
 verify_connection
+sleep 0.5
+echo "Verificando conexion"
 show_lab_ticket
+sleep 0.5
+echo "Mostrando el ticket"
 apply_lab_remote
+sleep 0.5
+echo "aplicando el lab remotamente"
 print_completion
+sleep 0.5
+echo "completado"

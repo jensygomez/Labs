@@ -1,4 +1,4 @@
 ID|LEVEL|SCRIPT|USES|STATUS
-J01|Junior|J01_User_Access_Breaks_Critical_Servicee.sh|0|active
+J01|Junior|J01_User_Access_Breaks_Critical_Servicee.sh|1|active
 J02|Junior|J02_Disk_Usage_Reaches_100_Affecting_Applications.sh|10|active
 J03|Junior|J03_Service_Enabled_but_Not_Starting_on_Boot.sh|10|active
