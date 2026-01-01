@@ -48,6 +48,7 @@ apply_lab() {
     local SERVICE_USER="apiuser"
     local SERVICE_DIR="/opt/internal-api"
     local BACKUP="/root/lab_j01_backup"
+    local API_LOG="/var/log/internal-api.log"
 
     {
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J01: Iniciando inyección de fallo"
@@ -64,14 +65,25 @@ apply_lab() {
         cp -r "$SERVICE_DIR" "$BACKUP" 2>/dev/null || true
     fi
 
-    # 1. Crear usuario incorrecto del servicio
+    # 1. Crear usuario del servicio
     useradd -r -s /sbin/nologin "$SERVICE_USER" &>/dev/null || true
 
-    # 2. Crear estructura y binario del servicio
+    # 2. Crear estructura y script con loop infinito (más realista)
     mkdir -p "$SERVICE_DIR"
-    echo -e '#!/bin/bash\necho "API running"' > "$SERVICE_DIR/start.sh"
+
+    cat > "$SERVICE_DIR/start.sh" <<'EOF'
+#!/bin/bash
+echo "Internal API started (PID $$) - listening..."
+echo "$(date '+%Y-%m-%d %H:%M:%S') - API started (PID $$)" >> /var/log/internal-api.log
+
+# Bucle infinito para mantener el servicio vivo
+while true; do
+    sleep 300  # duerme 5 minutos entre iteraciones (bajo consumo)
+done
+EOF
+
     chmod 700 "$SERVICE_DIR/start.sh"
-    chown root:root "$SERVICE_DIR/start.sh"
+    chown root:root "$SERVICE_DIR/start.sh"   # ← Aquí inyectamos el fallo de permisos
 
     # 3. Crear unit file
     cat > /etc/systemd/system/${SERVICE}.service <<EOF
@@ -90,16 +102,23 @@ EOF
     systemctl enable "$SERVICE" &>/dev/null
     systemctl start "$SERVICE" &>/dev/null
 
+    # Crear el archivo de log de la API (para que exista y dé otro síntoma opcional)
+    touch "$API_LOG"
+    chown root:root "$API_LOG"
+    chmod 640 "$API_LOG"
+
     {
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J01: Inyección completada"
         echo "   → Servicio: $SERVICE"
         echo "   → Usuario del servicio: $(id $SERVICE_USER 2>/dev/null || echo 'NO EXISTE')"
         echo "   → Backup: $BACKUP"
-        echo "   → Para probar reinicio: systemctl restart $SERVICE"
+        echo "   → Script con loop infinito para estado 'active (running)'"
+        echo "   → Log de API creado en $API_LOG (ownership root:root)"
     } >> "$LOG"
 
     echo "Lab J01 inyectado. Revisa logs y estado del servicio..."
 }
+
 
 # ==============================================================================
 # Ejecución
