@@ -121,13 +121,10 @@ show_lab_ticket() {
 # ------------------------------------------------------------------------------
 # Aplicar laboratorio usando la función definida en el lab
 # ------------------------------------------------------------------------------
-apply_lab_remote() {
-    echo -e "${CYAN}Ejecutando función apply_lab() del laboratorio $SELECTED_LAB...${RESET}"
-    sleep 0.5
+echo -e "${CYAN}Ejecutando función apply_lab() del laboratorio $SELECTED_LAB...${RESET}"
+sleep 0.5
+apply_lab --apply   # Llama directamente a la función del lab inyectando el fallo
 
-    # Llama directamente a la función que está definida en el script del lab
-    apply_lab --apply
-}
 
 
 # ------------------------------------------------------------------------------
@@ -143,6 +140,8 @@ print_completion() {
     echo -e "${CYAN}==================================================${RESET}"
     echo -e "${GREEN}¡A practicar! 🚀${RESET}"
 }
+
+
 
 # ==============================================================================
 # BLOQUE PRINCIPAL - EJECUCIÓN
