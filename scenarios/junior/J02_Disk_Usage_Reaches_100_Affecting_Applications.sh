@@ -1,7 +1,7 @@
 #!/bin/bash
 # ==============================================================================
 # LAB J01 – JUNIOR
-# Escenario: Usuario del servicio incorrecto bloquea aplicación crítica
+# Escenario: UDisco lleno por logs, coredump
 # ==============================================================================
 set -uo pipefail
 
