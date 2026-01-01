@@ -165,6 +165,9 @@ echo "Verificando conexion"
 show_lab_ticket
 sleep 0.5
 echo "Mostrando el ticket"
+verify_connection
+sleep 0.5
+echo "Verificando conexion"
 apply_lab_remote
 sleep 0.5
 echo "aplicando el lab remotamente"
