@@ -119,12 +119,24 @@ show_lab_ticket() {
 }
 
 # ------------------------------------------------------------------------------
-# Aplicar laboratorio usando la función definida en el lab
+# Aplicar laboratorio en la VM usando la función del lab
 # ------------------------------------------------------------------------------
 apply_lab_remote() {
-echo -e "${CYAN}Ejecutando función apply_lab() del laboratorio $SELECTED_LAB...${RESET}"
-sleep 0.5
-apply_lab --apply   # Llama directamente a la función del lab inyectando el fallo
+    echo -e "${CYAN}Copiando laboratorio $SELECTED_LAB a la VM...${RESET}"
+
+    # Copiamos el script del lab a la VM
+    scp -q -i "$SSH_KEY" -o StrictHostKeyChecking=no \
+        "$patch_path" "$VM_USER@$VM_HOST:/tmp/lab.sh"
+
+    echo -e "${CYAN}Ejecutando apply_lab() como root en la VM...${RESET}"
+
+    ssh -T -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" << EOF
+echo '$SUDO_PASS' | sudo -S bash -c '
+    source /tmp/lab.sh
+    apply_lab --apply
+'
+rm -f /tmp/lab.sh
+EOF
 }
 
 
