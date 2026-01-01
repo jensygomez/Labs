@@ -52,7 +52,7 @@ show_ticket() {
 # Función: Aplicar fallo para LAB J02 (versión rápida)
 # ==============================================================================
 
-apply_fall() {
+apply_lab() {
     local LOG="/var/log/lab_j02.log"
     local APP_LOG_DIR="/var/log/application"
     local COREDUMP_DIR="/var/lib/systemd/coredump"

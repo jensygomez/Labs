@@ -55,7 +55,7 @@ show_ticket() {
 # Función: Aplicar fallo para LAB J02 (versión rápida)
 # ==============================================================================
 
-apply_fall() {
+aapply_lab() {
     local LOG="/var/log/lab_j01.log"
     local SERVICE="internal-api"
     local SERVICE_USER="apiuser"
