@@ -144,8 +144,12 @@ print_completion() {
 # ==============================================================================
 # BLOQUE PRINCIPAL - EJECUCIÓN
 # ==============================================================================
+echo "Leyendo la base de datos"
 load_db
+sleep 0.5
+echo "Selecionando la Base de datos"
 select_lab
+sleep 0.5
 update_lab_counter
 build_patch_path
 verify_connection
