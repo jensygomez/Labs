@@ -121,12 +121,12 @@ show_lab_ticket() {
 # ------------------------------------------------------------------------------
 # Aplicar laboratorio usando la función definida en el lab
 # ------------------------------------------------------------------------------
-apply_selected_lab() {
+apply_lab_remote() {
     echo -e "${CYAN}Ejecutando función apply_lab() del laboratorio $SELECTED_LAB...${RESET}"
     sleep 0.5
 
     # Llama directamente a la función que está definida en el script del lab
-    apply_lab
+    apply_lab --apply
 }
 
 
