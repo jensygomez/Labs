@@ -98,7 +98,10 @@ update_lab_counter() {
 # Construir ruta del script según nivel
 # ------------------------------------------------------------------------------
 build_patch_path() {
-    patch_path="$BASE_DIR/scenarios/${SELECTED_LAB_LEVEL,,}/$SELECTED_LAB_SCRIPT"
+    # LABS_DIR apunta a la carpeta principal de escenarios
+    LABS_DIR="$(realpath "$BASE_DIR/../scenarios")"
+    patch_path="$LABS_DIR/${SELECTED_LAB_LEVEL,,}/$SELECTED_LAB_SCRIPT"
+
     [[ -f "$patch_path" ]] || { echo -e "${RED}ERROR: No existe el script $patch_path${RESET}"; exit 1; }
     echo -e "${GREEN}Encontrado script: $patch_path${RESET}"
     sleep 0.5
