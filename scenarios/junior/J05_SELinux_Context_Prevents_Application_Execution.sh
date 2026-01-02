@@ -12,46 +12,48 @@ set -uo pipefail
 show_ticket() {
     clear
     printf "\033[1;36m========================================================\033[0m\n"
-    printf "\033[1;36m   LAB J05 – JUNIOR – SERVICE BLOCKED BY SELINUX\033[0m\n"
+    printf "\033[1;36m   LAB J05 – JUNIOR – SELINUX CONTEXT BLOCKS EXECUTION\033[0m\n"
     printf "\033[1;36m========================================================\033[0m\n\n"
 
     printf "\033[1;33mEscenario:\033[0m\n"
-    printf "  El servicio fue desplegado correctamente y el binario existe.\n"
-    printf "  Los permisos son correctos, systemd reconoce la unidad y el\n"
-    printf "  administrador anterior asegura que 'todo funcionaba ayer'.\n"
-    printf "  Sin embargo, el servicio ahora falla inmediatamente al iniciar.\n"
-    printf "  No hay mensajes claros en pantalla y reiniciarlo no cambia nada.\n"
-    printf "  El sistema está en modo enforcing y la seguridad no ha sido desactivada.\n\n"
+    printf "  En Linux, la seguridad no consiste en desactivar controles, sino en\n"
+    printf "  permitir exactamente lo que el sistema necesita para operar. SELinux\n"
+    printf "  no es un obstáculo para la aplicación, es su guardián. Tras un ajuste\n"
+    printf "  reciente —probablemente bien intencionado— el sistema sigue estable,\n"
+    printf "  el servicio existe y el binario está presente. Sin embargo, la ejecución\n"
+    printf "  falla inmediatamente. SELinux, fiel a su diseño, está aplicando políticas\n"
+    printf "  con precisión… aunque ya no reflejen la intención del servicio.\n\n"
 
     printf "\033[1;33mSíntomas:\033[0m\n"
-    printf "  \033[1;31m• systemctl start falla de forma inmediata.\033[0m\n"
-    printf "  \033[1;31m• El binario existe y tiene permisos de ejecución.\033[0m\n"
-    printf "  \033[1;31m• Ejecutado manualmente, el script parece funcionar.\033[0m\n"
-    printf "  \033[1;31m• No hay errores evidentes en el código.\033[0m\n\n"
+    printf "  \033[1;31m• El servicio existe y está configurado en systemd.\033[0m\n"
+    printf "  \033[1;31m• El binario está presente y tiene permisos de ejecución.\033[0m\n"
+    printf "  \033[1;31m• El servicio falla al iniciar o termina inmediatamente.\033[0m\n"
+    printf "  \033[1;31m• SELinux se encuentra en modo Enforcing.\033[0m\n\n"
 
     printf "\033[1;33mTarea:\033[0m\n"
-    printf "  Restaurar la capacidad de ejecución del servicio sin comprometer\n"
-    printf "  la política de seguridad del sistema:\n"
-    printf "  - Identificar por qué systemd no puede ejecutar el binario\n"
-    printf "  - Validar el estado real de SELinux\n"
-    printf "  - Corregir el problema de forma persistente\n"
-    printf "  La solución correcta no implica desactivar SELinux.\n\n"
+    printf "  Restaurar el equilibrio entre seguridad y operación:\n"
+    printf "  - Determinar por qué SELinux impide la ejecución del proceso\n"
+    printf "  - Identificar si el contexto del archivo coincide con su función\n"
+    printf "  - Corregir el problema alineando el contexto con la intención del servicio\n"
+    printf "  La solución correcta no consiste en desactivar SELinux,\n"
+    printf "  sino en enseñarle qué debe permitirse.\n\n"
 
     printf "\033[1;33mRestricciones:\033[0m\n"
-    printf "  • Prohibido desactivar SELinux (setenforce 0)\n"
-    printf "  • Prohibido modificar el código del script\n"
-    printf "  • No reinstalar el servicio\n"
-    printf "  • La corrección debe sobrevivir reinicios\n\n"
+    printf "  • Prohibido desactivar SELinux o usar setenforce 0\n"
+    printf "  • Prohibido aplicar permisos excesivos como solución\n"
+    printf "  • Evitar cambios genéricos que rompan el principio de mínimo privilegio\n"
+    printf "  • Los cambios deben persistir tras reiniciar el sistema\n\n"
 
     printf "\033[1;33mPistas:\033[0m\n"
-    printf "  • systemd ejecuta binarios bajo políticas estrictas\n"
-    printf "  • Un permiso POSIX correcto no garantiza ejecución\n"
-    printf "  • SELinux decide antes que el kernel ejecute el binario\n"
-    printf "  • journalctl ve cosas que systemctl no muestra\n\n"
+    printf "  • systemd ejecuta procesos bajo políticas, no suposiciones\n"
+    printf "  • SELinux decide antes de que el binario comience a ejecutarse\n"
+    printf "  • El shell puede ocultar errores que el journal revela\n"
+    printf "  • Cuando la solución es correcta, SELinux deja de ser visible\n\n"
 
     printf "\033[1;36m========================================================\033[0m\n"
     printf "\nEjecutar con --apply para inyectar el fallo...\n"
 }
+
 
 
 # ==============================================================================
