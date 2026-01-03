@@ -5,9 +5,8 @@
 # ===========================================================================
 set -uo pipefail
 
-
 # ==============================================================================
-# Función 1: Mostrar ticket J03
+# Función: Mostrar ticket J03
 # ==============================================================================
 show_ticket() {
     clear
@@ -15,40 +14,40 @@ show_ticket() {
     printf "\033[1;36m   LAB J03 – JUNIOR – SERVICE SKIPPED AFTER REBOOT\033[0m\n"
     printf "\033[1;36m========================================================\033[0m\n\n"
 
-    printf "\033[1;33mEscenario:\033[0m\n"
-    printf "  En Linux, arrancar un servicio no es una orden, es una negociación.\n"
-    printf "  systemd no ejecuta procesos a ciegas: primero evalúa si el sistema\n"
-    printf "  cumple las condiciones que garantizan un arranque seguro y coherente.\n"
-    printf "  Tras un reboot, el sistema parece sano, estable y funcional. Sin embargo,\n"
-    printf "  un servicio interno —habilitado y correctamente instalado— simplemente\n"
-    printf "  no está corriendo. No falló. No se estrelló. Fue omitido.\n"
-    printf "  systemd decidió que el entorno ya no era el que el servicio esperaba.\n\n"
+    printf "\033[1;33mEscenario (cuando systemd decide no intervenir):\033[0m\n"
+    printf "  En entornos modernos, systemd no se limita a arrancar servicios:\n"
+    printf "  primero valida que el sistema se encuentre en un estado coherente.\n"
+    printf "  Tras un reinicio planificado, el host vuelve a estar operativo,\n"
+    printf "  pero un servicio interno —habilitado y sin errores aparentes—\n"
+    printf "  no está en ejecución. No falló, no se detuvo, no registró crashes.\n"
+    printf "  Simplemente fue omitido porque una condición declarada no se cumplió.\n"
+    printf "  El sistema hizo exactamente lo que se le pidió.\n\n"
 
-    printf "\033[1;33mSíntomas:\033[0m\n"
-    printf "  \033[1;31m• El servicio no aparece como \"failed\", sino como inactivo.\033[0m\n"
-    printf "  \033[1;31m• systemctl status indica que el arranque fue saltado.\033[0m\n"
-    printf "  \033[1;31m• journalctl no muestra errores de ejecución ni crashes.\033[0m\n"
-    printf "  \033[1;31m• El propio estado del servicio sugiere una condición no satisfecha.\033[0m\n\n"
+    printf "\033[1;33mSíntomas (no todo lo que no corre está roto):\033[0m\n"
+    printf "  \033[1;31m• systemctl status muestra el servicio como inactivo, no failed.\033[0m\n"
+    printf "  \033[1;31m• El log indica que el arranque fue \"skipped\" por una condición.\033[0m\n"
+    printf "  \033[1;31m• journalctl no presenta errores de ejecución ni permisos.\033[0m\n"
+    printf "  \033[1;31m• El servicio puede arrancar manualmente si el entorno es correcto.\033[0m\n\n"
 
-    printf "\033[1;33mTarea:\033[0m\n"
-    printf "  Restaurar el acuerdo entre el servicio y el sistema:\n"
-    printf "  - Identificar qué condición evalúa systemd antes de ejecutar el servicio\n"
-    printf "  - Comprender por qué esa condición deja de cumplirse tras el reboot\n"
-    printf "  - Devolver al sistema exactamente lo que el servicio espera encontrar\n"
-    printf "  La solución correcta no consiste en forzar el arranque,\n"
-    printf "  sino en respetar la lógica declarativa del sistema.\n\n"
+    printf "\033[1;33mTarea (diagnóstico basado en intención, no en fuerza):\033[0m\n"
+    printf "  Analiza el acuerdo implícito entre el servicio y el sistema:\n"
+    printf "  - Identificar qué Condition= o Assert= evalúa systemd\n"
+    printf "  - Determinar por qué esa condición no se cumple tras el reboot\n"
+    printf "  - Restaurar el estado esperado (archivo, path, mount, variable, etc.)\n"
+    printf "  El objetivo no es forzar el servicio a arrancar,\n"
+    printf "  sino devolverle el contexto que necesita para hacerlo.\n\n"
 
-    printf "\033[1;33mRestricciones:\033[0m\n"
-    printf "  • Prohibido eliminar condiciones solo para que el servicio arranque\n"
-    printf "  • No modificar el diseño del unit file sin entender su intención\n"
-    printf "  • No convertir un problema de estado en un problema de fuerza bruta\n"
-    printf "  • La solución debe sobrevivir a un reinicio completo del sistema\n\n"
+    printf "\033[1;33mRestricciones (respetar el diseño del sistema):\033[0m\n"
+    printf "  • No eliminar condiciones solo para evitar el análisis\n"
+    printf "  • No modificar units sin comprender su propósito original\n"
+    printf "  • No usar overrides como solución por defecto\n"
+    printf "  • La corrección debe persistir tras un reboot completo\n\n"
 
-    printf "\033[1;33mPistas:\033[0m\n"
-    printf "  • systemd siempre explica por qué decide no ejecutar algo\n"
-    printf "  • Observa con atención la sección \"Condition\" del servicio\n"
-    printf "  • Piensa qué existe antes del reboot y qué desaparece después\n"
-    printf "  • Cuando la condición se cumple, el servicio arranca sin protestar\n\n"
+    printf "\033[1;33mPistas (systemd siempre explica su decisión):\033[0m\n"
+    printf "  • systemctl status detalla por qué una condición no se cumplió\n"
+    printf "  • systemctl cat <servicio> revela Condition* y Assert*\n"
+    printf "  • Compara el estado del sistema antes y después del reboot\n"
+    printf "  • Cuando la condición vuelve a ser verdadera, el servicio arranca solo\n\n"
 
     printf "\033[1;36m========================================================\033[0m\n"
     printf "\nEjecutar con --apply para inyectar el fallo del servicio...\n"

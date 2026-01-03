@@ -1,7 +1,7 @@
 #!/bin/bash
 # ==============================================================================
 # LAB J01 – JUNIOR
-# Escenario: Usuario del servicio incorrecto bloquea aplicación crítica
+# Escenario: Application fails due to execution identity mismatch
 # ==============================================================================
 set -uo pipefail
 
@@ -11,36 +11,42 @@ set -uo pipefail
 show_ticket() {
     clear
     printf "\033[1;36m========================================================\033[0m\n"
-    printf "\033[1;36m   LAB J01 – JUNIOR – USER ACCESS BREAKS SERVICE\033[0m\n"
+    printf "\033[1;36m   LAB J01 – JUNIOR – APPLICATION FAILS TO START\033[0m\n"
     printf "\033[1;36m========================================================\033[0m\n\n"
 
     printf "\033[1;33mEscenario:\033[0m\n"
-    printf "  En Linux todo funciona cuando se respeta el principio de menor privilegio.\n"
-    printf "  Un ajuste administrativo (quizá para mejorar la seguridad) cambió algo\n"
-    printf "  y rompió el equilibrio: el servicio internal-api dejó de arrancar.\n"
-    printf "  El problema está en la configuración del usuario que ejecuta el servicio,\n"
-    printf "  recordándonos que los permisos son los guardianes silenciosos del sistema.\n\n"
+    printf "  En Linux, los servicios no solo dependen de binarios y configuraciones,\n"
+    printf "  sino también de la identidad bajo la cual se ejecutan.\n"
+    printf "  Tras un cambio administrativo reciente —probablemente orientado a mejorar\n"
+    printf "  la seguridad— una aplicación interna crítica dejó de iniciar.\n\n"
+    printf "  El sistema sigue estable, el servicio existe y no hay errores aparentes\n"
+    printf "  en la configuración general. Sin embargo, la aplicación no logra arrancar.\n"
+    printf "  Algo en la relación entre el servicio y su identidad ya no encaja.\n\n"
 
     printf "\033[1;33mSíntomas:\033[0m\n"
-    printf "  \033[1;31m• systemctl status internal-api.service\033[0m muestra fallo\n"
-    printf "  \033[1;31m• journalctl\033[0m revela errores de permisos u ownership\n"
-    printf "  \033[1;31m• El servicio no responde a reinicios\033[0m\n\n"
+    printf "  \033[1;31m• El servicio existe y está definido en systemd.\033[0m\n"
+    printf "  \033[1;31m• El servicio falla al iniciar o termina inmediatamente.\033[0m\n"
+    printf "  \033[1;31m• Reiniciar el servicio no resuelve el problema.\033[0m\n"
+    printf "  \033[1;31m• El sistema no muestra fallos generales ni errores de arranque.\033[0m\n\n"
 
     printf "\033[1;33mTarea:\033[0m\n"
-    printf "  Recuperar el servicio manteniendo la seguridad:\n"
-    printf "  - Usuario y permisos correctos (solo lo necesario)\n"
-    printf "  - Servicio funcionando y persistente tras reboot\n"
-    printf "  - Sin relajar permisos de forma global\n\n"
+    printf "  Restaurar el equilibrio entre seguridad y operación:\n"
+    printf "  - Identificar bajo qué usuario y grupo intenta ejecutarse el servicio\n"
+    printf "  - Verificar si esa identidad tiene acceso real a los recursos necesarios\n"
+    printf "  - Corregir la desalineación sin comprometer el principio de mínimo privilegio\n\n"
+    printf "  La solución correcta no consiste en ejecutar todo como root,\n"
+    printf "  sino en asegurar que cada proceso tenga exactamente los permisos que necesita.\n\n"
 
     printf "\033[1;33mRestricciones:\033[0m\n"
-    printf "  • Prohibido chmod 777 o usar root sin necesidad\n"
-    printf "  • Las correcciones deben sobrevivir a un reinicio\n\n"
+    printf "  • Prohibido relajar permisos de forma global (chmod 777)\n"
+    printf "  • Prohibido ejecutar el servicio como root sin justificación\n"
+    printf "  • Las correcciones deben persistir tras reiniciar el sistema\n\n"
 
     printf "\033[1;33mPistas:\033[0m\n"
-    printf "  • Revisa User= y Group= en la unit de systemd\n"
-    printf "  • journalctl -u internal-api.service te dirá el error exacto\n"
-    printf "  • Compara el owner de /opt/internal-api/start.sh con el usuario del servicio\n"
-    printf "  • Un chown preciso suele ser la solución más limpia\n\n"
+    printf "  • systemd no ejecuta servicios como el usuario del shell\n"
+    printf "  • La identidad del proceso es tan importante como el binario\n"
+    printf "  • El journal suele revelar errores de permisos u ownership\n"
+    printf "  • Un ajuste preciso suele ser más seguro que una solución amplia\n\n"
 
     printf "\033[1;36m========================================================\033[0m\n"
     printf "\nEjecutar con --apply para inyectar el fallo...\n"

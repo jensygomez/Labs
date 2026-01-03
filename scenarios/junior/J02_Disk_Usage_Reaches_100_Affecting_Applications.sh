@@ -1,13 +1,13 @@
 #!/bin/bash
 # ==============================================================================
-# LAB J01 – JUNIOR
-# Escenario: UDisco lleno por logs, coredump
+# LAB J02 – JUNIOR
+# Escenario: Disk pressure causes application instability
 # ==============================================================================
 set -uo pipefail
 
 
 # ==============================================================================
-# Función 2: Mostrar ticket J02
+# Función: Mostrar ticket J02
 # ==============================================================================
 show_ticket() {
     clear
@@ -15,32 +15,48 @@ show_ticket() {
     printf "\033[1;36m   LAB J02 – JUNIOR – DISK PRESSURE BREAKS SERVICE\033[0m\n"
     printf "\033[1;36m========================================================\033[0m\n\n"
 
-    printf "\033[1;33mEscenario (el peso del almacenamiento en Linux):\033[0m\n"
-    printf "  Imagina un sistema Linux que ha ido creciendo en silencio: logs que nadie rota, core dumps olvidados, cachés que se inflan con cada actualización. Todo parece funcionar… hasta que el disco, ese recurso finito y a veces subestimado, se convierte en el cuello de botella. De repente, servicios que antes levantaban sin quejas empiezan a fallar, operaciones simples como crear archivos temporales se niegan a ejecutarse, y el sistema te recuerda una verdad básica: sin espacio en disco, no hay progreso. Este no es solo un fallo técnico; es un recordatorio de que la observabilidad y la gestión proactiva del espacio son parte esencial del diseño de un sistema sano.\n\n"
+    printf "\033[1;33mEscenario:\033[0m\n"
+    printf "  En Linux, muchos problemas no aparecen de forma abrupta, sino que se\n"
+    printf "  acumulan en silencio. El sistema ha estado funcionando sin cambios\n"
+    printf "  recientes aparentes, pero en los últimos días algunos servicios han\n"
+    printf "  comenzado a comportarse de forma inestable.\n\n"
+    printf "  Procesos que antes iniciaban sin dificultad ahora fallan al arrancar,\n"
+    printf "  otros se detienen inesperadamente, y tareas simples parecen tardar más\n"
+    printf "  de lo normal. El sistema sigue en línea, pero algo esencial se está\n"
+    printf "  agotando.\n\n"
 
-    printf "\033[1;33mSíntomas (lee entre bloques y porcentajes):\033[0m\n"
-    printf "  \033[1;31m- systemctl status muestra servicios que fallan al arrancar o se caen inesperadamente, a veces con mensajes crípticos relacionados con escritura de logs o PID files.\033[0m\n"
-    printf "  \033[1;31m- journalctl revela errores como \"No space left on device\" o fallos al crear archivos temporales en /tmp, /var/log o directorios de trabajo del servicio.\033[0m\n"
-    printf "  \033[1;31m- df -h y du -sh exponen un / casi al límite, con directorios como /var/log, /var/lib/systemd/coredump o /var/cache consumiendo más de lo que deberían.\033[0m\n\n"
+    printf "\033[1;33mSíntomas:\033[0m\n"
+    printf "  \033[1;31m• Servicios fallan al iniciar o se caen de forma intermitente.\033[0m\n"
+    printf "  \033[1;31m• El journal muestra errores relacionados con escritura de archivos.\033[0m\n"
+    printf "  \033[1;31m• Operaciones rutinarias generan mensajes poco claros o genéricos.\033[0m\n"
+    printf "  \033[1;31m• No se observan fallos de red ni errores evidentes de configuración.\033[0m\n\n"
 
-    printf "\033[1;33mTarea (piensa como SRE, actúa como admin):\033[0m\n"
-    printf "  Restaura la salud del sistema recuperando espacio de forma inteligente, sin destruir evidencias útiles ni provocar más daño. Identifica qué está llenando el disco (logs, core dumps, cachés, archivos temporales) y aplica medidas correctivas: limpieza selectiva, rotación de logs, configuración de límites o políticas de retención. Garantiza que los servicios críticos vuelvan a arrancar de forma confiable y que el sistema no vuelva a quedarse sin espacio a la primera rotación de logs.\n\n"
+    printf "\033[1;33mTarea:\033[0m\n"
+    printf "  Restaurar la estabilidad del sistema identificando el recurso bajo presión\n"
+    printf "  y recuperando su funcionamiento normal sin comprometer la operación.\n"
+    printf "  Para ello deberás:\n"
+    printf "  - Determinar qué recurso crítico se encuentra al límite\n"
+    printf "  - Identificar qué componentes del sistema están contribuyendo al problema\n"
+    printf "  - Aplicar una solución precisa y sostenible\n\n"
+    printf "  La solución correcta no consiste en eliminar datos de forma indiscriminada,\n"
+    printf "  sino en comprender qué información es prescindible y cuál es necesaria\n"
+    printf "  para la operación y el soporte del sistema.\n\n"
 
-    printf "\033[1;33mRestricciones (no mates al mensajero):\033[0m\n"
-    printf "  • Evita borrar ciegamente todo /var/log; los logs son valiosos para auditoría y troubleshooting.\n"
-    printf "  • No desactives la generación de logs o core dumps sin entender el impacto en soporte y análisis de incidentes.\n"
-    printf "  • Asegura que cualquier cambio (logrotate, límites de systemd-coredump, limpieza de cachés) sea persistente y se mantenga tras el reboot.\n\n"
+    printf "\033[1;33mRestricciones:\033[0m\n"
+    printf "  • Prohibido eliminar datos de forma masiva o sin análisis previo\n"
+    printf "  • No desactivar mecanismos de logging como solución rápida\n"
+    printf "  • Evitar acciones que comprometan la capacidad de auditoría o diagnóstico\n"
+    printf "  • Las correcciones deben ser persistentes tras reiniciar el sistema\n\n"
 
-    printf "\033[1;33mPistas (del \"df -h\" a la causa raíz):\033[0m\n"
-    printf "  • Usa df -h para localizar el filesystem bajo presión y du -sh /var/* /home/* /opt/* para descubrir qué directorios son los responsables.\n"
-    printf "  • Inspecciona /var/log, /var/lib/systemd/coredump y /var/cache/dnf: ¿hay archivos gigantes o muchos ficheros antiguos que ya no aportan valor?\n"
-    printf "  • Revisa la configuración de rotación de logs (por ejemplo en /etc/logrotate.d/) y de core dumps (systemd-coredump, límites de tamaño) para prevenir que el problema se repita.\n"
-    printf "  • Tras liberar espacio, verifica con df -h y luego intenta systemctl restart en los servicios afectados para confirmar que el sistema se ha recuperado.\n\n"
+    printf "\033[1;33mPistas:\033[0m\n"
+    printf "  • Cuando el disco se agota, los errores no siempre son explícitos\n"
+    printf "  • df y du revelan más que muchos mensajes de error\n"
+    printf "  • Algunos directorios crecen lentamente hasta convertirse en un problema\n"
+    printf "  • Liberar espacio es solo parte de la solución; prevenir es igual de importante\n\n"
 
     printf "\033[1;36m========================================================\033[0m\n"
-    printf "\nEjecutar con --apply para inyectar el fallo de espacio en disco...\n"
+    printf "\nEjecutar con --apply para inyectar la condición de presión de disco...\n"
 }
-
 
 
 
