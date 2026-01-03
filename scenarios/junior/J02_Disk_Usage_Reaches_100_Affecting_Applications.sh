@@ -66,53 +66,105 @@ show_ticket() {
  apply_lab() {
     local LOG="/var/log/lab_j02.log"
     local BACKUP="/root/lab_j02_backup"
-    local TARGET_USAGE=92  # Más bajo para no ser obvio
-    local MARGIN_MB=150
+    local TARGET_USAGE=88           # A 88% (¡CRÍTICO!)
+    local MARGIN_MB=300             # AUMENTADO margen de seguridad
+    local SAFETY_LIMIT_MB=800       # MÁXIMO por archivo individual
+    local MIN_FREE_AFTER_MB=600     # MÍNIMO a dejar libre después
     
     {
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J02-Evolved: Inyección distribuida"
+        echo "========================================"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J02-Protected: Inyección distribuida y SEGURA"
+        echo "========================================"
     } >> "$LOG"
 
     # Validación root
-    [ "$EUID" -ne 0 ] && { echo "ERROR: Ejecutar como root" >> "$LOG"; return 1; }
-
-    # Backup
-    mkdir -p "$BACKUP"
-    find /var/log -type f -name "*.lab_*" -exec cp --parents {} "$BACKUP" \; 2>/dev/null || true
+    [ "$EUID" -ne 0 ] && { 
+        echo "ERROR: Ejecutar como root" >> "$LOG"
+        echo "Este script debe ejecutarse como root." >&2
+        return 1 
+    }
 
     # ------------------------------------------------------------------
-    # 1) Distribuir el consumo en múltiples archivos/lugares
+    # VERIFICACIÓN DE SEGURIDAD INICIAL (NUEVO)
     # ------------------------------------------------------------------
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Realizando verificaciones de seguridad..." >> "$LOG"
     
-    local LINE TOTAL_KB USED_KB FREE_KB CURRENT_USAGE
-    LINE=$(df -k / | awk 'NR==2 {print $2" "$3" "$4}')
-    read TOTAL_KB USED_KB FREE_KB <<< "$LINE"
+    # Obtener métricas actuales
+    local TOTAL_KB USED_KB FREE_KB CURRENT_USAGE
+    read TOTAL_KB USED_KB FREE_KB <<< $(df -k / | awk 'NR==2 {print $2" "$3" "$4}')
     CURRENT_USAGE=$(( USED_KB * 100 / TOTAL_KB ))
+    local FREE_MB=$(( FREE_KB / 1024 ))
     
+    {
+        echo "Estado inicial del sistema:"
+        echo "  Uso actual: ${CURRENT_USAGE}%"
+        echo "  Espacio libre: ${FREE_MB} MB"
+        echo "  Total espacio: $((TOTAL_KB/1024)) MB"
+        echo ""
+        echo "Límites de seguridad activados:"
+        echo "  Objetivo máximo: ${TARGET_USAGE}%"
+        echo "  Margen de seguridad: ${MARGIN_MB} MB"
+        echo "  Límite por archivo: ${SAFETY_LIMIT_MB} MB"
+        echo "  Mínimo libre final: ${MIN_FREE_AFTER_MB} MB"
+    } >> "$LOG"
+    
+    # VERIFICACIÓN 1: ¿Ya estamos en zona de peligro?
+    if [ "$CURRENT_USAGE" -ge 90 ]; then
+        echo "❌ ABORTADO: Sistema ya al ${CURRENT_USAGE}% (zona de peligro)" >> "$LOG"
+        echo "⚠️  ERROR: El sistema ya tiene presión crítica de disco. No se inyectará más." >&2
+        echo "   Uso actual: ${CURRENT_USAGE}% | Libre: ${FREE_MB} MB" >&2
+        return 1
+    fi
+    
+    # VERIFICACIÓN 2: ¿Tenemos suficiente espacio para operar?
+    local REQUIRED_FREE=$(( MIN_FREE_AFTER_MB + MARGIN_MB ))
+    if [ "$FREE_MB" -lt "$REQUIRED_FREE" ]; then
+        echo "❌ ABORTADO: Espacio insuficiente para operar de forma segura" >> "$LOG"
+        echo "⚠️  ERROR: Solo ${FREE_MB} MB libres (se requieren ${REQUIRED_FREE} MB)" >> "$LOG"
+        echo "⚠️  No hay suficiente espacio libre para operar de forma segura." >&2
+        return 1
+    fi
+    
+    # Backup (seguro, limitado)
+    mkdir -p "$BACKUP"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Creando backup limitado..." >> "$LOG"
+    find /var/log -type f -name "*.lab_*" -size -10M -exec cp --parents {} "$BACKUP" \; 2>/dev/null | head -5 >> "$LOG"
+
+    # ------------------------------------------------------------------
+    # 1) Distribuir el consumo con LÍMITES DE SEGURIDAD
+    # ------------------------------------------------------------------
     if [ "$CURRENT_USAGE" -lt "$TARGET_USAGE" ]; then
         local NEED_KB NEED_MB
         NEED_KB=$(( (TARGET_USAGE * TOTAL_KB / 100) - USED_KB ))
         NEED_MB=$(( (NEED_KB / 1024) - MARGIN_MB ))
         
-        if [ "$NEED_MB" -gt 50 ]; then  # Solo si hace falta > 50MB
+        # APLICAR LÍMITE DE SEGURIDAD AL TOTAL
+        local MAX_SAFE_MB=$(( FREE_MB - MIN_FREE_AFTER_MB ))
+        if [ "$NEED_MB" -gt "$MAX_SAFE_MB" ]; then
+            echo "⚠️  AJUSTADO: ${NEED_MB}MB excede límite seguro. Reducido a ${MAX_SAFE_MB}MB" >> "$LOG"
+            NEED_MB="$MAX_SAFE_MB"
+        fi
+        
+        if [ "$NEED_MB" -gt 100 ]; then  # Solo si hace falta > 100MB (aumentado)
             {
-                echo "Creando ${NEED_MB}MB distribuidos en múltiples archivos..."
+                echo "========================================"
+                echo "Creando ${NEED_MB}MB distribuidos (CON LÍMITES DE SEGURIDAD)..."
+                echo "========================================"
             } >> "$LOG"
             
-            # Array de directorios "plausibles" para archivos grandes
+            # Array de directorios "plausibles" pero SEGUROS
             local DIRS=(
-                "/var/log"
+                "/var/log/application"
                 "/var/tmp"
                 "/tmp"
-                "/var/cache"
-                "/opt"
-                "/home"
+                "/var/cache/temp"
+                "/opt/backups"
             )
             
             # Patrones de nombres "creíbles"
             local PATTERNS=(
                 "debug_dump"
-                "session_data"
+                "session_data" 
                 "cache_blob"
                 "temp_export"
                 "backup_tmp"
@@ -122,141 +174,212 @@ show_ticket() {
             
             local EXTENSIONS=(".dat" ".tmp" ".cache" ".bin" ".data" "")
             
-            # Dividir en 4-8 archivos de diferentes tamaños
-            local NUM_FILES=$((4 + RANDOM % 5))
-            local MB_PER_FILE=$((NEED_MB / NUM_FILES))
-            local REMAINING_MB=$((NEED_MB % NUM_FILES))
+            # Dividir en 3-6 archivos (reducido de 4-8)
+            local NUM_FILES=$((3 + RANDOM % 4))
+            local MB_PER_FILE=$(( NEED_MB / NUM_FILES ))
+            
+            # APLICAR LÍMITE POR ARCHIVO
+            if [ "$MB_PER_FILE" -gt "$SAFETY_LIMIT_MB" ]; then
+                MB_PER_FILE="$SAFETY_LIMIT_MB"
+                NUM_FILES=$(( (NEED_MB / SAFETY_LIMIT_MB) + 1 ))
+                echo "⚠️  Límite por archivo activado: máximo ${SAFETY_LIMIT_MB}MB cada uno" >> "$LOG"
+            fi
+            
+            local REMAINING_MB=$(( NEED_MB % NUM_FILES ))
             
             for ((i=1; i<=NUM_FILES; i++)); do
+                # ------------------------------------------------------------------
+                # VERIFICACIÓN DE SEGURIDAD ANTES DE CADA ARCHIVO (NUEVO)
+                # ------------------------------------------------------------------
+                local CURRENT_FREE_MB=$(df -m / | awk 'NR==2 {print $4}')
+                if [ "$CURRENT_FREE_MB" -lt "$MIN_FREE_AFTER_MB" ]; then
+                    echo "🛑 ALTO DE EMERGENCIA: Solo ${CURRENT_FREE_MB}MB libres. Parando creación." >> "$LOG"
+                    echo "⚠️  Parada de seguridad activada. Se crearon $((i-1)) de ${NUM_FILES} archivos." >> "$LOG"
+                    break
+                fi
+                
                 # Selección aleatoria
                 local DIR="${DIRS[$RANDOM % ${#DIRS[@]}]}"
                 local PATTERN="${PATTERNS[$RANDOM % ${#PATTERNS[@]}]}"
                 local EXT="${EXTENSIONS[$RANDOM % ${#EXTENSIONS[@]}]}"
                 local TIMESTAMP=$(date +%s%N | cut -c1-13)
                 
-                # Tamaño variable ±30%
-                local FILE_MB=$((MB_PER_FILE + (RANDOM % (MB_PER_FILE / 3)) - (MB_PER_FILE / 6)))
-                [ $i -eq $NUM_FILES ] && FILE_MB=$((FILE_MB + REMAINING_MB))  # Resto al último
+                # Tamaño variable ±20% (reducido de ±30%)
+                local FILE_MB="$MB_PER_FILE"
+                local VARIATION=$(( FILE_MB / 5 ))  # 20%
+                FILE_MB=$(( FILE_MB + (RANDOM % (VARIATION * 2)) - VARIATION ))
                 
-                # Nombre "creíble"
-                local FILENAME="${PATTERN}_${TIMESTAMP}${EXT}"
-                local FILEPATH="${DIR}/${FILENAME}"
+                # Ajustar último archivo con resto
+                [ $i -eq $NUM_FILES ] && FILE_MB=$((FILE_MB + REMAINING_MB))
                 
-                mkdir -p "$DIR"
-                
-                # Crear archivo con contenido pseudo-aleatorio (más realista que solo ceros)
-                {
-                    echo "LAB_J02_DUMMY_DATA: $(head -c 100 /dev/urandom | base64)" > "$FILEPATH"
-                    dd if=/dev/urandom of="$FILEPATH" bs=1M count="$FILE_MB" seek=1 status=none 2>/dev/null
-                } 2>>"$LOG"
-                
-                # 30% de probabilidad de comprimirlo (parece legítimo)
-                if [ $((RANDOM % 100)) -lt 30 ]; then
-                    gzip -f "$FILEPATH" 2>/dev/null
-                    FILEPATH="${FILEPATH}.gz"
+                # VERIFICAR LÍMITE POR ARCHIVO (nuevamente)
+                if [ "$FILE_MB" -gt "$SAFETY_LIMIT_MB" ]; then
+                    echo "⚠️  Archivo ${i} ajustado: ${FILE_MB}MB → ${SAFETY_LIMIT_MB}MB (límite)" >> "$LOG"
+                    REMAINING_MB=$(( REMAINING_MB + (FILE_MB - SAFETY_LIMIT_MB) ))
+                    FILE_MB="$SAFETY_LIMIT_MB"
                 fi
                 
-                # 20% de probabilidad de cambiar permisos para hacerlo menos obvio
+                # Nombre "creíble"
+                local FILENAME="${PATTERN}_${TIMESTAMP}_${i}${EXT}"
+                local FILEPATH="${DIR}/${FILENAME}"
+                
+                # Crear directorio si no existe
+                mkdir -p "$DIR"
+                
+                {
+                    echo "📁 Creando archivo ${i}/${NUM_FILES}:"
+                    echo "   Ruta: ${FILEPATH}"
+                    echo "   Tamaño: ${FILE_MB} MB"
+                    echo "   Libre actual: ${CURRENT_FREE_MB} MB"
+                } >> "$LOG"
+                
+                # Crear archivo CON VERIFICACIÓN DE ERROR
+                if ! dd if=/dev/urandom of="$FILEPATH" bs=4M count=$(( (FILE_MB + 3) / 4 )) status=none 2>>"$LOG"; then
+                    echo "❌ ERROR dd en ${FILEPATH}. Continuando con siguiente..." >> "$LOG"
+                    rm -f "$FILEPATH" 2>/dev/null
+                    continue
+                fi
+                
+                # 30% de probabilidad de comprimirlo
+                if [ $((RANDOM % 100)) -lt 30 ]; then
+                    if gzip -f "$FILEPATH" 2>/dev/null; then
+                        FILEPATH="${FILEPATH}.gz"
+                        echo "   ✅ Comprimido a ${FILEPATH}.gz" >> "$LOG"
+                    fi
+                fi
+                
+                # 20% de probabilidad de cambiar permisos
                 if [ $((RANDOM % 100)) -lt 20 ]; then
                     chown nobody:nobody "$FILEPATH" 2>/dev/null || true
                 fi
                 
-                echo "  Creado: ${FILEPATH} (${FILE_MB}MB)" >> "$LOG"
-                sleep 0.5
+                echo "   ✅ Creado exitosamente" >> "$LOG"
+                
+                # Pequeña pausa y verificación POST-creación
+                sleep 0.3
+                
+                # Verificar espacio después de crear
+                local NEW_FREE_MB=$(df -m / | awk 'NR==2 {print $4}')
+                echo "   📊 Libre después: ${NEW_FREE_MB} MB" >> "$LOG"
+                
+                # Si estamos cerca del límite, reducir velocidad
+                if [ "$NEW_FREE_MB" -lt $((MIN_FREE_AFTER_MB * 2)) ]; then
+                    sleep 1
+                    echo "   ⚠️  Espacio bajo, aumentando pausa..." >> "$LOG"
+                fi
             done
+        else
+            echo "ℹ️  No se requiere creación (${NEED_MB}MB < 100MB mínimo)" >> "$LOG"
         fi
+    else
+        echo "ℹ️  Ya cerca del objetivo (${CURRENT_USAGE}% >= ${TARGET_USAGE}%)" >> "$LOG"
     fi
     
     # ------------------------------------------------------------------
-    # 2) Logs "legítimos" que crecen anormalmente
+    # 2) Logs "legítimos" con LÍMITES DE SEGURIDAD
     # ------------------------------------------------------------------
-    
     {
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Simulando crecimiento anormal de logs..."
+        echo ""
+        echo "========================================"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Simulando crecimiento controlado de logs..."
+        echo "========================================"
     } >> "$LOG"
     
-    # Directorios de logs reales con diferentes tipos
+    # Directorios de logs reales (SIN inflar /var/log/messages crítico)
     local LOG_TARGETS=(
-        "/var/log/messages"
-        "/var/log/secure"
-        "/var/log/cron"
+        "/var/log/application"
         "/var/log/httpd/access_log"
         "/var/log/httpd/error_log"
-        "/var/log/audit/audit.log"
     )
     
     for logfile in "${LOG_TARGETS[@]}"; do
-        if [ -f "$logfile" ]; then
-            local GROWTH=$((50 + RANDOM % 150))  # 50-200MB por log
+        if [ -f "$logfile" ] || [ "$logfile" = "/var/log/application" ]; then
+            # CREAR archivo si no existe (solo para /var/log/application)
+            if [ "$logfile" = "/var/log/application" ] && [ ! -f "$logfile" ]; then
+                mkdir -p "/var/log/application"
+                logfile="/var/log/application/app.log"
+                touch "$logfile"
+            fi
+            
+            # Tamaño MUCHO más pequeño (5-15MB en lugar de 50-200MB)
+            local GROWTH=$((5 + RANDOM % 10))
+            
+            # Verificar espacio ANTES de añadir logs
+            local FREE_NOW=$(df -m / | awk 'NR==2 {print $4}')
+            if [ "$FREE_NOW" -lt "$MIN_FREE_AFTER_MB" ]; then
+                echo "⚠️  Saltando logs por espacio bajo (${FREE_NOW}MB < ${MIN_FREE_AFTER_MB}MB)" >> "$LOG"
+                break
+            fi
+            
             {
-                # Añadir líneas que parezcan logs reales
-                for ((j=0; j<GROWTH*100; j++)); do  # ~100 líneas por MB
-                    echo "$(date '+%b %d %H:%M:%S') $(hostname) lab_j02[$$]: $(head -c $((10 + RANDOM % 50)) /dev/urandom | base64 | tr -d '\n')"
-                done >> "$logfile"
+                # Añadir líneas (MUCHAS MENOS)
+                for ((j=0; j<GROWTH*10; j++)); do  # 10 líneas por MB (no 100)
+                    echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Simulated app log entry $(cat /dev/urandom | tr -dc 'a-f0-9' | fold -w 8 | head -1)" \
+                        >> "$logfile" 2>/dev/null || break
+                done
                 
-                echo "  Expandido: ${logfile} (+${GROWTH}MB)" >> "$LOG"
+                echo "  📝 Expandido: ${logfile} (+${GROWTH}MB)" >> "$LOG"
             } 2>/dev/null
         fi
     done
     
     # ------------------------------------------------------------------
-    # 3) "Olvidar" paquetes descargados (más sutil que instalar)
+    # 3) Paquetes "olvidados" con LÍMITES
     # ------------------------------------------------------------------
-    
     {
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Inflando caché de paquetes residual..."
+        echo ""
+        echo "========================================"
+        echo "[$(date '+%m-%d %H:%M:%S')] Creando caché de paquetes residual (LIMITADO)..."
+        echo "========================================"
     } >> "$LOG"
     
-    # Crear directorios de paquetes "olvidados"
-    local PKG_DIRS=(
-        "/var/cache/dnf"
-        "/var/cache/yum"
-        "/root/.cache/dnf"
-        "/var/lib/dnf"
-    )
+    # Solo UN directorio (no 4)
+    local PKG_DIRS=("/var/cache/dnf/lab_cache")
     
     for pkgdir in "${PKG_DIRS[@]}"; do
         mkdir -p "$pkgdir"
-        local PKG_FILES=$((5 + RANDOM % 10))
+        
+        # Solo 2-3 archivos (no 5-10)
+        local PKG_FILES=$((2 + RANDOM % 2))
+        
         for ((p=1; p<=PKG_FILES; p++)); do
-            local PKG_SIZE=$((10 + RANDOM % 90))  # 10-100MB
-            local PKG_NAME="kernel-devel-$(uname -r | cut -d- -f1)-${p}.$(date +%Y%m%d).rpm"
-            dd if=/dev/zero of="${pkgdir}/${PKG_NAME}" bs=1M count="$PKG_SIZE" status=none 2>/dev/null
+            # Verificar espacio ANTES de cada paquete
+            local FREE_NOW=$(df -m / | awk 'NR==2 {print $4}')
+            if [ "$FREE_NOW" -lt "$MIN_FREE_AFTER_MB" ]; then
+                echo "⚠️  Saltando paquetes por espacio bajo" >> "$LOG"
+                break 2
+            fi
+            
+            # Tamaño PEQUEÑO (5-20MB en lugar de 10-90MB)
+            local PKG_SIZE=$((5 + RANDOM % 15))
+            local PKG_NAME="lab_cache_$(uname -r | cut -d- -f1)-${p}.$(date +%Y%m%d).rpm"
+            
+            if dd if=/dev/zero of="${pkgdir}/${PKG_NAME}" bs=1M count="$PKG_SIZE" status=none 2>/dev/null; then
+                echo "  📦 Creado: ${PKG_NAME} (${PKG_SIZE}MB)" >> "$LOG"
+            fi
+            sleep 0.2
         done
     done
     
     # ------------------------------------------------------------------
-    # 4) Verificación final (menos obvia)
+    # 4) VERIFICACIÓN FINAL CON PROTECCIÓN
     # ------------------------------------------------------------------
-    
-    LINE=$(df -k / | awk 'NR==2 {print $2" "$3" "$4}')
-    read TOTAL_KB USED_KB FREE_KB <<< "$LINE"
+    read TOTAL_KB USED_KB FREE_KB <<< $(df -k / | awk 'NR==2 {print $2" "$3" "$4}')
     CURRENT_USAGE=$(( USED_KB * 100 / TOTAL_KB ))
+    local FINAL_FREE_MB=$(( FREE_KB / 1024 ))
     
-    {
-        echo "========================================"
-        echo "Uso final de /: ${CURRENT_USAGE}%"
-        echo "Espacio libre: $((FREE_KB/1024)) MB"
-        echo ""
-        echo "Pistas distribuidas en:"
-        echo "1. Múltiples archivos grandes en /var, /tmp, /opt"
-        echo "2. Logs del sistema inflados"
-        echo "3. Caché de paquetes residual"
-        echo "4. Archivos con timestamps y nombres creíbles"
-        echo ""
-        echo "Comandos útiles para diagnóstico:"
-        echo "  find / -type f -size +100M -exec ls -lh {} \; 2>/dev/null | sort -rh"
-        echo "  du -sh /* 2>/dev/null | sort -rh | head -10"
-        echo "  lsof -nP | grep deleted"
-        echo "  journalctl --since '1 hour ago' | grep -i 'disk\|space\|error'"
-        echo "========================================"
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J02-Evolved: Completo"
-    } >> "$LOG"
+    # VERIFICACIÓN FINAL DE SEGURIDAD
+    local SAFETY_STATUS="✅"
+    if [ "$FINAL_FREE_MB" -lt "$MIN_FREE_AFTER_MB" ]; then
+        SAFETY_STATUS="⚠️ "
+        echo "ALERTA: Espacio libre final (${FINAL_FREE_MB}MB) por debajo del mínimo (${MIN_FREE_AFTER_MB}MB)" >> "$LOG"
+    fi
     
-    echo "Lab J02-Evolved inyectado. Consulte $LOG para detalles."
-    echo "NOTA: Los síntomas aparecerán gradualmente (espacio, logs lentos)"
-}
-
+    if [ "$CURRENT_USAGE" -gt 90 ]; then
+        SAFETY_STATUS="🔴"
+        echo "ALERTA CRÍTICA: Uso final (${CURRENT_USAGE}%) supera el 90%" >> "$LOG"
+    fi
+ }
 
 
 
