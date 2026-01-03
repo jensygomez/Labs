@@ -63,6 +63,217 @@ show_ticket() {
 
 
 
+ apply_lab() {
+    local LOG="/var/log/lab_j02.log"
+    local BACKUP="/root/lab_j02_backup"
+    local TARGET_USAGE=92  # Más bajo para no ser obvio
+    local MARGIN_MB=150
+    
+    {
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J02-Evolved: Inyección distribuida"
+    } >> "$LOG"
+
+    # Validación root
+    [ "$EUID" -ne 0 ] && { echo "ERROR: Ejecutar como root" >> "$LOG"; return 1; }
+
+    # Backup
+    mkdir -p "$BACKUP"
+    find /var/log -type f -name "*.lab_*" -exec cp --parents {} "$BACKUP" \; 2>/dev/null || true
+
+    # ------------------------------------------------------------------
+    # 1) Distribuir el consumo en múltiples archivos/lugares
+    # ------------------------------------------------------------------
+    
+    local LINE TOTAL_KB USED_KB FREE_KB CURRENT_USAGE
+    LINE=$(df -k / | awk 'NR==2 {print $2" "$3" "$4}')
+    read TOTAL_KB USED_KB FREE_KB <<< "$LINE"
+    CURRENT_USAGE=$(( USED_KB * 100 / TOTAL_KB ))
+    
+    if [ "$CURRENT_USAGE" -lt "$TARGET_USAGE" ]; then
+        local NEED_KB NEED_MB
+        NEED_KB=$(( (TARGET_USAGE * TOTAL_KB / 100) - USED_KB ))
+        NEED_MB=$(( (NEED_KB / 1024) - MARGIN_MB ))
+        
+        if [ "$NEED_MB" -gt 50 ]; then  # Solo si hace falta > 50MB
+            {
+                echo "Creando ${NEED_MB}MB distribuidos en múltiples archivos..."
+            } >> "$LOG"
+            
+            # Array de directorios "plausibles" para archivos grandes
+            local DIRS=(
+                "/var/log"
+                "/var/tmp"
+                "/tmp"
+                "/var/cache"
+                "/opt"
+                "/home"
+            )
+            
+            # Patrones de nombres "creíbles"
+            local PATTERNS=(
+                "debug_dump"
+                "session_data"
+                "cache_blob"
+                "temp_export"
+                "backup_tmp"
+                "metrics_data"
+                "trace_buffer"
+            )
+            
+            local EXTENSIONS=(".dat" ".tmp" ".cache" ".bin" ".data" "")
+            
+            # Dividir en 4-8 archivos de diferentes tamaños
+            local NUM_FILES=$((4 + RANDOM % 5))
+            local MB_PER_FILE=$((NEED_MB / NUM_FILES))
+            local REMAINING_MB=$((NEED_MB % NUM_FILES))
+            
+            for ((i=1; i<=NUM_FILES; i++)); do
+                # Selección aleatoria
+                local DIR="${DIRS[$RANDOM % ${#DIRS[@]}]}"
+                local PATTERN="${PATTERNS[$RANDOM % ${#PATTERNS[@]}]}"
+                local EXT="${EXTENSIONS[$RANDOM % ${#EXTENSIONS[@]}]}"
+                local TIMESTAMP=$(date +%s%N | cut -c1-13)
+                
+                # Tamaño variable ±30%
+                local FILE_MB=$((MB_PER_FILE + (RANDOM % (MB_PER_FILE / 3)) - (MB_PER_FILE / 6)))
+                [ $i -eq $NUM_FILES ] && FILE_MB=$((FILE_MB + REMAINING_MB))  # Resto al último
+                
+                # Nombre "creíble"
+                local FILENAME="${PATTERN}_${TIMESTAMP}${EXT}"
+                local FILEPATH="${DIR}/${FILENAME}"
+                
+                mkdir -p "$DIR"
+                
+                # Crear archivo con contenido pseudo-aleatorio (más realista que solo ceros)
+                {
+                    echo "LAB_J02_DUMMY_DATA: $(head -c 100 /dev/urandom | base64)" > "$FILEPATH"
+                    dd if=/dev/urandom of="$FILEPATH" bs=1M count="$FILE_MB" seek=1 status=none 2>/dev/null
+                } 2>>"$LOG"
+                
+                # 30% de probabilidad de comprimirlo (parece legítimo)
+                if [ $((RANDOM % 100)) -lt 30 ]; then
+                    gzip -f "$FILEPATH" 2>/dev/null
+                    FILEPATH="${FILEPATH}.gz"
+                fi
+                
+                # 20% de probabilidad de cambiar permisos para hacerlo menos obvio
+                if [ $((RANDOM % 100)) -lt 20 ]; then
+                    chown nobody:nobody "$FILEPATH" 2>/dev/null || true
+                fi
+                
+                echo "  Creado: ${FILEPATH} (${FILE_MB}MB)" >> "$LOG"
+                sleep 0.5
+            done
+        fi
+    fi
+    
+    # ------------------------------------------------------------------
+    # 2) Logs "legítimos" que crecen anormalmente
+    # ------------------------------------------------------------------
+    
+    {
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Simulando crecimiento anormal de logs..."
+    } >> "$LOG"
+    
+    # Directorios de logs reales con diferentes tipos
+    local LOG_TARGETS=(
+        "/var/log/messages"
+        "/var/log/secure"
+        "/var/log/cron"
+        "/var/log/httpd/access_log"
+        "/var/log/httpd/error_log"
+        "/var/log/audit/audit.log"
+    )
+    
+    for logfile in "${LOG_TARGETS[@]}"; do
+        if [ -f "$logfile" ]; then
+            local GROWTH=$((50 + RANDOM % 150))  # 50-200MB por log
+            {
+                # Añadir líneas que parezcan logs reales
+                for ((j=0; j<GROWTH*100; j++)); do  # ~100 líneas por MB
+                    echo "$(date '+%b %d %H:%M:%S') $(hostname) lab_j02[$$]: $(head -c $((10 + RANDOM % 50)) /dev/urandom | base64 | tr -d '\n')"
+                done >> "$logfile"
+                
+                echo "  Expandido: ${logfile} (+${GROWTH}MB)" >> "$LOG"
+            } 2>/dev/null
+        fi
+    done
+    
+    # ------------------------------------------------------------------
+    # 3) "Olvidar" paquetes descargados (más sutil que instalar)
+    # ------------------------------------------------------------------
+    
+    {
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Inflando caché de paquetes residual..."
+    } >> "$LOG"
+    
+    # Crear directorios de paquetes "olvidados"
+    local PKG_DIRS=(
+        "/var/cache/dnf"
+        "/var/cache/yum"
+        "/root/.cache/dnf"
+        "/var/lib/dnf"
+    )
+    
+    for pkgdir in "${PKG_DIRS[@]}"; do
+        mkdir -p "$pkgdir"
+        local PKG_FILES=$((5 + RANDOM % 10))
+        for ((p=1; p<=PKG_FILES; p++)); do
+            local PKG_SIZE=$((10 + RANDOM % 90))  # 10-100MB
+            local PKG_NAME="kernel-devel-$(uname -r | cut -d- -f1)-${p}.$(date +%Y%m%d).rpm"
+            dd if=/dev/zero of="${pkgdir}/${PKG_NAME}" bs=1M count="$PKG_SIZE" status=none 2>/dev/null
+        done
+    done
+    
+    # ------------------------------------------------------------------
+    # 4) Verificación final (menos obvia)
+    # ------------------------------------------------------------------
+    
+    LINE=$(df -k / | awk 'NR==2 {print $2" "$3" "$4}')
+    read TOTAL_KB USED_KB FREE_KB <<< "$LINE"
+    CURRENT_USAGE=$(( USED_KB * 100 / TOTAL_KB ))
+    
+    {
+        echo "========================================"
+        echo "Uso final de /: ${CURRENT_USAGE}%"
+        echo "Espacio libre: $((FREE_KB/1024)) MB"
+        echo ""
+        echo "Pistas distribuidas en:"
+        echo "1. Múltiples archivos grandes en /var, /tmp, /opt"
+        echo "2. Logs del sistema inflados"
+        echo "3. Caché de paquetes residual"
+        echo "4. Archivos con timestamps y nombres creíbles"
+        echo ""
+        echo "Comandos útiles para diagnóstico:"
+        echo "  find / -type f -size +100M -exec ls -lh {} \; 2>/dev/null | sort -rh"
+        echo "  du -sh /* 2>/dev/null | sort -rh | head -10"
+        echo "  lsof -nP | grep deleted"
+        echo "  journalctl --since '1 hour ago' | grep -i 'disk\|space\|error'"
+        echo "========================================"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J02-Evolved: Completo"
+    } >> "$LOG"
+    
+    echo "Lab J02-Evolved inyectado. Consulte $LOG para detalles."
+    echo "NOTA: Los síntomas aparecerán gradualmente (espacio, logs lentos)"
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+: << 'COMMENT'
+
 
 # ==============================================================================
 # Función: Aplicar fallo para LAB J02 (versión rápida)
@@ -220,3 +431,7 @@ case "${1:-}" in
         show_ticket
         ;;
 esac
+
+
+
+COMMENT
