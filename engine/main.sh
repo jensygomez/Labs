@@ -180,6 +180,8 @@ echo "Mostrando el ticket"
 verify_connection
 sleep 0.5
 echo "Verificando conexion"
+echo "para monitorerar en la VM"
+echo " watch -n 2 'echo "=== MONITOR ==="; df -h /; echo "---"; ps aux | grep dd | grep -v grep' "
 apply_lab_remote
 sleep 0.5
 echo "aplicando el lab remotamente"
