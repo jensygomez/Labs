@@ -60,43 +60,49 @@ show_ticket() {
 }
 
 
-
 # ==============================================================================
-# Función 2: Aplicar fallo para LAB J05
+# Función 2: Aplicar fallo para LAB J05 (4 VARIACIONES SELinux)
 # ==============================================================================
 apply_lab() {
     local LOG="/var/log/lab_j05.log"
     local APP_DIR="/opt/acme/bin"
     local APP="$APP_DIR/acme-app.sh"
     local SERVICE="/etc/systemd/system/acme-app.service"
-
+    
     # Validación root
     if [ "$EUID" -ne 0 ]; then
         echo "ERROR: Ejecutar como root" | tee -a "$LOG"
         return 1
     fi
-
+    
+    # VARIACIÓN ALEATORIA (1-4)
+    local VARIATION=$(( RANDOM % 4 + 1 ))
+    
     {
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J05: Iniciando inyección de fallo"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J05: Iniciando variación $VARIATION"
     } >> "$LOG"
 
-    # ------------------------------------------------------------------
-    # 1) Crear aplicación
-    # ------------------------------------------------------------------
+    # LIMPIAR configuraciones previas
+    systemctl stop acme-app 2>/dev/null || true
+    systemctl disable acme-app 2>/dev/null || true
+    rm -f "$SERVICE" "$APP"
+    rm -rf "$APP_DIR"
+
+    # Crear aplicación base
     mkdir -p "$APP_DIR"
-
-    cat << 'EOF' > "$APP"
+    cat > "$APP" << 'EOF'
 #!/bin/bash
-echo "ACME application running" >> /var/log/acme-app.log
-sleep infinity
+echo "ACME application running (PID $$)" >> /var/log/acme-app.log
+exec sleep infinity
 EOF
-
     chmod 755 "$APP"
 
     # ------------------------------------------------------------------
-    # 2) Crear servicio systemd
+    # VARIACIÓN 1: Contexto SELinux incorrecto (restorecon)
     # ------------------------------------------------------------------
-    cat << EOF > "$SERVICE"
+    if [ "$VARIATION" = "1" ]; then
+        chcon -t default_t "$APP"
+        cat > "$SERVICE" << EOF
 [Unit]
 Description=ACME Internal Application
 After=network.target
@@ -108,33 +114,122 @@ Restart=on-failure
 [Install]
 WantedBy=multi-user.target
 EOF
-
-    systemctl daemon-reexec
-    systemctl enable acme-app >> "$LOG" 2>&1
-
-    # ------------------------------------------------------------------
-    # 3) Inyectar fallo SELinux (contexto incorrecto)
-    # ------------------------------------------------------------------
-    chcon -t default_t "$APP" >> "$LOG" 2>&1
+        {
+            echo "VARIACIÓN 1: Contexto SELinux 'default_t' (necesita restorecon)"
+        } >> "$LOG"
 
     # ------------------------------------------------------------------
-    # 4) Intentar iniciar servicio (fallará)
+    # VARIACIÓN 2: SELinux deniega escritura log (audit log)
     # ------------------------------------------------------------------
-    systemctl restart acme-app >> "$LOG" 2>&1 || true
+    elif [ "$VARIATION" = "2" ]; then
+        chcon -t var_log_t "$APP"  # App OK
+        mkdir -p /var/log
+        chcon -t user_tmp_t /var/log/acme-app.log 2>/dev/null || true
+        cat > "$APP" << EOF
+#!/bin/bash
+echo "ACME application running (PID \$\$)" >> /var/log/acme-app.log
+exec sleep infinity
+EOF
+        chmod 755 "$APP"
+        cat > "$SERVICE" << EOF
+[Unit]
+Description=ACME Internal Application  
+After=network.target
+
+[Service]
+ExecStart=$APP
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+        {
+            echo "VARIACIÓN 2: /var/log/acme-app.log tiene contexto user_tmp_t"
+        } >> "$LOG"
+
+    # ------------------------------------------------------------------
+    # VARIACIÓN 3: Permisos SELinux en directorio (semanage permissive)
+    # ------------------------------------------------------------------
+    elif [ "$VARIATION" = "3" ]; then
+        chcon -R -t bin_t "$APP_DIR"
+        cat > "$APP" << EOF
+#!/bin/bash
+# Script necesita acceso al directorio padre
+ls -la /opt/acme >> /tmp/acme-start.log 2>&1
+echo "ACME application running (PID \$\$)" >> /var/log/acme-app.log
+exec sleep infinity
+EOF
+        chmod 755 "$APP"
+        chcon -t user_home_t "$APP_DIR"  # Directorio con contexto malo
+        cat > "$SERVICE" << EOF
+[Unit]
+Description=ACME Internal Application
+After=network.target
+
+[Service]
+ExecStart=$APP
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+        {
+            echo "VARIACIÓN 3: Directorio /opt/acme/bin tiene contexto user_home_t"
+        } >> "$LOG"
+
+    # ------------------------------------------------------------------
+    # VARIACIÓN 4: Dominio SELinux denegado (solo para sistemas enforcing)
+    # ------------------------------------------------------------------
+    elif [ "$VARIATION" = "4" ]; then
+        # Crear política que falle
+        cat > /etc/selinux/local/bin/acme-fail.te << EOF
+policy_module(acme-fail, 1.0)
+dontaudit unconfined_service_t bin_t:file { execute };
+EOF
+        
+        checkmodule -M -m -o /etc/selinux/local/bin/acme-fail.mod /etc/selinux/local/bin/acme-fail.te
+        semodule_package -o /etc/selinux/local/bin/acme-fail.pp -m /etc/selinux/local/bin/acme-fail.mod
+        semodule -i /etc/selinux/local/bin/acme-fail.pp
+        
+        chcon -t bin_t "$APP"
+        cat > "$SERVICE" << EOF
+[Unit]
+Description=ACME Internal Application
+After=network.target
+
+[Service]
+ExecStart=$APP
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+        {
+            echo "VARIACIÓN 4: Política dontaudit bloquea unconfined_service_t"
+        } >> "$LOG"
+    fi
+
+    # ------------------------------------------------------------------
+    # CONFIGURAR Y PROBAR SERVICIO
+    # ------------------------------------------------------------------
+    systemctl daemon-reload
+    systemctl enable acme-app.service >> "$LOG" 2>&1
+    systemctl start acme-app.service >> "$LOG" 2>&1 || true
 
     {
-        echo "Contexto actual del binario:"
-        ls -Z "$APP"
-        echo "Estado del servicio:"
-        systemctl status acme-app
-        echo "Pruebas sugeridas:"
-        echo "  - getenforce"
-        echo "  - journalctl -xeu acme-app"
-        echo "  - ls -Z /opt/acme/bin/acme-app.sh"
-        echo "  - restorecon -v /opt/acme/bin/acme-app.sh"
+        echo "=== DIAGNÓSTICO ==="
+        echo "getenforce: $(getenforce)"
+        echo "Contexto app: $(ls -Z "$APP")"
+        echo "Estado servicio: $(systemctl is-active acme-app.service)"
+        echo "Solución esperada:"
+        echo "  journalctl -xeu acme-app"
+        echo "  ausearch -m avc -ts recent"
+        echo "  restorecon -v $APP"
+        echo "Variación aplicada: $VARIATION"
     } >> "$LOG"
 
-    echo "Lab J05 inyectado. El servicio existe, pero SELinux impide su ejecución."
+    echo "✅ LAB J05-$VARIATION inyectado (SELinux bloqueando acme-app.service)"
+    echo "📄 Detalles: $LOG"
 }
 
 
