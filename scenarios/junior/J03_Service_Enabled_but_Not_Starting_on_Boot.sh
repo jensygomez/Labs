@@ -53,9 +53,8 @@ show_ticket() {
     printf "\nEjecutar con --apply para inyectar el fallo del servicio...\n"
 }
 
-
 # ==============================================================================
-# Función 2: Aplicar fallo para LAB J03
+# Función 2: Aplicar fallo para LAB J03 (VARIACIÓN ALEATORIA - SIMPLIFICADA)
 # ==============================================================================
 apply_lab() {
     local LOG="/var/log/lab_j03.log"
@@ -63,16 +62,32 @@ apply_lab() {
     local SERVICE_DIR="/opt/j03-demo"
     local READY_DIR="/etc/j03"
     local READY_FLAG="$READY_DIR/ready.flag"
+    local CONFLICT_SERVICE="/etc/systemd/system/j03-conflict.service"
+    
+    # Determinar variación aleatoriamente (1-4) o usar la especificada
+    local VARIATION
+    if [ -n "$2" ] && [[ "$2" =~ ^[1-4]$ ]]; then
+        VARIATION="$2"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J03: Variación especificada manualmente ($VARIATION)" >> "$LOG"
+    else
+        # Generar número aleatorio entre 1 y 4
+        VARIATION=$(( RANDOM % 4 + 1 ))
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J03: Variación aleatoria seleccionada ($VARIATION)" >> "$LOG"
+    fi
 
-    {
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J03: Iniciando inyección de fallo"
-    } >> "$LOG"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J03: Iniciando inyección de fallo (Variación $VARIATION)" >> "$LOG"
 
     # Validación root
     if [ "$EUID" -ne 0 ]; then
         echo "ERROR: Ejecutar como root" | tee -a "$LOG"
         return 1
     fi
+
+    # Limpiar posibles configuraciones previas
+    systemctl stop j03-demo.service j03-conflict.service 2>/dev/null
+    systemctl disable j03-demo.service j03-conflict.service 2>/dev/null
+    rm -f "$SERVICE_FILE" "$CONFLICT_SERVICE"
+    rm -rf "$READY_DIR"
 
     # ------------------------------------------------------------------
     # 1) Crear script del servicio (simple y estable)
@@ -81,8 +96,10 @@ apply_lab() {
 
     cat > "$SERVICE_DIR/start.sh" << 'EOF'
 #!/bin/bash
+COUNTER=0
 while true; do
-    echo "$(date '+%F %T') J03 demo service running" >> /var/log/j03-demo.log
+    echo "$(date '+%F %T') J03 demo service running (iteration $COUNTER)" >> /var/log/j03-demo.log
+    COUNTER=$((COUNTER + 1))
     sleep 5
 done
 EOF
@@ -90,64 +107,153 @@ EOF
     chmod +x "$SERVICE_DIR/start.sh"
 
     # ------------------------------------------------------------------
-    # 2) Crear unidad systemd con ConditionPathExists
+    # VARIACIÓN 1: Original - Condición con flag que desaparece
     # ------------------------------------------------------------------
-    cat > "$SERVICE_FILE" << 'EOF'
+    if [ "$VARIATION" = "1" ]; then
+        cat > "$SERVICE_FILE" << 'EOF'
 [Unit]
-Description=J03 Demo Internal Service
+Description=J03 Demo Service - Conditional Flag Check
 ConditionPathExists=/etc/j03/ready.flag
 
 [Service]
 Type=simple
 ExecStart=/opt/j03-demo/start.sh
+Restart=on-failure
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-    # ------------------------------------------------------------------
-    # 3) Preparar condición (flag presente ANTES del reboot)
-    # ------------------------------------------------------------------
-    mkdir -p "$READY_DIR"
-    echo "ready" > "$READY_FLAG"
+        mkdir -p "$READY_DIR"
+        echo "ready" > "$READY_FLAG"
+        
+        systemctl daemon-reload
+        systemctl enable j03-demo.service
+        systemctl restart j03-demo.service
+        
+        # Inyectar fallo: eliminar flag tras reinicio
+        rm -f "$READY_FLAG"
+        
+        echo "VARIACIÓN 1: Flag condicional configurado y removido" >> "$LOG"
 
     # ------------------------------------------------------------------
-    # 4) Activar servicio
+    # VARIACIÓN 2: Conflicto de dependencias cíclicas
     # ------------------------------------------------------------------
-    systemctl daemon-reexec
-    systemctl daemon-reload
-    systemctl enable j03-demo.service
+    elif [ "$VARIATION" = "2" ]; then
+        cat > "$SERVICE_FILE" << 'EOF'
+[Unit]
+Description=J03 Demo Service - Circular Dependency
+After=j03-conflict.service
+Requires=j03-conflict.service
 
-    # Arranque inicial exitoso
-    systemctl restart j03-demo.service
+[Service]
+Type=simple
+ExecStart=/opt/j03-demo/start.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+        # Crear servicio conflictivo que depende del principal
+        cat > "$CONFLICT_SERVICE" << 'EOF'
+[Unit]
+Description=J03 Conflict Service - Circular Dependency
+After=j03-demo.service
+Requires=j03-demo.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/true
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+        # Habilitar ambos (creando dependencia circular)
+        systemctl daemon-reload
+        systemctl enable j03-demo.service
+        systemctl enable j03-conflict.service
+        
+        # Iniciar manualmente funciona (con orden específica)
+        systemctl start j03-conflict.service
+        systemctl start j03-demo.service
+        
+        echo "VARIACIÓN 2: Dependencia circular configurada" >> "$LOG"
 
     # ------------------------------------------------------------------
-    # 5) Inyectar el fallo real
-    #    El flag se elimina → tras reboot el servicio será omitido
+    # VARIACIÓN 3: Target incorrecto en [Install]
     # ------------------------------------------------------------------
-    rm -f "$READY_FLAG"
+    elif [ "$VARIATION" = "3" ]; then
+        cat > "$SERVICE_FILE" << 'EOF'
+[Unit]
+Description=J03 Demo Service - Wrong Target
 
-    {
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Flag eliminado: $READY_FLAG"
-        echo "Servicio arrancará ahora, pero será omitido tras reboot"
-        echo "Pruebas sugeridas:"
-        echo "  - systemctl status j03-demo"
-        echo "  - reboot"
-        echo "  - systemctl status j03-demo"
-    } >> "$LOG"
+[Service]
+Type=simple
+ExecStart=/opt/j03-demo/start.sh
+Restart=on-failure
+RestartSec=5
 
-    echo "Lab J03 inyectado. Reboot el sistema para observar el fallo."
+[Install]
+WantedBy=graphical.target
+EOF
+
+        systemctl daemon-reload
+        systemctl enable j03-demo.service
+        systemctl start j03-demo.service
+        
+        echo "VARIACIÓN 3: Target gráfico configurado en servidor sin GUI" >> "$LOG"
+
+    # ------------------------------------------------------------------
+    # VARIACIÓN 4: Timeout de inicio demasiado corto
+    # ------------------------------------------------------------------
+    elif [ "$VARIATION" = "4" ]; then
+        cat > "$SERVICE_FILE" << 'EOF'
+[Unit]
+Description=J03 Demo Service - Startup Timeout
+
+[Service]
+Type=simple
+ExecStart=/bin/bash -c "sleep 45; /opt/j03-demo/start.sh"
+TimeoutStartSec=10
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+        systemctl daemon-reload
+        systemctl enable j03-demo.service
+        systemctl start j03-demo.service
+        
+        echo "VARIACIÓN 4: Timeout insuficiente configurado (10s vs 45s sleep)" >> "$LOG"
+    fi
+
+    # ------------------------------------------------------------------
+    # Estado final mínimo
+    # ------------------------------------------------------------------
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J03: Configuración completada (Variación $VARIATION)" >> "$LOG"
+    
+    # Solo mostrar mensaje mínimo al usuario
+    echo "✅ LAB J03 configurado (Variación $VARIATION)"
+    echo "📄 Log: $LOG"
+    echo ""
+    echo "💡 Ejecuta sin argumentos para ver el ticket del laboratorio"
 }
-
 
 # ==============================================================================
 # Ejecución
 # ==============================================================================
 case "${1:-}" in
     --apply)
-        apply_lab
+        apply_lab "$@"
         ;;
     *)
-        show_ticket
+        show_ticket  # Esta función ya muestra toda la información necesaria
         ;;
 esac
