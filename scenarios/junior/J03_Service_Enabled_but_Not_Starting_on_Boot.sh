@@ -251,7 +251,7 @@ EOF
 # ==============================================================================
 case "${1:-}" in
     --apply)
-        apply_lab "$@"
+        apply_lab
         ;;
     *)
         show_ticket  # Esta función ya muestra toda la información necesaria
