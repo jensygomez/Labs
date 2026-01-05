@@ -229,8 +229,8 @@ EOF
 Description=J03 Demo Service - Startup Timeout
 
 [Service]
-Type=simple
-ExecStart=/bin/bash -c "sleep 45; /opt/j03-demo/start.sh"
+Type=forking
+ExecStart=/opt/j03-demo/slow-start.sh
 TimeoutStartSec=10
 Restart=on-failure
 RestartSec=5
@@ -239,14 +239,22 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
+        # Crear el script lento
+        cat > /opt/j03-demo/slow-start.sh << 'EOF'
+#!/bin/bash
+(sleep 45; /opt/j03-demo/start.sh)&
+sleep 1000
+EOF
+        chmod +x /opt/j03-demo/slow-start.sh
+            
         systemctl daemon-reload
         systemctl enable j03-demo.service
-        systemctl start j03-demo.service
-        
+
         {
-            echo "VARIACIÓN 4: Timeout insuficiente configurado"
-            echo "FALLO: TimeoutStartSec=10 pero servicio tarda 45s en iniciar"
+            echo "VARIACIÓN 4: Type=forking + slow-start.sh → TIMEOUT 10s"
+            echo "FALLO: Servicio tarda >10s, systemd mata y reintenta"
         } >> "$LOG"
+
     fi
 
     # ------------------------------------------------------------------

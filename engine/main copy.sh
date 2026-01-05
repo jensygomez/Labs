@@ -98,6 +98,7 @@ update_lab_counter() {
 # Construir ruta del script según nivel
 # ------------------------------------------------------------------------------
 build_patch_path() {
+    # LABS_DIR apunta a la carpeta principal de escenarios
     LABS_DIR="$(realpath "$BASE_DIR/../scenarios")"
     patch_path="$LABS_DIR/${SELECTED_LAB_LEVEL,,}/$SELECTED_LAB_SCRIPT"
 
@@ -123,6 +124,7 @@ show_lab_ticket() {
 apply_lab_remote() {
     echo -e "${CYAN}Copiando laboratorio $SELECTED_LAB a la VM...${RESET}"
 
+    # Copiamos el script del lab a la VM
     scp -q -i "$SSH_KEY" -o StrictHostKeyChecking=no \
         "$patch_path" "$VM_USER@$VM_HOST:/tmp/lab.sh"
 
@@ -137,25 +139,6 @@ rm -f /tmp/lab.sh
 EOF
 }
 
-# ------------------------------------------------------------------------------
-# Reboot automático post-laboratorio (GLOBAL para todos los labs)
-# ------------------------------------------------------------------------------
-trigger_vm_reboot() {
-    echo -e "${CYAN}🔄 Iniciando reboot automático de la VM...${RESET}"
-    echo -e "${YELLOW}El laboratorio estará listo en ~30 segundos${RESET}"
-    
-    ssh -T -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" << EOF
-echo "LAB $SELECTED_LAB aplicado - listo para diagnóstico" | sudo tee -a /var/log/lab_engine.log
-echo 'Reboot automático activado por Labs Engine...'
-sudo wall "🔄 REBOOT: Lab $SELECTED_LAB configurado. Conéctate en 30s."
-sleep 5
-sudo reboot
-EOF
-    
-    echo -e "${GREEN}✅ VM reiniciándose automáticamente...${RESET}"
-    echo -e "${YELLOW}Conéctate cuando esté arriba:${RESET}"
-    echo "    ssh -i $SSH_KEY $VM_USER@$VM_HOST"
-}
 
 # ------------------------------------------------------------------------------
 # Mensaje final
@@ -171,30 +154,29 @@ print_completion() {
     echo -e "${GREEN}¡A practicar! 🚀${RESET}"
 }
 
+
+
 # ==============================================================================
 # BLOQUE PRINCIPAL - EJECUCIÓN
 # ==============================================================================
 echo "Leyendo la base de datos"
 load_db
 sleep 0.5
-echo "Seleccionando laboratorio..."
+echo "Selecionando la Base de datos"
 select_lab
 sleep 0.5
 update_lab_counter
 sleep 0.5
-echo "Construyendo path del script..."
+echo "actualizando el contador"
 build_patch_path
 sleep 0.5
+echo "construyendo el path"
 verify_connection
 sleep 0.5
-
-# Mostrar ticket ANTES de aplicar
-show_lab_ticket
-
-echo "Aplicando laboratorio remotamente..."
+echo "Verificando conexion"
 apply_lab_remote
-
-# 🔄 REBOOT AUTOMÁTICO DESPUÉS DE APLICAR
-trigger_vm_reboot
-
+sleep 0.5
+echo "aplicando el lab remotamente"
 print_completion
+sleep 0.5
+echo "completado"
