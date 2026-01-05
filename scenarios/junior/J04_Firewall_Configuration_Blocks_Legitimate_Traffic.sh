@@ -54,64 +54,187 @@ show_ticket() {
 }
 
 
+
+
 # ==============================================================================
-# Función 2: Aplicar fallo para LAB J04
+# Función 2: Configurar servicio personalizado
+# ==============================================================================
+setup_custom_service() {
+    local port=$1
+    local service_name="custom-app-$port"
+    
+    # Crear definición de servicio personalizado
+    cat > /etc/firewalld/services/${service_name}.xml << EOF
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>Custom Application Port $port</short>
+  <description>Servicio personalizado para lab J04 en puerto $port</description>
+  <port protocol="tcp" port="$port"/>
+</service>
+EOF
+    
+    # Iniciar servicio dummy en ese puerto
+    python3 -m http.server $port --directory /tmp &
+    echo $! > /tmp/custom_service_$port.pid
+    
+    echo $service_name
+}
+
+# ==============================================================================
+# Función 3: Aplicar fallo aleatorio
 # ==============================================================================
 apply_lab() {
-    local LOG="/var/log/lab_j04.log"
     local IFACE
     IFACE=$(ip route | awk '/default/ {print $5; exit}')
-
+    
     {
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J04: Iniciando inyección de fallo"
-        echo "Interfaz detectada: $IFACE"
+        echo "Interfaz: $IFACE"
+        echo "Escenario aleatorio: $RANDOM_SCENARIO"
+        echo "========================================"
     } >> "$LOG"
-
+    
     # Validación root
     if [ "$EUID" -ne 0 ]; then
         echo "ERROR: Ejecutar como root" | tee -a "$LOG"
         return 1
     fi
-
-    # ------------------------------------------------------------------
-    # 1) Asegurar servicios base
-    # ------------------------------------------------------------------
+    
+    # Asegurar que firewalld y httpd están activos
     systemctl enable --now firewalld >> "$LOG" 2>&1
     systemctl enable --now httpd >> "$LOG" 2>&1
-
-    # ------------------------------------------------------------------
-    # 2) Forzar zona pública en la interfaz
-    # ------------------------------------------------------------------
-    firewall-cmd --zone=public --change-interface="$IFACE" >> "$LOG" 2>&1
-
-    # ------------------------------------------------------------------
-    # 3) Remover servicio http de la zona pública
-    # ------------------------------------------------------------------
-    firewall-cmd --zone=public --remove-service=http >> "$LOG" 2>&1
-    firewall-cmd --zone=public --remove-service=http --permanent >> "$LOG" 2>&1
+    
+    # Resetear firewall a estado conocido
+    firewall-cmd --runtime-to-permanent >> "$LOG" 2>&1
+    
+    # Escenario aleatorio
+    case $RANDOM_SCENARIO in
+        0)
+            # ESCENARIO 1: HTTP bloqueado (el original)
+            echo "Configurando ESCENARIO 1: HTTP bloqueado" >> "$LOG"
+            firewall-cmd --zone=public --change-interface="$IFACE" >> "$LOG" 2>&1
+            firewall-cmd --zone=public --remove-service=http --permanent >> "$LOG" 2>&1
+            firewall-cmd --reload >> "$LOG" 2>&1
+            
+            {
+                echo "Problema: HTTP (puerto 80) bloqueado"
+                echo "Servicio activo: Apache (httpd)"
+                echo "Zona: public"
+                echo "Servicios permitidos: $(firewall-cmd --zone=public --list-services)"
+            } >> "$LOG"
+            ;;
+            
+        1)
+            # ESCENARIO 2: HTTPS bloqueado
+            echo "Configurando ESCENARIO 2: HTTPS bloqueado" >> "$LOG"
+            firewall-cmd --zone=public --change-interface="$IFACE" >> "$LOG" 2>&1
+            firewall-cmd --zone=public --add-service=http --permanent >> "$LOG" 2>&1
+            firewall-cmd --zone=public --remove-service=https --permanent >> "$LOG" 2>&1
+            
+            # Configurar Apache para HTTPS (simplificado)
+            if ! openssl version &>/dev/null; then
+                yum install -y mod_ssl openssl >> "$LOG" 2>&1
+            fi
+            systemctl restart httpd >> "$LOG" 2>&1
+            
+            firewall-cmd --reload >> "$LOG" 2>&1
+            
+            {
+                echo "Problema: HTTPS (puerto 443) bloqueado"
+                echo "Servicios activos: Apache (http y https configurados)"
+                echo "Zona: public"
+                echo "HTTP permitido, HTTPS bloqueado"
+            } >> "$LOG"
+            ;;
+            
+        2)
+            # ESCENARIO 3: Servicio personalizado bloqueado
+            RANDOM_PORT=$((1024 + RANDOM % 30000))
+            echo "Configurando ESCENARIO 3: Servicio personalizado en puerto $RANDOM_PORT" >> "$LOG"
+            
+            SERVICE_NAME=$(setup_custom_service $RANDOM_PORT)
+            
+            firewall-cmd --zone=public --change-interface="$IFACE" >> "$LOG" 2>&1
+            firewall-cmd --zone=public --add-service=http --permanent >> "$LOG" 2>&1
+            firewall-cmd --zone=public --add-service=https --permanent >> "$LOG" 2>&1
+            firewall-cmd --reload >> "$LOG" 2>&1
+            
+            {
+                echo "Problema: Servicio personalizado en puerto $RANDOM_PORT bloqueado"
+                echo "Servicio activo: Python HTTP server en puerto $RANDOM_PORT"
+                echo "PID: $(cat /tmp/custom_service_$RANDOM_PORT.pid 2>/dev/null)"
+                echo "Zona: public"
+                echo "Servicios permitidos: $(firewall-cmd --zone=public --list-services)"
+                echo "NOTA: Este servicio NO está en la lista de servicios permitidos"
+            } >> "$LOG"
+            ;;
+            
+        3)
+            # ESCENARIO 4: Zona incorrecta
+            echo "Configurando ESCENARIO 4: Zona bloqueada" >> "$LOG"
+            
+            # Mover a zona block (la más restrictiva)
+            firewall-cmd --zone=block --change-interface="$IFACE" >> "$LOG" 2>&1
+            firewall-cmd --zone=block --add-service=ssh --permanent >> "$LOG" 2>&1  # Solo SSH para administración
+            
+            {
+                echo "Problema: Interfaz en zona 'block'"
+                echo "Servicio activo: Apache (httpd)"
+                echo "Zona actual: block (muy restrictiva)"
+                echo "Servicios permitidos en block: $(firewall-cmd --zone=block --list-services)"
+                echo "Consejo: Revisa en qué zona está la interfaz"
+            } >> "$LOG"
+            ;;
+    esac
+    
     firewall-cmd --reload >> "$LOG" 2>&1
-
-    {
-        echo "Servicio http removido de la zona public"
-        echo "Estado actual de la zona public:"
-        firewall-cmd --zone=public --list-all
-        echo "Pruebas sugeridas:"
-        echo "  - systemctl status httpd"
-        echo "  - ss -tulnp | grep :80"
-        echo "  - firewall-cmd --get-active-zones"
-        echo "  - curl http://localhost"
-    } >> "$LOG"
-
-    echo "Lab J04 inyectado. El servicio funciona, pero el firewall bloquea el acceso."
+    
+    # Mostrar resumen al usuario
+    echo "========================================" | tee -a "$LOG"
+    echo "LAB J04 CONFIGURADO - ESCENARIO $RANDOM_SCENARIO" | tee -a "$LOG"
+    echo "Log completo: $LOG" | tee -a "$LOG"
+    echo "" | tee -a "$LOG"
+    echo "PISTAS INICIALES:" | tee -a "$LOG"
+    echo "1. Verifica servicios activos: systemctl list-units | grep -E '(http|firewalld)'" | tee -a "$LOG"
+    echo "2. Verifica puertos en escucha: ss -tlnp" | tee -a "$LOG"
+    echo "3. Revisa configuración de firewall: firewall-cmd --get-active-zones" | tee -a "$LOG"
+    echo "4. Consulta el log para más detalles: tail -20 $LOG" | tee -a "$LOG"
+    echo "========================================" | tee -a "$LOG"
 }
 
+# ==============================================================================
+# Función 4: Limpiar lab (opcional)
+# ==============================================================================
+cleanup_lab() {
+    echo "Limpiando configuración del lab..." | tee -a "$LOG"
+    
+    # Matar servicios personalizados
+    pkill -f "python3 -m http.server" 2>/dev/null
+    rm -f /tmp/custom_service_*.pid 2>/dev/null
+    
+    # Remover servicios personalizados de firewalld
+    rm -f /etc/firewalld/services/custom-app-*.xml 2>/dev/null
+    
+    # Restaurar zona public con servicios básicos
+    IFACE=$(ip route | awk '/default/ {print $5; exit}')
+    firewall-cmd --zone=public --change-interface="$IFACE" --permanent >> "$LOG" 2>&1
+    firewall-cmd --zone=public --add-service=ssh --permanent >> "$LOG" 2>&1
+    firewall-cmd --zone=public --add-service=http --permanent >> "$LOG" 2>&1
+    firewall-cmd --zone=public --add-service=https --permanent >> "$LOG" 2>&1
+    firewall-cmd --reload >> "$LOG" 2>&1
+    
+    echo "Lab limpiado. Firewall restaurado a estado normal." | tee -a "$LOG"
+}
 
 # ==============================================================================
-# Ejecución
+# Ejecución principal
 # ==============================================================================
 case "${1:-}" in
     --apply)
         apply_lab
+        ;;
+    --cleanup)
+        cleanup_lab
         ;;
     *)
         show_ticket
