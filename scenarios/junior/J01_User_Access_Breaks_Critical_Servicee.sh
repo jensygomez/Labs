@@ -104,7 +104,8 @@ apply_lab() {
 Description=Internal API Service
 
 [Service]
-User=${SERVICE_USER}  # Usuario que NO existe
+# Usuario que NO existe
+User=${SERVICE_USER}  
 ExecStart=${SERVICE_DIR}/start.sh
 
 [Install]
