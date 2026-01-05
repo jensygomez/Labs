@@ -72,7 +72,7 @@ apply_lab() {
     
     # Determinar variación aleatoriamente (1-4) o usar la especificada
     local VARIATION
-    if [ -n "$2" ] && [[ "$2" =~ ^[1-4]$ ]]; then
+    if [ -n "${2:-}" ] && [[ "${2:-}" =~ ^[1-4]$ ]]; then
         VARIATION="$2"
     else
         # Generar número aleatorio entre 1 y 4
@@ -274,6 +274,6 @@ case "${1:-}" in
         apply_lab
         ;;
     *)
-        show_ticket  # Esta función ya muestra toda la información necesaria
+        show_ticket
         ;;
 esac
