@@ -11,7 +11,7 @@ set -uo pipefail
 show_ticket() {
     clear
     printf "\033[1;36m========================================================\033[0m\n"
-    printf "\033[1;36m   LAB J01 – JUNIOR – APPLICATION FAILS TO START\033[0m\n"
+    printf "\033[1;36m   LAB J01 – JUNIOR\033[0m\n"
     printf "\033[1;36m========================================================\033[0m\n\n"
 
     printf "\033[1;33mEscenario:\033[0m\n"
