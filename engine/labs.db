@@ -1,5 +1,5 @@
 ID|LEVEL|SCRIPT|USES|STATUS
-J01|Junior|J01_User_Access_Breaks_Critical_Servicee.sh|1|active
+J01|Junior|J01_User_Access_Breaks_Critical_Servicee.sh|0|active
 J02|Junior|J02_Disk_Usage_Reaches_100_Affecting_Applications.sh|2|active
 J03|Junior|J04_Firewall_Configuration_Blocks_Legitimate_Traffic.sh|1|active
 J04|Junior|J04_Firewall_Configuration_Blocks_Legitimate_Traffic.sh|2|active
