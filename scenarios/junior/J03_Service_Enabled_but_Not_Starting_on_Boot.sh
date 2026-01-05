@@ -54,7 +54,7 @@ show_ticket() {
 }
 
 # ==============================================================================
-# Función 2: Aplicar fallo para LAB J03 (VARIACIÓN ALEATORIA - SIMPLIFICADA)
+# Función 2: Aplicar fallo para LAB J03 (VARIACIÓN ALEATORIA - CORREGIDA)
 # ==============================================================================
 apply_lab() {
     local LOG="/var/log/lab_j03.log"
@@ -64,24 +64,26 @@ apply_lab() {
     local READY_FLAG="$READY_DIR/ready.flag"
     local CONFLICT_SERVICE="/etc/systemd/system/j03-conflict.service"
     
+    # Validación root PRIMERO (antes de cualquier operación)
+    if [ "$EUID" -ne 0 ]; then
+        echo "ERROR: Ejecutar como root"
+        return 1
+    fi
+    
     # Determinar variación aleatoriamente (1-4) o usar la especificada
     local VARIATION
     if [ -n "$2" ] && [[ "$2" =~ ^[1-4]$ ]]; then
         VARIATION="$2"
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J03: Variación especificada manualmente ($VARIATION)" >> "$LOG"
     else
         # Generar número aleatorio entre 1 y 4
         VARIATION=$(( RANDOM % 4 + 1 ))
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J03: Variación aleatoria seleccionada ($VARIATION)" >> "$LOG"
     fi
-
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J03: Iniciando inyección de fallo (Variación $VARIATION)" >> "$LOG"
-
-    # Validación root
-    if [ "$EUID" -ne 0 ]; then
-        echo "ERROR: Ejecutar como root" | tee -a "$LOG"
-        return 1
-    fi
+    
+    # AHORA empezamos a escribir en el log (después de definir todo)
+    {
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J03: Iniciando inyección de fallo"
+        echo "Variación seleccionada: $VARIATION"
+    } >> "$LOG"
 
     # Limpiar posibles configuraciones previas
     systemctl stop j03-demo.service j03-conflict.service 2>/dev/null
@@ -135,7 +137,10 @@ EOF
         # Inyectar fallo: eliminar flag tras reinicio
         rm -f "$READY_FLAG"
         
-        echo "VARIACIÓN 1: Flag condicional configurado y removido" >> "$LOG"
+        {
+            echo "VARIACIÓN 1: Flag condicional configurado y removido"
+            echo "FALLO: ConditionPathExists=/etc/j03/ready.flag"
+        } >> "$LOG"
 
     # ------------------------------------------------------------------
     # VARIACIÓN 2: Conflicto de dependencias cíclicas
@@ -182,7 +187,10 @@ EOF
         systemctl start j03-conflict.service
         systemctl start j03-demo.service
         
-        echo "VARIACIÓN 2: Dependencia circular configurada" >> "$LOG"
+        {
+            echo "VARIACIÓN 2: Dependencia circular configurada"
+            echo "FALLO: Dependencia circular entre j03-demo y j03-conflict"
+        } >> "$LOG"
 
     # ------------------------------------------------------------------
     # VARIACIÓN 3: Target incorrecto en [Install]
@@ -206,7 +214,10 @@ EOF
         systemctl enable j03-demo.service
         systemctl start j03-demo.service
         
-        echo "VARIACIÓN 3: Target gráfico configurado en servidor sin GUI" >> "$LOG"
+        {
+            echo "VARIACIÓN 3: Target gráfico configurado en servidor sin GUI"
+            echo "FALLO: WantedBy=graphical.target (el sistema usa multi-user.target)"
+        } >> "$LOG"
 
     # ------------------------------------------------------------------
     # VARIACIÓN 4: Timeout de inicio demasiado corto
@@ -231,13 +242,22 @@ EOF
         systemctl enable j03-demo.service
         systemctl start j03-demo.service
         
-        echo "VARIACIÓN 4: Timeout insuficiente configurado (10s vs 45s sleep)" >> "$LOG"
+        {
+            echo "VARIACIÓN 4: Timeout insuficiente configurado"
+            echo "FALLO: TimeoutStartSec=10 pero servicio tarda 45s en iniciar"
+        } >> "$LOG"
     fi
 
     # ------------------------------------------------------------------
-    # Estado final mínimo
+    # Estado final y cierre
     # ------------------------------------------------------------------
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J03: Configuración completada (Variación $VARIATION)" >> "$LOG"
+    {
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J03: Configuración completada"
+        echo "Variación aplicada: $VARIATION/4"
+        echo "Servicio: j03-demo.service"
+        echo "Estado actual: $(systemctl is-active j03-demo.service 2>/dev/null || echo 'inactive')"
+        echo "Habilitado: $(systemctl is-enabled j03-demo.service 2>/dev/null || echo 'disabled')"
+    } >> "$LOG"
     
     # Solo mostrar mensaje mínimo al usuario
     echo "✅ LAB J03 configurado (Variación $VARIATION)"
