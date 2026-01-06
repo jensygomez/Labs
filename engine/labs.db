@@ -3,5 +3,5 @@ J01|Junior|J01_User_Access_Breaks_Critical_Servicee.sh|2|active
 J02|Junior|J02_Disk_Usage_Reaches_100_Affecting_Applications.sh|2|active
 J03|Junior|J03_Service_Enabled_but_Not_Starting_on_Boot.sh|2|active
 J04|Junior|J04_Firewall_Configuration_Blocks_Legitimate_Traffic.sh|2|active
-J05|Junior|J05_SELinux_Context_Prevents_Application_Execution.sh|1|active
+J05|Junior|J05_SELinux_Context_Prevents_Application_Execution.sh|2|active
 J06|Junior|J06_Incorrect_Hostname_and_DNS_Resolution_Issue.sh|10|active
