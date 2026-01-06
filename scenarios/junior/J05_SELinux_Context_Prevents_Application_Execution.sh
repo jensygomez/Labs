@@ -68,16 +68,18 @@ apply_lab() {
     local APP_DIR="/opt/acme/bin"
     local APP="$APP_DIR/acme-app.sh"
     local SERVICE="/etc/systemd/system/acme-app.service"
-    
+    local SELINUX_BASE="/etc/selinux/local"
+    local SELINUX_BIN="$SELINUX_BASE/bin"
+
     # Validación root
     if [ "$EUID" -ne 0 ]; then
         echo "ERROR: Ejecutar como root" | tee -a "$LOG"
         return 1
     fi
-    
+
     # VARIACIÓN ALEATORIA (1-4)
     local VARIATION=$(( RANDOM % 4 + 1 ))
-    
+
     {
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] LAB J05: Iniciando variación $VARIATION"
     } >> "$LOG"
@@ -85,8 +87,12 @@ apply_lab() {
     # LIMPIAR configuraciones previas
     systemctl stop acme-app 2>/dev/null || true
     systemctl disable acme-app 2>/dev/null || true
-    rm -f "$SERVICE" "$APP"
+    rm -f "$SERVICE"
     rm -rf "$APP_DIR"
+
+    # LIMPIAR políticas SELinux previas (si existen)
+    semodule -r acme-fail 2>/dev/null || true
+    rm -rf "$SELINUX_BASE"
 
     # Crear aplicación base
     mkdir -p "$APP_DIR"
@@ -114,26 +120,18 @@ Restart=on-failure
 [Install]
 WantedBy=multi-user.target
 EOF
-        {
-            echo "VARIACIÓN 1: Contexto SELinux 'default_t' (necesita restorecon)"
-        } >> "$LOG"
+        echo "VARIACIÓN 1: Contexto SELinux 'default_t'" >> "$LOG"
 
     # ------------------------------------------------------------------
-    # VARIACIÓN 2: SELinux deniega escritura log (audit log)
+    # VARIACIÓN 2: SELinux deniega escritura de logs
     # ------------------------------------------------------------------
     elif [ "$VARIATION" = "2" ]; then
-        chcon -t var_log_t "$APP"  # App OK
-        mkdir -p /var/log
-        chcon -t user_tmp_t /var/log/acme-app.log 2>/dev/null || true
-        cat > "$APP" << EOF
-#!/bin/bash
-echo "ACME application running (PID \$\$)" >> /var/log/acme-app.log
-exec sleep infinity
-EOF
-        chmod 755 "$APP"
+        chcon -t bin_t "$APP"
+        touch /var/log/acme-app.log
+        chcon -t user_tmp_t /var/log/acme-app.log
         cat > "$SERVICE" << EOF
 [Unit]
-Description=ACME Internal Application  
+Description=ACME Internal Application
 After=network.target
 
 [Service]
@@ -143,24 +141,14 @@ Restart=on-failure
 [Install]
 WantedBy=multi-user.target
 EOF
-        {
-            echo "VARIACIÓN 2: /var/log/acme-app.log tiene contexto user_tmp_t"
-        } >> "$LOG"
+        echo "VARIACIÓN 2: Log con contexto user_tmp_t" >> "$LOG"
 
     # ------------------------------------------------------------------
-    # VARIACIÓN 3: Permisos SELinux en directorio (semanage permissive)
+    # VARIACIÓN 3: Contexto incorrecto en directorio
     # ------------------------------------------------------------------
     elif [ "$VARIATION" = "3" ]; then
         chcon -R -t bin_t "$APP_DIR"
-        cat > "$APP" << EOF
-#!/bin/bash
-# Script necesita acceso al directorio padre
-ls -la /opt/acme >> /tmp/acme-start.log 2>&1
-echo "ACME application running (PID \$\$)" >> /var/log/acme-app.log
-exec sleep infinity
-EOF
-        chmod 755 "$APP"
-        chcon -t user_home_t "$APP_DIR"  # Directorio con contexto malo
+        chcon -t user_home_t "$APP_DIR"
         cat > "$SERVICE" << EOF
 [Unit]
 Description=ACME Internal Application
@@ -173,25 +161,39 @@ Restart=on-failure
 [Install]
 WantedBy=multi-user.target
 EOF
-        {
-            echo "VARIACIÓN 3: Directorio /opt/acme/bin tiene contexto user_home_t"
-        } >> "$LOG"
+        echo "VARIACIÓN 3: Directorio con contexto user_home_t" >> "$LOG"
 
     # ------------------------------------------------------------------
-    # VARIACIÓN 4: Dominio SELinux denegado (solo para sistemas enforcing)
+    # VARIACIÓN 4: Política SELinux personalizada (robusta)
     # ------------------------------------------------------------------
     elif [ "$VARIATION" = "4" ]; then
-        # Crear política que falle
-        cat > /etc/selinux/local/bin/acme-fail.te << EOF
+        # Garantizar estructura SELinux
+        mkdir -p "$SELINUX_BIN"
+
+        cat > "$SELINUX_BIN/acme-fail.te" << EOF
 policy_module(acme-fail, 1.0)
-dontaudit unconfined_service_t bin_t:file { execute };
+
+require {
+    type unconfined_service_t;
+    type bin_t;
+    class file execute;
+}
+
+dontaudit unconfined_service_t bin_t:file execute;
 EOF
-        
-        checkmodule -M -m -o /etc/selinux/local/bin/acme-fail.mod /etc/selinux/local/bin/acme-fail.te
-        semodule_package -o /etc/selinux/local/bin/acme-fail.pp -m /etc/selinux/local/bin/acme-fail.mod
-        semodule -i /etc/selinux/local/bin/acme-fail.pp
-        
+
+        checkmodule -M -m \
+            -o "$SELINUX_BIN/acme-fail.mod" \
+            "$SELINUX_BIN/acme-fail.te"
+
+        semodule_package \
+            -o "$SELINUX_BIN/acme-fail.pp" \
+            -m "$SELINUX_BIN/acme-fail.mod"
+
+        semodule -i "$SELINUX_BIN/acme-fail.pp"
+
         chcon -t bin_t "$APP"
+
         cat > "$SERVICE" << EOF
 [Unit]
 Description=ACME Internal Application
@@ -204,9 +206,7 @@ Restart=on-failure
 [Install]
 WantedBy=multi-user.target
 EOF
-        {
-            echo "VARIACIÓN 4: Política dontaudit bloquea unconfined_service_t"
-        } >> "$LOG"
+        echo "VARIACIÓN 4: Política SELinux dontaudit instalada" >> "$LOG"
     fi
 
     # ------------------------------------------------------------------
@@ -221,16 +221,13 @@ EOF
         echo "getenforce: $(getenforce)"
         echo "Contexto app: $(ls -Z "$APP")"
         echo "Estado servicio: $(systemctl is-active acme-app.service)"
-        echo "Solución esperada:"
-        echo "  journalctl -xeu acme-app"
-        echo "  ausearch -m avc -ts recent"
-        echo "  restorecon -v $APP"
         echo "Variación aplicada: $VARIATION"
     } >> "$LOG"
 
     echo "✅ LAB J05-$VARIATION inyectado (SELinux bloqueando acme-app.service)"
     echo "📄 Detalles: $LOG"
 }
+
 
 
 # ==============================================================================
