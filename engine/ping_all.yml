@@ -1,0 +1,8 @@
+---
+- name: Ping a todas las VMs
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Hacer ping
+      ansible.builtin.ping:
