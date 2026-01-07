@@ -1,29 +1,34 @@
+# ==============================================================================
+# VARIANTE 1 — Usuario inexistente
+# ==============================================================================
+
 variant:
-  description: >
+  description: |
     systemd intenta ejecutar un servicio bajo un usuario inexistente,
     causando fallo inmediato al inicio. El servicio está bien configurado,
     el script existe y es ejecutable, pero el UID/GID asignado no existe.
 
   symptoms:
-    - El servicio existe en systemd con unit file válido
-    - `systemctl status` muestra "User not found" o código 227
-    - Journal contiene "Failed to set up machine ID" o "Unknown user"
-    - `getent passwd SERVICE_USER` devuelve vacío
-    - Script y directorio tienen permisos correctos
+    - "\"El servicio existe en systemd con unit file válido\""
+    - "\"`systemctl status` muestra \"User not found\" o código 227\""
+    - "\"Journal contiene \"Failed to set up machine ID\" o \"Unknown user\"\""
+    - "\"`getent passwd SERVICE_USER` devuelve vacío\""
+    - "\"Script y directorio tienen permisos correctos\""
 
-  task: >
+  task: |
     Diagnosticar por qué systemd no puede cambiar al usuario especificado
     en el unit file y recrear el usuario mínimo necesario para que el
     servicio funcione correctamente.
 
   restrictions:
-    - NO ejecutar el servicio como root (User=root)
-    - NO usar usuarios existentes del sistema
-    - NO usar chmod 777 en ningún archivo
-    - La corrección debe persistir tras reboot
+    - "\"NO ejecutar el servicio como root (User=root)\""
+    - "\"NO usar usuarios existentes del sistema\""
+    - "\"NO usar chmod 777 en ningún archivo\""
+    - "\"La corrección debe persistir tras reboot\""
 
   hints:
-    - "`systemctl status SERVICE_NAME` → ¿qué código de error numérico?"
-    - "`journalctl -u SERVICE_NAME -n 10` → busca mensajes de usuario"
-    - "`getent passwd SERVICE_USER` o `id SERVICE_USER` → ¿existe?"
-    - "useradd recrea usuario mínimo sin home ni shell interactivo"
+    - "\"`systemctl status SERVICE_NAME` → ¿qué código de error numérico?\""
+    - "\"`journalctl -u SERVICE_NAME -n 10` → busca mensajes de usuario\""
+    - "\"`getent passwd SERVICE_USER` o `id SERVICE_USER` → ¿existe?\""
+    - "\"useradd recrea usuario mínimo sin home ni shell interactivo\""
+
