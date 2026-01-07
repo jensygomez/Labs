@@ -1,6 +1,9 @@
-- name: Mostrar ticket final
-  shell: |
-    cat > /tmp/J01_ticket.txt << EOF
+---
+- name: Mostrar ticket final EN admin01
+  block:
+    - name: Crear ticket con template heredoc
+      shell: |
+        cat > /tmp/J01_ticket.txt << 'EOF'
 ╔══════════════════════════════════════════════════════════╗
 ║                    LAB J01 - JUNIOR                      ║
 ║                VARIANTE: {{ selected_variant_file }}     ║
@@ -10,18 +13,27 @@
 {{ variant.description }}
 
 🔍 SÍNTOMAS:
-{% for s in variant.symptoms %}
-• {{ s }}
-{% endfor %}
+{{ variant.symptoms | join('\n') }}
 
 🎯 TAREA:
 {{ variant.task }}
 
 ⚠️  RESTRICCIONES:
-{% for r in variant.restrictions %}
-• {{ r }}
-{% endfor %}
+{{ variant.restrictions | join('\n') }}
 
 💡 PISTAS:
-{% for p in variant.hints %}
-• {{ p | replace('SERVICE_USER
+{{ variant.hints | join('\n') | replace('SERVICE_USER', service_user) | replace('SERVICE_NAME', service_name) | replace('SERVICE_DIR', service_dir) }}
+
+═══════════════════════════════════════════════════════════
+📊 RESULTADO: {{ final_state }}
+═══════════════════════════════════════════════════════════
+SSH web01: ssh student@192.168.122.22
+EOF
+      args:
+        executable: /bin/bash
+
+    - name: Mostrar ticket
+      shell: cat /tmp/J01_ticket.txt
+      args:
+        executable: /bin/bash
+  run_once: yes
