@@ -6,7 +6,7 @@
 # Rol:
 # - Orquestador de laboratorios
 # - Menú por nivel (Junior / Junior-Pleno / Senior)
-# - Selección de labs
+# - Asignación AUTOMÁTICA de labs
 # - Métricas de uso
 #
 # Backend único:
@@ -65,8 +65,8 @@ main_menu() {
     read -rp "Opción: " option
 
     case "$option" in
-        1) select_track "junior" ;;
-        2) select_track "junior_pleno" ;;
+        1) assign_lab "junior" ;;
+        2) assign_lab "pleno" ;;
         3)
             echo
             echo "Nivel Senior aún no disponible."
@@ -82,49 +82,51 @@ main_menu() {
 }
 
 # ==============================================================================
-# BLOQUE 3 - SELECCIÓN DE LAB POR TRACK
+# BLOQUE 3 - ASIGNACIÓN AUTOMÁTICA DE LAB
 # ==============================================================================
-select_track() {
+assign_lab() {
     local TRACK="$1"
-    local AVAILABLE=()
+    local CANDIDATES=()
+    local MIN_USES=""
 
     clear
     echo "========================================"
-    echo " Laboratorios disponibles: $TRACK"
+    echo " Asignando laboratorio automáticamente"
+    echo " Nivel: $TRACK"
     echo "========================================"
     echo
 
+    # Buscar labs activos del track con menor USE
     for LAB in "${LABS[@]}"; do
         IFS='|' read -r ID LAB_TRACK LEVEL ARTIFACT USES <<< "$LAB"
+        [[ "$LAB_TRACK" != "$TRACK" ]] && continue
 
-        if [[ "$LAB_TRACK" == "$TRACK" ]]; then
-            AVAILABLE+=("$LAB")
-            printf "%-6s %-40s\n" "$ID" "$LEVEL"
+        if [[ -z "$MIN_USES" || "$USES" -lt "$MIN_USES" ]]; then
+            MIN_USES="$USES"
+            CANDIDATES=("$LAB")
+        elif [[ "$USES" -eq "$MIN_USES" ]]; then
+            CANDIDATES+=("$LAB")
         fi
     done
 
-    [[ "${#AVAILABLE[@]}" -eq 0 ]] && {
-        echo
-        echo "No hay laboratorios disponibles para este nivel."
+    [[ "${#CANDIDATES[@]}" -eq 0 ]] && {
+        echo "No hay laboratorios activos para este nivel."
         sleep 2
         return
     }
 
-    echo
-    read -rp "Ingrese ID del laboratorio (o 'b' para volver): " choice
-    [[ "$choice" == "b" ]] && return
+    # Selección aleatoria entre los menos usados
+    SELECTED="${CANDIDATES[$RANDOM % ${#CANDIDATES[@]}]}"
+    IFS='|' read -r ID LAB_TRACK LEVEL ARTIFACT USES <<< "$SELECTED"
 
-    for LAB in "${AVAILABLE[@]}"; do
-        IFS='|' read -r ID LAB_TRACK LEVEL ARTIFACT USES <<< "$LAB"
-        if [[ "$ID" == "$choice" ]]; then
-            run_lab "$ID" "$ARTIFACT"
-            return
-        fi
-    done
-
+    echo "Laboratorio asignado:"
+    echo "ID        : $ID"
+    echo "Nivel     : $LEVEL"
+    echo "Usos prev.: $USES"
     echo
-    echo "Laboratorio no encontrado."
     sleep 2
+
+    run_lab "$ID" "$ARTIFACT"
 }
 
 # ==============================================================================
