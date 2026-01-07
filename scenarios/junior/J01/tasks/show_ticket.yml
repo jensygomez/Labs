@@ -1,47 +1,51 @@
-- name: Mostrar ticket final EN admin01 (SIMPLE + COLORES)
+- name: Mostrar ticket final EN admin01
   shell: |
-    # Colores
-    RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
-    BLUE='\033[0;34m'; PURPLE='\033[0;35m'; CYAN='\033[0;36m'
-    WHITE='\033[1;37m'; NC='\033[0m'
+    # Header
+    echo "╔══════════════════════════════════════════════════════════╗" > /tmp/J01_ticket.txt
+    echo "║                    LAB J01 - JUNIOR                      ║" >> /tmp/J01_ticket.txt
+    echo "║                VARIANTE: {{ selected_variant_file }}     ║" >> /tmp/J01_ticket.txt
+    echo "╚══════════════════════════════════════════════════════════╝" >> /tmp/J01_ticket.txt
+    echo "" >> /tmp/J01_ticket.txt
+    
+    # ESCENARIO
+    echo "📋 ESCENARIO:" >> /tmp/J01_ticket.txt
+    echo "{{ variant.description }}" >> /tmp/J01_ticket.txt
+    echo "" >> /tmp/J01_ticket.txt
+    
+    # SÍNTOMAS
+    echo "🔍 SÍNTOMAS:" >> /tmp/J01_ticket.txt
+    {% for s in variant.symptoms %}
+    echo "• {{ s }}" >> /tmp/J01_ticket.txt
+    {% endfor %}
+    echo "" >> /tmp/J01_ticket.txt
+    
+    # TAREA (FALTABA)
+    echo "🎯 TAREA:" >> /tmp/J01_ticket.txt
+    echo "{{ variant.task }}" >> /tmp/J01_ticket.txt
+    echo "" >> /tmp/J01_ticket.txt
+    
+    # RESTRICCIONES (FALTABA)
+    echo "⚠️  RESTRICCIONES:" >> /tmp/J01_ticket.txt
+    {% for r in variant.restrictions %}
+    echo "• {{ r }}" >> /tmp/J01_ticket.txt
+    {% endfor %}
+    echo "" >> /tmp/J01_ticket.txt
+    
+    # PISTAS (FALTABA)
+    echo "💡 PISTAS:" >> /tmp/J01_ticket.txt
+    {% for p in variant.hints %}
+    echo "• {{ p | replace('SERVICE_USER', service_user) | replace('SERVICE_NAME', service_name) | replace('SERVICE_DIR', service_dir) }}" >> /tmp/J01_ticket.txt
+    {% endfor %}
+    echo "" >> /tmp/J01_ticket.txt
+    
+    # RESULTADO
+    echo "═══════════════════════════════════════════════════════════" >> /tmp/J01_ticket.txt
+    echo "📊 RESULTADO: {{ final_state }}" >> /tmp/J01_ticket.txt
+    echo "═══════════════════════════════════════════════════════════" >> /tmp/J01_ticket.txt
+    echo "SSH web01: ssh student@{{ hostvars['web01'].ansible_host | default('192.168.122.22') }}" >> /tmp/J01_ticket.txt
     
     clear
-    printf "${BLUE}%*s${NC}\n" 60 | tr ' ' '='
-    echo "${WHITE}                    LAB J01 - JUNIOR                      ${NC}"
-    echo "${WHITE}                VARIANTE: ${YELLOW}{{ selected_variant_file }}${NC}               "
-    printf "${BLUE}%*s${NC}\n" 60 | tr ' ' '='
-    echo ""
-    
-    echo "${CYAN}📋 ESCENARIO:${NC}"
-    echo "${CYAN}En Linux, que un archivo exista no significa...${NC}"
-    echo ""
-    
-    echo "${YELLOW}🔍 SÍNTOMAS:${NC}"
-    echo "${YELLOW}• El servicio existe en systemd${NC}"
-    echo "${YELLOW}• El usuario del servicio existe en el sistema${NC}"
-    echo "${YELLOW}• El servicio falla al iniciar inmediatamente${NC}"
-    echo ""
-    
-    echo "${GREEN}🎯 TAREA:${NC}"
-    echo "${GREEN}Identificar por qué el servicio no logra ejecutar...${NC}"
-    echo ""
-    
-    echo "${RED}⚠️  RESTRICCIONES:${NC}"
-    echo "${RED}• NO ejecutar el servicio como root${NC}"
-    echo "${RED}• NO usar chmod 777${NC}"
-    echo "${RED}• NO cambiar el usuario del servicio${NC}"
-    echo ""
-    
-    echo "${PURPLE}💡 PISTAS:${NC}"
-    echo "${PURPLE}• ls -l {{ service_dir }}/start.sh → ¿ves el 'x'?${NC}"
-    echo "${PURPLE}• chmod necesita +x para systemd${NC}"
-    echo ""
-    
-    printf "${GREEN}═══════════════════════════════════════════════════════════${NC}\n"
-    echo "${GREEN}📊 RESULTADO: ${RED}{{ final_state }}${NC}"
-    printf "${GREEN}═══════════════════════════════════════════════════════════${NC}\n"
-    echo ""
-    echo "${WHITE}💻 SSH web01:${NC} ssh student@{{ hostvars['web01'].ansible_host }}"
+    cat /tmp/J01_ticket.txt
   args:
     executable: /bin/bash
   run_once: yes
