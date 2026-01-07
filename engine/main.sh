@@ -19,9 +19,10 @@ ANSIBLE_WRAPPER="$ENGINE_DIR/ansible_wrapper.sh"
 LABS=()
 
 # ==============================================================================
-# BLOQUE 1 - CARGA DE BASE DE DATOS (MANEJA ESPACIOS)
+# BLOQUE 1 - CARGA DE BASE DE DATOS
 # ==============================================================================
 load_db() {
+    echo "[DEBUG] Iniciando carga de BD desde: $DB_FILE" >&2
     LABS=()
 
     if [[ ! -f "$DB_FILE" ]]; then
@@ -29,31 +30,45 @@ load_db() {
         return 1
     fi
 
-    # Método simple y robusto
-    awk -F'|' '
-        NR==1 {next}  # Saltar cabecera
-        {
-            # Limpiar ESPECIALMENTE el campo STATUS (campo 7)
-            status = $7
-            gsub(/^[[:space:]]+|[[:space:]]+$/, "", status)
+    # DEBUG: mostrar qué hay en la BD
+    echo "[DEBUG] Verificando labs activos..." >&2
+    awk -F'|' 'NR>1 && $7=="active" {print "[DEBUG] Lab activo en BD: " $1}' "$DB_FILE" >&2
+
+    # Leer la BD - versión simple
+    local line_count=0
+    while IFS= read -r line; do
+        ((line_count++))
+        [[ $line_count -eq 1 ]] && continue  # Saltar cabecera
+        [[ -z "$line" ]] && continue         # Saltar líneas vacías
+        
+        # Separar campos
+        IFS='|' read -r id track level artifact type uses status <<< "$line"
+        
+        # Limpiar cualquier espacio
+        status=$(echo "$status" | tr -d '[:space:]')
+        
+        echo "[DEBUG] Procesando: $id, status='$status'" >&2
+        
+        if [[ "$status" == "active" ]]; then
+            # Limpiar todos los campos
+            id=$(echo "$id" | xargs)
+            track=$(echo "$track" | xargs)
+            level=$(echo "$level" | xargs)
+            artifact=$(echo "$artifact" | xargs)
+            type=$(echo "$type" | xargs)
+            uses=$(echo "$uses" | xargs)
             
-            # Limpiar los otros campos que necesitamos
-            gsub(/^[[:space:]]+|[[:space:]]+$/, "", $1)
-            gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2)
-            gsub(/^[[:space:]]+|[[:space:]]+$/, "", $3)
-            gsub(/^[[:space:]]+|[[:space:]]+$/, "", $4)
-            gsub(/^[[:space:]]+|[[:space:]]+$/, "", $5)
-            gsub(/^[[:space:]]+|[[:space:]]+$/, "", $6)
-            
-            if (status == "active") {
-                printf "%s|%s|%s|%s|%s|%s\n", $1, $2, $3, $4, $5, $6
-            }
-        }
-    ' "$DB_FILE" | while read -r LINE; do
-        LABS+=("$LINE")
-    done
+            LABS+=("$id|$track|$level|$artifact|$type|$uses")
+            echo "[DEBUG] Agregado a LABS: $id" >&2
+        fi
+    done < "$DB_FILE"
 
     echo "[INFO] Cargados ${#LABS[@]} laboratorio(s) activo(s)" >&2
+    
+    # DEBUG: mostrar qué se cargó
+    for lab in "${LABS[@]}"; do
+        echo "[DEBUG] En array: $lab" >&2
+    done
 }
 
 # ==============================================================================
@@ -104,25 +119,42 @@ assign_lab() {
     echo "========================================"
     echo
 
+    echo "[DEBUG] Nivel solicitado: $LEVEL" >&2
+    echo "[DEBUG] Total de labs en array: ${#LABS[@]}" >&2
+    
     if [[ "${#LABS[@]}" -eq 0 ]]; then
         echo "[ERROR] No hay laboratorios activos en la base de datos."
+        echo "DEBUG: El array LABS está vacío"
         echo "Contacte al administrador para activar laboratorios."
         sleep 3
         return
     fi
 
+    # Mostrar todos los labs disponibles
+    echo "[DEBUG] Labs disponibles:" >&2
+    for LAB in "${LABS[@]}"; do
+        IFS='|' read -r ID TRACK LAB_LEVEL ARTIFACT TYPE USES <<< "$LAB"
+        echo "[DEBUG]   - $ID ($LAB_LEVEL)" >&2
+    done
+
     # Buscar labs activos del nivel con menor USES
     for LAB in "${LABS[@]}"; do
         IFS='|' read -r ID TRACK LAB_LEVEL ARTIFACT TYPE USES <<< "$LAB"
         
+        echo "[DEBUG] Evaluando: $ID (Nivel: $LAB_LEVEL, Target: $LEVEL)" >&2
+        
         # Filtrar por nivel
-        [[ "$LAB_LEVEL" != "$LEVEL" ]] && continue
-
-        if [[ -z "$MIN_USES" || "$USES" -lt "$MIN_USES" ]]; then
-            MIN_USES="$USES"
-            CANDIDATES=("$LAB")
-        elif [[ "$USES" -eq "$MIN_USES" ]]; then
-            CANDIDATES+=("$LAB")
+        if [[ "$LAB_LEVEL" == "$LEVEL" ]]; then
+            echo "[DEBUG] ¡Coincide! $ID tiene $USES usos" >&2
+            
+            if [[ -z "$MIN_USES" || "$USES" -lt "$MIN_USES" ]]; then
+                MIN_USES="$USES"
+                CANDIDATES=("$LAB")
+                echo "[DEBUG] Nuevo mínimo: $MIN_USES usos (lab: $ID)" >&2
+            elif [[ "$USES" -eq "$MIN_USES" ]]; then
+                CANDIDATES+=("$LAB")
+                echo "[DEBUG] Mismo mínimo: $USES usos (lab: $ID)" >&2
+            fi
         fi
     done
 
@@ -137,6 +169,8 @@ assign_lab() {
         return
     }
 
+    echo "[DEBUG] Candidatos encontrados: ${#CANDIDATES[@]}" >&2
+    
     # Selección aleatoria entre los menos usados
     SELECTED="${CANDIDATES[$RANDOM % ${#CANDIDATES[@]}]}"
     IFS='|' read -r ID TRACK LEVEL ARTIFACT TYPE USES <<< "$SELECTED"
@@ -213,8 +247,8 @@ increment_uses() {
 # ==============================================================================
 # Cargar base de datos
 if ! load_db; then
-    echo "[ADVERTENCIA] Problema al cargar la base de datos" >&2
-    echo "Continuando con lista de laboratorios vacía..." >&2
+    echo "[ADVERTENCIA] Problema al cargar la base de datos"
+    echo "Continuando con lista de laboratorios vacía..."
 fi
 
 while true; do
