@@ -28,8 +28,3 @@ variant:
     - "NO usar chmod 777"
     - "NO cambiar el usuario del servicio"
     - "La corrección debe persistir tras reboot"
-
-  hints:
-    - "ls -l {{ service_dir }}/start.sh → ¿ves el 'x'?"
-    - "chmod necesita +x para systemd, pero ¿quién ejecuta?"
-    - "Prueba systemctl status {{ service_name }} para pistas"

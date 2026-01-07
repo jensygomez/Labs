@@ -25,9 +25,3 @@ variant:
     - "NO usar usuarios existentes del sistema"
     - "NO usar chmod 777 en ningún archivo"
     - "La corrección debe persistir tras reboot"
-
-  hints:
-    - "`systemctl status SERVICE_NAME` → ¿qué código de error numérico?"
-    - "`journalctl -u SERVICE_NAME -n 10` → busca mensajes de usuario"
-    - "`getent passwd SERVICE_USER` o `id SERVICE_USER` → ¿existe?"
-    - "useradd recrea usuario mínimo sin home ni shell interactivo"
