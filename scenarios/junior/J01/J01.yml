@@ -3,7 +3,7 @@
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# 1. CONFIGURACIÓN INICIAL (en admin01)
+# 1. CONFIGURACIÓN INICIAL (SOLO admin01)
 # ------------------------------------------------------------------------------
 - name: J01 | Configuración inicial
   hosts: admin01
@@ -21,36 +21,35 @@
         selected_variant_file: "{{ variants | random }}"
       run_once: yes
 
-    # Cargar datos del ticket (las variables ya están cargadas)
+    # Cargar datos del ticket
     - name: Cargar datos de la variante
       include_vars:
         file: "tickets/{{ selected_variant_file }}"
         name: ticket_data
 
-    # Hacer 'variant' disponible en admin01
-    - name: Establecer variable 'variant' en admin01
+    # Hacer variables disponibles GLOBALMENTE
+    - name: Establecer variables globales
       set_fact:
-        variant: "{{ ticket_data.variant }}"
-
-    # Propagarla a todos los hosts
-    - name: Propagar 'variant' a todos los hosts
-      set_fact:
-        variant: "{{ hostvars['admin01'].variant }}"
-      delegate_to: "{{ item }}"
-      loop: "{{ groups['all'] }}"
+        global_variant: "{{ ticket_data.variant }}"
+        global_selected_variant: "{{ selected_variant_file }}"
+      run_once: yes
 
     - name: Mostrar selección
       debug:
-        msg: "Variante seleccionada: {{ selected_variant_file }}"
+        msg: "Variante: {{ global_selected_variant }}"
 
 # ------------------------------------------------------------------------------
-# 2. MOSTRAR TICKET (todos ven el mismo ticket)
+# 2. MOSTRAR TICKET (admin01, web01, client01 - SIN localhost)
 # ------------------------------------------------------------------------------
 - name: J01 | Mostrar ticket del incidente
-  hosts: all
+  hosts: admin01,web01,client01  # <-- EXPLÍCITAMENTE los 3 hosts
   gather_facts: false
 
   tasks:
+    - name: Cargar variables globales
+      set_fact:
+        variant: "{{ hostvars['admin01'].global_variant }}"
+
     - name: Mostrar ticket
       import_tasks: tasks/show_ticket.yml
 
@@ -63,7 +62,7 @@
   gather_facts: true
 
   tasks:
-    - name: Cargar variables para web01
+    - name: Cargar variables
       include_vars:
         file: vars/main.yml
 
@@ -71,7 +70,7 @@
       import_tasks: tasks/base.yml
 
 # ------------------------------------------------------------------------------
-# 4. INYECTAR FALLO (solo web01, según variante)
+# 4. INYECTAR FALLO (solo web01)
 # ------------------------------------------------------------------------------
 - name: J01 | Inyectar fallo
   hosts: web01
@@ -79,12 +78,12 @@
   gather_facts: false
 
   tasks:
-    - name: Cargar variables para inyección
+    - name: Cargar variables
       include_vars:
         file: vars/main.yml
 
-    - name: Ejecutar inyección de fallo
-      include_tasks: "inject/{{ hostvars['admin01'].selected_variant_file }}"
+    - name: Ejecutar inyección
+      include_tasks: "inject/{{ hostvars['admin01'].global_selected_variant }}"
 
 # ------------------------------------------------------------------------------
 # 5. OBSERVACIÓN (solo client01)
@@ -94,13 +93,12 @@
   gather_facts: false
 
   tasks:
-    - name: Verificar estado del servicio
+    - name: Verificar servicio
       shell: |
         systemctl status {{ service_name }} >/dev/null 2>&1 || echo "SERVICE DOWN"
       register: service_status
       changed_when: false
-      ignore_errors: yes
 
-    - name: Mostrar resultado de la observación
+    - name: Mostrar resultado
       debug:
-        msg: "Estado del servicio desde cliente: {{ service_status.stdout }}"
+        msg: "Estado desde cliente: {{ service_status.stdout }}"

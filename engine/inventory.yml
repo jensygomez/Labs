@@ -16,11 +16,6 @@ all:
         client01:
           ansible_host: 192.168.122.21
 
-    # AÑADE un grupo 'controller' o añade localhost a todos los grupos
-    controller:
-      hosts:
-        localhost:
-          ansible_connection: local
 
   vars:
     ansible_user: student
