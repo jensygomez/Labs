@@ -1,0 +1,39 @@
+# ==============================================================================
+# VARIANTE 4 — Archivo de configuración inaccesible (EnvironmentFile)
+# ==============================================================================
+
+variant:
+  description: >
+    En sistemas Linux modernos, systemd no solo gestiona procesos, sino
+    también su entorno de ejecución. Muchos servicios dependen de archivos
+    externos para definir variables críticas. En este escenario, el
+    servicio está correctamente definido y su script es ejecutable, pero
+    el entorno requerido para iniciar el proceso no puede ser cargado
+    debido a restricciones de acceso al archivo de configuración.
+
+  symptoms:
+    - El servicio existe en systemd
+    - El usuario del servicio existe en el sistema
+    - El script de inicio es ejecutable
+    - El servicio falla al iniciar inmediatamente
+    - systemctl reporta errores relacionados con el entorno
+    - El journal menciona problemas al cargar EnvironmentFile
+
+  task: >
+    Analizar por qué el servicio no logra cargar su entorno de ejecución
+    y corregir los permisos o el acceso al archivo de configuración
+    requerido, asegurando que systemd pueda iniciar el proceso sin
+    comprometer la seguridad del sistema.
+
+  restrictions:
+    - NO ejecutar el servicio como root
+    - NO eliminar el uso de EnvironmentFile
+    - NO exponer secretos con permisos inseguros
+    - NO usar chmod 777
+    - La corrección debe persistir tras reboot
+
+  hints:
+    - Revisa el unit file con `systemctl cat {{ service_name }}`
+    - systemd necesita leer el EnvironmentFile antes de ejecutar el proceso
+    - El usuario del servicio debe tener permiso de lectura sobre el archivo
+    - Un servicio puede fallar incluso antes de ejecutar ExecStart

@@ -1,0 +1,40 @@
+# ==============================================================================
+# VARIANTE 3 — Permisos incorrectos en el directorio del servicio
+# ==============================================================================
+
+variant:
+  description: >
+    En Linux, no basta con que un servicio tenga un binario válido y un
+    usuario asignado. El sistema de archivos impone controles estrictos
+    sobre quién puede atravesar un directorio. En este escenario, el
+    servicio y su script de inicio existen y tienen permisos correctos,
+    pero el directorio que los contiene ha sido restringido de forma
+    indebida, impidiendo que el usuario del servicio pueda acceder a él.
+
+  symptoms:
+    - El servicio existe en systemd
+    - El usuario del servicio existe en el sistema
+    - El script de inicio tiene permisos de ejecución
+    - El servicio falla al iniciar inmediatamente
+    - systemctl reporta errores genéricos de inicio
+    - El journal no muestra errores de red ni de dependencias externas
+
+  task: >
+    Identificar por qué el usuario del servicio no puede acceder a los
+    recursos necesarios para iniciar el proceso y corregir los permisos
+    del directorio de trabajo, garantizando que el servicio pueda
+    ejecutarse correctamente sin violar las políticas de seguridad del
+    sistema.
+
+  restrictions:
+    - NO ejecutar el servicio como root
+    - NO usar chmod 777
+    - NO cambiar el usuario del servicio
+    - NO deshabilitar mecanismos de seguridad del sistema
+    - La corrección debe persistir tras reboot
+
+  hints:
+    - Revisa los permisos del directorio con `ls -ld {{ service_dir }}`
+    - Para acceder a un archivo, el usuario necesita permisos sobre el directorio
+    - El bit de ejecución en un directorio permite atravesarlo
+    - Un script puede ser ejecutable, pero inaccesible por el contexto del directorio

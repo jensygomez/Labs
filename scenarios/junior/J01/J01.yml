@@ -2,28 +2,36 @@
 # ==============================================================================
 # J01 — User Access Breaks Critical Service
 # Nivel: Junior
-# Tipo: Ansible (Producción)
+# Tipo: Ansible (Producción Educativa)
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-- name: J01 | Seleccionar variante
+# Selección de variante (motor)
+# ------------------------------------------------------------------------------
+- name: J01 | Seleccionar variante del incidente
   hosts: localhost
   gather_facts: false
 
   vars:
     variants:
-      - variant_1.yml    
-      - variant_2.yml   
-      - variant_3.yml   
-      - variant_4.yml   
+      - variant_1.yml
+      - variant_2.yml
+      - variant_3.yml
+      - variant_4.yml
 
     selected_variant: "{{ variant | default(variants | random) }}"
 
   tasks:
-    - name: Guardar variante seleccionada
+    - name: Registrar variante seleccionada
       set_fact:
         j01_variant: "{{ selected_variant }}"
 
+    - name: Mostrar variante seleccionada (solo motor)
+      debug:
+        msg: "Variante seleccionada: {{ j01_variant }}"
+
+# ------------------------------------------------------------------------------
+# Mostrar ticket del incidente (todos los nodos)
 # ------------------------------------------------------------------------------
 - name: J01 | Mostrar ticket del incidente
   hosts: all
@@ -33,45 +41,58 @@
     - "tickets/{{ hostvars['localhost'].j01_variant }}"
 
   tasks:
-    - import_tasks: tasks/show_ticket.yml
+    - name: Mostrar ticket
+      import_tasks: tasks/show_ticket.yml
 
+# ------------------------------------------------------------------------------
+# Preparar baseline del servicio (web)
 # ------------------------------------------------------------------------------
 - name: J01 | Preparar baseline del servicio
   hosts: web
   become: true
+  gather_facts: true
+
   vars_files:
     - vars/main.yml
 
   tasks:
-    - import_tasks: tasks/base.yml
+    - name: Preparar estado base
+      import_tasks: tasks/base.yml
 
+# ------------------------------------------------------------------------------
+# Inyectar fallo según variante seleccionada (web)
 # ------------------------------------------------------------------------------
 - name: J01 | Inyectar fallo (variante seleccionada)
   hosts: web
   become: true
+  gather_facts: false
+
   vars_files:
     - vars/main.yml
 
   tasks:
-    - name: Ejecutar variante
-      import_tasks: "tasks/{{ hostvars['localhost'].j01_variant }}"
+    - name: Ejecutar inyección de la variante
+      import_tasks: "inject/{{ hostvars['localhost'].j01_variant }}"
 
 # ------------------------------------------------------------------------------
-- name: J01 | Observación desde cliente
+# Observación desde cliente
+# ------------------------------------------------------------------------------
+- name: J01 | Observación del impacto desde cliente
   hosts: client
   gather_facts: false
 
   tasks:
-    - name: Probar acceso lógico al servicio (simulado)
-      shell: systemctl status internal-api >/dev/null 2>&1 || echo "SERVICE DOWN"
-      changed_when: false
+    - name: Verificar estado lógico del servicio
+      shell: |
+        systemctl status internal-api >/dev/null 2>&1 || echo "SERVICE DOWN"
       register: client_check
+      changed_when: false
       ignore_errors: true
 
-    - name: Resultado observado por el cliente
+    - name: Mostrar resultado observado por el cliente
       debug:
         msg: "Resultado cliente: {{ client_check.stdout | default('sin respuesta') }}"
 
 # ------------------------------------------------------------------------------
-# FIN DEL LABORATORIO
+# FIN DEL LABORATORIO J01
 # ------------------------------------------------------------------------------
