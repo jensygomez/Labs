@@ -3,53 +3,48 @@
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# 0. PRIMERO: Cargar variables base (IMPORTANTE)
+# 1. CONFIGURACIÓN INICIAL (en admin01)
 # ------------------------------------------------------------------------------
-- name: J01 | Cargar configuración base
-  hosts: localhost
+- name: J01 | Configuración inicial
+  hosts: admin01
   gather_facts: false
 
   tasks:
+    # Cargar variables base
     - name: Cargar variables principales
       include_vars:
         file: vars/main.yml
 
-    - name: Definir service_name para contexto global
-      set_fact:
-        service_name: "{{ service_name }}"
-        service_user: "{{ service_user }}"
-        service_dir: "{{ service_dir }}"
-      run_once: yes
-
-# ------------------------------------------------------------------------------
-# 1. Seleccionar y cargar variante (AHORA las variables están definidas)
-# ------------------------------------------------------------------------------
-- name: J01 | Cargar variante del incidente
-  hosts: localhost
-  gather_facts: false
-
-  tasks:
+    # Seleccionar variante
     - name: Seleccionar variante aleatoria
       set_fact:
         selected_variant_file: "{{ variants | random }}"
       run_once: yes
 
+    # Cargar datos del ticket (las variables ya están cargadas)
     - name: Cargar datos de la variante
       include_vars:
         file: "tickets/{{ selected_variant_file }}"
         name: ticket_data
 
-    - name: Crear variable global 'variant'
+    # Hacer 'variant' disponible en admin01
+    - name: Establecer variable 'variant' en admin01
       set_fact:
         variant: "{{ ticket_data.variant }}"
-      run_once: yes
+
+    # Propagarla a todos los hosts
+    - name: Propagar 'variant' a todos los hosts
+      set_fact:
+        variant: "{{ hostvars['admin01'].variant }}"
+      delegate_to: "{{ item }}"
+      loop: "{{ groups['all'] }}"
 
     - name: Mostrar selección
       debug:
-        msg: "Variante cargada: {{ selected_variant_file }}"
+        msg: "Variante seleccionada: {{ selected_variant_file }}"
 
 # ------------------------------------------------------------------------------
-# 2. Mostrar ticket a TODOS los hosts
+# 2. MOSTRAR TICKET (todos ven el mismo ticket)
 # ------------------------------------------------------------------------------
 - name: J01 | Mostrar ticket del incidente
   hosts: all
@@ -60,15 +55,15 @@
       import_tasks: tasks/show_ticket.yml
 
 # ------------------------------------------------------------------------------
-# 3. Preparar baseline (web)
+# 3. PREPARAR BASELINE (solo web01)
 # ------------------------------------------------------------------------------
 - name: J01 | Preparar baseline del servicio
-  hosts: web
+  hosts: web01
   become: true
   gather_facts: true
 
   tasks:
-    - name: Cargar variables para web
+    - name: Cargar variables para web01
       include_vars:
         file: vars/main.yml
 
@@ -76,10 +71,10 @@
       import_tasks: tasks/base.yml
 
 # ------------------------------------------------------------------------------
-# 4. Inyectar fallo (web)
+# 4. INYECTAR FALLO (solo web01, según variante)
 # ------------------------------------------------------------------------------
 - name: J01 | Inyectar fallo
-  hosts: web
+  hosts: web01
   become: true
   gather_facts: false
 
@@ -88,23 +83,24 @@
       include_vars:
         file: vars/main.yml
 
-    - name: Ejecutar inyección
-      include_tasks: "inject/{{ hostvars['localhost'].selected_variant_file }}"
+    - name: Ejecutar inyección de fallo
+      include_tasks: "inject/{{ hostvars['admin01'].selected_variant_file }}"
 
 # ------------------------------------------------------------------------------
-# 5. Observación (cliente)
+# 5. OBSERVACIÓN (solo client01)
 # ------------------------------------------------------------------------------
 - name: J01 | Observación del impacto
-  hosts: client
+  hosts: client01
   gather_facts: false
 
   tasks:
-    - name: Verificar servicio
+    - name: Verificar estado del servicio
       shell: |
         systemctl status {{ service_name }} >/dev/null 2>&1 || echo "SERVICE DOWN"
-      register: client_check
+      register: service_status
       changed_when: false
+      ignore_errors: yes
 
-    - name: Mostrar resultado
+    - name: Mostrar resultado de la observación
       debug:
-        msg: "Resultado: {{ client_check.stdout }}"
+        msg: "Estado del servicio desde cliente: {{ service_status.stdout }}"
