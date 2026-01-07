@@ -33,7 +33,3 @@ variant:
     - "NO deshabilitar mecanismos de seguridad del sistema"
     - "La corrección debe persistir tras reboot"
 
-  hints:
-    - "ls -ld {{ service_dir }} → ¿service_user puede 'entrar'?"
-    - "Directorios necesitan 'x' para traverse, como archivos para execute"
-    - "`su - {{ service_user }} -c 'ls {{ service_dir }}/start.sh'` prueba acceso"
