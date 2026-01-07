@@ -1,0 +1,78 @@
+
+PLAY [J01 | Configuración inicial] *********************************************
+
+TASK [Cargar variables principales] ********************************************
+ok: [admin01]
+
+TASK [Seleccionar variante aleatoria] ******************************************
+ok: [admin01]
+
+TASK [Cargar datos de la variante] *********************************************
+ok: [admin01]
+
+TASK [Establecer variables globales] *******************************************
+ok: [admin01]
+
+PLAY [J01 | Preparar baseline del servicio] ************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [web01]
+
+TASK [Cargar variables] ********************************************************
+ok: [web01]
+
+TASK [Asegurar usuario del servicio] *******************************************
+ok: [web01]
+
+TASK [Crear directorio del servicio] *******************************************
+ok: [web01]
+
+TASK [Crear script de inicio del servicio] *************************************
+changed: [web01]
+
+TASK [Crear unidad systemd del servicio] ***************************************
+ok: [web01]
+
+TASK [Registrar baseline en log] ***********************************************
+ok: [web01]
+
+PLAY [J01 | Inyectar fallo] ****************************************************
+
+TASK [Cargar variables] ********************************************************
+ok: [web01]
+
+TASK [Ejecutar inyección] ******************************************************
+included: /home/jensy/GitHub/Labs/scenarios/junior/J01/inject/variant_1.yml for web01
+
+TASK [Eliminar usuario real del servicio] **************************************
+changed: [web01]
+
+TASK [Crear usuario temporal incorrecto] ***************************************
+changed: [web01]
+
+TASK [Cambiar ownership del script a usuario incorrecto] ***********************
+ok: [web01]
+
+TASK [Registrar variante 1 en log] *********************************************
+changed: [web01]
+
+PLAY [J01 | Verificar estado del servicio] *************************************
+
+TASK [Comprobar estado real del servicio] **************************************
+ok: [web01]
+
+TASK [Determinar estado para ticket] *******************************************
+ok: [web01 -> admin01(192.168.122.20)]
+
+PLAY [J01 | Mostrar resumen final] *********************************************
+
+TASK [Preparar variables para TU show_ticket.yml] ******************************
+ok: [admin01]
+
+TASK [Mostrar ticket final EN admin01 (SIMPLE + COLORES)] **********************
+changed: [admin01]
+
+PLAY RECAP *********************************************************************
+admin01                    : ok=6    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+web01                      : ok=15   changed=4    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
