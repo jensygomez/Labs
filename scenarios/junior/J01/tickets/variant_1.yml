@@ -1,22 +1,29 @@
-# /home/jensy/GitHub/Labs/scenarios/junior/J01/tickets/variant_1.yml
-# variant_1.yml modificado:
 variant:
   description: >
-    El servicio crítico no inicia porque el usuario real del servicio
-    ha sido eliminado del sistema, y systemd sigue intentando ejecutarlo
-    bajo ese usuario inexistente.
+    systemd intenta ejecutar un servicio bajo un usuario inexistente,
+    causando fallo inmediato al inicio. El servicio está bien configurado,
+    el script existe y es ejecutable, pero el UID/GID asignado no existe.
+
   symptoms:
-    - El servicio existe en systemd
-    - El servicio falla al iniciar inmediatamente
-    - Journal muestra errores de “Failed to start” o problemas de permisos
+    - El servicio existe en systemd con unit file válido
+    - `systemctl status` muestra "User not found" o código 227
+    - Journal contiene "Failed to set up machine ID" o "Unknown user"
+    - `getent passwd SERVICE_USER` devuelve vacío
+    - Script y directorio tienen permisos correctos
+
   task: >
-    Restaurar el usuario correcto y asegurarse de que el script de inicio
-    tenga la propiedad y permisos adecuados para que el servicio levante.
+    Diagnosticar por qué systemd no puede cambiar al usuario especificado
+    en el unit file y recrear el usuario mínimo necesario para que el
+    servicio funcione correctamente.
+
   restrictions:
-    - NO ejecutar el servicio como root
-    - NO usar chmod 777
+    - NO ejecutar el servicio como root (User=root)
+    - NO usar usuarios existentes del sistema
+    - NO usar chmod 777 en ningún archivo
     - La corrección debe persistir tras reboot
+
   hints:
-    - Verifica `id SERVICE_USER` para comprobar si existe
-    - Revisa `systemctl status SERVICE_NAME` y `journalctl -xe`
-    - Ajusta el propietario del script: `chown SERVICE_USER:SERVICE_USER SERVICE_DIR/start.sh`
+    - "`systemctl status SERVICE_NAME` → ¿qué código de error numérico?"
+    - "`journalctl -u SERVICE_NAME -n 10` → busca mensajes de usuario"
+    - "`getent passwd SERVICE_USER` o `id SERVICE_USER` → ¿existe?"
+    - "useradd recrea usuario mínimo sin home ni shell interactivo"

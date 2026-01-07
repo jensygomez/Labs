@@ -34,7 +34,6 @@ variant:
     - La corrección debe persistir tras reboot
 
   hints:
-    - Revisa los permisos del directorio con `ls -ld {{ service_dir }}`
-    - Para acceder a un archivo, el usuario necesita permisos sobre el directorio
-    - El bit de ejecución en un directorio permite atravesarlo
-    - Un script puede ser ejecutable, pero inaccesible por el contexto del directorio
+    - "`ls -ld {{ service_dir }}` → ¿service_user puede 'entrar'?"
+    - "Directorios necesitan 'x' para traverse, como archivos para execute"
+    - "`su - {{ service_user }} -c 'ls {{ service_dir }}/start.sh'` prueba acceso"

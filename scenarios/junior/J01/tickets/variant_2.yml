@@ -30,7 +30,6 @@ variant:
     - La corrección debe persistir tras reboot
 
   hints:
-    - Revisa los permisos del script con `ls -l {{ service_dir }}/start.sh`
-    - systemd necesita permiso de ejecución en el archivo
-    - El bit de ejecución es tan importante como el propietario
-    - Un servicio puede existir, pero no tener permiso para arrancar
+    - "ls -l {{ service_dir }}/start.sh → ¿ves el 'x'?"
+    - "chmod necesita +x para systemd, pero ¿quién ejecuta?"
+    - "Prueba systemctl status {{ service_name }} para pistas"

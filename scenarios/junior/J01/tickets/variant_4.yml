@@ -33,7 +33,8 @@ variant:
     - La corrección debe persistir tras reboot
 
   hints:
-    - Revisa el unit file con `systemctl cat {{ service_name }}`
-    - systemd necesita leer el EnvironmentFile antes de ejecutar el proceso
-    - El usuario del servicio debe tener permiso de lectura sobre el archivo
-    - Un servicio puede fallar incluso antes de ejecutar ExecStart
+    - "`systemctl cat {{ service_name }}` → busca EnvironmentFile="
+    - "`journalctl -u {{ service_name }}` → ¿qué archivo no puede leer?"
+    - "`ls -l $(grep EnvironmentFile <(systemctl cat {{ service_name }}))` → ¿service_user tiene 'r'?"
+    - "chmod 644 environment_file (root:root), systemd lee como root pero pasa al user"
+
