@@ -33,7 +33,7 @@ LABS=()
 load_db() {
     LABS=()
 
-    while IFS='|' read -r ID TRACK LEVEL ARTIFACT USES STATUS; do
+    while IFS='|' read -r ID TRACK LEVEL ARTIFACT TYPE USES STATUS; do
         [[ "$ID" == "ID" ]] && continue
         [[ "$STATUS" != "active" ]] && continue
 
