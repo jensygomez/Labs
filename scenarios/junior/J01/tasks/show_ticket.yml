@@ -1,31 +1,36 @@
-# tasks/show_ticket.yml
-- name: Mostrar ticket del incidente
-  ansible.builtin.debug:
+# /home/jensy/GitHub/Labs/scenarios/junior/J01/tasks/show_ticket.yml
+
+- name: Mostrar ticket final
+  debug:
     msg: |
-      ========================================================
-         LAB J01 – JUNIOR
-      ========================================================
-
-      Escenario:
-        {{ variant.description }}
-
-      Síntomas:
-        {% for s in variant.symptoms %}
-        • {{ s }}
-        {% endfor %}
-
-      Tarea:
-        {{ variant.task }}
-
-      Restricciones:
-        {% for r in variant.restrictions %}
-        • {{ r }}
-        {% endfor %}
-
-      Pistas:
-        {% for p in variant.hints %}
-        • {{ p }}
-        {% endfor %}
-
-      ========================================================
-      Ejecutar con --apply para inyectar la condición de fallo...
+      ╔══════════════════════════════════════════════════════════╗
+      ║                    LAB J01 - JUNIOR                      ║
+      ║                VARIANTE: {{ selected_variant_file }}     ║
+      ╚══════════════════════════════════════════════════════════╝
+      
+      📋 ESCENARIO:
+      {{ variant.description }}
+      
+      🔍 SÍNTOMAS:
+      {% for s in variant.symptoms %}
+      • {{ s }}
+      {% endfor %}
+      
+      🎯 TAREA:
+      {{ variant.task }}
+      
+      ⚠️  RESTRICCIONES:
+      {% for r in variant.restrictions %}
+      • {{ r }}
+      {% endfor %}
+      
+      💡 PISTAS:
+      {% for p in variant.hints %}
+      • {{ p | replace('SERVICE_USER', service_user) | replace('SERVICE_NAME', service_name) | replace('SERVICE_DIR', service_dir) }}
+      {% endfor %}
+      
+      ═══════════════════════════════════════════════════════════
+      📊 RESULTADO: {{ final_state }}
+      ═══════════════════════════════════════════════════════════
+      Laboratorio completado. Revisa arriba para ver las acciones ejecutadas.
+  run_once: yes

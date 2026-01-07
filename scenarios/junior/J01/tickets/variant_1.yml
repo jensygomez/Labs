@@ -1,4 +1,5 @@
 # /home/jensy/GitHub/Labs/scenarios/junior/J01/tickets/variant_1.yml
+# variant_1.yml modificado:
 variant:
   description: >
     El servicio crítico no inicia porque el usuario real del servicio
@@ -16,6 +17,6 @@ variant:
     - NO usar chmod 777
     - La corrección debe persistir tras reboot
   hints:
-    - Verifica `id {{ service_user }}` para comprobar si existe
-    - Revisa `systemctl status <nombre_servicio>` y `journalctl -xe`
-    - Ajusta el propietario del script: `chown {{ service_user }}:{{ service_user }} {{ service_dir }}/start.sh`
+    - Verifica `id SERVICE_USER` para comprobar si existe
+    - Revisa `systemctl status SERVICE_NAME` y `journalctl -xe`
+    - Ajusta el propietario del script: `chown SERVICE_USER:SERVICE_USER SERVICE_DIR/start.sh`

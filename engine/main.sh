@@ -214,8 +214,13 @@ run_lab() {
     increment_uses "$ID"
 
     echo
-    echo "Laboratorio finalizado."
-    read -rp "Presione ENTER para continuar..."
+    echo "========================================"
+    echo " Laboratorio $ID finalizado"
+    echo "========================================"
+    echo "Revisa el log para más detalles."
+    echo
+    read -rp "Presione ENTER para volver al menú..."
+    clear
 }
 
 # ==============================================================================
