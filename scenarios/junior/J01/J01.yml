@@ -1,13 +1,11 @@
 # ==============================================================================
 # J01 — User Access Breaks Critical Service
-# Nivel: Junior
-# Tipo: Ansible (Producción Educativa)
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# Selección de variante (motor)
+# 1. Seleccionar y cargar variante (TODO en localhost)
 # ------------------------------------------------------------------------------
-- name: J01 | Seleccionar variante del incidente
+- name: J01 | Cargar variante del incidente
   hosts: localhost
   gather_facts: false
 
@@ -18,33 +16,44 @@
       - variant_3.yml
       - variant_4.yml
 
-    selected_variant: "{{ variant | default(variants | random) }}"
-
   tasks:
-    - name: Registrar variante seleccionada
+    - name: Seleccionar variante aleatoria
       set_fact:
-        j01_variant: "{{ selected_variant }}"
+        selected_variant_file: "{{ variants | random }}"
+      run_once: yes
 
-    - name: Mostrar variante seleccionada (solo motor)
+    - name: Cargar datos de la variante
+      include_vars:
+        file: "tickets/{{ selected_variant_file }}"
+        name: loaded_data
+
+    - name: Crear variable global 'variant'
+      set_fact:
+        variant: "{{ loaded_data.variant }}"
+      run_once: yes
+
+    - name: Crear variable global 'selected_variant' (para inyección)
+      set_fact:
+        selected_variant: "{{ selected_variant_file }}"
+      run_once: yes
+
+    - name: Mostrar selección
       debug:
-        msg: "Variante seleccionada: {{ j01_variant }}"
+        msg: "Variante cargada: {{ selected_variant_file }}"
 
 # ------------------------------------------------------------------------------
-# Mostrar ticket del incidente (todos los nodos)
+# 2. Mostrar ticket a TODOS los hosts
 # ------------------------------------------------------------------------------
 - name: J01 | Mostrar ticket del incidente
   hosts: all
   gather_facts: false
-
-  vars_files:
-    - "tickets/{{ j01_variant }}"  # <-- CAMBIADO: quitado hostvars['localhost']
 
   tasks:
     - name: Mostrar ticket
       import_tasks: tasks/show_ticket.yml
 
 # ------------------------------------------------------------------------------
-# Preparar baseline del servicio (web)
+# 3. Preparar baseline (web)
 # ------------------------------------------------------------------------------
 - name: J01 | Preparar baseline del servicio
   hosts: web
@@ -59,9 +68,9 @@
       import_tasks: tasks/base.yml
 
 # ------------------------------------------------------------------------------
-# Inyectar fallo según variante seleccionada (web)
+# 4. Inyectar fallo (web) - AHORA CON selected_variant
 # ------------------------------------------------------------------------------
-- name: J01 | Inyectar fallo (variante seleccionada)
+- name: J01 | Inyectar fallo
   hosts: web
   become: true
   gather_facts: false
@@ -70,28 +79,23 @@
     - vars/main.yml
 
   tasks:
-    - name: Ejecutar inyección de la variante
-      include_tasks: "inject/{{ j01_variant }}"  # <-- CAMBIADO: quitado hostvars['localhost']
+    - name: Ejecutar inyección
+      include_tasks: "inject/{{ hostvars['localhost'].selected_variant }}"
 
 # ------------------------------------------------------------------------------
-# Observación desde cliente
+# 5. Observación (cliente)
 # ------------------------------------------------------------------------------
-- name: J01 | Observación del impacto desde cliente
+- name: J01 | Observación del impacto
   hosts: client
   gather_facts: false
 
   tasks:
-    - name: Verificar estado lógico del servicio
+    - name: Verificar servicio
       shell: |
         systemctl status internal-api >/dev/null 2>&1 || echo "SERVICE DOWN"
       register: client_check
       changed_when: false
-      ignore_errors: true
 
-    - name: Mostrar resultado observado por el cliente
+    - name: Mostrar resultado
       debug:
-        msg: "Resultado cliente: {{ client_check.stdout | default('sin respuesta') }}"
-
-# ------------------------------------------------------------------------------
-# FIN DEL LABORATORIO J01
-# ------------------------------------------------------------------------------
+        msg: "Resultado: {{ client_check.stdout }}"

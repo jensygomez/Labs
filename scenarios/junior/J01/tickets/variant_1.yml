@@ -1,4 +1,4 @@
-# variants/variant_1.yml
+# /home/jensy/GitHub/Labs/scenarios/junior/J01/tickets/variant_1.yml
 variant:
   description: >
     El servicio crítico no inicia porque el usuario real del servicio
