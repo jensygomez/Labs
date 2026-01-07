@@ -2,23 +2,25 @@ all:
   hosts:
     localhost:
       ansible_connection: local
-      ansible_python_interpreter: /usr/bin/python3
   
   children:
     admin:
       hosts:
         admin01:
           ansible_host: 192.168.122.20
+        localhost:
 
     web:
       hosts:
         web01:
           ansible_host: 192.168.122.22
+        localhost:
 
     client:
       hosts:
         client01:
           ansible_host: 192.168.122.21
+        localhost:
 
   vars:
     ansible_user: student
