@@ -12,12 +12,12 @@ variant:
     debido a restricciones de acceso al archivo de configuración.
 
   symptoms:
-    - "\"El servicio existe en systemd\""
-    - "\"El usuario del servicio existe en el sistema\""
-    - "\"El script de inicio es ejecutable\""
-    - "\"El servicio falla al iniciar inmediatamente\""
-    - "\"systemctl reporta errores relacionados con el entorno\""
-    - "\"El journal menciona problemas al cargar EnvironmentFile\""
+    - "El servicio existe en systemd"
+    - "El usuario del servicio existe en el sistema"
+    - "El script de inicio es ejecutable"
+    - "El servicio falla al iniciar inmediatamente"
+    - "systemctl reporta errores relacionados con el entorno"
+    - "El journal menciona problemas al cargar EnvironmentFile"
 
   task: |
     Analizar por qué el servicio no logra cargar su entorno de ejecución
@@ -26,15 +26,15 @@ variant:
     comprometer la seguridad del sistema.
 
   restrictions:
-    - "\"NO ejecutar el servicio como root\""
-    - "\"NO eliminar el uso de EnvironmentFile\""
-    - "\"NO exponer secretos con permisos inseguros\""
-    - "\"NO usar chmod 777\""
-    - "\"La corrección debe persistir tras reboot\""
+    - "NO ejecutar el servicio como root"
+    - "NO eliminar el uso de EnvironmentFile"
+    - "NO exponer secretos con permisos inseguros"
+    - "NO usar chmod 777"
+    - "La corrección debe persistir tras reboot"
 
   hints:
-    - "\"\`systemctl cat {{ service_name }}\` → busca EnvironmentFile=\""
-    - "\"\`journalctl -u {{ service_name }}\` → ¿qué archivo no puede leer?\""
-    - "\"\`ls -l \$(grep EnvironmentFile <(systemctl cat {{ service_name }}))\` → ¿service_user tiene 'r'?\""
-    - "\"chmod 644 environment_file (root:root), systemd lee como root pero pasa al user\""
+    - "`systemctl cat {{ service_name }}` → busca EnvironmentFile="
+    - "`journalctl -u {{ service_name }}` → ¿qué archivo no puede leer?"
+    - "`ls -l $(grep EnvironmentFile <(systemctl cat {{ service_name }}))` → ¿service_user tiene 'r'?"
+    - "chmod 644 environment_file (root:root), systemd lee como root pero pasa al user"
 

@@ -11,11 +11,11 @@ variant:
     de ejecución.
 
   symptoms:
-    - "\"El servicio existe en systemd\""
-    - "\"El usuario del servicio existe en el sistema\""
-    - "\"El servicio falla al iniciar inmediatamente\""
-    - "\"systemctl reporta errores genéricos de ejecución\""
-    - "\"El journal no indica fallos de red ni de dependencias\""
+    - "El servicio existe en systemd"
+    - "El usuario del servicio existe en el sistema"
+    - "El servicio falla al iniciar inmediatamente"
+    - "systemctl reporta errores genéricos de ejecución"
+    - "El journal no indica fallos de red ni de dependencias"
 
   task: |
     Identificar por qué el servicio no logra ejecutar su script de inicio
@@ -24,12 +24,12 @@ variant:
     privilegio.
 
   restrictions:
-    - "\"NO ejecutar el servicio como root\""
-    - "\"NO usar chmod 777\""
-    - "\"NO cambiar el usuario del servicio\""
-    - "\"La corrección debe persistir tras reboot\""
+    - "NO ejecutar el servicio como root"
+    - "NO usar chmod 777"
+    - "NO cambiar el usuario del servicio"
+    - "La corrección debe persistir tras reboot"
 
   hints:
-    - "\"ls -l {{ service_dir }}/start.sh → ¿ves el 'x'?\""
-    - "\"chmod necesita +x para systemd, pero ¿quién ejecuta?\""
-    - "\"Prueba systemctl status {{ service_name }} para pistas\""
+    - "ls -l {{ service_dir }}/start.sh → ¿ves el 'x'?"
+    - "chmod necesita +x para systemd, pero ¿quién ejecuta?"
+    - "Prueba systemctl status {{ service_name }} para pistas"
