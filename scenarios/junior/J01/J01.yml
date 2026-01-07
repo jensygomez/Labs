@@ -39,10 +39,10 @@
         msg: "Variante: {{ global_selected_variant }}"
 
 # ------------------------------------------------------------------------------
-# 2. MOSTRAR TICKET (admin01, web01, client01 - SIN localhost)
+# 2. MOSTRAR TICKET (todos los hosts)
 # ------------------------------------------------------------------------------
 - name: J01 | Mostrar ticket del incidente
-  hosts: admin01,web01,client01  # <-- EXPLÍCITAMENTE los 3 hosts
+  hosts: admin01,web01,client01
   gather_facts: false
 
   tasks:
@@ -93,6 +93,11 @@
   gather_facts: false
 
   tasks:
+    # AÑADE ESTA TAREA:
+    - name: Cargar variables para cliente
+      include_vars:
+        file: vars/main.yml
+
     - name: Verificar servicio
       shell: |
         systemctl status {{ service_name }} >/dev/null 2>&1 || echo "SERVICE DOWN"
