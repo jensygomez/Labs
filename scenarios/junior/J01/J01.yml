@@ -1,4 +1,3 @@
----
 # ==============================================================================
 # J01 — User Access Breaks Critical Service
 # Nivel: Junior
@@ -38,7 +37,7 @@
   gather_facts: false
 
   vars_files:
-    - "tickets/{{ hostvars['localhost'].j01_variant }}"
+    - "tickets/{{ j01_variant }}"  # <-- CAMBIADO: quitado hostvars['localhost']
 
   tasks:
     - name: Mostrar ticket
@@ -72,7 +71,7 @@
 
   tasks:
     - name: Ejecutar inyección de la variante
-      import_tasks: "inject/{{ hostvars['localhost'].j01_variant }}"
+      import_tasks: "inject/{{ j01_variant }}"  # <-- CAMBIADO: quitado hostvars['localhost']
 
 # ------------------------------------------------------------------------------
 # Observación desde cliente
