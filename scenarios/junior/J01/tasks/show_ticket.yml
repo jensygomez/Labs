@@ -1,69 +1,52 @@
-- name: Mostrar ticket final EN admin01 (CON COLORES)
+- name: Mostrar ticket final CON COLORES REALES
   shell: |
     # Colores ANSI
-    RED='\033[0;31m'
-    GREEN='\033[0;32m' 
-    YELLOW='\033[1;33m'
-    BLUE='\033[0;34m'
-    PURPLE='\033[0;35m'
-    CYAN='\033[0;36m'
-    WHITE='\033[1;37m'
-    NC='\033[0m' # No Color
+    RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
+    BLUE='\033[0;34m'; PURPLE='\033[0;35m'; CYAN='\033[0;36m'
+    WHITE='\033[1;37m'; NC='\033[0m'
     
-    # Limpiar archivo
-    > /tmp/J01_ticket.txt
-    
-    # HEADER - FONDO AZUL
-    printf "${BLUE}%*s${NC}\n" 60 | tr ' ' '=' >> /tmp/J01_ticket.txt
-    echo "${WHITE}                    LAB J01 - JUNIOR                      ${NC}" >> /tmp/J01_ticket.txt
-    echo "${WHITE}                VARIANTE: ${YELLOW}${selected_variant_file}${NC}${WHITE}     ${NC}" >> /tmp/J01_ticket.txt
-    printf "${BLUE}%*s${NC}\n" 60 | tr ' ' '=' >> /tmp/J01_ticket.txt
-    echo "" >> /tmp/J01_ticket.txt
-    
-    # ESCENARIO - CIAN
-    echo "${CYAN}📋 ESCENARIO:${NC}" >> /tmp/J01_ticket.txt
-    echo "${CYAN}{{ variant.description }}${NC}" >> /tmp/J01_ticket.txt
-    echo "" >> /tmp/J01_ticket.txt
-    
-    # SÍNTOMAS - AMARILLO
-    echo "${YELLOW}🔍 SÍNTOMAS:${NC}" >> /tmp/J01_ticket.txt
-    {% for s in variant.symptoms %}
-    echo "${YELLOW}• {{ s }}${NC}" >> /tmp/J01_ticket.txt
-    {% endfor %}
-    echo "" >> /tmp/J01_ticket.txt
-    
-    # TAREA - VERDE
-    echo "${GREEN}🎯 TAREA:${NC}" >> /tmp/J01_ticket.txt
-    echo "${GREEN}{{ variant.task }}${NC}" >> /tmp/J01_ticket.txt
-    echo "" >> /tmp/J01_ticket.txt
-    
-    # RESTRICCIONES - ROJO
-    echo "${RED}⚠️  RESTRICCIONES:${NC}" >> /tmp/J01_ticket.txt
-    {% for r in variant.restrictions %}
-    echo "${RED}• {{ r }}${NC}" >> /tmp/J01_ticket.txt
-    {% endfor %}
-    echo "" >> /tmp/J01_ticket.txt
-    
-    # PISTAS - MORADO
-    echo "${PURPLE}💡 PISTAS:${NC}" >> /tmp/J01_ticket.txt
-    {% for p in variant.hints %}
-    echo "${PURPLE}• {{ p | replace('SERVICE_USER', service_user) | replace('SERVICE_NAME', service_name) | replace('SERVICE_DIR', service_dir) }}${NC}" >> /tmp/J01_ticket.txt
-    {% endfor %}
-    echo "" >> /tmp/J01_ticket.txt
-    
-    # RESULTADO - DESTACADO
-    printf "${GREEN}═══════════════════════════════════════════════════════════${NC}\n" >> /tmp/J01_ticket.txt
-    echo "${GREEN}📊 RESULTADO: ${RED}{{ final_state }}${NC}${GREEN}${NC}" >> /tmp/J01_ticket.txt
-    printf "${GREEN}═══════════════════════════════════════════════════════════${NC}\n" >> /tmp/J01_ticket.txt
-    echo "" >> /tmp/J01_ticket.txt
-    
-    # INSTRUCCIÓN FINAL
-    echo "${WHITE}💻 CONÉCTATE AHORA:${NC}" >> /tmp/J01_ticket.txt
-    echo "${WHITE}ssh student@${hostvars['web01'].ansible_host | default('192.168.122.22')}${NC}" >> /tmp/J01_ticket.txt
-    
-    # MOSTRAR CON COLORES
+    # MOSTRAR DIRECTO con colores (SIN archivo)
     clear
-    cat /tmp/J01_ticket.txt
+    printf "${BLUE}%*s${NC}\n" 60 | tr ' ' '='
+    echo "${WHITE}                    LAB J01 - JUNIOR                      ${NC}"
+    echo "${WHITE}                VARIANTE: ${YELLOW}${selected_variant_file}${NC}               "
+    printf "${BLUE}%*s${NC}\n" 60 | tr ' ' '='
+    echo ""
+    
+    echo "${CYAN}📋 ESCENARIO:${NC}"
+    echo "${CYAN}{{ variant.description }}${NC}"
+    echo ""
+    
+    echo "${YELLOW}🔍 SÍNTOMAS:${NC}"
+    {% for s in variant.symptoms %}
+    echo "${YELLOW}• {{ s }}${NC}"
+    {% endfor %}
+    echo ""
+    
+    echo "${GREEN}🎯 TAREA:${NC}"
+    echo "${GREEN}{{ variant.task }}${NC}"
+    echo ""
+    
+    echo "${RED}⚠️  RESTRICCIONES:${NC}"
+    {% for r in variant.restrictions %}
+    echo "${RED}• {{ r }}${NC}"
+    {% endfor %}
+    echo ""
+    
+    echo "${PURPLE}💡 PISTAS:${NC}"
+    {% for p in variant.hints %}
+    echo "${PURPLE}• {{ p | replace('SERVICE_USER', service_user) | replace('SERVICE_NAME', service_name) | replace('SERVICE_DIR', service_dir) }}${NC}"
+    {% endfor %}
+    echo ""
+    
+    printf "${GREEN}═══════════════════════════════════════════════════════════${NC}\n"
+    echo "${GREEN}📊 RESULTADO:${RED} {{ final_state }}${NC}"
+    printf "${GREEN}═══════════════════════════════════════════════════════════${NC}\n"
+    echo ""
+    echo "${WHITE}💻 SSH web01:${NC} ssh student@{{ hostvars['web01'].ansible_host | default('192.168.122.22') }}"
+    echo ""
+    echo "${WHITE}[Presiona Enter para mantener abierto]${NC}"
+    read -r
   args:
     executable: /bin/bash
   run_once: yes
