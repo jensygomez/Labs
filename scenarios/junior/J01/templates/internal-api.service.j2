@@ -1,0 +1,12 @@
+[Unit]
+Description=Internal API Service
+After=network.target
+
+[Service]
+Type=simple
+User={{ service_user }}
+ExecStart={{ service_dir }}/start.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
