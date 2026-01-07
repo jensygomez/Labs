@@ -1,26 +1,26 @@
+# inventory.yml modificado:
 all:
-  hosts:
-    localhost:
-      ansible_connection: local
-  
   children:
     admin:
       hosts:
         admin01:
           ansible_host: 192.168.122.20
-        localhost:
 
     web:
       hosts:
         web01:
           ansible_host: 192.168.122.22
-        localhost:
 
     client:
       hosts:
         client01:
           ansible_host: 192.168.122.21
+
+    # AÑADE un grupo 'controller' o añade localhost a todos los grupos
+    controller:
+      hosts:
         localhost:
+          ansible_connection: local
 
   vars:
     ansible_user: student
