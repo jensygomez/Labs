@@ -10,24 +10,20 @@
   gather_facts: false
 
   tasks:
-    # Cargar variables base
     - name: Cargar variables principales
       include_vars:
         file: vars/main.yml
 
-    # Seleccionar variante
     - name: Seleccionar variante aleatoria
       set_fact:
         selected_variant_file: "{{ variants | random }}"
       run_once: yes
 
-    # Cargar datos del ticket
     - name: Cargar datos de la variante
       include_vars:
         file: "tickets/{{ selected_variant_file }}"
         name: ticket_data
 
-    # Hacer variables disponibles GLOBALMENTE
     - name: Establecer variables globales
       set_fact:
         global_variant: "{{ ticket_data.variant }}"
@@ -67,7 +63,7 @@
       include_tasks: "inject/{{ hostvars['admin01'].global_selected_variant }}"
 
 # ------------------------------------------------------------------------------
-# 4. OBSERVACIÓN (solo client01)
+# 4. OBSERVACIÓN (solo client01) - FIX SERVICE UNKNOWN
 # ------------------------------------------------------------------------------
 - name: J01 | Observación del impacto
   hosts: client01
@@ -78,9 +74,9 @@
       include_vars:
         file: vars/main.yml
 
-    - name: Verificar servicio
+    - name: Verificar servicio DESDE client01 → web01
       shell: |
-        systemctl status {{ service_name }} >/dev/null 2>&1 || echo "SERVICE DOWN"
+        ssh student@web01 systemctl is-active {{ service_name }} 2>/dev/null || echo "SERVICE DOWN"
       register: service_status
       changed_when: false
 
@@ -91,18 +87,44 @@
       delegate_to: admin01
 
 # ------------------------------------------------------------------------------
-# 5. MOSTRAR TICKET FINAL (limpio, solo en admin01)
+# 5. MOSTRAR TICKET FINAL (EN admin01 usando TU show_ticket.yml)
 # ------------------------------------------------------------------------------
 - name: J01 | Mostrar resumen final
   hosts: admin01
   gather_facts: false
 
   tasks:
-    - name: Cargar variables para el resumen
+    # Hacer variables disponibles para show_ticket.yml
+    - name: Preparar variables para show_ticket.yml
       set_fact:
-        variant: "{{ global_variant }}"
-        selected_variant_file: "{{ global_selected_variant }}"
-        final_state: "{{ hostvars['admin01'].service_state | default('SERVICE UNKNOWN') }}"
+        variant: "{{ hostvars['admin01'].global_variant }}"
+        selected_variant_file: "{{ hostvars['admin01'].global_selected_variant }}"
+        final_state: "{{ hostvars['admin01'].service_state | default('SERVICE DOWN') }}"
+        service_user: "{{ hostvars['admin01'].service_user }}"
+        service_name: "{{ hostvars['admin01'].service_name }}"
+        service_dir: "{{ hostvars['admin01'].service_dir }}"
 
-    - name: Mostrar ticket final
-      import_tasks: tasks/show_ticket.yml
+    # EJECUTAR TU show_ticket.yml PERO MOSTRARLO EN admin01
+    - name: Renderizar tu show_ticket.yml y mostrar EN admin01
+      shell: |
+        ansible localhost -m debug -a "msg={{ lookup('template', 'tasks/show_ticket.yml') | regex_replace('debug:\\s*msg:\\s*\\|', '') }}" \
+        --extra-vars "variant={{ variant | to_json }} selected_variant_file={{ selected_variant_file }} final_state={{ final_state }} service_user={{ service_user }} service_name={{ service_name }} service_dir={{ service_dir }}" \
+        | sed '1,3d;$d' > /tmp/J01_ticket.txt
+        
+        echo "=== TICKET J01 GENERADO EN ADMIN01 ==="
+        cat /tmp/J01_ticket.txt
+        echo "======================================"
+      delegate_to: localhost
+      run_once: yes
+
+    # OPCIÓN MÁS SIMPLE - Copiar TU template renderizado
+    - name: Guardar ticket renderizado de show_ticket.yml
+      shell: |
+        cat > /tmp/J01_ticket.txt << 'EOF'
+        $(ansible-inventory -i ../../engine/inventory.yml --host admin01 --vars \
+          --extra-vars "variant={{ variant | to_json }} selected_variant_file={{ selected_variant_file }} final_state={{ final_state }}" \
+          --playbook tasks/show_ticket.yml -vvv 2>&1 | grep -A 100 "msg:" | sed 's/^msg: //')
+        EOF
+      args:
+        executable: /bin/bash
+      run_once: yes
