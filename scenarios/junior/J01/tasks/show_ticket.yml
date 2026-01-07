@@ -1,7 +1,8 @@
 # /home/jensy/GitHub/Labs/scenarios/junior/J01/tasks/show_ticket.yml
+# tasks/show_ticket.yml
 - name: Mostrar ticket final EN admin01
   shell: |
-    cat > /tmp/J01_ticket.txt << EOF
+    cat > /tmp/J01_ticket.txt << 'EOF'
 ╔══════════════════════════════════════════════════════════╗
 ║                    LAB J01 - JUNIOR                      ║
 ║                VARIANTE: {{ selected_variant_file }}     ║
@@ -25,7 +26,9 @@
 
 💡 PISTAS:
 {% for p in variant.hints %}
-• {{ p | replace('SERVICE_USER', service_user) | replace('SERVICE_NAME', service_name) | replace('SERVICE_DIR', service_dir) }}
+• {{ p | replace('SERVICE_USER', service_user) | 
+       replace('SERVICE_NAME', service_name) | 
+       replace('SERVICE_DIR', service_dir) }}
 {% endfor %}
 
 ═══════════════════════════════════════════════════════════
@@ -33,6 +36,7 @@
 ═══════════════════════════════════════════════════════════
 SSH web01: ssh student@{{ hostvars['web01'].ansible_host | default('192.168.122.21') }}
 EOF
+    
     clear
     cat /tmp/J01_ticket.txt
   args:
