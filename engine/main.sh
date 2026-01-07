@@ -24,6 +24,11 @@ LABS=()
 load_db() {
     LABS=()
 
+    if [[ ! -f "$DB_FILE" ]]; then
+        echo "[ERROR] No se encuentra el archivo labs.db en: $DB_FILE"
+        return 1
+    fi
+
     while IFS='|' read -r ID TRACK LEVEL ARTIFACT TYPE USES STATUS; do
         # Limpiar espacios en blanco
         ID=$(echo "$ID" | xargs)
@@ -35,10 +40,7 @@ load_db() {
         LABS+=("$ID|$TRACK|$LEVEL|$ARTIFACT|$TYPE|$USES")
     done < "$DB_FILE"
 
-    [[ "${#LABS[@]}" -eq 0 ]] && {
-        echo "[ERROR] No hay laboratorios activos en labs.db"
-        exit 1
-    }
+    echo "[INFO] Cargados ${#LABS[@]} laboratorio(s) activo(s)"
 }
 
 # ==============================================================================
@@ -52,17 +54,19 @@ main_menu() {
     echo
     echo "Seleccione su nivel actual:"
     echo
-    echo "1) Junior (0 –18 meses)"
-    echo "2) Pleno  (24–36 meses)"
-    echo "3) Senior (36+   meses)"
+    echo "1) Junior (0–18 meses)"
+    echo "2) Junior-Pleno (18–24 meses)"
+    echo "3) Pleno (24–36 meses)"
+    echo "4) Senior (36+ meses)"
     echo "0) Salir"
     echo
     read -rp "Opción: " option
 
     case "$option" in
-        1) assign_lab "Junior" ;;          # Corresponde a LEVEL en DB
-        2) assign_lab "Pleno" ;;
-        3) assign_lab "Senior" ;;
+        1) assign_lab "Junior" ;;
+        2) assign_lab "Junior-Pleno" ;;
+        3) assign_lab "Pleno" ;;
+        4) assign_lab "Senior" ;;
         0) exit 0 ;;
         *)
             echo
@@ -87,11 +91,18 @@ assign_lab() {
     echo "========================================"
     echo
 
+    if [[ "${#LABS[@]}" -eq 0 ]]; then
+        echo "[ERROR] No hay laboratorios activos en la base de datos."
+        echo "Contacte al administrador para activar laboratorios."
+        sleep 3
+        return
+    fi
+
     # Buscar labs activos del nivel con menor USES
     for LAB in "${LABS[@]}"; do
         IFS='|' read -r ID TRACK LAB_LEVEL ARTIFACT TYPE USES <<< "$LAB"
         
-        # Filtrar por nivel y estado activo (ya filtrado en load_db)
+        # Filtrar por nivel
         [[ "$LAB_LEVEL" != "$LEVEL" ]] && continue
 
         if [[ -z "$MIN_USES" || "$USES" -lt "$MIN_USES" ]]; then
@@ -103,8 +114,13 @@ assign_lab() {
     done
 
     [[ "${#CANDIDATES[@]}" -eq 0 ]] && {
-        echo "No hay laboratorios activos para este nivel."
-        sleep 2
+        echo "[INFO] No hay laboratorios activos para el nivel '$LEVEL'."
+        echo "Laboratorios disponibles para otros niveles:"
+        for LAB in "${LABS[@]}"; do
+            IFS='|' read -r ID TRACK LAB_LEVEL ARTIFACT TYPE USES <<< "$LAB"
+            echo "  - $ID ($LAB_LEVEL): $USES usos"
+        done
+        sleep 3
         return
     }
 
@@ -136,6 +152,13 @@ run_lab() {
     echo " Ejecutando laboratorio $ID"
     echo "========================================"
     echo
+
+    if [[ ! -f "$PLAYBOOK" ]]; then
+        echo "[ERROR] No se encuentra el playbook: $PLAYBOOK"
+        echo "Verifique la ruta del artifact en la base de datos."
+        sleep 3
+        return
+    fi
 
     "$ANSIBLE_WRAPPER" \
         "$PLAYBOOK" \
@@ -175,7 +198,10 @@ increment_uses() {
 # ==============================================================================
 # BLOQUE PRINCIPAL
 # ==============================================================================
-load_db
+load_db || {
+    echo "[ADVERTENCIA] Problema al cargar la base de datos"
+    echo "Continuando con lista de laboratorios vacía..."
+}
 
 while true; do
     main_menu
