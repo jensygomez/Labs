@@ -1,71 +1,45 @@
 #!/bin/bash
 # ==============================================================================
-# LABS ENGINE - Generador automático de laboratorios Linux
-# Soporta niveles: Junior / Pleno / Senior
-# Selección automática + contador + inyección remota en VM
+# LABS ENGINE v2 — Orquestador de Laboratorios
+# Soporta niveles: Junior / Junior-Pleno / Senior
+# Ejecución desacoplada (Ansible, Bash, futuro)
 # Autor: Jensy - 2026
 # ==============================================================================
 
-set -uo pipefail
+set -euo pipefail
 
 # ==============================================================================
-# BLOQUE 0 - CONFIGURACIÓN GLOBAL
+# CONFIGURACIÓN GLOBAL
 # ==============================================================================
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="$BASE_DIR/lab.conf"
+DB_FILE="$BASE_DIR/labs.db"
 
-[[ -f "$CONFIG_FILE" ]] || { echo "ERROR: Falta $CONFIG_FILE"; exit 1; }
+[[ -f "$CONFIG_FILE" ]] || { echo "ERROR: Falta lab.conf"; exit 1; }
+[[ -f "$DB_FILE" ]]     || { echo "ERROR: Falta labs.db"; exit 1; }
+
 source "$CONFIG_FILE"
 
 # ==============================================================================
-# BLOQUE 1 - FUNCIONES AUXILIARES
+# CARGA DE BASE DE DATOS
 # ==============================================================================
-# ------------------------------------------------------------------------------
-# Verifica conexión SSH + sudo
-# ------------------------------------------------------------------------------
-verify_connection() {
-    echo -e "${CYAN}Verificando conexión a la VM y acceso sudo...${RESET}"
-
-    if ! ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
-             -o BatchMode=yes -q "$VM_USER@$VM_HOST" exit 2>/dev/null; then
-        echo -e "${RED}✗ Error: No se puede conectar por SSH a $VM_HOST${RESET}"
-        exit 1
-    fi
-
-    if ! ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o BatchMode=yes -q \
-             "$VM_USER@$VM_HOST" "echo '$SUDO_PASS' | sudo -S whoami" 2>/dev/null | \
-             grep -q "^root$"; then
-        echo -e "${RED}✗ Error: sudo falla (password incorrecta o configuración)${RESET}"
-        exit 1
-    fi
-
-    echo -e "${GREEN}✓ Conexión SSH y sudo verificados correctamente${RESET}"
-    sleep 0.5
-}
-
-# ------------------------------------------------------------------------------
-# Leer base de datos labs.db y cargar arrays
-# ------------------------------------------------------------------------------
 load_db() {
-    declare -gA LAB_LEVEL LAB_SCRIPT LAB_USES LAB_STATUS
-    while IFS='|' read -r id level script uses status; do
+    declare -gA LAB_LEVEL LAB_SCRIPT LAB_USES LAB_STATUS LAB_TYPE
+
+    while IFS='|' read -r id level type script uses status; do
         [[ "$id" == "ID" || -z "$id" ]] && continue
         LAB_LEVEL["$id"]="$level"
+        LAB_TYPE["$id"]="$type"       # bash | ansible | future
         LAB_SCRIPT["$id"]="$script"
         LAB_USES["$id"]="$uses"
         LAB_STATUS["$id"]="$status"
     done < "$DB_FILE"
-
-    [[ ${#LAB_LEVEL[@]} -eq 0 ]] && {
-        echo -e "${RED}ERROR: Base de datos vacía o inválida${RESET}"
-        exit 1
-    }
 }
 
-# ------------------------------------------------------------------------------
-# Selecciona lab con menor contador + azar
-# ------------------------------------------------------------------------------
-select_lab() {
+# ==============================================================================
+# SELECCIÓN DE LAB
+# ==============================================================================
+select_lab_auto() {
     local min_use
     min_use=$(printf "%s\n" "${LAB_USES[@]}" | sort -n | head -1)
 
@@ -75,126 +49,106 @@ select_lab() {
             CANDIDATES+=("$id")
     done
 
-    index=$(( RANDOM % ${#CANDIDATES[@]} ))
-    SELECTED_LAB="${CANDIDATES[index]}"
-    SELECTED_LAB_LEVEL="${LAB_LEVEL[$SELECTED_LAB]}"
-    SELECTED_LAB_SCRIPT="${LAB_SCRIPT[$SELECTED_LAB]}"
-
-    echo -e "${GREEN}Laboratorio seleccionado: $SELECTED_LAB (${SELECTED_LAB_LEVEL}) - Script: $SELECTED_LAB_SCRIPT (uso=${LAB_USES[$SELECTED_LAB]})${RESET}"
-    sleep 0.5
+    SELECTED_LAB="${CANDIDATES[RANDOM % ${#CANDIDATES[@]}]}"
 }
 
-# ------------------------------------------------------------------------------
-# Actualiza contador del lab
-# ------------------------------------------------------------------------------
-update_lab_counter() {
-    local new_count=$(( LAB_USES["$SELECTED_LAB"] + 1 ))
-    sed -i "s/^${SELECTED_LAB}|.*|.*|.*|.*/${SELECTED_LAB}|${SELECTED_LAB_LEVEL}|${SELECTED_LAB_SCRIPT}|${new_count}|${LAB_STATUS[$SELECTED_LAB]}/" "$DB_FILE"
-    echo -e "${GREEN}OK - $SELECTED_LAB ahora tiene contador $new_count${RESET}"
-    sleep 0.5
+select_lab_by_level() {
+    local level="$1"
+    CANDIDATES=()
+
+    for id in "${!LAB_LEVEL[@]}"; do
+        [[ "${LAB_LEVEL[$id]}" == "$level" && "${LAB_STATUS[$id]}" == "active" ]] && \
+            CANDIDATES+=("$id")
+    done
+
+    [[ ${#CANDIDATES[@]} -eq 0 ]] && {
+        echo "No hay labs activos para nivel $level"
+        exit 1
+    }
+
+    SELECTED_LAB="${CANDIDATES[RANDOM % ${#CANDIDATES[@]}]}"
 }
 
-# ------------------------------------------------------------------------------
-# Construir ruta del script según nivel
-# ------------------------------------------------------------------------------
-build_patch_path() {
+# ==============================================================================
+# EJECUCIÓN DEL LAB
+# ==============================================================================
+execute_lab() {
+    local level="${LAB_LEVEL[$SELECTED_LAB]}"
+    local type="${LAB_TYPE[$SELECTED_LAB]}"
+    local script="${LAB_SCRIPT[$SELECTED_LAB]}"
+
     LABS_DIR="$(realpath "$BASE_DIR/../scenarios")"
-    patch_path="$LABS_DIR/${SELECTED_LAB_LEVEL,,}/$SELECTED_LAB_SCRIPT"
+    LAB_PATH="$LABS_DIR/${level,,}/$script"
 
-    [[ -f "$patch_path" ]] || { echo -e "${RED}ERROR: No existe el script $patch_path${RESET}"; exit 1; }
-    echo -e "${GREEN}Encontrado script: $patch_path${RESET}"
-    sleep 0.5
-}
+    [[ -f "$LAB_PATH" ]] || {
+        echo "ERROR: No existe $LAB_PATH"
+        exit 1
+    }
 
-# ------------------------------------------------------------------------------
-# Mostrar ticket localmente
-# ------------------------------------------------------------------------------
-show_lab_ticket() {
-    source "$patch_path"
-    show_ticket
     echo
-    echo -e "${YELLOW}Presiona Enter para inyectar el laboratorio en la VM...${RESET}"
-    read -r
-}
-
-# ------------------------------------------------------------------------------
-# Aplicar laboratorio en la VM usando la función del lab
-# ------------------------------------------------------------------------------
-apply_lab_remote() {
-    echo -e "${CYAN}Copiando laboratorio $SELECTED_LAB a la VM...${RESET}"
-
-    scp -q -i "$SSH_KEY" -o StrictHostKeyChecking=no \
-        "$patch_path" "$VM_USER@$VM_HOST:/tmp/lab.sh"
-
-    echo -e "${CYAN}Ejecutando apply_lab() como root en la VM...${RESET}"
-
-    ssh -T -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" << EOF
-echo '$SUDO_PASS' | sudo -S bash -c '
-    source /tmp/lab.sh
-    apply_lab --apply
-'
-rm -f /tmp/lab.sh
-EOF
-}
-
-# ------------------------------------------------------------------------------
-# Reboot automático post-laboratorio (GLOBAL para todos los labs)
-# ------------------------------------------------------------------------------
-trigger_vm_reboot() {
-    echo -e "${CYAN}🔄 Iniciando reboot automático de la VM...${RESET}"
-    echo -e "${YELLOW}El laboratorio estará listo en ~30 segundos${RESET}"
-    
-    ssh -T -i "$SSH_KEY" -o StrictHostKeyChecking=no "$VM_USER@$VM_HOST" << EOF
-echo "LAB $SELECTED_LAB aplicado - listo para diagnóstico" | sudo tee -a /var/log/lab_engine.log
-echo 'Reboot automático activado por Labs Engine...'
-sudo wall "🔄 REBOOT: Lab $SELECTED_LAB configurado. Conéctate en 30s."
-sleep 5
-sudo reboot
-EOF
-    
-    echo -e "${GREEN}✅ VM reiniciándose automáticamente...${RESET}"
-    echo -e "${YELLOW}Conéctate cuando esté arriba:${RESET}"
-    echo "    ssh -i $SSH_KEY $VM_USER@$VM_HOST"
-}
-
-# ------------------------------------------------------------------------------
-# Mensaje final
-# ------------------------------------------------------------------------------
-print_completion() {
+    echo "▶ Ejecutando laboratorio $SELECTED_LAB"
+    echo "  Nivel : $level"
+    echo "  Tipo  : $type"
+    echo "  Script: $script"
     echo
-    echo -e "${CYAN}==================================================${RESET}"
-    echo -e "${GREEN}¡LABORATORIO $SELECTED_LAB LISTO!${RESET}"
-    echo
-    echo -e "${CYAN}Conéctate y resuélvelo:${RESET}"
-    echo -e "${YELLOW}    ssh -i $SSH_KEY $VM_USER@$VM_HOST${RESET}"
-    echo -e "${CYAN}==================================================${RESET}"
-    echo -e "${GREEN}¡A practicar! 🚀${RESET}"
+
+    case "$type" in
+        ansible)
+            "$BASE_DIR/ansible_wrapper.sh" "$LAB_PATH" "$BASE_DIR/inventory.yml"
+            ;;
+        bash)
+            echo "⚠️  Bash labs no soportados en v2 (legacy)"
+            ;;
+        *)
+            echo "ERROR: Tipo de lab desconocido ($type)"
+            exit 1
+            ;;
+    esac
 }
 
 # ==============================================================================
-# BLOQUE PRINCIPAL - EJECUCIÓN
+# MENÚ
 # ==============================================================================
-echo "Leyendo la base de datos"
+show_menu() {
+    echo
+    echo "LABS ENGINE"
+    echo "───────────"
+    echo "1) Ejecutar laboratorio (auto)"
+    echo "2) Ejecutar laboratorio por nivel"
+    echo "3) Listar laboratorios"
+    echo "4) Salir"
+    echo
+    read -rp "Selecciona una opción: " opt
+
+    case "$opt" in
+        1)
+            select_lab_auto
+            execute_lab
+            ;;
+        2)
+            read -rp "Nivel (junior | junior_pleno | senior): " lvl
+            select_lab_by_level "$lvl"
+            execute_lab
+            ;;
+        3)
+            printf "%-6s %-15s %-10s %-20s %-5s\n" "ID" "Nivel" "Tipo" "Script" "Usos"
+            for id in "${!LAB_LEVEL[@]}"; do
+                printf "%-6s %-15s %-10s %-20s %-5s\n" \
+                    "$id" "${LAB_LEVEL[$id]}" "${LAB_TYPE[$id]}" \
+                    "${LAB_SCRIPT[$id]}" "${LAB_USES[$id]}"
+            done
+            ;;
+        4)
+            exit 0
+            ;;
+        *)
+            echo "Opción inválida"
+            ;;
+    esac
+}
+
+# ==============================================================================
+# MAIN
+# ==============================================================================
 load_db
-sleep 0.5
-echo "Seleccionando laboratorio..."
-select_lab
-sleep 0.5
-update_lab_counter
-sleep 0.5
-echo "Construyendo path del script..."
-build_patch_path
-sleep 0.5
-verify_connection
-sleep 0.5
-
-# Mostrar ticket ANTES de aplicar
-show_lab_ticket
-
-echo "Aplicando laboratorio remotamente..."
-apply_lab_remote
-
-# 🔄 REBOOT AUTOMÁTICO DESPUÉS DE APLICAR
-trigger_vm_reboot
-
-print_completion
+show_menu

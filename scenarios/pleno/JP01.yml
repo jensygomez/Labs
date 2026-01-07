@@ -1,0 +1,160 @@
+# ============================================================================
+# JP01 — Service Deployed but Fails Across One Tier (WITH VARIANTS)
+# Nivel: Junior → Junior-Pleno (≈24 meses)
+# Tecnología: Ansible
+#
+# Descripción general:
+# El servicio httpd está instalado y habilitado en el tier web,
+# pero solo web01 presenta un fallo. La causa cambia en cada ejecución
+# mediante una variante aleatoria.
+#
+# El operador NO conoce la variante.
+# ============================================================================
+
+---
+
+# -----------------------------------------------------------------------------
+# VARIABLES GLOBALES
+# -----------------------------------------------------------------------------
+- name: "JP01 | Definición de variables y ticket"
+  hosts: all
+  gather_facts: false
+
+  vars:
+    jp01_variants: ['A', 'B', 'C', 'D']
+    variant: "{{ variant | default(jp01_variants | random) }}"
+
+  tasks:
+    - name: "Mostrar ticket de incidente"
+      debug:
+        msg: |
+          🎫 INCIDENTE #JP01
+          Impacto: Cliente no accede a http://web01
+          Síntoma: Timeout / conexión rechazada
+          Prioridad: Media
+          Nota: Servicio aparentemente instalado
+
+# -----------------------------------------------------------------------------
+# PLAY 1 — Preparación del entorno base (estado esperado)
+# -----------------------------------------------------------------------------
+- name: "JP01 | Preparar entorno base"
+  hosts: web
+  become: true
+
+  tasks:
+    - name: "Instalar httpd"
+      package:
+        name: httpd
+        state: present
+
+    - name: "Asegurar servicio habilitado"
+      service:
+        name: httpd
+        enabled: true
+
+# -----------------------------------------------------------------------------
+# PLAY 2 — Inyección del fallo (VARIANTE ALEATORIA)
+# -----------------------------------------------------------------------------
+- name: "JP01 | Inyectar fallo controlado"
+  hosts: web
+  become: true
+
+  tasks:
+    # -------------------------
+    # VARIANTE A — Configuración inválida
+    # -------------------------
+    - name: "VAR A | Configuración inválida de httpd"
+      when:
+        - inventory_hostname == 'web01'
+        - variant == 'A'
+      copy:
+        dest: /etc/httpd/conf.d/broken.conf
+        content: "Listen 99999"
+
+    # -------------------------
+    # VARIANTE B — Permisos incorrectos en DocumentRoot
+    # -------------------------
+    - name: "VAR B | Permisos incorrectos en /var/www/html"
+      when:
+        - inventory_hostname == 'web01'
+        - variant == 'B'
+      file:
+        path: /var/www/html
+        owner: root
+        group: root
+        mode: '000'
+
+    # -------------------------
+    # VARIANTE C — Puerto incorrecto
+    # -------------------------
+    - name: "VAR C | Cambiar puerto HTTP"
+      when:
+        - inventory_hostname == 'web01'
+        - variant == 'C'
+      lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        regexp: '^Listen '
+        line: 'Listen 8080'
+
+    # -------------------------
+    # VARIANTE D — SELinux bloquea contenido web
+    # -------------------------
+    - name: "VAR D | Contexto SELinux incorrecto"
+      when:
+        - inventory_hostname == 'web01'
+        - variant == 'D'
+      shell: |
+        chcon -R -t user_home_t /var/www/html
+
+    - name: "Reiniciar httpd (aplicar fallo)"
+      service:
+        name: httpd
+        state: restarted
+      ignore_errors: true
+
+# -----------------------------------------------------------------------------
+# PLAY 3 — Diagnóstico (SIN CORREGIR)
+# -----------------------------------------------------------------------------
+- name: "JP01 | Diagnóstico del servicio"
+  hosts: web
+  become: true
+
+  tasks:
+    - name: "Recolectar facts de servicios"
+      service_facts:
+
+    - name: "Estado de httpd por host"
+      debug:
+        msg: "httpd en {{ inventory_hostname }}: {{ ansible_facts.services['httpd.service'].state | default('no instalado') }}"
+
+    - name: "Verificar puertos en escucha"
+      shell: ss -lntp | grep httpd || true
+      changed_when: false
+
+# -----------------------------------------------------------------------------
+# PLAY 4 — Validación desde cliente
+# -----------------------------------------------------------------------------
+- name: "JP01 | Validación desde cliente"
+  hosts: client
+
+  tasks:
+    - name: "Probar acceso HTTP a web01"
+      uri:
+        url: http://web01
+        return_content: no
+      register: web_test
+      failed_when: false
+
+    - name: "Resultado desde cliente"
+      debug:
+        msg: "Resultado HTTP: {{ web_test.status | default('sin respuesta') }}"
+
+# -----------------------------------------------------------------------------
+# CRITERIOS DE ÉXITO
+# -----------------------------------------------------------------------------
+# El operador debe ser capaz de:
+# - Determinar que solo web01 está afectado
+# - Identificar la causa raíz (según variante)
+# - Explicar por qué otros nodos no fallan
+# - Proponer corrección SIN romper el baseline
+# -----------------------------------------------------------------------------
