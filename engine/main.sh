@@ -3,10 +3,15 @@
 # INCIDENT RESPONSE LAB ENGINE
 # main.sh
 # ------------------------------------------------------------------------------
-# - Selector de laboratorios por nivel
-# - Soporte Bash y Ansible
+# Rol:
+# - Orquestador de laboratorios
+# - Menú por nivel (Junior / Junior-Pleno / Senior)
+# - Selección de labs
 # - Métricas de uso
-# - Arquitectura escalable (Senior-ready)
+#
+# Backend único:
+# - Ansible (vía ansible_wrapper.sh)
+#
 # Autor: Jensy - 2026
 # ==============================================================================
 
@@ -18,6 +23,7 @@ set -euo pipefail
 ENGINE_DIR="$(cd "$(dirname "$0")" && pwd)"
 DB_FILE="$ENGINE_DIR/labs.db"
 INVENTORY="$ENGINE_DIR/inventory.yml"
+ANSIBLE_WRAPPER="$ENGINE_DIR/ansible_wrapper.sh"
 
 LABS=()
 
@@ -27,11 +33,11 @@ LABS=()
 load_db() {
     LABS=()
 
-    while IFS='|' read -r ID TRACK LEVEL ARTIFACT TYPE USES STATUS; do
+    while IFS='|' read -r ID TRACK LEVEL ARTIFACT USES STATUS; do
         [[ "$ID" == "ID" ]] && continue
         [[ "$STATUS" != "active" ]] && continue
 
-        LABS+=("$ID|$TRACK|$LEVEL|$ARTIFACT|$TYPE|$USES")
+        LABS+=("$ID|$TRACK|$LEVEL|$ARTIFACT|$USES")
     done < "$DB_FILE"
 
     [[ "${#LABS[@]}" -eq 0 ]] && {
@@ -51,9 +57,9 @@ main_menu() {
     echo
     echo "Seleccione su nivel actual:"
     echo
-    echo "1) Junior (0–18 meses)"
-    echo "2) Junior-Pleno (18–36 meses)"
-    echo "3) Senior (36+ meses) [PRÓXIMAMENTE]"
+    echo "1) Junior ( 0–18 meses)"
+    echo "2) Pleno  (18–36 meses)"
+    echo "3) Senior (36+   meses) [PRÓXIMAMENTE]"
     echo "0) Salir"
     echo
     read -rp "Opción: " option
@@ -89,11 +95,11 @@ select_track() {
     echo
 
     for LAB in "${LABS[@]}"; do
-        IFS='|' read -r ID LAB_TRACK LEVEL ARTIFACT TYPE USES <<< "$LAB"
+        IFS='|' read -r ID LAB_TRACK LEVEL ARTIFACT USES <<< "$LAB"
 
         if [[ "$LAB_TRACK" == "$TRACK" ]]; then
             AVAILABLE+=("$LAB")
-            printf "%-6s %-30s [%s]\n" "$ID" "$LEVEL" "$TYPE"
+            printf "%-6s %-40s\n" "$ID" "$LEVEL"
         fi
     done
 
@@ -109,9 +115,9 @@ select_track() {
     [[ "$choice" == "b" ]] && return
 
     for LAB in "${AVAILABLE[@]}"; do
-        IFS='|' read -r ID LAB_TRACK LEVEL ARTIFACT TYPE USES <<< "$LAB"
+        IFS='|' read -r ID LAB_TRACK LEVEL ARTIFACT USES <<< "$LAB"
         if [[ "$ID" == "$choice" ]]; then
-            run_lab "$ID" "$ARTIFACT" "$TYPE"
+            run_lab "$ID" "$ARTIFACT"
             return
         fi
     done
@@ -122,12 +128,11 @@ select_track() {
 }
 
 # ==============================================================================
-# BLOQUE 4 - EJECUTOR GENÉRICO DE LABS
+# BLOQUE 4 - EJECUCIÓN DE LAB (ANSIBLE ONLY)
 # ==============================================================================
 run_lab() {
     local ID="$1"
-    local ARTIFACT="$2"
-    local TYPE="$3"
+    local PLAYBOOK="$2"
 
     clear
     echo "========================================"
@@ -135,17 +140,9 @@ run_lab() {
     echo "========================================"
     echo
 
-    case "$TYPE" in
-        bash)
-            bash "$ARTIFACT"
-            ;;
-        ansible)
-            run_ansible_lab "$ID" "$ARTIFACT"
-            ;;
-        *)
-            echo "[ERROR] Tipo de laboratorio desconocido: $TYPE"
-            ;;
-    esac
+    "$ANSIBLE_WRAPPER" \
+        "$PLAYBOOK" \
+        "$INVENTORY"
 
     increment_uses "$ID"
 
@@ -155,33 +152,14 @@ run_lab() {
 }
 
 # ==============================================================================
-# BLOQUE 5 - WRAPPER ANSIBLE
-# ==============================================================================
-run_ansible_lab() {
-    local ID="$1"
-    local PLAYBOOK="$2"
-
-    local VARIANT
-    VARIANT="$(shuf -e A B C D -n 1)"
-
-    echo "Variante seleccionada: $VARIANT"
-    echo
-
-    ansible-playbook \
-        -i "$INVENTORY" \
-        "$PLAYBOOK" \
-        -e "variant=$VARIANT"
-}
-
-# ==============================================================================
-# BLOQUE 6 - MÉTRICAS (USES++)
+# BLOQUE 5 - MÉTRICAS (USES++)
 # ==============================================================================
 increment_uses() {
     local ID="$1"
 
     awk -F'|' -v id="$ID" 'BEGIN {OFS=FS}
         NR==1 {print; next}
-        $1==id {$6=$6+1}
+        $1==id {$5=$5+1}
         {print}
     ' "$DB_FILE" > "$DB_FILE.tmp" && mv "$DB_FILE.tmp" "$DB_FILE"
 }
