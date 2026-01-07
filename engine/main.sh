@@ -19,26 +19,33 @@ ANSIBLE_WRAPPER="$ENGINE_DIR/ansible_wrapper.sh"
 LABS=()
 
 # ==============================================================================
-# BLOQUE 1 - CARGA DE BASE DE DATOS
+# BLOQUE 1 - CARGA DE BASE DE DATOS (MANEJA ESPACIOS)
 # ==============================================================================
 load_db() {
     LABS=()
 
     if [[ ! -f "$DB_FILE" ]]; then
-        echo "[ERROR] No se encuentra el archivo labs.db en: $DB_FILE"
+        echo "[ERROR] No se encuentra el archivo labs.db en: $DB_FILE" >&2
         return 1
     fi
 
-    # Usar awk para limpiar todos los campos automáticamente
+    # Método simple y robusto
     awk -F'|' '
         NR==1 {next}  # Saltar cabecera
         {
-            # Limpiar espacios de todos los campos
-            for(i=1; i<=NF; i++) {
-                gsub(/^[[:space:]]+|[[:space:]]+$/, "", $i)
-            }
+            # Limpiar ESPECIALMENTE el campo STATUS (campo 7)
+            status = $7
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", status)
             
-            if ($7 == "active") {
+            # Limpiar los otros campos que necesitamos
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", $1)
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2)
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", $3)
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", $4)
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", $5)
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", $6)
+            
+            if (status == "active") {
                 printf "%s|%s|%s|%s|%s|%s\n", $1, $2, $3, $4, $5, $6
             }
         }
@@ -46,7 +53,7 @@ load_db() {
         LABS+=("$LINE")
     done
 
-    echo "[INFO] Cargados ${#LABS[@]} laboratorio(s) activo(s)"
+    echo "[INFO] Cargados ${#LABS[@]} laboratorio(s) activo(s)" >&2
 }
 
 # ==============================================================================
@@ -108,7 +115,7 @@ assign_lab() {
     for LAB in "${LABS[@]}"; do
         IFS='|' read -r ID TRACK LAB_LEVEL ARTIFACT TYPE USES <<< "$LAB"
         
-        # Filtrar por nivel (los campos ya están limpios)
+        # Filtrar por nivel
         [[ "$LAB_LEVEL" != "$LEVEL" ]] && continue
 
         if [[ -z "$MIN_USES" || "$USES" -lt "$MIN_USES" ]]; then
@@ -204,10 +211,11 @@ increment_uses() {
 # ==============================================================================
 # BLOQUE PRINCIPAL
 # ==============================================================================
-load_db || {
-    echo "[ADVERTENCIA] Problema al cargar la base de datos"
-    echo "Continuando con lista de laboratorios vacía..."
-}
+# Cargar base de datos
+if ! load_db; then
+    echo "[ADVERTENCIA] Problema al cargar la base de datos" >&2
+    echo "Continuando con lista de laboratorios vacía..." >&2
+fi
 
 while true; do
     main_menu
