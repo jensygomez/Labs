@@ -4,38 +4,36 @@
 # Nivel: Junior
 # Tipo: Ansible (Producción)
 # ==============================================================================
+
+# ------------------------------------------------------------------------------
+- name: J01 | Seleccionar variante
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    variants:
+      - variant_1.yml    
+      - variant_2.yml   
+      - variant_3.yml   
+      - variant_4.yml   
+
+    selected_variant: "{{ variant | default(variants | random) }}"
+
+  tasks:
+    - name: Guardar variante seleccionada
+      set_fact:
+        j01_variant: "{{ selected_variant }}"
+
+# ------------------------------------------------------------------------------
 - name: J01 | Mostrar ticket del incidente
   hosts: all
   gather_facts: false
 
+  vars_files:
+    - "tickets/{{ hostvars['localhost'].j01_variant }}"
+
   tasks:
-    - name: Ticket del incidente
-      debug:
-        msg: |
-          =========================================================
-          INCIDENTE #J01
-          ---------------------------------------------------------
-          Impacto:
-            Aplicación interna crítica no inicia.
-
-          Síntomas:
-            - El servicio existe en systemd
-            - El servicio falla al iniciar o muere inmediatamente
-            - El sistema operativo está estable
-
-          Contexto:
-            Tras un cambio administrativo reciente orientado
-            a seguridad, la aplicación dejó de funcionar.
-
-          Objetivo:
-            Identificar y corregir el desalineamiento entre
-            identidad del servicio y permisos reales.
-
-          Restricciones:
-            - NO ejecutar el servicio como root
-            - NO usar chmod 777
-            - La corrección debe persistir tras reboot
-          =========================================================
+    - import_tasks: tasks/show_ticket.yml
 
 # ------------------------------------------------------------------------------
 - name: J01 | Preparar baseline del servicio
@@ -48,32 +46,24 @@
     - import_tasks: tasks/base.yml
 
 # ------------------------------------------------------------------------------
-- name: J01 | Inyectar fallo (variante aleatoria)
+- name: J01 | Inyectar fallo (variante seleccionada)
   hosts: web
   become: true
   vars_files:
     - vars/main.yml
 
-  vars:
-    selected_variant: "{{ variant | default(variants | random) }}"
-
   tasks:
-    - name: Mostrar variante seleccionada (solo para motor)
-      debug:
-        msg: "Variante seleccionada: {{ selected_variant }}"
-
     - name: Ejecutar variante
-      import_tasks: "tasks/{{ selected_variant }}"
+      import_tasks: "tasks/{{ hostvars['localhost'].j01_variant }}"
 
 # ------------------------------------------------------------------------------
-- name: J01 | Validación desde cliente
+- name: J01 | Observación desde cliente
   hosts: client
   gather_facts: false
 
   tasks:
     - name: Probar acceso lógico al servicio (simulado)
-      shell: |
-        systemctl status internal-api >/dev/null 2>&1 || echo "SERVICE DOWN"
+      shell: systemctl status internal-api >/dev/null 2>&1 || echo "SERVICE DOWN"
       changed_when: false
       register: client_check
       ignore_errors: true
