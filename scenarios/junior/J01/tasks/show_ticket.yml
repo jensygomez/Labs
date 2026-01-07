@@ -1,41 +1,21 @@
-# /home/jensy/GitHub/Labs/scenarios/junior/J01/tasks/show_ticket.yml
-# tasks/show_ticket.yml
+# tasks/show_ticket.yml - SIN PROBLEMAS VSCode
 - name: Mostrar ticket final EN admin01
   shell: |
-    cat > /tmp/J01_ticket.txt << 'EOF'
-╔══════════════════════════════════════════════════════════╗
-║                    LAB J01 - JUNIOR                      ║
-║                VARIANTE: {{ selected_variant_file }}     ║
-╚══════════════════════════════════════════════════════════╝
-
-📋 ESCENARIO:
-{{ variant.description }}
-
-🔍 SÍNTOMAS:
-{% for s in variant.symptoms %}
-• {{ s }}
-{% endfor %}
-
-🎯 TAREA:
-{{ variant.task }}
-
-⚠️  RESTRICCIONES:
-{% for r in variant.restrictions %}
-• {{ r }}
-{% endfor %}
-
-💡 PISTAS:
-{% for p in variant.hints %}
-• {{ p | replace('SERVICE_USER', service_user) | 
-       replace('SERVICE_NAME', service_name) | 
-       replace('SERVICE_DIR', service_dir) }}
-{% endfor %}
-
-═══════════════════════════════════════════════════════════
-📊 RESULTADO: {{ final_state }}
-═══════════════════════════════════════════════════════════
-SSH web01: ssh student@{{ hostvars['web01'].ansible_host | default('192.168.122.21') }}
-EOF
+    echo "╔══════════════════════════════════════════════════════════╗" > /tmp/J01_ticket.txt
+    echo "║                    LAB J01 - JUNIOR                      ║" >> /tmp/J01_ticket.txt
+    echo "║                VARIANTE: {{ selected_variant_file }}     ║" >> /tmp/J01_ticket.txt
+    echo "╚══════════════════════════════════════════════════════════╝" >> /tmp/J01_ticket.txt
+    echo "" >> /tmp/J01_ticket.txt
+    echo "📋 ESCENARIO:" >> /tmp/J01_ticket.txt
+    echo "{{ variant.description }}" >> /tmp/J01_ticket.txt
+    echo "" >> /tmp/J01_ticket.txt
+    echo "🔍 SÍNTOMAS:" >> /tmp/J01_ticket.txt
+    {% for s in variant.symptoms %}
+    echo "• {{ s }}" >> /tmp/J01_ticket.txt
+    {% endfor %}
+    echo "" >> /tmp/J01_ticket.txt
+    echo "📊 RESULTADO: {{ final_state }}" >> /tmp/J01_ticket.txt
+    echo "SSH web01: ssh student@{{ hostvars['web01'].ansible_host | default('192.168.122.21') }}" >> /tmp/J01_ticket.txt
     
     clear
     cat /tmp/J01_ticket.txt
