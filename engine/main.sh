@@ -1,154 +1,196 @@
 #!/bin/bash
 # ==============================================================================
-# LABS ENGINE v2 — Orquestador de Laboratorios
-# Soporta niveles: Junior / Junior-Pleno / Senior
-# Ejecución desacoplada (Ansible, Bash, futuro)
+# INCIDENT RESPONSE LAB ENGINE
+# main.sh
+# ------------------------------------------------------------------------------
+# - Selector de laboratorios por nivel
+# - Soporte Bash y Ansible
+# - Métricas de uso
+# - Arquitectura escalable (Senior-ready)
 # Autor: Jensy - 2026
 # ==============================================================================
 
 set -euo pipefail
 
 # ==============================================================================
-# CONFIGURACIÓN GLOBAL
+# BLOQUE 0 - CONFIGURACIÓN GLOBAL
 # ==============================================================================
-BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_FILE="$BASE_DIR/lab.conf"
-DB_FILE="$BASE_DIR/labs.db"
+ENGINE_DIR="$(cd "$(dirname "$0")" && pwd)"
+DB_FILE="$ENGINE_DIR/labs.db"
+INVENTORY="$ENGINE_DIR/inventory.yml"
 
-[[ -f "$CONFIG_FILE" ]] || { echo "ERROR: Falta lab.conf"; exit 1; }
-[[ -f "$DB_FILE" ]]     || { echo "ERROR: Falta labs.db"; exit 1; }
-
-source "$CONFIG_FILE"
+LABS=()
 
 # ==============================================================================
-# CARGA DE BASE DE DATOS
+# BLOQUE 1 - CARGA DE BASE DE DATOS
 # ==============================================================================
 load_db() {
-    declare -gA LAB_LEVEL LAB_SCRIPT LAB_USES LAB_STATUS LAB_TYPE
+    LABS=()
 
-    while IFS='|' read -r id level type script uses status; do
-        [[ "$id" == "ID" || -z "$id" ]] && continue
-        LAB_LEVEL["$id"]="$level"
-        LAB_TYPE["$id"]="$type"       # bash | ansible | future
-        LAB_SCRIPT["$id"]="$script"
-        LAB_USES["$id"]="$uses"
-        LAB_STATUS["$id"]="$status"
+    while IFS='|' read -r ID TRACK LEVEL ARTIFACT TYPE USES STATUS; do
+        [[ "$ID" == "ID" ]] && continue
+        [[ "$STATUS" != "active" ]] && continue
+
+        LABS+=("$ID|$TRACK|$LEVEL|$ARTIFACT|$TYPE|$USES")
     done < "$DB_FILE"
-}
 
-# ==============================================================================
-# SELECCIÓN DE LAB
-# ==============================================================================
-select_lab_auto() {
-    local min_use
-    min_use=$(printf "%s\n" "${LAB_USES[@]}" | sort -n | head -1)
-
-    CANDIDATES=()
-    for id in "${!LAB_USES[@]}"; do
-        [[ "${LAB_USES[$id]}" -eq "$min_use" && "${LAB_STATUS[$id]}" == "active" ]] && \
-            CANDIDATES+=("$id")
-    done
-
-    SELECTED_LAB="${CANDIDATES[RANDOM % ${#CANDIDATES[@]}]}"
-}
-
-select_lab_by_level() {
-    local level="$1"
-    CANDIDATES=()
-
-    for id in "${!LAB_LEVEL[@]}"; do
-        [[ "${LAB_LEVEL[$id]}" == "$level" && "${LAB_STATUS[$id]}" == "active" ]] && \
-            CANDIDATES+=("$id")
-    done
-
-    [[ ${#CANDIDATES[@]} -eq 0 ]] && {
-        echo "No hay labs activos para nivel $level"
+    [[ "${#LABS[@]}" -eq 0 ]] && {
+        echo "[ERROR] No hay laboratorios activos en labs.db"
         exit 1
     }
-
-    SELECTED_LAB="${CANDIDATES[RANDOM % ${#CANDIDATES[@]}]}"
 }
 
 # ==============================================================================
-# EJECUCIÓN DEL LAB
+# BLOQUE 2 - MENÚ PRINCIPAL
 # ==============================================================================
-execute_lab() {
-    local level="${LAB_LEVEL[$SELECTED_LAB]}"
-    local type="${LAB_TYPE[$SELECTED_LAB]}"
-    local script="${LAB_SCRIPT[$SELECTED_LAB]}"
-
-    LABS_DIR="$(realpath "$BASE_DIR/../scenarios")"
-    LAB_PATH="$LABS_DIR/${level,,}/$script"
-
-    [[ -f "$LAB_PATH" ]] || {
-        echo "ERROR: No existe $LAB_PATH"
-        exit 1
-    }
-
+main_menu() {
+    clear
+    echo "========================================"
+    echo "  INCIDENT RESPONSE LAB ENGINE"
+    echo "========================================"
     echo
-    echo "▶ Ejecutando laboratorio $SELECTED_LAB"
-    echo "  Nivel : $level"
-    echo "  Tipo  : $type"
-    echo "  Script: $script"
+    echo "Seleccione su nivel actual:"
     echo
-
-    case "$type" in
-        ansible)
-            "$BASE_DIR/ansible_wrapper.sh" "$LAB_PATH" "$BASE_DIR/inventory.yml"
-            ;;
-        bash)
-            echo "⚠️  Bash labs no soportados en v2 (legacy)"
-            ;;
-        *)
-            echo "ERROR: Tipo de lab desconocido ($type)"
-            exit 1
-            ;;
-    esac
-}
-
-# ==============================================================================
-# MENÚ
-# ==============================================================================
-show_menu() {
+    echo "1) Junior (0–18 meses)"
+    echo "2) Junior-Pleno (18–36 meses)"
+    echo "3) Senior (36+ meses) [PRÓXIMAMENTE]"
+    echo "0) Salir"
     echo
-    echo "LABS ENGINE"
-    echo "───────────"
-    echo "1) Ejecutar laboratorio (auto)"
-    echo "2) Ejecutar laboratorio por nivel"
-    echo "3) Listar laboratorios"
-    echo "4) Salir"
-    echo
-    read -rp "Selecciona una opción: " opt
+    read -rp "Opción: " option
 
-    case "$opt" in
-        1)
-            select_lab_auto
-            execute_lab
-            ;;
-        2)
-            read -rp "Nivel (junior | junior_pleno | senior): " lvl
-            select_lab_by_level "$lvl"
-            execute_lab
-            ;;
+    case "$option" in
+        1) select_track "junior" ;;
+        2) select_track "junior_pleno" ;;
         3)
-            printf "%-6s %-15s %-10s %-20s %-5s\n" "ID" "Nivel" "Tipo" "Script" "Usos"
-            for id in "${!LAB_LEVEL[@]}"; do
-                printf "%-6s %-15s %-10s %-20s %-5s\n" \
-                    "$id" "${LAB_LEVEL[$id]}" "${LAB_TYPE[$id]}" \
-                    "${LAB_SCRIPT[$id]}" "${LAB_USES[$id]}"
-            done
+            echo
+            echo "Nivel Senior aún no disponible."
+            sleep 2
             ;;
-        4)
-            exit 0
-            ;;
+        0) exit 0 ;;
         *)
-            echo "Opción inválida"
+            echo
+            echo "Opción inválida."
+            sleep 1
             ;;
     esac
 }
 
 # ==============================================================================
-# MAIN
+# BLOQUE 3 - SELECCIÓN DE LAB POR TRACK
+# ==============================================================================
+select_track() {
+    local TRACK="$1"
+    local AVAILABLE=()
+
+    clear
+    echo "========================================"
+    echo " Laboratorios disponibles: $TRACK"
+    echo "========================================"
+    echo
+
+    for LAB in "${LABS[@]}"; do
+        IFS='|' read -r ID LAB_TRACK LEVEL ARTIFACT TYPE USES <<< "$LAB"
+
+        if [[ "$LAB_TRACK" == "$TRACK" ]]; then
+            AVAILABLE+=("$LAB")
+            printf "%-6s %-30s [%s]\n" "$ID" "$LEVEL" "$TYPE"
+        fi
+    done
+
+    [[ "${#AVAILABLE[@]}" -eq 0 ]] && {
+        echo
+        echo "No hay laboratorios disponibles para este nivel."
+        sleep 2
+        return
+    }
+
+    echo
+    read -rp "Ingrese ID del laboratorio (o 'b' para volver): " choice
+    [[ "$choice" == "b" ]] && return
+
+    for LAB in "${AVAILABLE[@]}"; do
+        IFS='|' read -r ID LAB_TRACK LEVEL ARTIFACT TYPE USES <<< "$LAB"
+        if [[ "$ID" == "$choice" ]]; then
+            run_lab "$ID" "$ARTIFACT" "$TYPE"
+            return
+        fi
+    done
+
+    echo
+    echo "Laboratorio no encontrado."
+    sleep 2
+}
+
+# ==============================================================================
+# BLOQUE 4 - EJECUTOR GENÉRICO DE LABS
+# ==============================================================================
+run_lab() {
+    local ID="$1"
+    local ARTIFACT="$2"
+    local TYPE="$3"
+
+    clear
+    echo "========================================"
+    echo " Ejecutando laboratorio $ID"
+    echo "========================================"
+    echo
+
+    case "$TYPE" in
+        bash)
+            bash "$ARTIFACT"
+            ;;
+        ansible)
+            run_ansible_lab "$ID" "$ARTIFACT"
+            ;;
+        *)
+            echo "[ERROR] Tipo de laboratorio desconocido: $TYPE"
+            ;;
+    esac
+
+    increment_uses "$ID"
+
+    echo
+    echo "Laboratorio finalizado."
+    read -rp "Presione ENTER para continuar..."
+}
+
+# ==============================================================================
+# BLOQUE 5 - WRAPPER ANSIBLE
+# ==============================================================================
+run_ansible_lab() {
+    local ID="$1"
+    local PLAYBOOK="$2"
+
+    local VARIANT
+    VARIANT="$(shuf -e A B C D -n 1)"
+
+    echo "Variante seleccionada: $VARIANT"
+    echo
+
+    ansible-playbook \
+        -i "$INVENTORY" \
+        "$PLAYBOOK" \
+        -e "variant=$VARIANT"
+}
+
+# ==============================================================================
+# BLOQUE 6 - MÉTRICAS (USES++)
+# ==============================================================================
+increment_uses() {
+    local ID="$1"
+
+    awk -F'|' -v id="$ID" 'BEGIN {OFS=FS}
+        NR==1 {print; next}
+        $1==id {$6=$6+1}
+        {print}
+    ' "$DB_FILE" > "$DB_FILE.tmp" && mv "$DB_FILE.tmp" "$DB_FILE"
+}
+
+# ==============================================================================
+# BLOQUE PRINCIPAL
 # ==============================================================================
 load_db
-show_menu
+
+while true; do
+    main_menu
+done
