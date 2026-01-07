@@ -71,7 +71,7 @@
 
   tasks:
     - name: Ejecutar inyección de la variante
-      import_tasks: "inject/{{ j01_variant }}"  # <-- CAMBIADO: quitado hostvars['localhost']
+      include_tasks: "inject/{{ j01_variant }}"  # <-- CAMBIADO: quitado hostvars['localhost']
 
 # ------------------------------------------------------------------------------
 # Observación desde cliente
