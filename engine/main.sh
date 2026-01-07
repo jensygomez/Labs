@@ -29,16 +29,22 @@ load_db() {
         return 1
     fi
 
-    while IFS='|' read -r ID TRACK LEVEL ARTIFACT TYPE USES STATUS; do
-        # Limpiar espacios en blanco
-        ID=$(echo "$ID" | xargs)
-        STATUS=$(echo "$STATUS" | xargs)
-        
-        [[ "$ID" == "ID" ]] && continue
-        [[ "$STATUS" != "active" ]] && continue  # Solo labs activos
-
-        LABS+=("$ID|$TRACK|$LEVEL|$ARTIFACT|$TYPE|$USES")
-    done < "$DB_FILE"
+    # Usar awk para limpiar todos los campos automáticamente
+    awk -F'|' '
+        NR==1 {next}  # Saltar cabecera
+        {
+            # Limpiar espacios de todos los campos
+            for(i=1; i<=NF; i++) {
+                gsub(/^[[:space:]]+|[[:space:]]+$/, "", $i)
+            }
+            
+            if ($7 == "active") {
+                printf "%s|%s|%s|%s|%s|%s\n", $1, $2, $3, $4, $5, $6
+            }
+        }
+    ' "$DB_FILE" | while read -r LINE; do
+        LABS+=("$LINE")
+    done
 
     echo "[INFO] Cargados ${#LABS[@]} laboratorio(s) activo(s)"
 }
@@ -102,7 +108,7 @@ assign_lab() {
     for LAB in "${LABS[@]}"; do
         IFS='|' read -r ID TRACK LAB_LEVEL ARTIFACT TYPE USES <<< "$LAB"
         
-        # Filtrar por nivel
+        # Filtrar por nivel (los campos ya están limpios)
         [[ "$LAB_LEVEL" != "$LEVEL" ]] && continue
 
         if [[ -z "$MIN_USES" || "$USES" -lt "$MIN_USES" ]]; then
@@ -180,11 +186,11 @@ increment_uses() {
     awk -F'|' -v id="$ID" 'BEGIN {OFS=FS}
         NR==1 {print; next}
         {
-            # Limpiar espacios
-            gsub(/^[ \t]+|[ \t]+$/, "", $1)
+            # Limpiar espacios del ID para comparación
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", $1)
             if ($1 == id) {
-                # Limpiar y convertir USES a número
-                gsub(/^[ \t]+|[ \t]+$/, "", $6)
+                # Limpiar USES y convertir a número
+                gsub(/^[[:space:]]+|[[:space:]]+$/, "", $6)
                 $6 = $6 + 1
             }
             print
