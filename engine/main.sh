@@ -3,15 +3,6 @@
 # INCIDENT RESPONSE LAB ENGINE
 # main.sh
 # ------------------------------------------------------------------------------
-# Rol:
-# - Orquestador de laboratorios
-# - Menú por nivel (Junior / Junior-Pleno / Senior)
-# - Asignación AUTOMÁTICA de labs
-# - Métricas de uso
-#
-# Backend único:
-# - Ansible (vía ansible_wrapper.sh)
-#
 # Autor: Jensy - 2026
 # ==============================================================================
 
@@ -34,10 +25,14 @@ load_db() {
     LABS=()
 
     while IFS='|' read -r ID TRACK LEVEL ARTIFACT TYPE USES STATUS; do
+        # Limpiar espacios en blanco
+        ID=$(echo "$ID" | xargs)
+        STATUS=$(echo "$STATUS" | xargs)
+        
         [[ "$ID" == "ID" ]] && continue
-        [[ "$STATUS" != "active" ]] && continue
+        [[ "$STATUS" != "active" ]] && continue  # Solo labs activos
 
-        LABS+=("$ID|$TRACK|$LEVEL|$ARTIFACT|$USES")
+        LABS+=("$ID|$TRACK|$LEVEL|$ARTIFACT|$TYPE|$USES")
     done < "$DB_FILE"
 
     [[ "${#LABS[@]}" -eq 0 ]] && {
@@ -57,21 +52,17 @@ main_menu() {
     echo
     echo "Seleccione su nivel actual:"
     echo
-    echo "1) Junior ( 0–18 meses)"
-    echo "2) Pleno  (18–36 meses)"
-    echo "3) Senior (36+   meses) [PRÓXIMAMENTE]"
+    echo "1) Junior (0 –18 meses)"
+    echo "2) Pleno  (24–36 meses)"
+    echo "3) Senior (36+   meses)"
     echo "0) Salir"
     echo
     read -rp "Opción: " option
 
     case "$option" in
-        1) assign_lab "junior" ;;
-        2) assign_lab "pleno" ;;
-        3)
-            echo
-            echo "Nivel Senior aún no disponible."
-            sleep 2
-            ;;
+        1) assign_lab "Junior" ;;          # Corresponde a LEVEL en DB
+        2) assign_lab "Pleno" ;;
+        3) assign_lab "Senior" ;;
         0) exit 0 ;;
         *)
             echo
@@ -85,21 +76,23 @@ main_menu() {
 # BLOQUE 3 - ASIGNACIÓN AUTOMÁTICA DE LAB
 # ==============================================================================
 assign_lab() {
-    local TRACK="$1"
+    local LEVEL="$1"
     local CANDIDATES=()
     local MIN_USES=""
 
     clear
     echo "========================================"
     echo " Asignando laboratorio automáticamente"
-    echo " Nivel: $TRACK"
+    echo " Nivel: $LEVEL"
     echo "========================================"
     echo
 
-    # Buscar labs activos del track con menor USE
+    # Buscar labs activos del nivel con menor USES
     for LAB in "${LABS[@]}"; do
-        IFS='|' read -r ID LAB_TRACK LEVEL ARTIFACT USES <<< "$LAB"
-        [[ "$LAB_TRACK" != "$TRACK" ]] && continue
+        IFS='|' read -r ID TRACK LAB_LEVEL ARTIFACT TYPE USES <<< "$LAB"
+        
+        # Filtrar por nivel y estado activo (ya filtrado en load_db)
+        [[ "$LAB_LEVEL" != "$LEVEL" ]] && continue
 
         if [[ -z "$MIN_USES" || "$USES" -lt "$MIN_USES" ]]; then
             MIN_USES="$USES"
@@ -117,11 +110,13 @@ assign_lab() {
 
     # Selección aleatoria entre los menos usados
     SELECTED="${CANDIDATES[$RANDOM % ${#CANDIDATES[@]}]}"
-    IFS='|' read -r ID LAB_TRACK LEVEL ARTIFACT USES <<< "$SELECTED"
+    IFS='|' read -r ID TRACK LEVEL ARTIFACT TYPE USES <<< "$SELECTED"
 
     echo "Laboratorio asignado:"
     echo "ID        : $ID"
+    echo "Track     : $TRACK"
     echo "Nivel     : $LEVEL"
+    echo "Artifact  : $ARTIFACT"
     echo "Usos prev.: $USES"
     echo
     sleep 2
@@ -161,9 +156,20 @@ increment_uses() {
 
     awk -F'|' -v id="$ID" 'BEGIN {OFS=FS}
         NR==1 {print; next}
-        $1==id {$5=$5+1}
-        {print}
+        {
+            # Limpiar espacios
+            gsub(/^[ \t]+|[ \t]+$/, "", $1)
+            if ($1 == id) {
+                # Limpiar y convertir USES a número
+                gsub(/^[ \t]+|[ \t]+$/, "", $6)
+                $6 = $6 + 1
+            }
+            print
+        }
     ' "$DB_FILE" > "$DB_FILE.tmp" && mv "$DB_FILE.tmp" "$DB_FILE"
+    
+    # Recargar base de datos después del cambio
+    load_db
 }
 
 # ==============================================================================
