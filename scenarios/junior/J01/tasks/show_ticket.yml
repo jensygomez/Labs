@@ -1,0 +1,31 @@
+# tasks/show_ticket.yml
+- name: Mostrar ticket del incidente
+  ansible.builtin.debug:
+    msg: |
+      ========================================================
+         LAB J01 – JUNIOR
+      ========================================================
+
+      Escenario:
+        {{ variant.description }}
+
+      Síntomas:
+        {% for s in variant.symptoms %}
+        • {{ s }}
+        {% endfor %}
+
+      Tarea:
+        {{ variant.task }}
+
+      Restricciones:
+        {% for r in variant.restrictions %}
+        • {{ r }}
+        {% endfor %}
+
+      Pistas:
+        {% for p in variant.hints %}
+        • {{ p }}
+        {% endfor %}
+
+      ========================================================
+      Ejecutar con --apply para inyectar la condición de fallo...

@@ -1,0 +1,21 @@
+# variants/variant_1.yml
+variant:
+  description: >
+    El servicio crítico no inicia porque el usuario real del servicio
+    ha sido eliminado del sistema, y systemd sigue intentando ejecutarlo
+    bajo ese usuario inexistente.
+  symptoms:
+    - El servicio existe en systemd
+    - El servicio falla al iniciar inmediatamente
+    - Journal muestra errores de “Failed to start” o problemas de permisos
+  task: >
+    Restaurar el usuario correcto y asegurarse de que el script de inicio
+    tenga la propiedad y permisos adecuados para que el servicio levante.
+  restrictions:
+    - NO ejecutar el servicio como root
+    - NO usar chmod 777
+    - La corrección debe persistir tras reboot
+  hints:
+    - Verifica `id {{ service_user }}` para comprobar si existe
+    - Revisa `systemctl status <nombre_servicio>` y `journalctl -xe`
+    - Ajusta el propietario del script: `chown {{ service_user }}:{{ service_user }} {{ service_dir }}/start.sh`
