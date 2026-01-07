@@ -1,0 +1,87 @@
+---
+# ==============================================================================
+# J01 — User Access Breaks Critical Service
+# Nivel: Junior
+# Tipo: Ansible (Producción)
+# ==============================================================================
+- name: J01 | Mostrar ticket del incidente
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Ticket del incidente
+      debug:
+        msg: |
+          =========================================================
+          INCIDENTE #J01
+          ---------------------------------------------------------
+          Impacto:
+            Aplicación interna crítica no inicia.
+
+          Síntomas:
+            - El servicio existe en systemd
+            - El servicio falla al iniciar o muere inmediatamente
+            - El sistema operativo está estable
+
+          Contexto:
+            Tras un cambio administrativo reciente orientado
+            a seguridad, la aplicación dejó de funcionar.
+
+          Objetivo:
+            Identificar y corregir el desalineamiento entre
+            identidad del servicio y permisos reales.
+
+          Restricciones:
+            - NO ejecutar el servicio como root
+            - NO usar chmod 777
+            - La corrección debe persistir tras reboot
+          =========================================================
+
+# ------------------------------------------------------------------------------
+- name: J01 | Preparar baseline del servicio
+  hosts: web
+  become: true
+  vars_files:
+    - vars/main.yml
+
+  tasks:
+    - import_tasks: tasks/base.yml
+
+# ------------------------------------------------------------------------------
+- name: J01 | Inyectar fallo (variante aleatoria)
+  hosts: web
+  become: true
+  vars_files:
+    - vars/main.yml
+
+  vars:
+    selected_variant: "{{ variant | default(variants | random) }}"
+
+  tasks:
+    - name: Mostrar variante seleccionada (solo para motor)
+      debug:
+        msg: "Variante seleccionada: {{ selected_variant }}"
+
+    - name: Ejecutar variante
+      import_tasks: "tasks/{{ selected_variant }}"
+
+# ------------------------------------------------------------------------------
+- name: J01 | Validación desde cliente
+  hosts: client
+  gather_facts: false
+
+  tasks:
+    - name: Probar acceso lógico al servicio (simulado)
+      shell: |
+        systemctl status internal-api >/dev/null 2>&1 || echo "SERVICE DOWN"
+      changed_when: false
+      register: client_check
+      ignore_errors: true
+
+    - name: Resultado observado por el cliente
+      debug:
+        msg: "Resultado cliente: {{ client_check.stdout | default('sin respuesta') }}"
+
+# ------------------------------------------------------------------------------
+# FIN DEL LABORATORIO
+# ------------------------------------------------------------------------------
