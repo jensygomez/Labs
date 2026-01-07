@@ -1,19 +1,21 @@
+plugin: yaml
+
 all:
   children:
     admin:
       hosts:
         admin01:
           ansible_host: 192.168.122.20
-          ansible_user: student
     web:
       hosts:
         web01:
           ansible_host: 192.168.122.22
-          ansible_user: student
     client:
       hosts:
         client01:
           ansible_host: 192.168.122.21
-          ansible_user: student
+
   vars:
+    ansible_user: student
     ansible_python_interpreter: /usr/bin/python3
+
