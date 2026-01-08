@@ -31,7 +31,7 @@
       run_once: yes
 
 # ------------------------------------------------------------------------------
-# 2. PREPARAR BASELINE (solo web01)
+# 2. PREPARAR BASELINE
 # ------------------------------------------------------------------------------
 - name: J01 | Preparar baseline del servicio
   hosts: web01
@@ -47,7 +47,7 @@
       import_tasks: tasks/base.yml
 
 # ------------------------------------------------------------------------------
-# 3. INYECTAR FALLO (solo web01)
+# 3. INYECTAR FALLO
 # ------------------------------------------------------------------------------
 - name: J01 | Inyectar fallo
   hosts: web01
@@ -63,7 +63,7 @@
       include_tasks: "inject/{{ hostvars['admin01'].global_selected_variant }}"
 
 # ------------------------------------------------------------------------------
-# 4. VERIFICAR SERVICIO (DIRECTO en web01 - SIN SSH)
+# 4. VERIFICAR SERVICIO
 # ------------------------------------------------------------------------------
 - name: J01 | Verificar estado del servicio
   hosts: web01
@@ -85,7 +85,7 @@
       run_once: yes
 
 # ------------------------------------------------------------------------------
-# 5. MOSTRAR TICKET FINAL (LLAMA TU show_ticket.yml EXISTENTE)
+# 5. MOSTRAR TICKET FINAL
 # ------------------------------------------------------------------------------
 - name: J01 | Mostrar resumen final
   hosts: admin01

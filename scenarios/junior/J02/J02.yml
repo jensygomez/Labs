@@ -1,12 +1,12 @@
 # ==============================================================================
-# J01 — User Access Breaks Critical Service
+# J02 — Service Configuration and DNS Resolution Issue
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# 1. CONFIGURACIÓN INICIAL (SOLO admin01)
+# 1. CONFIGURACIÓN INICIAL (SOLO admin-j02.example.com)
 # ------------------------------------------------------------------------------
-- name: J01 | Configuración inicial
-  hosts: admin01
+- name: J02 | Configuración inicial
+  hosts: admin-j02.example.com
   gather_facts: false
 
   tasks:
@@ -31,10 +31,10 @@
       run_once: yes
 
 # ------------------------------------------------------------------------------
-# 2. PREPARAR BASELINE (solo web01)
+# 2. PREPARAR BASELINE
 # ------------------------------------------------------------------------------
-- name: J01 | Preparar baseline del servicio
-  hosts: web01
+- name: J02 | Preparar baseline del sistema
+  hosts: all
   become: true
   gather_facts: true
 
@@ -47,10 +47,10 @@
       import_tasks: tasks/base.yml
 
 # ------------------------------------------------------------------------------
-# 3. INYECTAR FALLO (solo web01)
+# 3. INYECTAR FALLO
 # ------------------------------------------------------------------------------
-- name: J01 | Inyectar fallo
-  hosts: web01
+- name: J02 | Inyectar fallo
+  hosts: web-j02.example.com
   become: true
   gather_facts: false
 
@@ -60,13 +60,13 @@
         file: vars/main.yml
 
     - name: Ejecutar inyección
-      include_tasks: "inject/{{ hostvars['admin01'].global_selected_variant }}"
+      include_tasks: "inject/{{ hostvars['admin-j02.example.com'].global_selected_variant }}"
 
 # ------------------------------------------------------------------------------
-# 4. VERIFICAR SERVICIO (DIRECTO en web01 - SIN SSH)
+# 4. VERIFICAR SERVICIO
 # ------------------------------------------------------------------------------
-- name: J01 | Verificar estado del servicio
-  hosts: web01
+- name: J02 | Verificar estado del servicio
+  hosts: web-j02.example.com
   become: true
   gather_facts: false
 
@@ -78,29 +78,47 @@
       failed_when: false
       changed_when: false
 
+    - name: Comprobar resolución DNS
+      shell: |
+        dig +short {{ inventory_hostname }}
+        dig +short admin-j02.{{ domain }}
+        dig +short web-j02.{{ domain }}
+        dig +short client-j02.{{ domain }}
+      register: dns_check
+      failed_when: false
+      changed_when: false
+
     - name: Determinar estado para ticket
       set_fact:
-        final_state: "{{ 'SERVICE DOWN' if (service_status is failed or (service_status.status is defined and service_status.status.ActiveState != 'active')) else 'SERVICE DOWN (baseline)' }}"
-      delegate_to: admin01
+        final_state: >-
+          {% if service_status is failed or (service_status.status is defined and service_status.status.ActiveState != 'active') %}
+            SERVICE DOWN
+          {% elif 'NXDOMAIN' in dns_check.stdout or dns_check.rc != 0 %}
+            DNS RESOLUTION FAILED
+          {% else %}
+            SERVICE OPERATIONAL
+          {% endif %}
+      delegate_to: admin-j02.example.com
       run_once: yes
 
 # ------------------------------------------------------------------------------
-# 5. MOSTRAR TICKET FINAL (LLAMA TU show_ticket.yml EXISTENTE)
+# 5. MOSTRAR TICKET FINAL
 # ------------------------------------------------------------------------------
-- name: J01 | Mostrar resumen final
-  hosts: admin01
+- name: J02 | Mostrar resumen final
+  hosts: admin-j02.example.com
   gather_facts: false
 
   tasks:
-    - name: Preparar variables para TU show_ticket.yml
+    - name: Preparar variables para show_ticket.yml
       set_fact:
-        variant: "{{ hostvars['admin01'].global_variant }}"
-        selected_variant_file: "{{ hostvars['admin01'].global_selected_variant }}"
-        final_state: "{{ hostvars['admin01'].final_state | default('SERVICE DOWN') }}"
-        service_user: "{{ hostvars['admin01'].service_user }}"
-        service_name: "{{ hostvars['admin01'].service_name }}"
-        service_dir: "{{ hostvars['admin01'].service_dir }}"
+        variant: "{{ hostvars['admin-j02.example.com'].global_variant }}"
+        selected_variant_file: "{{ hostvars['admin-j02.example.com'].global_selected_variant }}"
+        final_state: "{{ hostvars['admin-j02.example.com'].final_state | default('SERVICE DOWN') }}"
+        service_user: "{{ hostvars['admin-j02.example.com'].service_user }}"
+        service_name: "{{ hostvars['admin-j02.example.com'].service_name }}"
+        service_dir: "{{ hostvars['admin-j02.example.com'].service_dir }}"
+        domain: "{{ hostvars['admin-j02.example.com'].domain }}"
 
-    - name: IMPORTAR TU show_ticket.yml EXISTENTE
+    - name: Mostrar ticket
       import_tasks: tasks/show_ticket.yml
       run_once: yes
