@@ -1,4 +1,5 @@
 #!/bin/bash
+# /home/jensy/Labs/engine/ansible_wrapper.sh
 # ==============================================================================
 # Ansible Wrapper - Incident Labs Engine
 # ------------------------------------------------------------------------------
@@ -18,17 +19,26 @@
 set -euo pipefail
 
 # ------------------------------------------------------------------------------
-# Parámetros
+# Configuración de rutas (PORTABLE)
 # ------------------------------------------------------------------------------
-PLAYBOOK="$1"
-INVENTORY="$2"
-
 ENGINE_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT_DIR="$(cd "$ENGINE_DIR/.." && pwd)"
+
+# Exportar variables para inventory.yml
+export LAB_ENGINE_DIR="$ENGINE_DIR"
+export LAB_ROOT_DIR="$ROOT_DIR"
+
 LOG_DIR="$ENGINE_DIR/logs"
 RUN_ID="$(date +%Y%m%d_%H%M%S)"
 LOG_FILE="$LOG_DIR/ansible_${RUN_ID}.log"
 
 mkdir -p "$LOG_DIR"
+
+# ------------------------------------------------------------------------------
+# Parámetros
+# ------------------------------------------------------------------------------
+PLAYBOOK="$1"
+INVENTORY="$2"
 
 # ------------------------------------------------------------------------------
 # Validaciones
@@ -49,7 +59,7 @@ command -v ansible-playbook >/dev/null || {
 }
 
 # ------------------------------------------------------------------------------
-# Ejecución
+# Información de depuración
 # ------------------------------------------------------------------------------
 clear
 echo "========================================"
@@ -59,8 +69,20 @@ echo
 echo "Playbook : $PLAYBOOK"
 echo "Inventory: $INVENTORY"
 echo "Log file : $LOG_FILE"
+echo "Engine Dir: $LAB_ENGINE_DIR"
+echo "Root Dir  : $LAB_ROOT_DIR"
+echo "Clave SSH : $LAB_ROOT_DIR/.ssh/id_rhcsalabs"
 echo
 
+# Verificar que la clave SSH existe (solo warning)
+if [[ ! -f "$LAB_ROOT_DIR/.ssh/id_rhcsalabs" ]]; then
+    echo "[WRAPPER] WARNING: Clave SSH no encontrada en: $LAB_ROOT_DIR/.ssh/id_rhcsalabs"
+    echo "[WRAPPER] Verifique inventory.yml si falla la conexión"
+fi
+
+# ------------------------------------------------------------------------------
+# Ejecución
+# ------------------------------------------------------------------------------
 ansible-playbook \
     -i "$INVENTORY" \
     "$PLAYBOOK" \
@@ -73,7 +95,8 @@ RC=${PIPESTATUS[0]}
 # ------------------------------------------------------------------------------
 if [[ "$RC" -ne 0 ]]; then
     echo
-    echo "[WRAPPER] ERROR: Fallo durante ejecución de Ansible"
+    echo "[WRAPPER] ERROR: Fallo durante ejecución de Ansible (código: $RC)"
+    echo "[WRAPPER] Revise el log: $LOG_FILE"
     exit "$RC"
 fi
 

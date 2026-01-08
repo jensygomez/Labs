@@ -18,5 +18,5 @@ all:
   vars:
     ansible_user: student
     ansible_python_interpreter: /usr/bin/python3
-    ansible_ssh_private_key_file: "{{ lookup('env', 'LAB_ENGINE_DIR') }}/.ssh/id_rhcsalabs"
+    ansible_ssh_private_key_file: "{{ lookup('env', 'LAB_ROOT_DIR') }}/.ssh/id_rhcsalabs"
     domain: example.com
