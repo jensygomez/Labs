@@ -1,18 +1,16 @@
 ---
-# /home/jensy/GitHub/Labs/scenarios/junior/J01/vars/main.yml
+# scenarios/junior/J02/vars/main.yml
 # ==============================================================================
-# Variables globales — LAB J01
+# Variables globales — LAB J02
 # ==============================================================================
 
-# Servicio
-service_name: internal-api
-service_user: apiuser
+---
+# Variables de sistema
+corporate_user: sysadmin-junior
+domain: example.com
+service_name: internal-api.service
+service_user: internal-api
 service_dir: /opt/internal-api
-
-# Archivos
-start_script: "{{ service_dir }}/start.sh"
-config_file: "{{ service_dir }}/config.env"
-log_file: /var/log/lab_j01.log
 
 # Variantes disponibles
 variants:
@@ -20,7 +18,9 @@ variants:
   - variant_2.yml
   - variant_3.yml
   - variant_4.yml
-  # - variant_5.yml  # (opcional, futuro)
 
-# Seguridad
-service_shell: /sbin/nologin
+# Configuración del servicio
+service_port: 8080
+service_timeout: 30
+log_dir: /var/log/internal-api
+max_log_size: 100M

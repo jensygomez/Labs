@@ -1,23 +1,22 @@
-# inventory.yml modificado:
 all:
   children:
     admin:
       hosts:
-        admin01:
+        admin-j02.example.com:
           ansible_host: 192.168.122.20
 
     web:
       hosts:
-        web01:
+        web-j02.example.com:
           ansible_host: 192.168.122.22
 
     client:
       hosts:
-        client01:
+        client-j02.example.com:
           ansible_host: 192.168.122.21
 
-
   vars:
-    ansible_user: student
+    ansible_user: sysadmin-junior
     ansible_python_interpreter: /usr/bin/python3
-    ansible_ssh_private_key_file: /home/jensy/GitHub/Labs/.ssh/id_rhcsalabs
+    ansible_ssh_private_key_file: ~/Labs/.ssh/id_rhcsalabs
+    domain: example.com

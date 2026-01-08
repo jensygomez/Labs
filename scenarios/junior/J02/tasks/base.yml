@@ -1,14 +1,54 @@
 ---
-# ==============================================================================
-# BASELINE — Estado correcto esperado (ANTES del fallo)
-# ==============================================================================
-
-- name: Asegurar usuario del servicio
+- name: Crear usuario corporativo
   user:
-    name: "{{ service_user }}"
-    system: true
-    shell: /sbin/nologin
+    name: "{{ corporate_user }}"
+    comment: "Junior System Administrator"
+    shell: /bin/bash
+    groups: "wheel"
+    append: yes
+    password: "{{ 'Password123!' | password_hash('sha512') }}"
     state: present
+
+- name: Configurar sudo para usuario corporativo
+  copy:
+    dest: /etc/sudoers.d/{{ corporate_user }}
+    content: |
+      {{ corporate_user }} ALL=(ALL) NOPASSWD: ALL
+    validate: /usr/sbin/visudo -cf %s
+
+- name: Configurar archivo hosts local
+  blockinfile:
+    path: /etc/hosts
+    block: |
+      # J02 Lab Infrastructure
+      192.168.122.20 admin-j02.example.com admin-j02
+      192.168.122.22 web-j02.example.com web-j02
+      192.168.122.21 client-j02.example.com client-j02
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - J02 LAB"
+
+- name: Instalar paquetes básicos
+  package:
+    name:
+      - bind-utils
+      - net-tools
+      - curl
+      - wget
+      - vim-enhanced
+      - tmux
+      - htop
+    state: present
+
+- name: Configurar hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Configurar firewall para tráfico interno del lab
+  firewalld:
+    zone: internal
+    source: 192.168.122.0/24
+    state: enabled
+    permanent: yes
+    immediate: yes
 
 - name: Crear directorio del servicio
   file:
@@ -16,29 +56,28 @@
     state: directory
     owner: "{{ service_user }}"
     group: "{{ service_user }}"
-    mode: '0750'
+    mode: '0755'
+  when: inventory_hostname == "web-j02.example.com"
 
-- name: Crear script de inicio del servicio
-  copy:
-    dest: "{{ service_dir }}/start.sh"
-    owner: "{{ service_user }}"
-    group: "{{ service_user }}"
-    mode: '0750'
-    content: |
-      #!/bin/bash
-      echo "Internal API running"
-      sleep 300
-
-- name: Crear unidad systemd del servicio
+- name: Configurar servicio básico
   template:
     src: internal-api.service.j2
-    dest: "/etc/systemd/system/{{ service_name }}.service"
+    dest: /etc/systemd/system/{{ service_name }}
     owner: root
     group: root
     mode: '0644'
+  when: inventory_hostname == "web-j02.example.com"
+  notify: reload systemd
 
-- name: Registrar baseline en log
-  lineinfile:
-    path: "{{ log_file }}"
-    create: true
-    line: "[BASELINE] Servicio {{ service_name }} preparado correctamente"
+- name: Habilitar y arrancar servicio
+  systemd:
+    name: "{{ service_name }}"
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  when: inventory_hostname == "web-j02.example.com"
+
+handlers:
+  - name: reload systemd
+    systemd:
+      daemon_reload: yes
