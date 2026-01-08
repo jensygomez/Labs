@@ -1,0 +1,23 @@
+---
+# ==============================================================================
+# VARIANTE 2 — Script sin permisos de ejecución
+# ==============================================================================
+
+- name: Asegurar usuario del servicio existe
+  user:
+    name: "{{ service_user }}"
+    system: true
+    shell: /sbin/nologin
+    state: present
+
+- name: Quitar permisos de ejecución al script
+  file:
+    path: "{{ service_dir }}/start.sh"
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+    mode: '0640'
+
+- name: Registrar variante 2 en log
+  lineinfile:
+    path: "{{ log_file }}"
+    line: "[VARIANTE 2] Script {{ service_dir }}/start.sh sin permiso de ejecución"

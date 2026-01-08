@@ -1,0 +1,30 @@
+# ==============================================================================
+# VARIANTE 2 — Script sin permisos de ejecución
+# ==============================================================================
+
+variant:
+  description: |
+    En Linux, que un archivo exista no significa que pueda ejecutarse.
+    El sistema confía en los permisos para decidir qué puede correr y
+    bajo qué identidad. En este escenario, el servicio y el usuario
+    existen, pero el punto de entrada del servicio ha perdido su capacidad
+    de ejecución.
+
+  symptoms:
+    - "El servicio existe en systemd"
+    - "El usuario del servicio existe en el sistema"
+    - "El servicio falla al iniciar inmediatamente"
+    - "systemctl reporta errores genéricos de ejecución"
+    - "El journal no indica fallos de red ni de dependencias"
+
+  task: |
+    Identificar por qué el servicio no logra ejecutar su script de inicio
+    y restaurar los permisos mínimos necesarios para que systemd pueda
+    lanzar el proceso correctamente, respetando el principio de mínimo
+    privilegio.
+
+  restrictions:
+    - "NO ejecutar el servicio como root"
+    - "NO usar chmod 777"
+    - "NO cambiar el usuario del servicio"
+    - "La corrección debe persistir tras reboot"
