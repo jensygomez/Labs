@@ -1,33 +1,37 @@
 # ==============================================================================
-# VARIANTE 4 — Archivo de configuración inaccesible (EnvironmentFile)
+# TICKET PARA LA VARIANTE 4 
 # ==============================================================================
 
 variant:
   description: |
-    En sistemas Linux modernos, systemd no solo gestiona procesos, sino
-    también su entorno de ejecución. Muchos servicios dependen de archivos
-    externos para definir variables críticas. En este escenario, el
-    servicio está correctamente definido y su script es ejecutable, pero
-    el entorno requerido para iniciar el proceso no puede ser cargado
-    debido a restricciones de acceso al archivo de configuración.
+    El servicio {{ global_service_name }}.service está configurado con límites
+    de recursos de systemd extremadamente restrictivos que impiden su funcionamiento
+    normal. Los límites de file descriptors, procesos, memoria, CPU y otros
+    recursos están establecidos en valores tan bajos que el servicio no puede
+    ejecutarse o funciona de manera inestable. El script de inicio verifica
+    explícitamente algunos de estos límites y falla si no se satisfacen.
 
   symptoms:
-    - "El servicio existe en systemd"
-    - "El usuario del servicio existe en el sistema"
-    - "El script de inicio es ejecutable"
-    - "El servicio falla al iniciar inmediatamente"
-    - "systemctl reporta errores relacionados con el entorno"
-    - "El journal menciona problemas al cargar EnvironmentFile"
+    - "El servicio inicia pero se detiene inmediatamente o funciona de manera inestable"
+    - "`systemctl status {{ global_service_name }}.service` puede mostrar 'failed' o 'exited'"
+    - "Los logs del servicio muestran errores de 'file descriptors' o 'too many open files'"
+    - "El servicio puede ser eliminado por el OOM killer debido a MemoryLimit bajo"
+    - "`journalctl -u {{ global_service_name }}.service` muestra códigos de salida 1 o 137 (OOM)"
+    - "El script de inicio reporta 'File descriptors insuficientes' o 'Procesos máximos insuficientes'"
+    - "Performance degradado debido a CPUQuota restrictivo"
 
   task: |
-    Analizar por qué el servicio no logra cargar su entorno de ejecución
-    y corregir los permisos o el acceso al archivo de configuración
-    requerido, asegurando que systemd pueda iniciar el proceso sin
-    comprometer la seguridad del sistema.
+    Diagnosticar y ajustar los límites de recursos de systemd para
+    {{ global_service_name }}.service, asegurando que sean apropiados para las
+    necesidades reales del servicio. Identificar qué límites son demasiado
+    restrictivos, determinar valores apropiados basados en los requisitos del
+    script y el uso típico, y configurarlos para permitir un funcionamiento
+    estable sin asignar recursos excesivos.
 
   restrictions:
-    - "NO ejecutar el servicio como root"
-    - "NO eliminar el uso de EnvironmentFile"
-    - "NO exponer secretos con permisos inseguros"
-    - "NO usar chmod 777"
-    - "La corrección debe persistir tras reboot"
+    - "NO establecer límites como 'infinity' o valores extremadamente altos sin justificación"
+    - "NO eliminar todas las verificaciones de recursos del script de inicio"
+    - "NO deshabilitar completamente el OOM killer para el servicio"
+    - "Los límites deben ser realistas y proporcionados al uso esperado"
+    - "Debe mantenerse algún nivel de limitación para seguridad y estabilidad"
+    - "Los cambios deben considerar el impacto en otros servicios del sistema"

@@ -1,56 +1,191 @@
----
 # ==============================================================================
-# VARIANTE 4 — Archivo de configuración inaccesible (EnvironmentFile)
+# VARIANTE 4 — Resource Limits Too Restrictive
 # ==============================================================================
 
-- name: Asegurar usuario del servicio existe
-  user:
-    name: "{{ service_user }}"
-    system: true
-    shell: /sbin/nologin
-    state: present
-
-- name: Asegurar script con permisos correctos
-  file:
-    path: "{{ service_dir }}/start.sh"
-    owner: "{{ service_user }}"
-    group: "{{ service_user }}"
-    mode: '0755'
-
-- name: Crear archivo de configuración requerido por el servicio
+- name: V4 | Guardar estado original
   copy:
-    dest: "{{ service_dir }}/config.env"
+    src: "/etc/systemd/system/{{ global_service_name }}.service"
+    dest: "/etc/systemd/system/{{ global_service_name }}.service.v4backup"
+    remote_src: yes
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: V4 | Establecer límite extremadamente bajo de file descriptors
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    regexp: '^LimitNOFILE='
+    line: 'LimitNOFILE=64'
+    insertafter: '^\[Service\]'
+    backup: yes
+  when: "'LimitNOFILE=' in lookup('file', '/etc/systemd/system/' + global_service_name + '.service')"
+
+- name: V4 | Agregar LimitNOFILE si no existe
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'LimitNOFILE=64'
+    insertafter: '^\[Service\]'
+    backup: yes
+  when: "'LimitNOFILE=' not in lookup('file', '/etc/systemd/system/' + global_service_name + '.service')"
+
+- name: V4 | Establecer límite muy bajo de procesos
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    regexp: '^LimitNPROC='
+    line: 'LimitNPROC=8'
+    insertafter: '^LimitNOFILE='
+    backup: yes
+  when: "'LimitNPROC=' in lookup('file', '/etc/systemd/system/' + global_service_name + '.service')"
+
+- name: V4 | Agregar LimitNPROC si no existe
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'LimitNPROC=8'
+    insertafter: '^LimitNOFILE='
+    backup: yes
+  when: "'LimitNPROC=' not in lookup('file', '/etc/systemd/system/' + global_service_name + '.service')"
+
+- name: V4 | Establecer límite de memoria extremadamente bajo
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    regexp: '^MemoryLimit='
+    line: 'MemoryLimit=16M'
+    insertafter: '^LimitNPROC='
+    backup: yes
+
+- name: V4 | Agregar MemoryLimit si no existe
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'MemoryLimit=16M'
+    insertafter: '^LimitNPROC='
+    backup: yes
+  when: "'MemoryLimit=' not in lookup('file', '/etc/systemd/system/' + global_service_name + '.service')"
+
+- name: V4 | Establecer CPUQuota muy restrictivo
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'CPUQuota=5%'
+    insertafter: '^MemoryLimit='
+    backup: yes
+
+- name: V4 | Agregar TasksMax muy bajo
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'TasksMax=4'
+    insertafter: '^CPUQuota='
+    backup: yes
+
+- name: V4 | Agregar IOWeight muy bajo
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'IOWeight=10'
+    insertafter: '^TasksMax='
+    backup: yes
+
+- name: V4 | Agregar LimitCORE=0 (sin core dumps)
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'LimitCORE=0'
+    insertafter: '^IOWeight='
+    backup: yes
+
+- name: V4 | Agregar LimitMEMLOCK muy bajo
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'LimitMEMLOCK=65536'
+    insertafter: '^LimitCORE='
+    backup: yes
+
+- name: V4 | Agregar LimitSTACK bajo
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'LimitSTACK=8192'
+    insertafter: '^LimitMEMLOCK='
+    backup: yes
+
+- name: V4 | Modificar script de inicio para requerir más recursos
+  lineinfile:
+    path: "{{ service_dir }}/start.sh"
+    line: '# Se requieren al menos 256 file descriptors y 128MB de RAM'
+    insertafter: '^#!/bin/bash'
+    backup: yes
+
+- name: V4 | Agregar verificación de recursos en script
+  blockinfile:
+    path: "{{ service_dir }}/start.sh"
+    block: |
+      # Verificación de límites de recursos
+      echo "Verificando límites de sistema..."
+      REQUIRED_FDS=256
+      REQUIRED_PROCS=64
+      
+      CURRENT_FDS=$(ulimit -n)
+      CURRENT_PROCS=$(ulimit -u)
+      
+      if [ "$CURRENT_FDS" -lt "$REQUIRED_FDS" ]; then
+          echo "ERROR: File descriptors insuficientes. Requeridos: $REQUIRED_FDS, Disponibles: $CURRENT_FDS" >&2
+          exit 1
+      fi
+      
+      if [ "$CURRENT_PROCS" -lt "$REQUIRED_PROCS" ]; then
+          echo "ERROR: Procesos máximos insuficientes. Requeridos: $REQUIRED_PROCS, Disponibles: $CURRENT_PROCS" >&2
+          exit 1
+      fi
+      
+      echo "Límites de recursos OK: FDs=$CURRENT_FDS, Procs=$CURRENT_PROCS"
+    insertafter: '^# Se requieren al menos'
+    backup: yes
+
+- name: V4 | Recargar systemd
+  systemd:
+    daemon_reload: yes
+
+- name: V4 | Registrar variante en log
+  lineinfile:
+    path: "{{ log_path }}"
+    line: "[J02-V4-{{ ansible_date_time.epoch }}] Inyectado: Límites de recursos restrictivos - NOFILE=64, NPROC=8, MemoryLimit=16M, CPUQuota=5%"
+    create: yes
+    owner: "{{ global_service_user }}"
+    group: "{{ global_service_user }}"
+
+- name: V4 | Crear archivo de diagnóstico
+  copy:
+    dest: "/tmp/j02_variant_4_diagnosis.txt"
     content: |
-      API_KEY=secret123
+      =============================================
+      DIAGNOSIS: Variant 4 - Resource Limits Too Restrictive
+      Service: {{ global_service_name }}.service
+      Timestamp: {{ ansible_date_time.iso8601 }}
+      =============================================
+      
+      ISSUES INJECTED:
+      1. LimitNOFILE=64 (muy bajo, script requiere 256+)
+      2. LimitNPROC=8 (muy bajo, script verifica 64+)
+      3. MemoryLimit=16M (extremadamente bajo)
+      4. CPUQuota=5% (muy restrictivo)
+      5. TasksMax=4 (muy bajo)
+      6. IOWeight=10 (baja prioridad de I/O)
+      7. LimitCORE=0 (sin core dumps)
+      8. LimitMEMLOCK=65536 (64KB, bajo)
+      9. LimitSTACK=8192 (8KB, muy bajo)
+      
+      SCRIPT MODIFICATIONS:
+      - Added resource checking that requires 256 FDs and 64 processes
+      - Script will exit with error if limits are too low
+      
+      KEY PROBLEMS:
+      - Service needs 256+ FDs but only has 64
+      - Service needs 64+ processes but only has 8
+      - Memory limit may cause OOM killer
+      - CPU quota may cause performance issues
+      
+      VALID SOLUTIONS:
+      1. Increase LimitNOFILE to 1024 or higher
+      2. Increase LimitNPROC to 4096 or higher
+      3. Adjust MemoryLimit based on service needs
+      4. Modify or remove CPUQuota if not needed
+      5. Adjust other limits appropriately
+      6. Modify script requirements if appropriate
     owner: root
     group: root
     mode: '0600'
-
-- name: Configurar unit file con EnvironmentFile
-  copy:
-    dest: "/etc/systemd/system/{{ service_name }}.service"
-    content: |
-      [Unit]
-      Description=Internal API Service
-
-      [Service]
-      User={{ service_user }}
-      ExecStart=/bin/bash {{ service_dir }}/start.sh
-      EnvironmentFile={{ service_dir }}/config.env
-
-      [Install]
-      WantedBy=multi-user.target
-
-- name: Recargar systemd
-  command: systemctl daemon-reexec
-
-- name: Intentar iniciar servicio (fallará)
-  service:
-    name: "{{ service_name }}"
-    state: restarted
-  ignore_errors: true
-
-- name: Registrar variante 4 en log
-  lineinfile:
-    path: "{{ log_file }}"
-    line: "[VARIANTE 4] EnvironmentFile {{ service_dir }}/config.env no es legible por {{ service_user }}"

@@ -1,0 +1,45 @@
+# /home/jensy/Labs/scenarios/junior/J02/J02.yml
+# ==============================================================================
+# J02 — Service Configuration and DNS Resolution Issue
+# ==============================================================================
+# ------------------------------------------------------------------------------
+# 1. CONFIGURACIÓN INICIAL Y RANDOMIZACIÓN
+# ------------------------------------------------------------------------------
+- name: J02 | Configuración inicial
+  hosts: admin-j02.example.com
+  gather_facts: false
+
+  tasks:
+    - name: Cargar variables principales
+      include_vars:
+        file: vars/main.yml
+
+    # RANDOMIZACIÓN POR EJECUCIÓN (run_once)
+    - name: Seleccionar elementos aleatorios para esta ejecución
+      set_fact:
+        current_service_name: "{{ random_elements.services | random }}"
+        current_service_user: "{{ random_elements.users | random }}"
+        current_config_file: "{{ random_elements.config_files | random }}"
+        current_log_file: "{{ random_elements.log_files | random }}"
+        current_port: "{{ random_elements.ports | random }}"
+        current_timeout: "{{ [30, 45, 60, 90, 120] | random }}"
+      run_once: yes
+      delegate_to: localhost
+
+    - name: Seleccionar variante aleatoria
+      set_fact:
+        selected_variant_file: "{{ variants | random }}"
+      run_once: yes
+
+    - name: Cargar datos de la variante
+      include_vars:
+        file: "tickets/{{ selected_variant_file }}"
+        name: ticket_data
+
+    - name: Establecer variables globales de la ejecución
+      set_fact:
+        global_service_name: "{{ current_service_name }}"
+        global_service_user: "{{ current_service_user }}"
+        global_variant: "{{ ticket_data.variant }}"
+        global_selected_variant: "{{ selected_variant_file }}"
+      run_once: yes

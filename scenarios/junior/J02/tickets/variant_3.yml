@@ -1,35 +1,36 @@
 # ==============================================================================
-# VARIANTE 3 — Permisos incorrectos en el directorio del servicio
+# TICKET PARA LA VARIANTE 3 
 # ==============================================================================
 
 variant:
   description: |
-    En Linux, no basta con que un servicio tenga un binario válido y un
-    usuario asignado. El sistema de archivos impone controles estrictos
-    sobre quién puede atravesar un directorio. En este escenario, el
-    servicio y su script de inicio existen y tienen permisos correctos,
-    pero el directorio que los contiene ha sido restringido de forma
-    indebida, impidiendo que el usuario del servicio pueda acceder a él.
+    El servicio {{ global_service_name }}.service está configurado con múltiples
+    condiciones (Condition*) y aserciones (Assert*) de systemd que están fallando,
+    previniendo que el servicio se cargue o inicie. Estas condiciones verifican
+    existencia de archivos, contenido, tipo de virtualización y parámetros del
+    kernel que no coinciden con el entorno actual, causando que systemd omita
+    o rechace la activación del servicio.
 
   symptoms:
-    - "El servicio existe en systemd"
-    - "El usuario del servicio existe en el sistema"
-    - "El script de inicio tiene permisos de ejecución"
-    - "El servicio falla al iniciar inmediatamente"
-    - "systemctl reporta errores genéricos de inicio"
-    - "El journal no muestra errores de red ni de dependencias externas"
+    - "`systemctl start {{ global_service_name }}.service` no produce error pero no inicia"
+    - "`systemctl status` muestra 'inactive (dead)' sin mensajes de error claros"
+    - "`systemctl cat {{ global_service_name }}.service` muestra múltiples Condition/Assert"
+    - "Journal no contiene errores de inicio del servicio (se omite silenciosamente)"
+    - "`systemd-analyze verify` puede mostrar advertencias sobre condiciones"
+    - "Archivos de condición como /etc/{{ global_service_name }}/enabled no existen"
+    - "Script ExecCondition /usr/local/bin/check-{{ global_service_name }}.sh falla"
 
   task: |
-    Identificar por qué el usuario del servicio no puede acceder a los
-    recursos necesarios para iniciar el proceso y corregir los permisos
-    del directorio de trabajo, garantizando que el servicio pueda
-    ejecutarse correctamente sin violar las políticas de seguridad del
-    sistema.
+    Diagnosticar y corregir las condiciones y aserciones de systemd que están
+    bloqueando el inicio de {{ global_service_name }}.service. Identificar qué
+    condiciones están fallando, determinar si son necesarias, y o bien corregir
+    el entorno para satisfacerlas o ajustar/remover las condiciones incorrectas.
+    Asegurar que el servicio pueda cargarse e iniciarse normalmente.
 
   restrictions:
-    - "NO ejecutar el servicio como root"
-    - "NO usar chmod 777"
-    - "NO cambiar el usuario del servicio"
-    - "NO deshabilitar mecanismos de seguridad del sistema"
-    - "La corrección debe persistir tras reboot"
-
+    - "NO eliminar todas las condiciones/assertions indiscriminadamente"
+    - "NO modificar parámetros del kernel o tipo de virtualización del host"
+    - "NO usar '--skip-conditions' o '--force' al iniciar el servicio"
+    - "NO cambiar la lógica del script check-{{ global_service_name }}.sh (es requerido)"
+    - "Debe mantenerse al menos una condición de seguridad si era requerida"
+    - "Las correcciones deben respetar la intención original de las condiciones"

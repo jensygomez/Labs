@@ -1,30 +1,161 @@
----
 # ==============================================================================
-# VARIANTE 3 — Permisos incorrectos en el directorio del servicio
+# VARIANTE 3 — Condition/Assert Directives Blocking
 # ==============================================================================
 
-- name: Asegurar usuario del servicio existe
-  user:
-    name: "{{ service_user }}"
-    system: true
-    shell: /sbin/nologin
-    state: present
-
-- name: Asegurar script con permisos correctos
-  file:
-    path: "{{ service_dir }}/start.sh"
-    owner: "{{ service_user }}"
-    group: "{{ service_user }}"
-    mode: '0750'
-
-- name: Romper acceso al directorio del servicio
-  file:
-    path: "{{ service_dir }}"
+- name: V3 | Guardar estado original
+  copy:
+    src: "/etc/systemd/system/{{ global_service_name }}.service"
+    dest: "/etc/systemd/system/{{ global_service_name }}.service.v3backup"
+    remote_src: yes
     owner: root
     group: root
-    mode: '0700'
+    mode: '0644'
 
-- name: Registrar variante 3 en log
+- name: V3 | Eliminar archivo de condición PathExists (romperá ConditionPathExists)
+  file:
+    path: "/etc/{{ global_service_name }}/enabled"
+    state: absent
+
+- name: V3 | Eliminar archivo ready (romperá AssertPathExists)
+  file:
+    path: "/var/run/{{ global_service_name }}/ready"
+    state: absent
+
+- name: V3 | Vaciar archivo de configuración (romperá ConditionFileNotEmpty)
+  copy:
+    dest: "{{ config_path }}"
+    content: "# Archivo vacío - condición ConditionFileNotEmpty fallará"
+    owner: "{{ global_service_user }}"
+    group: "{{ global_service_user }}"
+    mode: '0640'
+
+- name: V3 | Agregar ConditionPathExists que fallará
   lineinfile:
-    path: "{{ log_file }}"
-    line: "[VARIANTE 3] Usuario {{ service_user }} sin permiso para acceder al directorio {{ service_dir }}"
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'ConditionPathExists=/etc/{{ global_service_name }}/enabled'
+    insertafter: '^\[Unit\]'
+    backup: yes
+
+- name: V3 | Agregar AssertPathExists que también fallará
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'AssertPathExists=/var/run/{{ global_service_name }}/ready'
+    insertafter: '^ConditionPathExists='
+    backup: yes
+
+- name: V3 | Agregar ConditionFileNotEmpty con archivo vacío
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'ConditionFileNotEmpty={{ config_path }}'
+    insertafter: '^AssertPathExists='
+    backup: yes
+
+- name: V3 | Crear archivo ConditionPathIsDirectory en archivo regular
+  copy:
+    dest: "/tmp/{{ global_service_name }}-not-a-directory"
+    content: "Esto es un archivo, no un directorio"
+    owner: "{{ global_service_user }}"
+    group: "{{ global_service_user }}"
+    mode: '0644'
+
+- name: V3 | Agregar ConditionPathIsDirectory que fallará
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'ConditionPathIsDirectory=/tmp/{{ global_service_name }}-not-a-directory'
+    insertafter: '^ConditionFileNotEmpty='
+    backup: yes
+
+- name: V3 | Agregar ConditionPathIsSymbolicLink en archivo regular
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'ConditionPathIsSymbolicLink=/etc/{{ global_service_name }}'
+    insertafter: '^ConditionPathIsDirectory='
+    backup: yes
+
+- name: V3 | Agregar ConditionKernelCommandLine con parámetro inexistente
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'ConditionKernelCommandLine={{ global_service_name }}_enabled=true'
+    insertafter: '^ConditionPathIsSymbolicLink='
+    backup: yes
+
+- name: V3 | Agregar ConditionVirtualization que no coincide
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'ConditionVirtualization=oracle'
+    insertafter: '^ConditionKernelCommandLine='
+    backup: yes
+
+- name: V3 | Crear script que verifica condición custom (siempre falla)
+  copy:
+    dest: "/usr/local/bin/check-{{ global_service_name }}.sh"
+    content: |
+      #!/bin/bash
+      # Script de condición que siempre retorna error
+      echo "Condition check for {{ global_service_name }} failed intentionally" >&2
+      exit 1
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: V3 | Agregar ConditionPathExists para script
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'ConditionPathExists=/usr/local/bin/check-{{ global_service_name }}.sh'
+    insertafter: '^ConditionVirtualization='
+    backup: yes
+
+- name: V3 | Agregar ExecCondition que ejecutará script fallido
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'ExecCondition=/usr/local/bin/check-{{ global_service_name }}.sh'
+    insertafter: '^ExecStart='
+    backup: yes
+
+- name: V3 | Recargar systemd
+  systemd:
+    daemon_reload: yes
+
+- name: V3 | Registrar variante en log
+  lineinfile:
+    path: "{{ log_path }}"
+    line: "[J02-V3-{{ ansible_date_time.epoch }}] Inyectado: Condiciones/Assert bloqueantes - múltiples Condition/Assert que fallan, archivos de condición eliminados"
+    create: yes
+    owner: "{{ global_service_user }}"
+    group: "{{ global_service_user }}"
+
+- name: V3 | Crear archivo de diagnóstico
+  copy:
+    dest: "/tmp/j02_variant_3_diagnosis.txt"
+    content: |
+      =============================================
+      DIAGNOSIS: Variant 3 - Condition/Assert Blocking
+      Service: {{ global_service_name }}.service
+      Timestamp: {{ ansible_date_time.iso8601 }}
+      =============================================
+      
+      ISSUES INJECTED:
+      1. Deleted /etc/{{ global_service_name }}/enabled (breaks ConditionPathExists)
+      2. Deleted /var/run/{{ global_service_name }}/ready (breaks AssertPathExists)
+      3. Emptied config file (breaks ConditionFileNotEmpty)
+      4. Added ConditionPathIsDirectory on regular file
+      5. Added ConditionPathIsSymbolicLink on non-symlink
+      6. Added ConditionKernelCommandLine with non-existent parameter
+      7. Added ConditionVirtualization=oracle (unlikely match)
+      8. Added ExecCondition script that always fails
+      
+      KEY PROBLEMS:
+      - 8 different conditions/asserts will fail
+      - AssertPathExists is fatal (stops unit loading)
+      - Conditions silently skip unit if false
+      - ExecCondition runs during service start
+      
+      VALID SOLUTIONS:
+      1. Restore missing files/directories
+      2. Remove or fix incorrect conditions
+      3. Adjust conditions to match environment
+      4. Fix or remove ExecCondition script
+      5. Ensure config file has content
+    owner: root
+    group: root
+    mode: '0600'
