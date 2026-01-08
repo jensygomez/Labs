@@ -1,0 +1,43 @@
+
+PLAY [J02 | Crear usuario corporativo] *****************************************
+
+TASK [Crear usuario sysadmin-junior] *******************************************
+[ERROR]: Task failed: Finalization of task args for 'ansible.builtin.user' failed: Error while resolving value for 'password': The filter plugin 'ansible.builtin.password_hash' failed: Unable to encrypt nor hash, passlib must be installed: No module named 'passlib'
+
+Task failed.
+Origin: /home/jensy/Labs/scenarios/junior/J02/J02.yml:14:7
+
+12
+13   tasks:
+14     - name: Crear usuario sysadmin-junior
+         ^ column 7
+
+<<< caused by >>>
+
+Finalization of task args for 'ansible.builtin.user' failed.
+Origin: /home/jensy/Labs/scenarios/junior/J02/J02.yml:15:7
+
+13   tasks:
+14     - name: Crear usuario sysadmin-junior
+15       user:
+         ^ column 7
+
+<<< caused by >>>
+
+Error while resolving value for 'password': The filter plugin 'ansible.builtin.password_hash' failed: Unable to encrypt nor hash, passlib must be installed: No module named 'passlib'
+Origin: /home/jensy/Labs/scenarios/junior/J02/J02.yml:21:19
+
+19         groups: "wheel"
+20         append: yes
+21         password: "{{ 'redhat' | password_hash('sha512') }}"
+                     ^ column 19
+
+fatal: [admin01]: FAILED! => {"changed": false, "msg": "Task failed: Finalization of task args for 'ansible.builtin.user' failed: Error while resolving value for 'password': The filter plugin 'ansible.builtin.password_hash' failed: Unable to encrypt nor hash, passlib must be installed: No module named 'passlib'"}
+fatal: [web01]: FAILED! => {"changed": false, "msg": "Task failed: Finalization of task args for 'ansible.builtin.user' failed: Error while resolving value for 'password': The filter plugin 'ansible.builtin.password_hash' failed: Unable to encrypt nor hash, passlib must be installed: No module named 'passlib'"}
+fatal: [client01]: FAILED! => {"changed": false, "msg": "Task failed: Finalization of task args for 'ansible.builtin.user' failed: Error while resolving value for 'password': The filter plugin 'ansible.builtin.password_hash' failed: Unable to encrypt nor hash, passlib must be installed: No module named 'passlib'"}
+
+PLAY RECAP *********************************************************************
+admin01                    : ok=0    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+client01                   : ok=0    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+web01                      : ok=0    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+
