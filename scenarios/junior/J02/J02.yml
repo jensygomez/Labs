@@ -6,7 +6,7 @@
 # 1. CONFIGURACIÓN INICIAL Y RANDOMIZACIÓN
 # ------------------------------------------------------------------------------
 - name: J02 | Configuración inicial
-  hosts: admin-j02.example.com
+  hosts: admin01
   gather_facts: false
 
   tasks:
@@ -64,7 +64,7 @@
 # 3. INYECTAR FALLO
 # ------------------------------------------------------------------------------
 - name: J02 | Inyectar fallo
-  hosts: web-j02.example.com
+  hosts: web01
   become: true
   gather_facts: false
 
@@ -74,13 +74,13 @@
         file: vars/main.yml
 
     - name: Ejecutar inyección
-      include_tasks: "inject/{{ hostvars['admin-j02.example.com'].global_selected_variant }}"
+      include_tasks: "inject/{{ hostvars['admin01'].global_selected_variant }}"
 
 # ------------------------------------------------------------------------------
 # 4. VERIFICAR SERVICIO
 # ------------------------------------------------------------------------------
 - name: J02 | Verificar estado del servicio
-  hosts: web-j02.example.com
+  hosts: web01
   become: true
   gather_facts: false
 
@@ -110,25 +110,25 @@
           {% else %}
             SERVICE OPERATIONAL
           {% endif %}
-      delegate_to: admin-j02.example.com
+      delegate_to: admin01
       run_once: yes
 
 # ------------------------------------------------------------------------------
 # 5. MOSTRAR TICKET FINAL
 # ------------------------------------------------------------------------------
 - name: J02 | Mostrar resumen final
-  hosts: admin-j02.example.com
+  hosts: admin01
   gather_facts: false
 
   tasks:
     - name: Preparar variables para show_ticket.yml
       set_fact:
-        variant: "{{ hostvars['admin-j02.example.com'].global_variant }}"
-        selected_variant_file: "{{ hostvars['admin-j02.example.com'].global_selected_variant }}"
-        final_state: "{{ hostvars['admin-j02.example.com'].final_state | default('SERVICE DOWN') }}"
-        service_user: "{{ hostvars['admin-j02.example.com'].global_service_user }}"
-        service_name: "{{ hostvars['admin-j02.example.com'].global_service_name }}.service"
-        service_dir: "/opt/{{ hostvars['admin-j02.example.com'].global_service_name }}"
+        variant: "{{ hostvars['admin01'].global_variant }}"
+        selected_variant_file: "{{ hostvars['admin01'].global_selected_variant }}"
+        final_state: "{{ hostvars['admin01'].final_state | default('SERVICE DOWN') }}"
+        service_user: "{{ hostvars['admin01'].global_service_user }}"
+        service_name: "{{ hostvars['admin01'].global_service_name }}.service"
+        service_dir: "/opt/{{ hostvars['admin01'].global_service_name }}"
         domain: "example.com"
 
     - name: Mostrar ticket
