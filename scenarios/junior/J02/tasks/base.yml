@@ -1,83 +1,25 @@
----
-- name: Crear usuario corporativo
+- name: Crear usuario del servicio (aleatorio por ejecución)
   user:
-    name: "{{ corporate_user }}"
-    comment: "Junior System Administrator"
-    shell: /bin/bash
-    groups: "wheel"
-    append: yes
-    password: "{{ 'Password123!' | password_hash('sha512') }}"
+    name: "{{ global_service_user }}"
+    system: yes
+    shell: /sbin/nologin
     state: present
-
-- name: Configurar sudo para usuario corporativo
-  copy:
-    dest: /etc/sudoers.d/{{ corporate_user }}
-    content: |
-      {{ corporate_user }} ALL=(ALL) NOPASSWD: ALL
-    validate: /usr/sbin/visudo -cf %s
-
-- name: Configurar archivo hosts local
-  blockinfile:
-    path: /etc/hosts
-    block: |
-      # J02 Lab Infrastructure
-      192.168.122.20 admin-j02.example.com admin-j02
-      192.168.122.22 web-j02.example.com web-j02
-      192.168.122.21 client-j02.example.com client-j02
-    marker: "# {mark} ANSIBLE MANAGED BLOCK - J02 LAB"
-
-- name: Instalar paquetes básicos
-  package:
-    name:
-      - bind-utils
-      - net-tools
-      - curl
-      - wget
-      - vim-enhanced
-      - tmux
-      - htop
-    state: present
-
-- name: Configurar hostname
-  hostname:
-    name: "{{ inventory_hostname }}"
-
-- name: Configurar firewall para tráfico interno del lab
-  firewalld:
-    zone: internal
-    source: 192.168.122.0/24
-    state: enabled
-    permanent: yes
-    immediate: yes
 
 - name: Crear directorio del servicio
   file:
     path: "{{ service_dir }}"
     state: directory
-    owner: "{{ service_user }}"
-    group: "{{ service_user }}"
+    owner: "{{ global_service_user }}"
+    group: "{{ global_service_user }}"
     mode: '0755'
-  when: inventory_hostname == "web-j02.example.com"
 
-- name: Configurar servicio básico
-  template:
-    src: internal-api.service.j2
-    dest: /etc/systemd/system/{{ service_name }}
-    owner: root
-    group: root
-    mode: '0644'
-  when: inventory_hostname == "web-j02.example.com"
-  notify: reload systemd
-
-- name: Habilitar y arrancar servicio
-  systemd:
-    name: "{{ service_name }}"
-    enabled: yes
-    state: started
-    daemon_reload: yes
-  when: inventory_hostname == "web-j02.example.com"
-
-handlers:
-  - name: reload systemd
-    systemd:
-      daemon_reload: yes
+- name: Crear archivo de configuración (nombre aleatorio)
+  copy:
+    dest: "{{ config_path }}"
+    content: |
+      # Configuración de {{ global_service_name }}
+      port: {{ service_port }}
+      log_file: {{ log_path }}
+    owner: "{{ global_service_user }}"
+    group: "{{ global_service_user }}"
+    mode: '0640'
