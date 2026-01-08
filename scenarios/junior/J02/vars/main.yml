@@ -4,13 +4,92 @@
 # Variables globales — LAB J02
 # ==============================================================================
 
----
-# Variables de sistema
-corporate_user: sysadmin-junior
-domain: example.com
-service_name: internal-api.service
-service_user: internal-api
-service_dir: /opt/internal-api
+random_elements:
+  services:
+    - internal-api
+    - data-processor
+    - auth-gateway
+    - file-sync
+    - notification-engine
+    - audit-logger
+    - metrics-collector
+    - report-generator
+    - cache-manager
+    - backup-coordinator
+  
+  users:
+    - svc-internal
+    - svc-process
+    - svc-gateway
+    - svc-sync
+    - svc-notify
+    - svc-audit
+    - svc-metrics
+    - svc-reports
+    - svc-cache
+    - svc-backup
+  
+  config_files:
+    - application.conf
+    - settings.yaml
+    - config.properties
+    - env.cfg
+    - parameters.json
+    - options.toml
+    - runtime.conf
+    - service.yaml
+    - defaults.cfg
+    - main.json
+  
+  log_files:
+    - app.log
+    - service.log
+    - debug.log
+    - error.log
+    - trace.log
+    - access.log
+    - system.log
+    - events.log
+    - audit.log
+    - performance.log
+  
+  ports:
+    - 8080
+    - 8888
+    - 9000
+    - 9090
+    - 10000
+    - 10080
+    - 11000
+    - 12000
+    - 13000
+    - 14000
+
+# Targets de systemd para variantes
+systemd_targets:
+  - multi-user.target
+  - graphical.target
+  - network-online.target
+  - remote-fs.target
+  - nss-lookup.target
+  - time-sync.target
+  - basic.target
+  - sysinit.target
+
+# Límites de recursos para variantes
+resource_limits:
+  nofile: [256, 512, 1024, 2048]
+  nproc: [50, 100, 200, 500]
+  core: [0, 1, "unlimited"]
+  memlock: [65536, 131072, 262144]
+
+# Variables derivadas (usadas en templates)
+service_name: "{{ global_service_name }}.service"
+service_user: "{{ global_service_user }}"
+service_dir: "/opt/{{ global_service_name }}"
+config_path: "/etc/{{ global_service_name }}/{{ current_config_file }}"
+log_path: "/var/log/{{ global_service_name }}/{{ current_log_file }}"
+service_port: "{{ current_port }}"
 
 # Variantes disponibles
 variants:
@@ -18,9 +97,3 @@ variants:
   - variant_2.yml
   - variant_3.yml
   - variant_4.yml
-
-# Configuración del servicio
-service_port: 8080
-service_timeout: 30
-log_dir: /var/log/internal-api
-max_log_size: 100M
