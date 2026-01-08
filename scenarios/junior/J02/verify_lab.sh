@@ -1,59 +1,56 @@
 #!/bin/bash
-echo "========================================"
-echo "PRUEBA FINAL DEL LABORATORIO J02"
-echo "========================================"
+echo "=========================================="
+echo "VERIFICACIÓN CORREGIDA - J02 CON USUARIO STUDENT"
+echo "=========================================="
 
-# 1. Verificar que todos los archivos existen
-echo "1. Archivos esenciales:"
-files=("J02.yml" "vars/main.yml" "tasks/base.yml" "tasks/show_ticket.yml" 
-       "templates/service-template.service.j2" "templates/start.sh.j2")
-all_ok=true
-for file in "${files[@]}"; do
-    if [ -f "$file" ]; then
-        echo "   ✅ $file"
-    else
-        echo "   ❌ $file - FALTANTE"
-        all_ok=false
-    fi
-done
+# 1. Verificar que J02.yml usa hosts correctos
+echo "1. Hosts en J02.yml:"
+if grep -q "hosts: admin01" J02.yml && \
+   grep -q "hosts: web01" J02.yml && \
+   grep -q "hosts: client01" J02.yml; then
+    echo "   ✅ Usa admin01, web01, client01"
+else
+    echo "   ❌ Hosts incorrectos"
+    grep "hosts:" J02.yml
+fi
 
-# 2. Verificar sintaxis
-echo -e "\n2. Sintaxis:"
+# 2. Verificar creación de usuario
+echo -e "\n2. Creación de usuario corporativo:"
+if grep -q "sysadmin-junior" J02.yml; then
+    echo "   ✅ Incluye creación de sysadmin-junior"
+else
+    echo "   ❌ No crea usuario sysadmin-junior"
+fi
+
+# 3. Verificar remote_user
+echo -e "\n3. Uso de remote_user:"
+if grep -q "remote_user: sysadmin-junior" J02.yml; then
+    echo "   ✅ Usa remote_user: sysadmin-junior después de crearlo"
+else
+    echo "   ⚠️  No especifica remote_user explícitamente"
+fi
+
+# 4. Verificar sintaxis
+echo -e "\n4. Sintaxis Ansible:"
 if ansible-playbook -i ../../engine/inventory.yml J02.yml --syntax-check 2>/dev/null; then
-    echo "   ✅ J02.yml - Sintaxis Ansible OK"
+    echo "   ✅ Sintaxis OK"
 else
-    echo "   ❌ J02.yml - Error de sintaxis"
-    all_ok=false
+    echo "   ❌ Error de sintaxis"
 fi
 
-# 3. Verificar randomización
-echo -e "\n3. Randomización:"
-if grep -q "random_elements:" vars/main.yml; then
-    echo "   ✅ vars/main.yml tiene random_elements"
+# 5. Verificar inventory original
+echo -e "\n5. Inventory.yml original:"
+cd ~/Labs/engine
+if grep -q "ansible_user: student" inventory.yml; then
+    echo "   ✅ inventory.yml mantiene ansible_user: student"
 else
-    echo "   ❌ vars/main.yml NO tiene random_elements"
-    all_ok=false
+    echo "   ❌ inventory.yml modificado (debe ser student)"
 fi
 
-# 4. Verificar variantes
-echo -e "\n4. Variantes:"
-variants_ok=true
-for i in {1..4}; do
-    if [ -f "inject/variant_$i.yml" ] && [ -f "tickets/variant_$i.yml" ]; then
-        echo "   ✅ Variante $i completa"
-    else
-        echo "   ❌ Variante $i incompleta"
-        variants_ok=false
-    fi
-done
-
-echo -e "\n========================================"
-if $all_ok && $variants_ok; then
-    echo "🎉 LABORATORIO J02 LISTO PARA USAR 🎉"
-    echo ""
-    echo "Para probar completamente:"
-    echo "  ansible-playbook -i ../../engine/inventory.yml J02.yml"
-else
-    echo "⚠️  AÚN HAY PROBLEMAS POR RESOLVER"
-fi
-echo "========================================"
+echo -e "\n=========================================="
+echo "RESUMEN: J02 debe:"
+echo "1. Conectarse como 'student' (vía inventory.yml)"
+echo "2. Crear usuario 'sysadmin-junior' en todas las VMs"
+echo "3. Ejecutar el resto del lab como 'sysadmin-junior'"
+echo "4. Usar hosts: admin01, web01, client01"
+echo "=========================================="
