@@ -1,30 +1,34 @@
 # ==============================================================================
-# VARIANTE 2 — Script sin permisos de ejecución
+# TICKET PARA LA VARIANTE 2 
 # ==============================================================================
 
 variant:
   description: |
-    En Linux, que un archivo exista no significa que pueda ejecutarse.
-    El sistema confía en los permisos para decidir qué puede correr y
-    bajo qué identidad. En este escenario, el servicio y el usuario
-    existen, pero el punto de entrada del servicio ha perdido su capacidad
-    de ejecución.
+    El servicio {{ global_service_name }}.service está configurado con dependencias
+    de systemd de tipo Wants/Requires incorrectas o faltantes. Algunas dependencias
+    críticas han sido debilitadas o removidas, mientras que se han agregado
+    dependencias a servicios que fallan o no existen. Esto causa que systemd
+    no pueda satisfacer los requisitos para iniciar el servicio principal.
 
   symptoms:
-    - "El servicio existe en systemd"
-    - "El usuario del servicio existe en el sistema"
-    - "El servicio falla al iniciar inmediatamente"
-    - "systemctl reporta errores genéricos de ejecución"
-    - "El journal no indica fallos de red ni de dependencias"
+    - "`systemctl start {{ global_service_name }}.service` falla con error de dependencia"
+    - "`systemctl status auth-{{ global_service_name }}.service` muestra 'failed'"
+    - "Journal contiene 'Unit {{ global_service_name }}.service has a bad Requires dependency'"
+    - "`systemctl list-dependencies` muestra dependencias a servicios inexistentes"
+    - "Network se inicia pero podría no estar completamente operativo"
+    - "Remote filesystem mount para remote-fs-{{ global_service_name }} falla"
 
   task: |
-    Identificar por qué el servicio no logra ejecutar su script de inicio
-    y restaurar los permisos mínimos necesarios para que systemd pueda
-    lanzar el proceso correctamente, respetando el principio de mínimo
-    privilegio.
+    Diagnosticar y corregir las dependencias Wants/Requires/After incorrectas
+    en la configuración de systemd de {{ global_service_name }}.service.
+    Identificar qué dependencias son críticas (Requires) versus opcionales (Wants),
+    eliminar dependencias a servicios fallidos, y asegurar que todas las
+    dependencias necesarias estén correctamente especificadas.
 
   restrictions:
-    - "NO ejecutar el servicio como root"
-    - "NO usar chmod 777"
-    - "NO cambiar el usuario del servicio"
-    - "La corrección debe persistir tras reboot"
+    - "NO eliminar el unit file auth-{{ global_service_name }}.service (es requerido por otros sistemas)"
+    - "NO cambiar network.target de vuelta a network-online.target sin justificación"
+    - "NO usar 'IgnoreOnIsolate=yes' para evadir dependencias"
+    - "NO modificar servicios del sistema fuera de {{ global_service_name }}.service"
+    - "La solución debe mantener la fortaleza apropiada de dependencias (Wants vs Requires)"
+    - "Los cambios deben permitir que el servicio inicie independientemente del estado de auth"

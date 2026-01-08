@@ -1,0 +1,57 @@
+# ==============================================================================
+# {{ global_service_name }}.service - Template para laboratorio J02
+# ==============================================================================
+[Unit]
+Description={{ global_service_name }} Service (J02 Lab)
+Documentation=https://internal.wiki/{{ global_service_name }}
+After=network-online.target
+Wants=network-online.target
+Requires=network-online.target
+
+[Service]
+Type=simple
+User={{ global_service_user }}
+Group={{ global_service_user }}
+WorkingDirectory={{ service_dir }}
+ExecStart={{ service_dir }}/start.sh
+ExecStartPre=/bin/echo "Starting {{ global_service_name }} service"
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStop=/bin/kill -TERM $MAINPID
+
+# Environment
+Environment="SERVICE_NAME={{ global_service_name }}"
+Environment="CONFIG_FILE={{ config_path }}"
+Environment="LOG_FILE={{ log_path }}"
+Environment="PORT={{ service_port }}"
+
+# Standard output/error
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier={{ global_service_name }}
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+
+# Resource limits (normales por defecto)
+LimitNOFILE=65536
+LimitNPROC=4096
+LimitCORE=infinity
+MemoryLimit=512M
+CPUQuota=100%
+TasksMax=infinity
+
+# Restart policy
+Restart=on-failure
+RestartSec=10s
+StartLimitInterval=60s
+StartLimitBurst=3
+
+# Timeouts
+TimeoutStartSec=180s
+TimeoutStopSec=30s
+
+[Install]
+WantedBy=multi-user.target

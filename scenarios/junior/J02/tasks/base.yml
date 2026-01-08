@@ -1,25 +1,48 @@
-- name: Crear usuario del servicio (aleatorio por ejecución)
-  user:
-    name: "{{ global_service_user }}"
-    system: yes
-    shell: /sbin/nologin
-    state: present
+# Añadir estas tareas a base.yml
+- name: Crear servicio systemd desde template
+  template:
+    src: service-template.service.j2
+    dest: "/etc/systemd/system/{{ global_service_name }}.service"
+    owner: root
+    group: root
+    mode: '0644'
 
-- name: Crear directorio del servicio
+- name: Crear script de inicio desde template
+  template:
+    src: start.sh.j2
+    dest: "{{ service_dir }}/start.sh"
+    owner: "{{ global_service_user }}"
+    group: "{{ global_service_user }}"
+    mode: '0755'
+
+- name: Crear archivo de configuración desde template
+  template:
+    src: config-template.conf.j2
+    dest: "{{ config_path }}"
+    owner: "{{ global_service_user }}"
+    group: "{{ global_service_user }}"
+    mode: '0640'
+
+- name: Crear algunos archivos/directorios para condiciones
   file:
-    path: "{{ service_dir }}"
+    path: "/etc/{{ global_service_name }}/enabled"
+    state: touch
+    owner: "{{ global_service_user }}"
+    group: "{{ global_service_user }}"
+    mode: '0644'
+
+- name: Crear directorio para socket/ready
+  file:
+    path: "/var/run/{{ global_service_name }}"
     state: directory
     owner: "{{ global_service_user }}"
     group: "{{ global_service_user }}"
     mode: '0755'
 
-- name: Crear archivo de configuración (nombre aleatorio)
+- name: Crear archivo ready
   copy:
-    dest: "{{ config_path }}"
-    content: |
-      # Configuración de {{ global_service_name }}
-      port: {{ service_port }}
-      log_file: {{ log_path }}
+    dest: "/var/run/{{ global_service_name }}/ready"
+    content: "ready"
     owner: "{{ global_service_user }}"
     group: "{{ global_service_user }}"
-    mode: '0640'
+    mode: '0644'

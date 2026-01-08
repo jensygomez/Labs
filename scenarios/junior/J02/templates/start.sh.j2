@@ -1,0 +1,66 @@
+#!/bin/bash
+# Script de inicio para {{ global_service_name }}
+# Puerto: {{ service_port }}
+# Usuario: {{ global_service_user }}
+
+set -e
+
+# Configuración básica
+CONFIG_FILE="{{ config_path }}"
+LOG_FILE="{{ log_path }}"
+PORT="{{ service_port }}"
+SERVICE_USER="{{ global_service_user }}"
+SERVICE_NAME="{{ global_service_name }}"
+
+# Crear directorio de logs si no existe
+mkdir -p "$(dirname "$LOG_FILE")"
+chown "$SERVICE_USER:$SERVICE_USER" "$(dirname "$LOG_FILE")"
+
+# Verificar que el usuario existe
+if ! id "$SERVICE_USER" &>/dev/null; then
+    echo "ERROR: User $SERVICE_USER does not exist" >&2
+    exit 1
+fi
+
+# Verificar archivo de configuración
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "ERROR: Config file $CONFIG_FILE not found" >&2
+    exit 1
+fi
+
+# Verificar permisos
+if [ ! -r "$CONFIG_FILE" ]; then
+    echo "ERROR: Cannot read config file $CONFIG_FILE" >&2
+    exit 1
+fi
+
+# Verificar límites de recursos
+echo "Checking resource limits..."
+echo "Max open files: $(ulimit -n)"
+echo "Max processes: $(ulimit -u)"
+
+# Cargar configuración
+source "$CONFIG_FILE"
+
+# Función de limpieza
+cleanup() {
+    echo "Stopping $SERVICE_NAME..."
+    # Aquí iría la lógica de limpieza real
+    exit 0
+}
+
+trap cleanup EXIT TERM INT
+
+# Iniciar servicio
+echo "Starting $SERVICE_NAME on port $PORT at $(date)" | tee -a "$LOG_FILE"
+echo "Running as user: $(id)" | tee -a "$LOG_FILE"
+
+# Simular servicio corriendo
+echo "Service $SERVICE_NAME is running..."
+echo "Press Ctrl+C to stop"
+
+# Mantener el script corriendo (en producción sería el servicio real)
+while true; do
+    echo "$(date): $SERVICE_NAME active" >> "$LOG_FILE"
+    sleep 30
+done

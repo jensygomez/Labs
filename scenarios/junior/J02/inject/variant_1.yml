@@ -1,29 +1,134 @@
 ---
 # scenarios/junior/J02/inject/variant_1.yml
 # ==============================================================================
-# VARIANTE 1 — Usuario del servicio eliminado
+# VARIANTE 1 — Dependencias de systemd invertidas (After/Before reversed)
 # ==============================================================================
 
-- name: Eliminar usuario real del servicio
-  user:
-    name: "{{ service_user }}"
-    state: absent
-    remove: false
+- name: V1 | Guardar estado original para posible restauración
+  copy:
+    src: "/etc/systemd/system/{{ global_service_name }}.service"
+    dest: "/etc/systemd/system/{{ global_service_name }}.service.backup"
+    remote_src: yes
+    owner: root
+    group: root
+    mode: '0644'
 
-- name: Crear usuario temporal incorrecto
-  user:
-    name: apiuser-temp
-    system: true
-    shell: /sbin/nologin
-    state: present
-
-- name: Cambiar ownership del script a usuario incorrecto
-  file:
-    path: "{{ service_dir }}/start.sh"
-    owner: apiuser-temp
-    group: apiuser-temp
-
-- name: Registrar variante 1 en log
+- name: V1 | Invertir orden de dependencias After (network-online -> network)
   lineinfile:
-    path: "{{ log_file }}"
-    line: "[VARIANTE 1] Usuario {{ service_user }} no existe pero systemd lo referencia"
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    regexp: '^After=network-online\.target$'
+    line: 'After=network.target'
+    backup: yes
+
+- name: V1 | Crear servicio de base de datos con dependencia circular
+  copy:
+    dest: "/etc/systemd/system/db-{{ global_service_name }}.service"
+    content: |
+      [Unit]
+      Description=Database Service for {{ global_service_name }}
+      After={{ global_service_name }}.service
+      Requires={{ global_service_name }}.service
+      
+      [Service]
+      Type=simple
+      ExecStart=/usr/bin/sleep infinity
+      User={{ global_service_user }}
+      Group={{ global_service_user }}
+      Restart=on-failure
+      
+      [Install]
+      WantedBy=multi-user.target
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: V1 | Agregar dependencia circular a nuestro servicio principal
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'After=db-{{ global_service_name }}.service'
+    insertafter: '^After='
+    backup: yes
+
+- name: V1 | Crear conflicto con servicio de logging
+  copy:
+    dest: "/etc/systemd/system/log-{{ global_service_name }}.service"
+    content: |
+      [Unit]
+      Description=Logging Service for {{ global_service_name }}
+      Before={{ global_service_name }}.service
+      
+      [Service]
+      Type=oneshot
+      ExecStart=/bin/echo "Logging service started"
+      RemainAfterExit=yes
+      User=root
+      Group=root
+      
+      [Install]
+      WantedBy=multi-user.target
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: V1 | Agregar conflicto Before/After
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'Before=log-{{ global_service_name }}.service'
+    insertafter: '^\[Unit\]'
+    backup: yes
+
+- name: V1 | Remover Wants= para hacer dependencia más débil
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    regexp: '^Wants=network-online\.target$'
+    state: absent
+    backup: yes
+
+- name: V1 | Recargar systemd para aplicar cambios
+  systemd:
+    daemon_reload: yes
+
+- name: V1 | Detener servicio para que la dependencia circular sea evidente al iniciar
+  systemd:
+    name: "{{ global_service_name }}.service"
+    state: stopped
+    daemon_reload: yes
+
+- name: V1 | Registrar variante en log del sistema
+  lineinfile:
+    path: "{{ log_path }}"
+    line: "[J02-V1-{{ ansible_date_time.epoch }}] Inyectado: Dependencias invertidas - {{ global_service_name }}.service tiene dependencia circular con db-{{ global_service_name }}.service"
+    create: yes
+    owner: "{{ global_service_user }}"
+    group: "{{ global_service_user }}"
+
+- name: V1 | Crear archivo de diagnóstico para instructor
+  copy:
+    dest: "/tmp/j02_variant_1_diagnosis.txt"
+    content: |
+      =============================================
+      DIAGNOSIS: Variant 1 - Dependencies Reversed
+      Service: {{ global_service_name }}.service
+      Timestamp: {{ ansible_date_time.iso8601 }}
+      =============================================
+      
+      ISSUES INJECTED:
+      1. Changed After=network-online.target to After=network.target
+      2. Created circular dependency with db-{{ global_service_name }}.service
+      3. Added Before=log-{{ global_service_name }}.service conflict
+      4. Removed Wants=network-online.target
+      
+      EXPECTED SYMPTOMS:
+      - systemctl start {{ global_service_name }}.service will fail
+      - systemctl status shows "dependency failed"
+      - Circular dependency: {{ global_service_name }} ↔ db-{{ global_service_name }}
+      - network.target may be ready before network is actually online
+      
+      VALID SOLUTIONS:
+      1. Fix After= to use network-online.target
+      2. Break circular dependency (remove After=db-... or modify db service)
+      3. Resolve Before/After conflict with log service
+      4. Restore Wants=network-online.target
+    owner: root
+    group: root
+    mode: '0600'

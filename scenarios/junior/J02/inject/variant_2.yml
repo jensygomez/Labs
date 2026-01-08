@@ -1,23 +1,147 @@
 ---
+
 # ==============================================================================
-# VARIANTE 2 — Script sin permisos de ejecución
+# VARIANTE 2 — Dependencias Wants/Requires faltantes o incorrectas
 # ==============================================================================
 
-- name: Asegurar usuario del servicio existe
-  user:
-    name: "{{ service_user }}"
-    system: true
-    shell: /sbin/nologin
-    state: present
+- name: V2 | Guardar estado original
+  copy:
+    src: "/etc/systemd/system/{{ global_service_name }}.service"
+    dest: "/etc/systemd/system/{{ global_service_name }}.service.v2backup"
+    remote_src: yes
+    owner: root
+    group: root
+    mode: '0644'
 
-- name: Quitar permisos de ejecución al script
-  file:
-    path: "{{ service_dir }}/start.sh"
-    owner: "{{ service_user }}"
-    group: "{{ service_user }}"
-    mode: '0640'
-
-- name: Registrar variante 2 en log
+- name: V2 | Remover dependencia Requires crítica
   lineinfile:
-    path: "{{ log_file }}"
-    line: "[VARIANTE 2] Script {{ service_dir }}/start.sh sin permiso de ejecución"
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    regexp: '^Requires=network-online\.target$'
+    state: absent
+    backup: yes
+
+- name: V2 | Debilitar Wants cambiando a target menos específico
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    regexp: '^Wants=network-online\.target$'
+    line: 'Wants=network.target'
+    backup: yes
+
+- name: V2 | Agregar dependencia a servicio que falla
+  copy:
+    dest: "/etc/systemd/system/auth-{{ global_service_name }}.service"
+    content: |
+      [Unit]
+      Description=Authentication Service for {{ global_service_name }}
+      
+      [Service]
+      Type=simple
+      ExecStart=/usr/bin/false  # Siempre falla
+      User=nobody
+      Group=nobody
+      Restart=no
+      
+      [Install]
+      WantedBy=multi-user.target
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: V2 | Agregar Requires a servicio que siempre falla
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'Requires=auth-{{ global_service_name }}.service'
+    insertafter: '^\[Unit\]'
+    backup: yes
+
+- name: V2 | Remover BindsTo si existe
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    regexp: '^BindsTo='
+    state: absent
+    backup: yes
+
+- name: V2 | Crear servicio de filesystem que no existe
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    line: 'After=remote-fs-{{ global_service_name }}.service'
+    insertafter: '^After='
+    backup: yes
+
+- name: V2 | Crear unit file para servicio de filesystem (roto)
+  copy:
+    dest: "/etc/systemd/system/remote-fs-{{ global_service_name }}.service"
+    content: |
+      [Unit]
+      Description=Remote Filesystem for {{ global_service_name }}
+      DefaultDependencies=no
+      Before=local-fs.target
+      
+      [Service]
+      Type=oneshot
+      ExecStart=/bin/mount -t nfs server:/nonexistent /mnt  # Montaje que fallará
+      TimeoutSec=10
+      
+      [Install]
+      WantedBy=multi-user.target
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: V2 | Remover PartOf si existe (dependencia de agrupación)
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    regexp: '^PartOf='
+    state: absent
+    backup: yes
+
+- name: V2 | Recargar systemd
+  systemd:
+    daemon_reload: yes
+
+- name: V2 | Intentar activar servicio de filesystem (fallará)
+  systemd:
+    name: "remote-fs-{{ global_service_name }}.service"
+    enabled: yes
+    state: started
+  ignore_errors: yes
+  failed_when: false
+
+- name: V2 | Registrar variante en log
+  lineinfile:
+    path: "{{ log_path }}"
+    line: "[J02-V2-{{ ansible_date_time.epoch }}] Inyectado: Dependencias Wants/Requires incorrectas - Requires removido, auth-{{ global_service_name }} agregado (siempre falla)"
+    create: yes
+    owner: "{{ global_service_user }}"
+    group: "{{ global_service_user }}"
+
+- name: V2 | Crear archivo de diagnóstico
+  copy:
+    dest: "/tmp/j02_variant_2_diagnosis.txt"
+    content: |
+      =============================================
+      DIAGNOSIS: Variant 2 - Wrong Wants/Requires
+      Service: {{ global_service_name }}.service
+      Timestamp: {{ ansible_date_time.iso8601 }}
+      =============================================
+      
+      ISSUES INJECTED:
+      1. Removed Requires=network-online.target
+      2. Changed Wants=network-online.target to Wants=network.target
+      3. Added Requires=auth-{{ global_service_name }}.service (always fails)
+      4. Added After=remote-fs-{{ global_service_name }}.service (mount fails)
+      5. Removed BindsTo and PartOf if existed
+      
+      KEY PROBLEMS:
+      - Service requires auth service that always fails (ExecStart=/usr/bin/false)
+      - Network dependency weakened (online → target)
+      - Remote filesystem mount will fail (nonexistent NFS share)
+      
+      VALID SOLUTIONS:
+      1. Restore Requires=network-online.target
+      2. Fix or remove auth-{{ global_service_name }} dependency
+      3. Fix remote-fs mount or remove dependency
+      4. Ensure proper dependency strength (Requires vs Wants)
+    owner: root
+    group: root
+    mode: '0600'

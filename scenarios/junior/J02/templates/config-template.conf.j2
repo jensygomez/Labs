@@ -1,0 +1,38 @@
+# Configuración para {{ global_service_name }}
+# Archivo: {{ current_config_file }}
+
+service:
+  name: "{{ global_service_name }}"
+  description: "Internal service for J02 lab"
+  version: "1.0.0"
+
+network:
+  port: {{ service_port }}
+  host: "0.0.0.0"
+  timeout: 30
+
+logging:
+  level: "INFO"
+  file: "{{ log_path }}"
+  max_size: "100MB"
+  retain_days: 7
+
+features:
+  enabled: true
+  maintenance_mode: false
+  debug_endpoints: false
+
+# Condiciones que pueden ser verificadas
+required_paths:
+  - "/etc/{{ global_service_name }}/enabled"
+  - "/var/run/{{ global_service_name }}/ready"
+  - "{{ config_path }}"
+
+# Dependencias del servicio
+dependencies:
+  required_services:
+    - "network-online.target"
+    - "postgresql.service"
+  optional_services:
+    - "redis.service"
+    - "nginx.service"

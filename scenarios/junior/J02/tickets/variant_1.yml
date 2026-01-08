@@ -5,24 +5,30 @@
 
 variant:
   description: |
-    systemd intenta ejecutar un servicio bajo un usuario inexistente,
-    causando fallo inmediato al inicio. El servicio está bien configurado,
-    el script existe y es ejecutable, pero el UID/GID asignado no existe.
+    El servicio {{ global_service_name }}.service está configurado con dependencias
+    de systemd invertidas y conflictivas, creando un ciclo de dependencia circular
+    que impide el inicio del servicio. El unit file tiene configuración válida
+    pero el orden de inicio y las relaciones entre servicios están mal definidas,
+    causando que systemd no pueda resolver la secuencia de arranque correcta.
 
   symptoms:
-    - "El servicio existe en systemd con unit file válido"
-    - "`systemctl status` muestra 'User not found' o código 227"
-    - "Journal contiene 'Failed to set up machine ID' o 'Unknown user'"
-    - "`getent passwd SERVICE_USER` devuelve vacío"
-    - "Script y directorio tienen permisos correctos"
+    - "`systemctl start {{ global_service_name }}.service` falla inmediatamente"
+    - "`systemctl status` muestra 'dependency failed' o código 1"
+    - "Journal contiene 'Job for {{ global_service_name }}.service/start failed'"
+    - "`systemd-analyze critical-chain` muestra ciclo en las dependencias"
+    - "El servicio db-{{ global_service_name }}.service también está bloqueado"
+    - "network.target se activa pero network-online.target podría no estar listo"
 
   task: |
-    Diagnosticar por qué systemd no puede cambiar al usuario especificado
-    en el unit file y recrear el usuario mínimo necesario para que el
-    servicio funcione correctamente.
+    Diagnosticar y resolver las dependencias circulares y conflictos en la
+    configuración de systemd que impiden el inicio de {{ global_service_name }}.service.
+    Identificar qué dependencias están invertidas, eliminar ciclos y asegurar
+    que todas las dependencias necesarias estén disponibles antes del inicio.
 
   restrictions:
-    - "NO ejecutar el servicio como root (User=root)"
-    - "NO usar usuarios existentes del sistema"
-    - "NO usar chmod 777 en ningún archivo"
-    - "La corrección debe persistir tras reboot"
+    - "NO modificar o eliminar db-{{ global_service_name }}.service (es crítico para producción)"
+    - "NO cambiar User=root en el unit file"
+    - "NO deshabilitar servicios del sistema para evadir dependencias"
+    - "NO usar máscaras de systemd (systemctl mask) como solución"
+    - "La corrección debe permitir que ambos servicios inicien en orden correcto"
+    - "Los cambios deben persistir tras reboot"
