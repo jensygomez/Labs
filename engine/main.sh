@@ -1,7 +1,8 @@
 #!/bin/bash
+# /home/jensy/Labs/engine/main.sh
 # ==============================================================================
 # INCIDENT RESPONSE LAB ENGINE
-# main.sh
+# main.sh - VERSIÓN PORTABLE
 # ------------------------------------------------------------------------------
 # Autor: Jensy - 2026
 # ==============================================================================
@@ -12,14 +13,20 @@ set -euo pipefail
 # BLOQUE 0 - CONFIGURACIÓN GLOBAL
 # ==============================================================================
 ENGINE_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT_DIR="$(cd "$ENGINE_DIR/.." && pwd)"  # Directorio raíz del proyecto
+
 DB_FILE="$ENGINE_DIR/labs.db"
 INVENTORY="$ENGINE_DIR/inventory.yml"
 ANSIBLE_WRAPPER="$ENGINE_DIR/ansible_wrapper.sh"
 
+# Exportar para uso en otros scripts
+export LAB_ROOT_DIR="$ROOT_DIR"
+export LAB_ENGINE_DIR="$ENGINE_DIR"
+
 LABS=()
 
 # ==============================================================================
-# BLOQUE 1 - CARGA DE BASE DE DATOS
+# BLOQUE 1 - CARGA DE BASE DE DATOS (MEJORADA PARA RUTAS RELATIVAS)
 # ==============================================================================
 load_db() {
     echo "[DEBUG] Iniciando carga de BD desde: $DB_FILE" >&2
@@ -34,7 +41,7 @@ load_db() {
     echo "[DEBUG] Verificando labs activos..." >&2
     awk -F'|' 'NR>1 && $7=="active" {print "[DEBUG] Lab activo en BD: " $1}' "$DB_FILE" >&2
 
-    # Leer la BD - versión simple
+    # Leer la BD - versión mejorada para rutas
     local line_count=0
     while IFS= read -r line; do
         ((line_count++))
@@ -47,7 +54,7 @@ load_db() {
         # Limpiar cualquier espacio
         status=$(echo "$status" | tr -d '[:space:]')
         
-        echo "[DEBUG] Procesando: $id, status='$status'" >&2
+        echo "[DEBUG] Procesando: $id, artifact='$artifact'" >&2
         
         if [[ "$status" == "active" ]]; then
             # Limpiar todos los campos
@@ -57,6 +64,19 @@ load_db() {
             artifact=$(echo "$artifact" | xargs)
             type=$(echo "$type" | xargs)
             uses=$(echo "$uses" | xargs)
+            
+            # CONVERTIR RUTA DEL ARTIFACT SI ES RELATIVA
+            if [[ ! "$artifact" =~ ^/ ]]; then
+                # Es ruta relativa, convertir a absoluta desde ROOT_DIR
+                artifact="$ROOT_DIR/$artifact"
+                echo "[DEBUG] Ruta convertida a absoluta: $artifact" >&2
+            fi
+            
+            # Verificar que el artifact existe
+            if [[ ! -f "$artifact" ]]; then
+                echo "[ADVERTENCIA] Artifact no encontrado: $artifact" >&2
+                continue
+            fi
             
             LABS+=("$id|$track|$level|$artifact|$type|$uses")
             echo "[DEBUG] Agregado a LABS: $id" >&2
@@ -78,23 +98,22 @@ main_menu() {
     clear
     echo "========================================"
     echo "  INCIDENT RESPONSE LAB ENGINE"
+    echo "  Directorio: $(basename "$ROOT_DIR")"
     echo "========================================"
     echo
     echo "Seleccione su nivel actual:"
     echo
-    echo "1) Junior (0–18 meses)"
-    echo "2) Junior-Pleno (18–24 meses)"
-    echo "3) Pleno (24–36 meses)"
-    echo "4) Senior (36+ meses)"
+    echo "1) Junior (0 –18 meses)"
+    echo "2) Pleno  (24–36 meses)"
+    echo "3) Senior (36+   meses)"
     echo "0) Salir"
     echo
     read -rp "Opción: " option
 
     case "$option" in
         1) assign_lab "Junior" ;;
-        2) assign_lab "Junior-Pleno" ;;
-        3) assign_lab "Pleno" ;;
-        4) assign_lab "Senior" ;;
+        2) assign_lab "Pleno" ;;
+        3) assign_lab "Senior" ;;
         0) exit 0 ;;
         *)
             echo
@@ -134,7 +153,7 @@ assign_lab() {
     echo "[DEBUG] Labs disponibles:" >&2
     for LAB in "${LABS[@]}"; do
         IFS='|' read -r ID TRACK LAB_LEVEL ARTIFACT TYPE USES <<< "$LAB"
-        echo "[DEBUG]   - $ID ($LAB_LEVEL)" >&2
+        echo "[DEBUG]   - $ID ($LAB_LEVEL) → $(basename "$ARTIFACT")" >&2
     done
 
     # Buscar labs activos del nivel con menor USES
@@ -179,7 +198,8 @@ assign_lab() {
     echo "ID        : $ID"
     echo "Track     : $TRACK"
     echo "Nivel     : $LEVEL"
-    echo "Artifact  : $ARTIFACT"
+    echo "Archivo   : $(basename "$ARTIFACT")"
+    echo "Ruta      : $(realpath "$ARTIFACT" 2>/dev/null || echo "$ARTIFACT")"
     echo "Usos prev.: $USES"
     echo
     sleep 2
@@ -202,10 +222,13 @@ run_lab() {
 
     if [[ ! -f "$PLAYBOOK" ]]; then
         echo "[ERROR] No se encuentra el playbook: $PLAYBOOK"
+        echo "ROOT_DIR actual: $ROOT_DIR"
         echo "Verifique la ruta del artifact en la base de datos."
         sleep 3
         return
     fi
+
+    echo "[INFO] Ejecutando: $ANSIBLE_WRAPPER \"$PLAYBOOK\" \"$INVENTORY\""
 
     "$ANSIBLE_WRAPPER" \
         "$PLAYBOOK" \
