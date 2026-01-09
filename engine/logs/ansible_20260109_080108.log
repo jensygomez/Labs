@@ -1,0 +1,82 @@
+
+PLAY [J02 | Crear usuario corporativo] *****************************************
+
+TASK [Crear usuario sysadmin-junior] *******************************************
+changed: [client01]
+changed: [admin01]
+changed: [web01]
+
+TASK [Configurar sudo sin password] ********************************************
+changed: [client01]
+changed: [admin01]
+changed: [web01]
+
+PLAY [J02 | Configuración inicial] *********************************************
+
+TASK [Cargar variables principales] ********************************************
+ok: [admin01]
+
+TASK [Seleccionar elementos aleatorios para esta ejecución] ********************
+ok: [admin01]
+
+TASK [Seleccionar variante aleatoria] ******************************************
+ok: [admin01]
+
+TASK [Cargar datos de la variante] *********************************************
+ok: [admin01]
+
+TASK [Establecer variables globales de la ejecución] ***************************
+ok: [admin01]
+
+PLAY [J02 | Preparar baseline del sistema] *************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [web01]
+ok: [admin01]
+ok: [client01]
+
+TASK [Exportar variables globales desde admin01] *******************************
+skipping: [admin01]
+ok: [web01]
+ok: [client01]
+
+TASK [Crear directorio del servicio] *******************************************
+[ERROR]: Task failed: Finalization of task args for 'ansible.builtin.file' failed: Error while resolving value for 'path': 'service_dir' is undefined
+
+Task failed.
+Origin: /home/jensy/Labs/scenarios/junior/J02/tasks/base.yml:48:3
+
+46 # ==============================================================================
+47
+48 - name: Crear directorio del servicio
+     ^ column 3
+
+<<< caused by >>>
+
+Finalization of task args for 'ansible.builtin.file' failed.
+Origin: /home/jensy/Labs/scenarios/junior/J02/tasks/base.yml:49:3
+
+47
+48 - name: Crear directorio del servicio
+49   file:
+     ^ column 3
+
+<<< caused by >>>
+
+Error while resolving value for 'path': 'service_dir' is undefined
+Origin: /home/jensy/Labs/scenarios/junior/J02/tasks/base.yml:50:11
+
+48 - name: Crear directorio del servicio
+49   file:
+50     path: "{{ service_dir }}"
+             ^ column 11
+
+fatal: [admin01]: FAILED! => {"changed": false, "msg": "Task failed: Finalization of task args for 'ansible.builtin.file' failed: Error while resolving value for 'path': 'service_dir' is undefined"}
+fatal: [web01]: FAILED! => {"changed": false, "msg": "Task failed: Finalization of task args for 'ansible.builtin.file' failed: Error while resolving value for 'path': 'service_dir' is undefined"}
+fatal: [client01]: FAILED! => {"changed": false, "msg": "Task failed: Finalization of task args for 'ansible.builtin.file' failed: Error while resolving value for 'path': 'service_dir' is undefined"}
+
+PLAY RECAP *********************************************************************
+admin01                    : ok=8    changed=2    unreachable=0    failed=1    skipped=1    rescued=0    ignored=0   
+client01                   : ok=4    changed=2    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+web01                      : ok=4    changed=2    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+

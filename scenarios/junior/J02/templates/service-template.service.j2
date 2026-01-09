@@ -1,42 +1,75 @@
 # ==============================================================================
-# {{ global_service_name }}.service - Template para laboratorio J02
+# service-template.service.j2 — PLANTILLA SYSTEMD J02
 # ==============================================================================
+# 
+# RELACIONES ← ATRÁS (DEPENDENCIAS)
+# ┌─────────────────────────────────────────────────────────────┐
+# │ 1. CARGADO POR: tasks/base.yml → template module             │
+# │    src: templates/service-template.service.j2               │
+# │    dest: /etc/systemd/system/{{ global_service_name }}.service │
+# │                                                          │
+# │ 2. REQUIERE variables de resolve.yml:                      │
+# │    • global_service_name  ← selected_service               │
+# │    • global_service_user  ← selected_user                  │
+# │    • service_dir          ← /opt/{{ selected_service }}    │
+# │    • global_config_file   ← selected_config_file           │
+# │    • current_log_file     ← ❌ NO DEFINIDA (ver abajo)     │
+# │    • current_port         ❌ NO DEFINIDA (ver abajo)       │
+# └─────────────────────────────────────────────────────────────┘
+# 
+# RELACIONES → ADELANTE (CONSUMIDORES)
+# ┌─────────────────────────────────────────────────────────────┐
+# │ 1. STUDENT: systemctl status [SERVICE].service              │
+# │ 2. STUDENT: systemctl cat [SERVICE].service → ve config     │
+# │ 3. STUDENT: journalctl -u [SERVICE] → ve ExecStart logs     │
+# │ 4. Variantes corrompen este archivo (user=, ExecStart=...)  │
+# └─────────────────────────────────────────────────────────────┘
+# 
+# FLUJO: resolve.yml → base.yml → [ESTE TEMPLATE] → systemd daemon-reload
+# EJEMPLO: /etc/systemd/system/internal-api.service (ALEATORIO)
+# ==============================================================================
+
+# ==============================================================================
+# {{ global_service_name }}.service - Template para laboratorio J02
+# ← ALEATORIO: internal-api.service, data-processor.service...
+# ==============================================================================
+
 [Unit]
-Description={{ global_service_name }} Service (J02 Lab)
-Documentation=https://internal.wiki/{{ global_service_name }}
+Description={{ global_service_name }} Service (J02 Lab)                    ← ALEATORIO
+Documentation=https://internal.wiki/{{ global_service_name }}             ← ALEATORIO
 After=network-online.target
 Wants=network-online.target
 Requires=network-online.target
 
 [Service]
 Type=simple
-User={{ global_service_user }}
-Group={{ global_service_user }}
-WorkingDirectory=/opt/{{ global_service_name }}
+User={{ global_service_user }}                                            ← ALEATORIO: svc-internal, svc-process...
+Group={{ global_service_user }}                                           ← ALEATORIO
+WorkingDirectory=/opt/{{ global_service_name }}                          ← service_dir de resolve.yml
 
-ExecStart=/opt/{{ global_service_name }}/start.sh
-ExecStartPre=/bin/echo "Starting {{ global_service_name }} service"
+ExecStart=/opt/{{ global_service_name }}/start.sh                         ← service_dir/start.sh
+ExecStartPre=/bin/echo "Starting {{ global_service_name }} service"      ← ALEATORIO
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStop=/bin/kill -TERM $MAINPID
 
-# Environment
-Environment="SERVICE_NAME={{ global_service_name }}"
-Environment="CONFIG_FILE=/etc/{{ global_service_name }}/{{ current_config_file }}"
-Environment="LOG_FILE=/var/log/{{ global_service_name }}/{{ current_log_file }}"
-Environment="PORT={{ current_port }}"
+# Environment (VARIABLES PARA start.sh)
+Environment="SERVICE_NAME={{ global_service_name }}"                      ← ALEATORIO
+Environment="CONFIG_FILE=/etc/{{ global_service_name }}/{{ global_config_file }}"  # ← global_config_file
+Environment="LOG_FILE=/var/log/{{ global_service_name }}/{{ selected_log_file }}"  # ← selected_log_file
+Environment="PORT={{ service_port }}"                                    ← service_port de resolve.yml
 
 # Logging
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier={{ global_service_name }}
+SyslogIdentifier={{ global_service_name }}                               ← ALEATORIO
 
-# Security
+# Security (BASELINE - variantes lo rompen)
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full
 ProtectHome=read-only
 
-# Resource limits (baseline, variantes los rompen)
+# Resource limits (BASELINE - variantes los modifican)
 LimitNOFILE=65536
 LimitNPROC=4096
 LimitCORE=infinity
@@ -56,3 +89,16 @@ TimeoutStopSec=30s
 
 [Install]
 WantedBy=multi-user.target
+
+# ==============================================================================
+# ⚠️  AJUSTES NECESARIOS EN resolve.yml:
+# 1. Agregar global_log_file: "{{ selected_log_file }}"
+# 2. Cambiar referencias current_* → global_* o selected_*
+# 
+# USO EN LABORATORIO (ALEATORIO POR EJECUCIÓN):
+# 1. base.yml: template → /etc/systemd/system/data-processor.service
+# 2. base.yml: systemctl daemon-reload + systemctl enable
+# 3. STUDENT: systemctl status data-processor.service → User=svc-process
+# 4. STUDENT: systemctl cat data-processor.service → Environment="PORT=9090"
+# 5. Variantes: variant_1.yml → User=root, variant_2.yml → ExecStart=/bin/false
+# ==============================================================================

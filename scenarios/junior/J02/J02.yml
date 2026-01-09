@@ -1,15 +1,35 @@
 # ==============================================================================
-# J02 — Systemd Service Misconfiguration
+# J02 — Systemd Service Misconfiguration LAB
+# ==============================================================================
+# 
+# PROPÓSITO: Simular incidente de servicio systemd mal configurado (RHCSA EX200)
+# STUDENT: sysadmin-junior@redhat → Resuelve en web01
+# 
+# FLUJO ARCHITECTURA:
+# 1. CATÁLOGOS  → vars/main.yml     (listas estáticas: services, users, ports...)
+# 2. RANDOMIZACIÓN → vars/resolve.yml (fija 1 valor por categoría → GLOBALES)
+# 3. ORQUESTACIÓN → J02.yml         (coordina plays entre hosts)
+# 4. EJECUCIÓN   → tasks/base.yml + inject/variant_X.yml
+# 
+# VARIABLES GLOBALES PUBLICADAS por resolve.yml:
+#   global_service_name, service_dir, global_service_user, config_dir, log_dir
+#   global_selected_variant (variant_1.yml → variant_4.yml)
+# 
+# DEPENDENCIAS:
+#   - engine/inventory.yml (admin01, web01, client01)
+#   - engine/ansible_wrapper.sh (logging, DB tracking)
+# 
+# EJECUCIÓN: ./ansible_wrapper.sh J02
+# RESULTADO: Ticket en admin01:/tmp/J02_ticket.txt + Servicio caído en web01
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# 0. CREAR USUARIO CORPORATIVO (ejecuta como student)
+# 0. PREPARAR USUARIO sysadmin-junior (wheel + sudo NOPASSWD)
 # ------------------------------------------------------------------------------
 - name: J02 | Crear usuario corporativo
   hosts: all
   become: true
   gather_facts: false
-
   tasks:
     - name: Crear usuario sysadmin-junior
       user:
@@ -29,48 +49,35 @@
         validate: /usr/sbin/visudo -cf %s
 
 # ------------------------------------------------------------------------------
-# 1. CONFIGURACIÓN INICIAL Y RANDOMIZACIÓN (ORQUESTADOR)
+# 1. ORQUESTADOR CENTRAL (admin01) — Carga + Resuelve + Randomiza
 # ------------------------------------------------------------------------------
-- name: J02 | Configuración inicial
+- name: J02 | Configuración inicial y randomización
   hosts: admin01
   remote_user: sysadmin-junior
   become: true
   gather_facts: false
 
   tasks:
-    - name: Cargar variables principales
-      include_vars:
+    - name: 1. Cargar catálogos base
+      include_vars: 
         file: vars/main.yml
 
-    - name: Seleccionar elementos aleatorios para esta ejecución
-      set_fact:
-        current_service_name: "{{ random_elements.services | random }}"
-        current_service_user: "{{ random_elements.users | random }}"
-        current_config_file: "{{ random_elements.config_files | random }}"
-        current_log_file: "{{ random_elements.log_files | random }}"
-        current_port: "{{ random_elements.ports | random }}"
+    - name: 2. Resolver TODAS las variables (random + derivadas)
+      include_tasks: vars/resolve.yml
       run_once: yes
 
-    - name: Seleccionar variante aleatoria
-      set_fact:
-        selected_variant_file: "{{ variants | random }}"
-      run_once: yes
-
-    - name: Cargar datos de la variante
+    - name: 3. Cargar variante del ticket
       include_vars:
-        file: "tickets/{{ selected_variant_file }}"
+        file: "tickets/{{ global_selected_variant }}"
         name: ticket_data
 
-    - name: Establecer variables globales de la ejecución
+    - name: 4. Publicar variante global
       set_fact:
-        global_service_name: "{{ current_service_name }}"
-        global_service_user: "{{ current_service_user }}"
         global_variant: "{{ ticket_data.variant }}"
-        global_selected_variant: "{{ selected_variant_file }}"
       run_once: yes
 
 # ------------------------------------------------------------------------------
-# 2. PREPARAR BASELINE (como sysadmin-junior)
+# 2. PROPAGAR VARIABLES → TODOS los hosts + BASELINE
 # ------------------------------------------------------------------------------
 - name: J02 | Preparar baseline del sistema
   hosts: all
@@ -79,18 +86,25 @@
   gather_facts: true
 
   tasks:
-    - name: Exportar variables globales desde admin01
+    - name: Propagar variables globales desde admin01
       set_fact:
         global_service_name: "{{ hostvars['admin01'].global_service_name }}"
         global_service_user: "{{ hostvars['admin01'].global_service_user }}"
-        current_config_file: "{{ hostvars['admin01'].current_config_file }}"
+        global_config_file: "{{ hostvars['admin01'].global_config_file }}"
+        global_log_file: "{{ hostvars['admin01'].global_log_file }}"  
+        global_selected_variant: "{{ hostvars['admin01'].global_selected_variant }}"
+        global_variant: "{{ hostvars['admin01'].global_variant }}"
+        service_dir: "{{ hostvars['admin01'].service_dir }}"
+        config_dir: "{{ hostvars['admin01'].config_dir }}"
+        log_dir: "{{ hostvars['admin01'].log_dir }}"
+        service_port: "{{ hostvars['admin01'].service_port }}"
       when: inventory_hostname != 'admin01'
 
-    - name: Preparar estado base
+    - name: Crear estructura base del servicio
       import_tasks: tasks/base.yml
 
 # ------------------------------------------------------------------------------
-# 3. INYECTAR FALLO (como sysadmin-junior)
+# 3. INYECTAR FALLO ESPECÍFICO (solo web01)
 # ------------------------------------------------------------------------------
 - name: J02 | Inyectar fallo
   hosts: web01
@@ -99,11 +113,11 @@
   gather_facts: false
 
   tasks:
-    - name: Ejecutar inyección
+    - name: Inyectar variante seleccionada
       include_tasks: "inject/{{ hostvars['admin01'].global_selected_variant }}"
 
 # ------------------------------------------------------------------------------
-# 4. VERIFICAR SERVICIO (como sysadmin-junior)
+# 4. VERIFICAR + DETERMINAR ESTADO FINAL
 # ------------------------------------------------------------------------------
 - name: J02 | Verificar estado del servicio
   hosts: web01
@@ -131,7 +145,7 @@
       run_once: yes
 
 # ------------------------------------------------------------------------------
-# 5. MOSTRAR TICKET FINAL (como sysadmin-junior)
+# 5. TICKET FINAL (solo admin01)
 # ------------------------------------------------------------------------------
 - name: J02 | Mostrar resumen final
   hosts: admin01
@@ -139,15 +153,12 @@
   gather_facts: false
 
   tasks:
-    - name: Preparar variables para show_ticket.yml
+    - name: Preparar contexto del ticket
       set_fact:
         variant: "{{ global_variant }}"
         selected_variant_file: "{{ global_selected_variant }}"
         final_state: "{{ final_state | default('SERVICE DOWN') }}"
-        service_user: "{{ global_service_user }}"
-        service_name: "{{ global_service_name }}.service"
-        service_dir: "/opt/{{ global_service_name }}"
 
-    - name: Mostrar ticket
+    - name: Generar ticket para student
       import_tasks: tasks/show_ticket.yml
       run_once: yes

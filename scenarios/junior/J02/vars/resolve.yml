@@ -66,6 +66,8 @@
   set_fact:
     global_service_name: "{{ selected_service }}"
     global_service_user: "{{ selected_user }}"
+    global_config_file: "{{ selected_config_file }}"     
+    global_log_file: "{{ selected_log_file }}" 
     service_dir: "/opt/{{ selected_service }}"
     config_dir: "/etc/{{ selected_service }}"
     config_path: "/etc/{{ selected_service }}/{{ selected_config_file }}"
