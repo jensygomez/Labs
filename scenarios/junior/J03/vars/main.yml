@@ -64,6 +64,12 @@ random_elements:
     - "nginx"
     - "apache"
   
+  # ✅ MOVIDO AQUÍ - Ahora random funciona
+  web_services:
+    - "nginx"
+    - "httpd"
+    - "apache2"
+  
   # MTU problemáticos - ip link | grep mtu
   mtu_values:
     - 1200
@@ -84,17 +90,11 @@ network_targets:
   - network-online.target
   - firewalld.target
 
-# Servicios web involucrados - systemctl | grep
-web_services:
-  - nginx
-  - httpd
-  - apache2
-
 # Variantes disponibles del incidente - resolve.yml elige 1
 variants:
   - variant_1.yml    # Firewalld bloquea puerto
   - variant_2.yml    # IP estática errónea  
   - variant_3.yml    # Interfaz DOWN
   - variant_4.yml    # Puerto cambiado sin firewall
-#
+
 # ==============================================================================

@@ -1,0 +1,59 @@
+
+PLAY [J03 | Crear usuario corporativo] *****************************************
+
+TASK [Crear usuario sysadmin-junior] *******************************************
+changed: [web01]
+changed: [client01]
+changed: [admin01]
+
+TASK [Configurar sudo sin password] ********************************************
+changed: [admin01]
+changed: [client01]
+changed: [web01]
+
+PLAY [J03 | Configuración inicial y randomización] *****************************
+
+TASK [1. Cargar catálogos de red J03] ******************************************
+ok: [admin01]
+
+TASK [2. Resolver variables de conectividad (puerto, interface, IP...)] ********
+included: /home/jensy/Labs/scenarios/junior/J03/vars/resolve.yml for admin01
+
+TASK [Seleccionar elementos aleatorios de conectividad J03] ********************
+[ERROR]: Task failed: Finalization of task args for 'ansible.builtin.set_fact' failed: Error while resolving value for 'selected_web_service': object of type 'dict' has no attribute 'web_services'
+
+Task failed.
+Origin: /home/jensy/Labs/scenarios/junior/J03/vars/resolve.yml:42:3
+
+40 # ==============================================================================
+41
+42 - name: Seleccionar elementos aleatorios de conectividad J03
+     ^ column 3
+
+<<< caused by >>>
+
+Finalization of task args for 'ansible.builtin.set_fact' failed.
+Origin: /home/jensy/Labs/scenarios/junior/J03/vars/resolve.yml:43:3
+
+41
+42 - name: Seleccionar elementos aleatorios de conectividad J03
+43   set_fact:
+     ^ column 3
+
+<<< caused by >>>
+
+Error while resolving value for 'selected_web_service': object of type 'dict' has no attribute 'web_services'
+Origin: /home/jensy/Labs/scenarios/junior/J03/vars/resolve.yml:49:27
+
+47     selected_firewall_zone: "{{ random_elements.firewall_zones | random }}"
+48     selected_firewall_service: "{{ random_elements.firewall_services | random }}"
+49     selected_web_service: "{{ random_elements.web_services | random }}"
+                             ^ column 27
+
+fatal: [admin01]: FAILED! => {"changed": false, "msg": "Task failed: Finalization of task args for 'ansible.builtin.set_fact' failed: Error while resolving value for 'selected_web_service': object of type 'dict' has no attribute 'web_services'"}
+
+PLAY RECAP *********************************************************************
+admin01                    : ok=4    changed=2    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+client01                   : ok=2    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+web01                      : ok=2    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+

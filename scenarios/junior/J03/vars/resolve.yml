@@ -71,7 +71,7 @@
 
 - name: Seleccionar variante del incidente de conectividad
   set_fact:
-    global_selected_variant: "{{ random_elements.variants | random }}"
+    global_selected_variant: "{{ variants | random }}"  # ✅ CORRECTO
   run_once: true
 
 - name: Marcar resolución J03 completada
