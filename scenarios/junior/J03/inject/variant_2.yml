@@ -72,35 +72,38 @@
 # 3. CAUSA RAÍZ: IP estática ERRÓNEA
 # ------------------------------------------------------------------------------
 - name: V2 | CAMBIAR IP a {{ global_wrong_ip }} (CAUSA RAÍZ)
-  nmcli:
-    conn_name: "{{ global_interface }}"
-    ipv4.addresses: "{{ global_wrong_ip }}/24"
-    ipv4.gateway: "{{ global_wrong_ip | regex_replace('\\.(\\d+)$', '.1') }}"
-    ipv4.method: manual
-    state: present
+  shell: |
+    nmcli con mod "{{ global_interface }}" \
+      ipv4.method manual \
+      ipv4.addresses "{{ global_wrong_ip }}/24" \
+      ipv4.gateway "{{ global_wrong_ip | regex_replace('\\.(\\d+)$', '.1') }}" || \
+    nmcli con add con-name "{{ global_interface }}" \
+      ifname "{{ 'enp1s0' if 'enp1s0' in global_interface else 'eth0' }}" \
+      ipv4.method manual \
+      ipv4.addresses "{{ global_wrong_ip }}/24" \
+      ipv4.gateway "{{ global_wrong_ip | regex_replace('\\.(\\d+)$', '.1') }}"
+  become: yes
+  args:
+    executable: /bin/bash
 
 # ------------------------------------------------------------------------------
 # 4. Ruido: Métrica de ruta alta
 # ------------------------------------------------------------------------------
 - name: V2 | Métrica alta (confunde routing)
-  nmcli:
-    conn_name: "{{ global_interface }}"
-    ipv4.route-metric: 1000
-    state: present
+  shell: nmcli con mod "{{ global_interface }}" ipv4.route-metric 1000
+  become: yes
 
 # ------------------------------------------------------------------------------
 # 5. Reiniciar conexión nmcli (aplicar cambios)
 # ------------------------------------------------------------------------------
-- name: V2 | Reiniciar interfaz para aplicar IP errónea
-  nmcli:
-    conn_name: "{{ global_interface }}"
-    state: down
-  ignore_errors: yes
-
-- name: V2 | Reactivar con IP nueva
-  nmcli:
-    conn_name: "{{ global_interface }}"
-    state: up
+- name: V2 | Reiniciar conexión nmcli (aplicar IP errónea)
+  shell: |
+    nmcli con down "{{ global_interface }}" || true
+    sleep 2
+    nmcli con up "{{ global_interface }}"
+  become: yes
+  args:
+    executable: /bin/bash
 
 # ------------------------------------------------------------------------------
 # 6. Verificar nginx LOCAL sigue OK

@@ -60,36 +60,40 @@
 # 2. Ruido secundario: Eliminar servicios web firewalld
 # ------------------------------------------------------------------------------
 - name: V1 | Remover servicios http/https (confunde diagnóstico)
-  firewalld:
-    service: "{{ item }}"
-    zone: "{{ global_firewall_zone }}"
-    permanent: yes
-    state: absent
-  loop:
-    - http
-    - https
-    - "{{ global_firewall_service }}"
-  notify: reload firewalld
+  shell: |
+    for svc in http https {{ global_firewall_service }}; do
+      firewall-cmd --zone="{{ global_firewall_zone }}" --remove-service "$svc" --permanent || true
+    done
+    firewall-cmd --reload || true
+  become: yes
+  args:
+    executable: /bin/bash
 
 # ------------------------------------------------------------------------------
 # 3. CAUSA RAÍZ: Bloquear puerto específico web
 # ------------------------------------------------------------------------------
 - name: V1 | BLOQUEAR PUERTO WEB {{ global_web_port }}/tcp (CAUSA RAÍZ)
-  firewalld:
-    port: "{{ global_web_port }}/tcp"
-    zone: "{{ global_firewall_zone }}"
-    permanent: yes
-    state: absent
+  shell: |
+    firewall-cmd --zone="{{ global_firewall_zone }}" \
+      --remove-port="{{ global_web_port }}/tcp" \
+      --permanent || true
+    firewall-cmd --reload || true
+  become: yes
+  args:
+    executable: /bin/bash
 
 # ------------------------------------------------------------------------------
 # 4. Ruido extra: Regla DROP masiva (parece ataque)
 # ------------------------------------------------------------------------------
 - name: V1 | Agregar DROP masivo HTTP (ruido visual)
-  firewalld:
-    port: "80-{{ global_web_port | int + 100 }}/tcp"
-    zone: "{{ global_firewall_zone }}"
-    permanent: yes
-    state: enabled
+  shell: |
+    firewall-cmd --zone="{{ global_firewall_zone }}" \
+      --add-port="80-{{ global_web_port | int + 100 }}/tcp" \
+      --permanent || true
+    firewall-cmd --reload || true
+  become: yes
+  args:
+    executable: /bin/bash
 
 # ------------------------------------------------------------------------------
 # 5. Aplicar cambios firewalld

@@ -66,6 +66,29 @@
     backup: yes
   when: global_web_service == "httpd"
 
+# AGREGAR después "Configurar puerto httpd" (antes "Iniciar servicio"):
+- name: Crear página de prueba para baseline
+  copy:
+    content: |
+      <html><body><h1>J03 Lab - Baseline FUNCIONAL</h1>
+      <p>Servicio: {{ global_web_service }}</p>
+      <p>Puerto: {{ global_web_port }}</p>
+      <p>IP: 192.168.122.22</p>
+      <p><a href="/">RHCSA Training Lab</a></p>
+      </body></html>
+    dest: "{{ '/usr/share/nginx/html/index.html' if global_web_service == 'nginx' else '/var/www/html/index.html' }}"
+  become: yes
+
+- name: Asegurar permisos página de prueba
+  file:
+    path: "{{ '/usr/share/nginx/html/index.html' if global_web_service == 'nginx' else '/var/www/html/index.html' }}"
+    mode: '0644'
+    owner: "{{ 'nginx' if global_web_service == 'nginx' else 'apache' }}"
+    group: "{{ 'nginx' if global_web_service == 'nginx' else 'apache' }}"
+  become: yes
+
+
+
 - name: Iniciar y habilitar servicio web
   systemd:
     name: "{{ global_web_service }}"

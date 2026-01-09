@@ -68,13 +68,16 @@
 # ------------------------------------------------------------------------------
 # 3. Ruido: Puerto original SIGUE en firewall (confunde)
 # ------------------------------------------------------------------------------
+# ✅ FIX shell (igual que base.yml)
 - name: V4 | Asegurar puerto ORIGINAL sigue abierto (ruido)
-  firewalld:
-    port: "{{ global_web_port }}/tcp"
-    zone: "{{ global_firewall_zone }}"
-    permanent: yes
-    immediate: yes
-    state: enabled
+  shell: |
+    firewall-cmd --zone="{{ global_firewall_zone }}" \
+      --add-port="{{ global_web_port }}/tcp" \
+      --permanent || true
+    firewall-cmd --reload || true
+  become: yes
+  args:
+    executable: /bin/bash
 
 # ------------------------------------------------------------------------------
 # 4. Recargar nginx (sin restart - workers sobreviven)
