@@ -68,7 +68,6 @@ random_elements:
   web_services:
     - "nginx"
     - "httpd"
-    - "apache2"
   
   # MTU problemáticos - ip link | grep mtu
   mtu_values:

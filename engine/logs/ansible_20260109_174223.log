@@ -1,0 +1,75 @@
+
+PLAY [J03 | Crear usuario corporativo] *****************************************
+
+TASK [Crear usuario sysadmin-junior] *******************************************
+changed: [client01]
+changed: [admin01]
+changed: [web01]
+
+TASK [Configurar sudo sin password] ********************************************
+ok: [client01]
+ok: [admin01]
+ok: [web01]
+
+PLAY [J03 | Configuración inicial y randomización] *****************************
+
+TASK [1. Cargar catálogos de red J03] ******************************************
+ok: [admin01]
+
+TASK [2. Resolver variables de conectividad (puerto, interface, IP...)] ********
+included: /home/jensy/Labs/scenarios/junior/J03/vars/resolve.yml for admin01
+
+TASK [Seleccionar elementos aleatorios de conectividad J03] ********************
+ok: [admin01]
+
+TASK [Resolver variables globales de red (configuración)] **********************
+ok: [admin01]
+
+TASK [Resolver variables globales de red (URLs y comandos)] ********************
+ok: [admin01]
+
+TASK [Seleccionar variante del incidente de conectividad] **********************
+ok: [admin01]
+
+TASK [Marcar resolución J03 completada] ****************************************
+ok: [admin01]
+
+TASK [3. Cargar datos del ticket específico] ***********************************
+ok: [admin01]
+
+TASK [4. Publicar variante global] *********************************************
+ok: [admin01]
+
+PLAY [J03 | Propagar variables globales de red] ********************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [admin01]
+ok: [client01]
+ok: [web01]
+
+TASK [Sincronizar variables DESDE admin01] *************************************
+skipping: [admin01]
+ok: [client01]
+ok: [web01]
+
+PLAY [J03 | Crear baseline FUNCIONAL en web01] *********************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [web01]
+
+TASK [Instalar servicio web según variante] ************************************
+[ERROR]: Task failed: Module failed: Failed to install some of the specified packages
+Origin: /home/jensy/Labs/scenarios/junior/J03/tasks/base.yml:43:3
+
+41
+42
+43 - name: Instalar servicio web según variante
+     ^ column 3
+
+fatal: [web01]: FAILED! => {"changed": false, "failures": ["No package apache2 available."], "msg": "Failed to install some of the specified packages", "rc": 1, "results": []}
+
+PLAY RECAP *********************************************************************
+admin01                    : ok=12   changed=1    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+client01                   : ok=4    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+web01                      : ok=5    changed=1    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+
