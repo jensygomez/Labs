@@ -1,0 +1,176 @@
+
+PLAY [J02 | Crear usuario corporativo] *****************************************
+
+TASK [Crear usuario sysadmin-junior] *******************************************
+changed: [client01]
+changed: [admin01]
+changed: [web01]
+
+TASK [Configurar sudo sin password] ********************************************
+changed: [client01]
+changed: [admin01]
+changed: [web01]
+
+PLAY [J02 | Configuración inicial y randomización] *****************************
+
+TASK [1. Cargar catálogos base] ************************************************
+ok: [admin01]
+
+TASK [2. Resolver TODAS las variables (random + derivadas)] ********************
+included: /home/jensy/Labs/scenarios/junior/J02/vars/resolve.yml for admin01
+
+TASK [Seleccionar elementos aleatorios del laboratorio] ************************
+ok: [admin01]
+
+TASK [Resolver variables globales del servicio] ********************************
+ok: [admin01]
+
+TASK [Seleccionar variante del incidente] **************************************
+ok: [admin01]
+
+TASK [Marcar resolución de variables completada] *******************************
+ok: [admin01]
+
+TASK [3. Cargar variante del ticket] *******************************************
+ok: [admin01]
+
+TASK [4. Publicar variante global] *********************************************
+ok: [admin01]
+
+PLAY [J02 | Preparar baseline del sistema] *************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [client01]
+ok: [web01]
+ok: [admin01]
+
+TASK [Propagar variables globales desde admin01] *******************************
+skipping: [admin01]
+ok: [web01]
+ok: [client01]
+
+TASK [Crear usuario del servicio en todos los hosts] ***************************
+changed: [admin01]
+changed: [client01]
+changed: [web01]
+
+TASK [Crear grupo del servicio (si no existe)] *********************************
+ok: [web01]
+ok: [client01]
+ok: [admin01]
+
+TASK [Crear directorio del servicio] *******************************************
+changed: [web01]
+changed: [client01]
+changed: [admin01]
+
+TASK [Crear directorio de configuración] ***************************************
+changed: [web01]
+changed: [admin01]
+changed: [client01]
+
+TASK [Crear directorio de logs] ************************************************
+changed: [admin01]
+changed: [client01]
+changed: [web01]
+
+TASK [Crear archivo de log inicial] ********************************************
+changed: [admin01]
+changed: [web01]
+changed: [client01]
+
+TASK [Crear servicio systemd desde template] ***********************************
+changed: [admin01]
+changed: [client01]
+changed: [web01]
+
+TASK [Crear script de inicio desde template] ***********************************
+changed: [admin01]
+changed: [web01]
+changed: [client01]
+
+TASK [Crear archivo de configuración del servicio] *****************************
+changed: [web01]
+changed: [admin01]
+changed: [client01]
+
+TASK [Crear archivo de condición enabled] **************************************
+changed: [admin01]
+changed: [client01]
+changed: [web01]
+
+TASK [Crear directorio runtime] ************************************************
+changed: [web01]
+changed: [admin01]
+changed: [client01]
+
+TASK [Crear archivo ready] *****************************************************
+changed: [web01]
+changed: [admin01]
+changed: [client01]
+
+PLAY [J02 | Inyectar fallo] ****************************************************
+
+TASK [Inyectar variante seleccionada] ******************************************
+included: /home/jensy/Labs/scenarios/junior/J02/inject/variant_4.yml for web01
+
+TASK [V4 | Backup del unit original] *******************************************
+changed: [web01]
+
+TASK [V4 | Limitar file descriptors (LimitNOFILE)] *****************************
+changed: [web01]
+
+TASK [V4 | Limitar número de procesos (LimitNPROC)] ****************************
+changed: [web01]
+
+TASK [V4 | Limitar memoria máxima (MemoryMax)] *********************************
+changed: [web01]
+
+TASK [V4 | Limitar CPU disponible (CPUQuota)] **********************************
+changed: [web01]
+
+TASK [V4 | Limitar número máximo de tareas (TasksMax)] *************************
+changed: [web01]
+
+TASK [V4 | Reducir prioridad de I/O] *******************************************
+changed: [web01]
+
+TASK [V4 | Deshabilitar core dumps] ********************************************
+changed: [web01]
+
+TASK [V4 | Limitar memoria bloqueada (MEMLOCK)] ********************************
+changed: [web01]
+
+TASK [V4 | Recargar daemon systemd] ********************************************
+ok: [web01]
+
+TASK [V4 | Detener servicio antes de la prueba] ********************************
+ok: [web01]
+
+TASK [V4 | Registrar inyección de la variante] *********************************
+changed: [web01]
+
+TASK [V4 | Crear archivo de diagnóstico] ***************************************
+changed: [web01]
+
+PLAY [J02 | Verificar estado del servicio] *************************************
+
+TASK [Comprobar estado real del servicio] **************************************
+ok: [web01]
+
+TASK [Determinar estado para ticket] *******************************************
+ok: [web01 -> admin01(192.168.122.20)]
+
+PLAY [J02 | Mostrar resumen final] *********************************************
+
+TASK [Preparar contexto del ticket] ********************************************
+ok: [admin01]
+
+TASK [Mostrar ticket final EN admin01 (J02 DINÁMICO)] **************************
+changed: [admin01]
+
+PLAY RECAP *********************************************************************
+admin01                    : ok=25   changed=14   unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+client01                   : ok=16   changed=13   unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+web01                      : ok=32   changed=24   unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
