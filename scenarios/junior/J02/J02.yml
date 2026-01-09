@@ -100,6 +100,7 @@
         service_port: "{{ hostvars['admin01'].service_port }}"
         log_path: "{{ hostvars['admin01'].log_path }}"
         config_path: "{{ hostvars['admin01'].config_path }}" 
+        selected_service: "{{ hostvars['admin01'].selected_service }}"
       when: inventory_hostname != 'admin01'
 
     # 🔧 NUEVO: Crear usuario del servicio ANTES de base.yml

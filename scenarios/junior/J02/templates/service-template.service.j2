@@ -1,20 +1,20 @@
 # ==============================================================================
-# service-template.service.j2 — PLANTILLA SYSTEMD J02
+# service-template.service.j2 — PLANTILLA SYSTEMD J02 (CORREGIDA)
 # ==============================================================================
 # 
-# RELACIONES ← ATRÁS (DEPENDENCIAS)
+# RELACIONES ← ATRÁS (DEPENDENCIAS) ✅ TODAS PROPAGADAS
 # ┌─────────────────────────────────────────────────────────────┐
 # │ 1. CARGADO POR: tasks/base.yml → template module             │
 # │    src: templates/service-template.service.j2               │
 # │    dest: /etc/systemd/system/{{ global_service_name }}.service │
 # │                                                          │
-# │ 2. REQUIERE variables de resolve.yml:                      │
-# │    • global_service_name  ← selected_service               │
-# │    • global_service_user  ← selected_user                  │
-# │    • service_dir          ← /opt/{{ selected_service }}    │
-# │    • global_config_file   ← selected_config_file           │
-# │    • current_log_file     ← ❌ NO DEFINIDA (ver abajo)     │
-# │    • current_port         ❌ NO DEFINIDA (ver abajo)       │
+# │ 2. REQUIERE variables de resolve.yml (TODAS PROPAGADAS):    │
+# │    • global_service_name  ← ✅ propagada                    │
+# │    • global_service_user  ← ✅ propagada                    │
+# │    • global_config_file   ← ✅ propagada                    │
+# │    • global_log_file      ← ✅ propagada                    │
+# │    • service_port         ← ✅ propagada                    │
+# │    • service_dir          ← ✅ propagada                    │
 # └─────────────────────────────────────────────────────────────┘
 # 
 # RELACIONES → ADELANTE (CONSUMIDORES)
@@ -25,43 +25,43 @@
 # │ 4. Variantes corrompen este archivo (user=, ExecStart=...)  │
 # └─────────────────────────────────────────────────────────────┘
 # 
-# FLUJO: resolve.yml → base.yml → [ESTE TEMPLATE] → systemd daemon-reload
-# EJEMPLO: /etc/systemd/system/internal-api.service (ALEATORIO)
+# FLUJO: resolve.yml → J02.yml(propagación) → base.yml → [ESTE TEMPLATE]
+# EJEMPLO: /etc/systemd/system/auth-gateway.service ✅
 # ==============================================================================
 
 # ==============================================================================
 # {{ global_service_name }}.service - Template para laboratorio J02
-# ← ALEATORIO: internal-api.service, data-processor.service...
+# ← ALEATORIO: auth-gateway.service, data-processor.service...
 # ==============================================================================
 
 [Unit]
-Description={{ global_service_name }} Service (J02 Lab)                    ← ALEATORIO
-Documentation=https://internal.wiki/{{ global_service_name }}             ← ALEATORIO
+Description={{ global_service_name }} Service (J02 Lab)                    ← ✅ global_service_name
+Documentation=https://internal.wiki/{{ global_service_name }}             ← ✅ global_service_name
 After=network-online.target
 Wants=network-online.target
 Requires=network-online.target
 
 [Service]
 Type=simple
-User={{ global_service_user }}                                            ← ALEATORIO: svc-internal, svc-process...
-Group={{ global_service_user }}                                           ← ALEATORIO
-WorkingDirectory=/opt/{{ global_service_name }}                          ← service_dir de resolve.yml
+User={{ global_service_user }}                                            ← ✅ global_service_user
+Group={{ global_service_user }}                                           ← ✅ global_service_user
+WorkingDirectory={{ service_dir }}                                        ← ✅ service_dir (/opt/auth-gateway)
 
-ExecStart=/opt/{{ global_service_name }}/start.sh                         ← service_dir/start.sh
-ExecStartPre=/bin/echo "Starting {{ global_service_name }} service"      ← ALEATORIO
+ExecStart={{ service_dir }}/start.sh                                      ← ✅ service_dir/start.sh
+ExecStartPre=/bin/echo "Starting {{ global_service_name }} service"      ← ✅ global_service_name
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStop=/bin/kill -TERM $MAINPID
 
-# Environment (VARIABLES PARA start.sh)
-Environment="SERVICE_NAME={{ global_service_name }}"                      ← ALEATORIO
-Environment="CONFIG_FILE=/etc/{{ global_service_name }}/{{ global_config_file }}"  # ← global_config_file
-Environment="LOG_FILE=/var/log/{{ global_service_name }}/{{ selected_log_file }}"  # ← selected_log_file
-Environment="PORT={{ service_port }}"                                    ← service_port de resolve.yml
+# Environment (VARIABLES PARA start.sh) ✅ TODAS CORREGIDAS
+Environment="SERVICE_NAME={{ global_service_name }}"                      ← ✅ global_service_name
+Environment="CONFIG_FILE={{ config_path }}"                              ← ✅ config_path (/etc/auth-gateway/app.conf)
+Environment="LOG_FILE={{ log_path }}"                                    ← ✅ log_path (/var/log/auth-gateway/app.log)
+Environment="PORT={{ service_port }}"                                    ← ✅ service_port
 
 # Logging
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier={{ global_service_name }}                               ← ALEATORIO
+SyslogIdentifier={{ global_service_name }}                               ← ✅ global_service_name
 
 # Security (BASELINE - variantes lo rompen)
 NoNewPrivileges=true
@@ -91,9 +91,12 @@ TimeoutStopSec=30s
 WantedBy=multi-user.target
 
 # ==============================================================================
-# ⚠️  AJUSTES NECESARIOS EN resolve.yml:
-# 1. Agregar global_log_file: "{{ selected_log_file }}"
-# 2. Cambiar referencias current_* → global_* o selected_*
+# ✅ VARIABLES CORREGIDAS:
+# ❌ selected_service     → ✅ global_service_name
+# ❌ selected_log_file    → ✅ global_log_file  
+# ❌ current_config_file  → ✅ global_config_file (via config_path)
+# ❌ current_log_file     → ✅ global_log_file (via log_path)
+# ❌ current_port         → ✅ service_port
 # 
 # USO EN LABORATORIO (ALEATORIO POR EJECUCIÓN):
 # 1. base.yml: template → /etc/systemd/system/data-processor.service
