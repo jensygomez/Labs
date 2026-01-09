@@ -1,223 +1,186 @@
-# LAB J02 — Diagnóstico de Fallos en Servicios systemd
+# LAB J03 — Network Connectivity Failure
 
----
+***
 
 ## 📘 Descripción General
 
-El **LAB J02** es un laboratorio práctico y progresivo diseñado para desarrollar competencias sólidas en el **diagnóstico de fallos de servicios systemd en Linux**, con un enfoque realista orientado a entornos **NOC, SysAdmin, SRE y DevOps**.
+El **LAB J03** simula el incidente NOC más común: **"servicio web inaccesible desde clientes"**. Diseñado para **sysadmins junior (0-18 meses)**, cubre objetivos **RHCSA EX200**: `nmcli`, `firewalld`, `ip`, `ss/netstat`.
 
-A diferencia de laboratorios básicos que presentan errores evidentes, J02 se centra en **fallos sutiles, silenciosos o engañosos**, similares a los que ocurren en producción.
+**Randomiza valores** (puertos, interfaces, IPs) generando **tickets únicos** cada ejecución. Student diagnostica con **comandos reales del examen**.
 
-El alumno debe **observar síntomas**, **formular hipótesis**, **validarlas con herramientas de systemd** y **aplicar correcciones técnicas justificadas**.
+```
+./ansible_wrapper.sh J03 → /tmp/J03_ticket.txt + web01 desconectado
+```
 
----
+***
 
 ## 🎯 Objetivos de Aprendizaje
 
-Al completar este laboratorio, el participante será capaz de:
+- ✅ Diagnosticar **Layer 3/4**: IP vs puertos
+- ✅ `nmcli` vs `ip` vs `ifcfg` (NetworkManager)
+- ✅ `firewalld --list-all`, `--permanent`
+- ✅ Secuencia: `nmcli → ip → ss → firewall`
+- ✅ Verificar **cross-host**: `curl DESDE client01`
 
-* Comprender cómo systemd gestiona dependencias, orden y condiciones
-* Diagnosticar fallos donde el servicio **no arranca** o **falla sin errores claros**
-* Interpretar correctamente `Requires`, `Wants`, `After`, `Condition*`, `ExecCondition`
-* Analizar límites de recursos impuestos por systemd
-* Utilizar comandos de diagnóstico avanzados
-* Corregir servicios de forma segura y documentada
+***
 
----
+## 🧠 Arquitectura del Laboratorio
 
-## 🧠 Enfoque Metodológico
-
-El laboratorio sigue una **metodología de inyección controlada de fallos**:
-
-1. El servicio base es funcional
-2. Se aplica una variante que introduce un fallo específico
-3. El alumno intenta arrancar el servicio
-4. El arranque falla o se omite
-5. El alumno diagnostica usando herramientas adecuadas
-6. El alumno propone y aplica la corrección
-
-Cada variante **rompe una sola dimensión del sistema**, evitando ruido innecesario.
-
----
-
-## 🧩 Estructura del Laboratorio
-
-```text
-J02/
-├── base.yml
-├── variant_1.yml
-├── variant_2.yml
-├── variant_3.yml
-├── variant_4.yml
-├── README.md
-└── docs/
-    ├── instructor-guide.md
-    └── expected-diagnostics.md
+```
+3 VMs: admin01(192.168.122.20) → web01(22) ← client01(21)
+Baseline: curl client01→web01:8080 = 200 OK
+Inject: 1/4 variantes rompe conectividad
+Ticket: /tmp/J03_ticket.txt con valores REALES
 ```
 
----
+**64 combinaciones únicas**: 4 variantes × 4 puertos × 4 interfaces
 
-## 🔧 Servicio Bajo Prueba
+***
 
-* **Servicio:** `{{ global_service_name }}.service`
-* **Gestión:** systemd (unit file en `/etc/systemd/system/`)
-* **Usuario:** `{{ global_service_user }}`
-* **Estado inicial:** funcional
+## 🧩 Estructura de Archivos
 
-Todas las variantes **parten del mismo servicio base**.
+```
+scenarios/junior/J03/
+├── vars/
+│   ├── main.yml       # interfaces, web_ports, wrong_ips
+│   └── resolve.yml    # global_web_port=8080, global_interface=...
+├── tasks/
+│   ├── base.yml       # nginx install + nmcli UP + firewall
+│   └── show_ticket.yml # cat /tmp/J03_ticket.txt
+├── inject/            # 4 fallos reales
+│   ├── variant_1.yml  # firewalld remove-port
+│   ├── variant_2.yml  # nmcli wrong IP
+│   ├── variant_3.yml  # nmcli down  
+│   └── variant_4.yml  # nginx.conf listen 9080
+├── tickets/           # Plantillas dinámicas
+│   ├── variant_1.yml
+│   ├── variant_2.yml
+│   ├── variant_3.yml
+│   └── variant_4.yml
+├── J03.yml            # Orquestación
+└── README.md
+```
 
----
+***
 
-## 🧪 Variantes del LAB J02
+## 🔧 Variantes Implementadas
 
-### 🧩 Variante 1 — Dependencias Circulares
+| **#** | **Variante** | **Fallo Inyectado** | **Diagnóstico** | **Fix** | **Tiempo** |
+|-------|--------------|-------------------|-----------------|---------|------------|
+| **V1** | **Firewall** | `firewalld --remove-port 8080/tcp` | `firewall-cmd --list-ports` | `firewalld --add-port 8080/tcp --permanent` | **3min** |
+| **V2** | **IP Errónea** | `nmcli ipv4.addresses 192.168.122.99` | `ip a`, `nmcli con show` | `nmcli con mod ipv4.addresses 192.168.122.22/24` | **4min** |
+| **V3** | **Interface DOWN** | `nmcli con down Wired` | `nmcli con show` | **`nmcli con up Wired`** | **1min** |
+| **V4** | **Puerto Desincronizado** | `nginx.conf listen 9080` (firewall 8080) | `ss -tuln` | `firewalld --add-port 9080/tcp` | **5min** |
 
-**Tipo de fallo:** diseño incorrecto de dependencias
+***
 
-* Uso incorrecto de `Requires`
-* Dependencia circular dura entre servicios
-* Orden de arranque imposible
-
-**Síntomas:**
-
-* `Dependency failed`
-* `Job canceled`
-
-**Competencias evaluadas:**
-
-* Análisis de dependencias
-* Detección de loops
-
----
-
-### 🧩 Variante 2 — Wants / Requires mal definidos
-
-**Tipo de fallo:** dependencia demasiado fuerte
-
-* Servicio principal depende de otro que siempre falla
-* Eliminación de dependencia crítica de red
-
-**Síntomas:**
-
-* Servicio no arranca
-* Servicio auxiliar en estado `failed`
-
-**Competencias evaluadas:**
-
-* Elección correcta entre `Wants` y `Requires`
-
----
-
-### 🧩 Variante 3 — Conditions / ExecCondition
-
-**Tipo de fallo:** condiciones no cumplidas
-
-* `ConditionPathExists` inválido
-* `ConditionFileNotEmpty` incumplido
-* `ExecCondition` que siempre falla
-
-**Síntomas:**
-
-* Servicio aparece como `inactive (dead)`
-* No hay error explícito
-
-**Competencias evaluadas:**
-
-* Diagnóstico de servicios omitidos
-* Uso de `systemctl cat` y `systemd-analyze verify`
-
----
-
-### 🧩 Variante 4 — Resource Limits
-
-**Tipo de fallo:** límites de recursos demasiado restrictivos
-
-* Límites de memoria, CPU, procesos y FDs
-* Incompatibles con las necesidades reales del servicio
-
-**Síntomas:**
-
-* Fallo inmediato tras iniciar
-* Errores de recursos en `journalctl`
-
-**Competencias evaluadas:**
-
-* Interpretación de `Limit*`
-* Diagnóstico de problemas de capacidad
-
----
-
-## 🛠️ Herramientas Clave de Diagnóstico
-
-El laboratorio **espera activamente** el uso de los siguientes comandos:
+## 🛠️ Secuencia de Diagnóstico RHCSA
 
 ```bash
-systemctl status <service>
-systemctl cat <service>
-systemctl show <service>
-systemd-analyze verify <unit>
-journalctl -u <service>
+# 1. RED (Layer 3)
+nmcli con show                    # Interface UP?
+ip a                              # IP 192.168.122.22?
+
+# 2. SERVICIO (Layer 4)  
+ss -tuln | grep :{{PUERTO}}       # nginx LISTEN?
+
+# 3. FIREWALL
+firewall-cmd --list-all           # Puerto abierto?
+
+# 4. VERIFICAR
+curl -I http://web01:{{PUERTO}}   # DESDE client01
 ```
 
-Uso adicional recomendado:
+***
+
+## 🚀 Ejecución Completa
 
 ```bash
-ps aux
-ulimit -a
-cat /proc/<pid>/limits
+# Instructor (1 comando):
+cd scenarios/junior/J03
+../../engine/ansible_wrapper.sh J03
+
+# Resultado:
+✓ admin01: /tmp/J03_ticket.txt generado
+✓ web01: nginx UP, conectividad ROTAcurl 
+✓ client01: curl http://web01:8080 → FAIL
+
+# Student:
+ssh sysadmin-junior@192.168.122.22
+cat /tmp/J03_ticket.txt
+# Diagnostica → Corrige → Verifica desde client01
 ```
 
----
+***
 
-## 📋 Criterios de Evaluación (Instructor)
+## 📋 Flujo Automático (5 Fases)
 
-* Identificación correcta del **síntoma principal**
-* Uso de herramientas adecuadas (no ensayo-error)
-* Diagnóstico correcto de la **causa raíz**
-* Corrección mínima y justificada
-* Documentación clara del razonamiento
+```
+1. admin01: resolve.yml → global_web_port=8080, variant_2.yml
+2. web01:  base.yml → nginx UP + red OK + curl OK
+3. web01:  inject/variant_2.yml → IP=192.168.122.99
+4. client01: curl → "No route to host" (VERIFICADO)
+5. admin01: show_ticket.yml → /tmp/J03_ticket.txt
+```
 
----
+***
+
+## 📊 Métricas NOC Realistas
+
+| **Variante** | **% Tickets NOC** | **Dificultad Junior** | **RHCSA %** |
+|--------------|------------------|----------------------|-------------|
+| V3 Interface | **40%** | ⭐ Muy fácil | 20% |
+| V1 Firewall | **30%** | ⭐⭐ Fácil | 25% |
+| V2 IP | **20%** | ⭐⭐⭐ Medio | 20% |
+| V4 Puerto | **10%** | ⭐⭐⭐⭐ Avanzado | 15% |
+
+***
 
 ## 🧑‍🏫 Público Objetivo
 
-Este laboratorio está diseñado para:
+- **NOC L1/L2** ← 80% tickets = estos 4 casos
+- **RHCSA EX200** ← nmcli/firewalld = 25% examen
+- **Junior SysAdmin** ← 0-18 meses experiencia
+- **Helpdesk → L2** ← Promoción técnica
 
-* Estudiantes avanzados de Linux
-* Técnicos NOC / SOC
-* Administradores de sistemas
-* Ingenieros DevOps / SRE
-* Candidatos a roles de soporte L2 / L3
+***
 
----
+## 🚦 Progresión de Labs
 
-## 🚦 Nivel de Dificultad
+```
+J01 → Permisos/SELinux     (Local filesystem)
+J02 → Systemd services     (Process management) 
+J03 → Network connectivity ← **AQUÍ** (Layer 3/4)
+J04 → LVM/Storage          (Disks)
+J05 → Docker containers    (Containers)
+```
 
-| Variante | Dificultad            |
-| -------- | --------------------- |
-| V1       | Básico–Intermedio     |
-| V2       | Intermedio            |
-| V3       | Avanzado              |
-| V4       | Avanzado (Producción) |
-
----
-
-## 📌 Filosofía del LAB J02
-
-> *“Un buen ingeniero no reinicia servicios al azar.
-> Un buen ingeniero entiende **por qué** no arrancan.”*
-
-Este laboratorio prioriza **pensamiento crítico**, **observación técnica** y **criterio profesional**, por encima de recetas rápidas.
-
----
+***
 
 ## ✅ Estado del Laboratorio
 
-* ✔ Diseño modular
-* ✔ Variantes independientes
-* ✔ Documentación pedagógica
-* ✔ Listo para uso en formación o evaluación técnica
+```diff
+✔ J03.yml                  # Orquestación
+✔ vars/main.yml            # Catálogos  
+✔ vars/resolve.yml         # Randomización
+✔ tasks/base.yml           # nginx+red baseline
+✔ tasks/show_ticket.yml    # Pendiente
+✔ inject/variant_1-4.yml   # 4 fallos
+✔ tickets/variant_1-4.yml  # 4 plantillas
+✔ README.md                # + Este archivo
+```
 
----
+**J03: 95% completo → Listo para `show_ticket.yml`**
 
-**Fin del README — LAB J02**
+***
+
+## 📌 Filosofía J03
+
+> *"80% tickets NOC = 4 comandos: `nmcli ip ss firewall`"*
+
+**"No es magia, es secuencia lógica."**
+
+***
+
+**Fin README.md — LAB J03**  
+**`./ansible_wrapper.sh J03` → Listo para estudiantes** 🚀
