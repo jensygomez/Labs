@@ -39,6 +39,7 @@
 # ORDEN: ÚNICA EJECUCIÓN al inicio del site.yml → ANTES base.yml
 # ==============================================================================
 
+
 - name: Seleccionar elementos aleatorios de conectividad J03
   set_fact:
     selected_interface: "{{ random_elements.interfaces | random }}"
@@ -49,37 +50,33 @@
     selected_web_service: "{{ random_elements.web_services | random }}"
   run_once: true
 
-- name: Resolver variables globales de red
+# ✅ FIX: 2 set_fact separados - configs PRIMERO
+- name: Resolver variables globales de red (configuración)
   set_fact:
-    # Configuración de red específica
     global_interface: "{{ selected_interface }}"
     global_web_port: "{{ selected_web_port }}"
     global_wrong_ip: "{{ selected_wrong_ip }}"
     global_firewall_zone: "{{ selected_firewall_zone }}"
     global_firewall_service: "{{ selected_firewall_service }}"
     global_web_service: "{{ selected_web_service }}"
-    
-    # URLs y comandos para ticket/verificación
-    web_url: "http://web01.example.com:{{ selected_web_port }}"
-    test_command: "curl -I {{ web_url }} --connect-timeout 5"
-    symptom_description: "curl desde client01 a web01.example.com:{{ selected_web_port }} falla"
-    
-    # Rutas de configuración derivadas
     nginx_listen: "listen {{ selected_web_port }};"
     nmcli_connection: "{{ selected_interface }}"
   run_once: true
 
+# ✅ URLs DESPUÉS - ahora selected_web_port existe
+- name: Resolver variables globales de red (URLs y comandos)
+  set_fact:
+    web_url: "http://web01.example.com:{{ selected_web_port }}"
+    test_command: "curl -I http://web01.example.com:{{ selected_web_port }} --connect-timeout 5"
+    symptom_description: "curl desde client01 a web01.example.com:{{ selected_web_port }} falla"
+  run_once: true
+
 - name: Seleccionar variante del incidente de conectividad
   set_fact:
-    global_selected_variant: "{{ variants | random }}"  # ✅ CORRECTO
+    global_selected_variant: "{{ variants | random }}"
   run_once: true
 
 - name: Marcar resolución J03 completada
   set_fact:
     j03_resolved: true
   run_once: true
-
-# ==============================================================================
-# FIN resolve.yml — Variables listas para inyección en inject/{{ global_selected_variant }}
-# Tickets generados usarán: {{ web_url }}, {{ test_command }}, {{ symptom_description }}
-# ==============================================================================
