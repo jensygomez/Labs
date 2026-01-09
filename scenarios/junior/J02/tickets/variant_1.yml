@@ -1,34 +1,34 @@
 # scenarios/junior/J02/tickets/variant_1.yml
 # ==============================================================================
-# TICKET PARA LA VARIANTE 1 
+# TICKET PARA LA VARIANTE 1
 # ==============================================================================
 
 variant:
   description: |
-    El servicio {{ global_service_name }}.service está configurado con dependencias
-    de systemd invertidas y conflictivas, creando un ciclo de dependencia circular
-    que impide el inicio del servicio. El unit file tiene configuración válida
-    pero el orden de inicio y las relaciones entre servicios están mal definidas,
-    causando que systemd no pueda resolver la secuencia de arranque correcta.
+    Un servicio del sistema está configurado con dependencias de systemd
+    invertidas y conflictivas, creando un ciclo de dependencia circular que
+    impide su inicio. El unit file contiene configuración válida, pero el
+    orden de arranque y las relaciones entre servicios están mal definidas,
+    causando que systemd no pueda resolver correctamente la secuencia de inicio.
 
   symptoms:
-    - "`systemctl start {{ global_service_name }}.service` falla inmediatamente"
-    - "`systemctl status` muestra 'dependency failed' o código 1"
-    - "Journal contiene 'Job for {{ global_service_name }}.service/start failed'"
-    - "`systemd-analyze critical-chain` muestra ciclo en las dependencias"
-    - "El servicio db-{{ global_service_name }}.service también está bloqueado"
-    - "network.target se activa pero network-online.target podría no estar listo"
+    - "`systemctl start <service>.service` falla inmediatamente"
+    - "`systemctl status` muestra 'dependency failed' o código de salida 1"
+    - "El journal indica 'Job for <service>.service/start failed'"
+    - "`systemd-analyze critical-chain` muestra ciclos de dependencia"
+    - "Un servicio dependiente también queda bloqueado"
+    - "network.target se activa, pero network-online.target no está garantizado"
 
   task: |
-    Diagnosticar y resolver las dependencias circulares y conflictos en la
-    configuración de systemd que impiden el inicio de {{ global_service_name }}.service.
-    Identificar qué dependencias están invertidas, eliminar ciclos y asegurar
-    que todas las dependencias necesarias estén disponibles antes del inicio.
+    Diagnosticar y resolver dependencias circulares y conflictos en la
+    configuración de systemd que impiden el inicio del servicio.
+    Identificar dependencias invertidas, eliminar ciclos y asegurar que
+    todos los requisitos estén disponibles antes del arranque.
 
   restrictions:
-    - "NO modificar o eliminar db-{{ global_service_name }}.service (es crítico para producción)"
-    - "NO cambiar User=root en el unit file"
+    - "NO modificar ni eliminar servicios dependientes críticos"
+    - "NO cambiar el usuario configurado en el unit file"
     - "NO deshabilitar servicios del sistema para evadir dependencias"
-    - "NO usar máscaras de systemd (systemctl mask) como solución"
-    - "La corrección debe permitir que ambos servicios inicien en orden correcto"
-    - "Los cambios deben persistir tras reboot"
+    - "NO usar systemctl mask como solución"
+    - "La corrección debe permitir que todos los servicios inicien en orden correcto"
+    - "Los cambios deben persistir tras un reboot"

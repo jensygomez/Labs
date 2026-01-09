@@ -1,37 +1,38 @@
 # ==============================================================================
-# TICKET PARA LA VARIANTE 4 
+# TICKET PARA LA VARIANTE 4
 # ==============================================================================
 
 variant:
   description: |
-    El servicio {{ global_service_name }}.service está configurado con límites
-    de recursos de systemd extremadamente restrictivos que impiden su funcionamiento
-    normal. Los límites de file descriptors, procesos, memoria, CPU y otros
-    recursos están establecidos en valores tan bajos que el servicio no puede
-    ejecutarse o funciona de manera inestable. El script de inicio verifica
-    explícitamente algunos de estos límites y falla si no se satisfacen.
+    Un servicio del sistema está configurado con límites de recursos de systemd
+    excesivamente restrictivos que impiden su funcionamiento normal. Los límites
+    de descriptores de archivo, número de procesos, memoria, CPU y otros recursos
+    están definidos con valores tan bajos que el servicio no puede ejecutarse
+    correctamente o se comporta de manera inestable. El script de inicio del
+    servicio valida explícitamente algunos de estos límites y falla si no se
+    cumplen los valores mínimos esperados.
 
   symptoms:
-    - "El servicio inicia pero se detiene inmediatamente o funciona de manera inestable"
-    - "`systemctl status {{ global_service_name }}.service` puede mostrar 'failed' o 'exited'"
-    - "Los logs del servicio muestran errores de 'file descriptors' o 'too many open files'"
-    - "El servicio puede ser eliminado por el OOM killer debido a MemoryLimit bajo"
-    - "`journalctl -u {{ global_service_name }}.service` muestra códigos de salida 1 o 137 (OOM)"
-    - "El script de inicio reporta 'File descriptors insuficientes' o 'Procesos máximos insuficientes'"
-    - "Performance degradado debido a CPUQuota restrictivo"
+    - "El servicio inicia pero se detiene inmediatamente o presenta inestabilidad"
+    - "`systemctl status <service>.service` muestra estados como 'failed' o 'exited'"
+    - "Los logs del servicio reportan errores relacionados con descriptores de archivo"
+    - "El servicio puede ser terminado por el OOM killer debido a límites de memoria bajos"
+    - "`journalctl -u <service>.service` muestra códigos de salida 1 o 137 (OOM)"
+    - "El script de inicio indica recursos insuficientes (FDs, procesos, memoria)"
+    - "Degradación severa de rendimiento debido a límites de CPU restrictivos"
 
   task: |
-    Diagnosticar y ajustar los límites de recursos de systemd para
-    {{ global_service_name }}.service, asegurando que sean apropiados para las
-    necesidades reales del servicio. Identificar qué límites son demasiado
-    restrictivos, determinar valores apropiados basados en los requisitos del
-    script y el uso típico, y configurarlos para permitir un funcionamiento
-    estable sin asignar recursos excesivos.
+    Diagnosticar y ajustar los límites de recursos definidos en systemd para el
+    servicio, asegurando que sean coherentes con sus requisitos reales de
+    ejecución. Identificar qué límites son excesivamente restrictivos, definir
+    valores apropiados basados en el comportamiento esperado y las validaciones
+    del script de inicio, y aplicar configuraciones que permitan un
+    funcionamiento estable sin asignar recursos innecesarios.
 
   restrictions:
-    - "NO establecer límites como 'infinity' o valores extremadamente altos sin justificación"
-    - "NO eliminar todas las verificaciones de recursos del script de inicio"
+    - "NO configurar límites como 'infinity' ni valores desproporcionadamente altos sin justificación"
+    - "NO eliminar las validaciones de recursos implementadas en el script de inicio"
     - "NO deshabilitar completamente el OOM killer para el servicio"
-    - "Los límites deben ser realistas y proporcionados al uso esperado"
-    - "Debe mantenerse algún nivel de limitación para seguridad y estabilidad"
-    - "Los cambios deben considerar el impacto en otros servicios del sistema"
+    - "Los límites deben ser realistas y acordes al uso esperado"
+    - "Debe mantenerse algún nivel de limitación por motivos de seguridad y estabilidad"
+    - "Los cambios deben considerar el impacto global en el sistema y otros servicios"

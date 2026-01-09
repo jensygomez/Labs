@@ -1,34 +1,35 @@
 # ==============================================================================
-# TICKET PARA LA VARIANTE 2 
+# TICKET PARA LA VARIANTE 2
 # ==============================================================================
 
 variant:
   description: |
-    El servicio {{ global_service_name }}.service está configurado con dependencias
-    de systemd de tipo Wants/Requires incorrectas o faltantes. Algunas dependencias
-    críticas han sido debilitadas o removidas, mientras que se han agregado
-    dependencias a servicios que fallan o no existen. Esto causa que systemd
-    no pueda satisfacer los requisitos para iniciar el servicio principal.
+    Un servicio del sistema está configurado con dependencias de systemd de tipo
+    Wants y Requires incorrectas o incompletas. Algunas dependencias críticas han
+    sido debilitadas o eliminadas, mientras que se han agregado dependencias hacia
+    servicios que fallan o no existen. Como resultado, systemd no puede satisfacer
+    correctamente los requisitos necesarios para iniciar el servicio principal.
 
   symptoms:
-    - "`systemctl start {{ global_service_name }}.service` falla con error de dependencia"
-    - "`systemctl status auth-{{ global_service_name }}.service` muestra 'failed'"
-    - "Journal contiene 'Unit {{ global_service_name }}.service has a bad Requires dependency'"
-    - "`systemctl list-dependencies` muestra dependencias a servicios inexistentes"
-    - "Network se inicia pero podría no estar completamente operativo"
-    - "Remote filesystem mount para remote-fs-{{ global_service_name }} falla"
+    - "`systemctl start <service>.service` falla con error de dependencias"
+    - "`systemctl status` muestra fallos relacionados con unidades requeridas"
+    - "El journal indica dependencias Requires inválidas o no satisfechas"
+    - "`systemctl list-dependencies` muestra unidades inexistentes o fallidas"
+    - "La red se inicia, pero puede no estar completamente operativa al arranque"
+    - "Un montaje de sistema de archivos remoto falla y bloquea el servicio"
 
   task: |
-    Diagnosticar y corregir las dependencias Wants/Requires/After incorrectas
-    en la configuración de systemd de {{ global_service_name }}.service.
-    Identificar qué dependencias son críticas (Requires) versus opcionales (Wants),
-    eliminar dependencias a servicios fallidos, y asegurar que todas las
-    dependencias necesarias estén correctamente especificadas.
+    Diagnosticar y corregir las dependencias Wants, Requires y After incorrectas
+    en la configuración de systemd del servicio afectado. Identificar qué
+    dependencias son realmente críticas y deben ser marcadas como Requires,
+    cuáles deben ser opcionales mediante Wants, y eliminar dependencias hacia
+    unidades inexistentes o inestables. Asegurar que todas las dependencias
+    necesarias estén correctamente definidas para permitir un arranque fiable.
 
   restrictions:
-    - "NO eliminar el unit file auth-{{ global_service_name }}.service (es requerido por otros sistemas)"
-    - "NO cambiar network.target de vuelta a network-online.target sin justificación"
-    - "NO usar 'IgnoreOnIsolate=yes' para evadir dependencias"
-    - "NO modificar servicios del sistema fuera de {{ global_service_name }}.service"
-    - "La solución debe mantener la fortaleza apropiada de dependencias (Wants vs Requires)"
-    - "Los cambios deben permitir que el servicio inicie independientemente del estado de auth"
+    - "NO eliminar unit files utilizados por otros sistemas"
+    - "NO debilitar dependencias críticas solo para forzar el arranque"
+    - "NO usar IgnoreOnIsolate para evadir problemas de dependencias"
+    - "NO modificar servicios del sistema fuera del servicio afectado"
+    - "La solución debe respetar la diferencia semántica entre Wants y Requires"
+    - "Los cambios deben permitir un arranque consistente tras reinicio"
