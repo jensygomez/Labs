@@ -1,6 +1,37 @@
 # ==============================================================================
-# J01 — User Access Breaks Critical Service
+# J01 — USER ACCESS BREAKS CRITICAL SERVICE
 # ==============================================================================
+# 
+# 🏢 PROPÓSITO: Laboratorio automatizado para RHCSA/EX200
+#    Simula fallo crítico donde un cambio de permisos de usuario
+#    rompe un servicio web crítico (nginx/apache + app personalizada)
+#
+# 🎯 OBJETIVO DEL ALUMNO:
+#    1. Recibir ticket con servicio caído
+#    2. Diagnosticar: systemctl + journalctl + permisos
+#    3. Identificar: chown/chmod/SELinux corrupto
+#    4. Recuperar servicio
+#
+# 🔄 FLUJO AUTOMÁTICO (5 fases):
+#    1. admin01: Selecciona variante aleatoria + variables globales
+#    2. web01:  Prepara baseline (servicio OK)
+#    3. web01:  Inyecta fallo específico (permisos rotos)
+#    4. web01:  Verifica estado final (SERVICE DOWN)
+#    5. admin01: Genera ticket con datos reales del fallo
+#
+# 📁 ARCHIVOS NECESARIOS:
+#    - vars/main.yml          → service_name, service_user, service_dir
+#    - tickets/*.yml          → Datos de variantes (10+ escenarios)
+#    - tasks/base.yml         → Estado baseline limpio
+#    - tasks/show_ticket.yml  → Plantilla de ticket final
+#    - inject/variant_XX.yml  → Inyección específica por escenario
+#
+# 🚀 USO:
+#    ansible-playbook labs/J01/site.yml
+#    → Genera ticket único cada ejecución
+#
+# =================================================================================
+
 
 # ------------------------------------------------------------------------------
 # 1. CONFIGURACIÓN INICIAL (SOLO admin01)

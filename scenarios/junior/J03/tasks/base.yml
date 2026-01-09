@@ -1,0 +1,118 @@
+---
+# ==============================================================================
+# scenarios/junior/J03/tasks/base.yml — LAB J03: Network Connectivity Failure
+# ------------------------------------------------------------------------------
+# RESPONSABILIDAD:
+#   Prepara baseline FUNCIONAL de nginx + red en web01 para laboratorio J03.
+#   Estado inicial: curl http://web01.example.com:8080 DESDE client01 funciona.
+#
+# QUE HACE:
+#   - Instala nginx/httpd según variante
+#   - Configura puerto correcto ({{ global_web_port }})
+#   - Configura red correcta (IP 192.168.122.22/24, interface UP)
+#   - Abre puerto en firewalld (http/https/puerto custom)
+#   - Verifica conectividad client01→web01 OK
+#   - NO introduce fallos
+#
+# QUE NO HACE:
+#   - NO selecciona variables (lo hace resolve.yml)
+#   - NO rompe conectividad (lo hacen variants/)
+#   - NO crea usuarios custom
+#
+# DEPENDENCIAS (OBLIGATORIAS):
+#   Debe ejecutarse DESPUÉS de:
+#     - vars/main.yml     → Catálogos
+#     - tasks/resolve.yml → Variables globales resueltas
+#
+# VARIABLES REQUERIDAS:
+#   global_interface, global_web_port, global_web_service, global_firewall_service
+#   web_url, test_command
+#
+# QUIÉN LO USA:
+#   site.yml → tasks/base.yml → inject/{{ global_selected_variant }} → ticket
+#
+# ORDEN DE EJECUCIÓN:
+#   1. vars/main.yml      (catálogos)
+#   2. tasks/resolve.yml (globals: puerto=8080, interface=...)
+#   3. tasks/base.yml    (nginx UP, red OK, curl OK)
+#   4. inject/variant_X  (ROMPER)
+#   5. show_ticket.yml   (generar ticket)
+# ==============================================================================
+
+- name: Instalar servicio web según variante
+  dnf:
+    name: "{{ global_web_service }}"
+    state: present
+
+- name: Asegurar puerto libre antes de configurar
+  systemd:
+    name: "{{ global_web_service }}"
+    state: stopped
+
+- name: Configurar puerto nginx ({{ global_web_port }})
+  lineinfile:
+    path: /etc/nginx/nginx.conf
+    regexp: '^(\s*listen\s+).*'
+    line: '    listen {{ global_web_port }};'
+    backup: yes
+  when: global_web_service == "nginx"
+
+- name: Configurar puerto httpd ({{ global_web_port }})
+  lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    regexp: '^(\s*Listen).*'
+    line: 'Listen {{ global_web_port }}'
+    backup: yes
+  when: global_web_service == "httpd"
+
+- name: Iniciar y habilitar servicio web
+  systemd:
+    name: "{{ global_web_service }}"
+    state: started
+    enabled: yes
+
+- name: Configurar interfaz de red correcta (baseline)
+  nmcli:
+    conn_name: "{{ global_interface }}"
+    type: ethernet
+    ifname: "{{ 'enp1s0' if 'enp1s0' in global_interface else 'eth0' }}"
+    ip4: "192.168.122.22/24"
+    gw4: "192.168.122.1"
+    autoconnect: yes
+    state: present
+
+- name: Activar interfaz de red
+  nmcli:
+    conn_name: "{{ global_interface }}"
+    state: up
+
+- name: Abrir puerto en firewalld (baseline FUNCIONAL)
+  firewalld:
+    port: "{{ global_web_port }}/tcp"
+    permanent: yes
+    immediate: yes
+    state: enabled
+    zone: "{{ global_firewall_zone }}"
+
+- name: Alternativa - Abrir servicio firewalld
+  firewalld:
+    service: "{{ global_firewall_service }}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+    zone: "{{ global_firewall_zone }}"
+
+- name: Verificar conectividad baseline DESDE client01
+  uri:
+    url: "{{ web_url }}"
+    method: HEAD
+    status: 200
+  delegate_to: client01
+  register: baseline_check
+  retries: 3
+  delay: 2
+
+- name: Confirmar baseline OK (curl funciona)
+  debug:
+    msg: "✓ BASELINE OK: {{ test_command }} responde desde client01 ({{ global_web_port }})"
+  when: baseline_check.status == 200

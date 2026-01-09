@@ -1,0 +1,181 @@
+---
+# ==============================================================================
+# J03 — Network Connectivity Failure LAB
+# ==============================================================================
+# 
+# 🏢 PROPÓSITO: Simular "servicio web inaccesible" (RHCSA EX200: nmcli/firewalld)
+# STUDENT: sysadmin-junior → Diagnostica en web01, verifica DESDE client01
+# 
+# FLUJO ARCHITECTURA:
+# 1. CATÁLOGOS  → vars/main.yml     (interfaces, puertos, IPs erróneas...)
+# 2. RANDOMIZACIÓN → vars/resolve.yml (fija puerto=8080, interface=...)
+# 3. ORQUESTACIÓN → J03.yml         (coordina admin01→web01→client01)
+# 4. EJECUCIÓN   → base.yml → inject/variant_X.yml → ticket
+# 
+# VARIABLES GLOBALES PUBLICADAS:
+#   global_interface, global_web_port, global_wrong_ip, global_firewall_zone
+#   web_url, test_command, global_selected_variant (variant_1.yml → variant_4.yml)
+# 
+# DEPENDENCIAS:
+#   - engine/inventory.yml (admin01, web01, client01)
+#   - engine/ansible_wrapper.sh
+# 
+# EJECUCIÓN: ./ansible_wrapper.sh J03
+# RESULTADO: /tmp/J03_ticket.txt + curl DESDE client01 → web01 FALLA
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 0. PREPARAR USUARIO sysadmin-junior (wheel + sudo NOPASSWD)
+# ------------------------------------------------------------------------------
+- name: J03 | Crear usuario corporativo
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Crear usuario sysadmin-junior
+      user:
+        name: sysadmin-junior
+        comment: "Junior System Administrator"
+        shell: /bin/bash
+        groups: "wheel"
+        append: yes
+        password: "{{ 'redhat' | password_hash('sha512') }}"
+        state: present
+
+    - name: Configurar sudo sin password
+      copy:
+        dest: /etc/sudoers.d/sysadmin-junior
+        content: |
+          sysadmin-junior ALL=(ALL) NOPASSWD: ALL
+        validate: /usr/sbin/visudo -cf %s
+
+# ------------------------------------------------------------------------------
+# 1. ORQUESTADOR CENTRAL (admin01) — Carga + Resuelve + Randomiza
+# ------------------------------------------------------------------------------
+- name: J03 | Configuración inicial y randomización
+  hosts: admin01
+  remote_user: sysadmin-junior
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: 1. Cargar catálogos de red J03
+      include_vars: 
+        file: vars/main.yml
+
+    - name: 2. Resolver variables de conectividad (puerto, interface, IP...)
+      include_tasks: vars/resolve.yml
+      run_once: yes
+
+    - name: 3. Cargar datos del ticket específico
+      include_vars:
+        file: "tickets/{{ global_selected_variant }}"
+        name: ticket_data
+
+    - name: 4. Publicar variante global
+      set_fact:
+        global_variant: "{{ ticket_data.variant }}"
+      run_once: yes
+
+# ------------------------------------------------------------------------------
+# 2. PROPAGAR VARIABLES → TODOS hosts
+# ------------------------------------------------------------------------------
+- name: J03 | Propagar variables globales de red
+  hosts: all
+  remote_user: sysadmin-junior
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Sincronizar variables DESDE admin01
+      set_fact:
+        global_interface: "{{ hostvars['admin01'].global_interface }}"
+        global_web_port: "{{ hostvars['admin01'].global_web_port }}"
+        global_wrong_ip: "{{ hostvars['admin01'].global_wrong_ip }}"
+        global_firewall_zone: "{{ hostvars['admin01'].global_firewall_zone }}"
+        global_firewall_service: "{{ hostvars['admin01'].global_firewall_service }}"
+        global_web_service: "{{ hostvars['admin01'].global_web_service }}"
+        web_url: "{{ hostvars['admin01'].web_url }}"
+        test_command: "{{ hostvars['admin01'].test_command }}"
+        symptom_description: "{{ hostvars['admin01'].symptom_description }}"
+        global_selected_variant: "{{ hostvars['admin01'].global_selected_variant }}"
+        global_variant: "{{ hostvars['admin01'].global_variant }}"
+        nginx_listen: "{{ hostvars['admin01'].nginx_listen }}"
+        nmcli_connection: "{{ hostvars['admin01'].nmcli_connection }}"
+      when: inventory_hostname != 'admin01'
+
+# ------------------------------------------------------------------------------
+# 3. BASELINE FUNCIONAL (nginx UP + red OK + curl OK)
+# ------------------------------------------------------------------------------
+- name: J03 | Crear baseline FUNCIONAL en web01
+  hosts: web01
+  remote_user: sysadmin-junior
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Establecer baseline nginx + red 100% funcional
+      import_tasks: tasks/base.yml
+
+# ------------------------------------------------------------------------------
+# 4. INYECTAR FALLO DE CONECTIVIDAD (solo web01)
+# ------------------------------------------------------------------------------
+- name: J03 | Romper conectividad web01→client01
+  hosts: web01
+  remote_user: sysadmin-junior
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Inyectar fallo específico de red
+      include_tasks: "inject/{{ hostvars['admin01'].global_selected_variant }}"
+
+# ------------------------------------------------------------------------------
+# 5. VERIFICAR FALLO (curl DESDE client01 debe FALLAR)
+# ------------------------------------------------------------------------------
+- name: J03 | Confirmar servicio INACCESIBLE
+  hosts: client01
+  remote_user: sysadmin-junior
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Test conectividad final DESDE client01
+      uri:
+        url: "{{ hostvars['admin01'].web_url }}"
+        method: HEAD
+        status: 200
+      register: connectivity_test
+      failed_when: false
+      changed_when: false
+
+    - name: Registrar estado FINAL para ticket
+      set_fact:
+        final_connectivity: "{{ 'SERVICE INACCESIBLE' if connectivity_test.status != 200 else 'SERVICE OK' }}"
+      delegate_to: admin01
+      run_once: yes
+
+# ------------------------------------------------------------------------------
+# 6. TICKET FINAL (admin01)
+# ------------------------------------------------------------------------------
+- name: J03 | Generar ticket para estudiante
+  hosts: admin01
+  remote_user: sysadmin-junior
+  gather_facts: false
+
+  tasks:
+    - name: Preparar datos reales del ticket
+      set_fact:
+        variant: "{{ global_variant }}"
+        selected_variant_file: "{{ global_selected_variant }}"
+        final_state: "{{ hostvars['client01'].final_connectivity | default('SERVICE INACCESIBLE') }}"
+        diagnostic_commands: |
+          nmcli con show
+          firewall-cmd --list-all
+          ip a show
+          ss -tuln | grep :{{ global_web_port }}
+          curl -I {{ web_url }}
+
+    - name: Mostrar ticket completo
+      import_tasks: tasks/show_ticket.yml
+      run_once: yes

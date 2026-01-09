@@ -1,0 +1,175 @@
+---
+# ==============================================================================
+# scenarios/junior/J03/inject/variant_2.yml — IP Estática Errónea (nmcli)
+# ==============================================================================
+#
+# PROPÓSITO DEL INCIDENTE:
+#   Simular ticket NOC: "No se puede acceder al servidor web, IP cambió sola".
+#   IP estática configurada fuera del rango de red (192.168.122.99 vs .22 esperado).
+#
+# CONTEXTO DEL LAB:
+#   - nginx funciona en puerto correcto ({{ global_web_port }})
+#   - Firewall OK (puerto abierto)
+#   - ANTES: IP 192.168.122.22/24 + curl OK desde client01
+#
+# PROBLEMAS INYECTADOS:
+#
+#   1. Causa raíz:
+#      nmcli: Cambia IP de 192.168.122.22 → {{ global_wrong_ip }}/24
+#      client01 (192.168.122.21) no puede alcanzar 192.168.122.99
+#
+#   2. Ruido secundario:
+#      - Gateway incorrecto → "No route to host"
+#      - Métrica de ruta alta → Parece routing problem
+#      - DNS resolution falsa OK → Confunde "es DNS?"
+#
+# RESULTADO ESPERADO:
+#   - ip a → 192.168.122.99/24 (ERRÓNEA)
+#   - curl DESDE client01 → "No route to host"
+#   - ss -tuln → nginx LISTEN ✓
+#   - ping web01 → FAIL (ARP no responde)
+#
+# MENSAJES TÍPICOS:
+#   - "curl: (7) Failed to connect to 192.168.122.22 port 8080: No route to host"
+#   - "ping: web01.example.com: Name or service not known" (si DNS cache)
+#
+# DIAGNÓSTICO SECUENCIAL:
+#   1. nmcli con show → IP {{ global_wrong_ip }} ✗
+#   2. ip a           → IP incorrecta ✗
+#   3. ss -tuln       → nginx OK ✓
+#   4. firewall-cmd   → puerto OK ✓
+#
+# OBJETIVO DIDÁCTICO:
+#   - Leer nmcli vs ifcfg vs ip a
+#   - Corregir IP estática: nmcli con mod
+#   - Entender /24 subnet vs IP individual
+#
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Backup configuración nmcli original
+# ------------------------------------------------------------------------------
+- name: V2 | Backup conexión nmcli actual
+  copy:
+    src: "/etc/NetworkManager/system-connections/{{ global_interface }}.nmconnection"
+    dest: "/etc/NetworkManager/system-connections/{{ global_interface }}.nmconnection.j03v2backup"
+    remote_src: yes
+    owner: root
+    group: root
+    mode: '0600'
+
+# ------------------------------------------------------------------------------
+# 2. Ruido: Config DNS falsa (parece DNS issue)
+# ------------------------------------------------------------------------------
+- name: V2 | DNS falso OK (confunde diagnóstico)
+  lineinfile:
+    path: "/etc/NetworkManager/system-connections/{{ global_interface }}.nmconnection"
+    regexp: '^dns='
+    line: 'dns=8.8.8.8;1.1.1.1;'
+    backup: yes
+
+# ------------------------------------------------------------------------------
+# 3. CAUSA RAÍZ: IP estática ERRÓNEA
+# ------------------------------------------------------------------------------
+- name: V2 | CAMBIAR IP a {{ global_wrong_ip }} (CAUSA RAÍZ)
+  nmcli:
+    conn_name: "{{ global_interface }}"
+    ipv4.addresses: "{{ global_wrong_ip }}/24"
+    ipv4.gateway: "{{ global_wrong_ip | regex_replace('\\.(\\d+)$', '.1') }}"
+    ipv4.method: manual
+    state: present
+
+# ------------------------------------------------------------------------------
+# 4. Ruido: Métrica de ruta alta
+# ------------------------------------------------------------------------------
+- name: V2 | Métrica alta (confunde routing)
+  nmcli:
+    conn_name: "{{ global_interface }}"
+    ipv4.route-metric: 1000
+    state: present
+
+# ------------------------------------------------------------------------------
+# 5. Reiniciar conexión nmcli (aplicar cambios)
+# ------------------------------------------------------------------------------
+- name: V2 | Reiniciar interfaz para aplicar IP errónea
+  nmcli:
+    conn_name: "{{ global_interface }}"
+    state: down
+  ignore_errors: yes
+
+- name: V2 | Reactivar con IP nueva
+  nmcli:
+    conn_name: "{{ global_interface }}"
+    state: up
+
+# ------------------------------------------------------------------------------
+# 6. Verificar nginx LOCAL sigue OK
+# ------------------------------------------------------------------------------
+- name: V2 | Confirmar nginx localhost:{{ global_web_port }} funciona
+  uri:
+    url: "http://localhost:{{ global_web_port }}"
+    method: HEAD
+  register: local_nginx
+  failed_when: local_nginx.status != 200
+
+# ------------------------------------------------------------------------------
+# 7. Verificar conectividad REMOTA FALLA
+# ------------------------------------------------------------------------------
+- name: V2 | Confirmar client01 NO alcanza (prueba cross-host)
+  uri:
+    url: "{{ web_url }}"
+    method: HEAD
+  delegate_to: client01
+  register: remote_test
+  failed_when: false
+
+# ------------------------------------------------------------------------------
+# 8. Log técnico inyección
+# ------------------------------------------------------------------------------
+- name: V2 | Registrar cambio IP errónea
+  lineinfile:
+    path: /var/log/j03-inject.log
+    create: yes
+    line: "[J03-V2-{{ ansible_date_time.epoch }}] IP cambiada a {{ global_wrong_ip }}/24 en {{ global_interface }} (era 192.168.122.22)"
+    owner: root
+    group: root
+    mode: '0644'
+
+# ------------------------------------------------------------------------------
+# 9. Archivo diagnóstico instructor
+# ------------------------------------------------------------------------------
+- name: V2 | Guía diagnóstico J03-V2
+  copy:
+    dest: "/tmp/j03_variant_2_diagnosis.txt"
+    content: |
+      =============================================
+      J03 VARIANT 2 — IP ESTÁTICA ERRÓNEA (nmcli)
+      Interfaz: {{ global_interface }}
+      IP actual: {{ global_wrong_ip }}/24
+      IP correcta: 192.168.122.22/24
+      =============================================
+
+      SYMPTOMS:
+      ✗ ip a show → inet {{ global_wrong_ip }}/24 (ERRÓNEA)
+      ✗ nmcli con show {{ global_interface }} → ipv4.addresses={{ global_wrong_ip }}
+      ✓ ss -tuln | grep :{{ global_web_port }} → nginx LISTEN
+      ✓ firewall-cmd --list-ports → {{ global_web_port }}/tcp ✓
+      ✗ ping web01.example.com → No route to host
+      ✗ curl {{ web_url }} → No route to host
+
+      ROOT CAUSE:
+      nmcli con show {{ global_interface }} | grep ipv4.addresses
+      → {{ global_wrong_ip }}/24 (fuera de 192.168.122.0/24)
+
+      FIX:
+      nmcli con mod {{ global_interface }} ipv4.addresses 192.168.122.22/24 ipv4.gateway 192.168.122.1 ipv4.method manual
+      nmcli con down {{ global_interface }} && nmcli con up {{ global_interface }}
+      ping 192.168.122.22 → OK
+      curl {{ web_url }} → 200 OK
+
+      NO TOCAR:
+      ✓ systemctl status {{ global_web_service }} → active
+      ✓ firewall-cmd --list-all → puerto abierto
+    owner: root
+    group: root
+    mode: '0600'

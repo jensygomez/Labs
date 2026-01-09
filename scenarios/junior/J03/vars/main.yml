@@ -1,0 +1,100 @@
+---
+# ==============================================================================
+# scenarios/junior/J03/vars/main.yml — LAB J03: Network Connectivity Failure
+# ==============================================================================
+# 
+# 🏢 PROPÓSITO:
+# Catálogo estático de valores para randomización automática del laboratorio J03.
+# Define todas las opciones posibles para generar tickets únicos de "servicio web 
+# inaccesible" simulando incidentes de red comunes en NOC Junior (0-18 meses exp).
+#
+# 🎯 USADO POR:
+# └── tasks/resolve.yml (misma carpeta vars/) ← Selecciona 1 valor aleatorio por 
+#     categoría y publica globals: global_selected_variant, global_web_port, etc.
+#
+# 🔄 FLUJO DE USO:
+# 1. resolve.yml → "{{ random_elements.interfaces | random }}" → global_interface
+# 2. inject/{{ global_selected_variant }} → Usa globals para inyectar fallo
+# 3. Muestra ticket con valores REALES del fallo inyectado
+#
+# 📋 DEPENDENCIAS:
+# → tasks/resolve.yml (obligatorio - set_fact globals)
+# → inject/variant_*.yml (4 archivos - usan globals)
+# → site.yml (importa vars/main.yml)
+#
+# 🧪 EJEMPLO EJECUCIÓN:
+# $ ansible-playbook labs/J03/site.yml
+# → global_interface="Wired connection 1", global_web_port=8080, etc.
+#
+# ==============================================================================
+
+random_elements:
+  # Interfaces de red comunes (NetworkManager) - nmcli con show
+  interfaces:
+    - "Wired connection 1"
+    - "System eth0"
+    - "enp1s0"
+    - "Wired connection 2"
+  
+  # Puertos web típicos - ss -tuln | grep
+  web_ports:
+    - 80
+    - 8080
+    - 443
+    - 8443
+  
+  # IPs erróneas comunes (fuera de rango 192.168.122.0/24) - ip a
+  wrong_ips:
+    - "192.168.122.99"
+    - "192.168.122.199"
+    - "10.0.0.99"
+    - "172.16.0.99"
+    - "192.168.1.99"
+  
+  # Zonas firewalld comunes - firewall-cmd --get-active-zones
+  firewall_zones:
+    - "public"
+    - "internal"
+    - "external"
+  
+  # Reglas firewalld problemáticas - firewall-cmd --list-services
+  firewall_services:
+    - "http"
+    - "https"
+    - "nginx"
+    - "apache"
+  
+  # MTU problemáticos - ip link | grep mtu
+  mtu_values:
+    - 1200
+    - 9000
+    - 1400
+    - 576
+  
+  # Gateways incorrectos - ip route | grep default
+  wrong_gateways:
+    - "192.168.122.99"
+    - "10.0.0.1"
+    - "192.168.1.1"
+    - "8.8.8.8"
+
+# Targets de NetworkManager/Firewalld - systemctl status
+network_targets:
+  - network.target
+  - network-online.target
+  - firewalld.target
+
+# Servicios web involucrados - systemctl | grep
+web_services:
+  - nginx
+  - httpd
+  - apache2
+
+# Variantes disponibles del incidente - resolve.yml elige 1
+variants:
+  - variant_1.yml    # Firewalld bloquea puerto
+  - variant_2.yml    # IP estática errónea  
+  - variant_3.yml    # Interfaz DOWN
+  - variant_4.yml    # Puerto cambiado sin firewall
+#
+# ==============================================================================

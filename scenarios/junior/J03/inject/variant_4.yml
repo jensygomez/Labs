@@ -1,0 +1,197 @@
+---
+# ==============================================================================
+# VARIANTE 4 — Resource Limits demasiado restrictivos
+# ==============================================================================
+#
+# PROPÓSITO DEL INCIDENTE:
+#   Simular un fallo de arranque causado por límites de recursos impuestos
+#   por systemd que son incompatibles con las necesidades reales del servicio.
+#
+# CONTEXTO DEL LAB:
+#   - El servicio {{ global_service_name }} es válido y funcional
+#   - El script de inicio ejecuta validaciones explícitas con ulimit
+#   - systemd aplica límites estrictos antes de ejecutar ExecStart
+#
+# COMPORTAMIENTO CLAVE:
+#   - systemd permite ejecutar el servicio
+#   - El proceso arranca pero aborta inmediatamente
+#   - El fallo se debe a recursos insuficientes, no a errores lógicos
+#
+# PROBLEMAS INYECTADOS:
+#
+#   1. LimitNOFILE   → Demasiados pocos file descriptors
+#   2. LimitNPROC    → Número insuficiente de procesos/hilos
+#   3. MemoryMax     → Memoria máxima extremadamente baja
+#   4. CPUQuota      → CPU insuficiente para inicialización
+#   5. TasksMax      → Número máximo de tareas muy limitado
+#   6. IOWeight      → Prioridad de I/O muy baja (secundario)
+#   7. LimitCORE     → Core dumps deshabilitados
+#   8. LimitMEMLOCK  → Memoria bloqueada insuficiente
+#
+# RESULTADO ESPERADO:
+#   - systemctl start {{ global_service_name }}.service falla
+#   - systemctl status muestra error de ejecución
+#   - journalctl refleja fallos relacionados con recursos
+#
+# MENSAJES TÍPICOS:
+#   - "Resource temporarily unavailable"
+#   - "Cannot allocate memory"
+#   - "ulimit: open files: cannot modify limit"
+#
+# OBJETIVO DIDÁCTICO:
+#   - Entender cómo systemd controla recursos
+#   - Diagnosticar fallos de arranque por límites
+#   - Interpretar Limit* vs ulimit
+#   - Ajustar servicios para producción
+#
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Backup del unit original
+# ------------------------------------------------------------------------------
+- name: V4 | Backup del unit original
+  copy:
+    src: "/etc/systemd/system/{{ global_service_name }}.service"
+    dest: "/etc/systemd/system/{{ global_service_name }}.service.v4backup"
+    remote_src: yes
+    owner: root
+    group: root
+    mode: '0644'
+
+# ------------------------------------------------------------------------------
+# 2. Aplicar límites extremadamente restrictivos en systemd
+# ------------------------------------------------------------------------------
+
+- name: V4 | Limitar file descriptors (LimitNOFILE)
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    regexp: '^LimitNOFILE='
+    line: 'LimitNOFILE=64'
+    insertafter: '^\[Service\]'
+    backup: yes
+
+- name: V4 | Limitar número de procesos (LimitNPROC)
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    regexp: '^LimitNPROC='
+    line: 'LimitNPROC=8'
+    insertafter: '^\[Service\]'
+    backup: yes
+
+- name: V4 | Limitar memoria máxima (MemoryMax)
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    regexp: '^MemoryMax='
+    line: 'MemoryMax=16M'
+    insertafter: '^\[Service\]'
+    backup: yes
+
+- name: V4 | Limitar CPU disponible (CPUQuota)
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    regexp: '^CPUQuota='
+    line: 'CPUQuota=5%'
+    insertafter: '^\[Service\]'
+    backup: yes
+
+- name: V4 | Limitar número máximo de tareas (TasksMax)
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    regexp: '^TasksMax='
+    line: 'TasksMax=4'
+    insertafter: '^\[Service\]'
+    backup: yes
+
+- name: V4 | Reducir prioridad de I/O
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    regexp: '^IOWeight='
+    line: 'IOWeight=10'
+    insertafter: '^\[Service\]'
+    backup: yes
+
+- name: V4 | Deshabilitar core dumps
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    regexp: '^LimitCORE='
+    line: 'LimitCORE=0'
+    insertafter: '^\[Service\]'
+    backup: yes
+
+- name: V4 | Limitar memoria bloqueada (MEMLOCK)
+  lineinfile:
+    path: "/etc/systemd/system/{{ global_service_name }}.service"
+    regexp: '^LimitMEMLOCK='
+    line: 'LimitMEMLOCK=65536'
+    insertafter: '^\[Service\]'
+    backup: yes
+
+# ------------------------------------------------------------------------------
+# 3. Recargar systemd
+# ------------------------------------------------------------------------------
+- name: V4 | Recargar daemon systemd
+  systemd:
+    daemon_reload: yes
+
+# ------------------------------------------------------------------------------
+# 4. Asegurar servicio detenido
+# ------------------------------------------------------------------------------
+- name: V4 | Detener servicio antes de la prueba
+  systemd:
+    name: "{{ global_service_name }}.service"
+    state: stopped
+  failed_when: false
+
+# ------------------------------------------------------------------------------
+# 5. Registrar inyección
+# ------------------------------------------------------------------------------
+- name: V4 | Registrar inyección de la variante
+  lineinfile:
+    path: "/var/log/j02-inject.log"
+    create: yes
+    line: "[J02-V4-{{ ansible_date_time.epoch }}] Límites de recursos restrictivos aplicados a {{ global_service_name }}"
+    owner: root
+    group: root
+    mode: '0644'
+
+# ------------------------------------------------------------------------------
+# 6. Archivo de diagnóstico (uso instructor / corrección)
+# ------------------------------------------------------------------------------
+- name: V4 | Crear archivo de diagnóstico
+  copy:
+    dest: "/tmp/j02_variant_4_diagnosis.txt"
+    content: |
+      =============================================
+      DIAGNOSIS: J02 Variant 4 — Resource Limits
+      Service: {{ global_service_name }}.service
+      Timestamp: {{ ansible_date_time.iso8601 }}
+      =============================================
+
+      ROOT CAUSE:
+      - systemd enforces resource limits incompatible with service requirements
+
+      APPLIED LIMITS:
+      - LimitNOFILE = 64
+      - LimitNPROC  = 8
+      - MemoryMax   = 16M
+      - CPUQuota    = 5%
+      - TasksMax    = 4
+
+      EXPECTED SYMPTOMS:
+      - Service fails shortly after start
+      - Errors related to memory, processes or file descriptors
+      - Non-zero exit code from ExecStart
+
+      DIAGNOSTIC COMMANDS:
+      - systemctl status {{ global_service_name }}.service
+      - systemctl show {{ global_service_name }}.service | grep -i limit
+      - journalctl -u {{ global_service_name }}.service
+      - cat /proc/$(pidof {{ global_service_name }})/limits
+
+      VALID FIXES:
+      - Increase or remove restrictive limits
+      - Align systemd limits with application requirements
+      - Document resource needs for production environments
+    owner: root
+    group: root
+    mode: '0600'

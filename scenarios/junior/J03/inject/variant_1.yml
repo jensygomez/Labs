@@ -1,0 +1,165 @@
+---
+# ==============================================================================
+# scenarios/junior/J03/inject/variant_1.yml — Firewalld Bloquea Puerto HTTP
+# ==============================================================================
+#
+# PROPÓSITO DEL INCIDENTE:
+#   Simular ticket NOC: "Servicio web no accesible desde Internet" causado por
+#   firewalld bloqueando el puerto HTTP/HTTPS configurado ({{ global_web_port }}).
+#
+# CONTEXTO DEL LAB:
+#   - nginx/httpd funciona correctamente (puerto {{ global_web_port }})
+#   - Red configurada correctamente (192.168.122.22/24 UP)
+#   - ANTES: curl DESDE client01 funcionaba (baseline)
+#
+# PROBLEMAS INYECTADOS:
+#
+#   1. Causa raíz:
+#      firewall-cmd --zone={{ global_firewall_zone }} --remove-port={{ global_web_port }}/tcp
+#      → Puerto web BLOQUEADO por firewalld
+#
+#   2. Ruido secundario:
+#      - Elimina servicio firewalld (http/https) → Confunde diagnóstico inicial
+#      - Agrega regla DROP masiva en zona → "Parece ataque DDoS"
+#
+# RESULTADO ESPERADO:
+#   - curl -I {{ web_url }} DESDE client01 → Connection refused
+#   - ss -tuln → nginx LISTEN :{{ global_web_port }} (servicio OK)
+#   - firewall-cmd --list-ports → {{ global_web_port }}/tcp AUSENTE
+#
+# MENSAJES TÍPICOS:
+#   - "curl: (7) Failed to connect to web01.example.com"
+#   - "telnet web01 {{ global_web_port }} → Connection refused"
+#
+# OBJETIVO DIDÁCTICO:
+#   - nmcli OK → ss OK → firewalld NO → "Firewall bloquea"
+#   - firewalld --list-all vs --permanent
+#   - immediate vs permanent en reglas
+#
+# DIAGNÓSTICO SECUENCIAL:
+#   1. nmcli con show    → Interface UP ✓
+#   2. ip a              → IP correcta ✓  
+#   3. ss -tuln          → nginx LISTEN ✓
+#   4. firewall-cmd --list-all → Puerto AUSENTE ✗ ← FIX AQUÍ
+#
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Backup firewalld (reversible)
+# ------------------------------------------------------------------------------
+- name: V1 | Backup configuración firewalld actual
+  copy:
+    src: /etc/firewalld/zones/{{ global_firewall_zone }}.xml
+    dest: "/etc/firewalld/zones/{{ global_firewall_zone }}.xml.j03v1backup"
+    remote_src: yes
+    owner: root
+    group: root
+    mode: '0644'
+
+# ------------------------------------------------------------------------------
+# 2. Ruido secundario: Eliminar servicios web firewalld
+# ------------------------------------------------------------------------------
+- name: V1 | Remover servicios http/https (confunde diagnóstico)
+  firewalld:
+    service: "{{ item }}"
+    zone: "{{ global_firewall_zone }}"
+    permanent: yes
+    state: absent
+  loop:
+    - http
+    - https
+    - "{{ global_firewall_service }}"
+  notify: reload firewalld
+
+# ------------------------------------------------------------------------------
+# 3. CAUSA RAÍZ: Bloquear puerto específico web
+# ------------------------------------------------------------------------------
+- name: V1 | BLOQUEAR PUERTO WEB {{ global_web_port }}/tcp (CAUSA RAÍZ)
+  firewalld:
+    port: "{{ global_web_port }}/tcp"
+    zone: "{{ global_firewall_zone }}"
+    permanent: yes
+    state: absent
+
+# ------------------------------------------------------------------------------
+# 4. Ruido extra: Regla DROP masiva (parece ataque)
+# ------------------------------------------------------------------------------
+- name: V1 | Agregar DROP masivo HTTP (ruido visual)
+  firewalld:
+    port: "80-{{ global_web_port | int + 100 }}/tcp"
+    zone: "{{ global_firewall_zone }}"
+    permanent: yes
+    state: enabled
+
+# ------------------------------------------------------------------------------
+# 5. Aplicar cambios firewalld
+# ------------------------------------------------------------------------------
+- name: V1 | Recargar firewalld (immediate + permanent)
+  command: firewall-cmd --reload
+
+# ------------------------------------------------------------------------------
+# 6. Verificar nginx SIGUE funcionando localmente
+# ------------------------------------------------------------------------------
+- name: V1 | Confirmar nginx local OK (solo red bloqueada)
+  uri:
+    url: "http://localhost:{{ global_web_port }}"
+    method: HEAD
+  register: local_check
+  failed_when: local_check.status != 200
+
+# ------------------------------------------------------------------------------
+# 7. Log técnico de inyección
+# ------------------------------------------------------------------------------
+- name: V1 | Registrar inyección variant_1
+  lineinfile:
+    path: /var/log/j03-inject.log
+    create: yes
+    line: "[J03-V1-{{ ansible_date_time.epoch }}] Firewalld bloqueó {{ global_web_port }}/tcp en zona {{ global_firewall_zone }}"
+    owner: root
+    group: root
+    mode: '0644'
+
+# ------------------------------------------------------------------------------
+# 8. Archivo diagnóstico instructor
+# ------------------------------------------------------------------------------
+- name: V1 | Crear guía diagnóstico J03-V1
+  copy:
+    dest: "/tmp/j03_variant_1_diagnosis.txt"
+    content: |
+      =============================================
+      J03 VARIANT 1 — FIREWALL BLOQUEA PUERTO WEB
+      Puerto: {{ global_web_port }}/tcp
+      Zona: {{ global_firewall_zone }}
+      URL: {{ web_url }}
+      =============================================
+
+      SYMPTOMS:
+      ✓ ss -tuln | grep :{{ global_web_port }} → nginx LISTEN
+      ✓ netstat -tlnp | grep :{{ global_web_port }} → nginx LISTEN  
+      ✗ curl -I {{ web_url }} → Connection refused
+      ✗ telnet web01 {{ global_web_port }} → Connection refused
+
+      ROOT CAUSE:
+      firewall-cmd --zone={{ global_firewall_zone }} --list-ports
+      → {{ global_web_port }}/tcp AUSENTE
+
+      FIX:
+      firewall-cmd --zone={{ global_firewall_zone }} --add-port={{ global_web_port }}/tcp --permanent
+      firewall-cmd --reload
+      curl -I {{ web_url }} → 200 OK
+
+      NO TOCAR:
+      ✓ systemctl status {{ global_web_service }} → active (running)
+      ✓ nmcli con show → UP
+    owner: root
+    group: root
+    mode: '0600'
+
+# ------------------------------------------------------------------------------
+# 9. Handlers
+# ------------------------------------------------------------------------------
+  handlers:
+    - name: reload firewalld
+      systemd:
+        name: firewalld
+        state: reloaded

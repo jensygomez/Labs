@@ -1,0 +1,107 @@
+# ==============================================================================
+# tasks/show_ticket.yml — GENERADOR DINÁMICO DE TICKETS J02
+# ==============================================================================
+# 
+# RELACIONES ← ATRÁS (DEPENDENCIAS)
+# ┌─────────────────────────────────────────────────────────────┐
+# │ 1. LLAMADO POR: J02.yml → "Generar ticket para student"     │
+# │ 2. REQUIERE variables del play anterior:                    │
+# │    • variant          ← ticket_data.variant (variant_3.yml) │
+# │    • global_selected_variant ← resolve.yml                 │
+# │    • global_service_name ← resolve.yml                     │
+# │    • final_state      ← Verificación servicio web01        │
+# └─────────────────────────────────────────────────────────────┘
+# 
+# RELACIONES → ADELANTE (CONSUMIDORES)
+# ┌─────────────────────────────────────────────────────────────┐
+# │ 1. STUDENT: ssh student@admin01 → cat /tmp/J02_ticket.txt   │
+# │ 2. Persiste entre ejecuciones (cleanup manual requerido)    │
+# │ 3. Template dinámico: 4 variantes × symptoms/restrictions  │
+# └─────────────────────────────────────────────────────────────┘
+# 
+# FLUJO: J02.yml → [ESTE TASK] → /tmp/J02_ticket.txt → STUDENT
+# CARACTERÍSTICAS:
+#   • 100% dinámico (variant_*.yml → symptoms, restrictions, hints)
+#   • Usa shell + Jinja2 (loops for % render en compile-time)
+#   • run_once: yes → solo admin01
+#   • clear + cat → visualización inmediata
+# ==============================================================================
+
+- name: Mostrar ticket final EN admin01 (J02 DINÁMICO)
+  shell: |
+    # Header J02
+    echo "╔══════════════════════════════════════════════════════════╗" > /tmp/J02_ticket.txt
+    echo "║                    LAB J02 - JUNIOR                      ║" >> /tmp/J02_ticket.txt
+    echo "║                VARIANTE: {{ global_selected_variant }}     ║" >> /tmp/J02_ticket.txt
+    echo "╚══════════════════════════════════════════════════════════╝" >> /tmp/J02_ticket.txt
+    echo "" >> /tmp/J02_ticket.txt
+    
+    # ESCENARIO (desde variant_*.yml)
+    echo "📋 ESCENARIO:" >> /tmp/J02_ticket.txt
+    echo "{{ variant.description }}" >> /tmp/J02_ticket.txt
+    echo "" >> /tmp/J02_ticket.txt
+    
+    # SÍNTOMAS - DINÁMICO (desde variant.symptoms[])
+    echo "🔍 SÍNTOMAS:" >> /tmp/J02_ticket.txt
+    {% for symptom in variant.symptoms %}
+    echo "• {{ symptom }}" >> /tmp/J02_ticket.txt
+    {% endfor %}
+    echo "" >> /tmp/J02_ticket.txt
+    
+    # TAREA (desde variant.task)
+    echo "🎯 TAREA:" >> /tmp/J02_ticket.txt
+    echo "{{ variant.task }}" >> /tmp/J02_ticket.txt
+    echo "" >> /tmp/J02_ticket.txt
+    
+    # RESTRICCIONES - DINÁMICO (desde variant.restrictions[])
+    echo "⚠️  RESTRICCIONES:" >> /tmp/J02_ticket.txt
+    {% for restriction in variant.restrictions %}
+    echo "• {{ restriction }}" >> /tmp/J02_ticket.txt
+    {% endfor %}
+    echo "" >> /tmp/J02_ticket.txt
+    
+    # PISTAS ESPECÍFICAS J02
+    echo "💡 PISTAS:" >> /tmp/J02_ticket.txt
+    echo "• Servicio: {{ global_service_name }}.service" >> /tmp/J02_ticket.txt
+    echo "• Usuario: {{ global_service_user }}" >> /tmp/J02_ticket.txt
+    echo "• Directorio: {{ service_dir }}" >> /tmp/J02_ticket.txt
+    echo "• systemctl status {{ global_service_name }}.service" >> /tmp/J02_ticket.txt
+    echo "• journalctl -u {{ global_service_name }}.service -n 20" >> /tmp/J02_ticket.txt
+    echo "• systemctl cat {{ global_service_name }}.service" >> /tmp/J02_ticket.txt
+    echo "• systemd-analyze verify {{ global_service_name }}.service" >> /tmp/J02_ticket.txt
+    {% if variant.hints is defined %}
+    {% for hint in variant.hints %}
+    echo "• {{ hint }}" >> /tmp/J02_ticket.txt
+    {% endfor %}
+    {% endif %}
+    echo "" >> /tmp/J02_ticket.txt
+    
+    # RESULTADO
+    echo "═══════════════════════════════════════════════════════════" >> /tmp/J02_ticket.txt
+    echo "📊 RESULTADO: {{ final_state }}" >> /tmp/J02_ticket.txt
+    echo "═══════════════════════════════════════════════════════════" >> /tmp/J02_ticket.txt
+    echo "" >> /tmp/J02_ticket.txt
+    echo "SSH web01: ssh student@192.168.122.22" >> /tmp/J02_ticket.txt
+    echo "" >> /tmp/J02_ticket.txt
+    echo "¡DIAGNÓSTICAR Y RESOLVER!" >> /tmp/J02_ticket.txt
+    
+    # Visualización
+    clear
+    cat /tmp/J02_ticket.txt
+  args:
+    executable: /bin/bash
+  run_once: yes
+
+# ==============================================================================
+# DEPENDENCIAS OBLIGATORIAS (definidas en J02.yml antes de llamar):
+#   - global_selected_variant: "variant_3.yml"
+#   - variant: {description, symptoms[], task, restrictions[], hints[]}
+#   - global_service_name: "data-processor"
+#   - global_service_user: "svc-process" 
+#   - service_dir: "/opt/data-processor"
+#   - final_state: "SERVICE DOWN"
+# 
+# RESULTADO: /tmp/J02_ticket.txt → LISTO PARA STUDENT
+# EJECUCIÓN: ./ansible_wrapper.sh J02 → ssh student@admin01
+# ==============================================================================
+
