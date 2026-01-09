@@ -29,7 +29,7 @@
         validate: /usr/sbin/visudo -cf %s
 
 # ------------------------------------------------------------------------------
-# 1. CONFIGURACIÓN INICIAL Y RANDOMIZACIÓN (ahora como sysadmin-junior)
+# 1. CONFIGURACIÓN INICIAL Y RANDOMIZACIÓN (ORQUESTADOR)
 # ------------------------------------------------------------------------------
 - name: J02 | Configuración inicial
   hosts: admin01
@@ -42,7 +42,6 @@
       include_vars:
         file: vars/main.yml
 
-    # RANDOMIZACIÓN POR EJECUCIÓN (run_once)
     - name: Seleccionar elementos aleatorios para esta ejecución
       set_fact:
         current_service_name: "{{ random_elements.services | random }}"
@@ -51,7 +50,6 @@
         current_log_file: "{{ random_elements.log_files | random }}"
         current_port: "{{ random_elements.ports | random }}"
       run_once: yes
-      delegate_to: localhost
 
     - name: Seleccionar variante aleatoria
       set_fact:
@@ -81,10 +79,6 @@
   gather_facts: true
 
   tasks:
-    - name: Cargar variables
-      include_vars:
-        file: vars/main.yml
-
     - name: Preparar estado base
       import_tasks: tasks/base.yml
 
@@ -98,10 +92,6 @@
   gather_facts: false
 
   tasks:
-    - name: Cargar variables
-      include_vars:
-        file: vars/main.yml
-
     - name: Ejecutar inyección
       include_tasks: "inject/{{ hostvars['admin01'].global_selected_variant }}"
 
@@ -117,14 +107,19 @@
   tasks:
     - name: Comprobar estado real del servicio
       systemd:
-        name: "{{ global_service_name }}.service"
+        name: "{{ hostvars['admin01'].global_service_name }}.service"
       register: service_status
       failed_when: false
       changed_when: false
 
     - name: Determinar estado para ticket
       set_fact:
-        final_state: "{{ 'SERVICE DOWN' if (service_status is failed or (service_status.status is defined and service_status.status.ActiveState != 'active')) else 'SERVICE OPERATIONAL' }}"
+        final_state: >-
+          {{ 'SERVICE DOWN'
+             if (service_status is failed
+             or (service_status.status is defined
+             and service_status.status.ActiveState != 'active'))
+             else 'SERVICE OPERATIONAL' }}
       delegate_to: admin01
       run_once: yes
 
@@ -139,12 +134,12 @@
   tasks:
     - name: Preparar variables para show_ticket.yml
       set_fact:
-        variant: "{{ hostvars['admin01'].global_variant }}"
-        selected_variant_file: "{{ hostvars['admin01'].global_selected_variant }}"
-        final_state: "{{ hostvars['admin01'].final_state | default('SERVICE DOWN') }}"
-        service_user: "{{ hostvars['admin01'].global_service_user }}"
-        service_name: "{{ hostvars['admin01'].global_service_name }}.service"
-        service_dir: "/opt/{{ hostvars['admin01'].global_service_name }}"
+        variant: "{{ global_variant }}"
+        selected_variant_file: "{{ global_selected_variant }}"
+        final_state: "{{ final_state | default('SERVICE DOWN') }}"
+        service_user: "{{ global_service_user }}"
+        service_name: "{{ global_service_name }}.service"
+        service_dir: "/opt/{{ global_service_name }}"
 
     - name: Mostrar ticket
       import_tasks: tasks/show_ticket.yml
