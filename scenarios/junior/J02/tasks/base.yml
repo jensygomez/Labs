@@ -1,4 +1,33 @@
-# Añadir estas tareas a base.yml
+# scenarios/junior/J02/tasks/base.yml
+# ==============================================================================
+# Preparación del baseline del servicio
+# Usa SOLO variables globales ya definidas
+# ==============================================================================
+
+- name: Crear directorio del servicio
+  file:
+    path: "/opt/{{ global_service_name }}"
+    state: directory
+    owner: "{{ global_service_user }}"
+    group: "{{ global_service_user }}"
+    mode: '0755'
+
+- name: Crear directorio de configuración
+  file:
+    path: "/etc/{{ global_service_name }}"
+    state: directory
+    owner: "{{ global_service_user }}"
+    group: "{{ global_service_user }}"
+    mode: '0755'
+
+- name: Crear directorio de logs
+  file:
+    path: "/var/log/{{ global_service_name }}"
+    state: directory
+    owner: "{{ global_service_user }}"
+    group: "{{ global_service_user }}"
+    mode: '0755'
+
 - name: Crear servicio systemd desde template
   template:
     src: service-template.service.j2
@@ -10,12 +39,12 @@
 - name: Crear script de inicio desde template
   template:
     src: start.sh.j2
-    dest: "{{ service_dir }}/start.sh"
+    dest: "/opt/{{ global_service_name }}/start.sh"
     owner: "{{ global_service_user }}"
     group: "{{ global_service_user }}"
     mode: '0755'
 
-- name: Crear archivo de configuración desde template
+- name: Crear archivo de configuración del servicio
   template:
     src: config-template.conf.j2
     dest: "{{ config_path }}"
@@ -23,7 +52,7 @@
     group: "{{ global_service_user }}"
     mode: '0640'
 
-- name: Crear algunos archivos/directorios para condiciones
+- name: Crear archivo de condición "enabled"
   file:
     path: "/etc/{{ global_service_name }}/enabled"
     state: touch
@@ -31,7 +60,7 @@
     group: "{{ global_service_user }}"
     mode: '0644'
 
-- name: Crear directorio para socket/ready
+- name: Crear directorio runtime
   file:
     path: "/var/run/{{ global_service_name }}"
     state: directory

@@ -1,10 +1,47 @@
 ---
-# scenarios/junior/J02/inject/variant_1.yml
 # ==============================================================================
-# VARIANTE 1 — Dependencias de systemd invertidas (After/Before reversed)
+# VARIANTE 1 — Dependencias circulares y orden incorrecto en systemd
+# ==============================================================================
+#
+# DESCRIPCIÓN (para el alumno / instructor):
+#
+# Esta variante introduce una mala configuración en las dependencias del servicio
+# {{ global_service_name }}.service a nivel de systemd.
+#
+# Se inyectan los siguientes problemas:
+#
+# 1. Se degrada la dependencia de red cambiando:
+#      After=network-online.target  →  After=network.target
+#    (ruido secundario, no la causa principal del fallo)
+#
+# 2. Se crea un servicio auxiliar ficticio:
+#      db-{{ global_service_name }}.service
+#
+# 3. Se introduce una dependencia circular dura:
+#      {{ global_service_name }}.service
+#        Requires=db-{{ global_service_name }}.service
+#        After=db-{{ global_service_name }}.service
+#
+#      db-{{ global_service_name }}.service
+#        Requires={{ global_service_name }}.service
+#        After={{ global_service_name }}.service
+#
+# RESULTADO ESPERADO:
+# - systemctl start {{ global_service_name }}.service falla
+# - systemctl status muestra "Dependency failed" o "Job canceled"
+# - journalctl indica dependencia circular
+#
+# OBJETIVO DIDÁCTICO:
+# - Entender Requires vs Wants
+# - Entender After como orden, no como activación
+# - Detectar y romper dependencias circulares en systemd
+#
 # ==============================================================================
 
-- name: V1 | Guardar estado original para posible restauración
+# ------------------------------------------------------------------------------
+# 1. Backup del servicio original
+# ------------------------------------------------------------------------------
+- name: V1 | Backup del unit original
   copy:
     src: "/etc/systemd/system/{{ global_service_name }}.service"
     dest: "/etc/systemd/system/{{ global_service_name }}.service.backup"
@@ -13,122 +50,111 @@
     group: root
     mode: '0644'
 
-- name: V1 | Invertir orden de dependencias After (network-online -> network)
+# ------------------------------------------------------------------------------
+# 2. Degradar dependencia de red (ruido secundario)
+# ------------------------------------------------------------------------------
+- name: V1 | Cambiar After=network-online.target a network.target
   lineinfile:
     path: "/etc/systemd/system/{{ global_service_name }}.service"
     regexp: '^After=network-online\.target$'
     line: 'After=network.target'
     backup: yes
 
-- name: V1 | Crear servicio de base de datos con dependencia circular
+# ------------------------------------------------------------------------------
+# 3. Crear servicio auxiliar con dependencia circular
+# ------------------------------------------------------------------------------
+- name: V1 | Crear servicio db-{{ global_service_name }} con dependencia circular
   copy:
     dest: "/etc/systemd/system/db-{{ global_service_name }}.service"
     content: |
       [Unit]
       Description=Database Service for {{ global_service_name }}
-      After={{ global_service_name }}.service
       Requires={{ global_service_name }}.service
-      
+      After={{ global_service_name }}.service
+
       [Service]
       Type=simple
       ExecStart=/usr/bin/sleep infinity
       User={{ global_service_user }}
       Group={{ global_service_user }}
       Restart=on-failure
-      
+
       [Install]
       WantedBy=multi-user.target
     owner: root
     group: root
     mode: '0644'
 
-- name: V1 | Agregar dependencia circular a nuestro servicio principal
-  lineinfile:
+# ------------------------------------------------------------------------------
+# 4. Introducir dependencia circular en el servicio principal
+# ------------------------------------------------------------------------------
+- name: V1 | Agregar Requires y After hacia el servicio db (circular)
+  blockinfile:
     path: "/etc/systemd/system/{{ global_service_name }}.service"
-    line: 'After=db-{{ global_service_name }}.service'
-    insertafter: '^After='
-    backup: yes
-
-- name: V1 | Crear conflicto con servicio de logging
-  copy:
-    dest: "/etc/systemd/system/log-{{ global_service_name }}.service"
-    content: |
-      [Unit]
-      Description=Logging Service for {{ global_service_name }}
-      Before={{ global_service_name }}.service
-      
-      [Service]
-      Type=oneshot
-      ExecStart=/bin/echo "Logging service started"
-      RemainAfterExit=yes
-      User=root
-      Group=root
-      
-      [Install]
-      WantedBy=multi-user.target
-    owner: root
-    group: root
-    mode: '0644'
-
-- name: V1 | Agregar conflicto Before/After
-  lineinfile:
-    path: "/etc/systemd/system/{{ global_service_name }}.service"
-    line: 'Before=log-{{ global_service_name }}.service'
+    marker: "# {mark} J02 VARIANT 1 CIRCULAR DEPENDENCY"
     insertafter: '^\[Unit\]'
+    block: |
+      Requires=db-{{ global_service_name }}.service
+      After=db-{{ global_service_name }}.service
     backup: yes
 
-- name: V1 | Remover Wants= para hacer dependencia más débil
-  lineinfile:
-    path: "/etc/systemd/system/{{ global_service_name }}.service"
-    regexp: '^Wants=network-online\.target$'
-    state: absent
-    backup: yes
-
-- name: V1 | Recargar systemd para aplicar cambios
+# ------------------------------------------------------------------------------
+# 5. Recargar systemd
+# ------------------------------------------------------------------------------
+- name: V1 | Recargar daemon systemd
   systemd:
     daemon_reload: yes
 
-- name: V1 | Detener servicio para que la dependencia circular sea evidente al iniciar
+# ------------------------------------------------------------------------------
+# 6. Asegurar que el servicio esté detenido
+# ------------------------------------------------------------------------------
+- name: V1 | Detener servicio para evidenciar el fallo al iniciar
   systemd:
     name: "{{ global_service_name }}.service"
     state: stopped
-    daemon_reload: yes
 
-- name: V1 | Registrar variante en log del sistema
+# ------------------------------------------------------------------------------
+# 7. Registrar inyección (log técnico)
+# ------------------------------------------------------------------------------
+- name: V1 | Registrar inyección de la variante
   lineinfile:
-    path: "{{ log_path }}"
-    line: "[J02-V1-{{ ansible_date_time.epoch }}] Inyectado: Dependencias invertidas - {{ global_service_name }}.service tiene dependencia circular con db-{{ global_service_name }}.service"
+    path: "/var/log/j02-inject.log"
     create: yes
-    owner: "{{ global_service_user }}"
-    group: "{{ global_service_user }}"
+    line: "[J02-V1-{{ ansible_date_time.epoch }}] Dependencia circular inyectada entre {{ global_service_name }}.service y db-{{ global_service_name }}.service"
+    owner: root
+    group: root
+    mode: '0644'
 
-- name: V1 | Crear archivo de diagnóstico para instructor
+# ------------------------------------------------------------------------------
+# 8. Archivo de diagnóstico para instructor
+# ------------------------------------------------------------------------------
+- name: V1 | Crear archivo de diagnóstico
   copy:
     dest: "/tmp/j02_variant_1_diagnosis.txt"
     content: |
       =============================================
-      DIAGNOSIS: Variant 1 - Dependencies Reversed
+      DIAGNOSIS: J02 Variant 1 — Circular Dependencies
       Service: {{ global_service_name }}.service
       Timestamp: {{ ansible_date_time.iso8601 }}
       =============================================
-      
+
       ISSUES INJECTED:
-      1. Changed After=network-online.target to After=network.target
-      2. Created circular dependency with db-{{ global_service_name }}.service
-      3. Added Before=log-{{ global_service_name }}.service conflict
-      4. Removed Wants=network-online.target
-      
+      - Circular dependency between:
+          {{ global_service_name }}.service
+          db-{{ global_service_name }}.service
+      - Requires + After used on both sides
+      - network-online.target degraded to network.target
+
       EXPECTED SYMPTOMS:
-      - systemctl start {{ global_service_name }}.service will fail
-      - systemctl status shows "dependency failed"
-      - Circular dependency: {{ global_service_name }} ↔ db-{{ global_service_name }}
-      - network.target may be ready before network is actually online
-      
-      VALID SOLUTIONS:
-      1. Fix After= to use network-online.target
-      2. Break circular dependency (remove After=db-... or modify db service)
-      3. Resolve Before/After conflict with log service
-      4. Restore Wants=network-online.target
+      - systemctl start {{ global_service_name }}.service fails
+      - systemctl status shows dependency failure
+      - journalctl shows circular dependency errors
+
+      EXPECTED FIXES:
+      - Remove one side of the Requires
+      - Replace Requires with Wants
+      - Break the dependency loop
+      - Restore network-online.target if needed
     owner: root
     group: root
     mode: '0600'

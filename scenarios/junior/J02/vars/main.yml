@@ -1,7 +1,8 @@
 ---
 # scenarios/junior/J02/vars/main.yml
 # ==============================================================================
-# Variables globales — LAB J02
+# Variables base — LAB J02
+# SOLO catálogos y valores estáticos
 # ==============================================================================
 
 random_elements:
@@ -16,7 +17,7 @@ random_elements:
     - report-generator
     - cache-manager
     - backup-coordinator
-  
+
   users:
     - svc-internal
     - svc-process
@@ -28,7 +29,7 @@ random_elements:
     - svc-reports
     - svc-cache
     - svc-backup
-  
+
   config_files:
     - application.conf
     - settings.yaml
@@ -40,7 +41,7 @@ random_elements:
     - service.yaml
     - defaults.cfg
     - main.json
-  
+
   log_files:
     - app.log
     - service.log
@@ -52,7 +53,7 @@ random_elements:
     - events.log
     - audit.log
     - performance.log
-  
+
   ports:
     - 8080
     - 8888
@@ -65,7 +66,7 @@ random_elements:
     - 13000
     - 14000
 
-# Targets de systemd para variantes
+# Targets de systemd (para variantes)
 systemd_targets:
   - multi-user.target
   - graphical.target
@@ -76,22 +77,14 @@ systemd_targets:
   - basic.target
   - sysinit.target
 
-# Límites de recursos para variantes
+# Límites posibles de recursos
 resource_limits:
   nofile: [256, 512, 1024, 2048]
   nproc: [50, 100, 200, 500]
   core: [0, 1, "unlimited"]
   memlock: [65536, 131072, 262144]
 
-# Variables derivadas (usadas en templates)
-service_name: "{{ global_service_name }}.service"
-service_user: "{{ global_service_user }}"
-service_dir: "/opt/{{ global_service_name }}"
-config_path: "/etc/{{ global_service_name }}/{{ current_config_file }}"
-log_path: "/var/log/{{ global_service_name }}/{{ current_log_file }}"
-service_port: "{{ current_port }}"
-
-# Variantes disponibles
+# Variantes disponibles del incidente
 variants:
   - variant_1.yml
   - variant_2.yml

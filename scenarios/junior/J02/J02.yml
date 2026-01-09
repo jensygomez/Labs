@@ -79,6 +79,13 @@
   gather_facts: true
 
   tasks:
+    - name: Exportar variables globales desde admin01
+      set_fact:
+        global_service_name: "{{ hostvars['admin01'].global_service_name }}"
+        global_service_user: "{{ hostvars['admin01'].global_service_user }}"
+        current_config_file: "{{ hostvars['admin01'].current_config_file }}"
+      when: inventory_hostname != 'admin01'
+
     - name: Preparar estado base
       import_tasks: tasks/base.yml
 

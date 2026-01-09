@@ -12,19 +12,20 @@ Requires=network-online.target
 Type=simple
 User={{ global_service_user }}
 Group={{ global_service_user }}
-WorkingDirectory={{ service_dir }}
-ExecStart={{ service_dir }}/start.sh
+WorkingDirectory=/opt/{{ global_service_name }}
+
+ExecStart=/opt/{{ global_service_name }}/start.sh
 ExecStartPre=/bin/echo "Starting {{ global_service_name }} service"
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStop=/bin/kill -TERM $MAINPID
 
 # Environment
 Environment="SERVICE_NAME={{ global_service_name }}"
-Environment="CONFIG_FILE={{ config_path }}"
-Environment="LOG_FILE={{ log_path }}"
-Environment="PORT={{ service_port }}"
+Environment="CONFIG_FILE=/etc/{{ global_service_name }}/{{ current_config_file }}"
+Environment="LOG_FILE=/var/log/{{ global_service_name }}/{{ current_log_file }}"
+Environment="PORT={{ current_port }}"
 
-# Standard output/error
+# Logging
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier={{ global_service_name }}
@@ -35,7 +36,7 @@ PrivateTmp=true
 ProtectSystem=full
 ProtectHome=read-only
 
-# Resource limits (normales por defecto)
+# Resource limits (baseline, variantes los rompen)
 LimitNOFILE=65536
 LimitNPROC=4096
 LimitCORE=infinity

@@ -1,10 +1,40 @@
 ---
-
 # ==============================================================================
-# VARIANTE 2 — Dependencias Wants/Requires faltantes o incorrectas
+# VARIANTE 2 — Wants/Requires mal definidos (dependencias incorrectas)
+# ==============================================================================
+#
+# DESCRIPCIÓN (para el alumno / instructor):
+#
+# Esta variante introduce una mala definición de dependencias Wants/Requires
+# en el servicio {{ global_service_name }}.service.
+#
+# Se inyectan los siguientes problemas:
+#
+# 1. Se elimina una dependencia crítica:
+#      Requires=network-online.target
+#
+# 2. Se agrega una dependencia dura (Requires) hacia un servicio auxiliar
+#    auth-{{ global_service_name }}.service que SIEMPRE falla.
+#
+# 3. El servicio principal ahora depende obligatoriamente de un servicio
+#    que nunca puede iniciar, bloqueando su arranque.
+#
+# RESULTADO ESPERADO:
+# - systemctl start {{ global_service_name }}.service falla
+# - systemctl status muestra "dependency failed"
+# - auth-{{ global_service_name }}.service está en estado failed
+#
+# OBJETIVO DIDÁCTICO:
+# - Entender cuándo usar Requires vs Wants
+# - Identificar dependencias demasiado fuertes
+# - Corregir dependencias sin eliminar servicios
+#
 # ==============================================================================
 
-- name: V2 | Guardar estado original
+# ------------------------------------------------------------------------------
+# 1. Backup del unit original
+# ------------------------------------------------------------------------------
+- name: V2 | Backup del unit original
   copy:
     src: "/etc/systemd/system/{{ global_service_name }}.service"
     dest: "/etc/systemd/system/{{ global_service_name }}.service.v2backup"
@@ -13,135 +43,108 @@
     group: root
     mode: '0644'
 
-- name: V2 | Remover dependencia Requires crítica
+# ------------------------------------------------------------------------------
+# 2. Remover dependencia crítica de red
+# ------------------------------------------------------------------------------
+- name: V2 | Eliminar Requires=network-online.target
   lineinfile:
     path: "/etc/systemd/system/{{ global_service_name }}.service"
     regexp: '^Requires=network-online\.target$'
     state: absent
     backup: yes
 
-- name: V2 | Debilitar Wants cambiando a target menos específico
-  lineinfile:
-    path: "/etc/systemd/system/{{ global_service_name }}.service"
-    regexp: '^Wants=network-online\.target$'
-    line: 'Wants=network.target'
-    backup: yes
-
-- name: V2 | Agregar dependencia a servicio que falla
+# ------------------------------------------------------------------------------
+# 3. Crear servicio auxiliar de autenticación que siempre falla
+# ------------------------------------------------------------------------------
+- name: V2 | Crear servicio auth-{{ global_service_name }} (siempre falla)
   copy:
     dest: "/etc/systemd/system/auth-{{ global_service_name }}.service"
     content: |
       [Unit]
       Description=Authentication Service for {{ global_service_name }}
-      
+
       [Service]
       Type=simple
-      ExecStart=/usr/bin/false  # Siempre falla
-      User=nobody
-      Group=nobody
+      ExecStart=/usr/bin/false
       Restart=no
-      
+
       [Install]
       WantedBy=multi-user.target
     owner: root
     group: root
     mode: '0644'
 
-- name: V2 | Agregar Requires a servicio que siempre falla
-  lineinfile:
+# ------------------------------------------------------------------------------
+# 4. Agregar dependencia dura hacia el servicio que falla
+# ------------------------------------------------------------------------------
+- name: V2 | Agregar Requires hacia auth-{{ global_service_name }}
+  blockinfile:
     path: "/etc/systemd/system/{{ global_service_name }}.service"
-    line: 'Requires=auth-{{ global_service_name }}.service'
+    marker: "# {mark} J02 VARIANT 2 BAD DEPENDENCY"
     insertafter: '^\[Unit\]'
+    block: |
+      Requires=auth-{{ global_service_name }}.service
+      After=auth-{{ global_service_name }}.service
     backup: yes
 
-- name: V2 | Remover BindsTo si existe
-  lineinfile:
-    path: "/etc/systemd/system/{{ global_service_name }}.service"
-    regexp: '^BindsTo='
-    state: absent
-    backup: yes
-
-- name: V2 | Crear servicio de filesystem que no existe
-  lineinfile:
-    path: "/etc/systemd/system/{{ global_service_name }}.service"
-    line: 'After=remote-fs-{{ global_service_name }}.service'
-    insertafter: '^After='
-    backup: yes
-
-- name: V2 | Crear unit file para servicio de filesystem (roto)
-  copy:
-    dest: "/etc/systemd/system/remote-fs-{{ global_service_name }}.service"
-    content: |
-      [Unit]
-      Description=Remote Filesystem for {{ global_service_name }}
-      DefaultDependencies=no
-      Before=local-fs.target
-      
-      [Service]
-      Type=oneshot
-      ExecStart=/bin/mount -t nfs server:/nonexistent /mnt  # Montaje que fallará
-      TimeoutSec=10
-      
-      [Install]
-      WantedBy=multi-user.target
-    owner: root
-    group: root
-    mode: '0644'
-
-- name: V2 | Remover PartOf si existe (dependencia de agrupación)
-  lineinfile:
-    path: "/etc/systemd/system/{{ global_service_name }}.service"
-    regexp: '^PartOf='
-    state: absent
-    backup: yes
-
-- name: V2 | Recargar systemd
+# ------------------------------------------------------------------------------
+# 5. Recargar systemd
+# ------------------------------------------------------------------------------
+- name: V2 | Recargar daemon systemd
   systemd:
     daemon_reload: yes
 
-- name: V2 | Intentar activar servicio de filesystem (fallará)
+# ------------------------------------------------------------------------------
+# 6. Asegurar servicios detenidos
+# ------------------------------------------------------------------------------
+- name: V2 | Detener servicios para evidenciar el fallo
   systemd:
-    name: "remote-fs-{{ global_service_name }}.service"
-    enabled: yes
-    state: started
-  ignore_errors: yes
+    name: "{{ item }}"
+    state: stopped
+  loop:
+    - "{{ global_service_name }}.service"
+    - "auth-{{ global_service_name }}.service"
   failed_when: false
 
-- name: V2 | Registrar variante en log
+# ------------------------------------------------------------------------------
+# 7. Registrar inyección
+# ------------------------------------------------------------------------------
+- name: V2 | Registrar inyección de la variante
   lineinfile:
-    path: "{{ log_path }}"
-    line: "[J02-V2-{{ ansible_date_time.epoch }}] Inyectado: Dependencias Wants/Requires incorrectas - Requires removido, auth-{{ global_service_name }} agregado (siempre falla)"
+    path: "/var/log/j02-inject.log"
     create: yes
-    owner: "{{ global_service_user }}"
-    group: "{{ global_service_user }}"
+    line: "[J02-V2-{{ ansible_date_time.epoch }}] Requires incorrecto: {{ global_service_name }} depende de auth-{{ global_service_name }} (siempre falla)"
+    owner: root
+    group: root
+    mode: '0644'
 
+# ------------------------------------------------------------------------------
+# 8. Archivo de diagnóstico para instructor
+# ------------------------------------------------------------------------------
 - name: V2 | Crear archivo de diagnóstico
   copy:
     dest: "/tmp/j02_variant_2_diagnosis.txt"
     content: |
       =============================================
-      DIAGNOSIS: Variant 2 - Wrong Wants/Requires
+      DIAGNOSIS: J02 Variant 2 — Wrong Wants/Requires
       Service: {{ global_service_name }}.service
       Timestamp: {{ ansible_date_time.iso8601 }}
       =============================================
-      
+
       ISSUES INJECTED:
-      1. Removed Requires=network-online.target
-      2. Changed Wants=network-online.target to Wants=network.target
-      3. Added Requires=auth-{{ global_service_name }}.service (always fails)
-      4. Added After=remote-fs-{{ global_service_name }}.service (mount fails)
-      5. Removed BindsTo and PartOf if existed
-      
-      KEY PROBLEMS:
-      - Service requires auth service that always fails (ExecStart=/usr/bin/false)
-      - Network dependency weakened (online → target)
-      - Remote filesystem mount will fail (nonexistent NFS share)
-      
-      VALID SOLUTIONS:
-      1. Restore Requires=network-online.target
-      2. Fix or remove auth-{{ global_service_name }} dependency
-      3. Fix remote-fs mount or remove dependency
-      4. Ensure proper dependency strength (Requires vs Wants)
+      - Removed Requires=network-online.target
+      - Added Requires=auth-{{ global_service_name }}.service
+      - auth service always fails (ExecStart=/usr/bin/false)
+
+      EXPECTED SYMPTOMS:
+      - systemctl start {{ global_service_name }}.service fails
+      - Dependency failed error
+      - auth-{{ global_service_name }}.service is failed
+
+      EXPECTED FIXES:
+      - Change Requires to Wants (or remove dependency)
+      - Fix or neutralize auth dependency
+      - Restore critical network dependency if needed
     owner: root
     group: root
     mode: '0600'
