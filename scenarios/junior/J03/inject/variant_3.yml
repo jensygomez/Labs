@@ -1,195 +1,169 @@
 ---
 # ==============================================================================
-# VARIANTE 3 — Conditions / Assertions bloquean el arranque
+# scenarios/junior/J03/inject/variant_3.yml — Interfaz de Red Down
 # ==============================================================================
 #
 # PROPÓSITO DEL INCIDENTE:
-#   Simular un servicio que NO arranca pero tampoco muestra errores explícitos,
-#   debido a condiciones (Condition*) y validaciones previas (ExecCondition)
-#   que no se cumplen.
+#   Simular ticket NOC clásico: "Servidor web desapareció de red después de reboot".
+#   Interfaz de red principal ({{ global_interface }}) está DOWN por nmcli.
 #
 # CONTEXTO DEL LAB:
-#   - El servicio {{ global_service_name }} está correctamente instalado
-#   - El script de inicio existe y es válido
-#   - No hay fallos de dependencias ni de permisos
-#   - systemd decide NO ejecutar el servicio
-#
-# COMPORTAMIENTO CLAVE:
-#   - El servicio es omitido silenciosamente
-#   - ExecStart nunca se ejecuta
-#   - systemctl start no devuelve error
+#   - nginx funciona (puerto {{ global_web_port }} LISTEN)
+#   - Firewall OK (puerto abierto)
+#   - IP correcta configurada en nmcli
+#   - ANTES: Interface UP + curl OK desde client01
 #
 # PROBLEMAS INYECTADOS:
 #
-#   1. ConditionPathExists:
-#      - Apunta a un archivo inexistente:
-#          /etc/{{ global_service_name }}/enabled
+#   1. Causa raíz:
+#      nmcli con down {{ global_interface }} → Interface DOWN
+#      ip link → STATE DOWN
 #
-#   2. ConditionFileNotEmpty:
-#      - Apunta a un archivo vacío:
-#          {{ config_path }}
-#
-#   3. ExecCondition (CAUSA RAÍZ):
-#      - Ejecuta un script que siempre retorna exit 1
+#   2. Ruido secundario:
+#      - NetworkManager autoconnect=NO → "No sube sola"
+#      - Servicio de red "reiniciado" → journalctl ruido
+#      - Ping local OK → "No es nginx"
 #
 # RESULTADO ESPERADO:
-#   - systemctl start {{ global_service_name }}.service no muestra error
-#   - systemctl status muestra: inactive (dead)
-#   - journalctl no muestra fallos del proceso principal
+#   - nmcli con show → {{ global_interface }} (disconnected)
+#   - ip link → STATE DOWN
+#   - ip a → NO IP asignada
+#   - curl DESDE client01 → Network unreachable
 #
 # MENSAJES TÍPICOS:
-#   - "Condition check resulted in ... not being met"
-#   - Servicio omitido sin ejecución
+#   - "curl: (101) Network is unreachable"
+#   - "ping: web01: Name or service not known"
+#   - "nmcli con show → disconnected"
+#
+# DIAGNÓSTICO SECUENCIAL:
+#   1. ping web01 → FAIL
+#   2. nmcli con show → {{ global_interface }} disconnected ✗
+#   3. ip link → STATE DOWN ✗
+#   4. nmcli con up → FIXED
 #
 # OBJETIVO DIDÁCTICO:
-#   - Entender diferencia entre Condition y Assert
-#   - Comprender por qué systemd puede omitir servicios silenciosamente
-#   - Diagnosticar servicios que no fallan, pero tampoco arrancan
-#   - Usar herramientas de inspección de units
+#   - nmcli con up/down vs ifup/ifdown
+#   - NetworkManager states (disconnected vs disconnected)
+#   - systemctl restart NetworkManager impacto
 #
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# 1. Backup del unit original
+# 1. Backup configuración nmcli (reversible)
 # ------------------------------------------------------------------------------
-# Permite restaurar el servicio tras finalizar el laboratorio
-- name: V3 | Backup del unit original
+- name: V3 | Backup conexión nmcli
   copy:
-    src: "/etc/systemd/system/{{ global_service_name }}.service"
-    dest: "/etc/systemd/system/{{ global_service_name }}.service.v3backup"
+    src: "/etc/NetworkManager/system-connections/{{ global_interface }}.nmconnection"
+    dest: "/etc/NetworkManager/system-connections/{{ global_interface }}.nmconnection.j03v3backup"
     remote_src: yes
     owner: root
     group: root
-    mode: '0644'
+    mode: '0600'
 
 # ------------------------------------------------------------------------------
-# 2. Romper ConditionPathExists
+# 2. Ruido: Desactivar autoconnect (no sube sola)
 # ------------------------------------------------------------------------------
-# El archivo requerido por la condición deja de existir
-- name: V3 | Eliminar archivo requerido por ConditionPathExists
-  file:
-    path: "/etc/{{ global_service_name }}/enabled"
-    state: absent
+- name: V3 | Desactivar autoconnect (ruido post-reboot)
+  nmcli:
+    conn_name: "{{ global_interface }}"
+    autoconnect: no
+    state: present
 
 # ------------------------------------------------------------------------------
-# 3. Romper ConditionFileNotEmpty
+# 3. CAUSA RAÍZ: Interfaz DOWN
 # ------------------------------------------------------------------------------
-# El archivo existe, pero queda vacío
-- name: V3 | Vaciar archivo de configuración
-  copy:
-    dest: "{{ config_path }}"
-    content: ""
-    owner: "{{ global_service_user }}"
-    group: "{{ global_service_user }}"
-    mode: '0640'
+- name: V3 | APAGAR INTERFAZ {{ global_interface }} (CAUSA RAÍZ)
+  nmcli:
+    conn_name: "{{ global_interface }}"
+    state: down
 
 # ------------------------------------------------------------------------------
-# 4. Inyectar condiciones bloqueantes en el unit
+# 4. Ruido: Reiniciar NetworkManager (journalctl ruido)
 # ------------------------------------------------------------------------------
-# Estas condiciones fallan y provocan que systemd omita el servicio
-- name: V3 | Inyectar ConditionPathExists y ConditionFileNotEmpty
-  blockinfile:
-    path: "/etc/systemd/system/{{ global_service_name }}.service"
-    marker: "# {mark} J02 VARIANT 3 CONDITIONS"
-    insertafter: '^\[Unit\]'
-    block: |
-      ConditionPathExists=/etc/{{ global_service_name }}/enabled
-      ConditionFileNotEmpty={{ config_path }}
-    backup: yes
-
-# ------------------------------------------------------------------------------
-# 5. Crear ExecCondition que siempre falla (CAUSA RAÍZ)
-# ------------------------------------------------------------------------------
-# ExecCondition se ejecuta antes de ExecStart y puede abortar el arranque
-- name: V3 | Crear script ExecCondition fallido
-  copy:
-    dest: "/usr/local/bin/check-{{ global_service_name }}.sh"
-    content: |
-      #!/bin/bash
-      echo "ExecCondition failed intentionally for {{ global_service_name }}" >&2
-      exit 1
-    owner: root
-    group: root
-    mode: '0755'
-
-# ------------------------------------------------------------------------------
-# 6. Asociar ExecCondition al servicio
-# ------------------------------------------------------------------------------
-# Aunque las Condition ya fallan, este refuerza el bloqueo
-- name: V3 | Agregar ExecCondition al unit
-  lineinfile:
-    path: "/etc/systemd/system/{{ global_service_name }}.service"
-    line: 'ExecCondition=/usr/local/bin/check-{{ global_service_name }}.sh'
-    insertafter: '^ExecStart='
-    backup: yes
-
-# ------------------------------------------------------------------------------
-# 7. Recargar systemd
-# ------------------------------------------------------------------------------
-- name: V3 | Recargar daemon systemd
+- name: V3 | Reiniciar NetworkManager (ruido en logs)
   systemd:
-    daemon_reload: yes
+    name: NetworkManager
+    state: restarted
+  ignore_errors: yes
 
 # ------------------------------------------------------------------------------
-# 8. Asegurar servicio detenido
+# 5. Verificar interface REALMENTE down
 # ------------------------------------------------------------------------------
-# Garantiza que el comportamiento se observe al intentar iniciar
-- name: V3 | Detener servicio para evidenciar omisión
-  systemd:
-    name: "{{ global_service_name }}.service"
-    state: stopped
+- name: V3 | Confirmar interface DOWN
+  shell: nmcli con show "{{ global_interface }}" | grep STATE | awk '{print $2}'
+  register: interface_state
+  changed_when: false
+  failed_when: "'down' not in interface_state.stdout and 'disconnected' not in interface_state.stdout"
+
+# ------------------------------------------------------------------------------
+# 6. Confirmar nginx LOCAL sigue vivo
+# ------------------------------------------------------------------------------
+- name: V3 | nginx localhost OK (solo red caída)
+  uri:
+    url: "http://localhost:{{ global_web_port }}"
+    method: HEAD
+  register: local_check
+  failed_when: local_check.status != 200
+
+# ------------------------------------------------------------------------------
+# 7. Verificar conectividad REMOTA IMPOSIBLE
+# ------------------------------------------------------------------------------
+- name: V3 | client01 NO alcanza web01 (sin IP)
+  shell: ping -c 1 -W 2 web01.example.com
+  delegate_to: client01
+  register: ping_test
   failed_when: false
+  changed_when: false
 
 # ------------------------------------------------------------------------------
-# 9. Registrar inyección (log técnico)
+# 8. Log técnico de inyección
 # ------------------------------------------------------------------------------
-- name: V3 | Registrar inyección de la variante
+- name: V3 | Registrar interfaz DOWN
   lineinfile:
-    path: "/var/log/j02-inject.log"
+    path: /var/log/j03-inject.log
     create: yes
-    line: "[J02-V3-{{ ansible_date_time.epoch }}] Conditions bloqueantes: PathExists + FileNotEmpty + ExecCondition fallido ({{ global_service_name }})"
+    line: "[J03-V3-{{ ansible_date_time.epoch }}] Interfaz {{ global_interface }} DOWN (autoconnect=off)"
     owner: root
     group: root
     mode: '0644'
 
 # ------------------------------------------------------------------------------
-# 10. Archivo de diagnóstico (uso instructor / corrección)
+# 9. Archivo diagnóstico instructor
 # ------------------------------------------------------------------------------
-- name: V3 | Crear archivo de diagnóstico
+- name: V3 | Guía diagnóstico J03-V3
   copy:
-    dest: "/tmp/j02_variant_3_diagnosis.txt"
+    dest: "/tmp/j03_variant_3_diagnosis.txt"
     content: |
       =============================================
-      DIAGNOSIS: J02 Variant 3 — Conditions / ExecCondition
-      Service: {{ global_service_name }}.service
-      Timestamp: {{ ansible_date_time.iso8601 }}
+      J03 VARIANT 3 — INTERFAZ DE RED DOWN
+      Interfaz: {{ global_interface }}
+      Estado: disconnected/down
       =============================================
+
+      SYMPTOMS:
+      ✗ nmcli con show → {{ global_interface }} "disconnected"
+      ✗ ip link show → STATE DOWN  
+      ✗ ip a → NO IP en {{ global_interface }}
+      ✓ ss -tuln | grep :{{ global_web_port }} → nginx LISTEN
+      ✓ curl http://localhost:{{ global_web_port }} → 200 OK
+      ✗ ping web01.example.com → Network unreachable
+      ✗ curl {{ web_url }} → Network unreachable
 
       ROOT CAUSE:
-      - One or more Condition* directives evaluate to false
-      - ExecCondition returns non-zero exit code
+      nmcli con show {{ global_interface }}
+      → STATE: disconnected/down
 
-      TECHNICAL DETAILS:
-      - Condition* directives silently skip unit execution
-      - ExecCondition aborts service start before ExecStart
-      - systemd does not treat this as a service failure
+      FIX (1 COMANDO):
+      nmcli con up {{ global_interface }}
+      
+      VERIFICAR:
+      nmcli con show → "connected"
+      ip a → inet 192.168.122.22/24
+      ping 192.168.122.22 → OK
+      curl {{ web_url }} → 200 OK
 
-      EXPECTED SYMPTOMS:
-      - systemctl start shows no error
-      - systemctl status: inactive (dead)
-      - No ExecStart logs present
-
-      DIAGNOSTIC COMMANDS:
-      - systemctl status {{ global_service_name }}.service
-      - systemctl cat {{ global_service_name }}.service
-      - systemd-analyze verify {{ global_service_name }}.service
-      - journalctl -u {{ global_service_name }}.service
-
-      VALID FIXES:
-      - Restore missing files
-      - Ensure config file is not empty
-      - Remove or fix ExecCondition
-      - Simplify conditions when not strictly required
+      OPCIONAL:
+      nmcli con mod {{ global_interface }} connection.autoconnect yes
     owner: root
     group: root
     mode: '0600'

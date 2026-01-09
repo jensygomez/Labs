@@ -1,34 +1,56 @@
-# scenarios/junior/J02/tickets/variant_1.yml
+---
 # ==============================================================================
-# TICKET PARA LA VARIANTE 1
+# scenarios/junior/J03/tickets/variant_1.yml — TICKET Firewalld Bloquea Puerto
+# ==============================================================================
+#
+# 🏢 PROPÓSITO DEL TICKET:
+#   Plantilla para variante 1 J03: firewalld bloquea puerto web. Genera ticket
+#   NOC real con valores DINÁMICOS resueltos por vars/resolve.yml.
+#
+# 🔄 FLUJO DE GENERACIÓN:
+#   J03.yml → resolve.yml → inject/variant_1.yml → tasks/show_ticket.yml
+#   → {{ global_web_port }} → /tmp/J03_ticket.txt (8080, public, etc. reales)
+#
+# 📋 VALORES DINÁMICOS SUSTITUIDOS:
+#   {{ web_url }} → http://web01.example.com:8080
+#   {{ global_web_port }} → 8080 (80,8080,443,8443 aleatorio)
+#   {{ global_firewall_zone }} → public (public/internal/external)
+#   {{ test_command }} → curl -I http://web01.example.com:8080
+#
+# USADO POR: tasks/show_ticket.yml → Sustituye y escribe ticket final
+# 
+# RESULTADO: Student abre /tmp/J03_ticket.txt → Comandos copy/paste listos
 # ==============================================================================
 
 variant:
   description: |
-    Un servicio del sistema está configurado con dependencias de systemd
-    invertidas y conflictivas, creando un ciclo de dependencia circular que
-    impide su inicio. El unit file contiene configuración válida, pero el
-    orden de arranque y las relaciones entre servicios están mal definidas,
-    causando que systemd no pueda resolver correctamente la secuencia de inicio.
+    El servicio web en {{ web_url }} se reporta as inaccesible desde estaciones 
+    de trabajo externas. Los clientes reportan "Connection refused" al intentar 
+    acceder a la aplicación web crítica. El servicio estaba funcionando 
+    correctamente hasta hace 30 minutos cuando se aplicaron cambios de seguridad 
+    en firewalld.
 
   symptoms:
-    - "`systemctl start <service>.service` falla inmediatamente"
-    - "`systemctl status` muestra 'dependency failed' o código de salida 1"
-    - "El journal indica 'Job for <service>.service/start failed'"
-    - "`systemd-analyze critical-chain` muestra ciclos de dependencia"
-    - "Un servicio dependiente también queda bloqueado"
-    - "network.target se activa, pero network-online.target no está garantizado"
+    - "`{{ test_command }}` DESDE client01 falla con 'Connection refused'"
+    - "`ss -tuln | grep :{{ global_web_port }}` muestra nginx/httpd LISTEN ✓"
+    - "`systemctl status {{ global_web_service }}` reporta active (running)"
+    - "`nmcli con show` muestra interfaz conectada con IP correcta"
+    - "`ip a` confirma 192.168.122.22/24 asignada correctamente"
+    - "`firewall-cmd --list-all` NO muestra {{ global_web_port }}/tcp abierto"
 
   task: |
-    Diagnosticar y resolver dependencias circulares y conflictos en la
-    configuración de systemd que impiden el inicio del servicio.
-    Identificar dependencias invertidas, eliminar ciclos y asegurar que
-    todos los requisitos estén disponibles antes del arranque.
+    Diagnosticar y restaurar conectividad del servicio web en {{ web_url }}.
+    
+    1. Verificar conectividad DESDE client01: `{{ test_command }}`
+    2. Confirmar nginx/httpd ejecutándose: `ss -tuln | grep :{{ global_web_port }}`
+    3. Validar configuración de red: `nmcli con show` y `ip a`
+    4. Revisar reglas firewalld: `firewall-cmd --list-all`
+    5. Restaurar acceso externo con persistencia tras reboot.
 
   restrictions:
-    - "NO modificar ni eliminar servicios dependientes críticos"
-    - "NO cambiar el usuario configurado en el unit file"
-    - "NO deshabilitar servicios del sistema para evadir dependencias"
-    - "NO usar systemctl mask como solución"
-    - "La corrección debe permitir que todos los servicios inicien en orden correcto"
-    - "Los cambios deben persistir tras un reboot"
+    - "NO reiniciar nginx/httpd (funciona correctamente)"
+    - "NO cambiar IP estática ni configuración de red nmcli"
+    - "NO modificar nginx.conf (puerto correcto)"
+    - "NO deshabilitar firewalld completamente"
+    - "La solución debe usar `--permanent` para persistir reboot"
+    - "Verificar DESDE client01: `{{ test_command }}` debe retornar 200 OK"
