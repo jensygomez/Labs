@@ -119,7 +119,7 @@
   uri:
     url: "{{ web_url }}"
     method: HEAD
-    status: 200
+    status_code: 200
   delegate_to: client01
   register: baseline_check
   retries: 3
