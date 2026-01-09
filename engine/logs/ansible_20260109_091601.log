@@ -1,0 +1,146 @@
+
+PLAY [J02 | Crear usuario corporativo] *****************************************
+
+TASK [Crear usuario sysadmin-junior] *******************************************
+changed: [client01]
+changed: [admin01]
+changed: [web01]
+
+TASK [Configurar sudo sin password] ********************************************
+ok: [client01]
+ok: [web01]
+ok: [admin01]
+
+PLAY [J02 | Configuración inicial y randomización] *****************************
+
+TASK [1. Cargar catálogos base] ************************************************
+ok: [admin01]
+
+TASK [2. Resolver TODAS las variables (random + derivadas)] ********************
+included: /home/jensy/Labs/scenarios/junior/J02/vars/resolve.yml for admin01
+
+TASK [Seleccionar elementos aleatorios del laboratorio] ************************
+ok: [admin01]
+
+TASK [Resolver variables globales del servicio] ********************************
+ok: [admin01]
+
+TASK [Seleccionar variante del incidente] **************************************
+ok: [admin01]
+
+TASK [Marcar resolución de variables completada] *******************************
+ok: [admin01]
+
+TASK [3. Cargar variante del ticket] *******************************************
+ok: [admin01]
+
+TASK [4. Publicar variante global] *********************************************
+ok: [admin01]
+
+PLAY [J02 | Preparar baseline del sistema] *************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [admin01]
+ok: [client01]
+ok: [web01]
+
+TASK [Propagar variables globales desde admin01] *******************************
+skipping: [admin01]
+ok: [web01]
+ok: [client01]
+
+TASK [Crear usuario del servicio en todos los hosts] ***************************
+changed: [admin01]
+changed: [web01]
+changed: [client01]
+
+TASK [Crear grupo del servicio (si no existe)] *********************************
+ok: [client01]
+ok: [admin01]
+ok: [web01]
+
+TASK [Crear directorio del servicio] *******************************************
+changed: [client01]
+changed: [web01]
+changed: [admin01]
+
+TASK [Crear directorio de configuración] ***************************************
+changed: [client01]
+changed: [web01]
+changed: [admin01]
+
+TASK [Crear directorio de logs] ************************************************
+changed: [admin01]
+changed: [client01]
+changed: [web01]
+
+TASK [Crear archivo de log inicial] ********************************************
+[ERROR]: Task failed: Finalization of task args for 'ansible.builtin.file' failed: Error while resolving value for 'path': 'log_path' is undefined
+
+Task failed.
+Origin: /home/jensy/Labs/scenarios/junior/J02/tasks/base.yml:72:3
+
+70     mode: '0755'
+71
+72 - name: Crear archivo de log inicial
+     ^ column 3
+
+<<< caused by >>>
+
+Finalization of task args for 'ansible.builtin.file' failed.
+Origin: /home/jensy/Labs/scenarios/junior/J02/tasks/base.yml:73:3
+
+71
+72 - name: Crear archivo de log inicial
+73   file:
+     ^ column 3
+
+<<< caused by >>>
+
+Error while resolving value for 'path': 'log_path' is undefined
+Origin: /home/jensy/Labs/scenarios/junior/J02/tasks/base.yml:74:11
+
+72 - name: Crear archivo de log inicial
+73   file:
+74     path: "{{ log_path }}"
+             ^ column 11
+
+fatal: [web01]: FAILED! => {"changed": false, "msg": "Task failed: Finalization of task args for 'ansible.builtin.file' failed: Error while resolving value for 'path': 'log_path' is undefined"}
+fatal: [client01]: FAILED! => {"changed": false, "msg": "Task failed: Finalization of task args for 'ansible.builtin.file' failed: Error while resolving value for 'path': 'log_path' is undefined"}
+changed: [admin01]
+
+TASK [Crear servicio systemd desde template] ***********************************
+changed: [admin01]
+
+TASK [Crear script de inicio desde template] ***********************************
+changed: [admin01]
+
+TASK [Crear archivo de configuración del servicio] *****************************
+changed: [admin01]
+
+TASK [Crear archivo de condición enabled] **************************************
+changed: [admin01]
+
+TASK [Crear directorio runtime] ************************************************
+changed: [admin01]
+
+TASK [Crear archivo ready] *****************************************************
+changed: [admin01]
+
+PLAY [J02 | Inyectar fallo] ****************************************************
+
+PLAY [J02 | Verificar estado del servicio] *************************************
+
+PLAY [J02 | Mostrar resumen final] *********************************************
+
+TASK [Preparar contexto del ticket] ********************************************
+ok: [admin01]
+
+TASK [Mostrar ticket final EN admin01 (DINÁMICO)] ******************************
+changed: [admin01]
+
+PLAY RECAP *********************************************************************
+admin01                    : ok=25   changed=13   unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+client01                   : ok=9    changed=5    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+web01                      : ok=9    changed=5    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+

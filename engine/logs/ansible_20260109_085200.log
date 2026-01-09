@@ -1,0 +1,69 @@
+
+PLAY [J02 | Crear usuario corporativo] *****************************************
+
+TASK [Crear usuario sysadmin-junior] *******************************************
+changed: [admin01]
+changed: [client01]
+changed: [web01]
+
+TASK [Configurar sudo sin password] ********************************************
+changed: [client01]
+changed: [admin01]
+changed: [web01]
+
+PLAY [J02 | Configuración inicial y randomización] *****************************
+
+TASK [1. Cargar catálogos base] ************************************************
+ok: [admin01]
+
+TASK [2. Resolver TODAS las variables (random + derivadas)] ********************
+included: /home/jensy/Labs/scenarios/junior/J02/vars/resolve.yml for admin01
+
+TASK [Seleccionar elementos aleatorios del laboratorio] ************************
+ok: [admin01]
+
+TASK [Resolver variables globales del servicio] ********************************
+ok: [admin01]
+
+TASK [Seleccionar variante del incidente] **************************************
+ok: [admin01]
+
+TASK [Marcar resolución de variables completada] *******************************
+ok: [admin01]
+
+TASK [3. Cargar variante del ticket] *******************************************
+ok: [admin01]
+
+TASK [4. Publicar variante global] *********************************************
+ok: [admin01]
+
+PLAY [J02 | Preparar baseline del sistema] *************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [admin01]
+ok: [client01]
+ok: [web01]
+
+TASK [Propagar variables globales desde admin01] *******************************
+skipping: [admin01]
+ok: [web01]
+ok: [client01]
+
+TASK [Crear directorio del servicio] *******************************************
+[ERROR]: Task failed: Module failed: chown failed: failed to look up user svc-internal
+Origin: /home/jensy/Labs/scenarios/junior/J02/tasks/base.yml:48:3
+
+46 # ==============================================================================
+47
+48 - name: Crear directorio del servicio
+     ^ column 3
+
+fatal: [web01]: FAILED! => {"changed": false, "gid": 0, "group": "root", "mode": "0755", "msg": "chown failed: failed to look up user svc-internal", "owner": "root", "path": "/opt/data-processor", "secontext": "unconfined_u:object_r:usr_t:s0", "size": 6, "state": "directory", "uid": 0}
+fatal: [client01]: FAILED! => {"changed": false, "gid": 0, "group": "root", "mode": "0755", "msg": "chown failed: failed to look up user svc-internal", "owner": "root", "path": "/opt/data-processor", "secontext": "unconfined_u:object_r:usr_t:s0", "size": 6, "state": "directory", "uid": 0}
+fatal: [admin01]: FAILED! => {"changed": false, "gid": 0, "group": "root", "mode": "0755", "msg": "chown failed: failed to look up user svc-internal", "owner": "root", "path": "/opt/data-processor", "secontext": "unconfined_u:object_r:usr_t:s0", "size": 6, "state": "directory", "uid": 0}
+
+PLAY RECAP *********************************************************************
+admin01                    : ok=11   changed=2    unreachable=0    failed=1    skipped=1    rescued=0    ignored=0   
+client01                   : ok=4    changed=2    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+web01                      : ok=4    changed=2    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+

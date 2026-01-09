@@ -77,7 +77,7 @@
       run_once: yes
 
 # ------------------------------------------------------------------------------
-# 2. PROPAGAR VARIABLES → TODOS los hosts + BASELINE
+# 2. PROPAGAR VARIABLES → TODOS los hosts + USUARIOS + BASELINE
 # ------------------------------------------------------------------------------
 - name: J02 | Preparar baseline del sistema
   hosts: all
@@ -98,7 +98,26 @@
         config_dir: "{{ hostvars['admin01'].config_dir }}"
         log_dir: "{{ hostvars['admin01'].log_dir }}"
         service_port: "{{ hostvars['admin01'].service_port }}"
+        log_path: "{{ hostvars['admin01'].log_path }}"
+        config_path: "{{ hostvars['admin01'].config_path }}" 
       when: inventory_hostname != 'admin01'
+
+    # 🔧 NUEVO: Crear usuario del servicio ANTES de base.yml
+    - name: Crear usuario del servicio en todos los hosts
+      user:
+        name: "{{ global_service_user }}"
+        system: yes
+        shell: /sbin/nologin
+        comment: "Systemd service user for {{ global_service_name }}"
+        create_home: no
+        state: present
+      register: service_user_created
+
+    - name: Crear grupo del servicio (si no existe)
+      group:
+        name: "{{ global_service_user }}"
+        system: yes
+        state: present
 
     - name: Crear estructura base del servicio
       import_tasks: tasks/base.yml
