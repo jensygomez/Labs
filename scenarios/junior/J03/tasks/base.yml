@@ -39,6 +39,7 @@
 #   5. show_ticket.yml   (generar ticket)
 # ==============================================================================
 
+
 - name: Instalar servicio web según variante
   dnf:
     name: "{{ global_web_service }}"
@@ -93,21 +94,26 @@
   shell: nmcli con up "{{ global_interface }}" || true
   become: yes
 
+# ✅ FIX firewalld → shell (reemplaza las 2 tareas firewalld)
 - name: Abrir puerto en firewalld (baseline FUNCIONAL)
-  firewalld:
-    port: "{{ global_web_port }}/tcp"
-    permanent: yes
-    immediate: yes
-    state: enabled
-    zone: "{{ global_firewall_zone }}"
+  shell: |
+    firewall-cmd --zone="{{ global_firewall_zone }}" \
+      --add-port="{{ global_web_port }}/tcp" \
+      --permanent || true
+    firewall-cmd --reload || true
+  become: yes
+  args:
+    executable: /bin/bash
 
 - name: Alternativa - Abrir servicio firewalld
-  firewalld:
-    service: "{{ global_firewall_service }}"
-    permanent: yes
-    immediate: yes
-    state: enabled
-    zone: "{{ global_firewall_zone }}"
+  shell: |
+    firewall-cmd --zone="{{ global_firewall_zone }}" \
+      --add-service="{{ global_firewall_service }}" \
+      --permanent || true
+    firewall-cmd --reload || true
+  become: yes
+  args:
+    executable: /bin/bash
 
 - name: Verificar conectividad baseline DESDE client01
   uri:
