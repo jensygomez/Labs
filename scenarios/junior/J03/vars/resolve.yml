@@ -66,9 +66,9 @@
 # ✅ URLs DESPUÉS - ahora selected_web_port existe
 - name: Resolver variables globales de red (URLs y comandos)
   set_fact:
-    web_url: "http://web01.example.com:{{ selected_web_port }}"
-    test_command: "curl -I http://web01.example.com:{{ selected_web_port }} --connect-timeout 5"
-    symptom_description: "curl desde client01 a web01.example.com:{{ selected_web_port }} falla"
+    web_url: "http://192.168.122.22:{{ selected_web_port }}"
+    test_command: "curl -I http://192.168.122.22:{{ selected_web_port }} --connect-timeout 5"
+    symptom_description: "curl desde client01 a 192.168.122.22:{{ selected_web_port }} falla"
   run_once: true
 
 - name: Seleccionar variante del incidente de conectividad
