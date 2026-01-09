@@ -38,7 +38,6 @@
 #   4. inject/variant_X  (ROMPER)
 #   5. show_ticket.yml   (generar ticket)
 # ==============================================================================
----
 
 - name: Instalar servicio web según variante
   dnf:
