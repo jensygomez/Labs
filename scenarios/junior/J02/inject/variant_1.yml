@@ -3,21 +3,29 @@
 # VARIANTE 1 — Dependencias circulares y orden incorrecto en systemd
 # ==============================================================================
 #
-# DESCRIPCIÓN (para el alumno / instructor):
+# PROPÓSITO DEL INCIDENTE:
+#   Simular un fallo de arranque causado por una mala definición de dependencias
+#   entre unidades systemd, específicamente una dependencia circular dura
+#   (Requires + After en ambos sentidos).
 #
-# Esta variante introduce una mala configuración en las dependencias del servicio
-# {{ global_service_name }}.service a nivel de systemd.
+# CONTEXTO DEL LAB:
+#   - El servicio {{ global_service_name }} ya existe y es funcional
+#   - Esta variante NO rompe el binario ni el script
+#   - El fallo ocurre ANTES de la ejecución del proceso
 #
-# Se inyectan los siguientes problemas:
+# PROBLEMAS INYECTADOS:
 #
-# 1. Se degrada la dependencia de red cambiando:
-#      After=network-online.target  →  After=network.target
-#    (ruido secundario, no la causa principal del fallo)
+#   1. Ruido secundario:
+#      - Se degrada la dependencia de red:
+#          After=network-online.target  →  After=network.target
+#      - Esto NO es la causa principal del fallo
 #
-# 2. Se crea un servicio auxiliar ficticio:
-#      db-{{ global_service_name }}.service
+#   2. Servicio auxiliar ficticio:
+#      - Se crea db-{{ global_service_name }}.service
+#      - Representa una dependencia externa (ej. base de datos)
 #
-# 3. Se introduce una dependencia circular dura:
+#   3. Dependencia circular dura (causa raíz):
+#
 #      {{ global_service_name }}.service
 #        Requires=db-{{ global_service_name }}.service
 #        After=db-{{ global_service_name }}.service
@@ -27,24 +35,31 @@
 #        After={{ global_service_name }}.service
 #
 # RESULTADO ESPERADO:
-# - systemctl start {{ global_service_name }}.service falla
-# - systemctl status muestra "Dependency failed" o "Job canceled"
-# - journalctl indica dependencia circular
+#   - systemctl start {{ global_service_name }}.service falla
+#   - El servicio nunca llega a ejecutarse
+#   - systemd detecta una dependencia circular y cancela el job
+#
+# MENSAJES TÍPICOS:
+#   - "Dependency failed"
+#   - "Job canceled"
+#   - "Found dependency cycle"
 #
 # OBJETIVO DIDÁCTICO:
-# - Entender Requires vs Wants
-# - Entender After como orden, no como activación
-# - Detectar y romper dependencias circulares en systemd
+#   - Comprender Requires vs Wants
+#   - Entender que After define ORDEN, no activación
+#   - Diagnosticar dependencias circulares en systemd
+#   - Leer correctamente systemctl status y journalctl
 #
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# 1. Backup del servicio original
+# 1. Backup del unit original
 # ------------------------------------------------------------------------------
+# Permite revertir el estado del sistema tras el laboratorio
 - name: V1 | Backup del unit original
   copy:
     src: "/etc/systemd/system/{{ global_service_name }}.service"
-    dest: "/etc/systemd/system/{{ global_service_name }}.service.backup"
+    dest: "/etc/systemd/system/{{ global_service_name }}.service.v1backup"
     remote_src: yes
     owner: root
     group: root
@@ -53,7 +68,8 @@
 # ------------------------------------------------------------------------------
 # 2. Degradar dependencia de red (ruido secundario)
 # ------------------------------------------------------------------------------
-- name: V1 | Cambiar After=network-online.target a network.target
+# No rompe el servicio por sí solo, pero confunde el análisis inicial
+- name: V1 | Degradar dependencia de red (network-online → network)
   lineinfile:
     path: "/etc/systemd/system/{{ global_service_name }}.service"
     regexp: '^After=network-online\.target$'
@@ -63,6 +79,7 @@
 # ------------------------------------------------------------------------------
 # 3. Crear servicio auxiliar con dependencia circular
 # ------------------------------------------------------------------------------
+# Servicio ficticio que representa una base de datos u otro backend
 - name: V1 | Crear servicio db-{{ global_service_name }} con dependencia circular
   copy:
     dest: "/etc/systemd/system/db-{{ global_service_name }}.service"
@@ -88,7 +105,8 @@
 # ------------------------------------------------------------------------------
 # 4. Introducir dependencia circular en el servicio principal
 # ------------------------------------------------------------------------------
-- name: V1 | Agregar Requires y After hacia el servicio db (circular)
+# Aquí se completa el ciclo de dependencia
+- name: V1 | Inyectar Requires y After hacia el servicio db (circular)
   blockinfile:
     path: "/etc/systemd/system/{{ global_service_name }}.service"
     marker: "# {mark} J02 VARIANT 1 CIRCULAR DEPENDENCY"
@@ -106,9 +124,10 @@
     daemon_reload: yes
 
 # ------------------------------------------------------------------------------
-# 6. Asegurar que el servicio esté detenido
+# 6. Asegurar estado detenido
 # ------------------------------------------------------------------------------
-- name: V1 | Detener servicio para evidenciar el fallo al iniciar
+# Garantiza que el fallo ocurra al intentar iniciar el servicio
+- name: V1 | Detener servicio antes de la prueba
   systemd:
     name: "{{ global_service_name }}.service"
     state: stopped
@@ -126,7 +145,7 @@
     mode: '0644'
 
 # ------------------------------------------------------------------------------
-# 8. Archivo de diagnóstico para instructor
+# 8. Archivo de diagnóstico (uso instructor / corrección)
 # ------------------------------------------------------------------------------
 - name: V1 | Crear archivo de diagnóstico
   copy:
@@ -138,23 +157,29 @@
       Timestamp: {{ ansible_date_time.iso8601 }}
       =============================================
 
-      ISSUES INJECTED:
+      ROOT CAUSE:
       - Circular dependency between:
           {{ global_service_name }}.service
           db-{{ global_service_name }}.service
+
+      TECHNICAL DETAILS:
       - Requires + After used on both sides
+      - systemd cannot resolve startup order
+      - Job is canceled before ExecStart
+
+      SECONDARY NOISE:
       - network-online.target degraded to network.target
 
       EXPECTED SYMPTOMS:
       - systemctl start {{ global_service_name }}.service fails
-      - systemctl status shows dependency failure
-      - journalctl shows circular dependency errors
+      - systemctl status shows dependency errors
+      - journalctl reports dependency cycle
 
-      EXPECTED FIXES:
-      - Remove one side of the Requires
+      VALID FIXES:
+      - Remove one side of Requires
       - Replace Requires with Wants
       - Break the dependency loop
-      - Restore network-online.target if needed
+      - Restore correct network dependency if needed
     owner: root
     group: root
     mode: '0600'

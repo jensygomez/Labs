@@ -1,0 +1,60 @@
+
+PLAY [J02 | Crear usuario corporativo] *****************************************
+
+TASK [Crear usuario sysadmin-junior] *******************************************
+changed: [admin01]
+changed: [web01]
+changed: [client01]
+
+TASK [Configurar sudo sin password] ********************************************
+changed: [client01]
+changed: [admin01]
+changed: [web01]
+
+PLAY [J02 | Configuración inicial] *********************************************
+
+TASK [Cargar variables principales] ********************************************
+ok: [admin01]
+
+TASK [Seleccionar elementos aleatorios para esta ejecución] ********************
+ok: [admin01]
+
+TASK [Seleccionar variante aleatoria] ******************************************
+ok: [admin01]
+
+TASK [Cargar datos de la variante] *********************************************
+ok: [admin01]
+
+TASK [Establecer variables globales de la ejecución] ***************************
+ok: [admin01]
+
+PLAY [J02 | Preparar baseline del sistema] *************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [client01]
+ok: [admin01]
+ok: [web01]
+
+TASK [Exportar variables globales desde admin01] *******************************
+skipping: [admin01]
+ok: [web01]
+ok: [client01]
+
+TASK [Crear directorio del servicio] *******************************************
+[ERROR]: Task failed: Module failed: chown failed: failed to look up user svc-metrics
+Origin: /home/jensy/Labs/scenarios/junior/J02/tasks/base.yml:7:3
+
+5 # ==============================================================================
+6
+7 - name: Crear directorio del servicio
+    ^ column 3
+
+fatal: [web01]: FAILED! => {"changed": false, "gid": 0, "group": "root", "mode": "0755", "msg": "chown failed: failed to look up user svc-metrics", "owner": "root", "path": "/opt/internal-api", "secontext": "unconfined_u:object_r:usr_t:s0", "size": 6, "state": "directory", "uid": 0}
+fatal: [client01]: FAILED! => {"changed": false, "gid": 0, "group": "root", "mode": "0755", "msg": "chown failed: failed to look up user svc-metrics", "owner": "root", "path": "/opt/internal-api", "secontext": "unconfined_u:object_r:usr_t:s0", "size": 6, "state": "directory", "uid": 0}
+fatal: [admin01]: FAILED! => {"changed": false, "gid": 0, "group": "root", "mode": "0755", "msg": "chown failed: failed to look up user svc-metrics", "owner": "root", "path": "/opt/internal-api", "secontext": "unconfined_u:object_r:usr_t:s0", "size": 6, "state": "directory", "uid": 0}
+
+PLAY RECAP *********************************************************************
+admin01                    : ok=8    changed=2    unreachable=0    failed=1    skipped=1    rescued=0    ignored=0   
+client01                   : ok=4    changed=2    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+web01                      : ok=4    changed=2    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+

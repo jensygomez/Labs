@@ -1,12 +1,53 @@
 # scenarios/junior/J02/tasks/base.yml
 # ==============================================================================
-# Preparación del baseline del servicio
-# Usa SOLO variables globales ya definidas
+# BASELINE DEL SERVICIO — LAB J02
+# ------------------------------------------------------------------------------
+# RESPONSABILIDAD:
+#   Este archivo prepara el estado base (baseline) del servicio seleccionado
+#   para el laboratorio J02. Crea directorios, archivos, templates y estructuras
+#   necesarias para que el servicio pueda existir y ejecutarse.
+#
+# QUE HACE:
+#   - Crea directorios del servicio, configuración, logs y runtime
+#   - Genera archivos desde templates (systemd, start.sh, config)
+#   - Establece permisos y ownership correctos
+#   - NO inicia el servicio
+#   - NO introduce fallos intencionales
+#
+# QUE NO HACE:
+#   - NO selecciona variables
+#   - NO elige servicios, usuarios ni puertos
+#   - NO crea usuarios ni grupos
+#   - NO aplica variantes de incidente
+#
+# DEPENDENCIAS (OBLIGATORIAS):
+#   Debe ejecutarse DESPUÉS de:
+#     - tasks/resolve.yml  → Variables globales resueltas
+#     - tasks/users.yml    → Usuario del servicio creado
+#
+# VARIABLES REQUERIDAS:
+#   - global_service_name
+#   - global_service_user
+#   - service_dir
+#   - config_dir
+#   - config_path
+#   - log_dir
+#   - log_path
+#
+# QUIÉN LO USA:
+#   - Playbook principal J02.yml
+#
+# ORDEN DE EJECUCIÓN RECOMENDADO:
+#   1. vars/main.yml        (catálogos)
+#   2. tasks/resolve.yml   (resolución de variables)
+#   3. tasks/users.yml     (creación de usuario)
+#   4. tasks/base.yml      (baseline del servicio)
+#   5. variants/           (incidentes)
 # ==============================================================================
 
 - name: Crear directorio del servicio
   file:
-    path: "/opt/{{ global_service_name }}"
+    path: "{{ service_dir }}"
     state: directory
     owner: "{{ global_service_user }}"
     group: "{{ global_service_user }}"
@@ -14,7 +55,7 @@
 
 - name: Crear directorio de configuración
   file:
-    path: "/etc/{{ global_service_name }}"
+    path: "{{ config_dir }}"
     state: directory
     owner: "{{ global_service_user }}"
     group: "{{ global_service_user }}"
@@ -22,11 +63,19 @@
 
 - name: Crear directorio de logs
   file:
-    path: "/var/log/{{ global_service_name }}"
+    path: "{{ log_dir }}"
     state: directory
     owner: "{{ global_service_user }}"
     group: "{{ global_service_user }}"
     mode: '0755'
+
+- name: Crear archivo de log inicial
+  file:
+    path: "{{ log_path }}"
+    state: touch
+    owner: "{{ global_service_user }}"
+    group: "{{ global_service_user }}"
+    mode: '0644'
 
 - name: Crear servicio systemd desde template
   template:
@@ -39,7 +88,7 @@
 - name: Crear script de inicio desde template
   template:
     src: start.sh.j2
-    dest: "/opt/{{ global_service_name }}/start.sh"
+    dest: "{{ service_dir }}/start.sh"
     owner: "{{ global_service_user }}"
     group: "{{ global_service_user }}"
     mode: '0755'
@@ -52,9 +101,9 @@
     group: "{{ global_service_user }}"
     mode: '0640'
 
-- name: Crear archivo de condición "enabled"
+- name: Crear archivo de condición enabled
   file:
-    path: "/etc/{{ global_service_name }}/enabled"
+    path: "{{ config_dir }}/enabled"
     state: touch
     owner: "{{ global_service_user }}"
     group: "{{ global_service_user }}"

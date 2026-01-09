@@ -1,39 +1,62 @@
+
 ---
 # ==============================================================================
 # VARIANTE 2 — Wants/Requires mal definidos (dependencias incorrectas)
 # ==============================================================================
 #
-# DESCRIPCIÓN (para el alumno / instructor):
+# PROPÓSITO DEL INCIDENTE:
+#   Simular un fallo de arranque provocado por el uso incorrecto de Requires
+#   en lugar de Wants, haciendo que el servicio principal dependa
+#   obligatoriamente de un servicio auxiliar que nunca puede iniciar.
 #
-# Esta variante introduce una mala definición de dependencias Wants/Requires
-# en el servicio {{ global_service_name }}.service.
+# CONTEXTO DEL LAB:
+#   - El servicio {{ global_service_name }} existe y funciona correctamente
+#   - No hay errores en el binario ni en el script de inicio
+#   - El fallo ocurre en la fase de resolución de dependencias systemd
 #
-# Se inyectan los siguientes problemas:
+# PROBLEMAS INYECTADOS:
 #
-# 1. Se elimina una dependencia crítica:
-#      Requires=network-online.target
+#   1. Eliminación de una dependencia crítica legítima:
+#      - Se elimina:
+#          Requires=network-online.target
+#      - El servicio deja de garantizar conectividad real
+#      - Esto es RUÍDO secundario, no la causa raíz
 #
-# 2. Se agrega una dependencia dura (Requires) hacia un servicio auxiliar
-#    auth-{{ global_service_name }}.service que SIEMPRE falla.
+#   2. Creación de un servicio auxiliar defectuoso:
+#      - auth-{{ global_service_name }}.service
+#      - ExecStart=/usr/bin/false → siempre falla
 #
-# 3. El servicio principal ahora depende obligatoriamente de un servicio
-#    que nunca puede iniciar, bloqueando su arranque.
+#   3. Dependencia dura incorrecta (CAUSA RAÍZ):
+#
+#      {{ global_service_name }}.service
+#        Requires=auth-{{ global_service_name }}.service
+#        After=auth-{{ global_service_name }}.service
+#
+#      auth-{{ global_service_name }}.service
+#        → estado FAILED permanente
 #
 # RESULTADO ESPERADO:
-# - systemctl start {{ global_service_name }}.service falla
-# - systemctl status muestra "dependency failed"
-# - auth-{{ global_service_name }}.service está en estado failed
+#   - systemctl start {{ global_service_name }}.service falla
+#   - El fallo es causado por dependencia obligatoria fallida
+#   - El servicio principal nunca ejecuta ExecStart
+#
+# MENSAJES TÍPICOS:
+#   - "Dependency failed"
+#   - "Job canceled"
+#   - "Unit auth-{{ global_service_name }}.service failed"
 #
 # OBJETIVO DIDÁCTICO:
-# - Entender cuándo usar Requires vs Wants
-# - Identificar dependencias demasiado fuertes
-# - Corregir dependencias sin eliminar servicios
+#   - Entender cuándo usar Requires vs Wants
+#   - Identificar dependencias demasiado fuertes
+#   - Diagnosticar servicios bloqueados por fallos externos
+#   - Corregir dependencias sin eliminar servicios
 #
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
 # 1. Backup del unit original
 # ------------------------------------------------------------------------------
+# Permite revertir el estado tras finalizar el laboratorio
 - name: V2 | Backup del unit original
   copy:
     src: "/etc/systemd/system/{{ global_service_name }}.service"
@@ -44,8 +67,9 @@
     mode: '0644'
 
 # ------------------------------------------------------------------------------
-# 2. Remover dependencia crítica de red
+# 2. Remover dependencia crítica de red (ruido secundario)
 # ------------------------------------------------------------------------------
+# Esto no rompe directamente el servicio, pero degrada el diseño original
 - name: V2 | Eliminar Requires=network-online.target
   lineinfile:
     path: "/etc/systemd/system/{{ global_service_name }}.service"
@@ -54,8 +78,9 @@
     backup: yes
 
 # ------------------------------------------------------------------------------
-# 3. Crear servicio auxiliar de autenticación que siempre falla
+# 3. Crear servicio auxiliar que siempre falla
 # ------------------------------------------------------------------------------
+# Representa un backend externo (ej. autenticación) mal implementado
 - name: V2 | Crear servicio auth-{{ global_service_name }} (siempre falla)
   copy:
     dest: "/etc/systemd/system/auth-{{ global_service_name }}.service"
@@ -75,9 +100,10 @@
     mode: '0644'
 
 # ------------------------------------------------------------------------------
-# 4. Agregar dependencia dura hacia el servicio que falla
+# 4. Introducir dependencia dura incorrecta (CAUSA RAÍZ)
 # ------------------------------------------------------------------------------
-- name: V2 | Agregar Requires hacia auth-{{ global_service_name }}
+# Requires obliga a que el servicio auxiliar esté ACTIVO para continuar
+- name: V2 | Inyectar Requires hacia auth-{{ global_service_name }}
   blockinfile:
     path: "/etc/systemd/system/{{ global_service_name }}.service"
     marker: "# {mark} J02 VARIANT 2 BAD DEPENDENCY"
@@ -95,9 +121,10 @@
     daemon_reload: yes
 
 # ------------------------------------------------------------------------------
-# 6. Asegurar servicios detenidos
+# 6. Asegurar estado detenido
 # ------------------------------------------------------------------------------
-- name: V2 | Detener servicios para evidenciar el fallo
+# Garantiza que el fallo se observe al intentar iniciar manualmente
+- name: V2 | Detener servicios antes de la prueba
   systemd:
     name: "{{ item }}"
     state: stopped
@@ -107,19 +134,19 @@
   failed_when: false
 
 # ------------------------------------------------------------------------------
-# 7. Registrar inyección
+# 7. Registrar inyección (log técnico)
 # ------------------------------------------------------------------------------
 - name: V2 | Registrar inyección de la variante
   lineinfile:
     path: "/var/log/j02-inject.log"
     create: yes
-    line: "[J02-V2-{{ ansible_date_time.epoch }}] Requires incorrecto: {{ global_service_name }} depende de auth-{{ global_service_name }} (siempre falla)"
+    line: "[J02-V2-{{ ansible_date_time.epoch }}] Requires incorrecto: {{ global_service_name }} depende de auth-{{ global_service_name }} (servicio siempre fallido)"
     owner: root
     group: root
     mode: '0644'
 
 # ------------------------------------------------------------------------------
-# 8. Archivo de diagnóstico para instructor
+# 8. Archivo de diagnóstico (uso instructor / corrección)
 # ------------------------------------------------------------------------------
 - name: V2 | Crear archivo de diagnóstico
   copy:
@@ -131,20 +158,28 @@
       Timestamp: {{ ansible_date_time.iso8601 }}
       =============================================
 
-      ISSUES INJECTED:
+      ROOT CAUSE:
+      - Requires dependency on a service that always fails:
+          auth-{{ global_service_name }}.service
+
+      TECHNICAL DETAILS:
+      - Requires enforces mandatory activation
+      - auth service exits immediately with failure
+      - systemd cancels the startup job
+
+      SECONDARY NOISE:
       - Removed Requires=network-online.target
-      - Added Requires=auth-{{ global_service_name }}.service
-      - auth service always fails (ExecStart=/usr/bin/false)
 
       EXPECTED SYMPTOMS:
       - systemctl start {{ global_service_name }}.service fails
-      - Dependency failed error
-      - auth-{{ global_service_name }}.service is failed
+      - Dependency failed messages
+      - auth service in FAILED state
 
-      EXPECTED FIXES:
-      - Change Requires to Wants (or remove dependency)
-      - Fix or neutralize auth dependency
-      - Restore critical network dependency if needed
+      VALID FIXES:
+      - Replace Requires with Wants
+      - Remove auth dependency if optional
+      - Fix auth service implementation
+      - Restore network-online.target if needed
     owner: root
     group: root
     mode: '0600'
