@@ -71,8 +71,13 @@
 # 3. CAUSA RAÍZ: Interfaz DOWN
 # ------------------------------------------------------------------------------
 - name: V3 | APAGAR INTERFAZ {{ global_interface }} (CAUSA RAÍZ)
-  shell: nmcli con down "{{ global_interface }}"
+  shell: |
+    systemctl restart NetworkManager
+    sleep 3
+    nmcli con down "{{ global_interface }}" || true
   become: yes
+  args:
+    executable: /bin/bash
 
 # ------------------------------------------------------------------------------
 # 4. Ruido: Reiniciar NetworkManager (journalctl ruido)

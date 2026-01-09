@@ -92,8 +92,8 @@ network_targets:
 # Variantes disponibles del incidente - resolve.yml elige 1
 variants:
   - variant_1.yml    # Firewalld bloquea puerto
-  - variant_2.yml    # IP estática errónea  
-  - variant_3.yml    # Interfaz DOWN
-  - variant_4.yml    # Puerto cambiado sin firewall
+#  - variant_2.yml    # IP estática errónea  
+#  - variant_3.yml    # Interfaz DOWN
+#  - variant_4.yml    # Puerto cambiado sin firewall
 
 # ==============================================================================
