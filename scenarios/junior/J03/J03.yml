@@ -63,11 +63,22 @@
 # 4. TICKET — Mostrar ticket al estudiante
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
-- name: J03 | Mostrar ticket del incidente (dinámico)
-  hosts: admin01
-  gather_facts: no
-  tasks:
-    - name: Mostrar ticket J03 según variante seleccionada
+- name: Mostrar ticket J03 según variante seleccionada
+  block:
+    - name: WEB | Comprobar existencia del ticket
+      stat:
+        path: "scenarios/junior/J03/tickets/{{ global_selected_variant }}"
+      register: ticket_file
+      run_once: true
+
+    - name: Mostrar ticket
       debug:
         msg: "{{ lookup('template', 'scenarios/junior/J03/tickets/' ~ global_selected_variant) }}"
+      when: ticket_file.stat.exists
+      run_once: true
 
+    - name: Aviso si ticket no existe
+      debug:
+        msg: "⚠️ El ticket para la variante {{ global_selected_variant }} NO EXISTE"
+      when: not ticket_file.stat.exists
+      run_once: true

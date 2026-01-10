@@ -73,18 +73,13 @@
 
 # ------------------------------------------------------------------------------
 # 0. CARGANDO ARCHIVO VARS/MAIN.YML
-# ----------------------------------------------------------------
-
+# ------------------------------------------------------------------------------
 - name: J03 | Cargar variables base del escenario
   include_vars: vars/main.yml
-
 
 # ------------------------------------------------------------------------------
 # 1. SELECCIÓN ALEATORIA DE PARÁMETROS BASE
 # ------------------------------------------------------------------------------
-# Se elige un valor por categoría desde los catálogos definidos
-# en vars/main.yml. Esta selección ocurre UNA SOLA VEZ.
-
 - name: J03 | Resolver parámetros aleatorios del escenario
   set_fact:
     global_interface: "{{ random_elements.interfaces | random }}"
@@ -96,14 +91,8 @@
   run_once: true
 
 # ------------------------------------------------------------------------------
-# 2. VARIABLES DERIVADAS (NO TOCAN EL SISTEMA)
+# 2. VARIABLES DERIVADAS
 # ------------------------------------------------------------------------------
-# Estas variables se construyen a partir de los valores resueltos
-# y se usan para:
-#   - Tickets
-#   - Mensajes de diagnóstico
-#   - Validaciones lógicas
-
 - name: J03 | Construir variables derivadas de contexto
   set_fact:
     web_url: "http://192.168.122.22:{{ global_web_port }}"
@@ -112,9 +101,9 @@
       192.168.122.22:{{ global_web_port }}
   run_once: true
 
-# =============================================
-# Verificnado variantes
-# =============================================
+# ------------------------------------------------------------------------------
+# 3. VERIFICACIÓN DE VARIANTS
+# ------------------------------------------------------------------------------
 - name: ASSERT | variants debe ser una lista
   assert:
     that:
@@ -123,50 +112,32 @@
       - variants | length > 0
     fail_msg: "❌ 'variants' no es una lista válida"
 
-
-
 # ------------------------------------------------------------------------------
-# 3. SELECCIÓN DE VARIANTE DEL INCIDENTE
+# 4. SELECCIÓN DE VARIANTE DEL INCIDENTE
 # ------------------------------------------------------------------------------
-# Se elige exactamente UNA variante de fallo que será inyectada
-# después del baseline.
-#
-# Ejemplos:
-#   - variant_1.yml → Firewalld bloquea puerto
-#   - variant_2.yml → IP incorrecta
-#   - variant_3.yml → Interfaz DOWN
-#   - variant_4.yml → Puerto cambiado sin firewall
-
 - name: J03 | Seleccionar variante del incidente
   set_fact:
     global_selected_variant: "{{ variants | random }}"
   run_once: true
 
-
-# =====================
+# ------------------------------------------------------------------------------
+# 5. VALIDAR QUE EXISTAN inject Y ticket PARA LA VARIANTE
+# ------------------------------------------------------------------------------
 - name: ASSERT | Existe inject y ticket para la variante seleccionada
   assert:
     that:
       - lookup('ansible.builtin.fileglob',
-               playbook_dir + '/inject/' + global_selected_variant + '.yml',
+               'scenarios/junior/J03/inject/' + global_selected_variant,
                errors='ignore') | length > 0
       - lookup('ansible.builtin.fileglob',
-               playbook_dir + '/tickets/' + global_selected_variant + '.yml',
+               'scenarios/junior/J03/tickets/' + global_selected_variant,
                errors='ignore') | length > 0
     fail_msg: "❌ La variante {{ global_selected_variant }} no tiene inject o ticket"
   run_once: true
 
-#
-
-
-
-
 # ------------------------------------------------------------------------------
-# 4. MARCA DE CONTROL
+# 6. MARCA DE CONTROL
 # ------------------------------------------------------------------------------
-# Bandera simple para permitir validaciones posteriores
-# (por ejemplo, evitar ejecutar inject si resolve falló).
-
 - name: J03 | Marcar resolución del escenario como completada
   set_fact:
     j03_resolved: true
