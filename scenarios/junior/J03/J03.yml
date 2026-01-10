@@ -1,35 +1,71 @@
 ---
 # ==============================================================================
-# J03.yml — ORQUESTADOR PRINCIPAL
-# ------------------------------------------------------------------------------
+# J03.yml — ORQUESTADOR PRINCIPAL DEL LABORATORIO J03
+# ==============================================================================
 # OBJETIVO:
 # Orquestar el laboratorio J03 en 3 fases estrictas:
-#   1. Resolve   → resolver variables finales
-#   2. Baseline  → estado óptimo validado
-#   3. Inject    → inyección de fallo (variante)
 #
-# NOTA:
-# - J03.yml no contiene lógica técnica
-# - Toda la inteligencia vive en tasks/ y variants/
+#   1. RESOLVE   → resolver variables finales del escenario
+#   2. BASELINE  → dejar las VMs en estado óptimo (por tema)
+#   3. INJECT    → inyectar el fallo según la variante seleccionada
+#
+# PRINCIPIOS:
+# - J03.yml NO contiene lógica técnica
+# - Los baselines son reutilizables
+# - Las variantes SOLO rompen
 # ==============================================================================
 
-- name: J03 | Resolve variables
+# ------------------------------------------------------------------------------
+# 1. RESOLVE — Resolver variables globales del laboratorio
+# ------------------------------------------------------------------------------
+- name: J03 | Resolve variables del escenario
   hosts: admin01
   gather_facts: no
   tasks:
-    - name: Include resolve phase
-      include_tasks: tasks/resolve.yml
+    - name: Resolver variables J03
+      include_tasks: vars/resolve.yml
 
-- name: J03 | Apply baseline (estado óptimo)
+# ------------------------------------------------------------------------------
+# 2. BASELINE — Estado óptimo (por tema)
+# ------------------------------------------------------------------------------
+- name: J03 | Aplicar baselines canónicos
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Baseline | Usuarios corporativos
+      include_tasks: ../../baselines/users.yml
+
+    - name: Baseline | Red funcional
+      include_tasks: ../../baselines/network.yml
+
+    - name: Baseline | Acceso SSH
+      include_tasks: ../../baselines/ssh.yml
+
+    - name: Baseline | Servicio Web
+      include_tasks: ../../baselines/web.yml
+      when: "'web' in group_names"
+
+    - name: Baseline | Firewall limpio
+      include_tasks: ../../baselines/firewall.yml
+      when: "'web' in group_names"
+
+# ------------------------------------------------------------------------------
+# 3. INJECT — Inyección del fallo
+# ------------------------------------------------------------------------------
+- name: J03 | Inyectar incidente
   hosts: web01
   gather_facts: no
   tasks:
-    - name: Include baseline phase
-      include_tasks: tasks/baseline.yml
+    - name: Ejecutar variante seleccionada
+      include_tasks: "inject/{{ global_selected_variant }}"
 
-- name: J03 | Inject failure (variant)
-  hosts: web01
+# ------------------------------------------------------------------------------
+# 4. TICKET — Mostrar ticket al estudiante
+# ------------------------------------------------------------------------------
+- name: J03 | Mostrar ticket del incidente
+  hosts: admin01
   gather_facts: no
   tasks:
-    - name: Include inject phase
-      include_tasks: "variants/{{ inject_variant }}.yml"
+    - name: Mostrar ticket correspondiente
+      include_tasks: tasks/show_ticket.yml
+
