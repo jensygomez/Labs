@@ -1,0 +1,166 @@
+
+PLAY [J03 | Resolve variables del escenario] ***********************************
+
+TASK [Resolver variables J03] **************************************************
+included: /home/jensy/Labs/scenarios/junior/J03/vars/resolve.yml for admin01
+
+TASK [J03 | Cargar variables base del escenario] *******************************
+ok: [admin01]
+
+TASK [J03 | Resolver parámetros aleatorios del escenario] **********************
+ok: [admin01]
+
+TASK [J03 | Construir variables derivadas de contexto] *************************
+ok: [admin01]
+
+TASK [J03 | Seleccionar variante del incidente] ********************************
+ok: [admin01]
+
+TASK [J03 | Marcar resolución del escenario como completada] *******************
+ok: [admin01]
+
+PLAY [J03 | Aplicar baselines canónicos] ***************************************
+
+TASK [Baseline | Usuarios corporativos] ****************************************
+included: /home/jensy/Labs/scenarios/baselines/users.yml for admin01, web01, client01
+
+TASK [USERS | Crear grupo sysadmin] ********************************************
+ok: [admin01]
+ok: [web01]
+ok: [client01]
+
+TASK [USERS | Crear usuario sysadmin] ******************************************
+ok: [web01]
+ok: [admin01]
+ok: [client01]
+
+TASK [USERS | Configurar sudo sin password] ************************************
+ok: [client01]
+ok: [web01]
+ok: [admin01]
+
+TASK [Baseline | Red funcional] ************************************************
+included: /home/jensy/Labs/scenarios/baselines/network.yml for admin01, web01, client01
+
+TASK [NETWORK | Recolectar facts de red] ***************************************
+ok: [admin01]
+ok: [client01]
+ok: [web01]
+
+TASK [NETWORK | NetworkManager instalado] **************************************
+ok: [client01]
+ok: [web01]
+ok: [admin01]
+
+TASK [NETWORK | NetworkManager activo] *****************************************
+ok: [web01]
+ok: [admin01]
+ok: [client01]
+
+TASK [NETWORK | Estado de interfaces (informativo)] ****************************
+ok: [web01]
+ok: [admin01]
+ok: [client01]
+
+TASK [NETWORK | Verificar conectividad IPv4 básica] ****************************
+ok: [admin01] => {
+    "changed": false,
+    "msg": "✓ Conectividad IPv4 detectada (192.168.122.20)"
+}
+ok: [web01] => {
+    "changed": false,
+    "msg": "✓ Conectividad IPv4 detectada (192.168.122.22)"
+}
+ok: [client01] => {
+    "changed": false,
+    "msg": "✓ Conectividad IPv4 detectada (192.168.122.21)"
+}
+
+TASK [NETWORK | Paquetes de diagnóstico instalados] ****************************
+changed: [client01]
+changed: [web01]
+changed: [admin01]
+
+TASK [Baseline | Acceso SSH] ***************************************************
+included: /home/jensy/Labs/scenarios/baselines/ssh.yml for admin01, web01, client01
+
+TASK [SSH | OpenSSH instalado] *************************************************
+ok: [web01]
+ok: [admin01]
+ok: [client01]
+
+TASK [SSH | Servicio activo] ***************************************************
+ok: [web01]
+ok: [client01]
+ok: [admin01]
+
+TASK [Baseline | Servicio Web] *************************************************
+skipping: [admin01]
+skipping: [client01]
+included: /home/jensy/Labs/scenarios/baselines/web.yml for web01
+
+TASK [WEB | Validar variables requeridas] **************************************
+[ERROR]: Task failed: Action failed: ❌ Variables web no definidas (global_web_service / global_web_port)
+Origin: /home/jensy/Labs/scenarios/baselines/web.yml:28:3
+
+26 # Preflight: Validación de variables requeridas
+27 # ---------------------------------------------------------------------------
+28 - name: WEB | Validar variables requeridas
+     ^ column 3
+
+fatal: [web01]: FAILED! => {
+    "assertion": "global_web_service is defined",
+    "changed": false,
+    "evaluated_to": false,
+    "msg": "❌ Variables web no definidas (global_web_service / global_web_port)"
+}
+
+TASK [Baseline | Firewall limpio] **********************************************
+skipping: [admin01]
+skipping: [client01]
+
+PLAY [J03 | Inyectar incidente] ************************************************
+
+PLAY [J03 | Mostrar ticket del incidente] **************************************
+
+TASK [Mostrar ticket correspondiente] ******************************************
+included: /home/jensy/Labs/scenarios/junior/J03/tasks/show_ticket.yml for admin01
+
+TASK [Mostrar ticket final EN admin01 (J02 DINÁMICO)] **************************
+[ERROR]: Task failed: Finalization of task args for 'ansible.builtin.shell' failed: Error while resolving value for '_raw_params': 'variant' is undefined
+
+Task failed.
+Origin: /home/jensy/Labs/scenarios/junior/J03/tasks/show_ticket.yml:30:3
+
+28 # ==============================================================================
+29
+30 - name: Mostrar ticket final EN admin01 (J02 DINÁMICO)
+     ^ column 3
+
+<<< caused by >>>
+
+Finalization of task args for 'ansible.builtin.shell' failed.
+Origin: /home/jensy/Labs/scenarios/junior/J03/tasks/show_ticket.yml:31:3
+
+29
+30 - name: Mostrar ticket final EN admin01 (J02 DINÁMICO)
+31   shell: |
+     ^ column 3
+
+<<< caused by >>>
+
+Error while resolving value for '_raw_params': 'variant' is undefined
+Origin: /home/jensy/Labs/scenarios/junior/J03/tasks/show_ticket.yml:31:10
+
+29
+30 - name: Mostrar ticket final EN admin01 (J02 DINÁMICO)
+31   shell: |
+            ^ column 10
+
+fatal: [admin01]: FAILED! => {"changed": false, "msg": "Task failed: Finalization of task args for 'ansible.builtin.shell' failed: Error while resolving value for '_raw_params': 'variant' is undefined"}
+
+PLAY RECAP *********************************************************************
+admin01                    : ok=21   changed=1    unreachable=0    failed=1    skipped=2    rescued=0    ignored=0   
+client01                   : ok=14   changed=1    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+web01                      : ok=15   changed=1    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+

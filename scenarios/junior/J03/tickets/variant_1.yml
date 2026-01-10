@@ -1,56 +1,66 @@
----
-# ==============================================================================
-# scenarios/junior/J03/tickets/variant_1.yml — TICKET Firewalld Bloquea Puerto
-# ==============================================================================
-#
-# 🏢 PROPÓSITO DEL TICKET:
-#   Plantilla para variante 1 J03: firewalld bloquea puerto web. Genera ticket
-#   NOC real con valores DINÁMICOS resueltos por vars/resolve.yml.
-#
-# 🔄 FLUJO DE GENERACIÓN:
-#   J03.yml → resolve.yml → inject/variant_1.yml → tasks/show_ticket.yml
-#   → {{ global_web_port }} → /tmp/J03_ticket.txt (8080, public, etc. reales)
-#
-# 📋 VALORES DINÁMICOS SUSTITUIDOS:
-#   {{ web_url }} → http://web01.example.com:8080
-#   {{ global_web_port }} → 8080 (80,8080,443,8443 aleatorio)
-#   {{ global_firewall_zone }} → public (public/internal/external)
-#   {{ test_command }} → curl -I http://web01.example.com:8080
-#
-# USADO POR: tasks/show_ticket.yml → Sustituye y escribe ticket final
-# 
-# RESULTADO: Student abre /tmp/J03_ticket.txt → Comandos copy/paste listos
-# ==============================================================================
+===============================================================================
+ LAB J03 — INCIDENTE NOC
+ VARIANTE 1: Firewalld bloquea puerto web
+===============================================================================
 
-variant:
-  description: |
-    El servicio web en {{ web_url }} se reporta as inaccesible desde estaciones 
-    de trabajo externas. Los clientes reportan "Connection refused" al intentar 
-    acceder a la aplicación web crítica. El servicio estaba funcionando 
-    correctamente hasta hace 30 minutos cuando se aplicaron cambios de seguridad 
-    en firewalld.
+📋 ESCENARIO
+----------------------------------------------------------------------------
+El servicio web en {{ web_url }} se reporta como inaccesible desde estaciones
+de trabajo externas. Los clientes reportan "Connection refused" al intentar
+acceder a la aplicación web crítica.
 
-  symptoms:
-    - "`{{ test_command }}` DESDE client01 falla con 'Connection refused'"
-    - "`ss -tuln | grep :{{ global_web_port }}` muestra nginx/httpd LISTEN ✓"
-    - "`systemctl status {{ global_web_service }}` reporta active (running)"
-    - "`nmcli con show` muestra interfaz conectada con IP correcta"
-    - "`ip a` confirma 192.168.122.22/24 asignada correctamente"
-    - "`firewall-cmd --list-all` NO muestra {{ global_web_port }}/tcp abierto"
+El servicio estaba funcionando correctamente hasta hace 30 minutos, cuando se
+aplicaron cambios de seguridad en firewalld.
 
-  task: |
-    Diagnosticar y restaurar conectividad del servicio web en {{ web_url }}.
-    
-    1. Verificar conectividad DESDE client01: `{{ test_command }}`
-    2. Confirmar nginx/httpd ejecutándose: `ss -tuln | grep :{{ global_web_port }}`
-    3. Validar configuración de red: `nmcli con show` y `ip a`
-    4. Revisar reglas firewalld: `firewall-cmd --list-all`
-    5. Restaurar acceso externo con persistencia tras reboot.
+📍 Puerto afectado : {{ global_web_port }}
+📍 Zona firewall   : {{ global_firewall_zone }}
 
-  restrictions:
-    - "NO reiniciar nginx/httpd (funciona correctamente)"
-    - "NO cambiar IP estática ni configuración de red nmcli"
-    - "NO modificar nginx.conf (puerto correcto)"
-    - "NO deshabilitar firewalld completamente"
-    - "La solución debe usar `--permanent` para persistir reboot"
-    - "Verificar DESDE client01: `{{ test_command }}` debe retornar 200 OK"
+🔍 SÍNTOMAS OBSERVADOS
+----------------------------------------------------------------------------
+- {{ test_command }} DESDE client01 falla con "Connection refused"
+- ss -tuln | grep :{{ global_web_port }}  → LISTEN ✓
+- systemctl status {{ global_web_service }} → active (running)
+- nmcli con show → interfaz conectada con IP válida
+- ip a → 192.168.122.22/24 asignada correctamente
+- firewall-cmd --list-all → {{ global_web_port }}/tcp NO presente
+
+🎯 TAREA
+----------------------------------------------------------------------------
+Diagnosticar y restaurar la conectividad del servicio web en:
+
+  {{ web_url }}
+
+Pasos esperados:
+1. Verificar conectividad DESDE client01:
+   {{ test_command }}
+
+2. Confirmar servicio web activo:
+   ss -tuln | grep :{{ global_web_port }}
+
+3. Validar red:
+   nmcli con show
+   ip a
+
+4. Revisar firewalld:
+   firewall-cmd --list-all
+
+5. Restaurar acceso externo con persistencia tras reboot.
+
+⚠️  RESTRICCIONES
+----------------------------------------------------------------------------
+- NO reiniciar nginx/httpd (el servicio funciona correctamente)
+- NO cambiar IP ni configuración nmcli
+- NO modificar nginx.conf (puerto correcto)
+- NO deshabilitar firewalld completamente
+- La solución DEBE usar --permanent
+- Validar DESDE client01:
+  {{ test_command }} → debe retornar 200 OK
+
+===============================================================================
+ ACCESO PARA DIAGNÓSTICO
+----------------------------------------------------------------------------
+SSH web01:
+  ssh student@192.168.122.22
+
+OBJETIVO: DIAGNOSTICAR Y RESOLVER
+===============================================================================

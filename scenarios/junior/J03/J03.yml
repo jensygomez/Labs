@@ -62,10 +62,15 @@
 # ------------------------------------------------------------------------------
 # 4. TICKET — Mostrar ticket al estudiante
 # ------------------------------------------------------------------------------
-- name: J03 | Mostrar ticket del incidente
+- name: J03 | Mostrar ticket del incidente (dinámico)
   hosts: admin01
   gather_facts: no
   tasks:
-    - name: Mostrar ticket correspondiente
-      include_tasks: tasks/show_ticket.yml
+    - name: Mostrar ticket J03 según variante seleccionada
+      debug:
+        msg: |
+          {{ lookup(
+               'template',
+               'scenarios/junior/J03/tickets/' ~ global_selected_variant ~ '.yml'
+          ) }}
 
