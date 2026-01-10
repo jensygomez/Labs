@@ -123,17 +123,30 @@
 # ------------------------------------------------------------------------------
 # 5. VALIDAR QUE EXISTAN inject Y ticket PARA LA VARIANTE
 # ------------------------------------------------------------------------------
-- name: ASSERT | Existe inject y ticket para la variante seleccionada
-  assert:
-    that:
-      - lookup('ansible.builtin.fileglob',
-               'scenarios/junior/J03/inject/' + global_selected_variant,
-               errors='ignore') | length > 0
-      - lookup('ansible.builtin.fileglob',
-               'scenarios/junior/J03/tickets/' + global_selected_variant,
-               errors='ignore') | length > 0
-    fail_msg: "❌ La variante {{ global_selected_variant }} no tiene inject o ticket"
+- name: Verificar inject existe
+  stat:
+    path: "scenarios/junior/J03/inject/{{ global_selected_variant }}"
+  register: inject_stat
   run_once: true
+
+- name: Verificar ticket existe  
+  stat:
+    path: "scenarios/junior/J03/tickets/{{ global_selected_variant }}"
+  register: ticket_stat
+  run_once: true
+
+- name: FAIL | inject no encontrado
+  fail:
+    msg: "❌ inject no existe: scenarios/junior/J03/inject/{{ global_selected_variant }}"
+  when: not inject_stat.stat.exists
+  run_once: true
+
+- name: FAIL | ticket no encontrado
+  fail:
+    msg: "❌ ticket no existe: scenarios/junior/J03/tickets/{{ global_selected_variant }}"
+  when: not ticket_stat.stat.exists
+  run_once: true
+
 
 # ------------------------------------------------------------------------------
 # 6. MARCA DE CONTROL
