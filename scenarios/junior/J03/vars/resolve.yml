@@ -121,7 +121,7 @@
   run_once: true
 
 # ------------------------------------------------------------------------------
-# 5. VALIDAR QUE EXISTAN inject Y ticket PARA LA VARIANTE
+# 5. VALIDAR QUE EXISTE inject (SOLO inject, ticket está embebido)
 # ------------------------------------------------------------------------------
 - name: Verificar inject existe
   stat:
@@ -129,23 +129,12 @@
   register: inject_stat
   run_once: true
 
-- name: Verificar ticket existe  
-  stat:
-    path: "../../scenarios/junior/J03/tickets/{{ global_selected_variant }}"
-  register: ticket_stat
+- name: FAIL | inject no encontrado  
+  fail:
+    msg: "❌ inject no existe: {{ inject_stat }}"
+  when: not (inject_stat.stat.exists | default(false))
   run_once: true
 
-- name: FAIL | inject no encontrado
-  fail:
-    msg: "❌ inject no existe: scenarios/junior/J03/inject/{{ global_selected_variant }}"
-  when: not inject_stat.stat.exists
-  run_once: true
-
-- name: FAIL | ticket no encontrado
-  fail:
-    msg: "❌ ticket no existe: scenarios/junior/J03/tickets/{{ global_selected_variant }}"
-  when: not ticket_stat.stat.exists
-  run_once: true
 
 
 
