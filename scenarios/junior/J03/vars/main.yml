@@ -26,102 +26,54 @@
 # $ ansible-playbook labs/J03/site.yml
 # → global_interface="Wired connection 1", global_web_port=8080, etc.
 #
-# ==============================================================================
 
 random_elements:
-  # Interfaces de red comunes (NetworkManager) - nmcli con show
   interfaces:
     - "Wired connection 1"
     - "System eth0"
     - "enp1s0"
-    - "Wired connection 2"
-  
-  # Puertos web típicos - ss -tuln | grep
+
   web_ports:
     - 80
     - 8080
     - 443
     - 8443
-  
-  # IPs erróneas comunes (fuera de rango 192.168.122.0/24) - ip a
+
   wrong_ips:
     - "192.168.122.99"
-    - "192.168.122.199"
     - "10.0.0.99"
     - "172.16.0.99"
-    - "192.168.1.99"
-  
-  # Zonas firewalld comunes - firewall-cmd --get-active-zones
+
   firewall_zones:
-    - "public"
-    - "internal"
-    - "external"
-  
-  # Reglas firewalld problemáticas - firewall-cmd --list-services
-  firewall_services:
-    - "http"
-    - "https"
-    - "nginx"
-    - "apache"
-  
-  # ✅ MOVIDO AQUÍ - Ahora random funciona
-  web_services:
-    - "nginx"
-    - "httpd"
-  
-  # MTU problemáticos - ip link | grep mtu
+    - public
+    - internal
+    - external
+
+  firewalld_services:
+    - http
+    - https
+    - nginx
+    - apache
+
+  systemd_web_services:
+    - nginx
+    - httpd
+
   mtu_values:
     - 1200
     - 9000
-    - 1400
     - 576
-  
-  # Gateways incorrectos - ip route | grep default
+
   wrong_gateways:
     - "192.168.122.99"
     - "10.0.0.1"
-    - "192.168.1.1"
-    - "8.8.8.8"
 
-# Targets de NetworkManager/Firewalld - systemctl status
-network_targets:
-  - network.target
-  - network-online.target
-  - firewalld.target
-
-# Variantes disponibles del incidente - resolve.yml elige 1
+# Variantes lógicas disponibles del incidente (resolve.yml elige 1)
 variants:
-  - variant_1.yml    # Firewalld bloquea puerto
-#  - variant_2.yml    # IP estática errónea  
-#  - variant_3.yml    # Interfaz DOWN
-#  - variant_4.yml    # Puerto cambiado sin firewall
+  - variant_1
+  - variant_2
+  - variant_3
+  - variant_4
 
-# ==============================================================================
-# ==============================================================================
-# Control de inyección de fallos (EXPECTED FAILURE MODE)
-# ==============================================================================
-#
-# inject_expected:
-# true  → El fallo es INTENCIONAL.
-#         - Ansible NO debe considerar como error:
-#           * curl / uri sin respuesta
-#           * connection refused
-#           * no route to host
-#         - Las tareas de verificación deben:
-#           * usar failed_when condicionado
-#           * o ignorar errores y registrar estado
-#
-# false → Modo baseline / entorno sano.
-#         - Cualquier fallo de conectividad es REAL
-#         - Las verificaciones deben fallar el playbook
-#
-# USO TÍPICO:
-# failed_when:
-#   - (result.status != 200) and (not inject_expected)
-#
-# ignore_errors: "{{ inject_expected }}"
-#
-# ------------------------------------------------------------------------------
+# Control de fallos esperados
 inject_expected: true
-
-

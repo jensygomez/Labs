@@ -1,90 +1,133 @@
 ---
 # ==============================================================================
-# scenarios/junior/J03/vars/resolve.yml — LAB J03: Network Connectivity Failure
+# scenarios/junior/J03/vars/resolve.yml — RESOLVER DEL ESCENARIO J03
+# ==============================================================================
+#
+# 🎯 PROPÓSITO:
+# Resolver y FIJAR todos los valores variables del laboratorio J03
+# de forma determinística para una única ejecución del escenario.
+#
+# Este archivo actúa como el "cerebro declarativo" del laboratorio:
+# toma catálogos abstractos (vars/main.yml) y los convierte en valores
+# CONCRETOS que serán utilizados por:
+#
+#   - Baselines   → para construir el estado ÓPTIMO del sistema
+#   - Variants    → para romper ese estado de forma controlada
+#   - Tickets     → para mostrar síntomas REALISTAS
+#
 # ------------------------------------------------------------------------------
-# RESPONSABILIDAD:
-#   Motor de resolución del laboratorio J03. Convierte catálogos de red 
-#   (vars/main.yml) en valores concretos FIJOS para toda la ejecución del lab.
+# 📐 PRINCIPIOS DE DISEÑO
 #
-# QUE HACE:
-#   - Selecciona aleatoriamente: interfaz, puerto web, IP errónea, zona firewall
-#   - Deriva configuraciones de red estándar (nmcli connection name, puerto nginx)
-#   - Selecciona variante específica del incidente de conectividad (1 de 4)
-#   - Publica variables GLOBALES para tasks operativos e inyección de fallos
+# 1. DETERMINISMO
+#    Una vez que un valor se resuelve aquí:
+#      → NO cambia durante toda la ejecución del laboratorio.
 #
-# QUE NO HACE:
-#   - NO configura interfaces (nmcli/ip)
-#   - NO modifica firewalld
-#   - NO toca nginx/httpd
-#   - NO introduce fallos (solo resolve)
+# 2. SEPARACIÓN DE RESPONSABILIDADES
+#    - resolve.yml   → SOLO selecciona valores (NO configura sistemas)
+#    - baselines/*   → construyen el estado sano
+#    - inject/*      → introducen fallos
 #
-# PRINCIPIO DE DISEÑO:
-#   Determinismo: Una vez resuelto aquí → NO CAMBIA durante el laboratorio
-#   4 variantes × 4 interfaces × 4 puertos × 5 IPs = 320 tickets únicos
+# 3. REUTILIZACIÓN
+#    Este resolver puede copiarse casi intacto a:
+#      J04, J05, J07… cambiando únicamente vars/main.yml
 #
-# DEPENDENCIAS (OBLIGATORIAS):
-#   vars/main.yml ← Catálogos estáticos de red
+# ------------------------------------------------------------------------------
+# 🚫 LO QUE **NO** HACE ESTE ARCHIVO
 #
-# VARIABLES PUBLICADAS (GLOBALES):
-#   global_interface, global_web_port, global_wrong_ip, global_firewall_zone
-#   global_firewall_service, global_web_service, global_selected_variant
-#   web_url, test_command, symptom_description
+# ✗ NO ejecuta comandos (nmcli, firewall-cmd, systemctl)
+# ✗ NO modifica servicios ni archivos
+# ✗ NO valida conectividad
+# ✗ NO introduce fallos
 #
-# QUIÉN LO USA:
-#   tasks/base.yml          ← Baseline nginx+network OK
-#   inject/variant_*.yml    ← Inyecta fallo específico  
-#   tasks/show_ticket.yml   ← Genera ticket con valores reales
-#   tasks/verify.yml        ← Valida DOWN/UP
+# ------------------------------------------------------------------------------
+# 📦 DEPENDENCIAS
 #
-# ORDEN: ÚNICA EJECUCIÓN al inicio del site.yml → ANTES base.yml
+# Requiere obligatoriamente:
+#   vars/main.yml
+#
+# Donde se definen los catálogos:
+#   random_elements.*
+#   variants
+#
+# ------------------------------------------------------------------------------
+# 🌍 VARIABLES GLOBALES PUBLICADAS
+#
+# Infraestructura:
+#   global_interface
+#   global_web_port
+#   global_web_service
+#
+# Fallos potenciales:
+#   global_wrong_ip
+#   global_firewall_zone
+#   global_firewall_service
+#
+# Contexto del laboratorio:
+#   global_selected_variant
+#   web_url
+#   symptom_description
+#
+# Estas variables se consideran INMUTABLES después de este punto.
+#
 # ==============================================================================
 
+# ------------------------------------------------------------------------------
+# 1. SELECCIÓN ALEATORIA DE PARÁMETROS BASE
+# ------------------------------------------------------------------------------
+# Se elige un valor por categoría desde los catálogos definidos
+# en vars/main.yml. Esta selección ocurre UNA SOLA VEZ.
 
-- name: Seleccionar elementos aleatorios de conectividad J03
+- name: J03 | Resolver parámetros aleatorios del escenario
   set_fact:
-    selected_interface: "{{ random_elements.interfaces | random }}"
-    selected_web_port: "{{ random_elements.web_ports | random }}"
-    selected_wrong_ip: "{{ random_elements.wrong_ips | random }}"
-    selected_firewall_zone: "{{ random_elements.firewall_zones | random }}"
-    selected_firewall_service: "{{ random_elements.firewall_services | random }}"
-    selected_web_service: "{{ random_elements.web_services | random }}"
+    global_interface: "{{ random_elements.interfaces | random }}"
+    global_web_port: "{{ random_elements.web_ports | random }}"
+    global_wrong_ip: "{{ random_elements.wrong_ips | random }}"
+    global_firewall_zone: "{{ random_elements.firewall_zones | random }}"
+    global_firewall_service: "{{ random_elements.firewalld_services | random }}"
+    global_web_service: "{{ random_elements.systemd_web_services | random }}"
   run_once: true
 
-# ✅ FIX: 2 set_fact separados - configs PRIMERO
-- name: Resolver variables globales de red (configuración)
+# ------------------------------------------------------------------------------
+# 2. VARIABLES DERIVADAS (NO TOCAN EL SISTEMA)
+# ------------------------------------------------------------------------------
+# Estas variables se construyen a partir de los valores resueltos
+# y se usan para:
+#   - Tickets
+#   - Mensajes de diagnóstico
+#   - Validaciones lógicas
+
+- name: J03 | Construir variables derivadas de contexto
   set_fact:
-    global_interface: "{{ selected_interface }}"
-    global_web_port: "{{ selected_web_port }}"
-    global_wrong_ip: "{{ selected_wrong_ip }}"
-    global_firewall_zone: "{{ selected_firewall_zone }}"
-    global_firewall_service: "{{ selected_firewall_service }}"
-    global_web_service: "{{ selected_web_service }}"
-    nginx_listen: "listen {{ selected_web_port }};"
-    nmcli_connection: "{{ selected_interface }}"
+    web_url: "http://192.168.122.22:{{ global_web_port }}"
+    symptom_description: >-
+      El cliente client01 no puede acceder al servicio web en
+      192.168.122.22:{{ global_web_port }}
   run_once: true
 
-# ✅ URLs DESPUÉS - ahora selected_web_port existe
-- name: Resolver variables globales de red (URLs y comandos)
-  set_fact:
-    web_url: "http://192.168.122.22:{{ selected_web_port }}"
-    test_command: "curl -I http://192.168.122.22:{{ selected_web_port }} --connect-timeout 5"
-    symptom_description: "curl desde client01 a 192.168.122.22:{{ selected_web_port }} falla"
-  run_once: true
+# ------------------------------------------------------------------------------
+# 3. SELECCIÓN DE VARIANTE DEL INCIDENTE
+# ------------------------------------------------------------------------------
+# Se elige exactamente UNA variante de fallo que será inyectada
+# después del baseline.
+#
+# Ejemplos:
+#   - variant_1.yml → Firewalld bloquea puerto
+#   - variant_2.yml → IP incorrecta
+#   - variant_3.yml → Interfaz DOWN
+#   - variant_4.yml → Puerto cambiado sin firewall
 
-- name: Seleccionar variante del incidente de conectividad
+- name: J03 | Seleccionar variante del incidente
   set_fact:
     global_selected_variant: "{{ variants | random }}"
   run_once: true
 
-- name: Marcar resolución J03 completada
+# ------------------------------------------------------------------------------
+# 4. MARCA DE CONTROL
+# ------------------------------------------------------------------------------
+# Bandera simple para permitir validaciones posteriores
+# (por ejemplo, evitar ejecutar inject si resolve falló).
+
+- name: J03 | Marcar resolución del escenario como completada
   set_fact:
     j03_resolved: true
   run_once: true
-
-
-- name: Normalizar puerto web según servicio
-  set_fact:
-    global_web_port: 8080
-  when:
-    - global_web_service == "httpd"
-    - global_web_port == 443
