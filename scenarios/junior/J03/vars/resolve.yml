@@ -112,6 +112,19 @@
       192.168.122.22:{{ global_web_port }}
   run_once: true
 
+# =============================================
+# Verificnado variantes
+# =============================================
+- name: ASSERT | variants debe ser una lista
+  assert:
+    that:
+      - variants is defined
+      - variants is iterable
+      - variants | length > 0
+    fail_msg: "❌ 'variants' no es una lista válida"
+
+
+
 # ------------------------------------------------------------------------------
 # 3. SELECCIÓN DE VARIANTE DEL INCIDENTE
 # ------------------------------------------------------------------------------
@@ -128,6 +141,25 @@
   set_fact:
     global_selected_variant: "{{ variants | random }}"
   run_once: true
+
+
+# =====================
+- name: ASSERT | Existe inject y ticket para la variante seleccionada
+  assert:
+    that:
+      - lookup('ansible.builtin.fileglob',
+               playbook_dir + '/inject/' + global_selected_variant + '.yml',
+               errors='ignore') | length > 0
+      - lookup('ansible.builtin.fileglob',
+               playbook_dir + '/tickets/' + global_selected_variant + '.yml',
+               errors='ignore') | length > 0
+    fail_msg: "❌ La variante {{ global_selected_variant }} no tiene inject o ticket"
+  run_once: true
+
+#
+
+
+
 
 # ------------------------------------------------------------------------------
 # 4. MARCA DE CONTROL
