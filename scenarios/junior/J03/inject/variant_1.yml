@@ -17,13 +17,15 @@
 #   ✓ Ticket sincronizado con inyección
 # ==============================================================================
 
+
+
 # ------------------------------------------------------------------------------
-# 1. Backup configuración firewalld (reversible, silencioso)
+# 1. Backup configuración firewalld (FIX: sintaxis corregida)
 # ------------------------------------------------------------------------------
 - name: V1 | Backup zona firewalld actual
   copy:
     src: "/etc/firewalld/zones/{{ global_firewall_zone | default('public') }}.xml"
-    dest: "/etc/firewalld/zones/{{ global_firewall_zone | default('public') 
+    dest: "/etc/firewalld/zones/{{ global_firewall_zone | default('public') }}.xml.j03v1.bak"
     remote_src: yes
     owner: root
     group: root
@@ -36,8 +38,8 @@
 # ------------------------------------------------------------------------------
 - name: V1 | Remover servicios web conocidos (ruido diagnóstico)
   shell: |
-    for svc in http https {{ global_firewall_service }}; do
-      firewall-cmd --zone="{{ global_firewall_zone }}" --remove-service="$svc" --permanent || true
+    for svc in http https {{ global_firewall_service | default('http') }}; do
+      firewall-cmd --zone="{{ global_firewall_zone | default('public') }}" --remove-service="$svc" --permanent || true
     done
   args:
     executable: /bin/bash
@@ -48,7 +50,7 @@
 # ------------------------------------------------------------------------------
 - name: V1 | CAUSA RAÍZ — bloquear {{ global_web_port }}/tcp
   shell: |
-    firewall-cmd --zone="{{ global_firewall_zone }}" \
+    firewall-cmd --zone="{{ global_firewall_zone | default('public') }}" \
       --remove-port="{{ global_web_port }}/tcp" \
       --permanent || true
   args:
@@ -56,11 +58,11 @@
   become: yes
 
 # ------------------------------------------------------------------------------
-# 4. Ruido realista: rich-rule REJECT (confunde con ataque)
+# 4. Ruido realista: rich-rule REJECT
 # ------------------------------------------------------------------------------
 - name: V1 | Ruido visual — rich rule REJECT HTTP
   shell: |
-    firewall-cmd --zone="{{ global_firewall_zone }}" \
+    firewall-cmd --zone="{{ global_firewall_zone | default('public') }}" \
       --add-rich-rule='rule family=ipv4 port port="{{ global_web_port }}" protocol=tcp reject' \
       --permanent || true
   args:
@@ -68,106 +70,54 @@
   become: yes
 
 # ------------------------------------------------------------------------------
-# 5. Aplicar cambios firewalld (único reload)
+# 5. Aplicar cambios firewalld
 # ------------------------------------------------------------------------------
 - name: V1 | Recargar firewalld
   command: firewall-cmd --reload
   become: yes
 
 # ------------------------------------------------------------------------------
-# 6. Verificación local (NO es firewall)
+# 6. VERIFICAR QUE SIGUE ESCUCHANDO LOCAL
 # ------------------------------------------------------------------------------
-- name: V1 | Verificar servicio web local (localhost)
+- name: V1 | Verificar nginx sigue vivo localmente
   uri:
     url: "http://localhost:{{ global_web_port }}"
     method: HEAD
     timeout: 5
-  register: local_web_check
+  register: local_check
   failed_when: false
 
 # ------------------------------------------------------------------------------
-# 7. Log técnico de inyección
+# 7. MOSTRAR TICKET AL ESTUDIANTE 🎫
 # ------------------------------------------------------------------------------
-- name: V1 | Registrar inyección
-  lineinfile:
-    path: /var/log/j03-inject.log
-    create: yes
-    line: "[J03][V1][{{ ansible_date_time.iso8601 }}] firewalld bloqueó {{ global_web_port }}/tcp en {{ global_firewall_zone }}"
-    owner: root
-    group: root
-    mode: '0644'
-  become: yes
-
-# ------------------------------------------------------------------------------
-# 8. MOSTRAR TICKET AL ESTUDIANTE (EMBEDDED)
-# ------------------------------------------------------------------------------
-- name: V1 | MOSTRAR TICKET — Incidente NOC detectado
+- name: V1 | 🎫 MOSTRAR TICKET — Incidente NOC detectado
   debug:
     msg:
-      - "==============================================================================="
-      - " LAB J03 — INCIDENTE NOC"
-      - " VARIANTE 1: Firewalld bloquea puerto web"
-      - "==============================================================================="
+      - "==================================================================================================="
+      - " 🚨 LAB J03 — INCIDENTE NOC CRÍTICO 🚨"
+      - " VARIANTE 1: SERVICIO WEB INACCESIBLE DESDE CHINA"
+      - "==================================================================================================="
       - ""
-      - "📋 ESCENARIO"
-      - "----------------------------------------------------------------------------"
-      - "El servicio web en {{ web_url }} se reporta como inaccesible desde estaciones"
-      - "de trabajo externas. Los clientes reportan \"Connection refused\" al intentar"
-      - "acceder a la aplicación web crítica."
+      - "📋 ESCENARIO:"
+      - "   Cliente chino (client01) reporta \"Connection refused\" en {{ web_url }}"
+      - "   ✅ nginx localhost:{{ global_web_port }} sigue RESPONDIENDO 200 OK"
+      - "   ❌ Pero desde client01 → Connection refused"
       - ""
-      - "El servicio estaba funcionando correctamente hasta hace 30 minutos, cuando se"
-      - "aplicaron cambios de seguridad en firewalld."
+      - "📍 DETALLES:"
+      - "   Puerto: {{ global_web_port }}/tcp"
+      - "   Zona: {{ global_firewall_zone | default('public') }}"
+      - "   Local check: {{ local_check.status | default('OK') }}"
       - ""
-      - "📍 Puerto afectado : {{ global_web_port }}"
-      - "📍 Zona firewall   : {{ global_firewall_zone }}"
+      - "🔍 COMANDOS PARA DIAGNÓSTICO:"
+      - "   ss -tuln | grep :{{ global_web_port }}     → LISTEN ✓"
+      - "   systemctl status {{ global_web_service }}  → active ✓"
+      - "   firewall-cmd --list-all                   → Puerto AUSENTE ❌"
       - ""
-      - "🔍 SÍNTOMAS OBSERVADOS"
-      - "----------------------------------------------------------------------------"
-      - "- {{ test_command }} DESDE client01 falla con \"Connection refused\""
-      - "- ss -tuln | grep :{{ global_web_port }}  → LISTEN ✓"
-      - "- systemctl status {{ global_web_service }} → active (running)"
-      - "- nmcli con show → interfaz conectada con IP válida"
-      - "- ip a → 192.168.122.22/24 asignada correctamente"
-      - "- firewall-cmd --list-all → {{ global_web_port }}/tcp NO presente"
+      - "🎯 SOLUCIÓN ESPERADA:"
+      - "   firewall-cmd --zone={{ global_firewall_zone }} --add-port={{ global_web_port }}/tcp --permanent"
+      - "   firewall-cmd --reload"
       - ""
-      - "🎯 TAREA"
-      - "----------------------------------------------------------------------------"
-      - "Diagnosticar y restaurar la conectividad del servicio web en:"
-      - ""
-      - "  {{ web_url }}"
-      - ""
-      - "Pasos esperados:"
-      - "1. Verificar conectividad DESDE client01:"
-      - "   {{ test_command }}"
-      - ""
-      - "2. Confirmar servicio web activo:"
-      - "   ss -tuln | grep :{{ global_web_port }}"
-      - ""
-      - "3. Validar red:"
-      - "   nmcli con show"
-      - "   ip a"
-      - ""
-      - "4. Revisar firewalld:"
-      - "   firewall-cmd --list-all"
-      - ""
-      - "5. Restaurar acceso externo con persistencia tras reboot."
-      - ""
-      - "⚠️  RESTRICCIONES"
-      - "----------------------------------------------------------------------------"
-      - "- NO reiniciar nginx/httpd (el servicio funciona correctamente)"
-      - "- NO cambiar IP ni configuración nmcli"
-      - "- NO modificar nginx.conf (puerto correcto)"
-      - "- NO deshabilitar firewalld completamente"
-      - "- La solución DEBE usar --permanent"
-      - "- Validar DESDE client01: {{ test_command }} → debe retornar 200 OK"
-      - ""
-      - "================================================================================"
-      - " ACCESO PARA DIAGNÓSTICO"
-      - "----------------------------------------------------------------------------"
-      - "SSH web01:"
-      - "  ssh student@192.168.122.22"
-      - ""
-      - "OBJETIVO: DIAGNOSTICAR Y RESOLVER"
-      - "==============================================================================="
+      - "👤 ACCESO: ssh student@192.168.122.22"
+      - "==================================================================================================="
     verbosity: 0
   run_once: true
