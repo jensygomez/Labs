@@ -125,13 +125,13 @@
 # ------------------------------------------------------------------------------
 - name: Verificar inject existe
   stat:
-    path: "scenarios/junior/J03/inject/{{ global_selected_variant }}"
+    path: "../../scenarios/junior/J03/inject/{{ global_selected_variant }}"
   register: inject_stat
   run_once: true
 
 - name: Verificar ticket existe  
   stat:
-    path: "scenarios/junior/J03/tickets/{{ global_selected_variant }}"
+    path: "../../scenarios/junior/J03/tickets/{{ global_selected_variant }}"
   register: ticket_stat
   run_once: true
 
@@ -146,6 +146,7 @@
     msg: "❌ ticket no existe: scenarios/junior/J03/tickets/{{ global_selected_variant }}"
   when: not ticket_stat.stat.exists
   run_once: true
+
 
 
 # ------------------------------------------------------------------------------
