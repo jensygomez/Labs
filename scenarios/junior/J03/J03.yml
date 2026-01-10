@@ -25,6 +25,26 @@
     - name: Resolver variables J03
       include_tasks: vars/resolve.yml
 
+
+# ------------------------------------------------------------------------------
+# 1.5 PROPAGAR VARIABLES GLOBALES A TODOS LOS HOSTS
+# ------------------------------------------------------------------------------
+- name: J03 | Propagar variables globales
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Obtener variable del admin01
+      set_fact:
+        global_selected_variant: "{{ hostvars['admin01']['global_selected_variant'] }}"
+        global_web_port: "{{ hostvars['admin01']['global_web_port'] }}"
+        global_firewall_zone: "{{ hostvars['admin01']['global_firewall_zone'] }}"
+        global_web_service: "{{ hostvars['admin01']['global_web_service'] }}"
+        web_url: "{{ hostvars['admin01']['web_url'] }}"
+        test_command: "curl -I {{ hostvars['admin01']['web_url'] }}"
+      run_once: true
+
+
+
 # ------------------------------------------------------------------------------
 # 2. BASELINE — Estado óptimo (por tema)
 # ------------------------------------------------------------------------------

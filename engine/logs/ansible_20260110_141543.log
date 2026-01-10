@@ -143,3 +143,57 @@ skipping: [client01]
 included: /home/jensy/Labs/scenarios/baselines/firewall.yml for web01
 
 TASK [FIREWALL | Instalar firewalld] *******************************************
+ok: [web01]
+
+TASK [FIREWALL | Iniciar y habilitar firewalld] ********************************
+ok: [web01]
+
+TASK [FIREWALL | Verificar estado del servicio] ********************************
+ok: [web01]
+
+TASK [FIREWALL | Obtener zona por defecto] *************************************
+ok: [web01]
+
+TASK [FIREWALL | Obtener zonas activas] ****************************************
+ok: [web01]
+
+PLAY [J03 | Inyectar incidente] ************************************************
+
+TASK [Ejecutar variante seleccionada] ******************************************
+[ERROR]: Task failed: Finalization of task args for 'ansible.builtin.include_tasks' failed: Error while resolving value for '_raw_params': 'global_selected_variant' is undefined
+
+Task failed.
+Origin: /home/jensy/Labs/scenarios/junior/J03/J03.yml:59:7
+
+57   gather_facts: no
+58   tasks:
+59     - name: Ejecutar variante seleccionada
+         ^ column 7
+
+<<< caused by >>>
+
+Finalization of task args for 'ansible.builtin.include_tasks' failed.
+Origin: /home/jensy/Labs/scenarios/junior/J03/J03.yml:60:7
+
+58   tasks:
+59     - name: Ejecutar variante seleccionada
+60       include_tasks: "inject/{{ global_selected_variant }}"
+         ^ column 7
+
+<<< caused by >>>
+
+Error while resolving value for '_raw_params': 'global_selected_variant' is undefined
+Origin: /home/jensy/Labs/scenarios/junior/J03/J03.yml:60:22
+
+58   tasks:
+59     - name: Ejecutar variante seleccionada
+60       include_tasks: "inject/{{ global_selected_variant }}"
+                        ^ column 22
+
+fatal: [web01]: FAILED! => {"changed": false, "msg": "Task failed: Finalization of task args for 'ansible.builtin.include_tasks' failed: Error while resolving value for '_raw_params': 'global_selected_variant' is undefined"}
+
+PLAY RECAP *********************************************************************
+admin01                    : ok=21   changed=0    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+client01                   : ok=14   changed=0    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+web01                      : ok=23   changed=0    unreachable=0    failed=1    skipped=8    rescued=0    ignored=0   
+
