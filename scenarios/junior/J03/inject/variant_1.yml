@@ -100,6 +100,7 @@
 # ------------------------------------------------------------------------------
 - name: V1 | Recargar firewalld (immediate + permanent)
   command: firewall-cmd --reload
+  become: yes
 
 # ------------------------------------------------------------------------------
 # 6. Verificar nginx SIGUE funcionando localmente
@@ -159,11 +160,4 @@
     group: root
     mode: '0600'
 
-# ------------------------------------------------------------------------------
-# 9. Handlers
-# ------------------------------------------------------------------------------
-  handlers:
-    - name: reload firewalld
-      systemd:
-        name: firewalld
-        state: reloaded
+
