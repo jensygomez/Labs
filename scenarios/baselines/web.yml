@@ -1,0 +1,98 @@
+---
+# ==============================================================================
+# baselines/web.yml — SERVICIO WEB CANÓNICO
+# ==============================================================================
+# OBJETIVO:
+# Proveer un servicio web FUNCIONAL y NEUTRO
+#
+# GARANTIZA:
+# - Servicio web instalado
+# - Escucha en {{ global_web_port }}
+# - Página válida servida localmente
+#
+# NO GARANTIZA:
+# - Acceso desde otras máquinas
+# - Firewall abierto
+# - DNS funcional
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Instalación
+# ------------------------------------------------------------------------------
+- name: WEB | Instalar servicio web
+  dnf:
+    name: "{{ global_web_service }}"
+    state: present
+  become: yes
+
+# ------------------------------------------------------------------------------
+# 2. Detener antes de configurar
+# ------------------------------------------------------------------------------
+- name: WEB | Detener servicio
+  systemd:
+    name: "{{ global_web_service }}"
+    state: stopped
+  become: yes
+
+# ------------------------------------------------------------------------------
+# 3. Configuración del puerto
+# ------------------------------------------------------------------------------
+- name: WEB | Configurar puerto nginx
+  lineinfile:
+    path: /etc/nginx/nginx.conf
+    regexp: '^\s*listen\s+'
+    line: "    listen {{ global_web_port }};"
+    backup: yes
+  when: global_web_service == "nginx"
+  become: yes
+
+- name: WEB | Configurar puerto httpd
+  lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    regexp: '^Listen'
+    line: "Listen {{ global_web_port }}"
+    backup: yes
+  when: global_web_service == "httpd"
+  become: yes
+
+# ------------------------------------------------------------------------------
+# 4. Página de prueba estándar
+# ------------------------------------------------------------------------------
+- name: WEB | Crear página web canónica
+  copy:
+    dest: "{{ '/usr/share/nginx/html/index.html'
+             if global_web_service == 'nginx'
+             else '/var/www/html/index.html' }}"
+    content: |
+      <html>
+      <body>
+        <h1>WEB BASELINE OK</h1>
+        <p>Service: {{ global_web_service }}</p>
+        <p>Port: {{ global_web_port }}</p>
+      </body>
+      </html>
+    owner: "{{ 'nginx' if global_web_service == 'nginx' else 'apache' }}"
+    group: "{{ 'nginx' if global_web_service == 'nginx' else 'apache' }}"
+    mode: '0644'
+  become: yes
+
+# ------------------------------------------------------------------------------
+# 5. Iniciar servicio
+# ------------------------------------------------------------------------------
+- name: WEB | Iniciar y habilitar servicio
+  systemd:
+    name: "{{ global_web_service }}"
+    state: started
+    enabled: yes
+  become: yes
+
+# ------------------------------------------------------------------------------
+# 6. Validación LOCAL (obligatoria)
+# ------------------------------------------------------------------------------
+- name: WEB | Validar servicio LOCAL
+  uri:
+    url: "http://localhost:{{ global_web_port }}"
+    method: GET
+    status_code: 200
+  register: web_local_check
+  failed_when: web_local_check.status != 200

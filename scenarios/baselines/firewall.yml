@@ -1,0 +1,17 @@
+---
+# ==============================================================================
+# baselines/firewall.yml — FIREWALL NEUTRO
+# ==============================================================================
+
+- name: FIREWALL | firewalld instalado
+  dnf:
+    name: firewalld
+    state: present
+  become: yes
+
+- name: FIREWALL | firewalld activo
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+  become: yes

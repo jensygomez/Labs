@@ -1,0 +1,52 @@
+---
+# ==============================================================================
+# baselines/network.yml — BASELINE DE RED CANÓNICO
+# ==============================================================================
+# OBJETIVO:
+# Garantizar conectividad funcional y herramientas básicas de red
+# en TODAS las VMs (admin, web, client).
+#
+# NO HACE:
+# - No cambia IPs
+# - No toca firewalld
+# - No abre puertos
+# - No rompe nada
+# ==============================================================================
+
+- name: NETWORK | NetworkManager instalado
+  dnf:
+    name: NetworkManager
+    state: present
+  become: yes
+
+- name: NETWORK | NetworkManager activo
+  systemd:
+    name: NetworkManager
+    state: started
+    enabled: yes
+  become: yes
+
+- name: NETWORK | Interfaz activa
+  command: nmcli device status
+  register: nmcli_status
+  changed_when: false
+
+- name: NETWORK | Verificar que existe conectividad IPv4
+  assert:
+    that:
+      - ansible_default_ipv4.address is defined
+    fail_msg: "❌ Sin conectividad IPv4"
+    success_msg: "✓ IPv4 detectada"
+
+- name: NETWORK | Paquetes de diagnóstico
+  dnf:
+    name:
+      - iproute
+      - iputils
+      - traceroute
+      - tcpdump
+      - nmap
+      - curl
+      - net-tools
+    state: present
+  become: yes
