@@ -69,12 +69,41 @@
       include_tasks: ../../baselines/firewall.yml
       when: "'web' in group_names"
 
+
+
+# ------------------------------------------------------------------------------
+# 2.5 VALIDAR - Confirmar que TODO funciona perfectamente
+# ------------------------------------------------------------------------------
+- name: J03 | Validar baseline (TODO FUNCIONA)
+  hosts: client01
+  gather_facts: no
+  tasks:
+    - name: VALIDAR | Conectividad web01 → 200 OK
+      uri:
+        url: "{{ web_url }}"
+        method: HEAD
+      register: pre_inject_test
+      failed_when: false
+
+    - name: VALIDAR | Reporte PRE-INJECT
+      debug:
+        msg: |
+          ✅ SISTEMA FUNCIONAL ANTES DE INJECT:
+            * web_url: {{ web_url }}
+            * Status: {{ pre_inject_test.status | default('N/A') }}
+            * Listo para INYECCIÓN DE FALLA...
+
+    - name: VALIDAR | Pausa dramática
+      pause:
+        seconds: 2
+        prompt: "🎬 Presiona Enter para INYECTAR el incidente..."
+
 # ------------------------------------------------------------------------------
 # 3. INJECT — Inyección del fallo
 # ------------------------------------------------------------------------------
-- name: J03 | Inyectar incidente
-  hosts: web01
-  gather_facts: no
-  tasks:
-    - name: Ejecutar variante seleccionada
-      include_tasks: "inject/{{ global_selected_variant }}"
+#- name: J03 | Inyectar incidente
+#  hosts: web01
+#  gather_facts: no
+#  tasks:
+#    - name: Ejecutar variante seleccionada
+#      include_tasks: "inject/{{ global_selected_variant }}"

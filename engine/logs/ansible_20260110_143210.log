@@ -1,0 +1,168 @@
+
+PLAY [J03 | Resolve variables del escenario] ***********************************
+
+TASK [Resolver variables J03] **************************************************
+included: /home/jensy/Labs/scenarios/junior/J03/vars/resolve.yml for admin01, web01, client01
+
+TASK [J03 | Cargar variables base del escenario] *******************************
+ok: [admin01]
+ok: [web01]
+ok: [client01]
+
+TASK [J03 | Resolver parámetros aleatorios del escenario] **********************
+ok: [admin01]
+
+TASK [J03 | Construir variables derivadas de contexto] *************************
+ok: [admin01]
+
+TASK [ASSERT | variants debe ser una lista] ************************************
+ok: [web01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+ok: [admin01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+ok: [client01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+
+TASK [J03 | Seleccionar variante del incidente] ********************************
+ok: [admin01]
+
+TASK [J03 | Marcar resolución del escenario como completada] *******************
+ok: [admin01]
+
+PLAY [J03 | Propagar variables globales] ***************************************
+
+TASK [Obtener variable del admin01] ********************************************
+ok: [admin01]
+
+PLAY [J03 | Aplicar baselines canónicos] ***************************************
+
+TASK [Baseline | Usuarios corporativos] ****************************************
+included: /home/jensy/Labs/scenarios/baselines/users.yml for admin01, web01, client01
+
+TASK [USERS | Crear grupo sysadmin] ********************************************
+ok: [web01]
+ok: [admin01]
+ok: [client01]
+
+TASK [USERS | Crear usuario sysadmin] ******************************************
+ok: [web01]
+ok: [client01]
+ok: [admin01]
+
+TASK [USERS | Configurar sudo sin password] ************************************
+ok: [client01]
+ok: [admin01]
+ok: [web01]
+
+TASK [Baseline | Red funcional] ************************************************
+included: /home/jensy/Labs/scenarios/baselines/network.yml for admin01, web01, client01
+
+TASK [NETWORK | Recolectar facts de red] ***************************************
+ok: [admin01]
+ok: [client01]
+ok: [web01]
+
+TASK [NETWORK | NetworkManager instalado] **************************************
+ok: [client01]
+ok: [web01]
+ok: [admin01]
+
+TASK [NETWORK | NetworkManager activo] *****************************************
+ok: [admin01]
+ok: [client01]
+ok: [web01]
+
+TASK [NETWORK | Estado de interfaces (informativo)] ****************************
+ok: [client01]
+ok: [admin01]
+ok: [web01]
+
+TASK [NETWORK | Verificar conectividad IPv4 básica] ****************************
+ok: [admin01] => {
+    "changed": false,
+    "msg": "✓ Conectividad IPv4 detectada (192.168.122.20)"
+}
+ok: [web01] => {
+    "changed": false,
+    "msg": "✓ Conectividad IPv4 detectada (192.168.122.22)"
+}
+ok: [client01] => {
+    "changed": false,
+    "msg": "✓ Conectividad IPv4 detectada (192.168.122.21)"
+}
+
+TASK [NETWORK | Paquetes de diagnóstico instalados] ****************************
+ok: [admin01]
+ok: [client01]
+ok: [web01]
+
+TASK [Baseline | Acceso SSH] ***************************************************
+included: /home/jensy/Labs/scenarios/baselines/ssh.yml for admin01, web01, client01
+
+TASK [SSH | OpenSSH instalado] *************************************************
+ok: [admin01]
+ok: [client01]
+ok: [web01]
+
+TASK [SSH | Servicio activo] ***************************************************
+ok: [admin01]
+ok: [web01]
+ok: [client01]
+
+TASK [Baseline | Servicio Web] *************************************************
+skipping: [admin01]
+skipping: [client01]
+included: /home/jensy/Labs/scenarios/baselines/web.yml for web01
+
+TASK [WEB | Verificar si el escenario requiere servicio web] *******************
+ok: [web01]
+
+TASK [WEB | Mostrar aviso si web no aplica] ************************************
+skipping: [web01]
+
+TASK [WEB | Recolectar facts del sistema] **************************************
+ok: [web01]
+
+TASK [WEB | Instalar servicio web] *********************************************
+ok: [web01]
+
+TASK [WEB | Detener servicio] **************************************************
+changed: [web01]
+
+TASK [WEB | Configurar puerto nginx (conf.d)] **********************************
+changed: [web01]
+
+TASK [WEB | Configurar puerto httpd] *******************************************
+skipping: [web01]
+
+TASK [WEB | Crear página web canónica] *****************************************
+changed: [web01]
+
+TASK [WEB | Iniciar y habilitar servicio] **************************************
+[ERROR]: Task failed: Module failed: Unsupported parameters for (systemd) module: ignore_errors. Supported parameters include: daemon_reexec, daemon_reload, enabled, force, masked, name, no_block, scope, state (daemon-reexec, daemon-reload, service, unit).
+Origin: /home/jensy/Labs/scenarios/baselines/web.yml:105:7
+
+103       become: yes
+104
+105     - name: WEB | Iniciar y habilitar servicio
+          ^ column 7
+
+fatal: [web01]: FAILED! => {"changed": false, "msg": "Unsupported parameters for (systemd) module: ignore_errors. Supported parameters include: daemon_reexec, daemon_reload, enabled, force, masked, name, no_block, scope, state (daemon-reexec, daemon-reload, service, unit)."}
+
+TASK [Baseline | Firewall limpio] **********************************************
+skipping: [admin01]
+skipping: [client01]
+
+PLAY [J03 | Inyectar incidente] ************************************************
+
+PLAY RECAP *********************************************************************
+admin01                    : ok=22   changed=0    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+client01                   : ok=17   changed=0    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+web01                      : ok=24   changed=3    unreachable=0    failed=1    skipped=2    rescued=0    ignored=0   
+
