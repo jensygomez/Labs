@@ -19,7 +19,7 @@
 # 1. RESOLVE — Resolver variables globales del laboratorio
 # ------------------------------------------------------------------------------
 - name: J03 | Resolve variables del escenario
-  hosts: admin01
+  hosts: all
   gather_facts: no
   tasks:
     - name: Resolver variables J03
