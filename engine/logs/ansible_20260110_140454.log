@@ -1,0 +1,44 @@
+
+PLAY [J03 | Resolve variables del escenario] ***********************************
+
+TASK [Resolver variables J03] **************************************************
+included: /home/jensy/Labs/scenarios/junior/J03/vars/resolve.yml for admin01
+
+TASK [J03 | Cargar variables base del escenario] *******************************
+ok: [admin01]
+
+TASK [J03 | Resolver parámetros aleatorios del escenario] **********************
+ok: [admin01]
+
+TASK [J03 | Construir variables derivadas de contexto] *************************
+ok: [admin01]
+
+TASK [ASSERT | variants debe ser una lista] ************************************
+ok: [admin01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+
+TASK [J03 | Seleccionar variante del incidente] ********************************
+ok: [admin01]
+
+TASK [Verificar inject existe] *************************************************
+ok: [admin01]
+
+TASK [Verificar ticket existe] *************************************************
+ok: [admin01]
+
+TASK [FAIL | inject no encontrado] *********************************************
+[ERROR]: Task failed: Action failed: ❌ inject no existe: scenarios/junior/J03/inject/variant_1.yml
+Origin: /home/jensy/Labs/scenarios/junior/J03/vars/resolve.yml:138:3
+
+136   run_once: true
+137
+138 - name: FAIL | inject no encontrado
+      ^ column 3
+
+fatal: [admin01]: FAILED! => {"changed": false, "msg": "❌ inject no existe: scenarios/junior/J03/inject/variant_1.yml"}
+
+PLAY RECAP *********************************************************************
+admin01                    : ok=8    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+

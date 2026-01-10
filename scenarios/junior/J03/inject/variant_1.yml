@@ -1,8 +1,6 @@
-
-
 ---
 # ==============================================================================
-# J03 | VARIANT 1 — Firewalld bloquea puerto web
+# J03 | VARIANT 1 — Firewalld bloquea puerto web + TICKET EMBEBIDO
 # ==============================================================================
 # INCIDENTE:
 #   Servicio web inaccesible desde client01
@@ -12,6 +10,11 @@
 #   - nginx/httpd LISTEN OK
 #   - Red OK
 #   - Acceso cliente → web01 FUNCIONABA
+#
+# 🎯 NUEVA ARQUITECTURA:
+#   ✓ INJECT + TICKET en UN SOLO archivo
+#   ✓ Sin paths relativos complicados
+#   ✓ Ticket sincronizado con inyección
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
@@ -96,31 +99,75 @@
   become: yes
 
 # ------------------------------------------------------------------------------
-# 8. Archivo diagnóstico instructor
+# 8. MOSTRAR TICKET AL ESTUDIANTE (EMBEDDED)
 # ------------------------------------------------------------------------------
-- name: V1 | Crear guía de diagnóstico
-  copy:
-    dest: /tmp/j03_variant_1_diagnosis.txt
-    owner: root
-    group: root
-    mode: '0600'
-    content: |
-      J03 VARIANT 1 — FIREWALL BLOQUEA PUERTO WEB
-      ========================================
-
-      SÍNTOMAS:
-        ✓ ss -tuln → {{ global_web_port }} LISTEN
-        ✗ curl {{ web_url }} → Connection refused
-        ✗ telnet web01 {{ global_web_port }} → refused
-
-      CAUSA RAÍZ:
-        firewall-cmd --zone={{ global_firewall_zone }} --list-ports
-        → {{ global_web_port }}/tcp AUSENTE
-
-      FIX:
-        firewall-cmd --zone={{ global_firewall_zone }} --add-port={{ global_web_port }}/tcp --permanent
-        firewall-cmd --reload
-
-      NO TOCAR:
-        ✓ systemctl status {{ global_web_service }}
-        ✓ nmcli con show
+- name: V1 | MOSTRAR TICKET — Incidente NOC detectado
+  debug:
+    msg:
+      - "==============================================================================="
+      - " LAB J03 — INCIDENTE NOC"
+      - " VARIANTE 1: Firewalld bloquea puerto web"
+      - "==============================================================================="
+      - ""
+      - "📋 ESCENARIO"
+      - "----------------------------------------------------------------------------"
+      - "El servicio web en {{ web_url }} se reporta como inaccesible desde estaciones"
+      - "de trabajo externas. Los clientes reportan \"Connection refused\" al intentar"
+      - "acceder a la aplicación web crítica."
+      - ""
+      - "El servicio estaba funcionando correctamente hasta hace 30 minutos, cuando se"
+      - "aplicaron cambios de seguridad en firewalld."
+      - ""
+      - "📍 Puerto afectado : {{ global_web_port }}"
+      - "📍 Zona firewall   : {{ global_firewall_zone }}"
+      - ""
+      - "🔍 SÍNTOMAS OBSERVADOS"
+      - "----------------------------------------------------------------------------"
+      - "- {{ test_command }} DESDE client01 falla con \"Connection refused\""
+      - "- ss -tuln | grep :{{ global_web_port }}  → LISTEN ✓"
+      - "- systemctl status {{ global_web_service }} → active (running)"
+      - "- nmcli con show → interfaz conectada con IP válida"
+      - "- ip a → 192.168.122.22/24 asignada correctamente"
+      - "- firewall-cmd --list-all → {{ global_web_port }}/tcp NO presente"
+      - ""
+      - "🎯 TAREA"
+      - "----------------------------------------------------------------------------"
+      - "Diagnosticar y restaurar la conectividad del servicio web en:"
+      - ""
+      - "  {{ web_url }}"
+      - ""
+      - "Pasos esperados:"
+      - "1. Verificar conectividad DESDE client01:"
+      - "   {{ test_command }}"
+      - ""
+      - "2. Confirmar servicio web activo:"
+      - "   ss -tuln | grep :{{ global_web_port }}"
+      - ""
+      - "3. Validar red:"
+      - "   nmcli con show"
+      - "   ip a"
+      - ""
+      - "4. Revisar firewalld:"
+      - "   firewall-cmd --list-all"
+      - ""
+      - "5. Restaurar acceso externo con persistencia tras reboot."
+      - ""
+      - "⚠️  RESTRICCIONES"
+      - "----------------------------------------------------------------------------"
+      - "- NO reiniciar nginx/httpd (el servicio funciona correctamente)"
+      - "- NO cambiar IP ni configuración nmcli"
+      - "- NO modificar nginx.conf (puerto correcto)"
+      - "- NO deshabilitar firewalld completamente"
+      - "- La solución DEBE usar --permanent"
+      - "- Validar DESDE client01: {{ test_command }} → debe retornar 200 OK"
+      - ""
+      - "================================================================================"
+      - " ACCESO PARA DIAGNÓSTICO"
+      - "----------------------------------------------------------------------------"
+      - "SSH web01:"
+      - "  ssh student@192.168.122.22"
+      - ""
+      - "OBJETIVO: DIAGNOSTICAR Y RESOLVER"
+      - "==============================================================================="
+    verbosity: 0
+  run_once: true
