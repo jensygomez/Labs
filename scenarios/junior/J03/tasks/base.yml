@@ -118,6 +118,7 @@
   become: yes
 
 # ✅ FIX firewalld → shell (reemplaza las 2 tareas firewalld)
+# ✅ FIX firewalld → shell (reemplaza las 2 tareas firewalld)
 - name: Abrir puerto {{ global_web_port }}/tcp firewalld
   firewalld:
     port: "{{ global_web_port }}/tcp"
@@ -125,6 +126,7 @@
     state: enabled
     immediate: yes  # ← CRÍTICO
   become: yes
+
 
 - name: Reload firewalld
   command: firewall-cmd --reload
