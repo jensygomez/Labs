@@ -49,6 +49,7 @@
   register: firewall_state
   changed_when: false
   failed_when: firewall_state.stdout != "running"
+  become: yes
 
 # ---------------------------------------------------------------------------
 # Información diagnóstica (no rompe)
@@ -57,8 +58,10 @@
   command: firewall-cmd --get-default-zone
   register: firewall_default_zone
   changed_when: false
+  become: yes
 
 - name: FIREWALL | Obtener zonas activas
   command: firewall-cmd --get-active-zones
   register: firewall_active_zones
   changed_when: false
+  become: yes
