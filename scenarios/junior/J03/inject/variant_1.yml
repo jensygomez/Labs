@@ -22,8 +22,8 @@
 # ------------------------------------------------------------------------------
 - name: V1 | Backup zona firewalld actual
   copy:
-    src: "/etc/firewalld/zones/{{ global_firewall_zone }}.xml"
-    dest: "/etc/firewalld/zones/{{ global_firewall_zone }}.xml.j03v1.bak"
+    src: "/etc/firewalld/zones/{{ global_firewall_zone | default('public') }}.xml"
+    dest: "/etc/firewalld/zones/{{ global_firewall_zone | default('public') 
     remote_src: yes
     owner: root
     group: root

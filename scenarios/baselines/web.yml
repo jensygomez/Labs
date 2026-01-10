@@ -107,6 +107,7 @@
         name: "{{ global_web_service }}"
         state: started
         enabled: yes
+        ignore_errors: yes
       become: yes
 
     - name: WEB | Validar servicio web local
