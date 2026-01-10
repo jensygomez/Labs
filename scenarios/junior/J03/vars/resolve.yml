@@ -80,3 +80,11 @@
   set_fact:
     j03_resolved: true
   run_once: true
+
+
+- name: Normalizar puerto web según servicio
+  set_fact:
+    global_web_port: 8080
+  when:
+    - global_web_service == "httpd"
+    - global_web_port == 443
