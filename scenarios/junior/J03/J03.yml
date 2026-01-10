@@ -101,9 +101,9 @@
 # ------------------------------------------------------------------------------
 # 3. INJECT — Inyección del fallo
 # ------------------------------------------------------------------------------
-#- name: J03 | Inyectar incidente
-#  hosts: web01
-#  gather_facts: no
-#  tasks:
-#    - name: Ejecutar variante seleccionada
-#      include_tasks: "inject/{{ global_selected_variant }}"
+- name: J03 | Inyectar incidente
+  hosts: web01
+  gather_facts: no
+  tasks:
+    - name: Ejecutar variante seleccionada
+      include_tasks: "inject/{{ global_selected_variant }}"
