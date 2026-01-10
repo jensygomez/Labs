@@ -70,7 +70,7 @@ random_elements:
 
 # Variantes lógicas disponibles del incidente (resolve.yml elige 1)
 variants:
-  - variant_1
+  - variant_1.yml
 #  - variant_2
 #  - variant_3
 #  - variant_4
