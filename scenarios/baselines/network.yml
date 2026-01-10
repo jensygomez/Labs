@@ -3,16 +3,41 @@
 # baselines/network.yml — BASELINE DE RED CANÓNICO
 # ==============================================================================
 # OBJETIVO:
-# Garantizar conectividad funcional y herramientas básicas de red
-# en TODAS las VMs (admin, web, client).
+# Garantizar un estado de red funcional y herramientas básicas de diagnóstico
+# en TODAS las VMs del laboratorio (admin, web, client).
 #
-# NO HACE:
-# - No cambia IPs
+# GARANTÍAS:
+# - NetworkManager presente y activo
+# - Stack IPv4 operativo
+# - Herramientas estándar de troubleshooting disponibles
+#
+# NO HACE (INTENCIONALMENTE):
+# - No modifica direcciones IP
+# - No cambia gateways
 # - No toca firewalld
-# - No abre puertos
-# - No rompe nada
+# - No abre/cierra puertos
+# - No induce fallos
+#
+# DISEÑO:
+# - Autosuficiente: recolecta SUS propios facts
+# - Reutilizable: no depende de variables del escenario
+# - Seguro: solo valida, no altera conectividad
+#
+# PLATAFORMA:
+# - Red Hat Enterprise Linux 9.6
 # ==============================================================================
 
+# ---------------------------------------------------------------------------
+# Recolección mínima de facts (requeridos para validación IPv4)
+# ---------------------------------------------------------------------------
+- name: NETWORK | Recolectar facts de red
+  setup:
+    gather_subset:
+      - network
+
+# ---------------------------------------------------------------------------
+# NetworkManager
+# ---------------------------------------------------------------------------
 - name: NETWORK | NetworkManager instalado
   dnf:
     name: NetworkManager
@@ -26,19 +51,26 @@
     enabled: yes
   become: yes
 
-- name: NETWORK | Interfaz activa
+# ---------------------------------------------------------------------------
+# Validaciones de estado
+# ---------------------------------------------------------------------------
+- name: NETWORK | Estado de interfaces (informativo)
   command: nmcli device status
   register: nmcli_status
   changed_when: false
 
-- name: NETWORK | Verificar que existe conectividad IPv4
+- name: NETWORK | Verificar conectividad IPv4 básica
   assert:
     that:
+      - ansible_default_ipv4 is defined
       - ansible_default_ipv4.address is defined
-    fail_msg: "❌ Sin conectividad IPv4"
-    success_msg: "✓ IPv4 detectada"
+    fail_msg: "❌ Sin conectividad IPv4 detectada en el sistema"
+    success_msg: "✓ Conectividad IPv4 detectada ({{ ansible_default_ipv4.address }})"
 
-- name: NETWORK | Paquetes de diagnóstico
+# ---------------------------------------------------------------------------
+# Herramientas de diagnóstico estándar
+# ---------------------------------------------------------------------------
+- name: NETWORK | Paquetes de diagnóstico instalados
   dnf:
     name:
       - iproute
@@ -50,3 +82,4 @@
       - net-tools
     state: present
   become: yes
+

@@ -1,0 +1,92 @@
+
+PLAY [J03 | Resolve variables del escenario] ***********************************
+
+TASK [Resolver variables J03] **************************************************
+included: /home/jensy/Labs/scenarios/junior/J03/vars/resolve.yml for admin01
+
+TASK [J03 | Cargar variables base del escenario] *******************************
+ok: [admin01]
+
+TASK [J03 | Resolver parámetros aleatorios del escenario] **********************
+ok: [admin01]
+
+TASK [J03 | Construir variables derivadas de contexto] *************************
+ok: [admin01]
+
+TASK [J03 | Seleccionar variante del incidente] ********************************
+ok: [admin01]
+
+TASK [J03 | Marcar resolución del escenario como completada] *******************
+ok: [admin01]
+
+PLAY [J03 | Aplicar baselines canónicos] ***************************************
+
+TASK [Baseline | Usuarios corporativos] ****************************************
+included: /home/jensy/Labs/scenarios/baselines/users.yml for admin01, web01, client01
+
+TASK [USERS | Crear grupo sysadmin] ********************************************
+changed: [web01]
+changed: [admin01]
+changed: [client01]
+
+TASK [USERS | Crear usuario sysadmin] ******************************************
+changed: [web01]
+changed: [admin01]
+changed: [client01]
+
+TASK [USERS | Configurar sudo sin password] ************************************
+changed: [web01]
+changed: [admin01]
+changed: [client01]
+
+TASK [Baseline | Red funcional] ************************************************
+included: /home/jensy/Labs/scenarios/baselines/network.yml for admin01, web01, client01
+
+TASK [NETWORK | NetworkManager instalado] **************************************
+ok: [web01]
+ok: [client01]
+ok: [admin01]
+
+TASK [NETWORK | NetworkManager activo] *****************************************
+ok: [web01]
+ok: [client01]
+ok: [admin01]
+
+TASK [NETWORK | Interfaz activa] ***********************************************
+ok: [web01]
+ok: [admin01]
+ok: [client01]
+
+TASK [NETWORK | Verificar que existe conectividad IPv4] ************************
+[ERROR]: Task failed: Action failed: ❌ Sin conectividad IPv4
+Origin: /home/jensy/Labs/scenarios/baselines/network.yml:34:3
+
+32   changed_when: false
+33
+34 - name: NETWORK | Verificar que existe conectividad IPv4
+     ^ column 3
+
+fatal: [web01]: FAILED! => {
+    "assertion": "ansible_default_ipv4.address is defined",
+    "changed": false,
+    "evaluated_to": false,
+    "msg": "❌ Sin conectividad IPv4"
+}
+fatal: [admin01]: FAILED! => {
+    "assertion": "ansible_default_ipv4.address is defined",
+    "changed": false,
+    "evaluated_to": false,
+    "msg": "❌ Sin conectividad IPv4"
+}
+fatal: [client01]: FAILED! => {
+    "assertion": "ansible_default_ipv4.address is defined",
+    "changed": false,
+    "evaluated_to": false,
+    "msg": "❌ Sin conectividad IPv4"
+}
+
+PLAY RECAP *********************************************************************
+admin01                    : ok=14   changed=3    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+client01                   : ok=8    changed=3    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+web01                      : ok=8    changed=3    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+

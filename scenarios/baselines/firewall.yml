@@ -1,17 +1,64 @@
 ---
 # ==============================================================================
-# baselines/firewall.yml — FIREWALL NEUTRO
+# baselines/firewall.yml — FIREWALL CANÓNICO
+# ==============================================================================
+# OBJETIVO:
+# Proveer un estado BASE y NEUTRO de firewalld para laboratorios.
+#
+# GARANTIZA:
+# - firewalld instalado
+# - firewalld activo y habilitado
+# - Zonas por defecto intactas
+#
+# NO HACE:
+# - No abre puertos
+# - No cierra puertos
+# - No cambia zonas
+# - No aplica reglas
+#
+# DISEÑO:
+# - Reutilizable en todos los labs
+# - Compatible con inyección de fallos
+# - Buenas prácticas RHEL 9.6
 # ==============================================================================
 
-- name: FIREWALL | firewalld instalado
+# ---------------------------------------------------------------------------
+# Instalación
+# ---------------------------------------------------------------------------
+- name: FIREWALL | Instalar firewalld
   dnf:
     name: firewalld
     state: present
   become: yes
 
-- name: FIREWALL | firewalld activo
+# ---------------------------------------------------------------------------
+# Servicio activo
+# ---------------------------------------------------------------------------
+- name: FIREWALL | Iniciar y habilitar firewalld
   systemd:
     name: firewalld
     state: started
     enabled: yes
   become: yes
+
+# ---------------------------------------------------------------------------
+# Validación básica
+# ---------------------------------------------------------------------------
+- name: FIREWALL | Verificar estado del servicio
+  command: firewall-cmd --state
+  register: firewall_state
+  changed_when: false
+  failed_when: firewall_state.stdout != "running"
+
+# ---------------------------------------------------------------------------
+# Información diagnóstica (no rompe)
+# ---------------------------------------------------------------------------
+- name: FIREWALL | Obtener zona por defecto
+  command: firewall-cmd --get-default-zone
+  register: firewall_default_zone
+  changed_when: false
+
+- name: FIREWALL | Obtener zonas activas
+  command: firewall-cmd --get-active-zones
+  register: firewall_active_zones
+  changed_when: false
