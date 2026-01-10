@@ -118,14 +118,15 @@
   become: yes
 
 # ✅ FIX firewalld → shell (reemplaza las 2 tareas firewalld)
-# ✅ FIX firewalld → shell (reemplaza las 2 tareas firewalld)
-- name: Abrir puerto {{ global_web_port }}/tcp firewalld
-  firewalld:
-    port: "{{ global_web_port }}/tcp"
-    permanent: yes
-    state: enabled
-    immediate: yes  # ← CRÍTICO
+- name: Abrir puerto {{ global_web_port }}/tcp en firewalld (baseline)
+  shell: |
+    firewall-cmd --zone="{{ global_firewall_zone }}" --list-ports | grep -q "{{ global_web_port }}/tcp" || \
+    firewall-cmd --zone="{{ global_firewall_zone }}" --add-port="{{ global_web_port }}/tcp" --permanent
+    firewall-cmd --reload
   become: yes
+  args:
+    executable: /bin/bash
+
 
 
 - name: Reload firewalld
