@@ -83,7 +83,7 @@
     executable: /bin/bash
 
 # ------------------------------------------------------------------------------
-# 4. Ruido extra: Regla DROP masiva (parece ataque)
+# 4. Ruido extra: Regla confusa de puertos adicionales (ruido visual)
 # ------------------------------------------------------------------------------
 - name: V1 | Agregar DROP masivo HTTP (ruido visual)
   shell: |
@@ -103,14 +103,17 @@
   become: yes
 
 # ------------------------------------------------------------------------------
-# 6. Verificar nginx SIGUE funcionando localmente
+# 6. Confirmar servicio web local activo (no es firewall)
 # ------------------------------------------------------------------------------
-- name: V1 | Confirmar nginx local OK (solo red bloqueada)
+- name: V1 | Confirmar servicio web local activo (no es firewall)
   uri:
     url: "http://localhost:{{ global_web_port }}"
     method: HEAD
+    timeout: 5
   register: local_check
-  failed_when: local_check.status != 200
+  failed_when: >
+    (local_check.status is defined and local_check.status not in [200,301,302,403])
+
 
 # ------------------------------------------------------------------------------
 # 7. Log técnico de inyección

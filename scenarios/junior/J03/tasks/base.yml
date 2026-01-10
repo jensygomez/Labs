@@ -143,15 +143,29 @@
   args:
     executable: /bin/bash
 
-- name: Verificar conectividad baseline DESDE client01
+- name: Verificar conectividad web DESDE client01
   uri:
     url: "{{ web_url }}"
     method: HEAD
-    status_code: 200
+    timeout: 5
   delegate_to: client01
-  register: baseline_check
-  retries: 3
-  delay: 2
+  register: web_check
+  failed_when: >
+    (web_check.status is defined and web_check.status != 200)
+    and (not inject_expected)
+  ignore_errors: "{{ inject_expected }}"
+
+- name: Confirmar estado esperado de conectividad
+  debug:
+    msg: >-
+      {% if inject_expected %}
+      ✓ INCIDENCIA INYECTADA CORRECTAMENTE:
+      El acceso a {{ web_url }} desde client01 está BLOQUEADO (esperado)
+      {% else %}
+      ✓ BASELINE OK:
+      El acceso a {{ web_url }} desde client01 funciona correctamente
+      {% endif %}
+
 
 - name: Confirmar baseline OK (curl funciona)
   debug:

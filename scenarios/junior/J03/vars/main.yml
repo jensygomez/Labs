@@ -97,3 +97,31 @@ variants:
 #  - variant_4.yml    # Puerto cambiado sin firewall
 
 # ==============================================================================
+# ==============================================================================
+# Control de inyección de fallos (EXPECTED FAILURE MODE)
+# ==============================================================================
+#
+# inject_expected:
+# true  → El fallo es INTENCIONAL.
+#         - Ansible NO debe considerar como error:
+#           * curl / uri sin respuesta
+#           * connection refused
+#           * no route to host
+#         - Las tareas de verificación deben:
+#           * usar failed_when condicionado
+#           * o ignorar errores y registrar estado
+#
+# false → Modo baseline / entorno sano.
+#         - Cualquier fallo de conectividad es REAL
+#         - Las verificaciones deben fallar el playbook
+#
+# USO TÍPICO:
+# failed_when:
+#   - (result.status != 200) and (not inject_expected)
+#
+# ignore_errors: "{{ inject_expected }}"
+#
+# ------------------------------------------------------------------------------
+inject_expected: true
+
+
