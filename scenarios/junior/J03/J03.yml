@@ -89,35 +89,36 @@
 
 
 # ------------------------------------------------------------------------------
-# 2. BASELINE — Estado óptimo (por tema)
+# 2. BASELINE — Estado óptimo por VARIANTE
 # ------------------------------------------------------------------------------
-# 🏗️  FUNDACIÓN SÓLIDA:
-# Cada baseline representa un componente funcional aislado. Juntos forman
-# un sistema saludable. Los baselines son:
-#   - Atómicos: Un tema por baseline
-#   - Idempotentes: Ejecutables múltiples veces sin efectos secundarios
-#   - Independientes: No asumen estado previo
+# 🏗️  ESTADO DE REFERENCIA CONTROLADO:
+# Cada variante define su propio baseline completo, que representa
+# el sistema en estado SANO antes de la inyección del incidente.
+#
+# PRINCIPIOS:
+#   - Un baseline por variante (no compartidos)
+#   - El baseline deja TODAS las capas funcionales
+#   - La variante solo rompe UNA capa específica después
+#
+# RESPONSABILIDAD:
+#   - J03.yml decide QUÉ variante ejecutar
+#   - La variante define CÓMO luce el sistema sano
+#
+# ⚠️  REGLA CRÍTICA:
+# El baseline NUNCA debe contener fallos intencionales.
+# Cualquier error aquí invalida el ejercicio completo.
 # ------------------------------------------------------------------------------
-- name: J03 | Aplicar baselines canónicos
+
+# ------------------------------------------------------------------------------
+# 2. BASELINE — Estado óptimo (por variante)
+# ------------------------------------------------------------------------------
+- name: J03 | Aplicar baseline de la variante seleccionada
   hosts: all
   gather_facts: no
   tasks:
-    - name: Baseline | Usuarios corporativos
-      include_tasks: ../../baselines/users.yml
+    - name: Ejecutar baseline de la variante
+      include_tasks: "variant_{{ global_selected_variant }}/baseline_variant_{{ global_selected_variant | regex_replace('^variant_', '') }}.yml"
 
-    - name: Baseline | Red funcional
-      include_tasks: ../../baselines/network.yml
-
-    - name: Baseline | Acceso SSH
-      include_tasks: ../../baselines/ssh.yml
-
-    - name: Baseline | Servicio Web
-      include_tasks: ../../baselines/web.yml
-      when: "'web' in group_names"
-
-    - name: Baseline | Firewall limpio
-      include_tasks: ../../baselines/firewall.yml
-      when: "'web' in group_names"
 
 
 # ------------------------------------------------------------------------------

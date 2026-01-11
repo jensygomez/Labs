@@ -105,7 +105,7 @@
       tags: tools
 
     # --------------------------------------------------------------------------
-    # SERVER_EU (web01) - CONFIGURACIÓN ESPECÍFICA
+    # 1. SERVER_EU (web01) - CONFIGURACIÓN ESPECÍFICA
     # --------------------------------------------------------------------------
     - name: SERVER_EU | Configurar dos IPs en la interfaz
       block:
@@ -209,7 +209,7 @@
       tags: server_firewall
 
     # --------------------------------------------------------------------------
-    # CLIENTE_CH (client01) - CONFIGURACIÓN ESPECÍFICA
+    # 2. CLIENTE_CH (client01) - CONFIGURACIÓN ESPECÍFICA
     # --------------------------------------------------------------------------
     - name: CLIENTE_CH | Configurar /etc/hosts para resolver server.eu
       copy:
