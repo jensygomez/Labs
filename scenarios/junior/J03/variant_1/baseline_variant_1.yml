@@ -1,0 +1,333 @@
+# ==============================================================================
+# baseline_variant1.yml — PUNTO ÓPTIMO PARA VARIANTE 1 (FIREWALL)
+# ==============================================================================
+# 🧱 FUNDAMENTO CONCEPTUAL:
+# Este archivo establece el ESTADO SANO Y FUNCIONAL previo a la inyección
+# del incidente. En troubleshooting, es crítico conocer cómo debería funcionar
+# el sistema para identificar qué se rompió.
+#
+# 🎯 OBJETIVO PRINCIPAL:
+# Configurar una infraestructura de 3 nodos geográficamente distribuidos donde:
+#   1. Server_EU (Europa) ofrece un servicio web accesible por nombre DNS
+#   2. Cliente_CH (China) puede consumir el servicio usando curl
+#   3. Sysadmin-PR (Puerto Rico) tiene herramientas para diagnosticar
+#
+# 🔧 CARACTERÍSTICAS TÉCNICAS DEL ESTADO ÓPTIMO:
+# • Server_EU tiene DUAL-IP: 
+#     - 192.168.122.22 → IP administrativa (SSH/management)
+#     - 192.168.122.50 → IP pública del servicio (web)
+# • Resolución DNS por /etc/hosts (sin servidores DNS complejos)
+# • Firewalld CONFIGURADO CORRECTAMENTE: puerto 80 abierto
+# • nginx vinculado explícitamente a la IP pública (no a 0.0.0.0)
+# • Herramientas mínimas de diagnóstico instaladas en cada nodo
+#
+# 🌍 CONTEXTO GEOGRÁFICO SIMULADO:
+#   ┌─────────────────────────────────────────────────────────┐
+#   │  Server_EU    │ Frankfurt, Germany  │ Centro de datos  │
+#   │  Cliente_CH   │ Shanghai, China     │ Oficina regional │
+#   │  Sysadmin-PR  │ San Juan, PR        │ Sede corporativa │
+#   └─────────────────────────────────────────────────────────┘
+#
+# 📡 ARQUITECTURA DE COMUNICACIÓN:
+#   Cliente_CH (curl)  →  DNS:server.eu  →  192.168.122.50  →  nginx:80
+#   Sysadmin-PR (curl) →  DNS:server.eu  →  192.168.122.50  →  nginx:80
+#   
+#   NOTA: Los clientes NUNCA conocen la IP administrativa (192.168.122.22)
+#         Solo conocen y usan el nombre DNS "server.eu"
+#
+# 🛡️  IMPORTANCIA PARA LA VARIANTE 1 (FIREWALL):
+# Este baseline establece un firewall CORRECTAMENTE configurado:
+#   • Zona: public
+#   • Puerto 80/tcp: PERMITIDO
+#   • Servicio http: HABILITADO
+#   • Política: ACCEPT para tráfico entrante al puerto 80
+#
+# La variante 1 luego MODIFICARÁ esta configuración para simular:
+#   • Reglas de firewall mal aplicadas
+#   • Puertos bloqueados incorrectamente
+#   • Zonas equivocadas
+#   • Políticas restrictivas donde no deberían estar
+#
+# 🧪 LO QUE EL ESTUDIANTE DEBE VERIFICAR DESPUÉS DE ESTE BASELINE:
+#   1. Desde Cliente_CH: curl http://server.eu → Debe devolver 200 OK
+#   2. Desde Sysadmin-PR: curl http://server.eu → Debe devolver 200 OK
+#   3. En Server_EU: ss -tlnp | grep :80 → Debe mostrar nginx escuchando
+#   4. En Server_EU: firewall-cmd --list-all → Debe mostrar puerto 80 abierto
+#
+# ⚠️  ADVERTENCIA DE DISEÑO:
+# Este baseline NO debe contener errores intencionales. Es el estado
+# de referencia contra el cual se comparará después de inyectar el fallo.
+# Cualquier problema aquí hará que el ejercicio sea imposible de resolver.
+#
+# 🔄 RELACIÓN CON EL FLUJO DEL LABORATORIO:
+#   1. Este baseline se ejecuta PRIMERO → Sistema SANO
+#   2. Luego se ejecuta la VARIANTE 1 → Sistema ROTO (firewall mal configurado)
+#   3. El estudiante diagnostica y repara → Sistema RESTAURADO
+#
+# 🎓 OBJETIVO EDUCATIVO:
+# Enseñar que el firewall no es un "interruptor binario" (on/off), sino
+# un conjunto complejo de reglas, zonas y políticas que deben coordinarse
+# con la configuración del servicio y el binding de red.
+#
+# La lección central: "Un servicio puede estar arriba, escuchando y con
+# contenido válido, pero seguir siendo inaccesible si el firewall lo bloquea."
+# ==============================================================================
+
+---
+
+- name: VARIANTE 1 | Baseline completo (3 VMs)
+  hosts: all
+  become: yes
+
+  vars:
+    # IPs del Server_EU
+    server_admin_ip: "192.168.122.22"
+    server_public_ip: "192.168.122.50"
+    server_domain: "server.eu"
+    
+    # IPs de otros nodos
+    admin_ip: "192.168.122.20"
+    client_ip: "192.168.122.21"
+
+  tasks:
+    # --------------------------------------------------------------------------
+    # 0. HERRAMIENTAS BÁSICAS PARA TODAS LAS VMs
+    # --------------------------------------------------------------------------
+    - name: Instalar herramientas mínimas de red
+      dnf:
+        name:
+          - iproute        # ip, ss comandos
+          - curl           # pruebas HTTP
+          - telnet         # pruebas TCP
+          - bind-utils     # nslookup, dig
+          - iputils        # ping
+        state: present
+      tags: tools
+
+    # --------------------------------------------------------------------------
+    # SERVER_EU (web01) - CONFIGURACIÓN ESPECÍFICA
+    # --------------------------------------------------------------------------
+    - name: SERVER_EU | Configurar dos IPs en la interfaz
+      block:
+        - name: Obtener nombre de conexión
+          command: nmcli -t -f NAME connection show --active
+          register: active_conn
+          changed_when: false
+        
+        - name: Configurar IP administrativa
+          nmcli:
+            conn_name: "{{ active_conn.stdout_lines[0] }}"
+            ip4: "{{ server_admin_ip }}/24"
+            gw4: "192.168.122.1"
+            state: present
+        
+        - name: Agregar IP pública como alias
+          shell: |
+            nmcli connection modify "{{ active_conn.stdout_lines[0] }}" \
+              +ipv4.addresses "{{ server_public_ip }}/24"
+            nmcli connection up "{{ active_conn.stdout_lines[0] }}"
+          args:
+            executable: /bin/bash
+      when: "'web' in group_names"
+      tags: server_network
+
+    - name: SERVER_EU | Configurar /etc/hosts
+      copy:
+        dest: /etc/hosts
+        content: |
+          127.0.0.1   localhost
+          {{ server_public_ip }}    {{ server_domain }}
+          {{ server_admin_ip }}     server-eu-admin
+          {{ admin_ip }}     admin.pr
+          {{ client_ip }}     client.ch
+        owner: root
+        group: root
+        mode: '0644'
+      when: "'web' in group_names"
+      tags: server_dns
+
+    - name: SERVER_EU | Instalar y configurar nginx
+      block:
+        - name: Instalar nginx
+          dnf:
+            name: nginx
+            state: present
+        
+        - name: Configurar para IP pública
+          copy:
+            dest: /etc/nginx/conf.d/server.conf
+            content: |
+              server {
+                  listen {{ server_public_ip }}:80;
+                  server_name {{ server_domain }};
+                  root /usr/share/nginx/html;
+                  index index.html;
+              }
+            owner: root
+            group: nginx
+            mode: '0644'
+        
+        - name: Crear página web simple
+          copy:
+            dest: /usr/share/nginx/html/index.html
+            content: |
+              <html>
+              <body>
+              <h1>Server_EU - Frankfurt</h1>
+              <p>IP: {{ server_public_ip }}</p>
+              <p>Test: curl http://{{ server_domain }}</p>
+              </body>
+              </html>
+            owner: nginx
+            group: nginx
+            mode: '0644'
+        
+        - name: Iniciar nginx
+          systemd:
+            name: nginx
+            state: started
+            enabled: yes
+      when: "'web' in group_names"
+      tags: server_web
+
+    - name: SERVER_EU | Configurar firewall (estado óptimo)
+      block:
+        - name: Asegurar firewalld activo
+          systemd:
+            name: firewalld
+            state: started
+            enabled: yes
+        
+        - name: Abrir puerto HTTP
+          firewalld:
+            port: "80/tcp"
+            zone: public
+            permanent: yes
+            state: enabled
+            immediate: yes
+      when: "'web' in group_names"
+      tags: server_firewall
+
+    # --------------------------------------------------------------------------
+    # CLIENTE_CH (client01) - CONFIGURACIÓN ESPECÍFICA
+    # --------------------------------------------------------------------------
+    - name: CLIENTE_CH | Configurar /etc/hosts para resolver server.eu
+      copy:
+        dest: /etc/hosts
+        content: |
+          127.0.0.1   localhost
+          {{ server_public_ip }}    {{ server_domain }}
+          {{ server_admin_ip }}     server-eu-admin
+          {{ admin_ip }}     admin.pr
+        owner: root
+        group: root
+        mode: '0644'
+      when: "'client' in group_names"
+      tags: client_dns
+
+    - name: CLIENTE_CH | Crear script de prueba simple
+      copy:
+        dest: /home/student/test-server
+        content: |
+          #!/bin/bash
+          echo "Testing connection to Server_EU..."
+          echo ""
+          echo "1. DNS resolution:"
+          ping -c 1 {{ server_domain }}
+          echo ""
+          echo "2. HTTP test:"
+          curl -s http://{{ server_domain }}
+          echo ""
+          echo "3. Quick status:"
+          curl -s -o /dev/null -w "%{http_code}\n" http://{{ server_domain }}
+        mode: '0755'
+        owner: student
+        group: student
+      when: "'client' in group_names"
+      tags: client_tools
+
+    # --------------------------------------------------------------------------
+    # SYSADMIN-PR (admin01) - CONFIGURACIÓN ESPECÍFICA
+    # --------------------------------------------------------------------------
+    - name: SYSADMIN-PR | Configurar /etc/hosts
+      copy:
+        dest: /etc/hosts
+        content: |
+          127.0.0.1   localhost
+          {{ server_public_ip }}    {{ server_domain }}
+          {{ client_ip }}     client.ch
+        owner: root
+        group: root
+        mode: '0644'
+      when: "'admin' in group_names"
+      tags: admin_dns
+
+    - name: SYSADMIN-PR | Instalar herramientas adicionales para sysadmin
+      dnf:
+        name:
+          - nmap       # escaneo de puertos
+          - tcpdump    # análisis de paquetes
+        state: present
+      when: "'admin' in group_names"
+      tags: admin_tools
+
+    # --------------------------------------------------------------------------
+    # VERIFICACIONES FINALES
+    # --------------------------------------------------------------------------
+    - name: SERVER_EU | Verificar estado final
+      block:
+        - name: Verificar nginx escuchando
+          command: ss -tlnp | grep ":80"
+          register: nginx_status
+          changed_when: false
+        
+        - name: Probar acceso local
+          uri:
+            url: "http://{{ server_public_ip }}"
+            timeout: 3
+          register: web_test
+          failed_when: false
+      when: "'web' in group_names"
+      tags: verify
+
+    - name: CLIENTE_CH | Verificar puede resolver y conectar
+      block:
+        - name: Probar resolución DNS
+          command: ping -c 1 {{ server_domain }}
+          register: ping_test
+          changed_when: false
+          failed_when: false
+        
+        - name: Probar conexión HTTP
+          command: timeout 3 curl -s http://{{ server_domain }}
+          register: curl_test
+          changed_when: false
+          failed_when: false
+      when: "'client' in group_names"
+      tags: verify
+
+    # --------------------------------------------------------------------------
+    # REPORTE RESUMIDO
+    # --------------------------------------------------------------------------
+    - name: Mostrar resumen por nodo
+      debug:
+        msg: |
+          {% if 'web' in group_names %}
+          ✅ SERVER_EU (Frankfurt) Listo
+          • Admin IP: {{ server_admin_ip }} (SSH)
+          • Public IP: {{ server_public_ip }} (Web)
+          • Domain: {{ server_domain }}
+          • Nginx: {{ nginx_status.stdout != '' | ternary('✅ Listening','❌ Not listening') }}
+          
+          {% elif 'client' in group_names %}
+          ✅ CLIENTE_CH (Shanghai) Listo
+          • IP: {{ client_ip }}
+          • Test script: /home/student/test-server
+          • Can reach server: {{ ping_test.rc == 0 | ternary('✅','❌') }}
+          
+          {% elif 'admin' in group_names %}
+          ✅ SYSADMIN-PR (San Juan) Listo
+          • IP: {{ admin_ip }}
+          • Tools: curl, nmap, tcpdump
+          {% endif %}
+      tags: report

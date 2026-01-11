@@ -1,0 +1,171 @@
+# ==============================================================================
+# J03 | VARIANT 1 — Firewalld bloquea puerto web + TICKET EMBEBIDO
+# ==============================================================================
+# INCIDENTE:
+#   Servicio web inaccesible desde client01 PERO FUNCIONA LOCALMENTE
+#   Causa real: firewalld tiene reglas contradictorias y bloquea el puerto
+#
+# ESTADO PREVIO (baseline):
+#   - nginx escuchando en 192.168.122.50:80
+#   - Firewall con puerto 80 PERMITIDO
+#   - Cliente_CH puede acceder via curl http://server.eu
+#
+# ESTADO POST-INYECCIÓN:
+#   - nginx SIGUE ESCUCHANDO (servicio activo)
+#   - Firewall BLOQUEA puerto 80 de forma específica
+#   - Rich rule REJECT sobreescribe permisos base
+#   - Cliente_CH recibe "Connection refused"
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Backup configuración firewalld
+# ------------------------------------------------------------------------------
+- name: V1 | Backup completo de firewalld
+  shell: |
+    # Backup de zona actual
+    cp /etc/firewalld/zones/{{ global_firewall_zone | default('public') }}.xml \
+       /etc/firewalld/zones/{{ global_firewall_zone | default('public') }}.xml.j03v1.bak
+    # Backup de rich rules
+    firewall-cmd --zone={{ global_firewall_zone | default('public') }} --list-rich-rules > /tmp/firewall-rich-rules.bak
+  args:
+    executable: /bin/bash
+  become: yes
+  changed_when: false
+
+# ------------------------------------------------------------------------------
+# 2. Ruido realista: Configuración ambigua
+# ------------------------------------------------------------------------------
+- name: V1 | Crear ambigüedad: añadir y quitar reglas
+  shell: |
+    # Añadir puerto (para luego ser sobreescrito por rich rule)
+    firewall-cmd --zone="{{ global_firewall_zone | default('public') }}" \
+      --add-port="{{ global_web_port }}/tcp" \
+      --permanent
+    
+    # Añadir servicio (crea confusión)
+    firewall-cmd --zone="{{ global_firewall_zone | default('public') }}" \
+      --add-service=http \
+      --permanent
+  args:
+    executable: /bin/bash
+  become: yes
+
+# ------------------------------------------------------------------------------
+# 3. CAUSA RAÍZ: Rich rule que REJECT específicamente
+# ------------------------------------------------------------------------------
+- name: V1 | CAUSA RAÍZ — Rich rule que bloquea explícitamente
+  shell: |
+    # Esta regla sobreescribe cualquier permiso anterior
+    firewall-cmd --zone="{{ global_firewall_zone | default('public') }}" \
+      --add-rich-rule='rule family="ipv4" source address="192.168.122.0/24" port port="{{ global_web_port }}" protocol="tcp" reject' \
+      --permanent
+    
+    # NOTA: Esta regla es MÁS ESPECÍFICA que las reglas generales
+    # En firewalld, las rich rules tienen prioridad sobre reglas simples
+  args:
+    executable: /bin/bash
+  become: yes
+
+# ------------------------------------------------------------------------------
+# 4. Ruido adicional: Cambiar política por defecto temporalmente
+# ------------------------------------------------------------------------------
+- name: V1 | Temporalmente cambiar política default (ruido)
+  shell: |
+    # Cambiar a DROP temporalmente (luego revertir, pero crea confusión en logs)
+    firewall-cmd --zone="{{ global_firewall_zone | default('public') }}" \
+      --set-target=DROP
+    sleep 2
+    firewall-cmd --zone="{{ global_firewall_zone | default('public') }}" \
+      --set-target=default
+  args:
+    executable: /bin/bash
+  become: yes
+
+# ------------------------------------------------------------------------------
+# 5. Aplicar cambios y verificar
+# ------------------------------------------------------------------------------
+- name: V1 | Recargar firewalld
+  command: firewall-cmd --reload
+  become: yes
+
+- name: V1 | Mostrar estado CONFUSO del firewall
+  shell: |
+    echo "=== ZONA {{ global_firewall_zone | default('public') }} ==="
+    firewall-cmd --zone={{ global_firewall_zone | default('public') }} --list-all
+    echo ""
+    echo "=== RICH RULES (prioridad alta) ==="
+    firewall-cmd --zone={{ global_firewall_zone | default('public') }} --list-rich-rules
+  register: firewall_debug
+  changed_when: false
+  become: yes
+
+# ------------------------------------------------------------------------------
+# 6. VERIFICAR PARADOJA: Local OK, Remoto FAIL
+# ------------------------------------------------------------------------------
+- name: V1 | Paradoja: servicio local funciona
+  uri:
+    url: "http://localhost:{{ global_web_port }}"
+    method: GET
+    timeout: 5
+  register: local_check
+  changed_when: false
+
+- name: V1 | Simular intento de cliente (debería fallar)
+  shell: |
+    # Intentar conectar desde "perspectiva externa"
+    timeout 2 curl -s http://{{ ansible_default_ipv4.address }}:{{ global_web_port }} || exit 0
+  register: remote_sim
+  changed_when: false
+  failed_when: false
+  become: yes
+
+# ------------------------------------------------------------------------------
+# 7. 🎫 TICKET MEJORADO (más realista)
+# ------------------------------------------------------------------------------
+- name: V1 | 🎫 TICKET NOC — Incidente crítico de conectividad
+  debug:
+    msg:
+      - ""
+      - "╔══════════════════════════════════════════════════════════════════════╗"
+      - "║                     🚨 INCIDENTE NOC - PRIORIDAD ALTA                ║"
+      - "╠══════════════════════════════════════════════════════════════════════╣"
+      - "║                                                                      ║"
+      - "║  TICKET: NOC-2024-03-15-001                                          ║"
+      - "║  ASUNTO: Cliente China no puede acceder a portal corporativo         ║"
+      - "║  IMPACTO: Oficina de Shanghai desconectada del ERP                   ║"
+      - "║                                                                      ║"
+      - "║  📍 DATOS DEL INCIDENTE:                                             ║"
+      - "║    • Servidor:    Server_EU (Frankfurt)                              ║"
+      - "║    • Cliente:     Cliente_CH (Shanghai)                              ║"
+      - "║    • Servicio:    Portal Web ({{ web_url }})                        ║"
+      - "║    • Puerto:      {{ global_web_port }}/tcp                          ║"
+      - "║    • Sintoma:     'Connection refused' desde China                   ║"
+      - "║                                                                      ║"
+      - "║  ✅ VERIFICACIONES REALIZADAS:                                        ║"
+      - "║    • Servicio local:     HTTP {{ local_check.status }} OK            ║"
+      - "║    • nginx status:       ACTIVE (listening)                          ║"
+      - "║    • Server ping:        RESPONDE (192.168.122.22)                   ║"
+      - "║                                                                      ║"
+      - "║  🔍 COMANDOS DE DIAGNÓSTICO SUGERIDOS:                               ║"
+      - "║    $ systemctl status {{ global_web_service }}                       ║"
+      - "║    $ ss -tulnp | grep :{{ global_web_port }}                         ║"
+      - "║    $ firewall-cmd --list-all                                         ║"
+      - "║    $ firewall-cmd --zone={{ global_firewall_zone }} --list-rich-rules║"
+      - "║    $ curl -v http://{{ server_domain | default('server.eu') }}       ║"
+      - "║                                                                      ║"
+      - "║  🎯 POSIBLE CAUSA:                                                    ║"
+      - "║    Configuración de firewall con reglas conflictivas.                ║"
+      - "║    Las rich rules tienen prioridad sobre reglas simples.             ║"
+      - "║                                                                      ║"
+      - "║  👤 ACCESO REMOTO:                                                   ║"
+      - "║    ssh student@192.168.122.22                                        ║"
+      - "║    (IP administrativa, no la IP del servicio)                        ║"
+      - "║                                                                      ║"
+      - "║  ⚠️  NOTA CRÍTICA:                                                    ║"
+      - "║    El servicio FUNCIONA localmente pero NO desde clientes externos.  ║"
+      - "║    Esto sugiere problema en CAPA DE RED/FIREWALL, no en aplicación.  ║"
+      - "║                                                                      ║"
+      - "╚══════════════════════════════════════════════════════════════════════╝"
+      - ""
+    verbosity: 0
+  run_once: true

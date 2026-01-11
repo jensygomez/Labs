@@ -1,17 +1,46 @@
 # ==============================================================================
 # J03.yml — ORQUESTADOR PRINCIPAL DEL LABORATORIO J03
 # ==============================================================================
-# OBJETIVO:
-# Orquestar el laboratorio J03 en 3 fases estrictas:
+# ⚡ TEMA CENTRAL: "Ilusiones de Conectividad en Redes Distribuidas"
+# 
+# En arquitecturas distribuidas, la percepción de conectividad suele ser engañosa.
+# Un servicio puede estar "vivo" localmente pero inalcanzable desde el mundo exterior.
+# Este laboratorio explora las múltiples capas donde puede romperse la comunicación
+# entre sistemas remotos en una infraestructura global simulada.
 #
-#   1. RESOLVE   → resolver variables finales del escenario
-#   2. BASELINE  → dejar las VMs en estado óptimo (por tema)
-#   3. INJECT    → inyectar el fallo según la variante seleccionada
+# 🌍 ECOSISTEMA SIMULADO:
+#   admin01  → Sede Corporativa (San Juan, Puerto Rico)
+#   client01 → Oficina Regional (Shanghái, China) 
+#   web01    → Centro de Datos (Frankfurt, Alemania)
 #
-# PRINCIPIOS:
-# - J03.yml NO contiene lógica técnica
-# - Los baselines son reutilizables
-# - Las variantes SOLO rompen
+# 📡 ARQUITECTURA:
+#   Cada VM representa un nodo crítico con diferentes roles, zonas horarias
+#   y configuraciones regionales, simulando los desafíos de infraestructuras
+#   geográficamente distribuidas.
+#
+# 🔄 FLUJO DEL LABORATORIO:
+#   1. RESOLVE   → Establecer el contexto del escenario (dónde, qué, cómo)
+#   2. BASELINE  → Llevar cada nodo a su estado óptimo por tema
+#   3. INJECT    → Introducir una falla específica según la variante
+#
+# 🎯 VARIANTES (4 perspectivas de fallo):
+#   V1 → FIREWALL: Permisos vs. Política (el muro invisible)
+#   V2 → IP ESTÁTICA: Configuración vs. Expectativa (la dirección fantasma)
+#   V3 → ENRUTAMIENTO: Trayectoria vs. Destino (el camino equivocado)
+#   V4 → SERVICIO: Proceso vs. Escucha (el puerto silencioso)
+#
+# 💡 FILOSOFÍA DEL LABORATORIO:
+#   "En redes, lo visible localmente no garantiza lo alcanzable remotamente.
+#    Un servicio puede respirar, latir y responder en su host, mientras
+#    permanece como un fantasma para el resto del mundo. La verdadera
+#    conectividad vive en la intersección de múltiples capas: configuración,
+#    enrutamiento, firewall y binding del servicio."
+#
+# 📐 PRINCIPIOS DE DISEÑO:
+#   - J03.yml es únicamente ORQUESTADOR, sin lógica técnica
+#   - Los baselines son reutilizables y atómicos
+#   - Las variantes SOLO rompen, NUNCA reparan
+#   - Cada fallo enseña una capa diferente del stack de red
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
@@ -28,10 +57,10 @@
 # ------------------------------------------------------------------------------
 # 1.5 PROPAGAR VARIABLES GLOBALES A TODOS LOS HOSTS
 # ------------------------------------------------------------------------------
-# NOTA:
-# - Estas variables ya fueron RESUELTAS en vars/resolve.yml
-# - Aquí solo se COPIAN desde admin01 a todos los hosts
-# - Las variantes NUNCA deben definir variables por sí mismas
+# ⚠️  NOTA CRÍTICA DE DISEÑO:
+# Estas variables fueron resueltas en vars/resolve.yml. Aquí solo se propagan
+# desde admin01 (nodo maestro) hacia todos los hosts. Las variantes NUNCA deben
+# definir sus propias variables; consumen estas variables globales.
 # ------------------------------------------------------------------------------
 - name: J03 | Propagar variables globales
   hosts: all
@@ -61,6 +90,13 @@
 
 # ------------------------------------------------------------------------------
 # 2. BASELINE — Estado óptimo (por tema)
+# ------------------------------------------------------------------------------
+# 🏗️  FUNDACIÓN SÓLIDA:
+# Cada baseline representa un componente funcional aislado. Juntos forman
+# un sistema saludable. Los baselines son:
+#   - Atómicos: Un tema por baseline
+#   - Idempotentes: Ejecutables múltiples veces sin efectos secundarios
+#   - Independientes: No asumen estado previo
 # ------------------------------------------------------------------------------
 - name: J03 | Aplicar baselines canónicos
   hosts: all
@@ -101,19 +137,41 @@
     - name: VALIDAR | Reporte PRE-INJECT
       debug:
         msg: |
-          ✅ SISTEMA FUNCIONAL ANTES DE INJECT:
-            * web_url: {{ web_url }}
-            * Status: {{ pre_inject_test.status | default('N/A') }}
-            * Listo para INYECCIÓN DE FALLA...
+          🌐 SISTEMA FUNCIONAL - CONEXIÓN GLOBAL ESTABLECIDA
+          ══════════════════════════════════════════════════
+          • Origen:       client01 (Shanghái, China)
+          • Destino:      web01 (Frankfurt, Alemania)
+          • Servicio:     {{ web_url }}
+          • Estado HTTP:  {{ pre_inject_test.status | default('N/A') }}
+          • Latencia:     {{ pre_inject_test.elapsed | default('N/A') }}s
+          
+          ✅ La infraestructura opera dentro de parámetros normales.
+          ✅ La comunicación intercontinental fluye sin obstrucciones.
 
-    - name: VALIDAR | Pausa dramática
+    - name: VALIDAR | 🧠 PREPARACIÓN MENTAL PARA EL INCIDENTE
       pause:
-        seconds: 2
-        prompt: "🎬 Presiona Enter para INYECTAR el incidente..."
+        seconds: 3
+        prompt: |
+          ════════════════════════════════════════════════════════════════════
+          🧭 FILOSOFÍA LINUX PARA EL SYSADMIN:
+          
+          "En sistemas distribuidos, la verdad no es absoluta sino contextual.
+           Lo que un nodo ve como 'conectado', otro puede verlo como 'inalcanzable'.
+           Tu tarea no es buscar al culpable, sino encontrar la capa donde
+           se rompió la percepción compartida de la realidad de red."
+           
+          Presiona ENTER cuando estés listo para enfrentar la discontinuidad...
+          ════════════════════════════════════════════════════════════════════
 
 
 # ------------------------------------------------------------------------------
 # 3. INJECT — Inyección del fallo
+# ------------------------------------------------------------------------------
+# 🩺 SIMULACIÓN DE INCIDENTE:
+# El sistema ahora pasa de estado saludable a degradado. La variante seleccionada
+# introduce una falla específica que rompe UNA capa de la pila, manteniendo
+# las otras intactas. Esto simula incidentes reales donde los síntomas
+# son evidentes pero la causa raíz está oculta en una capa específica.
 # ------------------------------------------------------------------------------
 - name: J03 | Inyectar incidente
   hosts: web01
