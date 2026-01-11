@@ -1,0 +1,237 @@
+
+PLAY [J03 | Resolve variables del escenario] ***********************************
+
+TASK [Resolver variables J03] **************************************************
+included: /home/jensy/Labs/scenarios/junior/J03/vars/resolve.yml for admin01, web01, client01
+
+TASK [J03 | Cargar variables base del escenario] *******************************
+ok: [admin01]
+ok: [web01]
+ok: [client01]
+
+TASK [J03 | Resolver parámetros aleatorios del escenario] **********************
+ok: [admin01]
+
+TASK [J03 | Construir variables derivadas de contexto] *************************
+ok: [admin01]
+
+TASK [ASSERT | variants debe ser una lista] ************************************
+ok: [admin01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+ok: [web01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+ok: [client01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+
+TASK [J03 | Seleccionar variante del incidente] ********************************
+ok: [admin01]
+
+TASK [J03 | Marcar resolución del escenario como completada] *******************
+ok: [admin01]
+
+PLAY [J03 | Propagar variables globales] ***************************************
+
+TASK [Obtener variable del admin01] ********************************************
+ok: [admin01]
+
+PLAY [J03 | Aplicar baselines canónicos] ***************************************
+
+TASK [Baseline | Usuarios corporativos] ****************************************
+included: /home/jensy/Labs/scenarios/baselines/users.yml for admin01, web01, client01
+
+TASK [USERS | Crear grupo sysadmin] ********************************************
+changed: [admin01]
+changed: [client01]
+changed: [web01]
+
+TASK [USERS | Crear usuario sysadmin] ******************************************
+changed: [admin01]
+changed: [client01]
+changed: [web01]
+
+TASK [USERS | Configurar sudo sin password] ************************************
+changed: [web01]
+changed: [client01]
+changed: [admin01]
+
+TASK [Baseline | Red funcional] ************************************************
+included: /home/jensy/Labs/scenarios/baselines/network.yml for admin01, web01, client01
+
+TASK [NETWORK | Recolectar facts de red] ***************************************
+ok: [web01]
+ok: [client01]
+ok: [admin01]
+
+TASK [NETWORK | NetworkManager instalado] **************************************
+ok: [web01]
+ok: [admin01]
+ok: [client01]
+
+TASK [NETWORK | NetworkManager activo] *****************************************
+ok: [admin01]
+ok: [web01]
+ok: [client01]
+
+TASK [NETWORK | Estado de interfaces (informativo)] ****************************
+ok: [admin01]
+ok: [client01]
+ok: [web01]
+
+TASK [NETWORK | Verificar conectividad IPv4 básica] ****************************
+ok: [admin01] => {
+    "changed": false,
+    "msg": "✓ Conectividad IPv4 detectada (192.168.122.20)"
+}
+ok: [web01] => {
+    "changed": false,
+    "msg": "✓ Conectividad IPv4 detectada (192.168.122.22)"
+}
+ok: [client01] => {
+    "changed": false,
+    "msg": "✓ Conectividad IPv4 detectada (192.168.122.21)"
+}
+
+TASK [NETWORK | Paquetes de diagnóstico instalados] ****************************
+changed: [web01]
+changed: [client01]
+changed: [admin01]
+
+TASK [Baseline | Acceso SSH] ***************************************************
+included: /home/jensy/Labs/scenarios/baselines/ssh.yml for admin01, web01, client01
+
+TASK [SSH | OpenSSH instalado] *************************************************
+ok: [client01]
+ok: [admin01]
+ok: [web01]
+
+TASK [SSH | Servicio activo] ***************************************************
+ok: [web01]
+ok: [admin01]
+ok: [client01]
+
+TASK [Baseline | Servicio Web] *************************************************
+skipping: [admin01]
+skipping: [client01]
+included: /home/jensy/Labs/scenarios/baselines/web.yml for web01
+
+TASK [WEB | Verificar si el escenario requiere servicio web] *******************
+ok: [web01]
+
+TASK [WEB | Mostrar aviso si web no aplica] ************************************
+skipping: [web01]
+
+TASK [WEB | Recolectar facts del sistema] **************************************
+ok: [web01]
+
+TASK [WEB | Instalar servicio web] *********************************************
+changed: [web01]
+
+TASK [WEB | Detener servicio (por seguridad)] **********************************
+ok: [web01]
+
+TASK [WEB | Configurar puerto nginx (conf.d)] **********************************
+skipping: [web01]
+
+TASK [WEB | Configurar puerto httpd] *******************************************
+changed: [web01]
+
+TASK [WEB | Crear página web canónica] *****************************************
+changed: [web01]
+
+TASK [WEB | Iniciar y habilitar servicio (SIEMPRE PASA)] ***********************
+changed: [web01]
+
+TASK [WEB | Validar servicio local (opcional)] *********************************
+ok: [web01]
+
+TASK [WEB | Reporte final baseline] ********************************************
+ok: [web01] => {
+    "msg": "✅ WEB BASELINE COMPLETADO:\n  * Servicio: httpd\n  * Puerto: 8443\n  * Local check: 200\n  * Listo para INJECT...\n"
+}
+
+TASK [Baseline | Firewall limpio] **********************************************
+skipping: [admin01]
+skipping: [client01]
+included: /home/jensy/Labs/scenarios/baselines/firewall.yml for web01
+
+TASK [FIREWALL | Instalar firewalld] *******************************************
+ok: [web01]
+
+TASK [FIREWALL | Iniciar y habilitar firewalld] ********************************
+ok: [web01]
+
+TASK [FIREWALL | Verificar estado del servicio] ********************************
+ok: [web01]
+
+TASK [FIREWALL | Obtener zona por defecto] *************************************
+ok: [web01]
+
+TASK [FIREWALL | Obtener zonas activas] ****************************************
+ok: [web01]
+
+PLAY [J03 | Validar baseline (TODO FUNCIONA)] **********************************
+
+TASK [VALIDAR | Conectividad web01 → 200 OK] ***********************************
+ok: [client01]
+
+TASK [VALIDAR | Reporte PRE-INJECT] ********************************************
+ok: [client01] => {
+    "msg": "✅ SISTEMA FUNCIONAL ANTES DE INJECT:\n  * web_url: http://192.168.122.22:8443\n  * Status: -1\n  * Listo para INYECCIÓN DE FALLA...\n"
+}
+
+TASK [VALIDAR | Pausa dramática] ***********************************************
+Pausing for 2 seconds
+(ctrl+C then 'C' = continue early, ctrl+C then 'A' = abort)
+[VALIDAR | Pausa dramática]
+🎬 Presiona Enter para INYECTAR el incidente...:
+ok: [client01]
+
+PLAY [J03 | Inyectar incidente] ************************************************
+
+TASK [Ejecutar variante seleccionada] ******************************************
+included: /home/jensy/Labs/scenarios/junior/J03/inject/variant_2.yml for web01
+
+TASK [V2 | Backup conexión actual] *********************************************
+[ERROR]: Task failed: Finalization of task args for 'ansible.builtin.command' failed: Error while resolving value for '_raw_params': 'global_connection_name' is undefined
+
+Task failed.
+Origin: /home/jensy/Labs/scenarios/junior/J03/inject/variant_2.yml:24:3
+
+22 # 1. Backup conexión actual
+23 # ------------------------------------------------------------------------------
+24 - name: V2 | Backup conexión actual
+     ^ column 3
+
+<<< caused by >>>
+
+Finalization of task args for 'ansible.builtin.command' failed.
+Origin: /home/jensy/Labs/scenarios/junior/J03/inject/variant_2.yml:25:3
+
+23 # ------------------------------------------------------------------------------
+24 - name: V2 | Backup conexión actual
+25   command: nmcli connection show "{{ global_connection_name }}"
+     ^ column 3
+
+<<< caused by >>>
+
+Error while resolving value for '_raw_params': 'global_connection_name' is undefined
+Origin: /home/jensy/Labs/scenarios/junior/J03/inject/variant_2.yml:25:12
+
+23 # ------------------------------------------------------------------------------
+24 - name: V2 | Backup conexión actual
+25   command: nmcli connection show "{{ global_connection_name }}"
+              ^ column 12
+
+fatal: [web01]: FAILED! => {"changed": false, "msg": "Task failed: Finalization of task args for 'ansible.builtin.command' failed: Error while resolving value for '_raw_params': 'global_connection_name' is undefined"}
+
+PLAY RECAP *********************************************************************
+admin01                    : ok=22   changed=4    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+client01                   : ok=20   changed=4    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+web01                      : ok=34   changed=8    unreachable=0    failed=1    skipped=2    rescued=0    ignored=0   
+

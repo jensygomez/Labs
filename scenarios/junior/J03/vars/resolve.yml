@@ -90,6 +90,20 @@
     global_web_service: "{{ random_elements.systemd_web_services | random }}"
   run_once: true
 
+
+# ------------------------------------------------------------------------------
+# 1b. Variables adicionales necesarias para Variant 2
+# ------------------------------------------------------------------------------
+- name: J03 | Resolver variables adicionales para Variant 2
+  set_fact:
+    global_connection_name: "{{ random_elements.interfaces | random }}"
+    global_web_ip: "192.168.122.22"
+    global_wrong_ip: "{{ random_elements.wrong_ips | random }}"
+    global_wrong_gw: "{{ random_elements.wrong_gateways | random }}"
+  run_once: true
+
+
+
 # ------------------------------------------------------------------------------
 # 2. VARIABLES DERIVADAS
 # ------------------------------------------------------------------------------
