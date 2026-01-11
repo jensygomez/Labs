@@ -112,12 +112,11 @@
 # ------------------------------------------------------------------------------
 # 2. BASELINE — Estado óptimo (por variante)
 # ------------------------------------------------------------------------------
-- name: J03 | Aplicar baseline de la variante seleccionada
-  hosts: all
-  gather_facts: no
-  tasks:
-    - name: Ejecutar baseline de la variante
-      include_tasks: "variant_{{ global_selected_variant }}/baseline_variant_{{ global_selected_variant | regex_replace('^variant_', '') }}.yml"
+- name: Ejecutar baseline de la variante
+  include_tasks: >
+    variant_{{ global_selected_variant | regex_replace('\.yml$', '') }}/
+    baseline_{{ global_selected_variant | regex_replace('\.yml$', '') }}.yml
+
 
 
 
