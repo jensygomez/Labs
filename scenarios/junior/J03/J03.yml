@@ -72,8 +72,9 @@
 
 
 # ------------------------------------------------------------------------------
-# 2.5 VALIDAR - Confirmar que TODO funciona perfectamente
+# 2.5 BASELINE - Confirmar que el servicio funciona ANTES del incidente
 # ------------------------------------------------------------------------------
+
 - name: J03 | Validar baseline (TODO FUNCIONA)
   hosts: client01
   gather_facts: no
