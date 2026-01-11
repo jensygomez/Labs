@@ -55,17 +55,18 @@
   become: yes
 
 # ------------------------------------------------------------------------------
-# 3. CAUSA RAÍZ: asignar IP fuera del rango
+# 3. CAUSA RAÍZ: asignar IP fuera del rango (como secundaria)
 # ------------------------------------------------------------------------------
-- name: V2 | CAUSA RAÍZ — cambiar IP estática a {{ global_wrong_ip }}
+- name: V2 | CAUSA RAÍZ — agregar IP incorrecta como secundaria
   shell: |
     nmcli connection modify "{{ global_connection_name }}" \
-      ipv4.addresses "{{ global_wrong_ip }}/24" \
+      +ipv4.addresses "{{ global_wrong_ip }}/24" \
       ipv4.method manual
     nmcli connection up "{{ global_connection_name }}"
   args:
     executable: /bin/bash
   become: yes
+
 
 # ------------------------------------------------------------------------------
 # 4. Ruido visual: ip route / resolv.conf confuso
