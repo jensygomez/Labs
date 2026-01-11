@@ -89,35 +89,33 @@
 
 
 # ------------------------------------------------------------------------------
-# 2. BASELINE — Estado óptimo por VARIANTE
+# 2. BASELINE — Estado óptimo CANÓNICO
 # ------------------------------------------------------------------------------
-# 🏗️  ESTADO DE REFERENCIA CONTROLADO:
-# Cada variante define su propio baseline completo, que representa
-# el sistema en estado SANO antes de la inyección del incidente.
+# 🏗️  ESTADO DE REFERENCIA GLOBAL:
+# Este baseline representa la infraestructura en su forma SANA y FUNCIONAL,
+# común a TODAS las variantes del laboratorio J03.
 #
 # PRINCIPIOS:
-#   - Un baseline por variante (no compartidos)
-#   - El baseline deja TODAS las capas funcionales
-#   - La variante solo rompe UNA capa específica después
+#   - Un único baseline compartido
+#   - Totalmente funcional desde TODAS las perspectivas
+#   - Independiente de la variante seleccionada
 #
 # RESPONSABILIDAD:
-#   - J03.yml decide QUÉ variante ejecutar
-#   - La variante define CÓMO luce el sistema sano
+#   - J03.yml ejecuta SIEMPRE este baseline
+#   - Las variantes SOLO degradan, nunca preparan
 #
 # ⚠️  REGLA CRÍTICA:
-# El baseline NUNCA debe contener fallos intencionales.
-# Cualquier error aquí invalida el ejercicio completo.
+# Este baseline NO puede contener fallos intencionales ni
+# anticipar ninguna variante.
 # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
-# 2. BASELINE — Estado óptimo (por variante)
-# ------------------------------------------------------------------------------
-- name: J03 | Ejecutar baseline de la variante
+- name: J03 | Ejecutar baseline canónico (estado sano)
   hosts: all
   gather_facts: no
   tasks:
-    - name: Incluir baseline de la variante
-      include_tasks: "{{ global_selected_variant }}/baseline_{{ global_selected_variant }}.yml"
+    - name: Incluir baseline global
+      include_tasks: baseline.yml
+
 
 
 
@@ -176,9 +174,12 @@
 # las otras intactas. Esto simula incidentes reales donde los síntomas
 # son evidentes pero la causa raíz está oculta en una capa específica.
 # ------------------------------------------------------------------------------
-#- name: J03 | Inyectar incidente
-#  hosts: web01
-#  gather_facts: no
-#  tasks:
-#    - name: Incluir inject de la variante
-#      include_tasks: "{{ global_selected_variant }}/inject_{{ global_selected_variant }}.yml"
+# ------------------------------------------------------------------------------
+
+- name: J03 | Inyectar incidente
+  hosts: web01
+  gather_facts: no
+  tasks:
+    - name: Incluir inject de la variante
+      include_tasks: "variant_{{ global_selected_variant }}.yml"
+
