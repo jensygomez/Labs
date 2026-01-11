@@ -116,10 +116,9 @@
   hosts: all
   gather_facts: no
   tasks:
-    - name: Ejecutar baseline de la variante seleccionada
-      include_tasks: >
-        variant_{{ global_selected_variant | regex_replace('\.yml$', '') }}/
-        baseline_{{ global_selected_variant | regex_replace('\.yml$', '') }}.yml
+    - name: Incluir baseline de la variante
+      include_tasks: "{{ global_selected_variant }}/baseline_{{ global_selected_variant }}.yml"
+
 
 
 
@@ -180,5 +179,5 @@
   hosts: web01
   gather_facts: no
   tasks:
-    - name: Ejecutar variante seleccionada
-      include_tasks: "inject/{{ global_selected_variant }}"
+    - name: Incluir inject de la variante
+      include_tasks: "{{ global_selected_variant }}/inject_{{ global_selected_variant }}.yml"
