@@ -55,12 +55,14 @@
   become: yes
 
 # ------------------------------------------------------------------------------
-# 3. CAUSA RAÍZ: asignar IP fuera del rango (como secundaria)
+# 3. CAUSA RAÍZ: quitar IP correcta y poner IP errónea
 # ------------------------------------------------------------------------------
-- name: V2 | CAUSA RAÍZ — agregar IP incorrecta como secundaria
+- name: V2 | CAUSA RAÍZ — cambiar IP correcta por IP incorrecta
   shell: |
+    # Primero quitar la IP correcta si existe
     nmcli connection modify "{{ global_connection_name }}" \
-      +ipv4.addresses "{{ global_wrong_ip }}/24" \
+      ipv4.addresses "{{ global_wrong_ip }}/24" \
+      ipv4.gateway "{{ global_wrong_gw }}" \
       ipv4.method manual
     nmcli connection up "{{ global_connection_name }}"
   args:
