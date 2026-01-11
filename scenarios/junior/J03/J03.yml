@@ -176,9 +176,9 @@
 # las otras intactas. Esto simula incidentes reales donde los síntomas
 # son evidentes pero la causa raíz está oculta en una capa específica.
 # ------------------------------------------------------------------------------
-- name: J03 | Inyectar incidente
-  hosts: web01
-  gather_facts: no
-  tasks:
-    - name: Incluir inject de la variante
-      include_tasks: "{{ global_selected_variant }}/inject_{{ global_selected_variant }}.yml"
+#- name: J03 | Inyectar incidente
+#  hosts: web01
+#  gather_facts: no
+#  tasks:
+#    - name: Incluir inject de la variante
+#      include_tasks: "{{ global_selected_variant }}/inject_{{ global_selected_variant }}.yml"
