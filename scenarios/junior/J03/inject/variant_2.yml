@@ -19,6 +19,20 @@
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
+# 0. Detectar interfaz activa y asignar variables NMCLI
+# ------------------------------------------------------------------------------
+- name: V2 | Detectar interfaz activa automáticamente
+  command: nmcli -t -f NAME,DEVICE connection show --active
+  register: active_conns
+  changed_when: false
+  become: yes
+
+- name: V2 | Asignar global_connection_name e interfaz
+  set_fact:
+    global_connection_name: "{{ (active_conns.stdout_lines[0].split(':'))[0] }}"
+    global_interface: "{{ (active_conns.stdout_lines[0].split(':'))[1] }}"
+
+# ------------------------------------------------------------------------------
 # 1. Backup conexión actual
 # ------------------------------------------------------------------------------
 - name: V2 | Backup conexión actual
@@ -94,6 +108,7 @@
       - "📍 DETALLES:"
       - "   IP actual: {{ global_wrong_ip }}/24"
       - "   Gateway: {{ global_wrong_gw }}"
+      - "   Interfaz física: {{ global_interface }}"
       - "   Local check: {{ local_check.status | default('OK') }}"
       - "   Rutas y DNS:"
       - "{{ network_info.stdout_lines | join('\n   ') }}"
