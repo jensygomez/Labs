@@ -57,34 +57,16 @@
         state: started
         enabled: true
 
-    - name: Bloquear ICMP desde CLIENT01 (ping/traceroute)
-      command: >
-        firewall-cmd --permanent
-        --add-rich-rule='rule family="ipv4"
-        source address="192.168.122.21"
-        icmp-type name="echo-request"
-        drop'
-
-    - name: Recargar firewalld
-      command: firewall-cmd --reload
+    - name: Bloquear ICMP echo-request de CLIENT01 (idempotente)
+          firewalld:
+            rich_rules: 
+              - "rule family=ipv4 source address=192.168.122.21 icmp-type name=echo-request drop"
+            permanent: true
+            state: present
+            immediate: true  
 
 
-- name: Asegurar que firewalld esté activo
-  systemd:
-    name: firewalld
-    state: started
-    enabled: true
 
-- name: Bloquear ICMP desde CLIENT01
-  command: >
-    firewall-cmd --permanent
-    --add-rich-rule='rule family="ipv4"
-    source address="192.168.122.21"
-    icmp-type name="echo-request"
-    drop'
-
-- name: Recargar firewalld
-  command: firewall-cmd --reload
 
 - name: Mostrar ticket / escenario estilo NOC con filosofía Linux
   debug:

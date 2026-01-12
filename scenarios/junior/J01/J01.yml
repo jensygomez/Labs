@@ -42,13 +42,12 @@
 
   vars:
     variantes:
-      - "variant_1.yml"
-      # En el futuro agregar: variant_2.yml, variant_3.yml, variant_4.yml
+      - "inject/variant_1.yml"
 
   tasks:
-    - name: Elegir una variante aleatoriamente
+    - name: Elegir variante aleatoriamente
       set_fact:
-        variante_elegida: "{{ variantes | random }}"
+        global_selected_variant: "{{ variantes | random }}"
 
     - name: Mostrar ticket con estilo caja
       debug:
