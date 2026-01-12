@@ -1,4 +1,3 @@
 ID|TRACK|LEVEL|ARTIFACT|TYPE|USES|STATUS
 J01|junior|Junior|scenarios/junior/J01.yml|ansible|1|active
-J02|junior|Junior|scenarios/junior/J02/J02.yml|ansible|20|active
 

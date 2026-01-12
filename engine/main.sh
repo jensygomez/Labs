@@ -26,7 +26,7 @@ export LAB_ENGINE_DIR="$ENGINE_DIR"
 LABS=()
 
 # ==============================================================================
-# BLOQUE 1 - CARGA DE BASE DE DATOS (MEJORADA PARA RUTAS RELATIVAS)
+# BLOQUE 1 - CARGA DE BASE DE DATOS (MEJORADO PARA ARCHIVOS O CARPETAS)
 # ==============================================================================
 load_db() {
     echo "[DEBUG] Iniciando carga de BD desde: $DB_FILE" >&2
@@ -37,59 +37,68 @@ load_db() {
         return 1
     fi
 
-    # DEBUG: mostrar qué hay en la BD
+    # DEBUG: mostrar labs activos
     echo "[DEBUG] Verificando labs activos..." >&2
     awk -F'|' 'NR>1 && $7=="active" {print "[DEBUG] Lab activo en BD: " $1}' "$DB_FILE" >&2
 
-    # Leer la BD - versión mejorada para rutas
     local line_count=0
     while IFS= read -r line; do
         ((line_count++))
         [[ $line_count -eq 1 ]] && continue  # Saltar cabecera
         [[ -z "$line" ]] && continue         # Saltar líneas vacías
-        
-        # Separar campos
+
         IFS='|' read -r id track level artifact type uses status <<< "$line"
-        
-        # Limpiar cualquier espacio
+
+        # Limpiar espacios
         status=$(echo "$status" | tr -d '[:space:]')
-        
+
         echo "[DEBUG] Procesando: $id, artifact='$artifact'" >&2
-        
-        if [[ "$status" == "active" ]]; then
-            # Limpiar todos los campos
-            id=$(echo "$id" | xargs)
-            track=$(echo "$track" | xargs)
-            level=$(echo "$level" | xargs)
-            artifact=$(echo "$artifact" | xargs)
-            type=$(echo "$type" | xargs)
-            uses=$(echo "$uses" | xargs)
-            
-            # CONVERTIR RUTA DEL ARTIFACT SI ES RELATIVA
-            if [[ ! "$artifact" =~ ^/ ]]; then
-                # Es ruta relativa, convertir a absoluta desde ROOT_DIR
-                artifact="$ROOT_DIR/$artifact"
-                echo "[DEBUG] Ruta convertida a absoluta: $artifact" >&2
-            fi
-            
-            # Verificar que el artifact existe
-            if [[ ! -f "$artifact" ]]; then
-                echo "[ADVERTENCIA] Artifact no encontrado: $artifact" >&2
+
+        [[ "$status" != "active" ]] && continue
+
+        # Limpiar campos
+        id=$(echo "$id" | xargs)
+        track=$(echo "$track" | xargs)
+        level=$(echo "$level" | xargs)
+        artifact=$(echo "$artifact" | xargs)
+        type=$(echo "$type" | xargs)
+        uses=$(echo "$uses" | xargs)
+
+        # Convertir ruta relativa a absoluta
+        if [[ ! "$artifact" =~ ^/ ]]; then
+            artifact="$ROOT_DIR/$artifact"
+            echo "[DEBUG] Ruta convertida a absoluta: $artifact" >&2
+        fi
+
+        LAB_PATH=""
+        if [[ -f "$artifact" ]]; then
+            # Es un archivo existente
+            LAB_PATH="$artifact"
+        elif [[ -d "$artifact" ]]; then
+            # Es una carpeta, buscar el primer .yml dentro
+            FOUND=$(ls "$artifact"/*.yml 2>/dev/null | head -n1)
+            if [[ -z "$FOUND" ]]; then
+                echo "[ADVERTENCIA] No se encontró ningún playbook en la carpeta: $artifact" >&2
                 continue
             fi
-            
-            LABS+=("$id|$track|$level|$artifact|$type|$uses")
-            echo "[DEBUG] Agregado a LABS: $id" >&2
+            LAB_PATH="$FOUND"
+        else
+            echo "[ADVERTENCIA] Artifact no encontrado: $artifact" >&2
+            continue
         fi
+
+        LABS+=("$id|$track|$level|$LAB_PATH|$type|$uses")
+        echo "[DEBUG] Agregado a LABS: $id → $LAB_PATH" >&2
+
     done < "$DB_FILE"
 
     echo "[INFO] Cargados ${#LABS[@]} laboratorio(s) activo(s)" >&2
-    
-    # DEBUG: mostrar qué se cargó
+
     for lab in "${LABS[@]}"; do
         echo "[DEBUG] En array: $lab" >&2
     done
 }
+
 
 # ==============================================================================
 # BLOQUE 2 - MENÚ PRINCIPAL
