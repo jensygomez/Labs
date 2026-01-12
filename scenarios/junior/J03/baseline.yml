@@ -74,25 +74,37 @@
 #
 # ==============================================================================
 
+
 ---
+# ==============================================================================
+# BASELINE J03 — Estado canónico SANO del ecosistema
+# ==============================================================================
 
-# ==============================================================================
-# BASELINE | admin01 — Control plane
-# ==============================================================================
+# ------------------------------------------------------------------------------
+# BASELINE | admin01 — Nodo de control (sin cambios de red)
+# ------------------------------------------------------------------------------
 - name: BASELINE | admin01 | Verificación pasiva
-  debug:
-    msg: "admin01 operativo. No se aplican cambios de red en baseline."
-  when: "'admin' in group_names"
-
-
-# ==============================================================================
-# BASELINE | web01 — Servidor EU (IP secundaria + servicio web)
-# ==============================================================================
-- name: BASELINE | web01 | Estado óptimo del servidor
-  when: "'web' in group_names"
+  hosts: admin01
+  gather_facts: yes
   become: yes
-  block:
+  tasks:
+    - name: ADMIN01 | Confirmar nodo operativo
+      debug:
+        msg: "admin01 operativo. No se aplican cambios de red en baseline."
 
+# ------------------------------------------------------------------------------
+# BASELINE | web01 — Servidor EU (IP secundaria + nginx + firewall)
+# ------------------------------------------------------------------------------
+- name: BASELINE | web01 | Servidor de servicio público (EU)
+  hosts: web01
+  gather_facts: yes
+  become: yes
+  vars:
+    service_ip: "{{ global_web_ip }}"
+    service_cidr: "{{ global_web_ip }}/24"
+    service_hostname: "server.eu"
+
+  tasks:
     # --------------------------------------------------------------------------
     # 1. Detectar interfaz primaria
     # --------------------------------------------------------------------------
@@ -106,19 +118,19 @@
         primary_iface: "{{ default_route.stdout.split(' dev ')[1].split()[0] }}"
 
     # --------------------------------------------------------------------------
-    # 2. IP secundaria (runtime, idempotente)
+    # 2. IP secundaria del servicio (idempotente y real)
     # --------------------------------------------------------------------------
-    - name: WEB01 | Verificar IP de servicio existente
-      command: ip addr show {{ primary_iface }}
+    - name: WEB01 | Verificar IP secundaria existente
+      command: ip -4 addr show dev {{ primary_iface }}
       register: ip_addr_check
       changed_when: false
 
     - name: WEB01 | Añadir IP secundaria del servicio
-      command: ip addr add {{ global_web_ip }}/24 dev {{ primary_iface }}
-      when: global_web_ip not in ip_addr_check.stdout
+      command: ip addr add {{ service_cidr }} dev {{ primary_iface }}
+      when: service_cidr not in ip_addr_check.stdout
 
     # --------------------------------------------------------------------------
-    # 3. Persistencia mínima (sin nmcli)
+    # 3. Persistencia simple (sin nmcli)
     # --------------------------------------------------------------------------
     - name: WEB01 | Script de persistencia de IP secundaria
       copy:
@@ -129,8 +141,8 @@
         content: |
           #!/bin/bash
           IFACE="{{ primary_iface }}"
-          IP="{{ global_web_ip }}/24"
-          ip addr show "$IFACE" | grep -q "{{ global_web_ip }}" || \
+          IP="{{ service_cidr }}"
+          ip addr show "$IFACE" | grep -q "{{ service_ip }}" || \
             ip addr add "$IP" dev "$IFACE"
 
     - name: WEB01 | Registrar script en rc.local
@@ -141,14 +153,14 @@
         mode: '0755'
 
     # --------------------------------------------------------------------------
-    # 4. Servicio web (estado sano)
+    # 4. Servicio web (nginx)
     # --------------------------------------------------------------------------
     - name: WEB01 | Instalar nginx
       package:
         name: nginx
         state: present
 
-    - name: WEB01 | Configurar nginx (estado sano)
+    - name: WEB01 | Configurar nginx (binding explícito a IP de servicio)
       copy:
         dest: /etc/nginx/conf.d/j03.conf
         owner: root
@@ -156,34 +168,34 @@
         mode: '0644'
         content: |
           server {
-              listen {{ global_web_port }};
-              server_name _;
+              listen {{ service_ip }}:{{ global_web_port }};
+              server_name {{ service_hostname }};
               location / {
                   return 200 "J03 BASELINE OK\n";
               }
           }
 
-    - name: WEB01 | Arrancar nginx
+    - name: WEB01 | Habilitar y arrancar nginx
       service:
         name: nginx
         state: started
         enabled: yes
 
     # --------------------------------------------------------------------------
-    # 5. Firewall — estado óptimo
+    # 5. Firewall — estado SANO
     # --------------------------------------------------------------------------
-    - name: WEB01 | Asegurar firewalld
+    - name: WEB01 | Asegurar firewalld instalado
       package:
         name: firewalld
         state: present
 
-    - name: WEB01 | Arrancar firewalld
+    - name: WEB01 | Habilitar firewalld
       service:
         name: firewalld
         state: started
         enabled: yes
 
-    - name: WEB01 | Abrir puerto web
+    - name: WEB01 | Abrir puerto web en firewall
       firewalld:
         port: "{{ global_web_port }}/tcp"
         zone: "{{ global_firewall_zone }}"
@@ -191,21 +203,29 @@
         state: enabled
         immediate: yes
 
-
-# ==============================================================================
-# BASELINE | client01 — Cliente remoto
-# ==============================================================================
-- name: BASELINE | client01 | Estado óptimo del cliente
-  when: "'client' in group_names"
+# ------------------------------------------------------------------------------
+# BASELINE | client01 — Cliente remoto (China)
+# ------------------------------------------------------------------------------
+- name: BASELINE | client01 | Cliente consumidor del servicio
+  hosts: client01
+  gather_facts: yes
   become: yes
-  block:
+  vars:
+    service_hostname: "server.eu"
 
-    - name: CLIENT01 | Resolver servicio vía /etc/hosts
+  tasks:
+    # --------------------------------------------------------------------------
+    # 1. Resolución DNS simulada (determinística)
+    # --------------------------------------------------------------------------
+    - name: CLIENT01 | Resolver nombre del servicio vía /etc/hosts
       lineinfile:
         path: /etc/hosts
-        line: "{{ global_web_ip }} {{ web_url | regex_replace('^https?://', '') }}"
+        line: "{{ global_web_ip }} {{ service_hostname }}"
         state: present
 
+    # --------------------------------------------------------------------------
+    # 2. Herramientas de diagnóstico
+    # --------------------------------------------------------------------------
     - name: CLIENT01 | Instalar curl
       package:
         name: curl
