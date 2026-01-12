@@ -45,25 +45,21 @@
 # - Eliminar la regla de ICMP en SERVER_EU y recargar firewalld
 # ==============================================================================
 
-- name: J01 Variant 1 - Bloquear ICMP desde CLIENT01
-  hosts: web
-  become: yes
-  gather_facts: yes
+- name: Asegurar que firewalld esté activo en web servers
+  systemd:
+    name: firewalld
+    state: started
+    enabled: true
+  delegate_to: web
 
-  tasks:
-    - name: Asegurar que firewalld esté activo
-      systemd:
-        name: firewalld
-        state: started
-        enabled: true
-
-    - name: Bloquear ICMP echo-request de CLIENT01 (idempotente)
-          firewalld:
-            rich_rules: 
-              - "rule family=ipv4 source address=192.168.122.21 icmp-type name=echo-request drop"
-            permanent: true
-            state: present
-            immediate: true  
+- name: Bloquear ICMP echo-request de CLIENT01 (idempotente)
+  firewalld:
+    rich_rules: 
+      - "rule family=ipv4 source address=192.168.122.21 icmp-type name=echo-request drop"
+    permanent: true
+    state: present
+    immediate: true
+  delegate_to: web
 
 
 
