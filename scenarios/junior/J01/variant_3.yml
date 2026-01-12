@@ -1,0 +1,164 @@
+# ==============================================================================
+# J01-V3: Keepalive TCP extremadamente agresivo - DB connections affected
+# ==============================================================================
+#
+# 🔹 OBJETIVO DEL LABORATORIO:
+# Simular un problema REAL de producción donde conexiones de base de datos
+# se cierran misteriosamente después de periodos cortos de inactividad.
+# Esto ocurre cuando el kernel TCP stack tiene configuraciones de keepalive
+# más agresivas que los timeouts de la aplicación o base de datos.
+#
+# 🔹 CONTEXTO TÉCNICO:
+# En sistemas Linux, el kernel gestiona conexiones TCP a nivel de sistema
+# operativo mediante parámetros de "keepalive". Cuando una conexión TCP
+# permanece completamente inactiva (sin tráfico en ningún sentido), el
+# kernel puede decidir cerrarla para liberar recursos.
+#
+# Tres timeouts interactúan:
+# 1. Aplicación:      (ej: HikariCP idleTimeout=600000ms = 10 minutos)
+# 2. Base de datos:   (ej: MySQL wait_timeout=28800s = 8 horas)
+# 3. Kernel TCP:      (ej: tcp_keepalive_time=7200s = 2 horas - DEFAULT)
+#
+# Problema: Si alguien configura kernel keepalive MUY bajo (ej: 5s),
+# el kernel cerrará conexiones que la app y DB creen que están vivas.
+#
+# 🔹 QUÉ ESTAMOS CONFIGURANDO:
+# - tcp_keepalive_time: 5 segundos (default: 7200s = 2 horas)
+#   → Tiempo de inactividad antes de que kernel empiece a verificar
+#
+# - tcp_keepalive_intvl: 1 segundo (default: 75s)
+#   → Intervalo entre verificaciones (probes) TCP keepalive
+#
+# - tcp_keepalive_probes: 2 intentos (default: 9)
+#   → Número de verificaciones fallidas antes de cerrar conexión
+#
+# 🔹 CÁLCULO DEL TIEMPO DE CIERRE:
+# tcp_keepalive_time + (tcp_keepalive_intvl × tcp_keepalive_probes)
+# 5s + (1s × 2) = 7 segundos aproximadamente
+#
+# Significado: Cualquier conexión TCP completamente inactiva por más de
+# ~7 segundos será cerrada silenciosamente por el kernel Linux.
+#
+# 🔹 QUÉ AFECTA ESTO EN PRODUCCIÓN:
+# 1. Database connection pools (HikariCP, c3p0, etc.)
+#    → Conexiones "idle" en el pool mueren después de ~7s
+#    → App intenta usar conexión muerta → "Connection reset by peer"
+#
+# 2. Conexiones persistentes (gRPC, HTTP/2, WebSockets)
+#    → Conexiones de larga duración con periodos de silencio
+#
+# 3. SSH tunnels / VPN connections
+#    → Túneles que no envían tráfico constantemente
+#
+# 🔹 QUÉ NO AFECTA:
+# - Ping (ICMP echo) → No usa TCP keepalive
+# - HTTP requests simples → Conexión se usa y cierra inmediatamente
+# - Consultas SQL rápidas → Conexión activa durante la consulta
+#
+# 🔹 SÍNTOMAS ESPERADOS:
+# - App reporta: "Conexiones DB se pierden después de ~7s de inactividad"
+# - HikariCP logs: "Connection is not available, timeout"
+# - Transacciones largas fallan si hay pausas >7s entre queries
+# - Connection pool se "vacía" periódicamente
+# - Ping y HTTP al servidor funcionan 100%
+#
+# 🔹 DIAGNÓSTICO SUGERIDO:
+# Desde cliente sospechoso:
+#   telnet [IP_DB] 3306
+#   (dejar abierto, esperar 8s, intentar escribir algo)
+#   → Si socket murió: problema de keepalive TCP
+#
+# En servidor DB:
+#   cat /proc/sys/net/ipv4/tcp_keepalive_time
+#   → Si es muy bajo (ej: 5, 10, 30) vs default (7200)
+#
+# 🔹 REPARACIÓN:
+# Restaurar valores default o alinear con timeouts de aplicación:
+#   echo 7200 > /proc/sys/net/ipv4/tcp_keepalive_time
+#   echo 75 > /proc/sys/net/ipv4/tcp_keepalive_intvl
+#   echo 9 > /proc/sys/net/ipv4/tcp_keepalive_probes
+#   sysctl -p
+#
+# O configurar aplicación para enviar keepalive a nivel app:
+#   (ej: MySQL: SET SESSION wait_timeout = 3600;)
+#
+# 🔹 LECCIÓN PRINCIPAL:
+# "Cuando aplicación, base de datos y kernel tienen diferentes
+#  expectativas sobre cuánto debe vivir una conexión inactiva,
+#  gana siempre la configuración más impaciente (generalmente el kernel)."
+#
+# ==============================================================================
+
+# variant_3.yml - Así sería en empresa real
+- name: "Set TCP keepalive to 5 seconds"
+  sysctl:
+    name: net.ipv4.tcp_keepalive_time
+    value: '5'
+    state: present
+    reload: yes
+
+- name: "Set TCP keepalive interval to 1 second"
+  sysctl:
+    name: net.ipv4.tcp_keepalive_intvl
+    value: '1'
+    state: present
+    reload: yes
+
+  
+- name: "[TICKET NOC] INC-J01-V3 - Conexiones DB se cierran periódicamente"
+  debug:
+    msg:
+      - "========================================================================="
+      - "| 🎫 INC-J01-V3 – DB Connection pools draining misteriosamente         |"
+      - "| FILOSOFÍA: 'El kernel no sabe qué quieren las aplicaciones'          |"
+      - "========================================================================="
+      - "|                                                                       |"
+      - "| 📜 REPORTE DE DESARROLLADORES:                                       |"
+      - "| • 'Nuestra app pierde conexiones DB después de 5-10 segundos idle'   |"
+      - "| • 'HikariCP reporta: Connection is not available, timeout'           |"
+      - "| • 'Consulta simple funciona, transacción larga falla si hay pausa'   |"
+      - "| • 'HTTP y ping al servidor: 100% OK'                                 |"
+      - "|                                                                       |"
+      - "| 🐧 REALIDAD TÉCNICA DESCUBIERTA:                                     |"
+      - "| • MySQL wait_timeout: 28800s (8 horas, default)                      |"
+      - "| • Kernel tcp_keepalive_time: 5s (¡MODIFICADO!)                       |"
+      - "| • Kernel gana: cierra sockets TCP idle >7s                           |"
+      - "| • MySQL pierde: conexiones en pool mueren silenciosamente            |"
+      - "|                                                                       |"
+      - "| 🧠 PREGUNTAS DE TU SENIOR:                                           |"
+      - "|                                                                       |"
+      - "| 1. '¿Cómo aíslas que es problema TCP, no de MySQL o aplicación?'     |"
+      - "|    ¿Raw socket test? ¿telnet al puerto 3306 y esperar?               |"
+      - "|                                                                       |"
+      - "| 2. '¿Dónde está el mismatch de timeouts?'                            |"
+      - "|    ¿MySQL vars? ¿Kernel params? ¿App connection pool config?         |"
+      - "|                                                                       |"
+      - "| 3. 'keepalive_time default 7200s... ¿quién lo puso en 5s?'           |"
+      - "|    ¿Performance tuning? ¿Security hardening? ¿Error de script?       |"
+      - "|                                                                       |"
+      - "| 4. '¿Cuál es la regla: app timeout vs DB timeout vs kernel timeout?' |"
+      - "|    ¿Qué debe ser mayor/menor? ¿Por qué?                              |"
+      - "|                                                                       |"
+      - "| 5. 'Si restauras a 7200s: ¿qué monitoreas?'                          |"
+      - "|    ¿Socket count? ¿Memory usage? ¿Hay riesgo de connection leak?     |"
+      - "|                                                                       |"
+      - "| 6. '¿Cómo comunicas esto a DevOps/Developers?'                       |"
+      - "|    'No es bug de tu app, es config del sistema'                      |"
+      - "|                                                                       |"
+      - "| 7. '¿Qué alertas implementas para futuro?'                           |"
+      - "|    ¿Monitor tcp_keepalive settings? ¿Compare con DB/app timeouts?    |"
+      - "|                                                                       |"
+      - "========================================================================="
+      - "| 🛠️  DIAGNÓSTICO CONFIRMATORIO:                                       |"
+      - "| # En servidor DB:                                                    |"
+      - "| cat /proc/sys/net/ipv4/tcp_keepalive_time  # Debe ser 5 (no 7200)    |"
+      - "| mysql -e 'SHOW VARIABLES LIKE \"%timeout%\"' | grep wait             |"
+      - "|                                                                      |"
+      - "| # Desde cliente diagnóstico:                                         |"
+      - "| telnet IP_DB 3306  # Deja abierto, espera 8s, intenta escribir      |"
+      - "========================================================================="
+      - "| 💡 LECCIÓN DE PRODUCCIÓN:                                            |"
+      - "| 'Cuando tres sistemas (app, DB, kernel) tienen diferentes            |"
+      - "|  expectativas de timeout, gana el más impaciente.'                   |"
+      - "========================================================================="
+  run_once: true
