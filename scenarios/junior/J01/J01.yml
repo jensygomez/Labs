@@ -39,7 +39,7 @@
 
 
 - name: J01 - Orquestador de variantes de redes
-  hosts: localhost
+  hosts: web
   gather_facts: no
 
   vars:
@@ -51,10 +51,12 @@
     - name: Elegir variante aleatoriamente
       set_fact:
         global_selected_variant: "{{ variantes | random }}"
+      run_once: true
 
     - name: Debug - Verificar variante seleccionada
       debug:
         var: global_selected_variant
+      run_once: true
 
     - name: Mostrar ticket con estilo caja
       debug:
