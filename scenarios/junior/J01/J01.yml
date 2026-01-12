@@ -49,7 +49,6 @@
       set_fact:
         variante_elegida: "{{ variantes | random }}"
 
-
     - name: Mostrar ticket con estilo caja
       debug:
         msg:
@@ -61,23 +60,13 @@
           - "| - Un fallo en la conectividad no siempre significa un servicio caído. |"
           - "| - Diferencia protocolos y evalúa el impacto antes de actuar.          |"
           - "========================================================================="
-        verbosity: 0
       run_once: true
-
-
-
-
-
-    
-
-
-
 
     - name: Esperar que el usuario presione Enter para continuar
       pause:
         prompt: "Presiona ENTER para continuar con la siguiente tarea..."
 
-          
-
-    - name: Ejecutar la variante seleccionada
+    - name: Ejecutar la variante seleccionada en SERVER_EU
       include_tasks: "{{ variante_elegida }}"
+      delegate_to: web01
+      become: yes

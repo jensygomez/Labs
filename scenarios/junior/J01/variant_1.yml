@@ -53,7 +53,7 @@
     state: started
     enabled: true
 
-- name: Bloquear ICMP desde CLIENT01 (ping/traceroute)
+- name: Bloquear ICMP desde CLIENT01
   command: >
     firewall-cmd --permanent
     --add-rich-rule='rule family="ipv4"
