@@ -1,0 +1,33 @@
+
+PLAY [J01 - Orquestador de variantes de redes] *********************************
+
+TASK [Elegir una variante aleatoriamente] **************************************
+ok: [localhost]
+
+TASK [Mensaje filosófico Linux (caja ASCII)] ***********************************
+ok: [localhost] => {
+    "msg": "+---------------------------------------------------------+\n| J01 – Laboratorio de Redes                              |\n| Junior, recuerda que en Linux todo es un ecosistema...  |\n| - Clientes, servidores, firewalls interactúan.         |\n| - Evalúa impacto antes de actuar.                      |\n| - Documenta y reflexiona antes de ejecutar acciones.   |\n+---------------------------------------------------------+\n"
+}
+
+TASK [Esperar que el usuario presione Enter para continuar] ********************
+[[[K[Esperar que el usuario presione Enter para continuar]
+Presiona ENTER para continuar con la siguiente tarea...:
+ok: [localhost]
+
+TASK [Ejecutar la variante seleccionada] ***************************************
+included: /home/jensy/Labs/scenarios/junior/J01/variant_4.yml for localhost
+
+TASK [V4 | Backup nginx.conf funcional] ****************************************
+[ERROR]: Task failed: Module failed: Source /etc/nginx/nginx.conf not found
+Origin: /home/jensy/Labs/scenarios/junior/J01/variant_4.yml:49:3
+
+47 # 1. Backup nginx.conf original
+48 # ------------------------------------------------------------------------------
+49 - name: V4 | Backup nginx.conf funcional
+     ^ column 3
+
+fatal: [localhost]: FAILED! => {"changed": false, "msg": "Source /etc/nginx/nginx.conf not found"}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=4    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+
