@@ -1,216 +1,226 @@
 # ==============================================================================
-# baseline_variant1.yml — PUNTO ÓPTIMO PARA VARIANTE 1 (FIREWALL)
+# baseline.yml — ESTADO ÓPTIMO DEL LABORATORIO J03
 # ==============================================================================
 # 🧱 FUNDAMENTO CONCEPTUAL:
-# Este archivo establece el ESTADO SANO Y FUNCIONAL previo a la inyección
-# del incidente. En troubleshooting, es crítico conocer cómo debería funcionar
-# el sistema para identificar qué se rompió.
+# Este archivo establece el ESTADO SANO, FUNCIONAL y DE REFERENCIA del
+# laboratorio J03, previo a la inyección de cualquier incidente.
+# En troubleshooting, definir con precisión cómo DEBERÍA funcionar
+# el sistema es esencial para identificar qué capa se ha roto.
 #
 # 🎯 OBJETIVO PRINCIPAL:
 # Configurar una infraestructura de 3 nodos geográficamente distribuidos donde:
-#   1. Server_EU (Europa) ofrece un servicio web accesible por nombre DNS
-#   2. Cliente_CH (China) puede consumir el servicio usando curl
-#   3. Sysadmin-PR (Puerto Rico) tiene herramientas para diagnosticar
+#   1. web01 (Frankfurt, Alemania) ofrece un servicio web accesible por nombre DNS
+#   2. client01 (Shanghái, China) puede consumir el servicio usando curl
+#   3. admin01 (San Juan, Puerto Rico) dispone de herramientas de diagnóstico
 #
 # 🔧 CARACTERÍSTICAS TÉCNICAS DEL ESTADO ÓPTIMO:
-# • Server_EU tiene DUAL-IP: 
-#     - 192.168.122.22 → IP administrativa (SSH/management)
-#     - 192.168.122.50 → IP pública del servicio (web)
-# • Resolución DNS por /etc/hosts (sin servidores DNS complejos)
-# • Firewalld CONFIGURADO CORRECTAMENTE: puerto 80 abierto
-# • nginx vinculado explícitamente a la IP pública (no a 0.0.0.0)
-# • Herramientas mínimas de diagnóstico instaladas en cada nodo
+# • web01 posee DUAL-IP:
+#     - 192.168.122.22 → IP administrativa (SSH / gestión)
+#     - 192.168.122.50 → IP del servicio web (expuesta a clientes)
+# • Resolución de nombres mediante /etc/hosts (sin DNS externos)
+# • Firewalld correctamente configurado (puerto HTTP permitido)
+# • nginx vinculado explícitamente a la IP del servicio (no a 0.0.0.0)
+# • Herramientas mínimas de diagnóstico instaladas en todos los nodos
 #
 # 🌍 CONTEXTO GEOGRÁFICO SIMULADO:
 #   ┌─────────────────────────────────────────────────────────┐
-#   │  Server_EU    │ Frankfurt, Germany  │ Centro de datos  │
-#   │  Cliente_CH   │ Shanghai, China     │ Oficina regional │
-#   │  Sysadmin-PR  │ San Juan, PR        │ Sede corporativa │
+#   │  web01    │ Frankfurt, Alemania  │ Centro de Datos      │
+#   │  client01 │ Shanghái, China      │ Oficina Regional    │
+#   │  admin01  │ San Juan, Puerto Rico│ Sede Corporativa    │
 #   └─────────────────────────────────────────────────────────┘
 #
 # 📡 ARQUITECTURA DE COMUNICACIÓN:
-#   Cliente_CH (curl)  →  DNS:server.eu  →  192.168.122.50  →  nginx:80
-#   Sysadmin-PR (curl) →  DNS:server.eu  →  192.168.122.50  →  nginx:80
-#   
-#   NOTA: Los clientes NUNCA conocen la IP administrativa (192.168.122.22)
-#         Solo conocen y usan el nombre DNS "server.eu"
+#   client01 (curl) → DNS: server.eu → 192.168.122.50 → nginx:80
+#   admin01  (curl) → DNS: server.eu → 192.168.122.50 → nginx:80
 #
-# 🛡️  IMPORTANCIA PARA LA VARIANTE 1 (FIREWALL):
-# Este baseline establece un firewall CORRECTAMENTE configurado:
-#   • Zona: public
-#   • Puerto 80/tcp: PERMITIDO
-#   • Servicio http: HABILITADO
-#   • Política: ACCEPT para tráfico entrante al puerto 80
+#   NOTA:
+#   Los clientes NO conocen la IP administrativa (192.168.122.22).
+#   Toda comunicación funcional ocurre únicamente vía nombre DNS
+#   y la IP del servicio.
 #
-# La variante 1 luego MODIFICARÁ esta configuración para simular:
-#   • Reglas de firewall mal aplicadas
-#   • Puertos bloqueados incorrectamente
-#   • Zonas equivocadas
-#   • Políticas restrictivas donde no deberían estar
+# 🛡️ RELACIÓN CON LAS VARIANTES DEL LABORATORIO:
+# Este baseline representa el estado CORRECTO y COMPARTIDO para todas
+# las variantes del laboratorio J03.
 #
-# 🧪 LO QUE EL ESTUDIANTE DEBE VERIFICAR DESPUÉS DE ESTE BASELINE:
-#   1. Desde Cliente_CH: curl http://server.eu → Debe devolver 200 OK
-#   2. Desde Sysadmin-PR: curl http://server.eu → Debe devolver 200 OK
-#   3. En Server_EU: ss -tlnp | grep :80 → Debe mostrar nginx escuchando
-#   4. En Server_EU: firewall-cmd --list-all → Debe mostrar puerto 80 abierto
+# Las variantes NO redefinen este estado.
+# Las variantes SOLO introducen fallos específicos en UNA capa:
+#   • V1 — Firewall (permisos vs política)
+#   • V2 — IP estática (configuración vs expectativa)
+#   • V3 — Enrutamiento (trayectoria vs destino)
+#   • V4 — Servicio (proceso vs escucha)
 #
-# ⚠️  ADVERTENCIA DE DISEÑO:
-# Este baseline NO debe contener errores intencionales. Es el estado
-# de referencia contra el cual se comparará después de inyectar el fallo.
-# Cualquier problema aquí hará que el ejercicio sea imposible de resolver.
+# 🧪 VERIFICACIONES ESPERADAS EN ESTE ESTADO:
+#   1. Desde client01: curl http://server.eu → HTTP 200 OK
+#   2. Desde admin01:  curl http://server.eu → HTTP 200 OK
+#   3. En web01: ss -tlnp | grep :80 → nginx escuchando correctamente
+#   4. En web01: firewall-cmd --list-all → puerto 80 permitido
 #
-# 🔄 RELACIÓN CON EL FLUJO DEL LABORATORIO:
-#   1. Este baseline se ejecuta PRIMERO → Sistema SANO
-#   2. Luego se ejecuta la VARIANTE 1 → Sistema ROTO (firewall mal configurado)
-#   3. El estudiante diagnostica y repara → Sistema RESTAURADO
+# ⚠️ ADVERTENCIA DE DISEÑO (CRÍTICA):
+# Este baseline NO contiene errores intencionales.
+# Cualquier fallo en este punto invalida el ejercicio completo,
+# ya que las variantes dependen de este estado como referencia.
+#
+# 🔄 FLUJO DEL LABORATORIO:
+#   1. BASELINE → Sistema sano y completamente funcional
+#   2. INJECT   → Introducción controlada de una falla
+#   3. FIX      → Diagnóstico y restauración del estado óptimo
 #
 # 🎓 OBJETIVO EDUCATIVO:
-# Enseñar que el firewall no es un "interruptor binario" (on/off), sino
-# un conjunto complejo de reglas, zonas y políticas que deben coordinarse
-# con la configuración del servicio y el binding de red.
+# Demostrar que en infraestructuras distribuidas un servicio puede
+# estar activo localmente y aun así ser inalcanzable remotamente.
 #
-# La lección central: "Un servicio puede estar arriba, escuchando y con
-# contenido válido, pero seguir siendo inaccesible si el firewall lo bloquea."
+# La conectividad real emerge de la alineación correcta entre:
+#   red, firewall, enrutamiento y binding del servicio.
+#
 # ==============================================================================
+
+
 
 ---
-# ==============================================================================
-# BASELINE VARIANTE 1 — FIREWALL (ESTADO SANO)
-# ==============================================================================
 
 # ------------------------------------------------------------------------------
-# 0. HERRAMIENTAS BASE (TODOS LOS NODOS)
+# BASELINE | admin01 — Control plane (sin cambios de red)
 # ------------------------------------------------------------------------------
-- name: Baseline | Instalar herramientas básicas
-  dnf:
-    name:
-      - iproute
-      - curl
-      - iputils
-      - bind-utils
-    state: present
+- name: BASELINE | admin01 | Nodo de control (sin modificaciones)
+  hosts: admin01
+  gather_facts: yes
   become: yes
+  tasks:
+    - name: ADMIN01 | Verificación pasiva del sistema
+      debug:
+        msg: "admin01 operativo. No se requieren cambios en baseline."
 
 # ------------------------------------------------------------------------------
-# 1. SERVER_EU (web01) — RED DUAL-IP
+# BASELINE | web01 — Servidor EU (doble IP + servicio web)
 # ------------------------------------------------------------------------------
-- name: SERVER_EU | Obtener conexión activa
-  command: nmcli -t -f NAME connection show --active
-  register: active_conn
-  changed_when: false
-  when: "'web' in group_names"
+- name: BASELINE | web01 | Servidor de servicio público (EU)
+  hosts: web01
+  gather_facts: yes
   become: yes
+  vars:
+    service_ip: "{{ global_web_ip }}"
+    service_cidr: "{{ global_web_ip }}/24"
 
-- name: SERVER_EU | Configurar IP administrativa
-  nmcli:
-    conn_name: "{{ active_conn.stdout_lines[0] }}"
-    ip4: "{{ global_admin_ip }}/24"
-    gw4: "{{ global_gateway }}"
-    state: present
-  when: "'web' in group_names"
-  become: yes
+  tasks:
+    # --------------------------------------------------------------------------
+    # 1. Detectar interfaz de red primaria
+    # --------------------------------------------------------------------------
+    - name: WEB01 | Detectar interfaz con ruta por defecto
+      command: ip route show default
+      register: default_route
+      changed_when: false
 
-- name: SERVER_EU | Agregar IP pública del servicio
-  shell: |
-    nmcli connection modify "{{ active_conn.stdout_lines[0] }}" \
-      +ipv4.addresses "{{ global_web_ip }}/24"
-    nmcli connection up "{{ active_conn.stdout_lines[0] }}"
-  args:
-    executable: /bin/bash
-  when: "'web' in group_names"
-  become: yes
+    - name: WEB01 | Extraer nombre de interfaz primaria
+      set_fact:
+        primary_iface: "{{ default_route.stdout.split(' dev ')[1].split()[0] }}"
+
+    # --------------------------------------------------------------------------
+    # 2. Añadir IP secundaria (runtime, idempotente)
+    # --------------------------------------------------------------------------
+    - name: WEB01 | Verificar si la IP de servicio ya existe
+      command: ip addr show {{ primary_iface }}
+      register: ip_addr_check
+      changed_when: false
+
+    - name: WEB01 | Añadir IP secundaria del servicio
+      command: ip addr add {{ service_cidr }} dev {{ primary_iface }}
+      when: service_ip not in ip_addr_check.stdout
+
+    # --------------------------------------------------------------------------
+    # 3. Persistencia mínima de la IP secundaria (sin nmcli)
+    # --------------------------------------------------------------------------
+    - name: WEB01 | Crear script de persistencia de IP de servicio
+      copy:
+        dest: /usr/local/sbin/j03-add-service-ip.sh
+        owner: root
+        group: root
+        mode: '0755'
+        content: |
+          #!/bin/bash
+          IFACE="{{ primary_iface }}"
+          IP="{{ service_cidr }}"
+          ip addr show "$IFACE" | grep -q "{{ service_ip }}" || \
+            ip addr add "$IP" dev "$IFACE"
+
+    - name: WEB01 | Asegurar ejecución del script en arranque (rc.local)
+      lineinfile:
+        path: /etc/rc.local
+        line: "/usr/local/sbin/j03-add-service-ip.sh"
+        create: yes
+        mode: '0755'
+
+    # --------------------------------------------------------------------------
+    # 4. Servicio web (nginx)
+    # --------------------------------------------------------------------------
+    - name: WEB01 | Instalar nginx
+      package:
+        name: nginx
+        state: present
+
+    - name: WEB01 | Configurar nginx para escuchar en IP de servicio
+      copy:
+        dest: /etc/nginx/conf.d/j03.conf
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          server {
+              listen {{ global_web_port }};
+              server_name _;
+              location / {
+                  return 200 "J03 BASELINE OK\n";
+              }
+          }
+
+    - name: WEB01 | Habilitar y arrancar nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+    # --------------------------------------------------------------------------
+    # 5. Firewall — estado sano
+    # --------------------------------------------------------------------------
+    - name: WEB01 | Asegurar firewalld instalado
+      package:
+        name: firewalld
+        state: present
+
+    - name: WEB01 | Habilitar firewalld
+      service:
+        name: firewalld
+        state: started
+        enabled: yes
+
+    - name: WEB01 | Abrir puerto web en firewall
+      firewalld:
+        port: "{{ global_web_port }}/tcp"
+        zone: "{{ global_firewall_zone }}"
+        permanent: yes
+        state: enabled
+        immediate: yes
 
 # ------------------------------------------------------------------------------
-# 2. DNS SIMPLE (/etc/hosts)
+# BASELINE | client01 — Cliente remoto (China)
 # ------------------------------------------------------------------------------
-- name: BASELINE | Configurar resolución DNS local
-  copy:
-    dest: /etc/hosts
-    content: |
-      127.0.0.1 localhost
-      {{ global_web_ip }} server.eu
-      {{ global_admin_ip }} server-eu-admin
-  mode: '0644'
+- name: BASELINE | client01 | Cliente consumidor del servicio
+  hosts: client01
+  gather_facts: yes
   become: yes
+  tasks:
+    # --------------------------------------------------------------------------
+    # 1. Resolución DNS simulada
+    # --------------------------------------------------------------------------
+    - name: CLIENT01 | Resolver nombre del servicio vía /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ global_web_ip }} {{ web_url | regex_replace('^https?://', '') }}"
+        state: present
 
-# ------------------------------------------------------------------------------
-# 3. SERVER_EU — SERVICIO WEB (NGINX)
-# ------------------------------------------------------------------------------
-- name: SERVER_EU | Instalar nginx
-  dnf:
-    name: nginx
-    state: present
-  when: "'web' in group_names"
-  become: yes
-
-- name: SERVER_EU | Configurar nginx para IP pública
-  copy:
-    dest: /etc/nginx/conf.d/server.conf
-    content: |
-      server {
-        listen {{ global_web_ip }}:80;
-        server_name server.eu;
-        root /usr/share/nginx/html;
-        index index.html;
-      }
-  when: "'web' in group_names"
-  become: yes
-
-- name: SERVER_EU | Página web de prueba
-  copy:
-    dest: /usr/share/nginx/html/index.html
-    content: |
-      <h1>Server_EU - Frankfurt</h1>
-      <p>Servicio operativo</p>
-  when: "'web' in group_names"
-  become: yes
-
-- name: SERVER_EU | Iniciar nginx
-  systemd:
-    name: nginx
-    state: started
-    enabled: yes
-  when: "'web' in group_names"
-  become: yes
-
-# ------------------------------------------------------------------------------
-# 4. SERVER_EU — FIREWALL LIMPIO (ESTADO ÓPTIMO)
-# ------------------------------------------------------------------------------
-- name: SERVER_EU | Reiniciar firewalld a estado limpio
-  shell: |
-    firewall-cmd --complete-reload
-    firewall-cmd --zone=public --remove-rich-rule='rule family="ipv4" source address="0.0.0.0/0" reject' || true
-  when: "'web' in group_names"
-  become: yes
-  changed_when: false
-
-- name: SERVER_EU | Permitir HTTP
-  firewalld:
-    port: 80/tcp
-    zone: public
-    permanent: yes
-    immediate: yes
-    state: enabled
-  when: "'web' in group_names"
-  become: yes
-
-# ------------------------------------------------------------------------------
-# 5. CLIENTE_CH — VERIFICACIÓN DE CONSUMO
-# ------------------------------------------------------------------------------
-- name: CLIENTE_CH | Probar acceso HTTP
-  command: curl -s http://server.eu
-  register: client_test
-  changed_when: false
-  when: "'client' in group_names"
-
-# ------------------------------------------------------------------------------
-# 6. SYSADMIN-PR — HERRAMIENTAS AVANZADAS
-# ------------------------------------------------------------------------------
-- name: SYSADMIN-PR | Instalar herramientas NOC
-  dnf:
-    name:
-      - nmap
-      - tcpdump
-    state: present
-  when: "'admin' in group_names"
-  become: yes
+    # --------------------------------------------------------------------------
+    # 2. Herramientas de diagnóstico
+    # --------------------------------------------------------------------------
+    - name: CLIENT01 | Instalar curl
+      package:
+        name: curl
+        state: present
