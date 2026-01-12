@@ -50,7 +50,7 @@
     name: firewalld
     state: started
     enabled: true
-  delegate_to: web
+  
 
 - name: Bloquear ICMP echo-request de CLIENT01 (idempotente)
   firewalld:
@@ -59,7 +59,7 @@
     permanent: true
     state: present
     immediate: true
-  delegate_to: web
+
 
 
 
