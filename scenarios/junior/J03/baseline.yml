@@ -79,148 +79,136 @@
 ---
 
 # ------------------------------------------------------------------------------
-# BASELINE | admin01 — Control plane (sin cambios de red)
+# BASELINE | admin01 — Control plane
 # ------------------------------------------------------------------------------
-- name: BASELINE | admin01 | Nodo de control (sin modificaciones)
-  hosts: admin01
-  gather_facts: yes
-  become: yes
-  tasks:
-    - name: ADMIN01 | Verificación pasiva del sistema
-      debug:
-        msg: "admin01 operativo. No se requieren cambios en baseline."
+- name: BASELINE | admin01 | Verificación pasiva
+  debug:
+    msg: "admin01 operativo. No se aplican cambios de red en baseline."
+  when: "'admin' in group_names"
+
 
 # ------------------------------------------------------------------------------
-# BASELINE | web01 — Servidor EU (doble IP + servicio web)
+# BASELINE | web01 — Servidor EU (IP secundaria + servicio web)
 # ------------------------------------------------------------------------------
-- name: BASELINE | web01 | Servidor de servicio público (EU)
-  hosts: web01
-  gather_facts: yes
-  become: yes
-  vars:
-    service_ip: "{{ global_web_ip }}"
-    service_cidr: "{{ global_web_ip }}/24"
 
-  tasks:
-    # --------------------------------------------------------------------------
-    # 1. Detectar interfaz de red primaria
-    # --------------------------------------------------------------------------
-    - name: WEB01 | Detectar interfaz con ruta por defecto
-      command: ip route show default
-      register: default_route
-      changed_when: false
+# 1. Detectar interfaz primaria
+- name: WEB01 | Detectar interfaz con ruta por defecto
+  command: ip route show default
+  register: default_route
+  changed_when: false
+  when: "'web' in group_names"
 
-    - name: WEB01 | Extraer nombre de interfaz primaria
-      set_fact:
-        primary_iface: "{{ default_route.stdout.split(' dev ')[1].split()[0] }}"
+- name: WEB01 | Definir interfaz primaria
+  set_fact:
+    primary_iface: "{{ default_route.stdout.split(' dev ')[1].split()[0] }}"
+  when: "'web' in group_names"
 
-    # --------------------------------------------------------------------------
-    # 2. Añadir IP secundaria (runtime, idempotente)
-    # --------------------------------------------------------------------------
-    - name: WEB01 | Verificar si la IP de servicio ya existe
-      command: ip addr show {{ primary_iface }}
-      register: ip_addr_check
-      changed_when: false
 
-    - name: WEB01 | Añadir IP secundaria del servicio
-      command: ip addr add {{ service_cidr }} dev {{ primary_iface }}
-      when: service_ip not in ip_addr_check.stdout
+# 2. IP secundaria (runtime, idempotente)
+- name: WEB01 | Verificar IP de servicio existente
+  command: ip addr show {{ primary_iface }}
+  register: ip_addr_check
+  changed_when: false
+  when: "'web' in group_names"
 
-    # --------------------------------------------------------------------------
-    # 3. Persistencia mínima de la IP secundaria (sin nmcli)
-    # --------------------------------------------------------------------------
-    - name: WEB01 | Crear script de persistencia de IP de servicio
-      copy:
-        dest: /usr/local/sbin/j03-add-service-ip.sh
-        owner: root
-        group: root
-        mode: '0755'
-        content: |
-          #!/bin/bash
-          IFACE="{{ primary_iface }}"
-          IP="{{ service_cidr }}"
-          ip addr show "$IFACE" | grep -q "{{ service_ip }}" || \
-            ip addr add "$IP" dev "$IFACE"
+- name: WEB01 | Añadir IP secundaria del servicio
+  command: ip addr add {{ global_web_ip }}/24 dev {{ primary_iface }}
+  when:
+    - "'web' in group_names"
+    - global_web_ip not in ip_addr_check.stdout
 
-    - name: WEB01 | Asegurar ejecución del script en arranque (rc.local)
-      lineinfile:
-        path: /etc/rc.local
-        line: "/usr/local/sbin/j03-add-service-ip.sh"
-        create: yes
-        mode: '0755'
 
-    # --------------------------------------------------------------------------
-    # 4. Servicio web (nginx)
-    # --------------------------------------------------------------------------
-    - name: WEB01 | Instalar nginx
-      package:
-        name: nginx
-        state: present
+# 3. Persistencia mínima (sin nmcli)
+- name: WEB01 | Script de persistencia de IP secundaria
+  copy:
+    dest: /usr/local/sbin/j03-add-service-ip.sh
+    owner: root
+    group: root
+    mode: '0755'
+    content: |
+      #!/bin/bash
+      IFACE="{{ primary_iface }}"
+      IP="{{ global_web_ip }}/24"
+      ip addr show "$IFACE" | grep -q "{{ global_web_ip }}" || \
+        ip addr add "$IP" dev "$IFACE"
+  when: "'web' in group_names"
 
-    - name: WEB01 | Configurar nginx para escuchar en IP de servicio
-      copy:
-        dest: /etc/nginx/conf.d/j03.conf
-        owner: root
-        group: root
-        mode: '0644'
-        content: |
-          server {
-              listen {{ global_web_port }};
-              server_name _;
-              location / {
-                  return 200 "J03 BASELINE OK\n";
-              }
+- name: WEB01 | Registrar script en rc.local
+  lineinfile:
+    path: /etc/rc.local
+    line: "/usr/local/sbin/j03-add-service-ip.sh"
+    create: yes
+    mode: '0755'
+  when: "'web' in group_names"
+
+
+# 4. Servicio web
+- name: WEB01 | Instalar nginx
+  package:
+    name: nginx
+    state: present
+  when: "'web' in group_names"
+
+- name: WEB01 | Configurar nginx (estado sano)
+  copy:
+    dest: /etc/nginx/conf.d/j03.conf
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      server {
+          listen {{ global_web_port }};
+          server_name _;
+          location / {
+              return 200 "J03 BASELINE OK\n";
           }
+      }
+  when: "'web' in group_names"
 
-    - name: WEB01 | Habilitar y arrancar nginx
-      service:
-        name: nginx
-        state: started
-        enabled: yes
+- name: WEB01 | Arrancar nginx
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+  when: "'web' in group_names"
 
-    # --------------------------------------------------------------------------
-    # 5. Firewall — estado sano
-    # --------------------------------------------------------------------------
-    - name: WEB01 | Asegurar firewalld instalado
-      package:
-        name: firewalld
-        state: present
 
-    - name: WEB01 | Habilitar firewalld
-      service:
-        name: firewalld
-        state: started
-        enabled: yes
+# 5. Firewall — estado óptimo
+- name: WEB01 | Asegurar firewalld
+  package:
+    name: firewalld
+    state: present
+  when: "'web' in group_names"
 
-    - name: WEB01 | Abrir puerto web en firewall
-      firewalld:
-        port: "{{ global_web_port }}/tcp"
-        zone: "{{ global_firewall_zone }}"
-        permanent: yes
-        state: enabled
-        immediate: yes
+- name: WEB01 | Arrancar firewalld
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+  when: "'web' in group_names"
+
+- name: WEB01 | Abrir puerto web
+  firewalld:
+    port: "{{ global_web_port }}/tcp"
+    zone: "{{ global_firewall_zone }}"
+    permanent: yes
+    state: enabled
+    immediate: yes
+  when: "'web' in group_names"
+
 
 # ------------------------------------------------------------------------------
-# BASELINE | client01 — Cliente remoto (China)
+# BASELINE | client01 — Cliente remoto
 # ------------------------------------------------------------------------------
-- name: BASELINE | client01 | Cliente consumidor del servicio
-  hosts: client01
-  gather_facts: yes
-  become: yes
-  tasks:
-    # --------------------------------------------------------------------------
-    # 1. Resolución DNS simulada
-    # --------------------------------------------------------------------------
-    - name: CLIENT01 | Resolver nombre del servicio vía /etc/hosts
-      lineinfile:
-        path: /etc/hosts
-        line: "{{ global_web_ip }} {{ web_url | regex_replace('^https?://', '') }}"
-        state: present
+- name: CLIENT01 | Resolver servicio vía /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ global_web_ip }} {{ web_url | regex_replace('^https?://', '') }}"
+    state: present
+  when: "'client' in group_names"
 
-    # --------------------------------------------------------------------------
-    # 2. Herramientas de diagnóstico
-    # --------------------------------------------------------------------------
-    - name: CLIENT01 | Instalar curl
-      package:
-        name: curl
-        state: present
+- name: CLIENT01 | Instalar curl
+  package:
+    name: curl
+    state: present
+  when: "'client' in group_names"
