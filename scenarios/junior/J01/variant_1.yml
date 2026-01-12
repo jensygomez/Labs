@@ -45,27 +45,27 @@
 # - Eliminar la regla de ICMP en SERVER_EU y recargar firewalld
 # ==============================================================================
 
-- name: Asegurar que firewalld esté activo en web servers
+- name: Asegurar que firewalld esté activo
   systemd:
     name: firewalld
     state: started
     enabled: true
 
-- name: Asegurar que zona public existe y está activa
-  firewalld:
-    zone: public
-    state: present
-    permanent: true
+
   
 
-- name: Bloquear ICMP echo-request de CLIENT01 (idempotente)
+- name: Bloquear ICMP echo-request de CLIENT01 (192.168.122.21)
   firewalld:
     zone: public
     rich_rule: 
       - "rule family=ipv4 source address=192.168.122.21 icmp-type name=echo-request drop"
     permanent: true
-    state: present
     immediate: true
+
+- name: Verificar regla aplicada
+  shell: firewall-cmd --zone=public --list-rich-rules 
+  register: rich_rules
+  changed_when: false
 
 
 
