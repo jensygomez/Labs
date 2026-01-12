@@ -45,41 +45,61 @@
 # ==============================================================================
 
 ---
+
 # ==============================================================================
-# J01-V1: BLOQUEO SELECTIVO ICMP - Simulación NOC
-# Objetivo: Bloquear ping desde CLIENT01 manteniendo HTTP/MariaDB funcionales
+# J01-V1: BLOQUEO ICMP - Simulación NOC Real
 # ==============================================================================
 
-- name: >-
-    [PREPARACIÓN] Asegurar firewalld activo y habilitado al boot
+- name: "[PREPARACIÓN] Asegurar firewalld activo"
   systemd:
     name: firewalld
     state: started
     enabled: true
-  # Idempotente: no rompe si ya está activo
 
-# ------------------------------------------------------------------------------
-# REGLA FIREWALL: Bloqueo específico ICMP echo-request desde CLIENT01
-# ------------------------------------------------------------------------------
-- name: >-
-    [CONFIGURACIÓN] Bloquear ICMP echo-request de CLIENT01 (192.168.122.21) 
-    en zona public
+- name: "[CONFIGURACIÓN] Bloquear ICMP echo-request (--add-icmp-block)"
   firewalld:
-    zone: public 
-    icmp: echo-request
+    zone: public
+    icmp_block: echo-request          # ← CAMBIO CLAVE
     permanent: true
     state: enabled
     immediate: true
 
-# ------------------------------------------------------------------------------
-# VERIFICACIÓN: Confirmar regla activa en runtime
-# ------------------------------------------------------------------------------
-- name: >-
-    [VALIDACIÓN] Verificar que la regla rich_rule se aplicó correctamente
+- name: "[VERIFICACIÓN] Confirmar bloqueo activo"
   shell: firewall-cmd --zone=public --list-icmp-blocks
-  register: icmp_blocks
-  changed_when: false   # Solo consulta, no modifica
-  # Output esperado: "rule family=ipv4 source address=192.168.122.21..."
+  register: result
+  changed_when: false
+
+- name: "[EXITOSO] J01-V1 Configurado ✓"
+  debug:
+    msg:
+      - "========================================================================"
+      - "🎯 J01-V1: ICMP echo-request BLOQUEADO"
+      - "Bloqueos activos: {{ result.stdout }}"
+      - "--------------------------------------------------------------------"
+      - "VERIFICAR DESDE CLIENT01:"
+      - "❌ ping 192.168.122.50 → 'Pacote filtrado'"
+      - "❌ ping 192.168.122.60 → 'Pacote filtrado'" 
+      - "✅ curl http://192.168.122.50 → 200 OK"
+      - "✅ nc 192.168.122.60 3306 → Connected"
+      - "========================================================================"
+  run_once: true
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # ------------------------------------------------------------------------------
 # REPORTING: Mostrar estado final al usuario (estilo NOC ticket)

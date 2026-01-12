@@ -1,0 +1,50 @@
+
+PLAY [J01 - Orquestador de variantes de redes] *********************************
+
+TASK [Elegir variante aleatoriamente] ******************************************
+ok: [web01]
+
+TASK [Debug - Verificar variante seleccionada] *********************************
+ok: [web01] => {
+    "global_selected_variant": "variant_1.yml"
+}
+
+TASK [Mostrar ticket con estilo caja] ******************************************
+ok: [web01] => {
+    "msg": [
+        "========================================================================",
+        "|                  J01 – Laboratorio de Redes                           |",
+        "-------------------------------------------------------------------------",
+        "| Junior, recuerda que Linux es un ecosistema interconectado            |",
+        "| - Clientes, servidores, firewalls interactúan.                        |",
+        "| - Un fallo en la conectividad no siempre significa un servicio caído. |",
+        "| - Diferencia protocolos y evalúa el impacto antes de actuar.          |",
+        "========================================================================="
+    ]
+}
+
+TASK [Esperar que el usuario presione Enter] ***********************************
+[[[K[Esperar que el usuario presione Enter]
+Presiona ENTER para continuar...:
+ok: [web01]
+
+TASK [Ejecutar la variante seleccionada] ***************************************
+included: /home/jensy/Labs/scenarios/junior/J01/variant_1.yml for web01
+
+TASK [[PREPARACIÓN] Asegurar firewalld activo y habilitado al boot] ************
+ok: [web01]
+
+TASK [[CONFIGURACIÓN] Bloquear ICMP echo-request de CLIENT01 (192.168.122.21)  en zona public] ***
+[ERROR]: Task failed: Module failed: Unsupported parameters for (firewalld) module: icmp. Supported parameters include: forward, icmp_block, icmp_block_inversion, immediate, interface, masquerade, offline, permanent, port, port_forward, protocol, rich_rule, service, source, state, target, timeout, zone.
+Origin: /home/jensy/Labs/scenarios/junior/J01/variant_1.yml:64:3
+
+62 # REGLA FIREWALL: Bloqueo específico ICMP echo-request desde CLIENT01
+63 # ------------------------------------------------------------------------------
+64 - name: >-
+     ^ column 3
+
+fatal: [web01]: FAILED! => {"changed": false, "msg": "Unsupported parameters for (firewalld) module: icmp. Supported parameters include: forward, icmp_block, icmp_block_inversion, immediate, interface, masquerade, offline, permanent, port, port_forward, protocol, rich_rule, service, source, state, target, timeout, zone."}
+
+PLAY RECAP *********************************************************************
+web01                      : ok=6    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+
