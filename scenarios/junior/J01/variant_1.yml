@@ -68,6 +68,7 @@
     zone: public
     rich_rule: 
       - "rule family=ipv4 source address=192.168.122.21 icmp-type name=echo-request drop"
+    state: enabled       # Habilita la regla
     permanent: true      # Persiste reboot
     immediate: true      # Aplica inmediatamente
   # Resultado: ping falla, curl/mariadb funcionan
@@ -78,7 +79,7 @@
 - name: >-
     [VALIDACIÓN] Verificar que la regla rich_rule se aplicó correctamente
   shell: firewall-cmd --zone=public --list-rich-rules
-  register: rich_rules
+  register: rich_rules 
   changed_when: false   # Solo consulta, no modifica
   # Output esperado: "rule family=ipv4 source address=192.168.122.21..."
 
