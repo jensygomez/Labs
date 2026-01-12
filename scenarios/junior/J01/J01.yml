@@ -53,26 +53,30 @@
         variante_elegida: "{{ variantes | random }}"
 
 
-
     - name: Mostrar mensaje filosófico Linux al junior
       debug:
         msg:
-          - "==================================================================================================="
-          - "                     J01 – Laboratorio de Redes                                               "
-          - "==================================================================================================="
-          - ""
-          - "Junior, recuerda que en Linux todo es un ecosistema interconectado:"
-          - "- Clientes, servidores, firewalls y servicios interactúan constantemente."
-          - "- Un fallo en la conectividad no siempre significa un servicio caído."
-          - "- Diferencia protocolos (ICMP, TCP, UDP) y observa qué sigue funcionando."
-          - "- Evalúa impacto en aplicaciones y usuarios antes de tomar decisiones."
-          - "- Documenta, analiza patrones y reflexiona sobre el “por qué” antes de ejecutar cualquier acción correctiva."
-          - ""
-          - "Este laboratorio pondrá a prueba tu capacidad de pensar como un sysadmin senior."
-          - "No se te dará pistas sobre qué componente está fallando; tu tarea es observar el ecosistema y aplicar pensamiento crítico."
-          - "==================================================================================================="
+          - "==========================================================="
+          - "||                     J01 – Laboratorio de Redes        ||"
+          - "-----------------------------------------------------------"
+          - "|| Junior, recuerda que en Linux todo es un ecosistema   ||"
+          - "|| interconectado:                                       ||"
+          - "|| - Clientes, servidores, firewalls interactúan.        ||"
+          - "|| - Un fallo en la conectividad no siempre significa    ||"
+          - "||   un servicio caído.                                  ||"
+          - "|| - Diferencia protocolos (ICMP, TCP, UDP).             ||"
+          - "|| - Evalúa impacto en aplicaciones y usuarios.          ||"
+          - "|| - Documenta y reflexiona antes de actuar.             ||"
+          - "||                                                       ||"
+          - "|| Este laboratorio pondrá a prueba tu capacidad de      ||"
+          - "|| pensar como un sysadmin senior.                       ||"
+          - "|| No se te dará pistas sobre qué componente está        ||"
+          - "|| fallando; tu tarea es observar el ecosistema y        ||"
+          - "|| aplicar pensamiento crítico.                          ||"
+          - "==========================================================="
         verbosity: 0
       run_once: true
+
 
 
 

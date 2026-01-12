@@ -10,3 +10,27 @@ ok: [localhost] => {
 }
 
 TASK [Esperar que el usuario presione Enter para continuar] ********************
+[[[K[[[K[Esperar que el usuario presione Enter para continuar]
+Presiona ENTER para continuar con la siguiente tarea...:
+Press 'C' to continue the play or 'A' to abort 
+ok: [localhost]
+
+TASK [Ejecutar la variante seleccionada] ***************************************
+included: /home/jensy/Labs/scenarios/junior/J01/variant_2.yml for localhost
+
+TASK [V2 | Detectar interfaz activa automáticamente] ***************************
+[ERROR]: Task failed: Premature end of stream waiting for become success.
+>>> Standard Error
+sudo: uma senha é necessária
+Origin: /home/jensy/Labs/scenarios/junior/J01/variant_2.yml:24:3
+
+22 # 0. Detectar interfaz activa y asignar variables NMCLI
+23 # ------------------------------------------------------------------------------
+24 - name: V2 | Detectar interfaz activa automáticamente
+     ^ column 3
+
+fatal: [localhost]: FAILED! => {"changed": false, "msg": "Task failed: Premature end of stream waiting for become success.\n>>> Standard Error\nsudo: uma senha é necessária"}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=4    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+
