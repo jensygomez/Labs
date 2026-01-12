@@ -67,6 +67,7 @@
           INPUT:
             - rule: "0 -p icmp --icmp-type 11 -j DROP"
     permanent: true
+    state: enabled
 
 - name: "[VERIFICACIÓN] Confirmar bloqueo activo"
   shell: firewall-cmd --direct --get-all-rules
