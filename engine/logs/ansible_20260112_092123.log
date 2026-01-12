@@ -1,0 +1,31 @@
+
+PLAY [J01 - Orquestador de variantes de redes] *********************************
+
+TASK [Elegir una variante aleatoriamente] **************************************
+ok: [localhost]
+
+TASK [Mostrar mensaje filosófico Linux al junior] ******************************
+ok: [localhost] => {
+    "msg": [
+        "===========================================================",
+        "||                     J01 – Laboratorio de Redes        ||",
+        "-----------------------------------------------------------",
+        "|| Junior, recuerda que en Linux todo es un ecosistema   ||",
+        "|| interconectado:                                       ||",
+        "|| - Clientes, servidores, firewalls interactúan.        ||",
+        "|| - Un fallo en la conectividad no siempre significa    ||",
+        "||   un servicio caído.                                  ||",
+        "|| - Diferencia protocolos (ICMP, TCP, UDP).             ||",
+        "|| - Evalúa impacto en aplicaciones y usuarios.          ||",
+        "|| - Documenta y reflexiona antes de actuar.             ||",
+        "||                                                       ||",
+        "|| Este laboratorio pondrá a prueba tu capacidad de      ||",
+        "|| pensar como un sysadmin senior.                       ||",
+        "|| No se te dará pistas sobre qué componente está        ||",
+        "|| fallando; tu tarea es observar el ecosistema y        ||",
+        "|| aplicar pensamiento crítico.                          ||",
+        "==========================================================="
+    ]
+}
+
+TASK [Esperar que el usuario presione Enter para continuar] ********************

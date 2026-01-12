@@ -25,3 +25,8 @@ ok: [localhost] => {
 }
 
 TASK [Esperar que el usuario presione Enter para continuar] ********************
+[[[K[Esperar que el usuario presione Enter para continuar]
+Presiona ENTER para continuar con la siguiente tarea...:
+ok: [localhost]
+
+TASK [Ejecutar la variante seleccionada] ***************************************
