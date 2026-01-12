@@ -1,4 +1,3 @@
----
 # ==============================================================================
 # J01 – Variant 1: Bloqueo de ICMP (ping) desde CLIENT01
 # ==============================================================================
@@ -45,33 +44,49 @@
 # - Eliminar la regla de ICMP en SERVER_EU y recargar firewalld
 # ==============================================================================
 
-- name: Asegurar que firewalld esté activo
+---
+# ==============================================================================
+# J01-V1: BLOQUEO SELECTIVO ICMP - Simulación NOC
+# Objetivo: Bloquear ping desde CLIENT01 manteniendo HTTP/MariaDB funcionales
+# ==============================================================================
+
+- name: >-
+    [PREPARACIÓN] Asegurar firewalld activo y habilitado al boot
   systemd:
     name: firewalld
     state: started
     enabled: true
+  # Idempotente: no rompe si ya está activo
 
-
-  
-
-- name: Bloquear ICMP echo-request de CLIENT01 (192.168.122.21)
+# ------------------------------------------------------------------------------
+# REGLA FIREWALL: Bloqueo específico ICMP echo-request desde CLIENT01
+# ------------------------------------------------------------------------------
+- name: >-
+    [CONFIGURACIÓN] Bloquear ICMP echo-request de CLIENT01 (192.168.122.21) 
+    en zona public
   firewalld:
     zone: public
     rich_rule: 
       - "rule family=ipv4 source address=192.168.122.21 icmp-type name=echo-request drop"
-    permanent: true
-    immediate: true
+    permanent: true      # Persiste reboot
+    immediate: true      # Aplica inmediatamente
+  # Resultado: ping falla, curl/mariadb funcionan
 
-- name: Verificar regla aplicada
-  shell: firewall-cmd --zone=public --list-rich-rules 
+# ------------------------------------------------------------------------------
+# VERIFICACIÓN: Confirmar regla activa en runtime
+# ------------------------------------------------------------------------------
+- name: >-
+    [VALIDACIÓN] Verificar que la regla rich_rule se aplicó correctamente
+  shell: firewall-cmd --zone=public --list-rich-rules
   register: rich_rules
-  changed_when: false
+  changed_when: false   # Solo consulta, no modifica
+  # Output esperado: "rule family=ipv4 source address=192.168.122.21..."
 
-
-
-
-
-- name: Mostrar ticket / escenario estilo NOC con filosofía Linux
+# ------------------------------------------------------------------------------
+# REPORTING: Mostrar estado final al usuario (estilo NOC ticket)
+# ------------------------------------------------------------------------------
+- name: >-
+    [COMPLETADO] Mostrar resultado y instrucciones de validación
   debug:
     msg:
       - "========================================================================"
