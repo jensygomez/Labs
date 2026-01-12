@@ -1,0 +1,146 @@
+
+PLAY [J03 | Resolve variables del escenario] ***********************************
+
+TASK [Resolver variables J03] **************************************************
+included: /home/jensy/Labs/scenarios/junior/J03/vars/resolve.yml for admin01, web01, client01
+
+TASK [J03 | Cargar variables base del escenario] *******************************
+ok: [web01]
+ok: [admin01]
+ok: [client01]
+
+TASK [J03 | Resolver parámetros aleatorios del escenario] **********************
+ok: [admin01]
+
+TASK [J03 | Resolver variables adicionales para Variant 2] *********************
+ok: [admin01]
+
+TASK [J03 | Construir variables derivadas de contexto] *************************
+ok: [admin01]
+
+TASK [ASSERT | variants debe ser una lista] ************************************
+ok: [admin01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+ok: [web01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+ok: [client01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+
+TASK [J03 | Seleccionar variante del incidente] ********************************
+ok: [admin01]
+
+TASK [J03 | Marcar resolución del escenario como completada] *******************
+ok: [admin01]
+
+PLAY [J03 | Propagar variables globales] ***************************************
+
+TASK [Obtener variables del admin01] *******************************************
+ok: [admin01]
+
+PLAY [J03 | Ejecutar baseline canónico (estado sano)] **************************
+
+TASK [Incluir baseline global] *************************************************
+included: /home/jensy/Labs/scenarios/junior/J03/baseline.yml for admin01, web01, client01
+
+TASK [BASELINE | admin01 | Verificación pasiva] ********************************
+skipping: [web01]
+ok: [admin01] => {
+    "msg": "admin01 operativo. No se aplican cambios de red en baseline."
+}
+skipping: [client01]
+
+TASK [WEB01 | Detectar interfaz con ruta por defecto] **************************
+skipping: [admin01]
+skipping: [client01]
+ok: [web01]
+
+TASK [WEB01 | Definir interfaz primaria] ***************************************
+skipping: [admin01]
+skipping: [client01]
+ok: [web01]
+
+TASK [WEB01 | Verificar IP de servicio existente] ******************************
+skipping: [admin01]
+skipping: [client01]
+ok: [web01]
+
+TASK [WEB01 | Añadir IP secundaria del servicio] *******************************
+skipping: [admin01]
+skipping: [web01]
+skipping: [client01]
+
+TASK [WEB01 | Script de persistencia de IP secundaria] *************************
+skipping: [admin01]
+skipping: [client01]
+[ERROR]: Task failed: Module failed: Destination /usr/local/sbin not writable
+Origin: /home/jensy/Labs/scenarios/junior/J03/baseline.yml:122:3
+
+120
+121 # 3. Persistencia mínima (sin nmcli)
+122 - name: WEB01 | Script de persistencia de IP secundaria
+      ^ column 3
+
+fatal: [web01]: FAILED! => {"changed": false, "checksum": "bf1d9d69cec5fa57447d53b83739a3f37cb3b091", "msg": "Destination /usr/local/sbin not writable"}
+
+TASK [WEB01 | Registrar script en rc.local] ************************************
+skipping: [admin01]
+skipping: [client01]
+
+TASK [WEB01 | Instalar nginx] **************************************************
+skipping: [admin01]
+skipping: [client01]
+
+TASK [WEB01 | Configurar nginx (estado sano)] **********************************
+skipping: [admin01]
+skipping: [client01]
+
+TASK [WEB01 | Arrancar nginx] **************************************************
+skipping: [admin01]
+skipping: [client01]
+
+TASK [WEB01 | Asegurar firewalld] **********************************************
+skipping: [admin01]
+skipping: [client01]
+
+TASK [WEB01 | Arrancar firewalld] **********************************************
+skipping: [admin01]
+skipping: [client01]
+
+TASK [WEB01 | Abrir puerto web] ************************************************
+skipping: [admin01]
+skipping: [client01]
+
+TASK [CLIENT01 | Resolver servicio vía /etc/hosts] *****************************
+skipping: [admin01]
+[ERROR]: Task failed: Module failed: The destination directory '/etc' is not writable by the current user: [Errno 13] Permissão negada: b'/etc/.ansible_tmp0ts0k45vhosts'
+
+Task failed: Module failed: The destination directory '/etc' is not writable by the current user.
+Origin: /home/jensy/Labs/scenarios/junior/J03/baseline.yml:203:3
+
+201 # BASELINE | client01 — Cliente remoto
+202 # ------------------------------------------------------------------------------
+203 - name: CLIENT01 | Resolver servicio vía /etc/hosts
+      ^ column 3
+
+<<< caused by >>>
+
+[Errno 13] Permissão negada: b'/etc/.ansible_tmp0ts0k45vhosts'
+
+fatal: [client01]: FAILED! => {"changed": false, "msg": "Task failed: Module failed: The destination directory '/etc' is not writable by the current user: [Errno 13] Permissão negada: b'/etc/.ansible_tmp0ts0k45vhosts'"}
+
+TASK [CLIENT01 | Instalar curl] ************************************************
+skipping: [admin01]
+
+PLAY [J03 | Validar baseline (TODO FUNCIONA)] **********************************
+
+PLAY RECAP *********************************************************************
+admin01                    : ok=11   changed=0    unreachable=0    failed=0    skipped=14   rescued=0    ignored=0   
+client01                   : ok=4    changed=0    unreachable=0    failed=1    skipped=13   rescued=0    ignored=0   
+web01                      : ok=7    changed=0    unreachable=0    failed=1    skipped=2    rescued=0    ignored=0   
+
