@@ -60,14 +60,12 @@
     state: started
     enabled: true
 
-- name: "[CONFIGURACIÓN] Bloquear ICMP tipo 11 (TTL exceeded) --direct rule"
-  shell: >
-    firewall-cmd --permanent --direct --add-rule ipv4 filter INPUT 0 -p icmp --icmp-type 11 -j DROP
-  args:
-    warn: false
-
-- name: "[CONFIGURACIÓN] Recargar firewalld para aplicar regla"
-  command: firewall-cmd --reload
+- name: "[CONFIGURACIÓN] Bloquear ICMP tipo 11 (TTL exceeded) usando módulo firewalld"
+  firewalld:
+    rich_rule: rule protocol value="icmp" icmp-type="time-exceeded" reject
+    permanent: true
+    immediate: true
+    state: enabled
 
 - name: "[VERIFICACIÓN] Confirmar regla ICMP TTL exceeded"
   shell: firewall-cmd --direct --get-all-rules
