@@ -42,7 +42,7 @@
 
   vars:
     variantes:
-      - "inject/variant_1.yml"
+      - variant_1.yml
 
   tasks:
     - name: Elegir variante aleatoriamente
