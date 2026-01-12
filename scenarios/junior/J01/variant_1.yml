@@ -54,7 +54,8 @@
 
 - name: Bloquear ICMP echo-request de CLIENT01 (idempotente)
   firewalld:
-    rich_rules: 
+    zone: public
+    rich_rule: 
       - "rule family=ipv4 source address=192.168.122.21 icmp-type name=echo-request drop"
     permanent: true
     state: present

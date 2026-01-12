@@ -1,0 +1,50 @@
+
+PLAY [J01 - Orquestador de variantes de redes] *********************************
+
+TASK [Elegir variante aleatoriamente] ******************************************
+ok: [web01]
+
+TASK [Debug - Verificar variante seleccionada] *********************************
+ok: [web01] => {
+    "global_selected_variant": "variant_1.yml"
+}
+
+TASK [Mostrar ticket con estilo caja] ******************************************
+ok: [web01] => {
+    "msg": [
+        "========================================================================",
+        "|                  J01 – Laboratorio de Redes                           |",
+        "-------------------------------------------------------------------------",
+        "| Junior, recuerda que Linux es un ecosistema interconectado            |",
+        "| - Clientes, servidores, firewalls interactúan.                        |",
+        "| - Un fallo en la conectividad no siempre significa un servicio caído. |",
+        "| - Diferencia protocolos y evalúa el impacto antes de actuar.          |",
+        "========================================================================="
+    ]
+}
+
+TASK [Esperar que el usuario presione Enter] ***********************************
+[[[K[Esperar que el usuario presione Enter]
+Presiona ENTER para continuar...:
+ok: [web01]
+
+TASK [Ejecutar la variante seleccionada] ***************************************
+included: /home/jensy/Labs/scenarios/junior/J01/variant_1.yml for web01
+
+TASK [Asegurar que firewalld esté activo en web servers] ***********************
+ok: [web01]
+
+TASK [Bloquear ICMP echo-request de CLIENT01 (idempotente)] ********************
+[ERROR]: Task failed: Module failed: absent and present state can only be used in zone level operations
+Origin: /home/jensy/Labs/scenarios/junior/J01/variant_1.yml:55:3
+
+53   
+54
+55 - name: Bloquear ICMP echo-request de CLIENT01 (idempotente)
+     ^ column 3
+
+fatal: [web01]: FAILED! => {"changed": false, "msg": "absent and present state can only be used in zone level operations"}
+
+PLAY RECAP *********************************************************************
+web01                      : ok=6    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+
