@@ -1,14 +1,2 @@
 ID|TRACK|LEVEL|ARTIFACT|TYPE|USES|STATUS
-J01|junior|Junior|scenarios/junior/J01/J01.yml|ansible|11|active
-J02|junior|Junior|scenarios/junior/J02/J02.yml|ansible|11|active
-J03|junior|Junior|scenarios/junior/J03/J03.yml|ansible|2|active
-J04|junior|Junior|scenarios/junior/J04/J04.yml|ansible|20|planned
-J05|junior|Junior|scenarios/junior/J05/J05.yml|ansible|20|planned
-J06|junior|Junior|scenarios/junior/J06/J06.yml|ansible|20|planned
-J07|junior|Junior|scenarios/junior/J07/J07.yml|ansible|20|planned
-JP01|pleno|Junior-Pleno|scenarios/pleno/JP01/JP01.yml|ansible|20|planned
-JP02|pleno|Pleno|scenarios/pleno/JP02/JP02.yml|ansible|20|planned
-JP03|pleno|Pleno|scenarios/pleno/JP03/JP03.yml|ansible|20|planned
-JS01|senior|Senior|scenarios/senior/JS01/JS01.yml|ansible|20|planned
-JS02|senior|Senior|scenarios/senior/JS02/JS02.yml|ansible|20|planned
-JS03|senior|Senior|scenarios/senior/JS03/JS03.yml|ansible|20|planned
+J01|junior|Junior|scenarios/junior/J01.yml|ansible|1|active
