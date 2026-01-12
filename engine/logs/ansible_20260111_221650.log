@@ -1,0 +1,159 @@
+
+PLAY [J03 | Resolve variables del escenario] ***********************************
+
+TASK [Resolver variables J03] **************************************************
+included: /home/jensy/Labs/scenarios/junior/J03/vars/resolve.yml for admin01, web01, client01
+
+TASK [J03 | Cargar variables base del escenario] *******************************
+ok: [admin01]
+ok: [web01]
+ok: [client01]
+
+TASK [J03 | Resolver parámetros aleatorios del escenario] **********************
+ok: [admin01]
+
+TASK [J03 | Resolver variables adicionales para Variant 2] *********************
+ok: [admin01]
+
+TASK [J03 | Construir variables derivadas de contexto] *************************
+ok: [admin01]
+
+TASK [ASSERT | variants debe ser una lista] ************************************
+ok: [admin01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+ok: [web01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+ok: [client01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+
+TASK [J03 | Seleccionar variante del incidente] ********************************
+ok: [admin01]
+
+TASK [J03 | Marcar resolución del escenario como completada] *******************
+ok: [admin01]
+
+PLAY [J03 | Propagar variables globales] ***************************************
+
+TASK [Obtener variables del admin01] *******************************************
+ok: [admin01]
+
+PLAY [J03 | Ejecutar baseline canónico (estado sano)] **************************
+
+TASK [Incluir baseline global] *************************************************
+included: /home/jensy/Labs/scenarios/junior/J03/baseline.yml for admin01, web01, client01
+
+TASK [BASELINE | admin01 | Verificación pasiva] ********************************
+skipping: [web01]
+ok: [admin01] => {
+    "msg": "admin01 operativo. No se aplican cambios de red en baseline."
+}
+skipping: [client01]
+
+TASK [WEB01 | Detectar interfaz con ruta por defecto] **************************
+skipping: [admin01]
+skipping: [client01]
+ok: [web01]
+
+TASK [WEB01 | Definir interfaz primaria] ***************************************
+skipping: [admin01]
+ok: [web01]
+skipping: [client01]
+
+TASK [WEB01 | Verificar IP de servicio existente] ******************************
+skipping: [admin01]
+skipping: [client01]
+ok: [web01]
+
+TASK [WEB01 | Añadir IP secundaria del servicio] *******************************
+skipping: [admin01]
+skipping: [web01]
+skipping: [client01]
+
+TASK [WEB01 | Script de persistencia de IP secundaria] *************************
+skipping: [admin01]
+skipping: [client01]
+changed: [web01]
+
+TASK [WEB01 | Registrar script en rc.local] ************************************
+skipping: [admin01]
+skipping: [client01]
+changed: [web01]
+
+TASK [WEB01 | Instalar nginx] **************************************************
+skipping: [admin01]
+skipping: [client01]
+ok: [web01]
+
+TASK [WEB01 | Configurar nginx (estado sano)] **********************************
+skipping: [admin01]
+skipping: [client01]
+changed: [web01]
+
+TASK [WEB01 | Arrancar nginx] **************************************************
+skipping: [admin01]
+skipping: [client01]
+ok: [web01]
+
+TASK [WEB01 | Asegurar firewalld] **********************************************
+skipping: [admin01]
+skipping: [client01]
+ok: [web01]
+
+TASK [WEB01 | Arrancar firewalld] **********************************************
+skipping: [admin01]
+skipping: [client01]
+ok: [web01]
+
+TASK [WEB01 | Abrir puerto web] ************************************************
+skipping: [admin01]
+skipping: [client01]
+changed: [web01]
+
+TASK [CLIENT01 | Resolver servicio vía /etc/hosts] *****************************
+skipping: [admin01]
+skipping: [web01]
+changed: [client01]
+
+TASK [CLIENT01 | Instalar curl] ************************************************
+skipping: [admin01]
+skipping: [web01]
+ok: [client01]
+
+PLAY [J03 | Validar baseline (TODO FUNCIONA)] **********************************
+
+TASK [VALIDAR | Conectividad web01 → 200 OK] ***********************************
+ok: [client01]
+
+TASK [VALIDAR | Reporte PRE-INJECT] ********************************************
+ok: [client01] => {
+    "msg": "🌐 SISTEMA FUNCIONAL - CONEXIÓN GLOBAL ESTABLECIDA\n══════════════════════════════════════════════════\n• Origen:       client01 (Shanghái, China)\n• Destino:      web01 (Frankfurt, Alemania)\n• Servicio:     http://192.168.122.22:8443\n• Estado HTTP:  -1\n• Latencia:     0s\n\n✅ La infraestructura opera dentro de parámetros normales.\n✅ La comunicación intercontinental fluye sin obstrucciones.\n"
+}
+
+TASK [VALIDAR | 🧠 PREPARACIÓN MENTAL PARA EL INCIDENTE] ***********************
+Pausing for 3 seconds
+(ctrl+C then 'C' = continue early, ctrl+C then 'A' = abort)
+[VALIDAR | 🧠 PREPARACIÓN MENTAL PARA EL INCIDENTE]
+════════════════════════════════════════════════════════════════════
+🧭 FILOSOFÍA LINUX PARA EL SYSADMIN:
+
+"En sistemas distribuidos, la verdad no es absoluta sino contextual.
+ Lo que un nodo ve como 'conectado', otro puede verlo como 'inalcanzable'.
+ Tu tarea no es buscar al culpable, sino encontrar la capa donde
+ se rompió la percepción compartida de la realidad de red."
+ 
+Presiona ENTER cuando estés listo para enfrentar la discontinuidad...
+════════════════════════════════════════════════════════════════════
+:
+ok: [client01]
+
+PLAY RECAP *********************************************************************
+admin01                    : ok=11   changed=0    unreachable=0    failed=0    skipped=14   rescued=0    ignored=0   
+client01                   : ok=9    changed=1    unreachable=0    failed=0    skipped=13   rescued=0    ignored=0   
+web01                      : ok=15   changed=4    unreachable=0    failed=0    skipped=4    rescued=0    ignored=0   
+
