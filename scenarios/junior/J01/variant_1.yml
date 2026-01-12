@@ -69,77 +69,34 @@
   register: result
   changed_when: false
 
-- name: "[EXITOSO] J01-V1 Configurado ✓"
+- name: "[TICKET NOC] INC-J01-V1 - Usuario reporta servidores caídos"
   debug:
     msg:
-      - "========================================================================"
-      - "🎯 J01-V1: ICMP echo-request BLOQUEADO"
-      - "Bloqueos activos: {{ result.stdout }}"
-      - "--------------------------------------------------------------------"
-      - "VERIFICAR DESDE CLIENT01:"
-      - "❌ ping 192.168.122.50 → 'Pacote filtrado'"
-      - "❌ ping 192.168.122.60 → 'Pacote filtrado'" 
-      - "✅ curl http://192.168.122.50 → 200 OK"
-      - "✅ nc 192.168.122.60 3306 → Connected"
-      - "========================================================================"
-  run_once: true
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ------------------------------------------------------------------------------
-# REPORTING: Mostrar estado final al usuario (estilo NOC ticket)
-# ------------------------------------------------------------------------------
-- name: >-
-    [COMPLETADO] Mostrar resultado y instrucciones de validación
-  debug:
-    msg:
-      - "========================================================================"
-      - "|                  INC-J01-V1 – Bloqueo ICMP desde CLIENT01             |"
-      - "------------------------------------------------------------------------"
-      - "| Descripción:                                                            |"
-      - "| - Ping y traceroute desde CLIENT01 a SERVER_EU fallan.                  |"
-      - "| - HTTP (80) y MariaDB (3306) siguen funcionando.                        |"
-      - "| - Posible bloqueo de ICMP por firewall.                                 |"
-      - "------------------------------------------------------------------------"
-      - "| Contexto:                                                               |"
-      - "| - CLIENT01 (192.168.122.21): Cliente que realiza pruebas.               |"
-      - "| - SERVER_EU (192.168.122.22): Servidor con Nginx y MariaDB.             |"
-      - "| - Firewalld activo en SERVER_EU.                                        |"
-      - "------------------------------------------------------------------------"
-      - "| Filosofía Linux (perspectiva senior):                                   |"
-      - "| - Linux permite observar todo el ecosistema: red, servicios y protocolos.|"
-      - "| - Fallo de ping no implica fallo de servicio. ICMP es solo diagnóstico. |"
-      - "| - TCP y UDP son independientes; servicios críticos siguen activos.       |"
-      - "| - Antes de actuar, observa qué falló y qué sigue funcionando.           |"
-      - "| - Reflexiona sobre impacto en usuarios y aplicaciones.                  |"
-      - "| - Mentalidad de senior: diagnosticar con criterio y documentar todo.    |"
-      - "------------------------------------------------------------------------"
-      - "| Objetivos de aprendizaje:                                               |"
-      - "| 1. Entender que fallo de ping no implica fallo de servicio.             |"
-      - "| 2. Diagnosticar reglas de firewall que afectan ICMP.                     |"
-      - "| 3. Diferenciar protocolos ICMP vs TCP.                                   |"
-      - "| 4. Practicar observación y pensamiento crítico de un sysadmin senior.   |"
-      - "------------------------------------------------------------------------"
-      - "| Checklist recomendado:                                                  |"
-      - "| - [ ] Desde CLIENT01: ping y traceroute hacia SERVER_EU                 |"
-      - "| - [ ] Confirmar que HTTP funciona                                       |"
-      - "| - [ ] Confirmar que MariaDB funciona                                    |"
-      - "| - [ ] Revisar firewalld en SERVER_EU                                    |"
-      - "| - [ ] Reflexión: ¿Por qué ICMP falla pero TCP sigue funcionando?        |"
-      - "========================================================================"
+      - "========================================================================="
+      - "| 🎫 INC-J01-V1 – SERVIDORES WEB Y DB NO RESPONDEN                       |"
+      - "| PRIORIDAD: 🟡 MEDIA | IMPACTO: REPORTADO POR USUARIO CLIENTE          |"
+      - "========================================================================="
+      - "| 📋 DESCRIPCIÓN USUARIO:                                               |"
+      - "| 'Desde CLIENT01 (192.168.122.21) no puedo conectarme a:'              |"
+      - "| • Servidor Web (192.168.122.50) - Sin respuesta                       |"
+      - "| • Servidor DB (192.168.122.60) - Sin respuesta                        |"
+      - "| 'Los servicios están caídos, urgente revisar conectividad.'           |"
+      - "-------------------------------------------------------------------------"
+      - "| 📊 METADATOS TÉCNICOS:                                                |"
+      - "| • Reportado: CLIENT01 → WEB(.50) + DB(.60)                            |"
+      - "| • Protocolos reportados: conectividad básica                          |"
+      - "| • Impacto reportado: total                                            |"
+      - "-------------------------------------------------------------------------"
+      - "| 💭 OBSERVACIONES INICIALES:                                            |"
+      - "| • ¿Qué significa realmente 'no responde'?                             |"
+      - "| • ¿Un solo punto de fallo afecta múltiples servicios?                 |"
+      - "| • ¿Linux te está enseñando algo sobre el ecosistema?                  |"
+      - "-------------------------------------------------------------------------"
+      - "| 🎯 TU MISIÓN:                                                          |"
+      - "| Diagnosticar con criterio senior                                      |"
+      - "| Validar impacto real en negocio                                       |"
+      - "| Documentar hallazgo                                                   |"
+      - "======================================================================== "
+      - "| ⏰ INICIAR DIAGNÓSTICO → Presiona ENTER cuando estés listo            |"
+      - "======================================================================== "
   run_once: true
