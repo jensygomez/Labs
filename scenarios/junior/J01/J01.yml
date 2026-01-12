@@ -64,7 +64,7 @@
 
   vars:
     variantes:
-      - variant_2.yml
+      - variant_3.yml
 
 
   tasks:
