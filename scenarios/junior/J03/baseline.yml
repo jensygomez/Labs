@@ -74,141 +74,139 @@
 #
 # ==============================================================================
 
-
-
 ---
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # BASELINE | admin01 — Control plane
-# ------------------------------------------------------------------------------
+# ==============================================================================
 - name: BASELINE | admin01 | Verificación pasiva
   debug:
     msg: "admin01 operativo. No se aplican cambios de red en baseline."
   when: "'admin' in group_names"
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # BASELINE | web01 — Servidor EU (IP secundaria + servicio web)
-# ------------------------------------------------------------------------------
-
-# 1. Detectar interfaz primaria
-- name: WEB01 | Detectar interfaz con ruta por defecto
-  command: ip route show default
-  register: default_route
-  changed_when: false
+# ==============================================================================
+- name: BASELINE | web01 | Estado óptimo del servidor
   when: "'web' in group_names"
+  become: yes
+  block:
 
-- name: WEB01 | Definir interfaz primaria
-  set_fact:
-    primary_iface: "{{ default_route.stdout.split(' dev ')[1].split()[0] }}"
-  when: "'web' in group_names"
+    # --------------------------------------------------------------------------
+    # 1. Detectar interfaz primaria
+    # --------------------------------------------------------------------------
+    - name: WEB01 | Detectar interfaz con ruta por defecto
+      command: ip route show default
+      register: default_route
+      changed_when: false
 
+    - name: WEB01 | Definir interfaz primaria
+      set_fact:
+        primary_iface: "{{ default_route.stdout.split(' dev ')[1].split()[0] }}"
 
-# 2. IP secundaria (runtime, idempotente)
-- name: WEB01 | Verificar IP de servicio existente
-  command: ip addr show {{ primary_iface }}
-  register: ip_addr_check
-  changed_when: false
-  when: "'web' in group_names"
+    # --------------------------------------------------------------------------
+    # 2. IP secundaria (runtime, idempotente)
+    # --------------------------------------------------------------------------
+    - name: WEB01 | Verificar IP de servicio existente
+      command: ip addr show {{ primary_iface }}
+      register: ip_addr_check
+      changed_when: false
 
-- name: WEB01 | Añadir IP secundaria del servicio
-  command: ip addr add {{ global_web_ip }}/24 dev {{ primary_iface }}
-  when:
-    - "'web' in group_names"
-    - global_web_ip not in ip_addr_check.stdout
+    - name: WEB01 | Añadir IP secundaria del servicio
+      command: ip addr add {{ global_web_ip }}/24 dev {{ primary_iface }}
+      when: global_web_ip not in ip_addr_check.stdout
 
+    # --------------------------------------------------------------------------
+    # 3. Persistencia mínima (sin nmcli)
+    # --------------------------------------------------------------------------
+    - name: WEB01 | Script de persistencia de IP secundaria
+      copy:
+        dest: /usr/local/sbin/j03-add-service-ip.sh
+        owner: root
+        group: root
+        mode: '0755'
+        content: |
+          #!/bin/bash
+          IFACE="{{ primary_iface }}"
+          IP="{{ global_web_ip }}/24"
+          ip addr show "$IFACE" | grep -q "{{ global_web_ip }}" || \
+            ip addr add "$IP" dev "$IFACE"
 
-# 3. Persistencia mínima (sin nmcli)
-- name: WEB01 | Script de persistencia de IP secundaria
-  copy:
-    dest: /usr/local/sbin/j03-add-service-ip.sh
-    owner: root
-    group: root
-    mode: '0755'
-    content: |
-      #!/bin/bash
-      IFACE="{{ primary_iface }}"
-      IP="{{ global_web_ip }}/24"
-      ip addr show "$IFACE" | grep -q "{{ global_web_ip }}" || \
-        ip addr add "$IP" dev "$IFACE"
-  when: "'web' in group_names"
+    - name: WEB01 | Registrar script en rc.local
+      lineinfile:
+        path: /etc/rc.local
+        line: "/usr/local/sbin/j03-add-service-ip.sh"
+        create: yes
+        mode: '0755'
 
-- name: WEB01 | Registrar script en rc.local
-  lineinfile:
-    path: /etc/rc.local
-    line: "/usr/local/sbin/j03-add-service-ip.sh"
-    create: yes
-    mode: '0755'
-  when: "'web' in group_names"
+    # --------------------------------------------------------------------------
+    # 4. Servicio web (estado sano)
+    # --------------------------------------------------------------------------
+    - name: WEB01 | Instalar nginx
+      package:
+        name: nginx
+        state: present
 
-
-# 4. Servicio web
-- name: WEB01 | Instalar nginx
-  package:
-    name: nginx
-    state: present
-  when: "'web' in group_names"
-
-- name: WEB01 | Configurar nginx (estado sano)
-  copy:
-    dest: /etc/nginx/conf.d/j03.conf
-    owner: root
-    group: root
-    mode: '0644'
-    content: |
-      server {
-          listen {{ global_web_port }};
-          server_name _;
-          location / {
-              return 200 "J03 BASELINE OK\n";
+    - name: WEB01 | Configurar nginx (estado sano)
+      copy:
+        dest: /etc/nginx/conf.d/j03.conf
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          server {
+              listen {{ global_web_port }};
+              server_name _;
+              location / {
+                  return 200 "J03 BASELINE OK\n";
+              }
           }
-      }
-  when: "'web' in group_names"
 
-- name: WEB01 | Arrancar nginx
-  service:
-    name: nginx
-    state: started
-    enabled: yes
-  when: "'web' in group_names"
+    - name: WEB01 | Arrancar nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
 
+    # --------------------------------------------------------------------------
+    # 5. Firewall — estado óptimo
+    # --------------------------------------------------------------------------
+    - name: WEB01 | Asegurar firewalld
+      package:
+        name: firewalld
+        state: present
 
-# 5. Firewall — estado óptimo
-- name: WEB01 | Asegurar firewalld
-  package:
-    name: firewalld
-    state: present
-  when: "'web' in group_names"
+    - name: WEB01 | Arrancar firewalld
+      service:
+        name: firewalld
+        state: started
+        enabled: yes
 
-- name: WEB01 | Arrancar firewalld
-  service:
-    name: firewalld
-    state: started
-    enabled: yes
-  when: "'web' in group_names"
-
-- name: WEB01 | Abrir puerto web
-  firewalld:
-    port: "{{ global_web_port }}/tcp"
-    zone: "{{ global_firewall_zone }}"
-    permanent: yes
-    state: enabled
-    immediate: yes
-  when: "'web' in group_names"
+    - name: WEB01 | Abrir puerto web
+      firewalld:
+        port: "{{ global_web_port }}/tcp"
+        zone: "{{ global_firewall_zone }}"
+        permanent: yes
+        state: enabled
+        immediate: yes
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # BASELINE | client01 — Cliente remoto
-# ------------------------------------------------------------------------------
-- name: CLIENT01 | Resolver servicio vía /etc/hosts
-  lineinfile:
-    path: /etc/hosts
-    line: "{{ global_web_ip }} {{ web_url | regex_replace('^https?://', '') }}"
-    state: present
+# ==============================================================================
+- name: BASELINE | client01 | Estado óptimo del cliente
   when: "'client' in group_names"
+  become: yes
+  block:
 
-- name: CLIENT01 | Instalar curl
-  package:
-    name: curl
-    state: present
-  when: "'client' in group_names"
+    - name: CLIENT01 | Resolver servicio vía /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ global_web_ip }} {{ web_url | regex_replace('^https?://', '') }}"
+        state: present
+
+    - name: CLIENT01 | Instalar curl
+      package:
+        name: curl
+        state: present
