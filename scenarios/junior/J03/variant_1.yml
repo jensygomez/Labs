@@ -1,171 +1,108 @@
+---
 # ==============================================================================
-# J03 | VARIANT 1 — Firewalld bloquea puerto web + TICKET EMBEBIDO
+# J01 – Variant 1: Bloqueo de ICMP (ping) desde CLIENT01
 # ==============================================================================
-# INCIDENTE:
-#   Servicio web inaccesible desde client01 PERO FUNCIONA LOCALMENTE
-#   Causa real: firewalld tiene reglas contradictorias y bloquea el puerto
 #
-# ESTADO PREVIO (baseline):
-#   - nginx escuchando en 192.168.122.50:80
-#   - Firewall con puerto 80 PERMITIDO
-#   - Cliente_CH puede acceder via curl http://server.eu
+# 🔹 Objetivo del laboratorio:
+# Este escenario simula un problema muy común en entornos corporativos: el cliente
+# no puede hacer ping ni traceroute hacia el servidor, aunque los servicios críticos
+# como HTTP y MySQL siguen funcionando. Esto permite practicar troubleshooting de
+# red y firewalls sin afectar los servicios reales.
 #
-# ESTADO POST-INYECCIÓN:
-#   - nginx SIGUE ESCUCHANDO (servicio activo)
-#   - Firewall BLOQUEA puerto 80 de forma específica
-#   - Rich rule REJECT sobreescribe permisos base
-#   - Cliente_CH recibe "Connection refused"
+# 🔹 Contexto:
+# - CLIENT01: 192.168.122.21 (Cliente que hará las pruebas)
+# - SERVER_EU: 192.168.122.22 (Servidor con Nginx 80, MariaDB 3306)
+# - Firewalld activo en SERVER_EU
+# 
+# 🔹 Qué estamos rompiendo:
+# - Bloqueo de paquetes ICMP tipo echo-request desde CLIENT01
+# - Esto hará que ping y traceroute fallen desde CLIENT01
+# 
+# 🔹 Qué NO estamos rompiendo:
+# - HTTP (puerto 80) sigue funcionando
+# - MySQL (puerto 3306) sigue funcionando
+# - Red física y demás servicios
+#
+# 🔹 Objetivos de aprendizaje:
+# 1. Entender que el fallo de ping no significa que el servidor esté caído
+# 2. Revisar reglas de firewall y cómo afectan distintos protocolos
+# 3. Diagnosticar conectividad desde cliente y servidor
+# 4. Diferenciar entre problemas de red y problemas de servicio
+#
+# 🔹 Pruebas recomendadas desde CLIENT01:
+# - ping -c 2 192.168.122.50     # Debe fallar
+# - ping -c 2 192.168.122.60     # Debe fallar
+# - traceroute 192.168.122.50    # Debe fallar
+# - curl http://www.paginaweb.com # Debe seguir funcionando
+# - nc -zv 192.168.122.60 3306   # Debe seguir funcionando
+#
+# 🔹 Diagnóstico sugerido:
+# - Revisar firewalld: firewall-cmd --list-all
+# - Verificar rich rules que bloquean ICMP
+# - Confirmar que HTTP y MySQL siguen accesibles
+#
+# 🔹 Reparación:
+# - Eliminar la regla de ICMP en SERVER_EU y recargar firewalld
 # ==============================================================================
 
-# ------------------------------------------------------------------------------
-# 1. Backup configuración firewalld
-# ------------------------------------------------------------------------------
-- name: V1 | Backup completo de firewalld
-  shell: |
-    # Backup de zona actual
-    cp /etc/firewalld/zones/{{ global_firewall_zone | default('public') }}.xml \
-       /etc/firewalld/zones/{{ global_firewall_zone | default('public') }}.xml.j03v1.bak
-    # Backup de rich rules
-    firewall-cmd --zone={{ global_firewall_zone | default('public') }} --list-rich-rules > /tmp/firewall-rich-rules.bak
-  args:
-    executable: /bin/bash
-  become: yes
-  changed_when: false
-
-# ------------------------------------------------------------------------------
-# 2. Ruido realista: Configuración ambigua
-# ------------------------------------------------------------------------------
-- name: V1 | Crear ambigüedad: añadir y quitar reglas
-  shell: |
-    # Añadir puerto (para luego ser sobreescrito por rich rule)
-    firewall-cmd --zone="{{ global_firewall_zone | default('public') }}" \
-      --add-port="{{ global_web_port }}/tcp" \
-      --permanent
-    
-    # Añadir servicio (crea confusión)
-    firewall-cmd --zone="{{ global_firewall_zone | default('public') }}" \
-      --add-service=http \
-      --permanent
-  args:
-    executable: /bin/bash
+- name: J01 Variant 1 - Bloquear ICMP desde CLIENT01
+  hosts: web
   become: yes
 
-# ------------------------------------------------------------------------------
-# 3. CAUSA RAÍZ: Rich rule que REJECT específicamente
-# ------------------------------------------------------------------------------
-- name: V1 | CAUSA RAÍZ — Rich rule que bloquea explícitamente
-  shell: |
-    # Esta regla sobreescribe cualquier permiso anterior
-    firewall-cmd --zone="{{ global_firewall_zone | default('public') }}" \
-      --add-rich-rule='rule family="ipv4" source address="192.168.122.0/24" port port="{{ global_web_port }}" protocol="tcp" reject' \
-      --permanent
-    
-    # NOTA: Esta regla es MÁS ESPECÍFICA que las reglas generales
-    # En firewalld, las rich rules tienen prioridad sobre reglas simples
-  args:
-    executable: /bin/bash
-  become: yes
+  tasks:
+    - name: Asegurar que firewalld esté activo
+      systemd:
+        name: firewalld
+        state: started
+        enabled: true
 
-# ------------------------------------------------------------------------------
-# 4. Ruido adicional: Cambiar política por defecto temporalmente
-# ------------------------------------------------------------------------------
-- name: V1 | Temporalmente cambiar política default (ruido)
-  shell: |
-    # Cambiar a DROP temporalmente (luego revertir, pero crea confusión en logs)
-    firewall-cmd --zone="{{ global_firewall_zone | default('public') }}" \
-      --set-target=DROP
-    sleep 2
-    firewall-cmd --zone="{{ global_firewall_zone | default('public') }}" \
-      --set-target=default
-  args:
-    executable: /bin/bash
-  become: yes
+    - name: Bloquear ICMP desde CLIENT01 (ping/traceroute)
+      command: >
+        firewall-cmd --permanent
+        --add-rich-rule='rule family="ipv4"
+        source address="192.168.122.21"
+        icmp-type name="echo-request"
+        drop'
 
-# ------------------------------------------------------------------------------
-# 5. Aplicar cambios y verificar
-# ------------------------------------------------------------------------------
-- name: V1 | Recargar firewalld
-  command: firewall-cmd --reload
-  become: yes
+    - name: Recargar firewalld
+      command: firewall-cmd --reload
 
-- name: V1 | Mostrar estado CONFUSO del firewall
-  shell: |
-    echo "=== ZONA {{ global_firewall_zone | default('public') }} ==="
-    firewall-cmd --zone={{ global_firewall_zone | default('public') }} --list-all
-    echo ""
-    echo "=== RICH RULES (prioridad alta) ==="
-    firewall-cmd --zone={{ global_firewall_zone | default('public') }} --list-rich-rules
-  register: firewall_debug
-  changed_when: false
-  become: yes
-
-# ------------------------------------------------------------------------------
-# 6. VERIFICAR PARADOJA: Local OK, Remoto FAIL
-# ------------------------------------------------------------------------------
-- name: V1 | Paradoja: servicio local funciona
-  uri:
-    url: "http://localhost:{{ global_web_port }}"
-    method: GET
-    timeout: 5
-  register: local_check
-  changed_when: false
-
-- name: V1 | Simular intento de cliente (debería fallar)
-  shell: |
-    # Intentar conectar desde "perspectiva externa"
-    timeout 2 curl -s http://{{ ansible_default_ipv4.address }}:{{ global_web_port }} || exit 0
-  register: remote_sim
-  changed_when: false
-  failed_when: false
-  become: yes
-
-# ------------------------------------------------------------------------------
-# 7. 🎫 TICKET MEJORADO (más realista)
-# ------------------------------------------------------------------------------
-- name: V1 | 🎫 TICKET NOC — Incidente crítico de conectividad
-  debug:
-    msg:
-      - ""
-      - "╔══════════════════════════════════════════════════════════════════════╗"
-      - "║                     🚨 INCIDENTE NOC - PRIORIDAD ALTA                ║"
-      - "╠══════════════════════════════════════════════════════════════════════╣"
-      - "║                                                                      ║"
-      - "║  TICKET: NOC-2024-03-15-001                                          ║"
-      - "║  ASUNTO: Cliente China no puede acceder a portal corporativo         ║"
-      - "║  IMPACTO: Oficina de Shanghai desconectada del ERP                   ║"
-      - "║                                                                      ║"
-      - "║  📍 DATOS DEL INCIDENTE:                                             ║"
-      - "║    • Servidor:    Server_EU (Frankfurt)                              ║"
-      - "║    • Cliente:     Cliente_CH (Shanghai)                              ║"
-      - "║    • Servicio:    Portal Web ({{ web_url }})                        ║"
-      - "║    • Puerto:      {{ global_web_port }}/tcp                          ║"
-      - "║    • Sintoma:     'Connection refused' desde China                   ║"
-      - "║                                                                      ║"
-      - "║  ✅ VERIFICACIONES REALIZADAS:                                        ║"
-      - "║    • Servicio local:     HTTP {{ local_check.status }} OK            ║"
-      - "║    • nginx status:       ACTIVE (listening)                          ║"
-      - "║    • Server ping:        RESPONDE (192.168.122.22)                   ║"
-      - "║                                                                      ║"
-      - "║  🔍 COMANDOS DE DIAGNÓSTICO SUGERIDOS:                               ║"
-      - "║    $ systemctl status {{ global_web_service }}                       ║"
-      - "║    $ ss -tulnp | grep :{{ global_web_port }}                         ║"
-      - "║    $ firewall-cmd --list-all                                         ║"
-      - "║    $ firewall-cmd --zone={{ global_firewall_zone }} --list-rich-rules║"
-      - "║    $ curl -v http://{{ server_domain | default('server.eu') }}       ║"
-      - "║                                                                      ║"
-      - "║  🎯 POSIBLE CAUSA:                                                    ║"
-      - "║    Configuración de firewall con reglas conflictivas.                ║"
-      - "║    Las rich rules tienen prioridad sobre reglas simples.             ║"
-      - "║                                                                      ║"
-      - "║  👤 ACCESO REMOTO:                                                   ║"
-      - "║    ssh student@192.168.122.22                                        ║"
-      - "║    (IP administrativa, no la IP del servicio)                        ║"
-      - "║                                                                      ║"
-      - "║  ⚠️  NOTA CRÍTICA:                                                    ║"
-      - "║    El servicio FUNCIONA localmente pero NO desde clientes externos.  ║"
-      - "║    Esto sugiere problema en CAPA DE RED/FIREWALL, no en aplicación.  ║"
-      - "║                                                                      ║"
-      - "╚══════════════════════════════════════════════════════════════════════╝"
-      - ""
-    verbosity: 0
-  run_once: true
+    - name: Mostrar ticket / escenario estilo NOC con filosofía Linux
+      debug:
+        msg: |
+          ╔═══════════════════════════════════════════════════════════════════════════╗
+          ║                     INC-J01-V1 – J01 Variant 1                            ║
+          ║             Bloqueo de ICMP (ping) desde CLIENT01                         ║
+          ╠═══════════════════════════════════════════════════════════════════════════╣
+          ║ Descripción:                                                              ║
+          ║ - Ping y traceroute desde CLIENT01 a SERVER_EU fallan.                    ║
+          ║ - HTTP (80) y MariaDB (3306) siguen funcionando.                          ║
+          ║ - Posible bloqueo de ICMP por firewall.                                   ║
+          ╠═══════════════════════════════════════════════════════════════════════════╣
+          ║ Contexto:                                                                 ║
+          ║ - CLIENT01 (192.168.122.21): Cliente que realiza pruebas.                 ║
+          ║ - SERVER_EU (192.168.122.22): Servidor con Nginx y MariaDB.               ║
+          ║ - Firewalld activo en SERVER_EU.                                          ║
+          ╠═══════════════════════════════════════════════════════════════════════════╣
+          ║ Filosofía Linux (desde la perspectiva de un sysadmin senior):             ║
+          ║ - Linux permite controlar y observar todo el ecosistema: red, servicios   ║
+          ║   y protocolos.                                                           ║
+          ║ - El fallo de ping no implica fallo de servicio. ICMP es solo diagnóstico.║
+          ║ - TCP y UDP son independientes; los servicios críticos siguen funcionando.║
+          ║ - Antes de actuar, observa qué falló y qué sigue funcionando.             ║
+          ║ - Reflexiona sobre el impacto en usuarios y aplicaciones.                 ║
+          ║ - Mentalidad de un senior: diagnosticar con criterio y documentar todo.   ║
+          ╠═══════════════════════════════════════════════════════════════════════════╣
+          ║ Objetivos de aprendizaje:                                                 ║
+          ║ 1. Entender que fallo de ping no implica fallo de servicio.               ║
+          ║ 2. Diagnosticar problemas de firewall que afectan ICMP.                   ║
+          ║ 3. Diferenciar protocolos ICMP vs TCP.                                    ║
+          ║ 4. Practicar la mentalidad de observación de un sysadmin senior.          ║
+          ╠═══════════════════════════════════════════════════════════════════════════╣
+          ║ Checklist recomendado:                                                    ║
+          ║ - [ ] Desde CLIENT01: ping y traceroute hacia SERVER_EU                   ║
+          ║ - [ ] Confirmar que HTTP funciona                                         ║
+          ║ - [ ] Confirmar que MariaDB funciona                                      ║
+          ║ - [ ] Revisar firewalld en SERVER_EU                                      ║
+          ║ - [ ] Reflexión: ¿Por qué ICMP falla pero TCP sigue funcionando?          ║
+          ╚═══════════════════════════════════════════════════════════════════════════╝
