@@ -50,6 +50,12 @@
     name: firewalld
     state: started
     enabled: true
+
+- name: Asegurar que zona public existe y está activa
+  firewalld:
+    zone: public
+    state: present
+    permanent: true
   
 
 - name: Bloquear ICMP echo-request de CLIENT01 (idempotente)
