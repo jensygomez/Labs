@@ -82,7 +82,7 @@
       debug:
         msg:
           - "======================================================"
-          - "📌 Comandos de prueba recomendados para VARIANT_2:"
+          - "📌 Comandos de prueba recomendados"
           - "======================================================"
           - "traceroute -n 192.168.122.50"
           - "ping -c 4 192.168.122.50"
@@ -118,7 +118,7 @@
           - "======================================================"
       when: global_selected_variant == 'variant_2.yml'
       run_once: true
-      
+
 
     - name: Esperar que el usuario presione Enter
       pause:
