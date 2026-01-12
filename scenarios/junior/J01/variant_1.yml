@@ -67,7 +67,7 @@
   firewalld:
     zone: public
     rich_rule: 
-      - "rule family=ipv4 source address=192.168.122.21 icmp-type name=echo-request drop"
+      - "rule family='ipv4' source address='192.168.122.21' icmp-type='echo-request' drop"
     state: enabled       # Habilita la regla
     permanent: true      # Persiste reboot
     immediate: true      # Aplica inmediatamente
