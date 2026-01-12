@@ -1,0 +1,126 @@
+# ==============================================================================
+# J02 – Variant 2: Bloqueo de traceroute (ICMP TTL exceeded) desde CLIENT01
+# ==============================================================================
+#
+# 🔹 Objetivo del laboratorio:
+# Este escenario simula un comportamiento frecuente en redes corporativas o 
+# entornos de laboratorio avanzado: traceroute falla en hop intermedio, pero 
+# los servicios críticos como HTTP y MySQL siguen funcionando. Esto permite 
+# practicar troubleshooting de red, análisis de TTL y firewalls sin afectar 
+# servicios reales.
+#
+# 🔹 Contexto:
+# - CLIENT01: 192.168.122.21 (Cliente que hará las pruebas)
+# - SERVER_EU: 192.168.122.50/60 (Servidor con Nginx 80/443, MariaDB 3306)
+# - Firewalld activo en SERVER_EU
+# 
+# 🔹 Qué estamos rompiendo:
+# - Bloqueo de paquetes ICMP tipo 11 (Time Exceeded) que usa traceroute
+# - Esto hará que traceroute falle desde CLIENT01
+#
+# 🔹 Qué NO estamos rompiendo:
+# - ICMP tipo 8 (echo-request) sigue funcionando → ping permitido
+# - HTTP/HTTPS (puertos 80/443) sigue funcionando
+# - MySQL (puerto 3306) sigue funcionando
+# - Red física y demás servicios
+#
+# 🔹 Objetivos de aprendizaje:
+# 1. Entender que traceroute puede fallar aunque el servidor esté activo
+# 2. Revisar reglas de firewall y cómo afectan distintos tipos de ICMP
+# 3. Diagnosticar conectividad desde cliente y servidor
+# 4. Diferenciar entre problemas de routing/traceroute y problemas de servicio TCP
+#
+# 🔹 Pruebas recomendadas desde CLIENT01:
+# - traceroute -n 192.168.122.50  # Debe fallar en hop intermedio
+# - traceroute -n 192.168.122.60  # Debe fallar en hop intermedio
+# - ping -c 4 192.168.122.50      # Debe funcionar normalmente
+# - ping -c 4 192.168.122.60      # Debe funcionar normalmente
+# - curl http://192.168.122.50     # Debe seguir funcionando
+# - nc -zv 192.168.122.60 3306     # Debe seguir funcionando
+#
+# 🔹 Diagnóstico sugerido:
+# - Revisar firewalld: firewall-cmd --list-all
+# - Revisar reglas directas ICMP: firewall-cmd --direct --get-all-rules
+# - Confirmar que HTTP y MySQL siguen accesibles desde cliente
+#
+# 🔹 Reparación:
+# - Eliminar regla ICMP tipo 11 en SERVER_EU y recargar firewalld:
+#   firewall-cmd --permanent --direct --remove-rule ipv4 filter INPUT 0 -p icmp --icmp-type 11 -j DROP
+#   firewall-cmd --reload
+# ==============================================================================
+
+
+- name: VARIANT_2 — Bloqueo traceroute TTL exceeded
+  hosts: ServerEU
+  become: yes
+  tasks:
+
+    - name: 🔹 Bloquear ICMP TTL exceeded (traceroute)
+      command: >
+        firewall-cmd
+        --permanent
+        --direct
+        --add-rule ipv4 filter INPUT 0 -p icmp --icmp-type 11 -j DROP
+      args:
+        warn: false
+
+    - name: 🔹 Asegurar puertos HTTP/HTTPS abiertos
+      firewalld:
+        port: "{{ item }}/tcp"
+        permanent: yes
+        state: enabled
+        immediate: yes
+      loop:
+        - 80
+        - 443
+
+    - name: 🔹 Asegurar puerto MariaDB abierto
+      firewalld:
+        port: 3306/tcp
+        permanent: yes
+        state: enabled
+        immediate: yes
+
+    - name: 🔹 Recargar firewall
+      command: firewall-cmd --reload
+
+    - name: ✅ Mostrar estado de puertos y reglas direct
+      command: >
+        firewall-cmd --list-ports && firewall-cmd --direct --get-all-rules
+      register: fw_status
+
+    - debug:
+        var: fw_status.stdout_lines
+
+
+- name: "[TICKET NOC] INC-J02-V2 - Usuario reporta problemas de conectividad"
+  debug:
+    msg:
+      - "========================================================================="
+      - "| 🎫 INC-J02-V2 – CLIENTE REPORTA FALLA EN TRACEROUTE                    |"
+      - "| PRIORIDAD: 🟡 MEDIA | IMPACTO: REPORTADO POR USUARIO CLIENTE          |"
+      - "========================================================================="
+      - "| 📋 DESCRIPCIÓN USUARIO:                                               |"
+      - "| 'Desde CLIENT01 (192.168.122.21) no puedo rastrear la ruta hacia:'     |"
+      - "| • Servidor Web (192.168.122.50)                                       |"
+      - "| • Servidor DB (192.168.122.60)                                        |"
+      - "| 'Ping funciona parcialmente, pero traceroute muestra saltos bloqueados.'|"
+      - "-------------------------------------------------------------------------"
+      - "| 📊 METADATOS TÉCNICOS:                                                |"
+      - "| • Reportado: CLIENT01 → WEB(.50) + DB(.60)                            |"
+      - "| • Protocolos reportados: ICMP (TTL exceeded), ping parcial             |"
+      - "| • Impacto reportado: traceroute bloqueado, servicios TCP OK           |"
+      - "-------------------------------------------------------------------------"
+      - "| 💭 OBSERVACIONES INICIALES:                                            |"
+      - "| • Falso positivo: 'no responde' no significa que los servicios estén caídos |"
+      - "| • HTTP/HTTPS y MariaDB accesibles                                      |"
+      - "| • Firewall bloquea ICMP TTL exceeded (traceroute)                      |"
+      - "-------------------------------------------------------------------------"
+      - "| 🎯 TU MISIÓN:                                                          |"
+      - "| Diagnosticar con criterio senior                                      |"
+      - "| Explicar diferencias entre conectividad ICMP y servicios TCP           |"
+      - "| Documentar hallazgo pedagógico                                         |"
+      - "======================================================================== "
+      - "| ⏰ INICIAR DIAGNÓSTICO → Presiona ENTER cuando estés listo            |"
+      - "======================================================================== "
+  run_once: true
