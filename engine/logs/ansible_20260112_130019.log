@@ -52,3 +52,8 @@ ok: [web01] => {
 }
 
 TASK [Esperar que el usuario presione Enter] ***********************************
+[[[K[Esperar que el usuario presione Enter]
+Presiona ENTER para continuar...:
+ok: [web01]
+
+TASK [Ejecutar la variante seleccionada] ***************************************

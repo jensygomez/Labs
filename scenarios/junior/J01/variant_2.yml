@@ -49,78 +49,64 @@
 #   firewall-cmd --reload
 # ==============================================================================
 
+# ==============================================================================
+# J01-V2: BLOQUEO TRACEROUTE (TTL exceeded) - Simulación NOC Real
+# ==============================================================================
 
-- name: VARIANT_2 — Bloqueo traceroute TTL exceeded
-  hosts: ServerEU
-  become: yes
-  tasks:
+- name: "[PREPARACIÓN] Asegurar firewalld activo"
+  systemd:
+    name: firewalld
+    state: started
+    enabled: true
 
-    - name: 🔹 Bloquear ICMP TTL exceeded (traceroute)
-      command: >
-        firewall-cmd
-        --permanent
-        --direct
-        --add-rule ipv4 filter INPUT 0 -p icmp --icmp-type 11 -j DROP
-      args:
-        warn: false
+- name: "[CONFIGURACIÓN] Bloquear ICMP tipo 11 (TTL exceeded) --direct rule"
+  firewalld:
+    direct:
+      ipv4:
+        filter:
+          INPUT:
+            - rule: "0 -p icmp --icmp-type 11 -j DROP"
+    permanent: true
 
-    - name: 🔹 Asegurar puertos HTTP/HTTPS abiertos
-      firewalld:
-        port: "{{ item }}/tcp"
-        permanent: yes
-        state: enabled
-        immediate: yes
-      loop:
-        - 80
-        - 443
+- name: "[VERIFICACIÓN] Confirmar bloqueo activo"
+  shell: firewall-cmd --direct --get-all-rules
+  register: result
+  changed_when: false
 
-    - name: 🔹 Asegurar puerto MariaDB abierto
-      firewalld:
-        port: 3306/tcp
-        permanent: yes
-        state: enabled
-        immediate: yes
-
-    - name: 🔹 Recargar firewall
-      command: firewall-cmd --reload
-
-    - name: ✅ Mostrar estado de puertos y reglas direct
-      command: >
-        firewall-cmd --list-ports && firewall-cmd --direct --get-all-rules
-      register: fw_status
-
-    - debug:
-        var: fw_status.stdout_lines
-
-
-- name: "[TICKET NOC] INC-J02-V2 - Usuario reporta problemas de conectividad"
+- name: "[TICKET NOC] INC-J01-V2 - Usuario reporta conectividad parcial"
   debug:
     msg:
       - "========================================================================="
-      - "| 🎫 INC-J02-V2 – CLIENTE REPORTA FALLA EN TRACEROUTE                    |"
-      - "| PRIORIDAD: 🟡 MEDIA | IMPACTO: REPORTADO POR USUARIO CLIENTE          |"
+      - "| 🎫 INC-J01-V2 – CLIENTE NO PUEDE TRACEROUTE HACIA SERVIDORES           |"
+      - "| PRIORIDAD: 🟡 MEDIA | IMPACTO: REPORTADO POR CLIENTE                   |"
       - "========================================================================="
       - "| 📋 DESCRIPCIÓN USUARIO:                                               |"
-      - "| 'Desde CLIENT01 (192.168.122.21) no puedo rastrear la ruta hacia:'     |"
+      - "| 'Desde CLIENT01 (192.168.122.21) no puedo traceroute a:'              |"
       - "| • Servidor Web (192.168.122.50)                                       |"
       - "| • Servidor DB (192.168.122.60)                                        |"
-      - "| 'Ping funciona parcialmente, pero traceroute muestra saltos bloqueados.'|"
+      - "| 'Ping y servicios críticos siguen funcionando.'                        |"
       - "-------------------------------------------------------------------------"
       - "| 📊 METADATOS TÉCNICOS:                                                |"
       - "| • Reportado: CLIENT01 → WEB(.50) + DB(.60)                            |"
-      - "| • Protocolos reportados: ICMP (TTL exceeded), ping parcial             |"
-      - "| • Impacto reportado: traceroute bloqueado, servicios TCP OK           |"
+      - "| • Protocolos afectados: ICMP tipo 11 (TTL exceeded)                   |"
+      - "| • Impacto real: traceroute bloqueado, servicios TCP/UDP normales      |"
       - "-------------------------------------------------------------------------"
       - "| 💭 OBSERVACIONES INICIALES:                                            |"
-      - "| • Falso positivo: 'no responde' no significa que los servicios estén caídos |"
-      - "| • HTTP/HTTPS y MariaDB accesibles                                      |"
-      - "| • Firewall bloquea ICMP TTL exceeded (traceroute)                      |"
+      - "| • Esto NO indica que el servidor esté caído                           |"
+      - "| • Ping sigue respondiendo correctamente                                |"
+      - "| • HTTP y MariaDB siguen accesibles                                     |"
       - "-------------------------------------------------------------------------"
       - "| 🎯 TU MISIÓN:                                                          |"
-      - "| Diagnosticar con criterio senior                                      |"
-      - "| Explicar diferencias entre conectividad ICMP y servicios TCP           |"
-      - "| Documentar hallazgo pedagógico                                         |"
-      - "======================================================================== "
-      - "| ⏰ INICIAR DIAGNÓSTICO → Presiona ENTER cuando estés listo            |"
-      - "======================================================================== "
+      - "| Diagnosticar conectividad desde cliente y servidor                     |"
+      - "| Validar qué protocolos están afectados                                 |"
+      - "| Documentar hallazgo y lección aprendida                                |"
+      - "========================================================================="
+      - "| ⏰ EJECUTAR PRUEBAS DESDE CLIENTE:                                     |"
+      - "| traceroute -n 192.168.122.50                                           |"
+      - "| traceroute -n 192.168.122.60                                           |"
+      - "| ping -c 4 192.168.122.50                                               |"
+      - "| ping -c 4 192.168.122.60                                               |"
+      - "| curl http://192.168.122.50                                             |"
+      - "| mysql -h 192.168.122.60 -u root -p                                      |"
+      - "========================================================================="
   run_once: true
