@@ -43,6 +43,7 @@
   vars:
     variantes:
       - "variant_1.yml"
+      # En el futuro agregar: variant_2.yml, variant_3.yml, variant_4.yml
 
   tasks:
     - name: Elegir una variante aleatoriamente
@@ -60,13 +61,12 @@
           - "| - Un fallo en la conectividad no siempre significa un servicio caído. |"
           - "| - Diferencia protocolos y evalúa el impacto antes de actuar.          |"
           - "========================================================================="
+        verbosity: 0
       run_once: true
 
     - name: Esperar que el usuario presione Enter para continuar
       pause:
         prompt: "Presiona ENTER para continuar con la siguiente tarea..."
 
-    - name: Ejecutar la variante seleccionada en SERVER_EU
-      include_tasks: "{{ variante_elegida }}"
-      delegate_to: web01
-      become: yes
+    - name: Ejecutar la variante seleccionada
+      import_playbook: "{{ variante_elegida }}"
