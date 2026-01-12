@@ -65,21 +65,19 @@
     [CONFIGURACIÓN] Bloquear ICMP echo-request de CLIENT01 (192.168.122.21) 
     en zona public
   firewalld:
-    zone: public
-    rich_rule: 
-      - "rule family='ipv4' source address='192.168.122.21' icmp-type='echo-request' drop"
-    state: enabled       # Habilita la regla
-    permanent: true      # Persiste reboot
-    immediate: true      # Aplica inmediatamente
-  # Resultado: ping falla, curl/mariadb funcionan
+    zone: public 
+    icmp: echo-request
+    permanent: true
+    state: enabled
+    immediate: true
 
 # ------------------------------------------------------------------------------
 # VERIFICACIÓN: Confirmar regla activa en runtime
 # ------------------------------------------------------------------------------
 - name: >-
     [VALIDACIÓN] Verificar que la regla rich_rule se aplicó correctamente
-  shell: firewall-cmd --zone=public --list-rich-rules
-  register: rich_rules 
+  shell: firewall-cmd --zone=public --list-icmp-blocks
+  register: icmp_blocks
   changed_when: false   # Solo consulta, no modifica
   # Output esperado: "rule family=ipv4 source address=192.168.122.21..."
 
