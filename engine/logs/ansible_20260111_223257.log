@@ -1,0 +1,219 @@
+
+PLAY [J03 | Resolve variables del escenario] ***********************************
+
+TASK [Resolver variables J03] **************************************************
+included: /home/jensy/Labs/scenarios/junior/J03/vars/resolve.yml for admin01, web01, client01
+
+TASK [J03 | Cargar variables base del escenario] *******************************
+ok: [web01]
+ok: [admin01]
+ok: [client01]
+
+TASK [J03 | Resolver parámetros aleatorios del escenario] **********************
+ok: [admin01]
+
+TASK [J03 | Resolver variables adicionales para Variant 2] *********************
+ok: [admin01]
+
+TASK [J03 | Construir variables derivadas de contexto] *************************
+ok: [admin01]
+
+TASK [ASSERT | variants debe ser una lista] ************************************
+ok: [admin01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+ok: [web01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+ok: [client01] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+
+TASK [J03 | Seleccionar variante del incidente] ********************************
+ok: [admin01]
+
+TASK [J03 | Marcar resolución del escenario como completada] *******************
+ok: [admin01]
+
+PLAY [J03 | Propagar variables globales] ***************************************
+
+TASK [Obtener variables del admin01] *******************************************
+ok: [admin01]
+
+PLAY [J03 | Ejecutar baseline canónico (estado sano)] **************************
+
+TASK [Incluir baseline global] *************************************************
+included: /home/jensy/Labs/scenarios/junior/J03/baseline.yml for admin01, web01, client01
+
+TASK [BASELINE | ADMIN01 | INICIO] *********************************************
+skipping: [web01]
+ok: [admin01] => {
+    "msg": "🧭 ADMIN01 activo. Nodo de control sin cambios de red."
+}
+skipping: [client01]
+
+TASK [BASELINE | WEB01 | INICIO BLOQUE] ****************************************
+skipping: [admin01]
+skipping: [client01]
+ok: [web01] => {
+    "msg": "🌍 Iniciando baseline de web01 (red + servicio web)"
+}
+
+TASK [WEB01 | ASSERT | Variables críticas definidas] ***************************
+skipping: [admin01]
+skipping: [client01]
+ok: [web01] => {
+    "changed": false,
+    "msg": "✅ Variables críticas definidas"
+}
+
+TASK [WEB01 | Detectar ruta por defecto] ***************************************
+skipping: [admin01]
+skipping: [client01]
+ok: [web01]
+
+TASK [WEB01 | DEBUG | Ruta por defecto] ****************************************
+skipping: [admin01]
+skipping: [client01]
+ok: [web01] => {
+    "web_default_route.stdout": "default via 192.168.122.1 dev enp1s0 proto static metric 100 "
+}
+
+TASK [WEB01 | Definir interfaz primaria] ***************************************
+skipping: [admin01]
+skipping: [client01]
+ok: [web01]
+
+TASK [WEB01 | DEBUG | Interfaz primaria detectada] *****************************
+skipping: [admin01]
+skipping: [client01]
+ok: [web01] => {
+    "msg": "🧩 Interfaz primaria: enp1s0"
+}
+
+TASK [WEB01 | Estado actual de IPs] ********************************************
+skipping: [admin01]
+skipping: [client01]
+ok: [web01]
+
+TASK [WEB01 | DEBUG | IPs actuales] ********************************************
+skipping: [admin01]
+ok: [web01] => {
+    "web_ip_state.stdout_lines": [
+        "2: enp1s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000",
+        "    link/ether 52:54:00:75:61:f0 brd ff:ff:ff:ff:ff:ff",
+        "    inet 192.168.122.22/24 brd 192.168.122.255 scope global noprefixroute enp1s0",
+        "       valid_lft forever preferred_lft forever",
+        "    inet6 fe80::5054:ff:fe75:61f0/64 scope link noprefixroute ",
+        "       valid_lft forever preferred_lft forever"
+    ]
+}
+skipping: [client01]
+
+TASK [WEB01 | Añadir IP secundaria (si falta)] *********************************
+skipping: [admin01]
+skipping: [web01]
+skipping: [client01]
+
+TASK [WEB01 | ASSERT | IP secundaria presente] *********************************
+skipping: [admin01]
+skipping: [client01]
+ok: [web01] => {
+    "changed": false,
+    "msg": "✅ IP secundaria aplicada correctamente"
+}
+
+TASK [WEB01 | Crear script de persistencia de IP] ******************************
+skipping: [admin01]
+skipping: [client01]
+[ERROR]: Task failed: Module failed: Destination /usr/local/sbin not writable
+Origin: /home/jensy/Labs/scenarios/junior/J03/baseline.yml:173:3
+
+171 # --- Persistencia mínima -------------------------------------------------------
+172
+173 - name: WEB01 | Crear script de persistencia de IP
+      ^ column 3
+
+fatal: [web01]: FAILED! => {"changed": false, "checksum": "bf1d9d69cec5fa57447d53b83739a3f37cb3b091", "msg": "Destination /usr/local/sbin not writable"}
+
+TASK [WEB01 | Registrar script en rc.local] ************************************
+skipping: [admin01]
+skipping: [client01]
+
+TASK [WEB01 | Instalar nginx] **************************************************
+skipping: [admin01]
+skipping: [client01]
+
+TASK [WEB01 | Configurar nginx] ************************************************
+skipping: [admin01]
+skipping: [client01]
+
+TASK [WEB01 | Arrancar nginx] **************************************************
+skipping: [admin01]
+skipping: [client01]
+
+TASK [WEB01 | ASSERT | nginx escuchando] ***************************************
+skipping: [admin01]
+skipping: [client01]
+
+TASK [assert] ******************************************************************
+skipping: [admin01]
+skipping: [client01]
+
+TASK [WEB01 | Asegurar firewalld] **********************************************
+skipping: [admin01]
+skipping: [client01]
+
+TASK [WEB01 | Arrancar firewalld] **********************************************
+skipping: [admin01]
+skipping: [client01]
+
+TASK [WEB01 | Abrir puerto web] ************************************************
+skipping: [admin01]
+skipping: [client01]
+
+TASK [BASELINE | CLIENT01 | INICIO BLOQUE] *************************************
+skipping: [admin01]
+ok: [client01] => {
+    "msg": "🧪 Iniciando baseline de client01"
+}
+
+TASK [CLIENT01 | Resolver servicio vía /etc/hosts] *****************************
+skipping: [admin01]
+[ERROR]: Task failed: Module failed: The destination directory '/etc' is not writable by the current user: [Errno 13] Permissão negada: b'/etc/.ansible_tmpvxg1ff60hosts'
+
+Task failed: Module failed: The destination directory '/etc' is not writable by the current user.
+Origin: /home/jensy/Labs/scenarios/junior/J03/baseline.yml:274:3
+
+272   when: "'client' in group_names"
+273
+274 - name: CLIENT01 | Resolver servicio vía /etc/hosts
+      ^ column 3
+
+<<< caused by >>>
+
+[Errno 13] Permissão negada: b'/etc/.ansible_tmpvxg1ff60hosts'
+
+fatal: [client01]: FAILED! => {"changed": false, "msg": "Task failed: Module failed: The destination directory '/etc' is not writable by the current user: [Errno 13] Permissão negada: b'/etc/.ansible_tmpvxg1ff60hosts'"}
+
+TASK [CLIENT01 | ASSERT | Resolución de nombre] ********************************
+skipping: [admin01]
+
+TASK [CLIENT01 | Instalar curl] ************************************************
+skipping: [admin01]
+
+TASK [BASELINE | FIN] **********************************************************
+ok: [admin01] => {
+    "msg": "✅ BASELINE COMPLETADO — Ecosistema alineado"
+}
+
+PLAY [J03 | Validar baseline (TODO FUNCIONA)] **********************************
+
+PLAY RECAP *********************************************************************
+admin01                    : ok=12   changed=0    unreachable=0    failed=0    skipped=24   rescued=0    ignored=0   
+client01                   : ok=5    changed=0    unreachable=0    failed=1    skipped=21   rescued=0    ignored=0   
+web01                      : ok=13   changed=0    unreachable=0    failed=1    skipped=2    rescued=0    ignored=0   
+
