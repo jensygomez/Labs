@@ -1,0 +1,34 @@
+
+PLAY [J01 - Orquestador de variantes de redes] *********************************
+
+TASK [Elegir una variante aleatoriamente] **************************************
+ok: [localhost]
+
+TASK [Mostrar mensaje filosófico Linux al junior] ******************************
+ok: [localhost] => {
+    "msg": "╔═══════════════════════════════════════════════════════════════════════════╗\n║                     J01 – Laboratorio de Redes                            ║\n╠═══════════════════════════════════════════════════════════════════════════╣\n║ Junior, recuerda que en Linux todo es un ecosistema interconectado:       ║\n║ - Clientes, servidores, firewalls y servicios interactúan constantemente. ║\n║ - Un fallo en la conectividad no siempre significa un servicio caído.     ║\n║ - Diferencia protocolos (ICMP, TCP, UDP) y observa qué sigue funcionando. ║\n║ - Evalúa impacto en aplicaciones y usuarios antes de tomar decisiones.    ║\n║ - Documenta, analiza patrones y reflexiona sobre el “por qué” antes de    ║\n║   ejecutar cualquier acción correctiva.                                   ║\n║                                                                           ║\n║ Este laboratorio pondrá a prueba tu capacidad de pensar como un sysadmin  ║\n║ senior. No se te dará pistas sobre qué componente está fallando;          ║\n║ tu tarea es observar el ecosistema y aplicar pensamiento crítico.         ║\n╚═══════════════════════════════════════════════════════════════════════════╝\n"
+}
+
+TASK [Esperar que el usuario presione Enter para continuar] ********************
+[[[K[[[K[Esperar que el usuario presione Enter para continuar]
+Presiona ENTER para continuar con la siguiente tarea...:
+Press 'C' to continue the play or 'A' to abort 
+[ERROR]: Task failed: user requested abort!
+
+Task failed.
+Origin: /home/jensy/Labs/scenarios/junior/J01/J01.yml:74:7
+
+72           ╚═══════════════════════════════════════════════════════════════════════════╝
+73     
+74     - name: Esperar que el usuario presione Enter para continuar
+         ^ column 7
+
+<<< caused by >>>
+
+user requested abort!
+
+fatal: [localhost]: FAILED! => {"changed": false, "msg": "Task failed: user requested abort!"}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=2    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+
