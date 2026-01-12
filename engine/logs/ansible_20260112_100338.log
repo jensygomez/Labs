@@ -1,0 +1,66 @@
+
+PLAY [J01 - Orquestador de variantes de redes] *********************************
+
+TASK [Elegir variante aleatoriamente] ******************************************
+ok: [localhost]
+
+TASK [Debug - Verificar variante seleccionada] *********************************
+ok: [localhost] => {
+    "global_selected_variant": "variant_1.yml"
+}
+
+TASK [Mostrar ticket con estilo caja] ******************************************
+ok: [localhost] => {
+    "msg": [
+        "========================================================================",
+        "|                  J01 – Laboratorio de Redes                           |",
+        "-------------------------------------------------------------------------",
+        "| Junior, recuerda que Linux es un ecosistema interconectado            |",
+        "| - Clientes, servidores, firewalls interactúan.                        |",
+        "| - Un fallo en la conectividad no siempre significa un servicio caído. |",
+        "| - Diferencia protocolos y evalúa el impacto antes de actuar.          |",
+        "========================================================================="
+    ]
+}
+
+TASK [Esperar que el usuario presione Enter para continuar] ********************
+[[[K[Esperar que el usuario presione Enter para continuar]
+Presiona ENTER para continuar con la siguiente variante...:
+ok: [localhost]
+
+TASK [Ejecutar la variante seleccionada] ***************************************
+[ERROR]: Task failed: Finalization of task args for 'ansible.builtin.import_playbook' failed: Task args must resolve to a 'dict' not 'str'.
+
+Task failed.
+Origin: /home/jensy/Labs/scenarios/junior/J01/J01.yml:73:7
+
+71         prompt: "Presiona ENTER para continuar con la siguiente variante..."
+72
+73     - name: Ejecutar la variante seleccionada
+         ^ column 7
+
+<<< caused by >>>
+
+Finalization of task args for 'ansible.builtin.import_playbook' failed.
+Origin: /home/jensy/Labs/scenarios/junior/J01/J01.yml:74:7
+
+72
+73     - name: Ejecutar la variante seleccionada
+74       import_playbook: "{{ global_selected_variant }}"
+         ^ column 7
+
+<<< caused by >>>
+
+Task args must resolve to a 'dict' not 'str'.
+Origin: /home/jensy/Labs/scenarios/junior/J01/J01.yml:74:24
+
+72
+73     - name: Ejecutar la variante seleccionada
+74       import_playbook: "{{ global_selected_variant }}"
+                          ^ column 24
+
+fatal: [localhost]: FAILED! => {"changed": false, "msg": "Task failed: Finalization of task args for 'ansible.builtin.import_playbook' failed: Task args must resolve to a 'dict' not 'str'."}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=4    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+

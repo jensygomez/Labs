@@ -71,4 +71,4 @@
         prompt: "Presiona ENTER para continuar con la siguiente variante..."
 
     - name: Ejecutar la variante seleccionada
-      import_playbook: "{{ global_selected_variant }}"
+      include_playbook: "{{ global_selected_variant }}"  
