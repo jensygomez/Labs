@@ -53,6 +53,7 @@
 # J01-V2: BLOQUEO TRACEROUTE (TTL exceeded) - Simulación NOC Real
 # ==============================================================================
 
+
 - name: "[PREPARACIÓN] Asegurar firewalld activo"
   systemd:
     name: firewalld
@@ -60,19 +61,21 @@
     enabled: true
 
 - name: "[CONFIGURACIÓN] Bloquear ICMP tipo 11 (TTL exceeded) --direct rule"
-  firewalld:
-    direct:
-      ipv4:
-        filter:
-          INPUT:
-            - rule: "0 -p icmp --icmp-type 11 -j DROP"
-    permanent: true
-    state: enabled
+  shell: >
+    firewall-cmd --permanent --direct --add-rule ipv4 filter INPUT 0 -p icmp --icmp-type 11 -j DROP
+  args:
+    warn: false
 
-- name: "[VERIFICACIÓN] Confirmar bloqueo activo"
+- name: "[CONFIGURACIÓN] Recargar firewalld para aplicar regla"
+  command: firewall-cmd --reload
+
+- name: "[VERIFICACIÓN] Confirmar regla ICMP TTL exceeded"
   shell: firewall-cmd --direct --get-all-rules
   register: result
   changed_when: false
+
+
+
 
 - name: "[TICKET NOC] INC-J01-V2 - Usuario reporta conectividad parcial"
   debug:
