@@ -49,6 +49,10 @@
       set_fact:
         global_selected_variant: "{{ variantes | random }}"
 
+    - name: Debug - Verificar variante seleccionada
+      debug:
+        var: global_selected_variant
+
     - name: Mostrar ticket con estilo caja
       debug:
         msg:
@@ -61,11 +65,10 @@
           - "| - Diferencia protocolos y evalúa el impacto antes de actuar.          |"
           - "========================================================================="
         verbosity: 0
-      run_once: true
 
     - name: Esperar que el usuario presione Enter para continuar
       pause:
-        prompt: "Presiona ENTER para continuar con la siguiente tarea..."
+        prompt: "Presiona ENTER para continuar con la siguiente variante..."
 
     - name: Ejecutar la variante seleccionada
-      import_playbook: "{{ variante_elegida }}"
+      import_playbook: "{{ global_selected_variant }}"
