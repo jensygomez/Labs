@@ -36,6 +36,8 @@
 # 4. Practicar documentación clara y pensamiento crítico.
 # ==============================================================================
 
+
+
 - name: J01 - Orquestador de variantes de redes
   hosts: localhost
   gather_facts: no
@@ -43,6 +45,7 @@
   vars:
     variantes:
       - variant_1.yml
+
 
   tasks:
     - name: Elegir variante aleatoriamente
@@ -64,11 +67,10 @@
           - "| - Un fallo en la conectividad no siempre significa un servicio caído. |"
           - "| - Diferencia protocolos y evalúa el impacto antes de actuar.          |"
           - "========================================================================="
-        verbosity: 0
 
-    - name: Esperar que el usuario presione Enter para continuar
+    - name: Esperar que el usuario presione Enter
       pause:
-        prompt: "Presiona ENTER para continuar con la siguiente variante..."
+        prompt: "Presiona ENTER para continuar..."
 
     - name: Ejecutar la variante seleccionada
-      include_playbook: "{{ global_selected_variant }}"  
+      include_tasks: "{{ global_selected_variant }}"
