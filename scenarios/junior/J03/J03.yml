@@ -1,186 +1,81 @@
+---
 # ==============================================================================
-# J03.yml — ORQUESTADOR PRINCIPAL DEL LABORATORIO J03
+# J01 – Laboratorio de Redes y Conectividad (Junior)
 # ==============================================================================
-# ⚡ TEMA CENTRAL: "Ilusiones de Conectividad en Redes Distribuidas"
-# 
-# En arquitecturas distribuidas, la percepción de conectividad suele ser engañosa.
-# Un servicio puede estar "vivo" localmente pero inalcanzable desde el mundo exterior.
-# Este laboratorio explora las múltiples capas donde puede romperse la comunicación
-# entre sistemas remotos en una infraestructura global simulada.
 #
-# 🌍 ECOSISTEMA SIMULADO:
-#   admin01  → Sede Corporativa (San Juan, Puerto Rico)
-#   client01 → Oficina Regional (Shanghái, China) 
-#   web01    → Centro de Datos (Frankfurt, Alemania)
+# Tema principal: Diagnóstico de problemas de red en un ecosistema Linux corporativo
 #
-# 📡 ARQUITECTURA:
-#   Cada VM representa un nodo crítico con diferentes roles, zonas horarias
-#   y configuraciones regionales, simulando los desafíos de infraestructuras
-#   geográficamente distribuidas.
+# Objetivo:
+# Practicar troubleshooting de conectividad y servicios en un entorno Linux
+# realista, comprendiendo el impacto de cada componente del ecosistema:
+# cliente, servidor, firewall y servicios críticos.
 #
-# 🔄 FLUJO DEL LABORATORIO:
-#   1. RESOLVE   → Establecer el contexto del escenario (dónde, qué, cómo)
-#   2. BASELINE  → Llevar cada nodo a su estado óptimo por tema
-#   3. INJECT    → Introducir una falla específica según la variante
+# Este playbook selecciona aleatoriamente un escenario de laboratorio (variante)
+# sin revelar qué se rompió, simulando la incertidumbre que se vive en un NOC
+# o en una entrevista técnica.
 #
-# 🎯 VARIANTES (4 perspectivas de fallo):
-#   V1 → FIREWALL: Permisos vs. Política (el muro invisible)
-#   V2 → IP ESTÁTICA: Configuración vs. Expectativa (la dirección fantasma)
-#   V3 → ENRUTAMIENTO: Trayectoria vs. Destino (el camino equivocado)
-#   V4 → SERVICIO: Proceso vs. Escucha (el puerto silencioso)
+# Filosofía Linux / Perspectiva Senior:
+# - Un sysadmin senior observa el ecosistema completo antes de actuar.
+# - No se enfoca en comandos inmediatos, sino en entender la raíz del problema.
+# - Diferencia protocolos, servicios y conectividad: ICMP vs TCP/UDP, puertos,
+#   VIPs, firewalld y servicios activos.
+# - Evalúa impacto real en usuarios y aplicaciones antes de “arreglar” algo.
+# - Documenta, reflexiona y planifica su diagnóstico paso a paso.
 #
-# 💡 FILOSOFÍA DEL LABORATORIO:
-#   "En redes, lo visible localmente no garantiza lo alcanzable remotamente.
-#    Un servicio puede respirar, latir y responder en su host, mientras
-#    permanece como un fantasma para el resto del mundo. La verdadera
-#    conectividad vive en la intersección de múltiples capas: configuración,
-#    enrutamiento, firewall y binding del servicio."
+# Ecosistema:
+# CLIENT01 (192.168.122.21) -> Cliente que realiza pruebas
+# SERVER_EU (192.168.122.22) -> Servidor
+#   - VIP 192.168.122.50: Nginx HTTP
+#   - VIP 192.168.122.60: MariaDB TCP 3306
+#   - Firewalld activo controlando acceso
 #
-# 📐 PRINCIPIOS DE DISEÑO:
-#   - J03.yml es únicamente ORQUESTADOR, sin lógica técnica
-#   - Los baselines son reutilizables y atómicos
-#   - Las variantes SOLO rompen, NUNCA reparan
-#   - Cada fallo enseña una capa diferente del stack de red
+# Objetivos de aprendizaje:
+# 1. Observar y comprender el ecosistema antes de actuar.
+# 2. Diferenciar protocolos y servicios.
+# 3. Analizar impacto de fallos en el entorno corporativo.
+# 4. Practicar documentación clara y pensamiento crítico.
 # ==============================================================================
 
-# ------------------------------------------------------------------------------
-# 1. RESOLVE — Resolver variables globales del laboratorio
-# ------------------------------------------------------------------------------
-- name: J03 | Resolve variables del escenario
-  hosts: all
+- name: J01 - Orquestador de variantes de redes
+  hosts: localhost
   gather_facts: no
-  tasks:
-    - name: Resolver variables J03
-      include_tasks: vars/resolve.yml
 
+  vars:
+    variantes:
+      - "variant_1.yml"
+      - "variant_2.yml"
+      - "variant_3.yml"
+      - "variant_4.yml"
 
-# ------------------------------------------------------------------------------
-# 1.5 PROPAGAR VARIABLES GLOBALES A TODOS LOS HOSTS
-# ------------------------------------------------------------------------------
-# ⚠️  NOTA CRÍTICA DE DISEÑO:
-# Estas variables fueron resueltas en vars/resolve.yml. Aquí solo se propagan
-# desde admin01 (nodo maestro) hacia todos los hosts. Las variantes NUNCA deben
-# definir sus propias variables; consumen estas variables globales.
-# ------------------------------------------------------------------------------
-- name: J03 | Propagar variables globales
-  hosts: all
-  gather_facts: no
   tasks:
-    - name: Obtener variables del admin01
+    - name: Elegir una variante aleatoriamente
       set_fact:
-        # Contexto general del lab
-        global_selected_variant: "{{ hostvars['admin01']['global_selected_variant'] }}"
-        web_url: "{{ hostvars['admin01']['web_url'] }}"
-        test_command: "curl -I {{ hostvars['admin01']['web_url'] }}"
+        variante_elegida: "{{ variantes | random }}"
 
-        # Servicio web
-        global_web_port: "{{ hostvars['admin01']['global_web_port'] }}"
-        global_web_service: "{{ hostvars['admin01']['global_web_service'] }}"
-
-        # Firewall (Variant 1)
-        global_firewall_zone: "{{ hostvars['admin01']['global_firewall_zone'] }}"
-
-        # Networking / nmcli (Variant 2)
-        global_connection_name: "{{ hostvars['admin01']['global_connection_name'] }}"
-        global_web_ip: "{{ hostvars['admin01']['global_web_ip'] }}"
-        global_wrong_ip: "{{ hostvars['admin01']['global_wrong_ip'] }}"
-        global_wrong_gw: "{{ hostvars['admin01']['global_wrong_gw'] }}"
-      run_once: true
-
-
-# ------------------------------------------------------------------------------
-# 2. BASELINE — Estado óptimo CANÓNICO
-# ------------------------------------------------------------------------------
-# 🏗️  ESTADO DE REFERENCIA GLOBAL:
-# Este baseline representa la infraestructura en su forma SANA y FUNCIONAL,
-# común a TODAS las variantes del laboratorio J03.
-#
-# PRINCIPIOS:
-#   - Un único baseline compartido
-#   - Totalmente funcional desde TODAS las perspectivas
-#   - Independiente de la variante seleccionada
-#
-# RESPONSABILIDAD:
-#   - J03.yml ejecuta SIEMPRE este baseline
-#   - Las variantes SOLO degradan, nunca preparan
-#
-# ⚠️  REGLA CRÍTICA:
-# Este baseline NO puede contener fallos intencionales ni
-# anticipar ninguna variante.
-# ------------------------------------------------------------------------------
-
-- name: J03 | Ejecutar baseline canónico (estado sano)
-  hosts: all
-  become: yes
-  gather_facts: no
-  tasks:
-    - name: Incluir baseline global
-      include_tasks: baseline.yml
-
-
-
-
-
-
-# ------------------------------------------------------------------------------
-# 2.5 BASELINE - Confirmar que el servicio funciona ANTES del incidente
-# ------------------------------------------------------------------------------
-- name: J03 | Validar baseline (TODO FUNCIONA)
-  hosts: client01
-  gather_facts: no
-  tasks:
-    - name: VALIDAR | Conectividad web01 → 200 OK
-      uri:
-        url: "{{ web_url }}"
-        method: HEAD
-      register: pre_inject_test
-      failed_when: false
-
-    - name: VALIDAR | Reporte PRE-INJECT
+    - name: Mostrar mensaje filosófico Linux al junior
       debug:
         msg: |
-          🌐 SISTEMA FUNCIONAL - CONEXIÓN GLOBAL ESTABLECIDA
-          ══════════════════════════════════════════════════
-          • Origen:       client01 (Shanghái, China)
-          • Destino:      web01 (Frankfurt, Alemania)
-          • Servicio:     {{ web_url }}
-          • Estado HTTP:  {{ pre_inject_test.status | default('N/A') }}
-          • Latencia:     {{ pre_inject_test.elapsed | default('N/A') }}s
-          
-          ✅ La infraestructura opera dentro de parámetros normales.
-          ✅ La comunicación intercontinental fluye sin obstrucciones.
-
-    - name: VALIDAR | 🧠 PREPARACIÓN MENTAL PARA EL INCIDENTE
+          ╔═══════════════════════════════════════════════════════════════════════════╗
+          ║                     J01 – Laboratorio de Redes                            ║
+          ╠═══════════════════════════════════════════════════════════════════════════╣
+          ║ Junior, recuerda que en Linux todo es un ecosistema interconectado:       ║
+          ║ - Clientes, servidores, firewalls y servicios interactúan constantemente. ║
+          ║ - Un fallo en la conectividad no siempre significa un servicio caído.     ║
+          ║ - Diferencia protocolos (ICMP, TCP, UDP) y observa qué sigue funcionando. ║
+          ║ - Evalúa impacto en aplicaciones y usuarios antes de tomar decisiones.    ║
+          ║ - Documenta, analiza patrones y reflexiona sobre el “por qué” antes de    ║
+          ║   ejecutar cualquier acción correctiva.                                   ║
+          ║                                                                           ║
+          ║ Este laboratorio pondrá a prueba tu capacidad de pensar como un sysadmin  ║
+          ║ senior. No se te dará pistas sobre qué componente está fallando;          ║
+          ║ tu tarea es observar el ecosistema y aplicar pensamiento crítico.         ║
+          ╚═══════════════════════════════════════════════════════════════════════════╝
+    
+    - name: Esperar que el usuario presione Enter para continuar
       pause:
-        seconds: 3
-        prompt: |
-          ════════════════════════════════════════════════════════════════════
-          🧭 FILOSOFÍA LINUX PARA EL SYSADMIN:
+        prompt: "Presiona ENTER para continuar con la siguiente tarea..."
+
           
-          "En sistemas distribuidos, la verdad no es absoluta sino contextual.
-           Lo que un nodo ve como 'conectado', otro puede verlo como 'inalcanzable'.
-           Tu tarea no es buscar al culpable, sino encontrar la capa donde
-           se rompió la percepción compartida de la realidad de red."
-           
-          Presiona ENTER cuando estés listo para enfrentar la discontinuidad...
-          ════════════════════════════════════════════════════════════════════
 
-
-# ------------------------------------------------------------------------------
-# 3. INJECT — Inyección del fallo
-# ------------------------------------------------------------------------------
-# 🩺 SIMULACIÓN DE INCIDENTE:
-# El sistema ahora pasa de estado saludable a degradado. La variante seleccionada
-# introduce una falla específica que rompe UNA capa de la pila, manteniendo
-# las otras intactas. Esto simula incidentes reales donde los síntomas
-# son evidentes pero la causa raíz está oculta en una capa específica.
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
-
-#- name: J03 | Inyectar incidente
-#  hosts: web01
-#  gather_facts: no
-#  tasks:
-#    - name: Incluir inject de la variante
-#      include_tasks: "variant_{{ global_selected_variant }}.yml"
-
+    - name: Ejecutar la variante seleccionada
+      include_tasks: "{{ variante_elegida }}"
