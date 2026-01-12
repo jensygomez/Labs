@@ -43,9 +43,6 @@
   vars:
     variantes:
       - "variant_1.yml"
-      - "variant_2.yml"
-      - "variant_3.yml"
-      - "variant_4.yml"
 
   tasks:
     - name: Elegir una variante aleatoriamente

@@ -45,11 +45,14 @@
 # - Eliminar la regla de ICMP en SERVER_EU y recargar firewalld
 # ==============================================================================
 
+
+
 - name: J01 Variant 1 - Bloquear ICMP desde CLIENT01
   hosts: web
   become: yes
 
   tasks:
+
     - name: Asegurar que firewalld esté activo
       systemd:
         name: firewalld
@@ -69,40 +72,39 @@
 
     - name: Mostrar ticket / escenario estilo NOC con filosofía Linux
       debug:
-        msg: |
-          ╔═══════════════════════════════════════════════════════════════════════════╗
-          ║                     INC-J01-V1 – J01 Variant 1                            ║
-          ║             Bloqueo de ICMP (ping) desde CLIENT01                         ║
-          ╠═══════════════════════════════════════════════════════════════════════════╣
-          ║ Descripción:                                                              ║
-          ║ - Ping y traceroute desde CLIENT01 a SERVER_EU fallan.                    ║
-          ║ - HTTP (80) y MariaDB (3306) siguen funcionando.                          ║
-          ║ - Posible bloqueo de ICMP por firewall.                                   ║
-          ╠═══════════════════════════════════════════════════════════════════════════╣
-          ║ Contexto:                                                                 ║
-          ║ - CLIENT01 (192.168.122.21): Cliente que realiza pruebas.                 ║
-          ║ - SERVER_EU (192.168.122.22): Servidor con Nginx y MariaDB.               ║
-          ║ - Firewalld activo en SERVER_EU.                                          ║
-          ╠═══════════════════════════════════════════════════════════════════════════╣
-          ║ Filosofía Linux (desde la perspectiva de un sysadmin senior):             ║
-          ║ - Linux permite controlar y observar todo el ecosistema: red, servicios   ║
-          ║   y protocolos.                                                           ║
-          ║ - El fallo de ping no implica fallo de servicio. ICMP es solo diagnóstico.║
-          ║ - TCP y UDP son independientes; los servicios críticos siguen funcionando.║
-          ║ - Antes de actuar, observa qué falló y qué sigue funcionando.             ║
-          ║ - Reflexiona sobre el impacto en usuarios y aplicaciones.                 ║
-          ║ - Mentalidad de un senior: diagnosticar con criterio y documentar todo.   ║
-          ╠═══════════════════════════════════════════════════════════════════════════╣
-          ║ Objetivos de aprendizaje:                                                 ║
-          ║ 1. Entender que fallo de ping no implica fallo de servicio.               ║
-          ║ 2. Diagnosticar problemas de firewall que afectan ICMP.                   ║
-          ║ 3. Diferenciar protocolos ICMP vs TCP.                                    ║
-          ║ 4. Practicar la mentalidad de observación de un sysadmin senior.          ║
-          ╠═══════════════════════════════════════════════════════════════════════════╣
-          ║ Checklist recomendado:                                                    ║
-          ║ - [ ] Desde CLIENT01: ping y traceroute hacia SERVER_EU                   ║
-          ║ - [ ] Confirmar que HTTP funciona                                         ║
-          ║ - [ ] Confirmar que MariaDB funciona                                      ║
-          ║ - [ ] Revisar firewalld en SERVER_EU                                      ║
-          ║ - [ ] Reflexión: ¿Por qué ICMP falla pero TCP sigue funcionando?          ║
-          ╚═══════════════════════════════════════════════════════════════════════════╝
+        msg:
+          - "========================================================================"
+          - "|                  INC-J01-V1 – Bloqueo ICMP desde CLIENT01             |"
+          - "------------------------------------------------------------------------"
+          - "| Descripción:                                                            |"
+          - "| - Ping y traceroute desde CLIENT01 a SERVER_EU fallan.                  |"
+          - "| - HTTP (80) y MariaDB (3306) siguen funcionando.                        |"
+          - "| - Posible bloqueo de ICMP por firewall.                                 |"
+          - "------------------------------------------------------------------------"
+          - "| Contexto:                                                               |"
+          - "| - CLIENT01 (192.168.122.21): Cliente que realiza pruebas.               |"
+          - "| - SERVER_EU (192.168.122.22): Servidor con Nginx y MariaDB.             |"
+          - "| - Firewalld activo en SERVER_EU.                                        |"
+          - "------------------------------------------------------------------------"
+          - "| Filosofía Linux (perspectiva senior):                                   |"
+          - "| - Linux permite observar todo el ecosistema: red, servicios y protocolos.|"
+          - "| - Fallo de ping no implica fallo de servicio. ICMP es solo diagnóstico. |"
+          - "| - TCP y UDP son independientes; servicios críticos siguen activos.       |"
+          - "| - Antes de actuar, observa qué falló y qué sigue funcionando.           |"
+          - "| - Reflexiona sobre impacto en usuarios y aplicaciones.                  |"
+          - "| - Mentalidad de senior: diagnosticar con criterio y documentar todo.    |"
+          - "------------------------------------------------------------------------"
+          - "| Objetivos de aprendizaje:                                               |"
+          - "| 1. Entender que fallo de ping no implica fallo de servicio.             |"
+          - "| 2. Diagnosticar reglas de firewall que afectan ICMP.                     |"
+          - "| 3. Diferenciar protocolos ICMP vs TCP.                                   |"
+          - "| 4. Practicar observación y pensamiento crítico de un sysadmin senior.   |"
+          - "------------------------------------------------------------------------"
+          - "| Checklist recomendado:                                                  |"
+          - "| - [ ] Desde CLIENT01: ping y traceroute hacia SERVER_EU                 |"
+          - "| - [ ] Confirmar que HTTP funciona                                       |"
+          - "| - [ ] Confirmar que MariaDB funciona                                    |"
+          - "| - [ ] Revisar firewalld en SERVER_EU                                    |"
+          - "| - [ ] Reflexión: ¿Por qué ICMP falla pero TCP sigue funcionando?        |"
+          - "========================================================================"
+      run_once: true
