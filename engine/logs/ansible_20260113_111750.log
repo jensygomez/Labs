@@ -1,0 +1,28 @@
+
+PLAY [J02 - Orquestador de variantes de Firewalld y SELinux] *******************
+
+TASK [Elegir variante aleatoriamente] ******************************************
+ok: [web01]
+
+TASK [Debug - Verificar variante seleccionada] *********************************
+ok: [web01] => {
+    "global_selected_variant": "variant_1.yml"
+}
+
+TASK [Ejecutar la variante seleccionada] ***************************************
+included: /home/jensy/Labs/scenarios/junior/J02/variant_1.yml for web01
+
+TASK [[VARIANT_FW_HTTP] Detectar zona activa de firewalld] *********************
+[ERROR]: Task failed: Failed to connect to the host via ssh: ssh: Could not resolve hostname servereu: Name or service not known
+Origin: /home/jensy/Labs/scenarios/junior/J02/variant_1.yml:40:3
+
+38 # ==============================================================================
+39
+40 - name: "[VARIANT_FW_HTTP] Detectar zona activa de firewalld"
+     ^ column 3
+
+fatal: [web01 -> ServerEU]: UNREACHABLE! => {"changed": false, "msg": "Task failed: Failed to connect to the host via ssh: ssh: Could not resolve hostname servereu: Name or service not known", "unreachable": true}
+
+PLAY RECAP *********************************************************************
+web01                      : ok=3    changed=0    unreachable=1    failed=0    skipped=0    rescued=0    ignored=0   
+

@@ -41,39 +41,39 @@
   command: firewall-cmd --get-active-zones
   register: active_zone
   changed_when: false
-  delegate_to: ServerEU
+  delegate_to: web
   become: yes
 
 - name: "[VARIANT_FW_HTTP] Extraer zona activa"
   set_fact:
     server_zone: "{{ active_zone.stdout.split()[0] }}"
-  delegate_to: ServerEU
+  delegate_to: web
 
 - name: "[VARIANT_FW_HTTP] Verificar puertos antes de bloquear HTTP"
   command: firewall-cmd --zone={{ server_zone }} --list-ports
   register: ports_before
   changed_when: false
-  delegate_to: ServerEU
+  delegate_to: web
 
 - name: "[VARIANT_FW_HTTP] Bloquear puerto 80/tcp en firewalld"
   command: firewall-cmd --zone={{ server_zone }} --remove-port=80/tcp --permanent
-  delegate_to: ServerEU
+  delegate_to: web
   become: yes
 
 - name: "[VARIANT_FW_HTTP] Recargar firewalld para aplicar cambios"
   command: firewall-cmd --reload
-  delegate_to: ServerEU
+  delegate_to: web
   become: yes
 
 - name: "[VARIANT_FW_HTTP] Verificar puertos después de bloquear HTTP"
   command: firewall-cmd --zone={{ server_zone }} --list-ports
   register: ports_after
   changed_when: false
-  delegate_to: ServerEU
+  delegate_to: web
 
 - name: "[VARIANT_FW_HTTP] Debug: mostrar puertos antes y después"
   debug:
     msg:
       - "Puertos antes de bloquear HTTP: {{ ports_before.stdout }}"
       - "Puertos después de bloquear HTTP: {{ ports_after.stdout }}"
-  delegate_to: ServerEU
+  delegate_to: web
