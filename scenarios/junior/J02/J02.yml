@@ -1,54 +1,50 @@
 ---
 # ==============================================================================
-# J01 – Laboratorio de Redes y Conectividad (Junior) - NOC Simulation
+# J02 – Laboratorio de Firewalls y SELinux (Junior) - NOC Simulation
 # ==============================================================================
 #
 # 🎯 TEMA PRINCIPAL
-# Diagnóstico de problemas de red en un ecosistema Linux corporativo realista.
+# Troubleshooting de seguridad y conectividad en Linux corporativo.
 #
 # 🎯 OBJETIVO
-# Practicar troubleshooting sin pistas explícitas, simulando tickets NOC donde
-# el usuario solo reporta síntomas ("no funciona"), nunca la causa.
-#
-# El foco está en:
-#   - Observación
-#   - Correlación de señales
-#   - Diferenciar fallo real vs comportamiento por diseño
+# Aprender a diagnosticar problemas de servicios causados por firewalld
+# o SELinux, sin pistas explícitas. Simulación de tickets NOC:
+# el usuario reporta síntoma ("no funciona") y el técnico debe determinar la causa.
 #
 # ==============================================================================
 # VARIANTES DISPONIBLES (selección aleatoria)
 # ==============================================================================
 #
-# VARIANT_1.yml — Bloqueo ICMP (firewalld icmp_block)
-#   ✓ Ping falla
-#   ✓ HTTP y MariaDB funcionan
-#   ✓ Lección: ICMP = diagnóstico, no servicio crítico
-#
-# VARIANT_2.yml — Traceroute incompleto (TTL exceeded filtrado)
-#   ✓ traceroute falla en hop intermedio
-#   ✓ Ping parcial funciona
-#   ✓ Servicios OK
-#   ✓ Lección: routing ≠ disponibilidad de servicio
-#
-# VARIANT_3.yml — TCP Keepalive / timeouts agresivos (HAProxy)
-#   ✓ Conexión TCP se corta prematuramente
+# variant_1.yml — Firewalld bloquea puerto HTTP
 #   ✓ Ping funciona
-#   ✓ Backend MariaDB está sano
-#   ✓ Error percibido desde cliente
-#   ✓ Lección: tuning TCP vs comportamiento de aplicación
+#   ✓ HTTP → inaccesible
+#   ✓ MariaDB OK
+#   ✓ Lección: firewall TCP afecta servicios, no ICMP
 #
-# VARIANT_4.yml — MTU mismatch en cliente
-#   ✓ Ping con paquetes grandes falla
-#   ✓ Ping pequeños funciona
-#   ✓ HTTP aparentemente OK
-#   ✓ Lección: PMTU y fragmentación afectan servicios de forma sutil
+# variant_2.yml — Firewalld bloquea puerto MariaDB
+#   ✓ Ping funciona
+#   ✓ HTTP → funciona
+#   ✓ MariaDB → falla al conectar
+#   ✓ Lección: firewall filtrando puertos críticos
+#
+# variant_3.yml — SELinux en enforcing bloquea Nginx
+#   ✓ Ping funciona
+#   ✓ HTTP → inaccesible
+#   ✓ MariaDB OK
+#   ✓ Lección: SELinux ≠ firewall, revisa logs / audit
+#
+# variant_4.yml — SELinux en enforcing bloquea MariaDB
+#   ✓ Ping funciona
+#   ✓ HTTP → OK
+#   ✓ MariaDB → falla al conectar
+#   ✓ Lección: SELinux bloqueando procesos, revisar audit.log
 #
 # ==============================================================================
 # FILOSOFÍA LINUX / NOC (Junior → Senior)
 # ==============================================================================
 # - Observa el ecosistema completo antes de tocar nada
-# - ICMP y traceroute no definen disponibilidad de negocio
-# - "Se cae" puede ser política, tuning o diseño
+# - Diferencia entre ICMP, TCP/UDP y políticas de seguridad
+# - "No responde" puede ser firewall o SELinux, no siempre fallo físico
 # - Prioriza impacto al negocio antes que métricas técnicas
 # - Documenta: qué funciona, qué falla y por qué
 #
@@ -56,14 +52,14 @@
 # ECOSISTEMA DEL LABORATORIO
 # ==============================================================================
 #
-# CLIENT01
-#   IP: 192.168.122.21
-#
 # SERVER_EU (una VM, múltiples VIPs)
 #   - 192.168.122.22 → IP administrativa (SSH / gestión)
 #   - 192.168.122.50 → WEB (Nginx / HTTP)
 #   - 192.168.122.60 → MariaDB (Backend real)
 #   - 192.168.122.70 → HAProxy (Proxy TCP)
+#
+# CLIENT01 (192.168.122.21)
+#   - Accede a HTTP y MariaDB vía proxy
 #
 # Flujo real de producción:
 #   CLIENT → HAProxy (.70) → MariaDB (.60)
@@ -72,20 +68,16 @@
 # ==============================================================================
 # FLUJO REAL NOC
 # ==============================================================================
-# 1. Usuario reporta: "No hay conectividad"
+# 1. Usuario reporta: "No hay conectividad a servicio"
 # 2. NOC analiza síntomas, no asume causas
 # 3. Se identifica impacto real en negocio
-# 4. Se determina causa raíz
+# 4. Se determina causa raíz (firewalld / SELinux)
 # 5. Se documenta lección aprendida
 # ==============================================================================
 
-
-
-
-
-- name: J01 - Orquestador de variantes de redes
+- name: J02 - Orquestador de variantes de Firewalld y SELinux
   hosts: web
-  become: yes 
+  become: yes
   gather_facts: no
 
   vars:
@@ -94,7 +86,6 @@
       - variant_2.yml
       - variant_3.yml
       - variant_4.yml
-
 
   tasks:
     - name: Elegir variante aleatoriamente
@@ -106,7 +97,6 @@
       debug:
         var: global_selected_variant
       run_once: true
-
 
     - name: Ejecutar la variante seleccionada
       include_tasks: "{{ global_selected_variant }}"

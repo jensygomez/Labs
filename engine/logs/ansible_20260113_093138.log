@@ -1,0 +1,34 @@
+
+PLAY [J01 - Orquestador de variantes de redes] *********************************
+
+TASK [Elegir variante aleatoriamente] ******************************************
+ok: [web01]
+
+TASK [Debug - Verificar variante seleccionada] *********************************
+ok: [web01] => {
+    "global_selected_variant": "variant_4.yml"
+}
+
+TASK [Ejecutar la variante seleccionada] ***************************************
+included: /home/jensy/Labs/scenarios/junior/J01/variant_4.yml for web01
+
+TASK [[VARIANT_4] Detectar interfaz de red activa en cliente] ******************
+ok: [web01 -> client01(192.168.122.21)]
+
+TASK [[VARIANT_4] Extraer interfaz de red desde la ruta] ***********************
+ok: [web01 -> client01(192.168.122.21)]
+
+TASK [[VARIANT_4] Reducir MTU en la interfaz del cliente] **********************
+changed: [web01 -> client01(192.168.122.21)]
+
+TASK [[VARIANT_4] Verificar MTU aplicado] **************************************
+ok: [web01 -> client01(192.168.122.21)]
+
+TASK [[VARIANT_4] Debug MTU final] *********************************************
+ok: [web01 -> client01(192.168.122.21)] => {
+    "msg": "2: enp1s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1200 qdisc fq_codel state UP mode DEFAULT group default qlen 1000\n    link/ether 52:54:00:4b:be:a3 brd ff:ff:ff:ff:ff:ff"
+}
+
+PLAY RECAP *********************************************************************
+web01                      : ok=8    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
