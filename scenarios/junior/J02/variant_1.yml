@@ -1,0 +1,79 @@
+---
+# ==============================================================================
+# VARIANT_FW_HTTP.yml — Bloqueo de HTTP en SERVER (firewalld)
+# ==============================================================================
+#
+# 🎯 PROPÓSITO:
+# Simular un fallo de conectividad a HTTP bloqueando el puerto 80 en el servidor.
+# Este tipo de escenario es típico en entornos donde políticas de firewall limitan
+# servicios públicos mientras otros servicios (DB, SSH, HTTPS) permanecen activos.
+#
+# 🔥 FALLA INTRODUCIDA:
+# - Firewall (firewalld) bloquea el puerto TCP 80 en la zona activa
+# - HTTP deja de ser accesible desde clientes
+# - Otros servicios (MariaDB vía HAProxy, HTTPS, SSH) siguen funcionando
+#
+# 🧪 SÍNTOMAS ESPERADOS:
+# ✔ Ping funciona (ICMP permitido)
+# ✔ HTTP falla
+# ✔ MariaDB sigue accesible vía HAProxy (TCP 3306)
+#
+# 🛠 COMANDOS DE DIAGNÓSTICO MANUAL:
+#   firewall-cmd --zone=public --list-all
+#   curl -v http://192.168.122.50
+#   ping 192.168.122.50
+#   mysql -h 192.168.122.70 -u user_prueba -p
+#
+# 🧠 LECCIÓN CLAVE:
+# - Servicios TCP específicos pueden estar bloqueados aunque la conectividad ICMP funcione
+# - Firewalld permite bloquear/permitir servicios por zona sin afectar la red completa
+# - Siempre verifica qué zona y qué interfaz está activa antes de modificar reglas
+#
+# 📍 TOPOLOGÍA DEL LAB:
+# CLIENT01 (192.168.122.21) → HTTP bloqueado
+# SERVER_EU
+#   - .50 → HTTP (bloqueado)
+#   - .60 → MariaDB
+#   - .70 → HAProxy
+# ==============================================================================
+
+- name: "[VARIANT_FW_HTTP] Detectar zona activa de firewalld"
+  command: firewall-cmd --get-active-zones
+  register: active_zone
+  changed_when: false
+  delegate_to: ServerEU
+  become: yes
+
+- name: "[VARIANT_FW_HTTP] Extraer zona activa"
+  set_fact:
+    server_zone: "{{ active_zone.stdout.split()[0] }}"
+  delegate_to: ServerEU
+
+- name: "[VARIANT_FW_HTTP] Verificar puertos antes de bloquear HTTP"
+  command: firewall-cmd --zone={{ server_zone }} --list-ports
+  register: ports_before
+  changed_when: false
+  delegate_to: ServerEU
+
+- name: "[VARIANT_FW_HTTP] Bloquear puerto 80/tcp en firewalld"
+  command: firewall-cmd --zone={{ server_zone }} --remove-port=80/tcp --permanent
+  delegate_to: ServerEU
+  become: yes
+
+- name: "[VARIANT_FW_HTTP] Recargar firewalld para aplicar cambios"
+  command: firewall-cmd --reload
+  delegate_to: ServerEU
+  become: yes
+
+- name: "[VARIANT_FW_HTTP] Verificar puertos después de bloquear HTTP"
+  command: firewall-cmd --zone={{ server_zone }} --list-ports
+  register: ports_after
+  changed_when: false
+  delegate_to: ServerEU
+
+- name: "[VARIANT_FW_HTTP] Debug: mostrar puertos antes y después"
+  debug:
+    msg:
+      - "Puertos antes de bloquear HTTP: {{ ports_before.stdout }}"
+      - "Puertos después de bloquear HTTP: {{ ports_after.stdout }}"
+  delegate_to: ServerEU
