@@ -43,28 +43,23 @@
 # ------------------------------------------------------------------------------
 # INYECCIÓN DEL FALLO
 # ------------------------------------------------------------------------------
+---
+# ==============================================================================
+# VARIANT_3.yml — SELinux Enforcing bloquea Nginx
+# ==============================================================================
 
-- name: "[VARIANT_SELINUX_NGINX] Backup configuración nginx"
-  copy:
-    src: "{{ item }}"
-    dest: "/tmp/j02_v3_backup_{{ ansible_date_time.epoch }}/{{ item | basename }}"
-    remote_src: yes
-    backup: yes
-  loop:
-    - /etc/nginx/nginx.conf
-    - /etc/nginx/conf.d/
-  become: yes
+- name: "[VARIANT_SELINUX_NGINX] Detectar si j03_web.conf existe"
+  stat:
+    path: /etc/nginx/conf.d/j03_web.conf
+  register: j03_conf
+  changed_when: false
 
 - name: "[VARIANT_SELINUX_NGINX] Desactivar j03_web.conf (bypass hardcoded)"
   copy:
     src: /etc/nginx/conf.d/j03_web.conf
     dest: /etc/nginx/conf.d/j03_web.conf.disabled
     remote_src: yes
-  notify: restart nginx
-  become: yes
-
-- name: "[VARIANT_SELINUX_NGINX] Asegurar SELinux Enforcing"
-  command: setenforce 1
+  when: j03_conf.stat.exists
   become: yes
 
 - name: "[VARIANT_SELINUX_NGINX] Verificar contextos ANTES"
@@ -73,10 +68,19 @@
   changed_when: false
   become: yes
 
+- name: "[VARIANT_SELINUX_NGINX] Asegurar SELinux Enforcing"
+  command: setenforce 1
+  become: yes
+
 - name: "[VARIANT_SELINUX_NGINX] Romper contextos SELinux (CAUSA 403)"
   shell: chcon -R -t user_home_t /usr/share/nginx/html/
   become: yes
-  notify: restart nginx
+
+- name: "[VARIANT_SELINUX_NGINX] Restart nginx"
+  systemd:
+    name: nginx
+    state: restarted
+  become: yes
 
 - name: "[VARIANT_SELINUX_NGINX] Verificar contextos DESPUÉS"
   shell: ls -laZ /usr/share/nginx/html/ | head -3
@@ -90,28 +94,18 @@
   changed_when: false
   become: yes
 
-- name: "[VARIANT_SELINUX_NGINX] Debug - Estado final"
+- name: "[VARIANT_SELINUX_NGINX] Debug - Estado final del bloqueo"
   debug:
     msg:
       - "Contextos ANTES: {{ contextos_antes.stdout }}"
       - "Contextos DESPUÉS: {{ contextos_despues.stdout }}"
       - "Nginx error.log: {{ error_log.stdout }}"
-      - "SELinux: {{ ansible_selinux.status }}"
-
-      
-- name: Verificar síntomas finales
-  debug:
-    msg: "✅ VARIANT_3: HTTP 403 + SELinux Enforcing + Firewall HTTP OK"
-
-# ------------------------------------------------------------------------------
-# TICKET NOC SIMULATION
-# ------------------------------------------------------------------------------
 
 - name: "[TICKET NOC] INC-J02-V3 - Sitio web no accesible"
   debug:
     msg:
       - "========================================================================="
-      - "| 🎫 INC-J02-V3 – SITIO WEB NO RESPONDE                                 |"
+      - "| 🎫 INC-J02-V3 – SITIO WEB NO RESPONDE (192.168.122.50)                |"
       - "| PRIORIDAD: 🔴 ALTA | IMPACTO: SERVICIO CLIENTES                      |"
       - "========================================================================="
       - "| 📋 DESCRIPCIÓN USUARIO:                                               |"
@@ -119,28 +113,21 @@
       - "| 'Página de error 403 Forbidden en todos los navegadores.'             |"
       - "| 'El servidor responde ping pero no contenido web.'                    |"
       - "-------------------------------------------------------------------------"
-      - "| 📊 METADATAS TÉCNICAS:                                                |"
-      - "| • Origen: CLIENT01 (192.168.122.21)                                  |"
-      - "| • Servicio afectado: HTTP 192.168.122.50                             |"
-      - "| • Error HTTP: 403 Forbidden                                          |"
-      - "| • Puerto afectado: TCP/80                                            |"
+      - "| 📊 METADATOS TÉCNICOS:                                                |"
+      - "| • Cliente: 192.168.122.21 → HTTP 192.168.122.50: 403 Forbidden        |"
+      - "| • Nginx: active | Firewall: http OK | SELinux: Enforcing             |"
       - "-------------------------------------------------------------------------"
-      - "| 💭 OBSERVACIONES INICIALES:                                           |"
-      - "| • Nginx service: active                                              |"
-      - "| • Firewall http: enabled                                             |"
-      - "| • Ping OK → ¿Firewall, SELinux o archivos?                           |"
+      - "| 💭 PISTAS DIAGNÓSTICO:                                                |"
+      - "| • systemctl status nginx → active                                     |"
+      - "| • firewall-cmd --list-services → http https ssh                       |"
+      - "| • tail /var/log/nginx/error.log → Permission denied (13)              |"
+      - "| • ls -laZ /usr/share/nginx/html/ → user_home_t ❌                      |"
       - "-------------------------------------------------------------------------"
       - "| 🎯 TU MISIÓN:                                                         |"
-      - "| 1. Validar conectividad L4 (netstat/ss)                              |"
-      - "| 2. Revisar nginx error.log                                           |"
-      - "| 3. Diferenciar firewalld vs SELinux (sestatus)                       |"
-      - "| 4. Identificar causa raíz                                            |"
+      - "| 1. Validar: ping → OK, netstat :80 → LISTEN, HTTP → 403               |"
+      - "| 2. Diferenciar: Firewall NO, SELinux SÍ                               |"
+      - "| 3. FIX: restorecon -Rv /usr/share/nginx/html/                        |"
       - "========================================================================="
       - "| ⏰ INICIAR DIAGNÓSTICO → Presiona ENTER cuando estés listo            |"
       - "========================================================================="
   run_once: true
-
-# ------------------------------------------------------------------------------
-# HANDLERS
-# ------------------------------------------------------------------------------
-
