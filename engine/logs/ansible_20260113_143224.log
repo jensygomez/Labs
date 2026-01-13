@@ -1,0 +1,73 @@
+
+PLAY [J02 - Orquestador de variantes de Firewalld y SELinux] *******************
+
+TASK [Elegir variante aleatoriamente] ******************************************
+ok: [web01]
+
+TASK [Debug - Verificar variante seleccionada] *********************************
+ok: [web01] => {
+    "global_selected_variant": "variant_3.yml"
+}
+
+TASK [Ejecutar la variante seleccionada] ***************************************
+included: /home/jensy/Labs/scenarios/junior/J02/variant_3.yml for web01
+
+TASK [[VARIANT_SELINUX_HTTP] Verificar estado de SELinux] **********************
+ok: [web01]
+
+TASK [[VARIANT_SELINUX_HTTP] Debug - Estado de SELinux] ************************
+ok: [web01] => {
+    "msg": "SELinux actual: Enforcing"
+}
+
+TASK [[VARIANT_SELINUX_HTTP] Asegurar SELinux en enforcing] ********************
+skipping: [web01]
+
+TASK [[VARIANT_SELINUX_HTTP] Alterar contexto SELinux del contenido web] *******
+changed: [web01]
+
+TASK [[VARIANT_SELINUX_HTTP] Reiniciar Nginx] **********************************
+changed: [web01]
+
+TASK [[VARIANT_SELINUX_HTTP] Confirmar estado del servicio Nginx] **************
+ok: [web01]
+
+TASK [[VARIANT_SELINUX_HTTP] Debug - Estado final de Nginx] ********************
+ok: [web01] => {
+    "msg": "Nginx está running"
+}
+
+TASK [[TICKET NOC] INC-J02-V3 - Sitio web no responde] *************************
+ok: [web01] => {
+    "msg": [
+        "=========================================================================",
+        "| 🎫 INC-J02-V3 – SITIO WEB INACCESIBLE                                |",
+        "| PRIORIDAD: 🟡 MEDIA | IMPACTO: SERVICIO WEB                           |",
+        "=========================================================================",
+        "| 📋 DESCRIPCIÓN USUARIO:                                               |",
+        "| 'La página web no abre desde esta mañana.'                            |",
+        "| 'El servidor responde al ping, pero el sitio no carga.'              |",
+        "-------------------------------------------------------------------------",
+        "| 📊 METADATOS TÉCNICOS:                                                |",
+        "| • Cliente: CLIENT01 (192.168.122.21)                                 |",
+        "| • Servidor Web: SERVER_EU (.50)                                      |",
+        "| • Protocolo afectado: HTTP (80/tcp)                                  |",
+        "-------------------------------------------------------------------------",
+        "| 💭 OBSERVACIONES INICIALES:                                            |",
+        "| • ¿Está caído el servicio?                                            |",
+        "| • ¿Firewall o seguridad a nivel sistema?                              |",
+        "| • ¿Qué dice SELinux?                                                  |",
+        "-------------------------------------------------------------------------",
+        "| 🎯 TU MISIÓN:                                                          |",
+        "| Diagnosticar sin asumir causas                                        |",
+        "| Revisar SELinux y logs de auditoría                                   |",
+        "| Identificar la causa raíz                                             |",
+        "======================================================================== ",
+        "| ⏰ INICIAR DIAGNÓSTICO → Presiona ENTER cuando estés listo            |",
+        "======================================================================== "
+    ]
+}
+
+PLAY RECAP *********************************************************************
+web01                      : ok=10   changed=2    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+

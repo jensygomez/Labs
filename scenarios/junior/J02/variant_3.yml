@@ -1,97 +1,151 @@
 ---
 # ==============================================================================
-# VARIANT_3.yml — SELinux en enforcing bloquea Nginx (HTTP)
+# VARIANT_3.yml — SELinux Enforcing bloquea Nginx
 # ==============================================================================
 #
 # 🎯 PROPÓSITO:
-# Simular un incidente donde el servicio web (Nginx) está activo y el firewall
-# permite tráfico HTTP, pero SELinux impide servir contenido debido a contextos
-# incorrectos.
+# Simular un incidente donde el servicio web deja de ser accesible desde el 
+# cliente debido a SELinux Enforcing bloqueando acceso a archivos estáticos,
+# mientras otros servicios (ping, MariaDB) continúan funcionando normalmente.
+#
+# Este escenario reproduce fallos reales en:
+#   - Cambios accidentales de SELinux contextos
+#   - Despliegues sin validación SELinux
+#   - Restauraciones incorrectas de archivos
 #
 # ------------------------------------------------------------------------------
 # 🔥 FALLA INTRODUCIDA:
-# - SELinux permanece en enforcing
-# - Se altera el contexto SELinux del DocumentRoot de Nginx
-# - Nginx queda funcional pero incapaz de servir contenido
+# - SELinux pasa a Enforcing 
+# - Contextos de /usr/share/nginx/html/ → user_home_t (no httpd_sys_content_t)
+# - j03_web.conf se deshabilita (evita bypass hardcoded)
+# - Nginx corriendo pero devuelve 403 Forbidden
 #
 # ------------------------------------------------------------------------------
 # 🧪 SÍNTOMAS ESPERADOS (DESDE CLIENT01):
 #
 # ✔ Ping → FUNCIONA
-# ✖ HTTP → FALLA
-# ✔ MariaDB → FUNCIONA
+# ✖ HTTP (192.168.122.50) → 403 Forbidden  
+# ✔ MariaDB (vía proxy .70) → FUNCIONA
+#
+# Error típico nginx error.log:
+#   "Permission denied (13)"
 #
 # ------------------------------------------------------------------------------
-# 🧠 LECCIÓN CLAVE:
+# 🧠 LECCIÓN CLAVE (NOC / SENIOR):
 #
-# - SELinux ≠ firewall
-# - Servicios pueden estar "UP" pero bloqueados por MAC
-# - Logs y audit son la fuente de verdad
+# - Nginx active ≠ HTTP funciona
+# - Firewalld http OK ≠ contenido accesible
+# - SELinux bloquea SILENCIOSAMENTE (no siempre AVC denials)
+# - Revisar nginx error.log + ls -laZ + restorecon
 #
 # ==============================================================================
 
-
-
 # ------------------------------------------------------------------------------
-# INYECCIÓN DEL FALLO SELINUX
+# INYECCIÓN DEL FALLO
 # ------------------------------------------------------------------------------
 
-- name: "[VARIANT_SELINUX_HTTP] Verificar estado de SELinux"
-  command: getenforce
-  register: selinux_state
-  changed_when: false
-
-- name: "[VARIANT_SELINUX_HTTP] Debug - Estado de SELinux"
-  debug:
-    msg: "SELinux actual: {{ selinux_state.stdout }}"
-
-- name: "[VARIANT_SELINUX_HTTP] Asegurar SELinux en enforcing"
-  command: setenforce 1
-  when: selinux_state.stdout != "Enforcing"
-
-- name: "[VARIANT_SELINUX_HTTP] Alterar contexto SELinux del contenido web"
-  command: chcon -R -t default_t /usr/share/nginx/html
+- name: "[VARIANT_SELINUX_NGINX] Backup configuración nginx"
+  copy:
+    src: "{{ item }}"
+    dest: "/tmp/j02_v3_backup_{{ ansible_date_time.epoch }}/{{ item | basename }}"
+    remote_src: yes
+    backup: yes
+  loop:
+    - /etc/nginx/nginx.conf
+    - /etc/nginx/conf.d/
   become: yes
 
-- name: "[VARIANT_SELINUX_HTTP] Reiniciar Nginx"
-  service:
-    name: nginx
-    state: restarted
+- name: "[VARIANT_SELINUX_NGINX] Desactivar j03_web.conf (bypass hardcoded)"
+  copy:
+    src: /etc/nginx/conf.d/j03_web.conf
+    dest: /etc/nginx/conf.d/j03_web.conf.disabled
+    remote_src: yes
+  notify: restart nginx
+  become: yes
 
-- name: "[VARIANT_SELINUX_HTTP] Confirmar estado del servicio Nginx"
-  service_facts:
+- name: "[VARIANT_SELINUX_NGINX] Asegurar SELinux Enforcing"
+  command: setenforce 1
+  become: yes
 
-- name: "[VARIANT_SELINUX_HTTP] Debug - Estado final de Nginx"
+- name: "[VARIANT_SELINUX_NGINX] Verificar contextos ANTES"
+  shell: ls -laZ /usr/share/nginx/html/ | head -3
+  register: contextos_antes
+  changed_when: false
+  become: yes
+
+- name: "[VARIANT_SELINUX_NGINX] Romper contextos SELinux (CAUSA 403)"
+  shell: chcon -R -t user_home_t /usr/share/nginx/html/
+  become: yes
+  notify: restart nginx
+
+- name: "[VARIANT_SELINUX_NGINX] Verificar contextos DESPUÉS"
+  shell: ls -laZ /usr/share/nginx/html/ | head -3
+  register: contextos_despues
+  changed_when: false
+  become: yes
+
+- name: "[VARIANT_SELINUX_NGINX] Verificar nginx error.log"
+  shell: tail -1 /var/log/nginx/error.log
+  register: error_log
+  changed_when: false
+  become: yes
+
+- name: "[VARIANT_SELINUX_NGINX] Debug - Estado final"
   debug:
-    msg: "Nginx está {{ ansible_facts.services['nginx.service'].state }}"
+    msg:
+      - "Contextos ANTES: {{ contextos_antes.stdout }}"
+      - "Contextos DESPUÉS: {{ contextos_despues.stdout }}"
+      - "Nginx error.log: {{ error_log.stdout }}"
+      - "SELinux: {{ ansible_selinux.status }}"
 
+# ------------------------------------------------------------------------------
+# TICKET NOC SIMULATION
+# ------------------------------------------------------------------------------
 
-- name: "[TICKET NOC] INC-J02-V3 - Sitio web no responde"
+- name: "[TICKET NOC] INC-J02-V3 - Sitio web no accesible"
   debug:
     msg:
       - "========================================================================="
-      - "| 🎫 INC-J02-V3 – SITIO WEB INACCESIBLE                                |"
-      - "| PRIORIDAD: 🟡 MEDIA | IMPACTO: SERVICIO WEB                           |"
+      - "| 🎫 INC-J02-V3 – SITIO WEB NO RESPONDE                                 |"
+      - "| PRIORIDAD: 🔴 ALTA | IMPACTO: SERVICIO CLIENTES                      |"
       - "========================================================================="
       - "| 📋 DESCRIPCIÓN USUARIO:                                               |"
-      - "| 'La página web no abre desde esta mañana.'                            |"
-      - "| 'El servidor responde al ping, pero el sitio no carga.'              |"
+      - "| 'El sitio está caído para todos los clientes.'                        |"
+      - "| 'Página de error 403 Forbidden en todos los navegadores.'             |"
+      - "| 'El servidor responde ping pero no contenido web.'                    |"
       - "-------------------------------------------------------------------------"
-      - "| 📊 METADATOS TÉCNICOS:                                                |"
-      - "| • Cliente: CLIENT01 (192.168.122.21)                                 |"
-      - "| • Servidor Web: SERVER_EU (.50)                                      |"
-      - "| • Protocolo afectado: HTTP (80/tcp)                                  |"
+      - "| 📊 METADATAS TÉCNICAS:                                                |"
+      - "| • Origen: CLIENT01 (192.168.122.21)                                  |"
+      - "| • Servicio afectado: HTTP 192.168.122.50                             |"
+      - "| • Error HTTP: 403 Forbidden                                          |"
+      - "| • Puerto afectado: TCP/80                                            |"
       - "-------------------------------------------------------------------------"
-      - "| 💭 OBSERVACIONES INICIALES:                                            |"
-      - "| • ¿Está caído el servicio?                                            |"
-      - "| • ¿Firewall o seguridad a nivel sistema?                              |"
-      - "| • ¿Qué dice SELinux?                                                  |"
+      - "| 💭 OBSERVACIONES INICIALES:                                           |"
+      - "| • Nginx service: active                                              |"
+      - "| • Firewall http: enabled                                             |"
+      - "| • Ping OK → ¿Firewall, SELinux o archivos?                           |"
       - "-------------------------------------------------------------------------"
-      - "| 🎯 TU MISIÓN:                                                          |"
-      - "| Diagnosticar sin asumir causas                                        |"
-      - "| Revisar SELinux y logs de auditoría                                   |"
-      - "| Identificar la causa raíz                                             |"
-      - "======================================================================== "
+      - "| 🎯 TU MISIÓN:                                                         |"
+      - "| 1. Validar conectividad L4 (netstat/ss)                              |"
+      - "| 2. Revisar nginx error.log                                           |"
+      - "| 3. Diferenciar firewalld vs SELinux (sestatus)                       |"
+      - "| 4. Identificar causa raíz                                            |"
+      - "========================================================================="
       - "| ⏰ INICIAR DIAGNÓSTICO → Presiona ENTER cuando estés listo            |"
-      - "======================================================================== "
+      - "========================================================================="
   run_once: true
+
+# ------------------------------------------------------------------------------
+# HANDLERS
+# ------------------------------------------------------------------------------
+
+  handlers:
+    - name: restart nginx
+      systemd:
+        name: nginx
+        state: restarted
+      become: yes
+
+    - name: Verificar síntomas finales
+      debug:
+        msg: "✅ VARIANT_3: HTTP 403 + SELinux Enforcing + Firewall HTTP OK"
