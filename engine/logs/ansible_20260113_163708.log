@@ -1,0 +1,82 @@
+
+PLAY [J02 - Orquestador de variantes de Firewalld y SELinux] *******************
+
+TASK [Elegir variante aleatoriamente] ******************************************
+ok: [web01]
+
+TASK [Debug - Verificar variante seleccionada] *********************************
+ok: [web01] => {
+    "global_selected_variant": "variant_3.yml"
+}
+
+TASK [Ejecutar la variante seleccionada] ***************************************
+included: /home/jensy/Labs/scenarios/junior/J02/variant_3.yml for web01
+
+TASK [[VARIANT_SELINUX_NGINX] Detectar si j03_web.conf existe] *****************
+ok: [web01]
+
+TASK [[VARIANT_SELINUX_NGINX] Desactivar j03_web.conf (bypass hardcoded)] ******
+changed: [web01]
+
+TASK [[VARIANT_SELINUX_NGINX] Verificar contextos ANTES] ***********************
+ok: [web01]
+
+TASK [[VARIANT_SELINUX_NGINX] Asegurar SELinux Enforcing] **********************
+changed: [web01]
+
+TASK [[VARIANT_SELINUX_NGINX] Romper contextos SELinux (CAUSA 403)] ************
+changed: [web01]
+
+TASK [[VARIANT_SELINUX_NGINX] Restart nginx] ***********************************
+changed: [web01]
+
+TASK [[VARIANT_SELINUX_NGINX] Verificar contextos DESPUÉS] *********************
+ok: [web01]
+
+TASK [[VARIANT_SELINUX_NGINX] Verificar nginx error.log] ***********************
+ok: [web01]
+
+TASK [[VARIANT_SELINUX_NGINX] Debug - Estado final del bloqueo] ****************
+ok: [web01] => {
+    "msg": [
+        "Contextos ANTES: total 12\ndrwxr-xr-x. 3 root root system_u:object_r:httpd_sys_content_t:s0  143 jan 10 22:29 .\ndrwxr-xr-x. 4 root root system_u:object_r:usr_t:s0                 33 jan 10 22:29 ..",
+        "Contextos DESPUÉS: total 12\ndrwxr-xr-x. 3 root root system_u:object_r:user_home_t:s0  143 jan 10 22:29 .\ndrwxr-xr-x. 4 root root system_u:object_r:usr_t:s0         33 jan 10 22:29 ..",
+        "Nginx error.log: "
+    ]
+}
+
+TASK [[TICKET NOC] INC-J02-V3 - Sitio web no accesible] ************************
+ok: [web01] => {
+    "msg": [
+        "=========================================================================",
+        "| 🎫 INC-J02-V3 – SITIO WEB NO RESPONDE (192.168.122.50)                |",
+        "| PRIORIDAD: 🔴 ALTA | IMPACTO: SERVICIO CLIENTES                      |",
+        "=========================================================================",
+        "| 📋 DESCRIPCIÓN USUARIO:                                               |",
+        "| 'El sitio está caído para todos los clientes.'                        |",
+        "| 'Página de error 403 Forbidden en todos los navegadores.'             |",
+        "| 'El servidor responde ping pero no contenido web.'                    |",
+        "-------------------------------------------------------------------------",
+        "| 📊 METADATOS TÉCNICOS:                                                |",
+        "| • Cliente: 192.168.122.21 → HTTP 192.168.122.50: 403 Forbidden        |",
+        "| • Nginx: active | Firewall: http OK | SELinux: Enforcing             |",
+        "-------------------------------------------------------------------------",
+        "| 💭 PISTAS DIAGNÓSTICO:                                                |",
+        "| • systemctl status nginx → active                                     |",
+        "| • firewall-cmd --list-services → http https ssh                       |",
+        "| • tail /var/log/nginx/error.log → Permission denied (13)              |",
+        "| • ls -laZ /usr/share/nginx/html/ → user_home_t ❌                      |",
+        "-------------------------------------------------------------------------",
+        "| 🎯 TU MISIÓN:                                                         |",
+        "| 1. Validar: ping → OK, netstat :80 → LISTEN, HTTP → 403               |",
+        "| 2. Diferenciar: Firewall NO, SELinux SÍ                               |",
+        "| 3. FIX: restorecon -Rv /usr/share/nginx/html/                        |",
+        "=========================================================================",
+        "| ⏰ INICIAR DIAGNÓSTICO → Presiona ENTER cuando estés listo            |",
+        "========================================================================="
+    ]
+}
+
+PLAY RECAP *********************************************************************
+web01                      : ok=13   changed=4    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
