@@ -1,0 +1,82 @@
+
+PLAY [J01 - Orquestador de variantes de redes] *********************************
+
+TASK [Elegir variante aleatoriamente] ******************************************
+ok: [web01]
+
+TASK [Debug - Verificar variante seleccionada] *********************************
+ok: [web01] => {
+    "global_selected_variant": "variant_3.yml"
+}
+
+TASK [Ejecutar la variante seleccionada] ***************************************
+included: /home/jensy/Labs/scenarios/junior/J01/variant_3.yml for web01
+
+TASK [Set TCP keepalive to 5 seconds] ******************************************
+changed: [web01]
+
+TASK [Set TCP keepalive interval to 1 second] **********************************
+changed: [web01]
+
+TASK [[TICKET NOC] INC-J01-V3 - Conexiones DB se cierran periódicamente] *******
+ok: [web01] => {
+    "msg": [
+        "=========================================================================",
+        "| 🎫 INC-J01-V3 – DB Connection pools draining misteriosamente         |",
+        "| FILOSOFÍA: 'El kernel no sabe qué quieren las aplicaciones'          |",
+        "=========================================================================",
+        "|                                                                       |",
+        "| 📜 REPORTE DE DESARROLLADORES:                                       |",
+        "| • 'Nuestra app pierde conexiones DB después de 5-10 segundos idle'   |",
+        "| • 'HikariCP reporta: Connection is not available, timeout'           |",
+        "| • 'Consulta simple funciona, transacción larga falla si hay pausa'   |",
+        "| • 'HTTP y ping al servidor: 100% OK'                                 |",
+        "|                                                                       |",
+        "| 🐧 REALIDAD TÉCNICA DESCUBIERTA:                                     |",
+        "| • MySQL wait_timeout: 28800s (8 horas, default)                      |",
+        "| • Kernel tcp_keepalive_time: 5s (¡MODIFICADO!)                       |",
+        "| • Kernel gana: cierra sockets TCP idle >7s                           |",
+        "| • MySQL pierde: conexiones en pool mueren silenciosamente            |",
+        "|                                                                       |",
+        "| 🧠 PREGUNTAS DE TU SENIOR:                                           |",
+        "|                                                                       |",
+        "| 1. '¿Cómo aíslas que es problema TCP, no de MySQL o aplicación?'     |",
+        "|    ¿Raw socket test? ¿telnet al puerto 3306 y esperar?               |",
+        "|                                                                       |",
+        "| 2. '¿Dónde está el mismatch de timeouts?'                            |",
+        "|    ¿MySQL vars? ¿Kernel params? ¿App connection pool config?         |",
+        "|                                                                       |",
+        "| 3. 'keepalive_time default 7200s... ¿quién lo puso en 5s?'           |",
+        "|    ¿Performance tuning? ¿Security hardening? ¿Error de script?       |",
+        "|                                                                       |",
+        "| 4. '¿Cuál es la regla: app timeout vs DB timeout vs kernel timeout?' |",
+        "|    ¿Qué debe ser mayor/menor? ¿Por qué?                              |",
+        "|                                                                       |",
+        "| 5. 'Si restauras a 7200s: ¿qué monitoreas?'                          |",
+        "|    ¿Socket count? ¿Memory usage? ¿Hay riesgo de connection leak?     |",
+        "|                                                                       |",
+        "| 6. '¿Cómo comunicas esto a DevOps/Developers?'                       |",
+        "|    'No es bug de tu app, es config del sistema'                      |",
+        "|                                                                       |",
+        "| 7. '¿Qué alertas implementas para futuro?'                           |",
+        "|    ¿Monitor tcp_keepalive settings? ¿Compare con DB/app timeouts?    |",
+        "|                                                                       |",
+        "=========================================================================",
+        "| 🛠️  DIAGNÓSTICO CONFIRMATORIO:                                       |",
+        "| # En servidor DB:                                                    |",
+        "| cat /proc/sys/net/ipv4/tcp_keepalive_time  # Debe ser 5 (no 7200)    |",
+        "| mysql -e 'SHOW VARIABLES LIKE \"%timeout%\"' | grep wait             |",
+        "|                                                                      |",
+        "| # Desde cliente diagnóstico:                                         |",
+        "| telnet IP_DB 3306  # Deja abierto, espera 8s, intenta escribir      |",
+        "=========================================================================",
+        "| 💡 LECCIÓN DE PRODUCCIÓN:                                            |",
+        "| 'Cuando tres sistemas (app, DB, kernel) tienen diferentes            |",
+        "|  expectativas de timeout, gana el más impaciente.'                   |",
+        "========================================================================="
+    ]
+}
+
+PLAY RECAP *********************************************************************
+web01                      : ok=6    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
