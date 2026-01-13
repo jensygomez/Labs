@@ -1,0 +1,97 @@
+---
+# ==============================================================================
+# VARIANT_3.yml — SELinux en enforcing bloquea Nginx (HTTP)
+# ==============================================================================
+#
+# 🎯 PROPÓSITO:
+# Simular un incidente donde el servicio web (Nginx) está activo y el firewall
+# permite tráfico HTTP, pero SELinux impide servir contenido debido a contextos
+# incorrectos.
+#
+# ------------------------------------------------------------------------------
+# 🔥 FALLA INTRODUCIDA:
+# - SELinux permanece en enforcing
+# - Se altera el contexto SELinux del DocumentRoot de Nginx
+# - Nginx queda funcional pero incapaz de servir contenido
+#
+# ------------------------------------------------------------------------------
+# 🧪 SÍNTOMAS ESPERADOS (DESDE CLIENT01):
+#
+# ✔ Ping → FUNCIONA
+# ✖ HTTP → FALLA
+# ✔ MariaDB → FUNCIONA
+#
+# ------------------------------------------------------------------------------
+# 🧠 LECCIÓN CLAVE:
+#
+# - SELinux ≠ firewall
+# - Servicios pueden estar "UP" pero bloqueados por MAC
+# - Logs y audit son la fuente de verdad
+#
+# ==============================================================================
+
+
+
+# ------------------------------------------------------------------------------
+# INYECCIÓN DEL FALLO SELINUX
+# ------------------------------------------------------------------------------
+
+- name: "[VARIANT_SELINUX_HTTP] Verificar estado de SELinux"
+  command: getenforce
+  register: selinux_state
+  changed_when: false
+
+- name: "[VARIANT_SELINUX_HTTP] Debug - Estado de SELinux"
+  debug:
+    msg: "SELinux actual: {{ selinux_state.stdout }}"
+
+- name: "[VARIANT_SELINUX_HTTP] Asegurar SELinux en enforcing"
+  command: setenforce 1
+  when: selinux_state.stdout != "Enforcing"
+
+- name: "[VARIANT_SELINUX_HTTP] Alterar contexto SELinux del contenido web"
+  command: chcon -R -t default_t /usr/share/nginx/html
+  become: yes
+
+- name: "[VARIANT_SELINUX_HTTP] Reiniciar Nginx"
+  service:
+    name: nginx
+    state: restarted
+
+- name: "[VARIANT_SELINUX_HTTP] Confirmar estado del servicio Nginx"
+  service_facts:
+
+- name: "[VARIANT_SELINUX_HTTP] Debug - Estado final de Nginx"
+  debug:
+    msg: "Nginx está {{ ansible_facts.services['nginx.service'].state }}"
+
+
+- name: "[TICKET NOC] INC-J02-V3 - Sitio web no responde"
+  debug:
+    msg:
+      - "========================================================================="
+      - "| 🎫 INC-J02-V3 – SITIO WEB INACCESIBLE                                |"
+      - "| PRIORIDAD: 🟡 MEDIA | IMPACTO: SERVICIO WEB                           |"
+      - "========================================================================="
+      - "| 📋 DESCRIPCIÓN USUARIO:                                               |"
+      - "| 'La página web no abre desde esta mañana.'                            |"
+      - "| 'El servidor responde al ping, pero el sitio no carga.'              |"
+      - "-------------------------------------------------------------------------"
+      - "| 📊 METADATOS TÉCNICOS:                                                |"
+      - "| • Cliente: CLIENT01 (192.168.122.21)                                 |"
+      - "| • Servidor Web: SERVER_EU (.50)                                      |"
+      - "| • Protocolo afectado: HTTP (80/tcp)                                  |"
+      - "-------------------------------------------------------------------------"
+      - "| 💭 OBSERVACIONES INICIALES:                                            |"
+      - "| • ¿Está caído el servicio?                                            |"
+      - "| • ¿Firewall o seguridad a nivel sistema?                              |"
+      - "| • ¿Qué dice SELinux?                                                  |"
+      - "-------------------------------------------------------------------------"
+      - "| 🎯 TU MISIÓN:                                                          |"
+      - "| Diagnosticar sin asumir causas                                        |"
+      - "| Revisar SELinux y logs de auditoría                                   |"
+      - "| Identificar la causa raíz                                             |"
+      - "======================================================================== "
+      - "| ⏰ INICIAR DIAGNÓSTICO → Presiona ENTER cuando estés listo            |"
+      - "======================================================================== "
+  run_once: true
