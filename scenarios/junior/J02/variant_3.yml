@@ -145,7 +145,3 @@ handlers:
       name: nginx
       state: restarted
     become: yes
-
-  - name: Verificar síntomas finales
-    debug:
-      msg: "✅ VARIANT_3: HTTP 403 + SELinux Enforcing + Firewall HTTP OK"
