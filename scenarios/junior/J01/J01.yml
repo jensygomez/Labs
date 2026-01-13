@@ -3,56 +3,82 @@
 # J01 – Laboratorio de Redes y Conectividad (Junior) - NOC Simulation
 # ==============================================================================
 #
-# Tema principal: Diagnóstico de problemas de red en ecosistema Linux corporativo
+# 🎯 TEMA PRINCIPAL
+# Diagnóstico de problemas de red en un ecosistema Linux corporativo realista.
 #
-# Objetivo: 
-# Practicar troubleshooting realista sin pistas, simulando tickets NOC donde
-# el usuario nunca dice "lo que hay que hacer", solo "lo que no funciona".
+# 🎯 OBJETIVO
+# Practicar troubleshooting sin pistas explícitas, simulando tickets NOC donde
+# el usuario solo reporta síntomas ("no funciona"), nunca la causa.
 #
-# VARIA NTES DISPONIBLES (selección aleatoria):
-# -----------------------------------------------------------------------------
-# VARIANT_1.yml: Bloqueo ICMP echo-request (firewalld icmp_block)
-#   ✓ Ping falla → "Pacote filtrado" 
-#   ✓ HTTP/MariaDB funcionan normalmente
-#   ✓ Lección: ICMP=diagnóstico ≠ servicios críticos
+# El foco está en:
+#   - Observación
+#   - Correlación de señales
+#   - Diferenciar fallo real vs comportamiento por diseño
 #
-# VARIANT_2.yml: Bloqueo traceroute (firewalld TTL exceeded) 
+# ==============================================================================
+# VARIANTES DISPONIBLES (selección aleatoria)
+# ==============================================================================
+#
+# VARIANT_1.yml — Bloqueo ICMP (firewalld icmp_block)
+#   ✓ Ping falla
+#   ✓ HTTP y MariaDB funcionan
+#   ✓ Lección: ICMP = diagnóstico, no servicio crítico
+#
+# VARIANT_2.yml — Traceroute incompleto (TTL exceeded filtrado)
 #   ✓ traceroute falla en hop intermedio
 #   ✓ Ping parcial funciona
-#   ✓ HTTP/MariaDB normales
-#   ✓ Lección: Routing vs conectividad servicios
+#   ✓ Servicios OK
+#   ✓ Lección: routing ≠ disponibilidad de servicio
 #
-# VARIANT_3.yml: Keepalive TCP conexión cerrada prematura
-#   ✓ HTTP responde 200 pero cierra conexión rápido
+# VARIANT_3.yml — TCP Keepalive / timeouts agresivos (HAProxy)
+#   ✓ Conexión TCP se corta prematuramente
 #   ✓ Ping funciona
-#   ✓ MariaDB OK
-#   ✓ Lección: TCP stack tuning vs aplicación
+#   ✓ Backend MariaDB está sano
+#   ✓ Error percibido desde cliente
+#   ✓ Lección: tuning TCP vs comportamiento de aplicación
 #
-# VARIANT_4.yml: MTU mismatch en cliente (Path MTU Discovery fallido)
+# VARIANT_4.yml — MTU mismatch en cliente
 #   ✓ Ping con paquetes grandes falla
 #   ✓ Ping pequeños funciona
-#   ✓ HTTP funciona (paquetes pequeños)
-#   ✓ Lección: Fragmentación vs servicios reales
+#   ✓ HTTP aparentemente OK
+#   ✓ Lección: PMTU y fragmentación afectan servicios de forma sutil
 #
-# -----------------------------------------------------------------------------
-#
-# Filosofía Linux Senior:
-# - Observa el ecosistema COMPLETO antes de tocar nada
-# - ICMP/traceroute ≠ Servicios críticos TCP/UDP
-# - "No responde" puede ser diseño, no fallo
-# - Siempre valida impacto NEGOCIO primero
-# - Documenta TODO: qué probaste, qué funciona, qué NO
-#
-# Ecosistema lab:
-# CLIENT01 (192.168.122.21) → WEB(192.168.122.50) + DB(192.168.122.60)
-# Firewalld → Nginx → MariaDB → Keepalived VIPs
-#
-# Flujo real NOC:
-# 1. Usuario: "No funciona conectividad"
-# 2. Senior: Observa TODO el ecosistema
-# 3. Diagnóstico: Causa raíz + impacto real
-# 4. Documenta: Hallazgo + lección aprendida
 # ==============================================================================
+# FILOSOFÍA LINUX / NOC (Junior → Senior)
+# ==============================================================================
+# - Observa el ecosistema completo antes de tocar nada
+# - ICMP y traceroute no definen disponibilidad de negocio
+# - "Se cae" puede ser política, tuning o diseño
+# - Prioriza impacto al negocio antes que métricas técnicas
+# - Documenta: qué funciona, qué falla y por qué
+#
+# ==============================================================================
+# ECOSISTEMA DEL LABORATORIO
+# ==============================================================================
+#
+# CLIENT01
+#   IP: 192.168.122.21
+#
+# SERVER_EU (una VM, múltiples VIPs)
+#   - 192.168.122.22 → IP administrativa (SSH / gestión)
+#   - 192.168.122.50 → WEB (Nginx / HTTP)
+#   - 192.168.122.60 → MariaDB (Backend real)
+#   - 192.168.122.70 → HAProxy (Proxy TCP)
+#
+# Flujo real de producción:
+#   CLIENT → HAProxy (.70) → MariaDB (.60)
+#   CLIENT → WEB (.50)
+#
+# ==============================================================================
+# FLUJO REAL NOC
+# ==============================================================================
+# 1. Usuario reporta: "No hay conectividad"
+# 2. NOC analiza síntomas, no asume causas
+# 3. Se identifica impacto real en negocio
+# 4. Se determina causa raíz
+# 5. Se documenta lección aprendida
+# ==============================================================================
+
 
 
 

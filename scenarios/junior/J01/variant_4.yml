@@ -1,0 +1,94 @@
+---
+# ==============================================================================
+# VARIANT_4.yml — MTU mismatch en CLIENT (Path MTU Discovery roto)
+# ==============================================================================
+#
+# 🎯 PROPÓSITO:
+# Introducir un fallo sutil y realista reduciendo el MTU en el CLIENTE, provocando
+# un escenario donde:
+#   - La conectividad básica parece sana
+#   - Los servicios TCP funcionan de forma engañosa
+#   - Los problemas reales aparecen solo con cargas mayores
+#
+# Este tipo de incidente es típico en:
+#   - VPNs (IPSec, WireGuard, OpenVPN)
+#   - Túneles GRE / VXLAN
+#   - Clouds híbridos
+#   - Overlays mal dimensionados
+#
+# ------------------------------------------------------------------------------
+# 🔥 FALLA INTRODUCIDA:
+# - MTU del cliente reducido artificialmente (ej: 1200 bytes)
+# - PMTU Discovery queda limitado
+# - Fragmentación prohibida (DF set) falla
+#
+# ------------------------------------------------------------------------------
+# 🧪 SÍNTOMAS ESPERADOS:
+#
+# ✔ Ping pequeño → FUNCIONA
+# ✔ Ping grande (DF, -M do) → FALLA
+# ✔ HTTP → FUNCIONA (paquetes pequeños)
+# ⚠ MariaDB → Conecta, pero puede fallar con queries grandes
+#
+# ------------------------------------------------------------------------------
+# 🛠 COMANDOS CLAVE PARA DIAGNÓSTICO (NO AUTOMATIZADOS):
+#
+#   ip link show
+#   ping -c 2 <destino>
+#   ping -M do -s 1472 <destino>
+#   tracepath <destino>
+#
+# Resultado típico:
+#   pmtu 1200
+#
+# ------------------------------------------------------------------------------
+# 🧠 LECCIÓN CLAVE (NOC / SENIOR):
+#
+# - ICMP básico ≠ Red sana
+# - Servicios que "responden" no siempre están saludables
+# - PMTU roto genera fallos INTERMITENTES y difíciles de rastrear
+# - Siempre validar MTU en escenarios con túneles o VPN
+#
+# ------------------------------------------------------------------------------
+# 📍 TOPOLOGÍA DEL LAB:
+#
+# CLIENT01 (192.168.122.21)
+#   ↓ MTU reducido
+# WEB01    (192.168.122.50)
+# DB01     (192.168.122.60)
+# PROXY    (192.168.122.70)
+#
+# ------------------------------------------------------------------------------
+# ⚠ IMPORTANTE:
+# Esta variante NO debe aplicar fixes automáticos.
+# El rollback se realiza manualmente o mediante variante correctiva separada.
+# ==============================================================================
+
+
+- name: "[VARIANT_4] Detectar interfaz de red activa en cliente"
+  command: ip route get 8.8.8.8
+  register: route_info
+  changed_when: false
+  delegate_to: client01
+  become: yes
+
+- name: "[VARIANT_4] Extraer interfaz de red desde la ruta"
+  set_fact:
+    client_iface: "{{ route_info.stdout.split('dev')[1].split()[0] }}"
+  delegate_to: client01
+
+- name: "[VARIANT_4] Reducir MTU en la interfaz del cliente"
+  command: ip link set dev {{ client_iface }} mtu 1200
+  delegate_to: client01
+  become: yes
+
+- name: "[VARIANT_4] Verificar MTU aplicado"
+  command: ip link show {{ client_iface }}
+  register: mtu_result
+  changed_when: false
+  delegate_to: client01
+
+- name: "[VARIANT_4] Debug MTU final"
+  debug:
+    msg: "{{ mtu_result.stdout }}"
+  delegate_to: client01
