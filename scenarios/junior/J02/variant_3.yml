@@ -98,6 +98,11 @@
       - "Nginx error.log: {{ error_log.stdout }}"
       - "SELinux: {{ ansible_selinux.status }}"
 
+      
+- name: Verificar síntomas finales
+  debug:
+    msg: "✅ VARIANT_3: HTTP 403 + SELinux Enforcing + Firewall HTTP OK"
+
 # ------------------------------------------------------------------------------
 # TICKET NOC SIMULATION
 # ------------------------------------------------------------------------------
@@ -139,9 +144,3 @@
 # HANDLERS
 # ------------------------------------------------------------------------------
 
-handlers:
-  - name: restart nginx
-    systemd:
-      name: nginx
-      state: restarted
-    become: yes
