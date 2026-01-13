@@ -64,7 +64,10 @@
 
   vars:
     variantes:
+      - variant_1.yml
+      - variant_2.yml
       - variant_3.yml
+      - variant_4.yml
 
 
   tasks:
@@ -78,51 +81,6 @@
         var: global_selected_variant
       run_once: true
 
-    - name: Mostrar comandos de prueba desde CLIENT01 (solo VARIANT_2)
-      debug:
-        msg:
-          - "======================================================"
-          - "📌 Comandos de prueba recomendados"
-          - "======================================================"
-          - "traceroute -n 192.168.122.50"
-          - "ping -c 4 192.168.122.50"
-          - "curl http://192.168.122.50"
-          - "mysql -h 192.168.122.60 -u root -p"
-          - "======================================================"
-      when: global_selected_variant == 'variant_2.yml'
-      run_once: true
-
-    - name: Mostrar ticket con estilo caja
-      debug:
-        msg:
-          - "========================================================================"
-          - "|                  J01 – Laboratorio de Redes                           |"
-          - "-------------------------------------------------------------------------"
-          - "| Jensy, recuerda que Linux es un ecosistema interconectado             |"
-          - "| - Clientes, servidores, firewalls interactúan.                        |"
-          - "| - Un fallo en la conectividad no siempre significa un servicio caído. |"
-          - "| - Diferencia protocolos y evalúa el impacto antes de actuar.          |"
-          - "========================================================================="
-
-
-    - name: Mostrar comandos de prueba desde CLIENT01 (solo VARIANT_2)
-      debug:
-        msg:
-          - "======================================================"
-          - "📌 Comandos de prueba recomendados para VARIANT_2:"
-          - "======================================================"
-          - "traceroute -n 192.168.122.50"
-          - "ping -c 4 192.168.122.50"
-          - "curl http://192.168.122.50"
-          - "mysql -h 192.168.122.60 -u root -p"
-          - "======================================================"
-      when: global_selected_variant == 'variant_2.yml'
-      run_once: true
-
-
-    - name: Esperar que el usuario presione Enter
-      pause:
-        prompt: "Presiona ENTER para continuar..."
 
     - name: Ejecutar la variante seleccionada
       include_tasks: "{{ global_selected_variant }}"
