@@ -37,6 +37,7 @@
 #   - .70 → HAProxy
 # ==============================================================================
 
+
 - name: "[VARIANT_FW_HTTP] Detectar zona activa de firewalld"
   command: firewall-cmd --get-active-zones
   register: active_zone
@@ -49,14 +50,14 @@
     server_zone: "{{ active_zone.stdout.split()[0] }}"
   delegate_to: web01
 
-- name: "[VARIANT_FW_HTTP] Verificar puertos antes de bloquear HTTP"
-  command: firewall-cmd --zone={{ server_zone }} --list-ports
-  register: ports_before
+- name: "[VARIANT_FW_HTTP] Verificar servicios y puertos antes de bloquear HTTP"
+  command: firewall-cmd --zone={{ server_zone }} --list-all
+  register: before
   changed_when: false
   delegate_to: web01
 
-- name: "[VARIANT_FW_HTTP] Bloquear puerto 80/tcp en firewalld"
-  command: firewall-cmd --zone={{ server_zone }} --remove-port=80/tcp --permanent
+- name: "[VARIANT_FW_HTTP] Bloquear servicio HTTP en firewalld"
+  command: firewall-cmd --zone={{ server_zone }} --remove-service=http --permanent
   delegate_to: web01
   become: yes
 
@@ -65,15 +66,15 @@
   delegate_to: web01
   become: yes
 
-- name: "[VARIANT_FW_HTTP] Verificar puertos después de bloquear HTTP"
-  command: firewall-cmd --zone={{ server_zone }} --list-ports
-  register: ports_after
+- name: "[VARIANT_FW_HTTP] Verificar servicios y puertos después de bloquear HTTP"
+  command: firewall-cmd --zone={{ server_zone }} --list-all
+  register: after
   changed_when: false
   delegate_to: web01
 
-- name: "[VARIANT_FW_HTTP] Debug: mostrar puertos antes y después"
+- name: "[VARIANT_FW_HTTP] Debug: mostrar servicios antes y después"
   debug:
     msg:
-      - "Puertos antes de bloquear HTTP: {{ ports_before.stdout }}"
-      - "Puertos después de bloquear HTTP: {{ ports_after.stdout }}"
+      - "Antes de bloquear HTTP: {{ before.stdout }}"
+      - "Después de bloquear HTTP: {{ after.stdout }}"
   delegate_to: web01
