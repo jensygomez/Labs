@@ -1,30 +1,41 @@
 #!/bin/bash
-set -euo pipefail
+# ==============================================================================
+# CLOUD-INIT GENERATOR (prueba mínima)
+# ==============================================================================
+# Uso: cloudinit_generator.sh <LEVEL> <LAB_ID> <TEMPLATE>
+# Devuelve: ruta absoluta del ISO generado
+# ==============================================================================
 
-if [[ $# -ne 3 ]]; then
-    echo "Uso: $0 <nivel> <lab_id> <variant>"
-    exit 1
-fi
+set -euo pipefail
 
 LEVEL="$1"
 LAB_ID="$2"
-VARIANT="$3"
+TEMPLATE="$3"
 
-ENGINE_DIR="$(cd "$(dirname "$0")" && pwd)"
-ROOT_DIR="$(cd "$ENGINE_DIR/.." && pwd)"
-TMP_DIR="$ROOT_DIR/tmp"
-
+TMP_DIR="$(dirname "$TEMPLATE")/tmp"
 mkdir -p "$TMP_DIR"
 
-SCENARIO_DIR="$ROOT_DIR/scenarios/${LEVEL,,}/$LAB_ID/cloudinit"
-USER_DATA="$SCENARIO_DIR/$VARIANT.yml"
-META_DATA="$ROOT_DIR/scenarios/${LEVEL,,}/$LAB_ID/metadata.yaml"
+ISO_PATH="$TMP_DIR/${LAB_ID}_nocloud.iso"
 
-[[ ! -f "$USER_DATA" ]] && { echo "Error: $USER_DATA no encontrado"; exit 1; }
-[[ ! -f "$META_DATA" ]] && { echo "Error: $META_DATA no encontrado"; exit 1; }
+# Crear user-data simple
+cat > "$TMP_DIR/user-data" <<EOF
+#cloud-config
+hostname: ${LAB_ID}
+ssh_pwauth: True
+users:
+  - name: jensy
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    shell: /bin/bash
+    lock_passwd: false
+    passwd: $(openssl passwd -6 "1234")
+EOF
 
-ISO_FILE="$TMP_DIR/${LAB_ID}_${VARIANT}.iso"
+# Crear meta-data vacío
+echo "instance-id: $LAB_ID" > "$TMP_DIR/meta-data"
+echo "local-hostname: $LAB_ID" >> "$TMP_DIR/meta-data"
 
-genisoimage -output "$ISO_FILE" -volid cidata -joliet -rock "$USER_DATA" "$META_DATA"
+# Generar ISO
+genisoimage -output "$ISO_PATH" -volid cidata -joliet -rock "$TMP_DIR/user-data" "$TMP_DIR/meta-data"
 
-echo "$ISO_FILE"
+echo "$ISO_PATH"
