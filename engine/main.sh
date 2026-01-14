@@ -53,46 +53,39 @@ assign_lab() {
 
 run_lab() {
     local ID="$1" TEMPLATE="$2" LEVEL="$3"
+    
     echo "🚀 LAB: $ID ($LEVEL)"
     
-    # 1. Generar ISO (✅ YA FUNCIONA)
-    read -rp "ENTER para generar ISO... "
-    ISO_PATH=$(bash "$ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$TEMPLATE")
+    # 1. ISO
+    local ISO_PATH=$(bash "$ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$TEMPLATE")
     echo "✅ ISO: $ISO_PATH"
     
-    # 2. **FALTA: CREAR VM CON EL ISO**
-    VM_NAME="lab-${ID}-$(date +%Y%m%d-%H%M%S)"
-    read -rp "ENTER para crear VM '$VM_NAME'... "
+    # 2. VM
+    local VM_NAME="lab-${ID}-$(date +%Y%m%d-%H%M%S)"
+    local VM_IMG="/mnt/vms/labs/tmp/${VM_NAME}.qcow2"
     
-    # CLONAR VM base (qcow2 overlay)
-    BASE_IMG="/mnt/vms/rocky-ir-base-junior-v1.qcow2"
-    VM_IMG="/mnt/vms/labs/tmp/${VM_NAME}.qcow2"
+    qemu-img create -f qcow2 -F qcow2 -b "/mnt/vms/rocky-ir-base-junior-v1.qcow2" "$VM_IMG"
     
-    qemu-img create -f qcow2 -b "$BASE_IMG" "$VM_IMG"
-    
-    # **CREAR VM con virt-install**
-    virt-install \
+    sudo virt-install \
         --name "$VM_NAME" \
         --memory 2048 --vcpus 2 \
         --disk path="$VM_IMG",format=qcow2,bus=virtio \
         --disk path="$ISO_PATH",device=cdrom \
-        --import \
-        --os-variant rhel9.0 \
-        --network bridge=br0 \
-        --noautoconsole \
-        --graphics none
+        --import --os-variant rhel9.0 \
+        --boot uefi \
+        --network network=default \
+        --graphics vnc,listen=0.0.0.0 \
+        --video virtio
     
-    echo "✅ VM '$VM_NAME' creada y booteando!"
-    echo "virsh list --all"
-    echo "virsh domifaddr $VM_NAME"
+    echo "✅ VM '$VM_NAME' CREADA!"
+    echo "🎮 sudo virt-manager  O  sudo virsh vncdisplay $VM_NAME"
     
-    read -rp "ENTER cuando termines el lab para cleanup..."
-    
-    # Cleanup
-    virsh destroy "$VM_NAME" 2>/dev/null || true
-    virsh undefine "$VM_NAME" --remove-all-storage 2>/dev/null || true
-    rm -f "$VM_IMG" "$ISO_PATH"
+    read -rp "ENTER cuando termines..."
+    sudo virsh destroy "$VM_NAME" && sudo virsh undefine "$VM_NAME" --remove-all-storage
+    rm -f "$VM_IMG"
 }
+
+
 
 
 # INICIO
