@@ -253,7 +253,9 @@ run_lab() {
     echo "IP: $(sudo virsh domifaddr "$VM_NAME" 2>/dev/null | awk 'NR>1{print $4}' || echo 'Esperando...')"
     echo ""
     
-    read -rp "ENTER cuando termines el lab..."
+    echo "✅ Lab $ID listo! Ve a opción 5) Gestión VMs para administrar"
+    read -rp "ENTER para volver al menú principal..."
+
     
     # 6. CLEANUP
     echo "🧹 Cleanup..."
