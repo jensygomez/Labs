@@ -42,41 +42,41 @@ BASE_VM_IMG="/mnt/vms/rocky-ir-base-junior-v1.qcow2"
 LABS=()
 load_db() {
     LABS=()
-    echo "[DEBUG] 🔍 Cargando $DB_FILE..."
+    echo "=== DEBUG COMPLETO load_db() ==="
+    echo "ROOT_DIR=[$ROOT_DIR]"
+    echo "DB_FILE=[$DB_FILE]"
     
-    if [[ ! -f "$DB_FILE" ]]; then
-        echo "[DEBUG] ❌ $DB_FILE no existe"
-        return
-    fi
+    [[ ! -f "$DB_FILE" ]] && { echo "❌ DB no existe"; return; }
     
-    # ✅ FIX: Detecta header en MAYÚSCULAS o minúsculas
-    local header_found=false
+    # Leer línea por línea CON debug
+    local line_num=0
     while IFS='|' read -r id track level artifact type uses status; do
-        echo "[DEBUG] Línea cruda: '$id|$track|$level|$artifact|$type|$uses|$status'"
+        ((line_num++))
+        echo "LÍNEA $line_num: id=[$id] level=[$level] artifact=[$artifact]"
         
-        # ✅ FIX HEADER: Insensible a mayúsculas
-        if [[ "${id,,}" == "id" || "${id,,}" == "id" ]]; then
-            echo "[DEBUG] ✅ Header detectado, saltando"
-            header_found=true
-            continue
-        fi
+        # Header check
+        [[ "$id" = "ID" || "$id" = "id" ]] && { echo "  → HEADER, saltando"; continue; }
+        [[ "$status" != "active" ]] && { echo "  → Inactivo, saltando"; continue; }
         
-        [[ "$status" != "active" ]] && { echo "[DEBUG] ⏭️  Saltando inactivo: $id"; continue; }
-        
-        # ✅ Resolver ruta absoluta
+        # Construir ruta completa
         local full_artifact="${artifact/#\.\//$ROOT_DIR/}"
-        echo "[DEBUG] Verificando artifact: '$full_artifact'"
+        echo "  → FULL PATH: $full_artifact"
+        echo "  → EXISTE? $([[ -f "$full_artifact" ]] && echo SÍ || echo NO)"
         
+        # Cargar si existe
         if [[ -f "$full_artifact" ]]; then
             LABS+=("$id|$track|$level|$full_artifact|$type|$uses")
-            echo "[DEBUG] ✅ Lab agregado: $id ($level)"
+            echo "  → ✅ AGREGADO A LABS[]"
         else
-            echo "[DEBUG] ❌ Artifact no existe: $full_artifact"
+            echo "  → ❌ NO CARGADO (archivo faltante)"
         fi
+        echo "---"
     done < "$DB_FILE"
     
-    echo "[DEBUG] 📊 Total LABS cargados: ${#LABS[@]}"
+    echo "TOTAL LABS: ${#LABS[@]}"
+    echo "============================"
 }
+
 
 # ==============================================================================
 # BLOQUE 3 — MENÚ SIEMPRE VISIBLE
