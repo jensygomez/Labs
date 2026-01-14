@@ -271,15 +271,19 @@ run_lab() {
     # Generar ISO
     ISO_PATH=$(bash "$LAB_ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$CLOUDINIT_TEMPLATE")
     echo "[DEBUG] ISO cloud-init generado: $ISO_PATH"
-    [[ ! -f "$ISO_PATH" ]] && { echo "[ERROR] ISO no existe. Abortando"; return; }
+    if [[ ! -f "$ISO_PATH" ]]; then
+        echo "[ERROR] ISO no existe. Abortando"
+        read -rp "Presione ENTER para volver al menú..."
+        return
+    fi
     read -rp "ENTER para clonar VM base..."
 
     # Clonar VM
-    VM_NAME="${ID}_${CLOUDINIT_TEMPLATE}_$(date +%s)"
+    VM_NAME="${ID}_$(basename "$CLOUDINIT_TEMPLATE")_$(date +%s)"
     BASE_IMG="/mnt/vms/rocky-ir-base-junior-v1.qcow2"
     CLONE_IMG="$TMP_DIR/${VM_NAME}.qcow2"
     echo "[DEBUG] Clonando VM base..."
-    cp "$BASE_IMG" "$CLONE_IMG" || { echo "[ERROR] Falló clonación de VM"; return; }
+    cp "$BASE_IMG" "$CLONE_IMG" || { echo "[ERROR] Falló clonación de VM"; read -rp "ENTER"; return; }
     read -rp "ENTER para crear la VM con virt-install..."
 
     # Crear VM
@@ -307,6 +311,7 @@ run_lab() {
     echo "[DEBUG] Laboratorio $ID ejecutado correctamente"
     read -rp "Presione ENTER para volver al menú..."
 }
+
 
 
 

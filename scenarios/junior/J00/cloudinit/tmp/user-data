@@ -7,4 +7,4 @@ users:
     groups: users, admin
     shell: /bin/bash
     lock_passwd: false
-    passwd: $6$peji027B600bD5Mr$nOvnt6ACn1IM5x9aGnHWzauTjLWZiuPUoRp0xJO5CedUzUJpuWxyRghwfw4wKVIrhf.PixLpNnA7YEgSn28dY0
+    passwd: $6$uPMHzYaC..VtZynn$qL7pT7.n3fwUYYVE3KDmPmNxPzgnfos7YOUNaN.CPwAdPKrTilJU0ZoapBw961DND4XzCfrhizm7pOgu7t4ml1
