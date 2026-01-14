@@ -199,38 +199,40 @@ manage_single_vm() {
 #==============================================================================
 # MOTOR CORE DE LABS v1.2 (FIX COMPLETO)
 #==============================================================================
+#==============================================================================
+# MOTOR CORE DE LABS v1.3 (SIN TIMEOUT)
+#==============================================================================
 run_lab() {
-    local ID="$1"      # ID del lab (J00)
-    local TEMPLATE="$2" # Ruta YAML cloud-init
-    local LEVEL="$3"    # Nivel (Junior)
+    local ID="$1" TEMPLATE="$2" LEVEL="$3"
     
     echo "🚀 LAB: $ID ($LEVEL)"
     echo "═══════════════════════"
     
     # ==============================
-    # BLOQUE 1: GENERAR ISO CLOUD-INIT
+    # BLOQUE 1: ISO ✓
     # ==============================
-    echo "🔨 [1/5] Generando ISO cloud-init..."
+    echo "🔨 [1/5] ISO cloud-init..."
     local ISO_PATH=$(bash "$ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$TEMPLATE")
-    echo "✅ [1/5] ISO: $ISO_PATH"
+    echo "✅ [1/5] $ISO_PATH"
     
     # ==============================
-    # BLOQUE 2: CREAR OVERLAY QCOW2
+    # BLOQUE 2: OVERLAY ✓
     # ==============================
     local VM_NAME="lab-${ID}-$(date +%Y%m%d-%H%M%S)"
     local VM_IMG="/mnt/vms/labs/tmp/${VM_NAME}.qcow2"
-    local BASE_IMG="/mnt/vms/rocky-ir-base-junior-v1.qcow2"
     
-    echo "🔧 [2/5] Creando overlay desde $BASE_IMG..."
+    echo "🔧 [2/5] Overlay qcow2..."
     mkdir -p "$(dirname "$VM_IMG")"
-    qemu-img create -f qcow2 -F qcow2 -b "$BASE_IMG" "$VM_IMG"
-    echo "✅ [2/5] Overlay: $VM_IMG"
+    qemu-img create -f qcow2 -F qcow2 -b "/mnt/vms/rocky-ir-base-junior-v1.qcow2" "$VM_IMG"
+    echo "✅ [2/5] $VM_IMG"
     
     # ==============================
-    # BLOQUE 3: CREAR Y ARRANCAR VM
+    # BLOQUE 3: VM (SIN TIMEOUT)
     # ==============================
-    echo "🎮 [3/5] Creando y arrancando VM..."
-    if timeout 30 sudo virt-install \
+    echo "🎮 [3/5] Creando VM (paciencia 30s)..."
+    echo "   💡 NO cierres terminal - espera 'Criação concluída'"
+    
+    sudo virt-install \
         --name "$VM_NAME" \
         --memory 2048 --vcpus 2 \
         --disk path="$VM_IMG",format=qcow2,bus=virtio \
@@ -242,42 +244,50 @@ run_lab() {
         --graphics vnc,listen=0.0.0.0 \
         --video virtio \
         --wait=-1 \
-        --quiet; then  
-        
+        --quiet 2>&1 || {
+            echo "⚠️  virt-install salió con warning (normal)"
+        }
+    
+    # Verificar que VM existe
+    if sudo virsh domstate "$VM_NAME" >/dev/null 2>&1; then
         echo "✅ [3/5] VM '$VM_NAME' CREADA!"
         
         # ==============================
-        # BLOQUE 4: VERIFICAR VM RUNNING
+        # BLOQUE 4: ARRANCAR SI NO ESTÁ
         # ==============================
-        sleep 2  # Espera boot inicial
-        local STATE=$(sudo virsh domstate "$VM_NAME" 2>/dev/null || echo "unknown")
+        sleep 3
+        STATE=$(sudo virsh domstate "$VM_NAME" 2>/dev/null || echo "gone")
         if [[ "$STATE" != "running" ]]; then
-            echo "⚠️  [4/5] VM no arrancó automáticamente, iniciando..."
-            sudo virsh start "$VM_NAME" 2>/dev/null || true
-            sleep 3
+            echo "🚀 [4/5] Arrancando VM..."
+            sudo virsh start "$VM_NAME" || {
+                echo "❌ Error arrancando VM"
+                cleanup_vm "$VM_NAME" "$VM_IMG"
+                read -rp "ENTER..."
+                return 1
+            }
         fi
         
-        echo "✅ [4/5] VM '$VM_NAME' lista!"
+        echo "✅ [4/5] VM '$VM_NAME' RUNNING!"
         
         # ==============================
-        # BLOQUE 5: MENÚ POST-LAB
+        # BLOQUE 5: POST-LAB MENU
         # ==============================
         post_lab_menu "$VM_NAME" "$ISO_PATH" "$VM_IMG"
         
     else
-        echo "❌ [3/5] Error creando VM"
+        echo "❌ [3/5] VM no creada"
         cleanup_vm "$VM_NAME" "$VM_IMG"
-        read -rp "ENTER para continuar..."
+        read -rp "ENTER..."
         return 1
     fi
     
     # ==============================
-    # BLOQUE 6: CLEANUP TOTAL (si sale del post_lab_menu)
+    # BLOQUE 6: CLEANUP FINAL
     # ==============================
-    echo "🧹 [6/6] Limpieza final..."
-    rm -rf "$(dirname "$ISO_PATH")/"  # Borra Junior_J00/ COMPLETO
-    cleanup_vm "$VM_NAME" "$VM_IMG"    # VM + overlay
-    echo "🎉 Lab $ID completado. ¡Todo limpio!"
+    echo "🧹 [6/6] Cleanup total..."
+    rm -rf "$(dirname "$ISO_PATH")"
+    cleanup_vm "$VM_NAME" "$VM_IMG"
+    echo "🎉 Lab completado!"
 }
 
 
