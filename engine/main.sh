@@ -260,6 +260,8 @@ run_lab() {
     local LEVEL="$3"
 
     echo "[DEBUG] run_lab() llamado con ID=$ID, LEVEL=$LEVEL, TEMPLATE=$CLOUDINIT_TEMPLATE"
+    read -rp "Presione ENTER para continuar con la ejecución del lab..."
+
 
     # -----------------------------
     # 1️⃣ Preparar carpeta temporal
@@ -303,8 +305,8 @@ run_lab() {
         --cdrom "$ISO_PATH" \
         --network bridge=br0 \
         --noautoconsole \
-        --graphics none \
-        --quiet || { echo "[ERROR] virt-install falló"; return; }
+        --graphics none
+
 
     # -----------------------------
     # 5️⃣ Arranque en background

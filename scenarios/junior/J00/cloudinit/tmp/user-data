@@ -1,0 +1,10 @@
+#cloud-config
+hostname: J00
+ssh_pwauth: True
+users:
+  - name: jensy
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    shell: /bin/bash
+    lock_passwd: false
+    passwd: $6$0NY7wKzbLarcyN5i$k8PGxLCYkEc2s.FRvuAPr./ZILqymbgBzYJcDIjrY8ejmE6l2Vjb4AqZBFcCx9x7RjUro0w51nvIB51nt05U/.
