@@ -304,30 +304,27 @@ post_lab_menu() {
 # CLEANUP
 #==============================================================================
 cleanup_vm() {
-    local VM_NAME="${1:-}"      # VM_NAME (obligatorio)
-    local VM_IMG="${2:-}"       # VM_IMG (opcional)
+    local VM_NAME="${1:-}"
+    local VM_IMG="${2:-}"
     
-    # Validación estricta
-    [[ -z "$VM_NAME" ]] && { 
-        echo "❌ ERROR: VM_NAME requerido" 
-        return 1 
-    }
+    [[ -z "$VM_NAME" ]] && { echo "❌ VM_NAME requerido"; return 1; }
     
-    echo "🧹 Cleanup VM: '$VM_NAME'"
+    echo "🧹 ELIMINANDO VM: $VM_NAME"
     
-    # 1. Detener VM si está corriendo
+    # 1. DESTROZAR VM
     sudo virsh destroy "$VM_NAME" 2>/dev/null || true
     
-    # 2. Eliminar definición + storage
+    # 2. ELIMINAR DEFINICIÓN + TODO STORAGE
     sudo virsh undefine "$VM_NAME" --remove-all-storage 2>/dev/null || true
     
-    # 3. Borrar overlay qcow2 (si se pasa)
+    # 3. BORRAR OVERLAY MANUAL (¡EL CLAVE!)
     if [[ -n "$VM_IMG" && -f "$VM_IMG" ]]; then
-        rm -f "$VM_IMG" && echo "   ✅ Borrado: $VM_IMG"
+        rm -f "$VM_IMG" && echo "   ✅ Disco borrado: $VM_IMG"
     fi
     
-    echo "✅ Cleanup VM completado"
+    echo "✅ VM $VM_NAME ELIMINADA COMPLETAMENTE"
 }
+
 
 
 #==============================================================================
