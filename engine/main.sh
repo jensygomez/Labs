@@ -212,7 +212,7 @@ run_lab() {
     
     # 2. VM
     local VM_NAME="lab-${ID}-$(date +%Y%m%d-%H%M%S)"
-    local VM_IMG="/mnt/vms/labs/tmp/${VM_IMG}.qcow2"
+    local VM_IMG="/mnt/vms/labs/tmp/${VM_NAME}.qcow2"
     
     echo "🔧 [2/5] Overlay..."
     mkdir -p /mnt/vms/labs/tmp
