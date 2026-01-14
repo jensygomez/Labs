@@ -197,55 +197,90 @@ manage_single_vm() {
 }
 
 #==============================================================================
-# MOTOR CORE DE LABS (MEJORADO v1.1)
+# MOTOR CORE DE LABS v1.2 (FIX COMPLETO)
 #==============================================================================
 run_lab() {
-    local ID="$1" TEMPLATE="$2" LEVEL="$3"
+    local ID="$1"      # ID del lab (J00)
+    local TEMPLATE="$2" # Ruta YAML cloud-init
+    local LEVEL="$3"    # Nivel (Junior)
     
     echo "🚀 LAB: $ID ($LEVEL)"
     echo "═══════════════════════"
     
-    # BLOQUE 1: ISO
-    echo "🔨 [1/5] ISO cloud-init..."
+    # ==============================
+    # BLOQUE 1: GENERAR ISO CLOUD-INIT
+    # ==============================
+    echo "🔨 [1/5] Generando ISO cloud-init..."
     local ISO_PATH=$(bash "$ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$TEMPLATE")
-    echo "✅ [1/5] $ISO_PATH"
+    echo "✅ [1/5] ISO: $ISO_PATH"
     
-    # BLOQUE 2: OVERLAY
+    # ==============================
+    # BLOQUE 2: CREAR OVERLAY QCOW2
+    # ==============================
     local VM_NAME="lab-${ID}-$(date +%Y%m%d-%H%M%S)"
     local VM_IMG="/mnt/vms/labs/tmp/${VM_NAME}.qcow2"
     local BASE_IMG="/mnt/vms/rocky-ir-base-junior-v1.qcow2"
     
-    echo "🔧 [2/5] Overlay qcow2..."
+    echo "🔧 [2/5] Creando overlay desde $BASE_IMG..."
     mkdir -p "$(dirname "$VM_IMG")"
     qemu-img create -f qcow2 -F qcow2 -b "$BASE_IMG" "$VM_IMG"
-    echo "✅ [2/5] $VM_IMG"
+    echo "✅ [2/5] Overlay: $VM_IMG"
     
-    # BLOQUE 3: VM
-    echo "🎮 [3/5] Creando VM..."
+    # ==============================
+    # BLOQUE 3: CREAR Y ARRANCAR VM
+    # ==============================
+    echo "🎮 [3/5] Creando y arrancando VM..."
     if timeout 15 sudo virt-install \
         --name "$VM_NAME" \
         --memory 2048 --vcpus 2 \
         --disk path="$VM_IMG",format=qcow2,bus=virtio \
         --disk path="$ISO_PATH",device=cdrom \
-        --import --os-variant rhel9.0 \
-        --boot uefi --network network=default \
-        --graphics vnc,listen=0.0.0.0 --video virtio \
-        --wait=-1 --noreboot --quiet --noautoconsole; then
+        --import \
+        --os-variant rhel9.0 \
+        --boot uefi \
+        --network network=default \
+        --graphics vnc,listen=0.0.0.0 \
+        --video virtio \
+        --wait=-1 \
+        --quiet \
+        --noautoconsole; then  # ❌ QUITADO --noreboot
         
-        echo "✅ [3/5] VM '$VM_NAME' RUNNING!"
+        echo "✅ [3/5] VM '$VM_NAME' CREADA!"
         
         # ==============================
-        # NUEVO v1.1: MENÚ POST-LAB
+        # BLOQUE 4: VERIFICAR VM RUNNING
+        # ==============================
+        sleep 2  # Espera boot inicial
+        local STATE=$(sudo virsh domstate "$VM_NAME" 2>/dev/null || echo "unknown")
+        if [[ "$STATE" != "running" ]]; then
+            echo "⚠️  [4/5] VM no arrancó automáticamente, iniciando..."
+            sudo virsh start "$VM_NAME" 2>/dev/null || true
+            sleep 3
+        fi
+        
+        echo "✅ [4/5] VM '$VM_NAME' lista!"
+        
+        # ==============================
+        # BLOQUE 5: MENÚ POST-LAB
         # ==============================
         post_lab_menu "$VM_NAME" "$ISO_PATH" "$VM_IMG"
         
     else
-        echo "❌ [3/5] Error VM"
+        echo "❌ [3/5] Error creando VM"
         cleanup_vm "$VM_NAME" "$VM_IMG"
-        read -rp "ENTER..."
+        read -rp "ENTER para continuar..."
         return 1
     fi
+    
+    # ==============================
+    # BLOQUE 6: CLEANUP TOTAL (si sale del post_lab_menu)
+    # ==============================
+    echo "🧹 [6/6] Limpieza final..."
+    rm -rf "$(dirname "$ISO_PATH")/"  # Borra Junior_J00/ COMPLETO
+    cleanup_vm "$VM_NAME" "$VM_IMG"    # VM + overlay
+    echo "🎉 Lab $ID completado. ¡Todo limpio!"
 }
+
 
 #==============================================================================
 # MENÚ POST-LAB (NUEVA FUNCIÓN v1.1)
@@ -286,13 +321,31 @@ post_lab_menu() {
 # CLEANUP
 #==============================================================================
 cleanup_vm() {
-    local VM_NAME="$1" VM_IMG="$2"
-    echo "🧹 Cleanup '$VM_NAME'..."
+    local VM_NAME="${1:-}"      # VM_NAME (obligatorio)
+    local VM_IMG="${2:-}"       # VM_IMG (opcional)
+    
+    # Validación estricta
+    [[ -z "$VM_NAME" ]] && { 
+        echo "❌ ERROR: VM_NAME requerido" 
+        return 1 
+    }
+    
+    echo "🧹 Cleanup VM: '$VM_NAME'"
+    
+    # 1. Detener VM si está corriendo
     sudo virsh destroy "$VM_NAME" 2>/dev/null || true
+    
+    # 2. Eliminar definición + storage
     sudo virsh undefine "$VM_NAME" --remove-all-storage 2>/dev/null || true
-    rm -f "$VM_IMG" 2>/dev/null || true
-    echo "✅ Cleanup OK"
+    
+    # 3. Borrar overlay qcow2 (si se pasa)
+    if [[ -n "$VM_IMG" && -f "$VM_IMG" ]]; then
+        rm -f "$VM_IMG" && echo "   ✅ Borrado: $VM_IMG"
+    fi
+    
+    echo "✅ Cleanup VM completado"
 }
+
 
 #==============================================================================
 # INICIO
