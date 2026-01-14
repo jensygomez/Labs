@@ -48,34 +48,32 @@ load_db() {
     
     [[ ! -f "$DB_FILE" ]] && { echo "❌ DB no existe"; return; }
     
-    # ✅ FIX: Leer LÍNEA COMPLETA primero
-    local line_num=0
-    while read -r LINE; do
-        ((line_num++))
-        echo "LÍNEA $line_num RAW: [$LINE]"
+    # ✅ FIX DOS: Leer con dos pasos + strip \r
+    local count=0
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        # Remover carriage return
+        line="${line//$'\r'/}"
+        ((count++))
+        echo "LÍNEA $count RAW: [$line]"
         
-        # ✅ Split manual seguro
-        IFS='|' read -r id track level artifact type uses status <<< "$LINE"
-        echo "  → PARSEADO: id=[$id] level=[$level] artifact=[$artifact]"
+        if [[ -z "$line" ]]; then continue; fi
         
-        # Header check
-        [[ "$id" = "ID" || "$id" = "id" ]] && { echo "  → HEADER, saltando"; continue; }
-        [[ "$status" != "active" ]] && { echo "  → Inactivo"; continue; }
+        IFS='|' read -r id track level artifact type uses status <<< "$line"
+        echo "  → PARSEADO: id=[$id] level=[$level]"
         
-        # Ruta completa
-        local full_artifact="${artifact/#\.\//$ROOT_DIR/}"
+        [[ "$id" = "ID" || "$id" = "id" ]] && { echo "  → HEADER"; continue; }
+        [[ "$status" != "active" ]] && continue
+        
+        local full_artifact="$ROOT_DIR/$artifact"
         echo "  → FULL PATH: $full_artifact"
         
-        if [[ -f "$full_artifact" ]]; then
-            LABS+=("$id|$track|$level|$full_artifact|$type|$uses")
-            echo "  → ✅ AGREGADO"
-        else
-            echo "  → ❌ FALTANTE"
-        fi
+        LABS+=("$id|$track|$level|$full_artifact|$type|$uses")
+        echo "  → ✅ CARGADO (${#LABS[@]} total)"
     done < "$DB_FILE"
     
-    echo "TOTAL LABS: ${#LABS[@]}"
+    echo "FINAL: ${#LABS[@]} labs"
 }
+
 
 
 
