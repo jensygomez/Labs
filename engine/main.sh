@@ -236,19 +236,20 @@ assign_lab() {
 }
 
 # ==============================================================================
-# BLOQUE 7 — EJECUCIÓN DEL LABORATORIO
+# BLOQUE 7 — EJECUCIÓN DEL LABORATORIO (cloud-init / VM)
 # ==============================================================================
 #
 # FUNCIÓN: run_lab
 #
 # RESPONSABILIDAD:
-#   - Ejecutar el playbook Ansible asignado
-#   - Delegar lógica técnica al laboratorio
-#   - Mantener el motor agnóstico
+#   - Generar ISO cloud-init para la variante seleccionada
+#   - Clonar VM base
+#   - Adjuntar ISO NoCloud
+#   - Arrancar VM en background
 #
 run_lab() {
     local ID="$1"
-    local PLAYBOOK="$2"
+    local CLOUDINIT_TEMPLATE="$2"
 
     clear
     echo "========================================"
@@ -256,8 +257,47 @@ run_lab() {
     echo "========================================"
     echo
 
-    "$ANSIBLE_WRAPPER" "$PLAYBOOK" "$INVENTORY"
+    # -----------------------------
+    # 1️⃣ Generar ISO NoCloud
+    # -----------------------------
+    ISO_PATH=$(bash "$ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$CLOUDINIT_TEMPLATE")
+    echo "ISO cloud-init generado: $ISO_PATH"
 
+    # -----------------------------
+    # 2️⃣ Clonar VM base
+    # -----------------------------
+    VM_NAME="${ID}_${CLOUDINIT_TEMPLATE}_$(date +%s)"
+    BASE_IMG="/mnt/vms/rocky-ir-base-junior-v1.qcow2"
+    BASE_IMG="/mnt/vms/rocky-ir-base-junior-v1.qcow2"
+
+    echo "Clonando VM base..."
+    cp "$BASE_IMG" "$CLONE_IMG"
+
+    # -----------------------------
+    # 3️⃣ Crear la VM con virsh
+    # -----------------------------
+    echo "Creando VM $VM_NAME..."
+    virt-install \
+        --name "$VM_NAME" \
+        --memory 2048 \
+        --vcpus 2 \
+        --disk path="$CLONE_IMG",format=qcow2 \
+        --import \
+        --cdrom "$ISO_PATH" \
+        --network bridge=br0 \
+        --noautoconsole \
+        --graphics none \
+        --quiet
+
+    # -----------------------------
+    # 4️⃣ Arranque en background
+    # -----------------------------
+    echo "VM $VM_NAME arrancando en background..."
+    virsh start "$VM_NAME"
+
+    # -----------------------------
+    # 5️⃣ Actualizar métricas
+    # -----------------------------
     increment_uses "$ID"
 
     echo
