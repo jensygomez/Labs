@@ -262,39 +262,27 @@ run_lab() {
     echo "[DEBUG] run_lab() llamado con ID=$ID, LEVEL=$LEVEL, TEMPLATE=$CLOUDINIT_TEMPLATE"
     read -rp "Presione ENTER para continuar con la ejecución del lab..."
 
-
-    # -----------------------------
-    # 1️⃣ Preparar carpeta temporal
-    # -----------------------------
+    # Carpeta temporal
     TMP_DIR="$LAB_ENGINE_DIR/tmp"
     mkdir -p "$TMP_DIR"
     echo "[DEBUG] Carpeta temporal: $TMP_DIR"
+    read -rp "ENTER para generar ISO cloud-init..."
 
-    # -----------------------------
-    # 2️⃣ Generar ISO NoCloud
-    # -----------------------------
+    # Generar ISO
     ISO_PATH=$(bash "$LAB_ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$CLOUDINIT_TEMPLATE")
     echo "[DEBUG] ISO cloud-init generado: $ISO_PATH"
+    [[ ! -f "$ISO_PATH" ]] && { echo "[ERROR] ISO no existe. Abortando"; return; }
+    read -rp "ENTER para clonar VM base..."
 
-    # Verificar si la ISO existe
-    if [[ ! -f "$ISO_PATH" ]]; then
-        echo "[ERROR] No se generó la ISO. Abortando laboratorio."
-        return
-    fi
-
-    # -----------------------------
-    # 3️⃣ Clonar VM base
-    # -----------------------------
+    # Clonar VM
     VM_NAME="${ID}_${CLOUDINIT_TEMPLATE}_$(date +%s)"
     BASE_IMG="/mnt/vms/rocky-ir-base-junior-v1.qcow2"
     CLONE_IMG="$TMP_DIR/${VM_NAME}.qcow2"
-
     echo "[DEBUG] Clonando VM base..."
     cp "$BASE_IMG" "$CLONE_IMG" || { echo "[ERROR] Falló clonación de VM"; return; }
+    read -rp "ENTER para crear la VM con virt-install..."
 
-    # -----------------------------
-    # 4️⃣ Crear la VM con virt-install
-    # -----------------------------
+    # Crear VM
     echo "[DEBUG] Creando VM $VM_NAME..."
     virt-install \
         --name "$VM_NAME" \
@@ -306,22 +294,20 @@ run_lab() {
         --network bridge=br0 \
         --noautoconsole \
         --graphics none
+    read -rp "ENTER para arrancar la VM..."
 
-
-    # -----------------------------
-    # 5️⃣ Arranque en background
-    # -----------------------------
+    # Arrancar VM
     echo "[DEBUG] Arrancando VM $VM_NAME..."
     virsh start "$VM_NAME" || echo "[ERROR] virsh start falló"
 
-    # -----------------------------
-    # 6️⃣ Actualizar métricas
-    # -----------------------------
+    # Actualizar métricas
     increment_uses "$ID"
     echo "[DEBUG] Uso del lab actualizado"
 
     echo "[DEBUG] Laboratorio $ID ejecutado correctamente"
+    read -rp "Presione ENTER para volver al menú..."
 }
+
 
 
 # ==============================================================================
