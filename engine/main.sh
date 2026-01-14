@@ -253,7 +253,7 @@ assign_lab() {
 #   - Adjuntar ISO NoCloud
 #   - Arrancar VM en background
 #
-run_lab() {
+
 run_lab() {
     local ID="$1"
     local CLOUDINIT_TEMPLATE="$2"
