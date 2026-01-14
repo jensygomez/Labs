@@ -230,7 +230,8 @@ assign_lab() {
     local SELECTED="${CANDIDATES[$RANDOM % ${#CANDIDATES[@]}]}"
     IFS='|' read -r id track level artifact type uses <<< "$SELECTED"
 
-    run_lab "$id" "$artifact"
+    run_lab "$id" "$artifact" "$level"
+
 }
 
 # ==============================================================================
@@ -248,6 +249,8 @@ assign_lab() {
 run_lab() {
     local ID="$1"
     local CLOUDINIT_TEMPLATE="$2"
+    local LEVEL="$3"   # ← esta línea es nueva
+
 
     clear
     echo "========================================"
