@@ -305,26 +305,28 @@ post_lab_menu() {
 # CLEANUP
 #==============================================================================
 cleanup_vm() {
-    local VM_NAME="${1:-}"
-    local VM_IMG="${2:-}"
+    local VM_NAME="${1:-}" VM_IMG="${2:-}"
     
     [[ -z "$VM_NAME" ]] && { echo "❌ VM_NAME requerido"; return 1; }
     
     echo "🧹 ELIMINANDO VM: $VM_NAME"
     
-    # 1. DESTROZAR VM
+    # 1. DESTROZAR
     sudo virsh destroy "$VM_NAME" 2>/dev/null || true
     
-    # 2. ELIMINAR DEFINICIÓN + TODO STORAGE
+    # 2. ELIMINAR DEFINICIÓN + STORAGE
     sudo virsh undefine "$VM_NAME" --remove-all-storage 2>/dev/null || true
     
-    # 3. BORRAR OVERLAY MANUAL (¡EL CLAVE!)
-    if [[ -n "$VM_IMG" && -f "$VM_IMG" ]]; then
-        rm -f "$VM_IMG" && echo "   ✅ Disco borrado: $VM_IMG"
-    fi
+    # 3. BORRAR OVERLAY MANUAL
+    [[ -n "$VM_IMG" && -f "$VM_IMG" ]] && rm -f "$VM_IMG" && echo "   ✅ Disco: $VM_IMG"
     
-    echo "✅ VM $VM_NAME ELIMINADA COMPLETAMENTE"
+    # 4. LIMPIAR CACHÉ LIBVIRT (¡EL CLAVE!)
+    sudo virsh pool-refresh default 2>/dev/null || true
+    sudo systemctl reload libvirtd 2>/dev/null || true
+    
+    echo "✅ VM $VM_NAME ELIMINADA + caché limpiado"
 }
+
 
 
 
