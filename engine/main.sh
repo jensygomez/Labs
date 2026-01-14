@@ -230,7 +230,7 @@ run_lab() {
     # BLOQUE 3: CREAR Y ARRANCAR VM
     # ==============================
     echo "🎮 [3/5] Creando y arrancando VM..."
-    if timeout 15 sudo virt-install \
+    if timeout 30 sudo virt-install \
         --name "$VM_NAME" \
         --memory 2048 --vcpus 2 \
         --disk path="$VM_IMG",format=qcow2,bus=virtio \
@@ -242,8 +242,7 @@ run_lab() {
         --graphics vnc,listen=0.0.0.0 \
         --video virtio \
         --wait=-1 \
-        --quiet \
-        --noautoconsole; then  # ❌ QUITADO --noreboot
+        --quiet; then  
         
         echo "✅ [3/5] VM '$VM_NAME' CREADA!"
         
