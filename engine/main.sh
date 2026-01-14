@@ -196,8 +196,9 @@ manage_single_vm() {
     manage_single_vm "$VM_NAME"
 }
 
+
 #==============================================================================
-# MOTOR CORE DE LABS v1.4 (SIMPLIFICADO - FUNCIONA SIEMPRE)
+# MOTOR CORE DE LABS v1.4 (VM QUEDA ACTIVA)
 #==============================================================================
 run_lab() {
     local ID="$1" TEMPLATE="$2" LEVEL="$3"
@@ -219,7 +220,7 @@ run_lab() {
     qemu-img create -f qcow2 -F qcow2 -b "/mnt/vms/rocky-ir-base-junior-v1.qcow2" "$VM_IMG"
     echo "✅ [2/5] $VM_IMG"
     
-    # 3. VM - SIN wait=-1 (el culpable)
+    # 3. VM
     echo "🎮 [3/5] Creando VM..."
     sudo virt-install \
         --name "$VM_NAME" \
@@ -238,39 +239,29 @@ run_lab() {
     
     # 4. Espera arranque
     sleep 5
-    if sudo virsh domstate "$VM_NAME" >/dev/null 2>&1; then
+    STATE=$(sudo virsh domstate "$VM_NAME" 2>/dev/null || echo "starting")
+    if [[ "$STATE" == "running" ]]; then
         echo "✅ [4/5] VM RUNNING!"
     else
-        echo "🚀 [4/5] Arrancando..."
-        sudo virsh start "$VM_NAME"
+        echo "🚀 [4/5] Estado: $STATE (arrancando...)"
     fi
     
-    # 5. INFO CONEXIÓN
+    # 5. INFO CONEXIÓN + VOLVER AL MENÚ (SIN CLEANUP)
     echo ""
-    echo "🔗 ===== CONECTAR ====="
-    echo "sudo virt-manager"
-    echo "O: sudo virsh vncdisplay $VM_NAME"
-    echo "IP: $(sudo virsh domifaddr "$VM_NAME" 2>/dev/null | awk 'NR>1{print $4}' || echo 'Esperando...')"
+    echo "🔗 ===== VM ACTIVA Y LISTA ====="
+    echo "VM: $VM_NAME"
+    echo "VNC: $(sudo virsh vncdisplay "$VM_NAME" 2>/dev/null || echo 'starting...')"
+    IP=$(sudo virsh domifaddr "$VM_NAME" 2>/dev/null | awk 'NR>1{print $4}' || echo 'booting...')
+    echo "IP: $IP"
+    echo ""
+    echo "💡 VM queda CORRIENDO → Opción 5) Gestión VMs para administrar"
+    echo "💡 ISO queda en: $(dirname "$ISO_PATH")"
     echo ""
     
-    echo "✅ Lab $ID listo! Ve a opción 5) Gestión VMs para administrar"
-    read -rp "ENTER para volver al menú principal..."
-
+    read -rp "ENTER para MENÚ PRINCIPAL (VM sigue activa)..."
     
-    # 6. CLEANUP
-    echo "🧹 Cleanup..."
-    rm -rf "$(dirname "$ISO_PATH")"
-    cleanup_vm "$VM_NAME" "$VM_IMG"
-    echo "🎉 Listo!"
-}
-
-cleanup_vm() {
-    local VM_NAME="${1:-}"
-    [[ -z "$VM_NAME" ]] && return 1
-    sudo virsh destroy "$VM_NAME" 2>/dev/null || true
-    sudo virsh undefine "$VM_NAME" --remove-all-storage 2>/dev/null || true
-    echo "✅ Cleanup OK"
-}
+    echo "✅ Lab $ID completado - VM '$VM_NAME' en Gestión VMs"
+}  # ← FIN - SIN CLEANUP
 
 
 
