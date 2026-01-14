@@ -39,7 +39,7 @@ Cualquier laboratorio que asuma algo **no descrito aquí** está incorrecto.
 
 #### VM Base (única)
 
-- Nombre: `rocky-ir-base-junior-v1`
+- Nombre: `vm-base-rocky9-noc.eu.corp`
 - Rol: Servidor multi-servicio (Europa)
 - SO: Rocky Linux 9.x
 
@@ -77,6 +77,44 @@ Durante instalación:
 - Perfil: Minimal Install
 
 ---
+
+
+## 4,5. Nombre de la maquina y FQDN
+hostnamectl set-hostname vm-base-rocky9-noc.eu.corp
+
+hostnamectl
+vim /etc/hosts
+127.0.0.1   localhost
+192.168.122.20 vm-base-rocky9-noc.eu.corp vm-base-rocky9-noc
+
+## 4,6. SSH
+
+sudo mkdir -p /home/student/.ssh
+sudo chmod 700 /home/student/.ssh
+sudo chown student:student /home/student/.ssh
+ssh-copy-id -i /home/jensy/Labs/.ssh/id_rhcsalabs.pub student@192.168.122.20
+o desde el host: ssh-copy-id -i /home/jensy/Labs/.ssh/id_rhcsalabs.pub student@192.168.122.20
+
+
+ajustar permisos
+
+
+sudo chmod 600 /home/student/.ssh/authorized_keys
+sudo chown student:student /home/student/.ssh/authorized_keys
+
+Editar /etc/ssh/sshd_config:
+
+PasswordAuthentication no
+PubkeyAuthentication yes
+PermitRootLogin no
+
+sudo systemctl reload sshd
+
+ssh -i /home/jensy/Labs/.ssh/id_rhcsalabs student@192.168.122.20
+
+
+
+
 
 ## 5. Configuración Inicial Post-Instalación
 
@@ -118,7 +156,34 @@ dnf install -y nginx
 
 Configuración:
 - `/etc/nginx/nginx.conf`
+cat << 'EOF' > /etc/nginx/conf.d/default.conf
+server {
+    listen 80 default_server;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+EOF
+
 - `/etc/nginx/conf.d/default.conf`
+cat << 'EOF' > /usr/share/nginx/html/index.html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>NOC Junior Lab</title>
+</head>
+<body>
+  <h1>NOC Junior – VM Base</h1>
+  <p>Static content baseline</p>
+</body>
+</html>
+EOF
+
 
 Contenido mínimo:
 - Listen 80
@@ -126,6 +191,8 @@ Contenido mínimo:
 
 Estado:
 - **disabled**
+systemctl disable --now nginx
+systemctl status nginx
 
 ---
 
@@ -141,9 +208,25 @@ Configuración:
 - Password: `app_pass`
 - Bind: `0.0.0.0`
 
+vim /etc/my.cnf.d/mariadb-server.cnf
+[mysqld]
+bind-address = 0.0.0.0
+systemctl start mariadb
+mysql << 'EOF'
+CREATE DATABASE appdb;
+CREATE USER 'appuser'@'%' IDENTIFIED BY 'app_pass';
+GRANT ALL PRIVILEGES ON appdb.* TO 'appuser'@'%';
+FLUSH PRIVILEGES;
+EOF
+
+systemctl stop mariadb
+
+
+
 Estado:
 - **disabled**
-
+systemctl disable mariadb
+systemctl status mariadb
 ---
 
 ### 6.3 Proxy TCP – HAProxy
@@ -151,6 +234,27 @@ Estado:
 ```bash
 dnf install -y haproxy
 ```
+vim /etc/haproxy/haproxy.cfg
+global
+    log /dev/log local0
+    maxconn 4096
+    daemon
+
+defaults
+    mode tcp
+    timeout connect 10s
+    timeout client  1m
+    timeout server  1m
+
+frontend mariadb_front
+    bind *:3306
+    default_backend mariadb_back
+
+backend mariadb_back
+    server db1 127.0.0.1:3306 check
+
+
+
 
 Configuración:
 - Frontend TCP 3306
@@ -158,6 +262,7 @@ Configuración:
 
 Estado:
 - **disabled**
+systemctl disable --now haproxy
 
 ---
 
@@ -169,6 +274,20 @@ Estado:
 - Uso administrativo (SSH)
 
 ### 7.2 VIPs (NO asignadas por defecto)
+nmcli device status
+nmcli connection shownmcli connection modify "enp1s0" \
+  ipv4.method manual \
+  ipv4.addresses 192.168.122.20/24 \
+  ipv4.gateway 192.168.122.1 \
+  ipv4.dns 192.168.122.1
+
+
+nmcli connection down "enp1s0"
+nmcli connection up "enp1s0"
+ip a show enp1s0
+ip route
+
+
 
 Reservadas para laboratorios:
 
@@ -185,6 +304,13 @@ Las VIPs **solo se asignan vía cloud-init**.
 ## 8. Firewall y SELinux (Baseline)
 
 ### 8.1 Firewalld
+firewall-cmd --permanent --add-service=ssh
+firewall-cmd --permanent --add-service=http
+firewall-cmd --permanent --add-port=3306/tcp
+firewall-cmd --reload
+
+firewall-cmd --list-all
+
 
 - Enabled
 - Zonas por defecto
@@ -196,7 +322,25 @@ Las VIPs **solo se asignan vía cloud-init**.
 Estado:
 - **Sano** (sin bloqueos)
 
+Declaración de arquitectura (queda grabada)
+
+El cliente nunca se conecta directo a MariaDB
+
+El flujo es:
+
+CLIENTE → VIP HAProxy (192.168.122.70:3306)
+        → HAProxy
+        → MariaDB (real)
+
+        ncluso cuando:
+
+MariaDB esté en la misma VM
+
+El laboratorio sea “simple”
+
 ### 8.2 SELinux
+getenforcesetsebool -P httpd_can_network_connect on
+
 
 - Modo: Enforcing
 - Booleanos necesarios habilitados
@@ -205,6 +349,11 @@ Estado:
 ---
 
 ## 9. Estados Iniciales (MUY IMPORTANTE)
+
+
+systemctl is-enabled nginx mariadb haproxy firewalld
+getenforce
+ip a
 
 | Componente | Estado |
 |---------|-------|
