@@ -64,9 +64,11 @@ run_lab() {
     local VM_NAME="lab-${ID}-$(date +%Y%m%d-%H%M%S)"
     local VM_IMG="/mnt/vms/labs/tmp/${VM_NAME}.qcow2"
     
+    echo "🔧 Creando overlay..."
     qemu-img create -f qcow2 -F qcow2 -b "/mnt/vms/rocky-ir-base-junior-v1.qcow2" "$VM_IMG"
     
-    sudo virt-install \
+    echo "🎮 Creando VM (esperando 10s max)..."
+    if timeout 10 sudo virt-install \
         --name "$VM_NAME" \
         --memory 2048 --vcpus 2 \
         --disk path="$VM_IMG",format=qcow2,bus=virtio \
@@ -75,15 +77,34 @@ run_lab() {
         --boot uefi \
         --network network=default \
         --graphics vnc,listen=0.0.0.0 \
-        --video virtio
+        --video virtio \
+        --wait=-1 --noreboot --quiet; then
+        
+        echo "✅ VM '$VM_NAME' CREADA!"
+        
+        # 3. Mostrar acceso
+        echo "🔗 Conectar:"
+        echo "  sudo virt-manager"
+        echo "  O: sudo virsh vncdisplay $VM_NAME && vncviewer localhost:5901"
+        echo "📡 IP: $(sudo virsh domifaddr $VM_NAME 2>/dev/null | awk 'NR>1{print $4}' || echo 'Esperando DHCP...')"
+        
+        # 4. Esperar FIN DEL LAB
+        echo
+        read -rp "ENTER cuando termines el lab J00... "
+        
+    else
+        echo "❌ Timeout creando VM. Cleanup..."
+        sudo virsh destroy "$VM_NAME" 2>/dev/null || true
+        sudo virsh undefine "$VM_NAME" --remove-all-storage 2>/dev/null || true
+        rm -f "$VM_IMG"
+        return 1
+    fi
     
-    echo "✅ VM '$VM_NAME' CREADA!"
-    echo "🎮 sudo virt-manager  O  sudo virsh vncdisplay $VM_NAME"
-    
-    read -rp "ENTER cuando termines..."
-    sudo virsh destroy "$VM_NAME" && sudo virsh undefine "$VM_NAME" --remove-all-storage
-    rm -f "$VM_IMG"
+    # 5. Cleanup AUTOMÁTICO
+    echo "🧹 Cleanup completado. Volviendo al menú..."
+    rm -f "$ISO_PATH"
 }
+
 
 
 
