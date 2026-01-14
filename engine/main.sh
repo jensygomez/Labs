@@ -254,11 +254,12 @@ assign_lab() {
 #   - Arrancar VM en background
 #
 run_lab() {
-    echo "[DEBUG] run_lab() ID=$ID, CLOUDINIT_TEMPLATE=$CLOUDINIT_TEMPLATE, LEVEL=$LEVEL"
-
+run_lab() {
     local ID="$1"
     local CLOUDINIT_TEMPLATE="$2"
-    local LEVEL="$3"   # ← esta línea es nueva
+    local LEVEL="$3"
+
+    echo "[DEBUG] run_lab() llamado con ID=$ID, LEVEL=$LEVEL, CLOUDINIT_TEMPLATE=$CLOUDINIT_TEMPLATE"
 
 
     clear
