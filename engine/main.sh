@@ -40,7 +40,7 @@ BASE_VM_IMG="/mnt/vms/rocky-ir-base-junior-v1.qcow2"
 # BLOQUE 2 — CARGA BASE DE DATOS (DIAGNÓSTICO MEJORADO)
 # ==============================================================================
 LABS=()
-lload_db() {
+load_db() {
     LABS=()
     echo "=== DEBUG COMPLETO load_db() ==="
     echo "ROOT_DIR=[$ROOT_DIR]"
