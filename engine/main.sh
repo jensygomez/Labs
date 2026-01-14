@@ -38,13 +38,36 @@ LABS=()
 #==============================================================================
 load_db() {
     LABS=()
+    
+    # PRIORIDAD 1: Si NO hay DB, usar HARDCODEADO (TU CASO)
     if [[ ! -s "$DB_FILE" ]]; then 
-        echo "⚠️  Sin labs.db - usando labs hardcodeados"
+        echo "⚠️  Sin labs.db o vacío - usando J00 hardcodeado"
         LABS=("J00|network|Junior|$ROOT_DIR/scenarios/junior/J00/cloudinit/variant_1.yml|cloudinit|0")
-        echo "✅ ${#LABS[@]} lab: J00 (Junior)"
-        return 
+        echo "✅ ${#LABS[@]} lab cargado: J00 (Junior)"
+        return 0
     fi
-    echo "✅ ${#LABS[@]} labs desde $DB_FILE"
+    
+    # PRIORIDAD 2: Si hay DB pero está vacío, igual HARDCODEAR
+    if [[ ! -s "$DB_FILE" ]]; then
+        echo "⚠️  DB existe pero vacío - usando J00 hardcodeado"
+        LABS=("J00|network|Junior|$ROOT_DIR/scenarios/junior/J00/cloudinit/variant_1.yml|cloudinit|0")
+        echo "✅ ${#LABS[@]} lab cargado: J00 (Junior)"
+        return 0
+    fi
+    
+    # PRIORIDAD 3: Leer desde SQLite (futuro)
+    echo "📖 Leyendo labs desde SQLite: $DB_FILE"
+    # TODO: Implementar sqlite3 query cuando tengas estructura DB
+    # mapfile -t LABS < <(sqlite3 "$DB_FILE" "SELECT id||'|'||track||'|'||level||'|'||artifact||'|'||type||'|'||uses FROM labs;")
+    
+    # FALLBACK: Si SQLite falla, HARDCODEAR J00
+    if [[ ${#LABS[@]} -eq 0 ]]; then
+        echo "⚠️  SQLite vacío/falló - usando J00 hardcodeado"
+        LABS=("J00|network|Junior|$ROOT_DIR/scenarios/junior/J00/cloudinit/variant_1.yml|cloudinit|0")
+    fi
+    
+    echo "✅ ${#LABS[@]} labs totales cargados"
+    printf '%s\n' "${LABS[@]}" | head -3  # Debug: muestra primeros 3
 }
 
 #==============================================================================
