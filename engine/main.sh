@@ -188,7 +188,8 @@ manage_single_vm() {
         2) sudo virsh domifaddr "$VM_NAME" 2>/dev/null || echo "Sin IP"; read -rp "ENTER..." ;;
         3) sudo virsh reboot "$VM_NAME"; echo "Reiniciando..."; sleep 2 ;;
         4) sudo virsh shutdown "$VM_NAME" || sudo virsh destroy "$VM_NAME"; echo "Parando..." ;;
-        5) cleanup_vm "$VM_NAME"; echo "✅ VM eliminada"; sleep 1 ;;
+        5) cleanup_vm "$VM_NAME" "/mnt/vms/labs/tmp/${VM_NAME}.qcow2"; 
+           echo "✅ VM eliminada COMPLETAMENTE"; sleep 1 ;;
         0) return ;;
         *) echo "❌ Opción inválida" ;;
     esac
