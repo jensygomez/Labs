@@ -182,6 +182,7 @@ main_menu() {
     echo
 
     read -rp "Opción: " option
+    echo "[DEBUG] Opción ingresada: $option"
 
     case "$option" in
         1) assign_lab "Junior" ;;
@@ -207,11 +208,15 @@ main_menu() {
 #
 assign_lab() {
     local LEVEL="$1"
+    echo "[DEBUG] assign_lab() llamado con nivel: $LEVEL"
+
     local MIN_USES=999999
     local CANDIDATES=()
 
     for LAB in "${LABS[@]}"; do
         IFS='|' read -r id track lab_level artifact type uses <<< "$LAB"
+
+        echo "[DEBUG] Revisa LAB: $LAB"
 
         [[ "$lab_level" != "$LEVEL" ]] && continue
 
@@ -223,16 +228,18 @@ assign_lab() {
         fi
     done
 
-    # Si no hay labs para ese nivel, se retorna al menú
-    [[ ${#CANDIDATES[@]} -eq 0 ]] && return
+    if [[ ${#CANDIDATES[@]} -eq 0 ]]; then
+        echo "[DEBUG] No se encontraron labs activos para nivel $LEVEL"
+        return
+    fi
 
-    # Selección aleatoria entre los menos usados
     local SELECTED="${CANDIDATES[$RANDOM % ${#CANDIDATES[@]}]}"
+    echo "[DEBUG] Lab seleccionado: $SELECTED"
+
     IFS='|' read -r id track level artifact type uses <<< "$SELECTED"
-
     run_lab "$id" "$artifact" "$level"
-
 }
+
 
 # ==============================================================================
 # BLOQUE 7 — EJECUCIÓN DEL LABORATORIO (cloud-init / VM)
@@ -247,6 +254,8 @@ assign_lab() {
 #   - Arrancar VM en background
 #
 run_lab() {
+    echo "[DEBUG] run_lab() ID=$ID, CLOUDINIT_TEMPLATE=$CLOUDINIT_TEMPLATE, LEVEL=$LEVEL"
+
     local ID="$1"
     local CLOUDINIT_TEMPLATE="$2"
     local LEVEL="$3"   # ← esta línea es nueva
@@ -263,6 +272,8 @@ run_lab() {
     # -----------------------------
     ISO_PATH=$(bash "$ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$CLOUDINIT_TEMPLATE")
     echo "ISO cloud-init generado: $ISO_PATH"
+    echo "[DEBUG] ISO generado: $ISO_PATH"
+
 
     # -----------------------------
     # 2️⃣ Clonar VM base
@@ -273,6 +284,8 @@ run_lab() {
 
     echo "Clonando VM base..."
     cp "$BASE_IMG" "$CLONE_IMG"
+    echo "[DEBUG] Clon VM: $CLONE_IMG listo"
+
 
 
     # -----------------------------
@@ -343,7 +356,10 @@ increment_uses() {
 #   2. Mostrar menú
 #   3. Ejecutar en bucle infinito
 #
+
+echo "[DEBUG] Inicio del motor - cargando base de datos..."
 load_db
+echo "[DEBUG] Base de datos cargada. LABS en memoria: ${#LABS[@]}"
 
 while true; do
     main_menu
