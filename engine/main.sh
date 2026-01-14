@@ -229,66 +229,34 @@ run_lab() {
     # ==============================
     # BLOQUE 3: VM (SIN TIMEOUT)
     # ==============================
-    echo "🎮 [3/5] Creando VM (paciencia 30s)..."
-    echo "   💡 NO cierres terminal - espera 'Criação concluída'"
-    
-    sudo virt-install \
-        --name "$VM_NAME" \
-        --memory 2048 --vcpus 2 \
-        --disk path="$VM_IMG",format=qcow2,bus=virtio \
-        --disk path="$ISO_PATH",device=cdrom \
-        --import \
-        --os-variant rhel9.0 \
-        --boot uefi \
-        --network network=default \
-        --graphics vnc,listen=0.0.0.0 \
-        --video virtio \
-        --wait=-1 \
-        --quiet 2>&1 || {
-            echo "⚠️  virt-install salió con warning (normal)"
-        }
-    
-    # Verificar que VM existe
-    if sudo virsh domstate "$VM_NAME" >/dev/null 2>&1; then
-        echo "✅ [3/5] VM '$VM_NAME' CREADA!"
-        
-        # ==============================
-        # BLOQUE 4: ARRANCAR SI NO ESTÁ
-        # ==============================
-        sleep 3
-        STATE=$(sudo virsh domstate "$VM_NAME" 2>/dev/null || echo "gone")
-        if [[ "$STATE" != "running" ]]; then
-            echo "🚀 [4/5] Arrancando VM..."
-            sudo virsh start "$VM_NAME" || {
-                echo "❌ Error arrancando VM"
-                cleanup_vm "$VM_NAME" "$VM_IMG"
-                read -rp "ENTER..."
-                return 1
-            }
-        fi
-        
-        echo "✅ [4/5] VM '$VM_NAME' RUNNING!"
-        
-        # ==============================
-        # BLOQUE 5: POST-LAB MENU
-        # ==============================
-        post_lab_menu "$VM_NAME" "$ISO_PATH" "$VM_IMG"
-        
-    else
-        echo "❌ [3/5] VM no creada"
-        cleanup_vm "$VM_NAME" "$VM_IMG"
-        read -rp "ENTER..."
-        return 1
-    fi
-    
-    # ==============================
-    # BLOQUE 6: CLEANUP FINAL
-    # ==============================
-    echo "🧹 [6/6] Cleanup total..."
-    rm -rf "$(dirname "$ISO_PATH")"
+# BLOQUE 3: VM (SIN wait=-1)
+echo "🎮 [3/5] Creando VM..."
+sudo virt-install \
+    --name "$VM_NAME" \
+    --memory 2048 --vcpus 2 \
+    --disk path="$VM_IMG",format=qcow2,bus=virtio \
+    --disk path="$ISO_PATH",device=cdrom \
+    --import \
+    --os-variant rhel9.0 \
+    --boot uefi \
+    --network network=default \
+    --graphics vnc,listen=0.0.0.0 \
+    --video virtio \
+    --quiet &  # ← EN BACKGROUND
+
+VM_PID=$!
+sleep 5  # Espera creación
+
+# Verifica que VM existe
+if sudo virsh domstate "$VM_NAME" >/dev/null 2>&1; then
+    kill $VM_PID 2>/dev/null || true  # Mata virt-install
+    echo "✅ [3/5] VM '$VM_NAME' CREADA!"
+else
+    echo "❌ VM no creada"
+    kill $VM_PID 2>/dev/null || true
     cleanup_vm "$VM_NAME" "$VM_IMG"
-    echo "🎉 Lab completado!"
-}
+    return 1
+fi
 
 
 #==============================================================================
