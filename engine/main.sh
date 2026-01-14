@@ -40,7 +40,7 @@ BASE_VM_IMG="/mnt/vms/rocky-ir-base-junior-v1.qcow2"
 # BLOQUE 2 — CARGA BASE DE DATOS (DIAGNÓSTICO MEJORADO)
 # ==============================================================================
 LABS=()
-load_db() {
+lload_db() {
     LABS=()
     echo "=== DEBUG COMPLETO load_db() ==="
     echo "ROOT_DIR=[$ROOT_DIR]"
@@ -48,34 +48,35 @@ load_db() {
     
     [[ ! -f "$DB_FILE" ]] && { echo "❌ DB no existe"; return; }
     
-    # Leer línea por línea CON debug
+    # ✅ FIX: Leer LÍNEA COMPLETA primero
     local line_num=0
-    while IFS='|' read -r id track level artifact type uses status; do
+    while read -r LINE; do
         ((line_num++))
-        echo "LÍNEA $line_num: id=[$id] level=[$level] artifact=[$artifact]"
+        echo "LÍNEA $line_num RAW: [$LINE]"
+        
+        # ✅ Split manual seguro
+        IFS='|' read -r id track level artifact type uses status <<< "$LINE"
+        echo "  → PARSEADO: id=[$id] level=[$level] artifact=[$artifact]"
         
         # Header check
         [[ "$id" = "ID" || "$id" = "id" ]] && { echo "  → HEADER, saltando"; continue; }
-        [[ "$status" != "active" ]] && { echo "  → Inactivo, saltando"; continue; }
+        [[ "$status" != "active" ]] && { echo "  → Inactivo"; continue; }
         
-        # Construir ruta completa
+        # Ruta completa
         local full_artifact="${artifact/#\.\//$ROOT_DIR/}"
         echo "  → FULL PATH: $full_artifact"
-        echo "  → EXISTE? $([[ -f "$full_artifact" ]] && echo SÍ || echo NO)"
         
-        # Cargar si existe
         if [[ -f "$full_artifact" ]]; then
             LABS+=("$id|$track|$level|$full_artifact|$type|$uses")
-            echo "  → ✅ AGREGADO A LABS[]"
+            echo "  → ✅ AGREGADO"
         else
-            echo "  → ❌ NO CARGADO (archivo faltante)"
+            echo "  → ❌ FALTANTE"
         fi
-        echo "---"
     done < "$DB_FILE"
     
     echo "TOTAL LABS: ${#LABS[@]}"
-    echo "============================"
 }
+
 
 
 # ==============================================================================
