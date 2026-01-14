@@ -102,8 +102,6 @@ export LAB_ROOT_DIR="$ROOT_DIR"
 #   Wrapper que estandariza la ejecución de Ansible
 #
 DB_FILE="$ENGINE_DIR/labs.db"
-INVENTORY="$ENGINE_DIR/inventory.yml"
-ANSIBLE_WRAPPER="$ENGINE_DIR/ansible_wrapper.sh"
 
 # ==============================================================================
 # BLOQUE 3 — ESTRUCTURAS DE DATOS EN MEMORIA
@@ -268,10 +266,11 @@ run_lab() {
     # -----------------------------
     VM_NAME="${ID}_${CLOUDINIT_TEMPLATE}_$(date +%s)"
     BASE_IMG="/mnt/vms/rocky-ir-base-junior-v1.qcow2"
-    BASE_IMG="/mnt/vms/rocky-ir-base-junior-v1.qcow2"
+    CLONE_IMG="$ENGINE_DIR/tmp/${VM_NAME}.qcow2"
 
     echo "Clonando VM base..."
     cp "$BASE_IMG" "$CLONE_IMG"
+
 
     # -----------------------------
     # 3️⃣ Crear la VM con virsh

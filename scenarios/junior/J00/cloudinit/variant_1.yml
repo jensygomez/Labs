@@ -1,0 +1,7 @@
+#cloud-config
+packages:
+  - httpd
+runcmd:
+  - setenforce 0           # Forzar fallo SELinux para práctica
+  - systemctl enable httpd
+  - systemctl start httpd
