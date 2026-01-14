@@ -259,40 +259,41 @@ run_lab() {
     local CLOUDINIT_TEMPLATE="$2"
     local LEVEL="$3"
 
-    echo "[DEBUG] run_lab() llamado con ID=$ID, LEVEL=$LEVEL, CLOUDINIT_TEMPLATE=$CLOUDINIT_TEMPLATE"
-
-
-    clear
-    echo "========================================"
-    echo " Ejecutando laboratorio $ID"
-    echo "========================================"
-    echo
+    echo "[DEBUG] run_lab() llamado con ID=$ID, LEVEL=$LEVEL, TEMPLATE=$CLOUDINIT_TEMPLATE"
 
     # -----------------------------
-    # 1️⃣ Generar ISO NoCloud
+    # 1️⃣ Preparar carpeta temporal
     # -----------------------------
-    ISO_PATH=$(bash "$ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$CLOUDINIT_TEMPLATE")
-    echo "ISO cloud-init generado: $ISO_PATH"
-    echo "[DEBUG] ISO generado: $ISO_PATH"
-
+    TMP_DIR="$LAB_ENGINE_DIR/tmp"
+    mkdir -p "$TMP_DIR"
+    echo "[DEBUG] Carpeta temporal: $TMP_DIR"
 
     # -----------------------------
-    # 2️⃣ Clonar VM base
+    # 2️⃣ Generar ISO NoCloud
+    # -----------------------------
+    ISO_PATH=$(bash "$LAB_ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$CLOUDINIT_TEMPLATE")
+    echo "[DEBUG] ISO cloud-init generado: $ISO_PATH"
+
+    # Verificar si la ISO existe
+    if [[ ! -f "$ISO_PATH" ]]; then
+        echo "[ERROR] No se generó la ISO. Abortando laboratorio."
+        return
+    fi
+
+    # -----------------------------
+    # 3️⃣ Clonar VM base
     # -----------------------------
     VM_NAME="${ID}_${CLOUDINIT_TEMPLATE}_$(date +%s)"
     BASE_IMG="/mnt/vms/rocky-ir-base-junior-v1.qcow2"
-    CLONE_IMG="$ENGINE_DIR/tmp/${VM_NAME}.qcow2"
+    CLONE_IMG="$TMP_DIR/${VM_NAME}.qcow2"
 
-    echo "Clonando VM base..."
-    cp "$BASE_IMG" "$CLONE_IMG"
-    echo "[DEBUG] Clon VM: $CLONE_IMG listo"
-
-
+    echo "[DEBUG] Clonando VM base..."
+    cp "$BASE_IMG" "$CLONE_IMG" || { echo "[ERROR] Falló clonación de VM"; return; }
 
     # -----------------------------
-    # 3️⃣ Crear la VM con virsh
+    # 4️⃣ Crear la VM con virt-install
     # -----------------------------
-    echo "Creando VM $VM_NAME..."
+    echo "[DEBUG] Creando VM $VM_NAME..."
     virt-install \
         --name "$VM_NAME" \
         --memory 2048 \
@@ -303,22 +304,23 @@ run_lab() {
         --network bridge=br0 \
         --noautoconsole \
         --graphics none \
-        --quiet
+        --quiet || { echo "[ERROR] virt-install falló"; return; }
 
     # -----------------------------
-    # 4️⃣ Arranque en background
+    # 5️⃣ Arranque en background
     # -----------------------------
-    echo "VM $VM_NAME arrancando en background..."
-    virsh start "$VM_NAME"
+    echo "[DEBUG] Arrancando VM $VM_NAME..."
+    virsh start "$VM_NAME" || echo "[ERROR] virsh start falló"
 
     # -----------------------------
-    # 5️⃣ Actualizar métricas
+    # 6️⃣ Actualizar métricas
     # -----------------------------
     increment_uses "$ID"
+    echo "[DEBUG] Uso del lab actualizado"
 
-    echo
-    read -rp "Presione ENTER para volver al menú..."
+    echo "[DEBUG] Laboratorio $ID ejecutado correctamente"
 }
+
 
 # ==============================================================================
 # BLOQUE 8 — MÉTRICAS DE USO
