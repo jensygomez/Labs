@@ -295,9 +295,12 @@ run_lab() {
         --disk path="$CLONE_IMG",format=qcow2 \
         --import \
         --cdrom "$ISO_PATH" \
+        --os-variant=rhel9.0 \
         --network bridge=br0 \
         --noautoconsole \
-        --graphics none
+        --graphics none \
+        --quiet
+
     read -rp "ENTER para arrancar la VM..."
 
     # Arrancar VM
