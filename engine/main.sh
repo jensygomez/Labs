@@ -359,7 +359,9 @@ increment_uses() {
 
 echo "[DEBUG] Inicio del motor - cargando base de datos..."
 load_db
-echo "[DEBUG] Base de datos cargada. LABS en memoria: ${#LABS[@]}"
+echo "[DEBUG] LABS cargados tras load_db:"
+printf '%s\n' "${LABS[@]}"
+
 
 while true; do
     main_menu
