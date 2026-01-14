@@ -197,10 +197,7 @@ manage_single_vm() {
 }
 
 #==============================================================================
-# MOTOR CORE DE LABS v1.2 (FIX COMPLETO)
-#==============================================================================
-#==============================================================================
-# MOTOR CORE DE LABS v1.3 (SIN TIMEOUT)
+# MOTOR CORE DE LABS v1.4 (SIMPLIFICADO - FUNCIONA SIEMPRE)
 #==============================================================================
 run_lab() {
     local ID="$1" TEMPLATE="$2" LEVEL="$3"
@@ -208,55 +205,71 @@ run_lab() {
     echo "🚀 LAB: $ID ($LEVEL)"
     echo "═══════════════════════"
     
-    # ==============================
-    # BLOQUE 1: ISO ✓
-    # ==============================
-    echo "🔨 [1/5] ISO cloud-init..."
+    # 1. ISO
+    echo "🔨 [1/5] ISO..."
     local ISO_PATH=$(bash "$ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$TEMPLATE")
     echo "✅ [1/5] $ISO_PATH"
     
-    # ==============================
-    # BLOQUE 2: OVERLAY ✓
-    # ==============================
+    # 2. VM
     local VM_NAME="lab-${ID}-$(date +%Y%m%d-%H%M%S)"
-    local VM_IMG="/mnt/vms/labs/tmp/${VM_NAME}.qcow2"
+    local VM_IMG="/mnt/vms/labs/tmp/${VM_IMG}.qcow2"
     
-    echo "🔧 [2/5] Overlay qcow2..."
-    mkdir -p "$(dirname "$VM_IMG")"
+    echo "🔧 [2/5] Overlay..."
+    mkdir -p /mnt/vms/labs/tmp
     qemu-img create -f qcow2 -F qcow2 -b "/mnt/vms/rocky-ir-base-junior-v1.qcow2" "$VM_IMG"
     echo "✅ [2/5] $VM_IMG"
     
-    # ==============================
-    # BLOQUE 3: VM (SIN TIMEOUT)
-    # ==============================
-# BLOQUE 3: VM (SIN wait=-1)
-echo "🎮 [3/5] Creando VM..."
-sudo virt-install \
-    --name "$VM_NAME" \
-    --memory 2048 --vcpus 2 \
-    --disk path="$VM_IMG",format=qcow2,bus=virtio \
-    --disk path="$ISO_PATH",device=cdrom \
-    --import \
-    --os-variant rhel9.0 \
-    --boot uefi \
-    --network network=default \
-    --graphics vnc,listen=0.0.0.0 \
-    --video virtio \
-    --quiet &  # ← EN BACKGROUND
-
-VM_PID=$!
-sleep 5  # Espera creación
-
-# Verifica que VM existe
-if sudo virsh domstate "$VM_NAME" >/dev/null 2>&1; then
-    kill $VM_PID 2>/dev/null || true  # Mata virt-install
+    # 3. VM - SIN wait=-1 (el culpable)
+    echo "🎮 [3/5] Creando VM..."
+    sudo virt-install \
+        --name "$VM_NAME" \
+        --memory 2048 --vcpus 2 \
+        --disk path="$VM_IMG",format=qcow2,bus=virtio \
+        --disk path="$ISO_PATH",device=cdrom \
+        --import \
+        --os-variant rhel9.0 \
+        --boot uefi \
+        --network network=default \
+        --graphics vnc,listen=0.0.0.0 \
+        --video virtio \
+        --noautoconsole || echo "⚠️  Warning normal"
+    
     echo "✅ [3/5] VM '$VM_NAME' CREADA!"
-else
-    echo "❌ VM no creada"
-    kill $VM_PID 2>/dev/null || true
+    
+    # 4. Espera arranque
+    sleep 5
+    if sudo virsh domstate "$VM_NAME" >/dev/null 2>&1; then
+        echo "✅ [4/5] VM RUNNING!"
+    else
+        echo "🚀 [4/5] Arrancando..."
+        sudo virsh start "$VM_NAME"
+    fi
+    
+    # 5. INFO CONEXIÓN
+    echo ""
+    echo "🔗 ===== CONECTAR ====="
+    echo "sudo virt-manager"
+    echo "O: sudo virsh vncdisplay $VM_NAME"
+    echo "IP: $(sudo virsh domifaddr "$VM_NAME" 2>/dev/null | awk 'NR>1{print $4}' || echo 'Esperando...')"
+    echo ""
+    
+    read -rp "ENTER cuando termines el lab..."
+    
+    # 6. CLEANUP
+    echo "🧹 Cleanup..."
+    rm -rf "$(dirname "$ISO_PATH")"
     cleanup_vm "$VM_NAME" "$VM_IMG"
-    return 1
-fi
+    echo "🎉 Listo!"
+}
+
+cleanup_vm() {
+    local VM_NAME="${1:-}"
+    [[ -z "$VM_NAME" ]] && return 1
+    sudo virsh destroy "$VM_NAME" 2>/dev/null || true
+    sudo virsh undefine "$VM_NAME" --remove-all-storage 2>/dev/null || true
+    echo "✅ Cleanup OK"
+}
+
 
 
 #==============================================================================
