@@ -348,7 +348,7 @@ assign_lab() {
     echo "📍 [4/7] === LLAMANDO select_lab_by_level '$ORIGINAL_LEVEL' ===" >&2
     
     # ✅ FIX 1: NOMBRE CORRECTO + ORIGINAL_LEVEL
-    LAB_INFO=$(select_lab_by_level "$ORIGINAL_LEVEL" 2>/dev/null)
+    LAB_INFO=$(select_lab_by_level "$ORIGINAL_LEVEL")
 
     local RET_CODE=$?
     
