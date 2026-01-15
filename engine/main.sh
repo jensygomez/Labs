@@ -1,103 +1,182 @@
-#!/bin/bash
+# INCIDENT RESPONSE LAB ENGINE v1.1 - DOCUMENTACIÓN ACTUALIZADA
+# ==============================================================
+# Documentación actualizada para reflejar EXACTAMENTE las variables
+# utilizadas en el código implementado.
+#
+# Última revisión: 2024
+#-----------------------------------------------------------------
+
+## 🔄 **OBSERVACIÓN IMPORTANTE:**
+# La documentación anterior contenía un "contrato ideal" de variables
+# que no se implementó completamente. Esta versión documenta SOLO
+# las variables realmente utilizadas en el código.
+
 #==============================================================================
-# INCIDENT RESPONSE LAB ENGINE v1.1
-# =================================
-# Plataforma automatizada para labs RHCSA/RHCE Incident Response
-# Creada para jensy@mx (MX Linux + KVM/QEMU + Rocky Linux 9)
-#
-# FLUJO COMPLETO:
-#   1. Genera ISO cloud-init con escenario específico
-#   2. Crea overlay qcow2 desde imagen base rocky-ir-base-junior-v1.qcow2
-#   3. Lanza VM con EFI+VNC usando virt-install
-#   4. Usuario conecta via virt-manager/VNCviewer
-#   5. MENU POST-LAB: Mantener/Eliminar/Status VM
-#   6. Cleanup automático o manual
-#
-# REQUISITOS:
-#   - KVM/libvirt corriendo (sudo systemctl status libvirtd)
-#   - Imagen base: /mnt/vms/rocky-ir-base-junior-v1.qcow2 (31GB)
-#   - Network default activa (virbr0 UP)
-#   - Usuario en grupos: kvm,libvirt
-#   - Paquetes: virt-install, qemu-img, genisoimage, tigervnc-viewer
-#
-# NUEVO v1.1: MENU POST-LAB con opciones Mantener/Eliminar/Status
-#
-#------------------------------------------------------------------------------
-# VARIABLES GLOBALES DEL MOTOR
-#------------------------------------------------------------------------------
-#
-# VARIABLES DE PATH Y ENTORNO
-# --------------------------
-# ENGINE_ROOT
-#   Directorio raíz del Incident Response Lab Engine.
-#
-# PROJECT_ROOT
-#   Raíz del proyecto de laboratorios (scenarios, imágenes, cloud-init).
-#
-# LAB_DB_FILE
-#   Archivo de base de datos de laboratorios (formato delimitado por '|').
-#
-# SCENARIOS_ROOT
-#   Directorio base que contiene todos los escenarios de laboratorio.
-#
-# VARIABLES DE CONTROL DEL MENÚ
-# ----------------------------
-# MENU_OPTION
-#   Opción numérica seleccionada por el usuario en el menú principal.
-#
-# SELECTED_LEVEL
-#   Nivel lógico elegido por el usuario:
-#   Junior | Pleno | Senior
-#
-# VARIABLES DE SELECCIÓN DE LABORATORIO
-# ------------------------------------
-# AVAILABLE_LABS
-#   Lista de laboratorios disponibles filtrados por nivel seleccionado.
-#
-# MIN_USES
-#   Número mínimo de usos detectado entre los labs del nivel seleccionado.
-#
-# CANDIDATE_LABS
-#   Laboratorios empatados con el menor número de usos.
-#
-# SELECTED_LAB_ID
-#   Identificador del laboratorio seleccionado (ej: J01, P02, S01).
-#
-# SELECTED_LAB_PATH
-#   Ruta base del laboratorio seleccionado
-#   (ej: scenarios/junior/J01).
-#
-# VARIABLES DE VARIANTES
-# ---------------------
-# AVAILABLE_VARIANTS
-#   Variantes disponibles dentro del laboratorio seleccionado.
-#
-# SELECTED_VARIANT
-#   Variante elegida aleatoriamente para ejecución.
-#
-# VARIABLES DE PERSISTENCIA
-# ------------------------
-# UPDATED_USES
-#   Nuevo contador de usos del laboratorio seleccionado.
-#
-# DB_UPDATE_STATUS
-#   Resultado de la operación de actualización de la base de datos.
-#
-# VARIABLES DE EJECUCIÓN
-# ---------------------
-# LAB_TYPE
-#   Tipo de artefacto a ejecutar (cloudinit, terraform, etc.).
-#
-# EXECUTION_ARTIFACT
-#   Archivo final ejecutado por el motor (lab + variante).
-#
-#------------------------------------------------------------------------------
-# NOTA ARQUITECTÓNICA
-# ------------------
-# Este bloque define el contrato global del motor.
-# Cualquier nueva funcionalidad debe reutilizar estas variables o introducir
-# nuevas únicamente si representan estado global real.
-#------------------------------------------------------------------------------
+# VARIABLES GLOBALES IMPLEMENTADAS
+#==============================================================================
+
+# -----------------------------------------------------------------
+# 1. VARIABLES DE DIRECTORIOS Y PATHS (CONSTANTES AL INICIO)
+# -----------------------------------------------------------------
+# ENGINE_DIR
+#   Descripción: Directorio donde reside el script engine (motor principal)
+#   Definición: ENGINE_DIR="$(cd "$(dirname "$0")" && pwd)"
+#   Uso: Referencia base para todos los paths relativos del motor
+
+# ROOT_DIR  
+#   Descripción: Directorio padre del proyecto (un nivel arriba de ENGINE_DIR)
+#   Definición: ROOT_DIR="$(cd "$ENGINE_DIR/.." && pwd)"
+#   Uso: Acceso a la raíz del proyecto donde están los escenarios
+
+# DB_FILE
+#   Descripción: Archivo de base de datos de laboratorios
+#   Definición: DB_FILE="$ENGINE_DIR/labs.db"
+#   Formato: ID|NIVEL|PATH|USES (ej: J01|Junior|scenarios/junior/J01|5)
+#   Uso: Persistencia del conteo de usos por lab
+
+# -----------------------------------------------------------------
+# 2. ARRAYS Y ESTRUCTURAS DE DATOS
+# -----------------------------------------------------------------
+# LABS (array)
+#   Descripción: Almacena en memoria todos los labs cargados desde DB_FILE
+#   Formato: Cada elemento es string "ID|LEVEL|PATH|USES"
+#   Ciclo de vida: Se llena en load_db(), se usa en select_lab_by_level()
+#   Nota: Variable GLOBAL del script
+
+# -----------------------------------------------------------------
+# 3. VARIABLES DE FUNCIONES (PASO DE PARÁMETROS Y RETORNOS)
+# -----------------------------------------------------------------
+# FUNCIÓN: load_db()
+#   - No usa parámetros
+#   - No retorna valores (modifica array global LABS)
+
+# FUNCIÓN: select_lab_by_level(LEVEL)
+#   Parámetro: LEVEL (string) - "Junior", "Pleno" o "Senior"
+#   Variables locales:
+#     - FILTERED (array): Labs filtrados por nivel
+#     - MIN_USES (int): Mínimo número de usos encontrado
+#     - CANDIDATES (array): Labs empatados con MIN_USES
+#     - SELECTED_LAB (string): Lab elegido aleatoriamente "ID|LEVEL|PATH|USES"
+#   Retorno: echo "ID|LEVEL|PATH" (capturado por llamante)
+
+# FUNCIÓN: update_lab_uses(TARGET_ID, NEW_USES)
+#   Parámetros:
+#     - TARGET_ID (string): ID del lab a actualizar (ej: "J01")
+#     - NEW_USES (int): Nuevo valor del contador
+#   Variables locales:
+#     - TMP_DB (string): Path temporal para archivo DB
+
+# FUNCIÓN: select_variant(LAB_PATH)
+#   Parámetro: LAB_PATH (string) - Ruta relativa del lab
+#   Variables locales:
+#     - VARIANT_DIR (string): Path absoluto a directorio de variantes
+#     - VARIANTS (array): Lista de archivos variant_*.yml
+#   Retorno: echo del path completo de una variante aleatoria
+
+# FUNCIÓN: assign_lab(LEVEL)
+#   Parámetro: LEVEL (string) - Nivel seleccionado
+#   Variables locales:
+#     - LAB_INFO (string): Salida de select_lab_by_level()
+#     - ID, LAB_LEVEL, LAB_PATH (strings): Partes de LAB_INFO
+#     - VARIANT (string): Salida de select_variant()
+
+# FUNCIÓN: run_lab(ID, TEMPLATE, LEVEL)
+#   Parámetros:
+#     - ID (string): Identificador del lab (ej: "J01")
+#     - TEMPLATE (string): Path completo al archivo variant_*.yml
+#     - LEVEL (string): Nivel del lab
+#   Variables locales CRÍTICAS:
+#     - ISO_PATH (string): Ruta de la ISO generada por cloudinit_generator.sh
+#     - VM_NAME (string): Nombre único de VM: "lab-{ID}-{timestamp}"
+#     - VM_IMG (string): Path del overlay qcow2: /mnt/vms/labs/tmp/{VM_NAME}.qcow2
+#   Nota: Esta función maneja el CICLO COMPLETO de creación de VM
+
+# -----------------------------------------------------------------
+# 4. VARIABLES DE CONFIGURACIÓN HARDCODED
+# -----------------------------------------------------------------
+# PATHS ABSOLUTOS (configuración del entorno MX Linux + KVM):
+#   - Imagen base: "/mnt/vms/rocky-ir-base-junior-v1.qcow2"
+#   - Directorio temporal VMs: "/mnt/vms/labs/tmp/"
+#   - Directorio temporal ISOs: "/tmp/" (implícito en cloudinit_generator.sh)
+
+# PARÁMETROS DE VIRT-INSTALL (hardcoded en run_lab()):
+#   --memory 2048 --vcpus 2
+#   --os-variant rhel9.0
+#   --boot uefi
+#   --network network=default
+#   --graphics vnc,listen=0.0.0.0
+
+# -----------------------------------------------------------------
+# 5. VARIABLES DE ESTADO EN FUNCIONES DE GESTIÓN
+# -----------------------------------------------------------------
+# FUNCIÓN: manage_single_vm(VM_NAME)
+#   Parámetro: VM_NAME (string) - Nombre de la VM a gestionar
+#   Variables locales:
+#     - STATE (string): Estado de VM ("running", "shut off", etc.)
+#     - IP (string): Dirección IP asignada o "no-ip"
+#     - opt (string): Opción seleccionada por usuario en submenú
+
+# FUNCIÓN: cleanup_vm(VM_NAME)
+#   Parámetro: VM_NAME (string) - Nombre de la VM a eliminar
+#   Nota: Elimina VM, definición libvirt, storage asociado e ISO
+
+# -----------------------------------------------------------------
+# 6. VARIABLES DE INTERACCIÓN CON USUARIO
+# -----------------------------------------------------------------
+# option (main_menu)
+#   Descripción: Opción numérica del menú principal (1,2,3,0)
+#   Tipo: string (capturada por read)
+
+# opt (manage_single_vm)
+#   Descripción: Opción numérica del submenú de gestión VM (1-4,0)
+#   Tipo: string (capturada por read)
+
+# -----------------------------------------------------------------
+# 7. FLUJO DE DATOS ENTRE VARIABLES (REAL)
+# -----------------------------------------------------------------
+# SECUENCIA TÍPICA:
+#   1. load_db() → llena array global LABS
+#   2. select_lab_by_level("Junior") → devuelve "J01|Junior|scenarios/junior/J01"
+#   3. select_variant("scenarios/junior/J01") → devuelve "/ruta/variant_1.yml"
+#   4. run_lab("J01", "/ruta/variant_1.yml", "Junior") → crea VM
+#   5. Variables dentro run_lab:
+#       ISO_PATH = (generada por cloudinit_generator.sh)
+#       VM_NAME = "lab-J01-20240115-143022"
+#       VM_IMG = "/mnt/vms/labs/tmp/lab-J01-20240115-143022.qcow2"
+
+#==============================================================================
+# DISEÑO ARQUITECTÓNICO IMPLEMENTADO
+#==============================================================================
+
+# 1. PATRÓN: Modelo de datos en array asociativo simple
+#    - LABS: Array indexado con strings delimitados por "|"
+#    - Ventaja: Simple, sin dependencias externas
+#    - Desventaja: Parsing manual con IFS en cada lectura
+
+# 2. PATRÓN: Paso de datos via stdout/stderr
+#    - select_lab_by_level: echo "ID|LEVEL|PATH"
+#    - select_variant: echo "/ruta/completa/variant_X.yml"
+#    - Las funciones llamantes capturan con $(...)
+
+# 3. PATRÓN: Rutas absolutas consistentes
+#    - Todas las rutas se convierten a absolutas al inicio
+#    - Uso de $(cd ... && pwd) evita problemas con rutas relativas
+
+# 4. PATRÓN: Separación clara de responsabilidades
+#    - load_db: Solo carga datos
+#    - select_lab_by_level: Lógica de selección + actualización DB
+#    - select_variant: Selección aleatoria de variante
+#    - run_lab: Orquestación completa de creación VM
+#    - manage_single_vm: Gestión post-creación
+
+# 5. PATRÓN: Nombrado consistente de recursos
+#    - VM_NAME: "lab-{ID}-{timestamp}"
+#    - VM_IMG: "/mnt/vms/labs/tmp/{VM_NAME}.qcow2"
+#    - ISO: "/tmp/{VM_NAME}-seed.iso" (generada por cloudinit_generator.sh)
+
+#==============================================================================
+# FIN DE DOCUMENTACIÓN ACTUALIZADA
+#==============================================================================
 
 
 set -euo pipefail
