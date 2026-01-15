@@ -312,181 +312,119 @@ run_lab() {
 # FUNCION DEL MENÚ PRINCIPAL
 #==============================================================================
 main_menu() {
-    clear
-    echo "================================================"
-    echo "INCIDENT RESPONSE LAB ENGINE v1.1"
-    echo "================================================"
-    echo "Labs: ${#LABS[@]} | Base VM: rocky-ir-base-junior-v1.qcow2"
-    echo ""
-    echo "1) Junior    2) Pleno    3) Senior"
-    echo "4) Estado VMs  5) Gestión VMs  0) Salir"
-    read -rp "Opción: " option
-    
-    case "$option" in
-        1) assign_lab "Junior" ;;
-        2) assign_lab "Pleno" ;;
-        3) assign_lab "Senior" ;;
-        4) show_vm_status ;;
-        5) manage_vms ;;
-        0) echo "👋 ¡Hasta luego!"; exit 0 ;;
-        *) echo "❌ Opción inválida"; sleep 1; main_menu ;;
-    esac
-}
-
-
-
-#==============================================================================
-# FUNCION DE ESTADO DE VMs
-#==============================================================================
-show_vm_status() {
-    clear
-    echo "📊 ESTADO VMs (libvirt)"
-    echo "======================"
-    sudo virsh list --all 2>/dev/null | cat || echo "❌ Error libvirt"
-    echo ""
-    echo "Redes:"
-    virsh net-list --all 2>/dev/null | head -5
-    echo ""
-    echo "Base: $(ls -lh /mnt/vms/rocky-ir-base-junior-v1.qcow2 2>/dev/null || echo 'NO ENCONTRADA')"
-    read -rp "ENTER..."
-}
-
-#==============================================================================
-# FUNCION DE GESTIÓN DE VMs
-#==============================================================================
-manage_vms() {
-    clear
-    echo "🔧 GESTIÓN DE VMs"
-    echo "=================="
-    
-    # Filtrar solo VMs de labs (lab-*)
-    local LAB_VMS=()
-    mapfile -t LAB_VMS < <(sudo virsh list --all --name 2>/dev/null | grep '^lab-' || true)
-    
-    if [[ ${#LAB_VMS[@]} -eq 0 ]]; then
-        echo "✅ No hay VMs de labs activas"
-        read -rp "ENTER..."
-        return
-    fi
-    
-    echo "VMs de labs encontradas: ${#LAB_VMS[@]}"
-    echo ""
-    for i in "${!LAB_VMS[@]}"; do
-        local VM="${LAB_VMS[$i]}"
-        local STATE=$(sudo virsh domstate "$VM" 2>/dev/null || echo "unknown")
-        local IP=$(sudo virsh domifaddr "$VM" 2>/dev/null | awk 'NR>1{print $4}' || echo "no-ip")
-        printf "%d) %s [%-9s] IP:%s\n" $((i+1)) "$VM" "$STATE" "$IP"
-    done
-    
-    echo ""
-    echo "0) Volver"
-    read -rp "Opción: " choice
-    
-    if [[ "$choice" =~ ^[0-9]+$ ]] && [[ $choice -le ${#LAB_VMS[@]} ]]; then
-        local VM="${LAB_VMS[$((choice-1))]}"
-        manage_single_vm "$VM"
-    fi
-}
-
-
-#==============================================================================
-# FUNCION DE GESTIÓN DE VM INDIVIDUAL
-#==============================================================================
-manage_single_vm() {
-    local VM_NAME="$1"
-    clear
-    echo "🔧 VM: $VM_NAME"
-    echo "================"
-    
-    STATE=$(sudo virsh domstate "$VM_NAME" 2>/dev/null || echo "unknown")
-    IP=$(sudo virsh domifaddr "$VM_NAME" 2>/dev/null | awk 'NR>1{print $4}' || echo "no-ip")
-    
-    echo "Estado: $STATE | IP: $IP"
-    echo ""
-    echo "1) Console VNC     2) IP detallada"
-    echo "3) Reiniciar       4) Parar"
-    echo "5) Eliminar VM     0) Volver"
-    read -rp "Opción: " opt
-    
-    case "$opt" in
-        1) echo "VNC: $(sudo virsh vncdisplay "$VM_NAME")"; read -rp "ENTER..." ;;
-        2) sudo virsh domifaddr "$VM_NAME" 2>/dev/null || echo "Sin IP"; read -rp "ENTER..." ;;
-        3) sudo virsh reboot "$VM_NAME"; echo "Reiniciando..."; sleep 2 ;;
-        4) sudo virsh shutdown "$VM_NAME" || sudo virsh destroy "$VM_NAME"; echo "Parando..." ;;
-        5) cleanup_vm "$VM_NAME" "/mnt/vms/labs/tmp/${VM_NAME}.qcow2"; 
-           echo "✅ VM eliminada COMPLETAMENTE"; sleep 1 ;;
-        0) return ;;
-        *) echo "❌ Opción inválida" ;;
-    esac
-    
-    manage_single_vm "$VM_NAME"
-}
-
-
-
-
-
-#==============================================================================
-# FUNCION DEL MENÚ POST-LAB
-#==============================================================================
-post_lab_menu() {
-    local VM_NAME="$1" ISO_PATH="$2" VM_IMG="$3"
-    
     while true; do
         clear
-        echo "🎓 LAB $VM_NAME COMPLETADO"
-        echo "═══════════════════════════"
-        
-        STATE=$(sudo virsh domstate "$VM_NAME" 2>/dev/null || echo "unknown")
-        IP=$(sudo virsh domifaddr "$VM_NAME" 2>/dev/null | awk 'NR>1{print $4}' || echo "no-ip")
-        
-        echo "Estado: $STATE | IP: $IP"
-        echo "VNC: $(sudo virsh vncdisplay "$VM_NAME" 2>/dev/null || echo "no-vnc")"
-        echo ""
-        echo "1) Usar VM más tiempo     2) Eliminar VM ahora"
-        echo "3) Parar VM (mantener)    4) Reiniciar VM"
-        echo "5) Gestión completa VMs   0) Volver menú principal"
-        echo ""
-        read -rp "Opción: " choice
-        
-        case "$choice" in
-            1) echo "✅ Sigue usando la VM"; echo "Pulsa ENTER cuando termines"; read -rp ""; continue ;;
-            2) cleanup_vm "$VM_NAME" "$VM_IMG"; rm -f "$ISO_PATH"; return 0 ;;
-            3) sudo virsh shutdown "$VM_NAME" 2>/dev/null || sudo virsh destroy "$VM_NAME"; echo "✅ VM parada (archivada)"; return 0 ;;
-            4) sudo virsh reboot "$VM_NAME"; echo "🔄 Reiniciando..."; sleep 3; continue ;;
-            5) manage_vms; continue ;;
-            0) return 1 ;;  # Volver a menú principal
-            *) echo "❌ Opción inválida"; sleep 1; continue ;;
+        echo "================================================"
+        echo " INCIDENT RESPONSE LAB ENGINE v1.1"
+        echo "================================================"
+        echo " Base VM: rocky-ir-base-junior-v1.qcow2"
+        echo
+        echo "1) Junior"
+        echo "2) Pleno"
+        echo "3) Senior"
+        echo "0) Salir"
+        echo
+        read -rp "Opción: " option
+
+        case "$option" in
+            1) assign_lab "Junior" ;;
+            2) assign_lab "Pleno" ;;
+            3) assign_lab "Senior" ;;
+            0)
+                echo "Saliendo del Lab Engine..."
+                exit 0
+                ;;
+            *)
+                echo "❌ Opción inválida"
+                sleep 1
+                ;;
         esac
     done
 }
+
+
+
+#==============================================================================
+# FUNCION DE GESTIÓN DIRECTA POST-CREACIÓN DE VM
+#==============================================================================
+manage_single_vm() {
+    local VM_NAME="$1"
+
+    while true; do
+        clear
+        STATE=$(sudo virsh domstate "$VM_NAME" 2>/dev/null || echo "unknown")
+        IP=$(sudo virsh domifaddr "$VM_NAME" 2>/dev/null | awk 'NR>1{print $4}' || echo "no-ip")
+
+        echo "=============================================="
+        echo " GESTIÓN DE VM ACTIVA"
+        echo "=============================================="
+        echo " VM    : $VM_NAME"
+        echo " Estado: $STATE"
+        echo " IP    : $IP"
+        echo
+        echo "1) Reiniciar VM"
+        echo "2) Parar VM"
+        echo "3) Prender VM"
+        echo "4) Eliminar VM (TOTAL)"
+        echo "0) Volver al menú principal"
+        echo
+        read -rp "Opción: " opt
+
+        case "$opt" in
+            1)
+                echo "🔄 Reiniciando VM..."
+                sudo virsh reboot "$VM_NAME" >/dev/null 2>&1
+                sleep 2
+                ;;
+            2)
+                echo "⏹️  Parando VM..."
+                sudo virsh shutdown "$VM_NAME" >/dev/null 2>&1
+                sleep 3
+                ;;
+            3)
+                echo "▶️  Encendiendo VM..."
+                sudo virsh start "$VM_NAME" >/dev/null 2>&1
+                sleep 2
+                ;;
+            4)
+                echo "⚠️  Eliminando VM completamente..."
+                cleanup_vm "$VM_NAME"
+                echo "✅ VM eliminada sin residuos"
+                sleep 2
+                return 0   # ← vuelve al menú principal
+                ;;
+            0)
+                return 0
+                ;;
+            *)
+                echo "❌ Opción inválida"
+                sleep 1
+                ;;
+        esac
+    done
+}
+
+
+
 
 #==============================================================================
 # FUNCION DE LIMPIEZA DE VM
 #==============================================================================
 cleanup_vm() {
-    local VM_NAME="${1:-}" VM_IMG="${2:-}"
-    
-    [[ -z "$VM_NAME" ]] && { echo "❌ VM_NAME requerido"; return 1; }
-    
-    echo "🧹 ELIMINANDO VM: $VM_NAME"
-    
-    # 1. DESTROZAR
-    sudo virsh destroy "$VM_NAME" 2>/dev/null || true
-    
-    # 2. ELIMINAR DEFINICIÓN + STORAGE
-    sudo virsh undefine "$VM_NAME" --remove-all-storage 2>/dev/null || true
-    
-    # 3. BORRAR OVERLAY MANUAL
-    [[ -n "$VM_IMG" && -f "$VM_IMG" ]] && rm -f "$VM_IMG" && echo "   ✅ Disco: $VM_IMG"
-    
-    # 4. LIMPIAR CACHÉ LIBVIRT (¡EL CLAVE!)
-    sudo virsh pool-refresh default 2>/dev/null || true
-    sudo systemctl reload libvirtd 2>/dev/null || true
-    
-    echo "✅ VM $VM_NAME ELIMINADA + caché limpiado"
-}
+    local VM_NAME="$1"
 
+    echo "[CLEANUP] Apagando VM si está activa..."
+    virsh destroy "$VM_NAME" >/dev/null 2>&1 || true
+
+    echo "[CLEANUP] Eliminando definición y storage..."
+    virsh undefine "$VM_NAME" --remove-all-storage >/dev/null 2>&1 || true
+
+    echo "[CLEANUP] Limpiando ISOs cloud-init..."
+    rm -f /mnt/vms/labs/tmp/"${VM_NAME}.qcow2" 2>/dev/null || true
+    rm -f "/tmp/${VM_NAME}-seed.iso" 2>/dev/null || true
+
+    echo "[CLEANUP] Cleanup completo"
+}
 
 
 
