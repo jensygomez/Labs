@@ -293,23 +293,37 @@ update_lab_uses() {
     local NEW_USES="$2"
     local TMP_DB
 
-    TMP_DB="$(mktemp)"
+    # ✅ FIX 1: mktemp con ruta absoluta (funciona con sudo)
+    TMP_DB=$(command -v mktemp >/dev/null 2>&1 && mktemp -t "labdb.$TARGET_ID.XXXXXX" || {
+        echo "/tmp/labdb.$TARGET_ID.$$" 
+        touch "/tmp/labdb.$TARGET_ID.$$"
+    })
 
-    # ✅ Backup original DB antes de sobrescribir
-    cp "$DB_FILE" "$TMP_DB"
+    # ✅ FIX 2: Header manual (NO depende de cp)
+    echo "ID|LEVEL|PATH|USES" > "$TMP_DB"
 
+    # ✅ FIX 3: Procesa DB línea por línea
     while IFS='|' read -r ID LEVEL PATH USES; do
-        [[ "$ID" == "ID" ]] && continue  # ✅ Salta header como load_db()
+        [[ -z "$ID" || "$ID" == "ID" ]] && continue  # Salta líneas vacías/header
+        
         if [[ "$ID" == "$TARGET_ID" ]]; then
             echo "$ID|$LEVEL|$PATH|$NEW_USES" >> "$TMP_DB"
+            echo "✅ Updated uses for $TARGET_ID → $NEW_USES" >&2
         else
             echo "$ID|$LEVEL|$PATH|$USES" >> "$TMP_DB"
         fi
     done < "$DB_FILE"
 
-    mv "$TMP_DB" "$DB_FILE"
-    echo "✅ Updated uses for $TARGET_ID → $NEW_USES" >&2
+    # ✅ FIX 4: Atomic move con verificación
+    if mv "$TMP_DB" "$DB_FILE" 2>/dev/null; then
+        echo "💾 DB actualizada: $DB_FILE" >&2
+    else
+        echo "💥 ERROR: No pudo actualizar $DB_FILE" >&2
+        rm -f "$TMP_DB"
+        return 1
+    fi
 }
+
 
 
 
@@ -358,7 +372,7 @@ assign_lab() {
     echo "📍 [4/7] === LLAMANDO select_lab_by_level '$ORIGINAL_LEVEL' ===" >&2
     
     # ✅ FIX 1: NOMBRE CORRECTO + ORIGINAL_LEVEL
-    LAB_INFO="$(select_lab_by_level "$ORIGINAL_LEVEL" 2>&1)"
+    LAB_INFO="$(select_lab_by_level "$ORIGINAL_LEVEL")"
     local RET_CODE=$?
     
     # ✅ FIX 2: Usa LAB_INFO (no LLAB_INFO)
