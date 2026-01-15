@@ -291,7 +291,11 @@ select_variant() {
         return 1
     fi
 
-    mapfile -t VARIANTS < <(ls "$VARIANT_DIR"/variant_*.yml 2>/dev/null)
+    VARIANTS=()
+    while IFS= read -r variant; do
+        VARIANTS+=("$variant")
+    done < <(find "$VARIANT_DIR" -name "variant_*.yml" 2>/dev/null)
+
 
     if [[ ${#VARIANTS[@]} -eq 0 ]]; then
         echo "❌ No hay variantes en $VARIANT_DIR" >&2
