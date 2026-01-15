@@ -123,15 +123,15 @@ select_variant() {
 #==============================================================================
 # FUNCION DE EJECUCIÓN DE LAB
 #==============================================================================
+#==============================================================================
+# FUNCION DE EJECUCIÓN DE LAB
+#==============================================================================
 run_lab() {
-    run_lab() {
     echo "=== ENTRANDO A run_lab ===" >&2
     echo "Parámetros recibidos: ID='$1', TEMPLATE='$2', LEVEL='$3'" >&2
     echo "[DEBUG] ENGINE_DIR='$ENGINE_DIR'" >&2
     echo "[DEBUG] cloudinit_generator.sh path: $ENGINE_DIR/cloudinit_generator.sh" >&2
     
-    # ... el resto del código existente
-}
     echo "[DEBUG] PATH=$PATH"
     command -v bash date mkdir qemu-img virt-install || true
     local ID="$1" TEMPLATE="$2" LEVEL="$3"
@@ -196,8 +196,7 @@ run_lab() {
     sleep 1
 
     manage_single_vm "$VM_NAME"
-
-} 
+}
 
 
 
