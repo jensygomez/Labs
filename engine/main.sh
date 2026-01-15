@@ -310,18 +310,21 @@ select_variant() {
         return 1
     fi
 
-    # Cargar variantes de forma segura
-    while IFS= read -r -d '' file; do
-        VARIANTS+=("$file")
-    done < <(find "$VARIANT_DIR" -maxdepth 1 -type f -name "variant_*.yml" -print0)
+    # Bash puro: globbing seguro
+    shopt -s nullglob
+    VARIANTS=("$VARIANT_DIR"/variant_*.yml)
+    shopt -u nullglob
 
     if [[ ${#VARIANTS[@]} -eq 0 ]]; then
         echo "❌ No hay variantes en $VARIANT_DIR" >&2
         return 1
     fi
 
+    # stdout limpio
     echo "${VARIANTS[RANDOM % ${#VARIANTS[@]}]}"
 }
+
+
 
 
 #==============================================================================
