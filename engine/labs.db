@@ -1,3 +1,7 @@
-ID|TRACK|LEVEL|ARTIFACT|TYPE|USES|STATUS^M
-J00|network|Junior|scenarios/junior/J00/cloudinit/variant_1.yml|cloudinit|0|active^M
-J01|network|Junior|scenarios/junior/J01/cloudinit/variant_1.yml|cloudinit|0|active^M
+ID|LEVEL|PATH|USES
+J01|Junior|scenarios/junior/J01|0
+J02|Junior|scenarios/junior/J02|3
+J03|Junior|scenarios/junior/J03|0
+P01|Pleno|scenarios/pleno/P01|1
+P02|Pleno|scenarios/pleno/P02|1
+S01|Senior|scenarios/senior/S01|1
