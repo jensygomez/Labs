@@ -219,20 +219,32 @@ select_lab_by_level() {
     local MIN_USES=""
     local CANDIDATES=()
 
+    echo "=== DEBUG START ==="
+    echo "Buscando nivel: '$LEVEL'"
+    echo "Total LABS: ${#LABS[@]}"
+    
     # 1. Filtrar por nivel
     for LAB in "${LABS[@]}"; do
         IFS='|' read -r ID LAB_LEVEL PATH USES <<< "$LAB"
-        echo "DEBUG: Comparando '$LAB_LEVEL' con '$LEVEL'"
+        echo "Lab: ID=$ID, LEVEL='$LAB_LEVEL', PATH='$PATH', USES=$USES"
+        
+        # Comparación insensible a mayúsculas
         if [[ "${LAB_LEVEL,,}" == "${LEVEL,,}" ]]; then
             FILTERED+=("$LAB")
-            echo "DEBUG: Coincidencia encontrada - $ID"
+            echo "  ✓ COINCIDE - Agregado a FILTERED"
+        else
+            echo "  ✗ NO coincide"
         fi
     done
+    
+    echo "FILTERED encontrados: ${#FILTERED[@]}"
+    echo "=== DEBUG END ==="
 
     if [[ ${#FILTERED[@]} -eq 0 ]]; then
         echo "❌ No hay labs para nivel $LEVEL" >&2
         return 1
     fi
+    # ... el resto de la función igual
 
     # 2. Encontrar mínimo USES
     for LAB in "${FILTERED[@]}"; do
@@ -312,17 +324,14 @@ select_variant() {
 #==============================================================================
 assign_lab() {
     local LEVEL="$1"
-
-    # DEBUG: Verificar qué llega
-    echo "DEBUG: LEVEL recibido = '$LEVEL'"
     
-    if [[ -z "$LEVEL" ]]; then
-        echo "❌ ERROR: Nivel no especificado"
-        return 1
-    fi
-
-
+    # Limpiar espacios
+    LEVEL="${LEVEL//[[:space:]]/}"
+    
+    echo "DEBUG: LEVEL recibido = '$LEVEL' (limpio)"
+    
     load_db
+    # ... resto igual
 
     LAB_INFO="$(select_lab_by_level "$LEVEL")" || return 1
     IFS='|' read -r ID LAB_LEVEL LAB_PATH <<< "$LAB_INFO"
