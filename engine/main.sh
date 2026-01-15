@@ -401,6 +401,8 @@ assign_lab() {
 # FUNCION DE EJECUCIÓN DE LAB
 #==============================================================================
 run_lab() {
+    echo "[DEBUG] PATH=$PATH"
+    command -v bash date mkdir qemu-img virt-install || true
     local ID="$1" TEMPLATE="$2" LEVEL="$3"
     
     echo "🚀 LAB: $ID ($LEVEL)"
