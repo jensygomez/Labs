@@ -10,7 +10,7 @@
 #
 # 🔹 Contexto:
 # - CLIENT01: 192.168.122.21 (Cliente que hará las pruebas)
-# - SERVER_EU: 192.168.122.22 (Servidor con Nginx 80, MariaDB 3306)
+# - SERVER_EU: 192.168.122.20 (Servidor con Nginx 80, MariaDB 3306)
 # - Firewalld activo en SERVER_EU
 # 
 # 🔹 Qué estamos rompiendo:
@@ -44,51 +44,15 @@
 # - Eliminar la regla de ICMP en SERVER_EU y recargar firewalld
 # ==============================================================================
 
-# variant_1.yml - Bloqueo HTTP en firewall
-# Lab: J01 - Variante 1
-# Dificultad: Junior
-# Tiempo estimado: 10-15 minutos
-
 variant_id: "1"
-title: "Bloqueo HTTP en firewall (puerto 80)"
+title: "Bloqueo ICMP desde CLIENT01"
 
-# Servicios que deben estar HABILITADOS y CORRIENDO
 enabled:
-  - nginx      # Servicio web
-  - firewalld  # Firewall activo
+  - nginx
+  - firewalld
 
-# Servicios que deben permanecer DESHABILITADOS
-# (no se listan aquí, se asumen deshabilitados por defecto)
-
-# Configuración de red
-# VIP para el servicio web (opcional, el lab puede usarla)
-# vip: "192.168.122.50"
-
-# Errores a inyectar en el sistema
 errors:
-  # Bloqueo de puerto HTTP
-  - description: "Bloquear acceso HTTP en puerto 80"
+  - description: "Bloquear ICMP echo-request"
     commands:
-      - firewall-cmd --zone=public --remove-port=80/tcp --permanent
+      - firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.122.21" icmp-type name="echo-request" drop'
       - firewall-cmd --reload
-      - echo "✅ Puerto 80 bloqueado en firewall" > /tmp/firewall_status.txt
-
-  # Verificación de que nginx está corriendo (para confirmar que no es problema del servicio)
-  - description: "Asegurar que nginx está activo"
-    commands:
-      - systemctl is-active nginx || systemctl start nginx
-      - systemctl enable nginx
-
-# Información para diagnóstico (no se ejecuta, solo documentación)
-diagnosis:
-  symptoms:
-    - "El sitio web no carga (http://192.168.122.50)"
-    - "Ping al servidor funciona"
-    - "SSH accesible"
-    - "Otros servicios no afectados"
-    
-  commands:
-    - "firewall-cmd --zone=public --list-all"
-    - "systemctl status nginx"
-    - "curl -v http://192.168.122.50"
-    - "ss -tlnp | grep :80"
