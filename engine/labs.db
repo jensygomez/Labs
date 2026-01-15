@@ -1,7 +1,7 @@
 ID|LEVEL|PATH|USES
 J01|Junior|scenarios/junior/J01|0
-J02|Junior|scenarios/junior/J02|3
-J03|Junior|scenarios/junior/J03|1
-P01|Pleno|scenarios/pleno/P01|1
-P02|Pleno|scenarios/pleno/P02|1
-S01|Senior|scenarios/senior/S01|1
+J02|Junior|scenarios/junior/J02|30
+J03|Junior|scenarios/junior/J03|10
+P01|Pleno|scenarios/pleno/P01|10
+P02|Pleno|scenarios/pleno/P02|10
+S01|Senior|scenarios/senior/S01|10

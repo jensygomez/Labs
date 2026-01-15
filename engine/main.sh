@@ -205,18 +205,40 @@ LABS=()
 load_db() {
     LABS=()
 
+    # --- Validación del archivo DB ---
     if [[ ! -f "$DB_FILE" || ! -s "$DB_FILE" ]]; then
         echo "❌ ERROR: Base de datos inexistente o vacía: $DB_FILE" >&2
         exit 1
     fi
 
+    # --- Carga segura de registros ---
     while IFS='|' read -r ID LEVEL LAB_PATH USES; do
-        [[ "$ID" == "ID" ]] && continue   # saltar header si existe
-        LABS+=("$ID|$LEVEL|$PATH|$USES")
+        # Saltar header
+        [[ "$ID" == "ID" ]] && continue
+
+        # --- Validaciones estrictas ---
+        [[ -z "$ID" || -z "$LEVEL" || -z "$LAB_PATH" || -z "$USES" ]] && {
+            echo "❌ DB corrupta: campos vacíos → '$ID|$LEVEL|$LAB_PATH|$USES'" >&2
+            exit 2
+        }
+
+        [[ ! "$USES" =~ ^[0-9]+$ ]] && {
+            echo "❌ DB corrupta: USES no numérico para $ID → '$USES'" >&2
+            exit 3
+        }
+
+        [[ "$LAB_PATH" == *":"* ]] && {
+            echo "❌ DB corrupta: LAB_PATH parece PATH del sistema para $ID → '$LAB_PATH'" >&2
+            exit 4
+        }
+
+        LABS+=("$ID|$LEVEL|$LAB_PATH|$USES")
+
     done < "$DB_FILE"
 
-    echo "✅ DB cargada: ${#LABS[@]} laboratorios"
+    echo "✅ DB cargada correctamente: ${#LABS[@]} laboratorios" >&2
 }
+
 
 
 
