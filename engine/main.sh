@@ -1,3 +1,4 @@
+#!/bin/bash 
 # INCIDENT RESPONSE LAB ENGINE v1.1 - DOCUMENTACIÓN ACTUALIZADA
 # ==============================================================
 # Documentación actualizada para reflejar EXACTAMENTE las variables
@@ -291,10 +292,7 @@ select_variant() {
         return 1
     fi
 
-    VARIANTS=()
-    while IFS= read -r variant; do
-        VARIANTS+=("$variant")
-    done < <(find "$VARIANT_DIR" -name "variant_*.yml" 2>/dev/null)
+    VARIANTS=($(find "$VARIANT_DIR" -name "variant_*.yml" 2>/dev/null))
 
 
     if [[ ${#VARIANTS[@]} -eq 0 ]]; then
@@ -396,7 +394,7 @@ run_lab() {
 #==============================================================================
 main_menu() {
     while true; do
-        clear
+        printf "\033c"
         echo "================================================"
         echo " INCIDENT RESPONSE LAB ENGINE v1.1"
         echo "================================================"
@@ -434,7 +432,7 @@ manage_single_vm() {
     local VM_NAME="$1"
 
     while true; do
-        clear
+        printf "\033c"
         STATE=$(sudo virsh domstate "$VM_NAME" 2>/dev/null || echo "unknown")
         IP=$(sudo virsh domifaddr "$VM_NAME" 2>/dev/null | awk 'NR>1{print $4}' || echo "no-ip")
 
