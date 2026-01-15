@@ -222,28 +222,25 @@ select_lab_by_level() {
     local FILTERED=()
     local MIN_USES=""
     local CANDIDATES=()
-    local ID LAB_LEVEL LAB_PATH USES  # ✅ Locales para parseo
+    local ID LAB_LEVEL LAB_PATH USES
 
-    echo "=== DEBUG START ==="
-    echo "Buscando nivel: '$LEVEL'"
-    echo "Total LABS: ${#LABS[@]}"
+    echo "Buscando nivel: '$LEVEL'" >&2
+    echo "Total LABS: ${#LABS[@]}" >&2
     
     # 1. Filtrar por nivel
     for LAB in "${LABS[@]}"; do
-        IFS='|' read -r ID LAB_LEVEL PATH USES <<< "$LAB"
-        echo "Lab: ID=$ID, LEVEL='$LAB_LEVEL', PATH='$PATH', USES=$USES"
+        IFS='|' read -r ID LAB_LEVEL LAB_PATH USES <<< "$LAB"
+        echo "Lab: ID=$ID, LEVEL='$LAB_LEVEL', PATH='$LAB_PATH', USES=$USES" >&2
         
-        # Comparación insensible a mayúsculas
         if [[ "${LAB_LEVEL,,}" == "${LEVEL,,}" ]]; then
             FILTERED+=("$LAB")
-            echo "  ✓ COINCIDE - Agregado a FILTERED"
+            echo "  ✓ COINCIDE - Agregado a FILTERED" >&2
         else
-            echo "  ✗ NO coincide"
+            echo "  ✗ NO coincide" >&2
         fi
     done
-    
-    echo "FILTERED encontrados: ${#FILTERED[@]}"
-    echo "=== DEBUG END ==="
+
+    echo "FILTERED encontrados: ${#FILTERED[@]}" >&2
 
     if [[ ${#FILTERED[@]} -eq 0 ]]; then
         echo "❌ No hay labs para nivel $LEVEL" >&2
@@ -262,25 +259,22 @@ select_lab_by_level() {
         [[ "$USES" -eq "$MIN_USES" ]] && CANDIDATES+=("$LAB")
     done
 
-    echo "DEBUG: CANDIDATES count = ${#CANDIDATES[@]}"
-    echo "DEBUG: CANDIDATES = ${CANDIDATES[*]}"
-    
-    # 4. Elegir aleatoriamente
+    echo "CANDIDATES count = ${#CANDIDATES[@]}" >&2
+    echo "CANDIDATES = ${CANDIDATES[*]}" >&2
+
     if [[ ${#CANDIDATES[@]} -eq 0 ]]; then
         echo "ERROR: No hay candidatos para seleccionar" >&2
         return 1
     fi
-    
-    local SELECTED_LAB="${CANDIDATES[RANDOM % ${#CANDIDATES[@]}]}"
-    echo "DEBUG: SELECTED_LAB = $SELECTED_LAB"
 
-    # ✅ 5. AHORA parsear PRIMERO → luego update
+    local SELECTED_LAB="${CANDIDATES[RANDOM % ${#CANDIDATES[@]}]}"
+    echo "SELECTED_LAB = $SELECTED_LAB" >&2
+
     IFS='|' read -r ID LAB_LEVEL LAB_PATH USES <<< "$SELECTED_LAB"
 
-    # 6. Incrementar USES y persistir
     update_lab_uses "$ID" "$((USES + 1))"
 
-    # 7. Devolver datos
+    # ✔️ ÚNICA salida por stdout
     echo "$ID|$LAB_LEVEL|$LAB_PATH"
 }
 
