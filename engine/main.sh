@@ -349,32 +349,36 @@ assign_lab() {
     LEVEL="${LEVEL//[[:space:]]/}"
     echo "📍 [2/7] LEVEL limpio = '$LEVEL'" >&2
     
-    local ORIGINAL_LEVEL="$LEVEL"  # ← GUARDADO AQUÍ ✓
+    local ORIGINAL_LEVEL="$LEVEL"
 
     echo "📍 [3/7] Llamando load_db()..." >&2
     load_db
     echo "📍 [3/7] load_db() TERMINADO - LABS=${#LABS[@]}" >&2
     
-    # ✅ CAMBIO 1: Usa ORIGINAL_LEVEL en el echo
     echo "📍 [4/7] === LLAMANDO select_lab_by_level '$ORIGINAL_LEVEL' ===" >&2
     
-    # ✅ CAMBIO 2: LLAB_INFO → LAB_INFO (quita una L)
+    # ✅ FIX 1: NOMBRE CORRECTO + ORIGINAL_LEVEL
     LAB_INFO="$(select_lab_by_level "$ORIGINAL_LEVEL" 2>&1)"
     local RET_CODE=$?
     
+    # ✅ FIX 2: Usa LAB_INFO (no LLAB_INFO)
     echo "📍 [4/7] select_lab_by_level RETORNÓ CODE=$RET_CODE" >&2
-    echo "📍 [4/7] LAB_INFO capturado = '$LAB_INFO'" >&2  # ✅ Usa LAB_INFO ✓
+    echo "📍 [4/7] LAB_INFO capturado = '$LAB_INFO'" >&2
     
-    # ... resto igual hasta [5/7] que ahora funcionará
-}
+    if [[ $RET_CODE -ne 0 ]]; then
+        echo "💥 [4/7] ERROR en select_lab_by_level" >&2
+        echo "💥 [4/7] Salida fue: $LAB_INFO" >&2
+        return 1
+    fi
+    echo "✅ [4/7] === select_lab_by_level COMPLETADO ===" >&2
 
-
+    # ✅ FIX 3: Ya existe LAB_INFO válido
     echo "📍 [5/7] Parseando LAB_INFO='$LAB_INFO'" >&2
     IFS='|' read -r ID LAB_LEVEL LAB_PATH <<< "$LAB_INFO"
     echo "📍 [5/7] EXTRAÍDO → ID='$ID' LAB_LEVEL='$LAB_LEVEL' LAB_PATH='$LAB_PATH'" >&2
     
     if [[ -z "$ID" || -z "$LAB_PATH" ]]; then
-        echo "💥 [5/7] ERROR: ID o LAB_PATH vacío después de parseo" >&2
+        echo "💥 [5/7] ERROR: ID o LAB_PATH vacío" >&2
         return 1
     fi
     echo "✅ [5/7] Parseo correcto" >&2
@@ -386,19 +390,16 @@ assign_lab() {
     echo "📍 [6/7] VARIANT='$VARIANT'" >&2
     
     if [[ $RET_VARIANT -ne 0 || -z "$VARIANT" ]]; then
-        echo "💥 [6/7] ERROR en select_variant → VARIANT vacío o falló" >&2
-        echo "🚫 [assign_lab] >>> FALLÓ EN PASO 6 <<<" >&2
+        echo "💥 [6/7] ERROR en select_variant" >&2
         return 1
     fi
-    echo "✅ [6/7] select_variant OK" >&2
 
     echo "📍 [7/7] 🚀 LLAMANDO run_lab('$ID', '$VARIANT', '$LAB_LEVEL')" >&2
     run_lab "$ID" "$VARIANT" "$LAB_LEVEL"
-    local RUN_RET=$?
-    echo "📍 [7/7] run_lab TERMINÓ con código $RUN_RET" >&2
     
-    echo "🚀 [assign_lab] >>> COMPLETADO EXITOSAMENTE <<<" >&2
+    echo "🚀 [assign_lab] >>> COMPLETADO <<<" >&2
 }
+
 
 
 #==============================================================================
