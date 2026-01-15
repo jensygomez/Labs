@@ -17,16 +17,19 @@
 # FUNCIONES DE VALIDACIÓN
 #==============================================================================
 check_env() {
+    echo "[DEBUG] check_env ejecutándose..." >&2
     [[ -z "${PATH:-}" ]] && {
-        echo "❌ PATH CORRUPTO — abortando"
+        echo "❌ PATH CORRUPTO — abortando" >&2
         exit 99
     }
+    echo "[DEBUG] check_env completado OK" >&2
 }
-
 #==============================================================================
 # FUNCION DE ASIGNACIÓN DE LAB (CON CHECKPOINTS)
 #==============================================================================
 assign_lab() {
+    check_env
+
     echo "🚀 [assign_lab] >>> INICIANDO <<<" >&2
     
     local LEVEL="$1"
@@ -46,7 +49,7 @@ assign_lab() {
     
     # ✅ FIX 1: NOMBRE CORRECTO + ORIGINAL_LEVEL
     LAB_INFO=$(select_lab_by_level "$ORIGINAL_LEVEL")
-    check_env
+    
 
 
     local RET_CODE=$?
@@ -121,6 +124,14 @@ select_variant() {
 # FUNCION DE EJECUCIÓN DE LAB
 #==============================================================================
 run_lab() {
+    run_lab() {
+    echo "=== ENTRANDO A run_lab ===" >&2
+    echo "Parámetros recibidos: ID='$1', TEMPLATE='$2', LEVEL='$3'" >&2
+    echo "[DEBUG] ENGINE_DIR='$ENGINE_DIR'" >&2
+    echo "[DEBUG] cloudinit_generator.sh path: $ENGINE_DIR/cloudinit_generator.sh" >&2
+    
+    # ... el resto del código existente
+}
     echo "[DEBUG] PATH=$PATH"
     command -v bash date mkdir qemu-img virt-install || true
     local ID="$1" TEMPLATE="$2" LEVEL="$3"
