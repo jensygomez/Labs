@@ -303,14 +303,17 @@ update_lab_uses() {
 select_variant() {
     local LAB_PATH="$1"
     local VARIANT_DIR="$ROOT_DIR/$LAB_PATH"
+    local -a VARIANTS=()
 
     if [[ ! -d "$VARIANT_DIR" ]]; then
         echo "❌ No existe directorio de variantes: $VARIANT_DIR" >&2
         return 1
     fi
 
-    VARIANTS=($(find "$VARIANT_DIR" -name "variant_*.yml" 2>/dev/null))
-
+    # Cargar variantes de forma segura
+    while IFS= read -r -d '' file; do
+        VARIANTS+=("$file")
+    done < <(find "$VARIANT_DIR" -maxdepth 1 -type f -name "variant_*.yml" -print0)
 
     if [[ ${#VARIANTS[@]} -eq 0 ]]; then
         echo "❌ No hay variantes en $VARIANT_DIR" >&2
@@ -319,6 +322,7 @@ select_variant() {
 
     echo "${VARIANTS[RANDOM % ${#VARIANTS[@]}]}"
 }
+
 
 #==============================================================================
 # FUNCION DE ASIGNACIÓN DE LAB (CON CHECKPOINTS)
