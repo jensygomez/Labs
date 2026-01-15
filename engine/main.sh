@@ -214,6 +214,9 @@ load_db() {
 # FUNCION DE LECTURA DE LAB POR NIVEL Y SELECCIÓN
 #==============================================================================
 select_lab_by_level() {
+    echo "=== ENTRANDO A select_lab_by_level ===" >&2
+    echo "Parámetro recibido: '$1'" >&2
+    
     local LEVEL="$1"
     local FILTERED=()
     local MIN_USES=""
