@@ -38,76 +38,69 @@
 # ==============================================================================
 
 
-- name: "[VARIANT_FW_HTTP] Detectar zona activa de firewalld"
-  command: firewall-cmd --get-active-zones
-  register: active_zone
-  changed_when: false
-  delegate_to: web01
-  become: yes
+# /home/jensy/Labs/scenarios/junior/J01/variant_1.yml
+---
+metadata:
+  lab_id: "J01"
+  variant_id: "1"
+  title: "Bloqueo HTTP en firewall (puerto 80)"
+  description: "Firewalld bloquea el puerto 80, nginx corre pero es inaccesible"
+  difficulty: "Junior"
+  estimated_time: "10-15 minutos"
 
-- name: "[VARIANT_FW_HTTP] Extraer zona activa"
-  set_fact:
-    server_zone: "{{ active_zone.stdout.split()[0] }}"
-  delegate_to: web01
+# SERVICIOS QUE ESTE LAB REQUIERE ACTIVOS
+# (basado en sección 6 de tu documento base)
+services:
+  enabled:
+    - nginx      # Servicio web debe estar corriendo
+    - firewalld  # Firewall debe estar activo
+  disabled:      # Servicios que deben permanecer apagados
+    - mariadb
+    - haproxy
 
-- name: "[VARIANT_FW_HTTP] Verificar servicios y puertos antes de bloquear HTTP"
-  command: firewall-cmd --zone={{ server_zone }} --list-all
-  register: before
-  changed_when: false
-  delegate_to: web01
+# CONFIGURACIÓN DE RED PARA ESTE LAB
+network:
+  vips:
+    - ip: "192.168.122.50"
+      service: "nginx"
+      interface: "enp1s0"
+  # NOTA: 192.168.122.60 (mariadb) y .70 (haproxy) NO se asignan
 
-- name: "[VARIANT_FW_HTTP] Bloquear servicio HTTP en firewalld"
-  command: firewall-cmd --zone={{ server_zone }} --remove-service=http --permanent
-  delegate_to: web01
-  become: yes
+# ERRORES A INYECTAR EN EL SISTEMA
+errors:
+  - type: "firewall_block"
+    description: "Bloquear puerto TCP 80 en zona public"
+    commands:
+      - firewall-cmd --zone=public --remove-port=80/tcp --permanent
+      - firewall-cmd --reload
 
-- name: "[VARIANT_FW_HTTP] Recargar firewalld para aplicar cambios"
-  command: firewall-cmd --reload
-  delegate_to: web01
-  become: yes
+  # Error adicional opcional para hacerlo más interesante:
+  - type: "service_state"
+    description: "Asegurar que nginx está corriendo (para confirmar que no es problema del servicio)"
+    commands:
+      - systemctl enable nginx
+      - systemctl start nginx
 
-- name: "[VARIANT_FW_HTTP] Verificar servicios y puertos después de bloquear HTTP"
-  command: firewall-cmd --zone={{ server_zone }} --list-all
-  register: after
-  changed_when: false
-  delegate_to: web01
-
-- name: "[VARIANT_FW_HTTP] Debug: mostrar servicios antes y después"
-  debug:
-    msg:
-      - "Antes de bloquear HTTP: {{ before.stdout }}"
-      - "Después de bloquear HTTP: {{ after.stdout }}"
-  delegate_to: web01
-
-
-- name: "[TICKET NOC] INC-J02-V1 - HTTP bloqueado por Firewalld"
-  debug:
-    msg:
-      - "========================================================================="
-      - "| 🎫 INC-J02-V1 – SERVIDOR WEB NO RESPONDE EN HTTP                        |"
-      - "| PRIORIDAD: 🟡 MEDIA | IMPACTO: REPORTADO POR USUARIO CLIENTE           |"
-      - "========================================================================="
-      - "| 📋 DESCRIPCIÓN USUARIO:                                                |"
-      - "| 'Desde CLIENT01 (192.168.122.21) no puedo acceder a la web:'           |"
-      - "| • Servidor Web (192.168.122.50) - puerto 80 inaccesible                |"
-      - "| 'Los servicios TCP sobre HTTP parecen caídos, revisar conectividad.'   |"
-      - "-------------------------------------------------------------------------"
-      - "| 📊 METADATOS TÉCNICOS:                                                 |"
-      - "| • Reportado: CLIENT01 → WEB(.50)                                       |"
-      - "| • Protocolos reportados: HTTP / TCP                                    |"
-      - "| • Impacto reportado: parcial (solo HTTP)                               |"
-      - "-------------------------------------------------------------------------"
-      - "| 💭 OBSERVACIONES INICIALES:                                             |"
-      - "| • Ping a 192.168.122.50 funciona → red básica operativa                |"
-      - "| • Conexión a MariaDB vía proxy (.70 → .60) funciona                    |"
-      - "| • Firewalld puede estar bloqueando solo HTTP                           |"
-      - "-------------------------------------------------------------------------"
-      - "| 🎯 TU MISIÓN:                                                           |"
-      - "| Diagnosticar el bloqueo en HTTP                                        |"
-      - "| Validar impacto real en negocio: solo HTTP afecta al cliente           |"
-      - "| Documentar hallazgo y preparar reporte NOC                             |"
-      - "========================================================================="
-      - "| ⏰ INICIAR DIAGNÓSTICO → Presiona ENTER cuando estés listo             |"
-      - "========================================================================="
-  run_once: true
-
+# INFORMACIÓN PARA EL ESTUDIANTE
+student_info:
+  scenario: |
+    Eres el administrador del servidor web corporativo.
+    Usuarios reportan que el sitio web (http://192.168.122.50) no responde.
+    Debes diagnosticar y resolver el problema.
+    
+  symptoms:
+    - "El sitio web no carga (timeout)"
+    - "Ping al servidor funciona normalmente"
+    - "SSH al servidor funciona"
+    - "Otros servicios no están afectados"
+    
+  diagnostic_commands:
+    - "firewall-cmd --zone=public --list-all"
+    - "systemctl status nginx"
+    - "curl -v http://192.168.122.50"
+    - "ss -tlnp | grep :80"
+    - "ip a show enp1s0"
+    
+  resolution_hint: |
+    Revisa las reglas de firewall en la zona public.
+    El puerto 80/tcp debe estar abierto para tráfico HTTP.
