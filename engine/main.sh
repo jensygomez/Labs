@@ -337,36 +337,70 @@ select_variant() {
 }
 
 #==============================================================================
-# FUNCION DE ASIGNACIÓN DE LAB
+# FUNCION DE ASIGNACIÓN DE LAB (CON CHECKPOINTS)
 #==============================================================================
 assign_lab() {
+    echo "🚀 [assign_lab] >>> INICIANDO <<<" >&2
+    
     local LEVEL="$1"
+    echo "📍 [1/7] Recibido parámetro LEVEL='$LEVEL'" >&2
     
     # Limpiar espacios
     LEVEL="${LEVEL//[[:space:]]/}"
+    echo "📍 [2/7] LEVEL limpio = '$LEVEL'" >&2
     
-    echo "DEBUG: LEVEL recibido = '$LEVEL' (limpio)"
-    
-    load_db
-    # ... resto igual
+    local ORIGINAL_LEVEL="$LEVEL"
 
+    echo "📍 [3/7] Llamando load_db()..." >&2
+    load_db
+    echo "📍 [3/7] load_db() TERMINADO - LABS=${#LABS[@]}" >&2
+    
     # Temporalmente para debugging:
-    echo "=== LLAMANDO select_lab_by_level ==="
-    LAB_INFO="$(select_lab_by_level "$LEVEL" 2>&1)"
-    if [[ $? -ne 0 ]]; then
-        echo "ERROR en select_lab_by_level"
-        echo "Salida fue: $LAB_INFO"
+    echo "📍 [4/7] === LLAMANDO select_lab_by_level '$LEVEL' ===" >&2
+    LLAB_INFO="$(select_lab_by_level "$ORIGINAL_LEVEL" 2>&1)"
+    local RET_CODE=$?
+    echo "📍 [4/7] select_lab_by_level RETORNÓ CODE=$RET_CODE" >&2
+    echo "📍 [4/7] LAB_INFO capturado = '$LAB_INFO'" >&2
+    
+    if [[ $RET_CODE -ne 0 ]]; then
+        echo "💥 [4/7] ERROR en select_lab_by_level" >&2
+        echo "💥 [4/7] Salida fue: $LAB_INFO" >&2
+        echo "🚫 [assign_lab] >>> FALLÓ EN PASO 4 <<<" >&2
         return 1
     fi
-    echo "=== select_lab_by_level COMPLETADO ==="
+    echo "✅ [4/7] === select_lab_by_level COMPLETADO ===" >&2
 
-
+    echo "📍 [5/7] Parseando LAB_INFO='$LAB_INFO'" >&2
     IFS='|' read -r ID LAB_LEVEL LAB_PATH <<< "$LAB_INFO"
+    echo "📍 [5/7] EXTRAÍDO → ID='$ID' LAB_LEVEL='$LAB_LEVEL' LAB_PATH='$LAB_PATH'" >&2
+    
+    if [[ -z "$ID" || -z "$LAB_PATH" ]]; then
+        echo "💥 [5/7] ERROR: ID o LAB_PATH vacío después de parseo" >&2
+        return 1
+    fi
+    echo "✅ [5/7] Parseo correcto" >&2
 
-    VARIANT="$(select_variant "$LAB_PATH")" || return 1
+    echo "📍 [6/7] Llamando select_variant('$LAB_PATH')" >&2
+    VARIANT="$(select_variant "$LAB_PATH")"
+    local RET_VARIANT=$?
+    echo "📍 [6/7] select_variant RETORNÓ CODE=$RET_VARIANT" >&2
+    echo "📍 [6/7] VARIANT='$VARIANT'" >&2
+    
+    if [[ $RET_VARIANT -ne 0 || -z "$VARIANT" ]]; then
+        echo "💥 [6/7] ERROR en select_variant → VARIANT vacío o falló" >&2
+        echo "🚫 [assign_lab] >>> FALLÓ EN PASO 6 <<<" >&2
+        return 1
+    fi
+    echo "✅ [6/7] select_variant OK" >&2
 
+    echo "📍 [7/7] 🚀 LLAMANDO run_lab('$ID', '$VARIANT', '$LAB_LEVEL')" >&2
     run_lab "$ID" "$VARIANT" "$LAB_LEVEL"
+    local RUN_RET=$?
+    echo "📍 [7/7] run_lab TERMINÓ con código $RUN_RET" >&2
+    
+    echo "🚀 [assign_lab] >>> COMPLETADO EXITOSAMENTE <<<" >&2
 }
+
 
 #==============================================================================
 # FUNCION DE EJECUCIÓN DE LAB
