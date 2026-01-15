@@ -258,12 +258,17 @@ select_lab_by_level() {
         [[ "$USES" -eq "$MIN_USES" ]] && CANDIDATES+=("$LAB")
     done
 
+    echo "DEBUG: CANDIDATES count = ${#CANDIDATES[@]}"
+    echo "DEBUG: CANDIDATES = ${CANDIDATES[*]}"
+    
     # 4. Elegir aleatoriamente
+    if [[ ${#CANDIDATES[@]} -eq 0 ]]; then
+        echo "ERROR: No hay candidatos para seleccionar" >&2
+        return 1
+    fi
+    
     SELECTED_LAB="${CANDIDATES[RANDOM % ${#CANDIDATES[@]}]}"
-
-    IFS='|' read -r ID LAB_LEVEL PATH USES <<< "$SELECTED_LAB"
-
-    echo "🎯 Lab seleccionado: $ID (USES=$USES → $((USES+1)))"
+    echo "DEBUG: SELECTED_LAB = $SELECTED_LAB"
 
     # 5. Incrementar USES y persistir
     update_lab_uses "$ID" "$((USES+1))"
@@ -343,7 +348,7 @@ assign_lab() {
     fi
     echo "=== select_lab_by_level COMPLETADO ==="
 
-    
+
     IFS='|' read -r ID LAB_LEVEL LAB_PATH <<< "$LAB_INFO"
 
     VARIANT="$(select_variant "$LAB_PATH")" || return 1
