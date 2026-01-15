@@ -222,7 +222,11 @@ select_lab_by_level() {
     # 1. Filtrar por nivel
     for LAB in "${LABS[@]}"; do
         IFS='|' read -r ID LAB_LEVEL PATH USES <<< "$LAB"
-        [[ "$LAB_LEVEL" == "$LEVEL" ]] && FILTERED+=("$LAB")
+        echo "DEBUG: Comparando '$LAB_LEVEL' con '$LEVEL'"
+        if [[ "${LAB_LEVEL,,}" == "${LEVEL,,}" ]]; then
+            FILTERED+=("$LAB")
+            echo "DEBUG: Coincidencia encontrada - $ID"
+        fi
     done
 
     if [[ ${#FILTERED[@]} -eq 0 ]]; then
@@ -308,6 +312,15 @@ select_variant() {
 #==============================================================================
 assign_lab() {
     local LEVEL="$1"
+
+    # DEBUG: Verificar qué llega
+    echo "DEBUG: LEVEL recibido = '$LEVEL'"
+    
+    if [[ -z "$LEVEL" ]]; then
+        echo "❌ ERROR: Nivel no especificado"
+        return 1
+    fi
+
 
     load_db
 
