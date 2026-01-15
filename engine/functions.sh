@@ -1,5 +1,27 @@
-#!/bin/bash 
+#!/bin/bash
 
+#==============================================================================
+# IMPORTAR CONSTANTES DESDE MAIN.SH
+#==============================================================================
+# Estas variables ya están exportadas desde main.sh
+# ENGINE_DIR, ROOT_DIR, DB_FILE, LABS
+
+#==============================================================================
+# FUNCIONES QUE NECESITAN ACCEDER A LAS FUNCIONES DE MAIN.SH
+#==============================================================================
+# Para llamar funciones de main.sh, necesitamos que estén definidas primero
+# O podemos declararlas aquí también
+
+
+#==============================================================================
+# FUNCIONES DE VALIDACIÓN
+#==============================================================================
+check_env() {
+    [[ -z "${PATH:-}" ]] && {
+        echo "❌ PATH CORRUPTO — abortando"
+        exit 99
+    }
+}
 
 #==============================================================================
 # FUNCION DE ASIGNACIÓN DE LAB (CON CHECKPOINTS)
@@ -69,7 +91,32 @@ assign_lab() {
 }
 
 
+#==============================================================================
+# FUNCION DE SELECCIÓN DE VARIANTE
+#==============================================================================
+select_variant() {
+    local LAB_PATH="$1"
+    local VARIANT_DIR="$ROOT_DIR/$LAB_PATH"
+    local -a VARIANTS=()
 
+    if [[ ! -d "$VARIANT_DIR" ]]; then
+        echo "❌ No existe directorio de variantes: $VARIANT_DIR" >&2
+        return 1
+    fi
+
+    # Bash puro: globbing seguro
+    shopt -s nullglob
+    VARIANTS=("$VARIANT_DIR"/variant_*.yml)
+    shopt -u nullglob
+
+    if [[ ${#VARIANTS[@]} -eq 0 ]]; then
+        echo "❌ No hay variantes en $VARIANT_DIR" >&2
+        return 1
+    fi
+
+    # stdout limpio
+    echo "${VARIANTS[RANDOM % ${#VARIANTS[@]}]}"
+}
 #==============================================================================
 # FUNCION DE EJECUCIÓN DE LAB
 #==============================================================================

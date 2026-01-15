@@ -11,6 +11,11 @@ DB_FILE="$ENGINE_DIR/labs.db"
 LABS=()
 
 #==============================================================================
+# EXPORTAR CONSTANTES A FUNCTIONS.SH
+#==============================================================================
+export ENGINE_DIR ROOT_DIR DB_FILE LABS
+
+#==============================================================================
 # CARGA DE FUNCIONES
 #==============================================================================
 source "$ENGINE_DIR/functions.sh"  # ← ESTA LÍNEA ES CRÍTICA
@@ -142,32 +147,7 @@ update_lab_uses() {
 }
 
 
-#==============================================================================
-# FUNCION DE SELECCIÓN DE VARIANTE
-#==============================================================================
-select_variant() {
-    local LAB_PATH="$1"
-    local VARIANT_DIR="$ROOT_DIR/$LAB_PATH"
-    local -a VARIANTS=()
 
-    if [[ ! -d "$VARIANT_DIR" ]]; then
-        echo "❌ No existe directorio de variantes: $VARIANT_DIR" >&2
-        return 1
-    fi
-
-    # Bash puro: globbing seguro
-    shopt -s nullglob
-    VARIANTS=("$VARIANT_DIR"/variant_*.yml)
-    shopt -u nullglob
-
-    if [[ ${#VARIANTS[@]} -eq 0 ]]; then
-        echo "❌ No hay variantes en $VARIANT_DIR" >&2
-        return 1
-    fi
-
-    # stdout limpio
-    echo "${VARIANTS[RANDOM % ${#VARIANTS[@]}]}"
-}
 
 
 #==============================================================================
