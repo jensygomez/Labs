@@ -183,6 +183,12 @@
 set -euo pipefail
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
+check_env() {
+    [[ -z "${PATH:-}" ]] && {
+        echo "❌ PATH CORRUPTO — abortando"
+        exit 99
+    }
+}
 
 
 #==============================================================================
@@ -279,7 +285,11 @@ select_lab_by_level() {
 
     # ✔️ ÚNICA salida por stdout
     echo "$ID|$LAB_LEVEL|$LAB_PATH"
+
+
 }
+
+
 
 
 #==============================================================================
@@ -288,14 +298,16 @@ select_lab_by_level() {
 update_lab_uses() {
     local TARGET_ID="$1"
     local NEW_USES="$2"
-    
-    # ✅ ULTRA-SIMPLE: grep + sed en 3 líneas
-    # Salta header, reemplaza SOLO línea del TARGET_ID
-    sed "/^$TARGET_ID|/ s/|$[0-9]*$/|$NEW_USES/" "$DB_FILE" > "${DB_FILE}.tmp" && \
-    mv "${DB_FILE}.tmp" "$DB_FILE"
-    
+
+    awk -F'|' -v OFS='|' -v id="$TARGET_ID" -v uses="$NEW_USES" '
+        NR==1 { print; next }
+        $1==id { $4=uses }
+        { print }
+    ' "$DB_FILE" > "${DB_FILE}.tmp" && mv "${DB_FILE}.tmp" "$DB_FILE"
+
     echo "✅ Updated uses for $TARGET_ID → $NEW_USES" >&2
 }
+
 
 
 
@@ -346,13 +358,15 @@ assign_lab() {
     local ORIGINAL_LEVEL="$LEVEL"
 
     echo "📍 [3/7] Llamando load_db()..." >&2
-    load_db
+
     echo "📍 [3/7] load_db() TERMINADO - LABS=${#LABS[@]}" >&2
     
     echo "📍 [4/7] === LLAMANDO select_lab_by_level '$ORIGINAL_LEVEL' ===" >&2
     
     # ✅ FIX 1: NOMBRE CORRECTO + ORIGINAL_LEVEL
     LAB_INFO=$(select_lab_by_level "$ORIGINAL_LEVEL")
+    check_env
+
 
     local RET_CODE=$?
     
@@ -595,3 +609,4 @@ cleanup_vm() {
 echo "🚀 Incident Response Lab Engine v1.1"
 load_db
 while true; do main_menu; done
+
