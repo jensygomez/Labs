@@ -349,26 +349,25 @@ assign_lab() {
     LEVEL="${LEVEL//[[:space:]]/}"
     echo "📍 [2/7] LEVEL limpio = '$LEVEL'" >&2
     
-    local ORIGINAL_LEVEL="$LEVEL"
+    local ORIGINAL_LEVEL="$LEVEL"  # ← GUARDADO AQUÍ ✓
 
     echo "📍 [3/7] Llamando load_db()..." >&2
     load_db
     echo "📍 [3/7] load_db() TERMINADO - LABS=${#LABS[@]}" >&2
     
-    # Temporalmente para debugging:
-    echo "📍 [4/7] === LLAMANDO select_lab_by_level '$LEVEL' ===" >&2
-    LLAB_INFO="$(select_lab_by_level "$ORIGINAL_LEVEL" 2>&1)"
-    local RET_CODE=$?
-    echo "📍 [4/7] select_lab_by_level RETORNÓ CODE=$RET_CODE" >&2
-    echo "📍 [4/7] LAB_INFO capturado = '$LAB_INFO'" >&2
+    # ✅ CAMBIO 1: Usa ORIGINAL_LEVEL en el echo
+    echo "📍 [4/7] === LLAMANDO select_lab_by_level '$ORIGINAL_LEVEL' ===" >&2
     
-    if [[ $RET_CODE -ne 0 ]]; then
-        echo "💥 [4/7] ERROR en select_lab_by_level" >&2
-        echo "💥 [4/7] Salida fue: $LAB_INFO" >&2
-        echo "🚫 [assign_lab] >>> FALLÓ EN PASO 4 <<<" >&2
-        return 1
-    fi
-    echo "✅ [4/7] === select_lab_by_level COMPLETADO ===" >&2
+    # ✅ CAMBIO 2: LLAB_INFO → LAB_INFO (quita una L)
+    LAB_INFO="$(select_lab_by_level "$ORIGINAL_LEVEL" 2>&1)"
+    local RET_CODE=$?
+    
+    echo "📍 [4/7] select_lab_by_level RETORNÓ CODE=$RET_CODE" >&2
+    echo "📍 [4/7] LAB_INFO capturado = '$LAB_INFO'" >&2  # ✅ Usa LAB_INFO ✓
+    
+    # ... resto igual hasta [5/7] que ahora funcionará
+}
+
 
     echo "📍 [5/7] Parseando LAB_INFO='$LAB_INFO'" >&2
     IFS='|' read -r ID LAB_LEVEL LAB_PATH <<< "$LAB_INFO"
