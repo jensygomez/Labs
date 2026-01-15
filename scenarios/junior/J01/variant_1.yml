@@ -44,59 +44,51 @@
 # - Eliminar la regla de ICMP en SERVER_EU y recargar firewalld
 # ==============================================================================
 
----
+# variant_1.yml - Bloqueo HTTP en firewall
+# Lab: J01 - Variante 1
+# Dificultad: Junior
+# Tiempo estimado: 10-15 minutos
 
-# ==============================================================================
-# J01-V1: BLOQUEO ICMP - Simulación NOC Real
-# ==============================================================================
+variant_id: "1"
+title: "Bloqueo HTTP en firewall (puerto 80)"
 
-- name: "[PREPARACIÓN] Asegurar firewalld activo"
-  systemd:
-    name: firewalld
-    state: started
-    enabled: true
+# Servicios que deben estar HABILITADOS y CORRIENDO
+enabled:
+  - nginx      # Servicio web
+  - firewalld  # Firewall activo
 
-- name: "[CONFIGURACIÓN] Bloquear ICMP echo-request (--add-icmp-block)"
-  firewalld:
-    zone: public
-    icmp_block: echo-request          # ← CAMBIO CLAVE
-    permanent: true
-    state: enabled
-    immediate: true
+# Servicios que deben permanecer DESHABILITADOS
+# (no se listan aquí, se asumen deshabilitados por defecto)
 
-- name: "[VERIFICACIÓN] Confirmar bloqueo activo"
-  shell: firewall-cmd --zone=public --list-icmp-blocks
-  register: result
-  changed_when: false
+# Configuración de red
+# VIP para el servicio web (opcional, el lab puede usarla)
+# vip: "192.168.122.50"
 
-- name: "[TICKET NOC] INC-J01-V1 - Usuario reporta servidores caídos"
-  debug:
-    msg:
-      - "========================================================================="
-      - "| 🎫 INC-J01-V1 – SERVIDORES WEB Y DB NO RESPONDEN                       |"
-      - "| PRIORIDAD: 🟡 MEDIA | IMPACTO: REPORTADO POR USUARIO CLIENTE          |"
-      - "========================================================================="
-      - "| 📋 DESCRIPCIÓN USUARIO:                                               |"
-      - "| 'Desde CLIENT01 (192.168.122.21) no puedo conectarme a:'              |"
-      - "| • Servidor Web (192.168.122.50) - Sin respuesta                       |"
-      - "| • Servidor DB (192.168.122.60) - Sin respuesta                        |"
-      - "| 'Los servicios están caídos, urgente revisar conectividad.'           |"
-      - "-------------------------------------------------------------------------"
-      - "| 📊 METADATOS TÉCNICOS:                                                |"
-      - "| • Reportado: CLIENT01 → WEB(.50) + DB(.60)                            |"
-      - "| • Protocolos reportados: conectividad básica                          |"
-      - "| • Impacto reportado: total                                            |"
-      - "-------------------------------------------------------------------------"
-      - "| 💭 OBSERVACIONES INICIALES:                                            |"
-      - "| • ¿Qué significa realmente 'no responde'?                             |"
-      - "| • ¿Un solo punto de fallo afecta múltiples servicios?                 |"
-      - "| • ¿Linux te está enseñando algo sobre el ecosistema?                  |"
-      - "-------------------------------------------------------------------------"
-      - "| 🎯 TU MISIÓN:                                                          |"
-      - "| Diagnosticar con criterio senior                                      |"
-      - "| Validar impacto real en negocio                                       |"
-      - "| Documentar hallazgo                                                   |"
-      - "======================================================================== "
-      - "| ⏰ INICIAR DIAGNÓSTICO → Presiona ENTER cuando estés listo            |"
-      - "======================================================================== "
-  run_once: true
+# Errores a inyectar en el sistema
+errors:
+  # Bloqueo de puerto HTTP
+  - description: "Bloquear acceso HTTP en puerto 80"
+    commands:
+      - firewall-cmd --zone=public --remove-port=80/tcp --permanent
+      - firewall-cmd --reload
+      - echo "✅ Puerto 80 bloqueado en firewall" > /tmp/firewall_status.txt
+
+  # Verificación de que nginx está corriendo (para confirmar que no es problema del servicio)
+  - description: "Asegurar que nginx está activo"
+    commands:
+      - systemctl is-active nginx || systemctl start nginx
+      - systemctl enable nginx
+
+# Información para diagnóstico (no se ejecuta, solo documentación)
+diagnosis:
+  symptoms:
+    - "El sitio web no carga (http://192.168.122.50)"
+    - "Ping al servidor funciona"
+    - "SSH accesible"
+    - "Otros servicios no afectados"
+    
+  commands:
+    - "firewall-cmd --zone=public --list-all"
+    - "systemctl status nginx"
+    - "curl -v http://192.168.122.50"
+    - "ss -tlnp | grep :80"
