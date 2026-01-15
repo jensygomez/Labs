@@ -210,6 +210,7 @@ load_db() {
 }
 
 
+
 #==============================================================================
 # FUNCION DE LECTURA DE LAB POR NIVEL Y SELECCIÓN
 #==============================================================================
@@ -221,6 +222,7 @@ select_lab_by_level() {
     local FILTERED=()
     local MIN_USES=""
     local CANDIDATES=()
+    local ID LAB_LEVEL LAB_PATH USES  # ✅ Locales para parseo
 
     echo "=== DEBUG START ==="
     echo "Buscando nivel: '$LEVEL'"
@@ -247,7 +249,6 @@ select_lab_by_level() {
         echo "❌ No hay labs para nivel $LEVEL" >&2
         return 1
     fi
-    # ... el resto de la función igual
 
     # 2. Encontrar mínimo USES
     for LAB in "${FILTERED[@]}"; do
@@ -270,14 +271,17 @@ select_lab_by_level() {
         return 1
     fi
     
-    SELECTED_LAB="${CANDIDATES[RANDOM % ${#CANDIDATES[@]}]}"
+    local SELECTED_LAB="${CANDIDATES[RANDOM % ${#CANDIDATES[@]}]}"
     echo "DEBUG: SELECTED_LAB = $SELECTED_LAB"
 
-    # 5. Incrementar USES y persistir
-    update_lab_uses "$ID" "$((USES+1))"
+    # ✅ 5. AHORA parsear PRIMERO → luego update
+    IFS='|' read -r ID LAB_LEVEL LAB_PATH USES <<< "$SELECTED_LAB"
 
-    # 6. Devolver datos
-    echo "$ID|$LAB_LEVEL|$PATH"
+    # 6. Incrementar USES y persistir
+    update_lab_uses "$ID" "$((USES + 1))"
+
+    # 7. Devolver datos
+    echo "$ID|$LAB_LEVEL|$LAB_PATH"
 }
 
 
@@ -291,7 +295,11 @@ update_lab_uses() {
 
     TMP_DB="$(mktemp)"
 
+    # ✅ Backup original DB antes de sobrescribir
+    cp "$DB_FILE" "$TMP_DB"
+
     while IFS='|' read -r ID LEVEL PATH USES; do
+        [[ "$ID" == "ID" ]] && continue  # ✅ Salta header como load_db()
         if [[ "$ID" == "$TARGET_ID" ]]; then
             echo "$ID|$LEVEL|$PATH|$NEW_USES" >> "$TMP_DB"
         else
@@ -300,6 +308,7 @@ update_lab_uses() {
     done < "$DB_FILE"
 
     mv "$TMP_DB" "$DB_FILE"
+    echo "✅ Updated uses for $TARGET_ID → $NEW_USES" >&2
 }
 
 
