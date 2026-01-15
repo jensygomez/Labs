@@ -333,7 +333,11 @@ assign_lab() {
     load_db
     # ... resto igual
 
-    LAB_INFO="$(select_lab_by_level "$LEVEL")" || return 1
+    LAB_INFO="$(select_lab_by_level "$LEVEL")"  # Elimina el "|| return 1"
+    if [[ $? -ne 0 ]]; then
+        echo "ERROR: select_lab_by_level falló"
+        return 1
+    fi
     IFS='|' read -r ID LAB_LEVEL LAB_PATH <<< "$LAB_INFO"
 
     VARIANT="$(select_variant "$LAB_PATH")" || return 1
