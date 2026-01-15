@@ -210,7 +210,7 @@ load_db() {
         exit 1
     fi
 
-    while IFS='|' read -r ID LEVEL PATH USES; do
+    while IFS='|' read -r ID LEVEL LAB_PATH USES; do
         [[ "$ID" == "ID" ]] && continue   # saltar header si existe
         LABS+=("$ID|$LEVEL|$PATH|$USES")
     done < "$DB_FILE"
