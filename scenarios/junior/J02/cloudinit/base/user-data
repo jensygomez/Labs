@@ -40,8 +40,7 @@
 #                                                                              #
 ###############################################################################
 
-
-hostname: j02-firewall-troubleshooting
+hostname: j02-troubleshooting
 
 users:
   - name: student
@@ -55,23 +54,6 @@ users:
 
 ssh_pwauth: false
 disable_root: true
-
-# ★★★ NUEVA SECCIÓN: NETWORKING PERSISTENTE ★★★
-network:
-  version: 2
-  renderer: networkd
-  ethernets:
-    enp1s0:
-      dhcp4: false
-      addresses: [192.168.122.20/24]
-      gateway4: 192.168.122.1
-      nameservers:
-        addresses: [8.8.8.8, 8.8.4.4]
-  dummy_devices:
-    dummy0:
-      addresses: [192.168.122.30/24]
-    dummy1:
-      addresses: [192.168.122.40/24]
 
 write_files:
   - path: /etc/motd
@@ -99,42 +81,103 @@ packages:
 
 runcmd:
   #===========================================================================
-  # 0. MÓDULO DUMMY PERSISTENTE (requerido para cloud-init)
+  # 1. MÓDULO DUMMY PERSISTENTE
   #===========================================================================
   - echo 'dummy' > /etc/modules-load.d/dummy.conf
   - modprobe dummy
 
   #===========================================================================
-  # 1. SERVICIOS BASE (SIN COMANDOS IP TEMPORALES)
+  # 2. SYSTEMD SERVICE: ADMIN IP (192.168.122.20)
   #===========================================================================
-  - systemctl enable --now firewalld
-  - systemctl enable --now nginx
-  - systemctl enable --now mariadb
-  - setenforce 1
+  - |
+    cat <<EOF > /etc/systemd/system/admin-ip.service
+    [Unit]
+    Description=Admin IP 192.168.122.20
+    After=network.target
+    
+    [Service]
+    Type=oneshot
+    ExecStart=/sbin/ip addr flush dev enp1s0
+    ExecStart=/sbin/ip addr add 192.168.122.20/24 dev enp1s0
+    ExecStart=/sbin/ip link set enp1s0 up
+    ExecStart=/sbin/ip route add default via 192.168.122.1
+    RemainAfterExit=yes
+    
+    [Install]
+    WantedBy=multi-user.target
+    EOF
 
   #===========================================================================
-  # 2. FIREWALL BASE SANO (ZONAS CORRECTAS)
+  # 3. SYSTEMD SERVICE: WEB IP (192.168.122.30)
   #===========================================================================
-  # Asignación de zonas
+  - |
+    cat <<EOF > /etc/systemd/system/web-ip.service
+    [Unit]
+    Description=Web IP 192.168.122.30
+    After=network.target
+    
+    [Service]
+    Type=oneshot
+    ExecStart=/sbin/ip link add dummy0 type dummy
+    ExecStart=/sbin/ip addr add 192.168.122.30/24 dev dummy0
+    ExecStart=/sbin/ip link set dummy0 up
+    RemainAfterExit=yes
+    
+    [Install]
+    WantedBy=multi-user.target
+    EOF
+
+  #===========================================================================
+  # 4. SYSTEMD SERVICE: DB IP (192.168.122.40)
+  #===========================================================================
+  - |
+    cat <<EOF > /etc/systemd/system/db-ip.service
+    [Unit]
+    Description=DB IP 192.168.122.40
+    After=network.target
+    
+    [Service]
+    Type=oneshot
+    ExecStart=/sbin/ip link add dummy1 type dummy
+    ExecStart=/sbin/ip addr add 192.168.122.40/24 dev dummy1
+    ExecStart=/sbin/ip link set dummy1 up
+    RemainAfterExit=yes
+    
+    [Install]
+    WantedBy=multi-user.target
+    EOF
+
+  #===========================================================================
+  # 5. ACTIVAR TODOS LOS SERVICES DE IP
+  #===========================================================================
+  - systemctl daemon-reload
+  - systemctl enable admin-ip.service web-ip.service db-ip.service
+  - systemctl start admin-ip.service web-ip.service db-ip.service
+
+  #===========================================================================
+  # 6. ESPERAR QUE LAS IPS ESTÉN LISTAS
+  #===========================================================================
+  - sleep 3
+
+  #===========================================================================
+  # 7. FIREWALL BASE SANO (ZONAS CORRECTAS)
+  #===========================================================================
   - firewall-cmd --permanent --zone=public   --add-interface=enp1s0
   - firewall-cmd --permanent --zone=internal --add-interface=dummy0
   - firewall-cmd --permanent --zone=internal --add-interface=dummy1
-
-  # Servicios
   - firewall-cmd --permanent --zone=public   --add-service=ssh
   - firewall-cmd --permanent --zone=internal --add-service=http
   - firewall-cmd --permanent --zone=internal --add-service=mysql
   - firewall-cmd --reload
 
   #===========================================================================
-  # 3. NGINX (WEB - .30)
+  # 8. SERVICIOS
   #===========================================================================
+  - systemctl enable --now nginx
+  - systemctl enable --now mariadb
+  - setenforce 1
   - echo "<h1>✅ J02 WEB OK - 192.168.122.30</h1>" > /usr/share/nginx/html/index.html
   - chown -R nginx:nginx /usr/share/nginx/html
-
-  #===========================================================================
-  # 4. MARIADB (DB - .40)
-  #===========================================================================
   - |
     cat <<EOF > /etc/my.cnf.d/j02-lab.cnf
     [mysqld]
@@ -143,6 +186,6 @@ runcmd:
   - systemctl restart mariadb
 
   #===========================================================================
-  # 5. VERIFICACIÓN BASE SANA
+  # 9. VERIFICACIÓN
   #===========================================================================
   - echo "BASE SANA OK - $(date)" >> /var/log/j02-base.log
