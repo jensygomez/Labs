@@ -99,27 +99,27 @@ assign_lab() {
 #==============================================================================
 select_variant() {
     local LAB_PATH="$1"
-    local VARIANT_DIR="$ROOT_DIR/$LAB_PATH"
+    local VARIANT_DIR="$ROOT_DIR/$LAB_PATH/cloudinit"
     local -a VARIANTS=()
 
     if [[ ! -d "$VARIANT_DIR" ]]; then
-        echo "❌ No existe directorio de variantes: $VARIANT_DIR" >&2
+        echo "❌ No existe cloudinit dir: $VARIANT_DIR" >&2
         return 1
     fi
 
-    # Bash puro: globbing seguro
     shopt -s nullglob
-    VARIANTS=("$VARIANT_DIR"/variant_*.yml)
+    VARIANTS=("$VARIANT_DIR"/V*/)
     shopt -u nullglob
 
     if [[ ${#VARIANTS[@]} -eq 0 ]]; then
-        echo "❌ No hay variantes en $VARIANT_DIR" >&2
+        echo "❌ No hay variantes Vxx en $VARIANT_DIR" >&2
         return 1
     fi
 
-    # stdout limpio
-    echo "${VARIANTS[RANDOM % ${#VARIANTS[@]}]}"
+    # stdout LIMPIO → solo el nombre de la variante
+    basename "${VARIANTS[RANDOM % ${#VARIANTS[@]}]}"
 }
+
 #==============================================================================
 # FUNCION DE EJECUCIÓN DE LAB
 #==============================================================================
