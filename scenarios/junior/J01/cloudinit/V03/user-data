@@ -1,0 +1,183 @@
+#cloud-config
+###############################################################################
+#                                                                              #
+#   ██████╗  ██████╗ ██╗   ██╗███╗   ██╗ ██████╗  ██████╗                      #
+#   ██╔══██╗██╔═══██╗██║   ██║████╗  ██║██╔════╝ ██╔═══██╗                     #
+#   ██████╔╝██║   ██║██║   ██║██╔██╗ ██║██║  ███╗██║   ██║                     #
+#   ██╔══██╗██║   ██║██║   ██║██║╚██╗██║██║   ██║██║   ██║                     #
+#   ██║  ██║╚██████╔╝╚██████╔╝██║ ╚████║╚██████╔╝╚██████╔╝                     #
+#   ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝  ╚═════╝                      #
+#                                                                              #
+#       J       E          N          S          Y                             #
+#                                                                              #
+#                 J01-V03: PUERTO INCORRECTO / SERVICIO MAL                    #
+#                   AUTOR: Jensy Gomez | I ♥ Linux                            #
+#                               Enero 2026                                    #
+###############################################################################
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 1. CONFIGURACIÓN DE RED - IP ADMINISTRATIVA FIJA (CRÍTICO)
+#═══════════════════════════════════════════════════════════════════════════════
+runcmd:
+  # IP ESTÁTICA para lab (distinta de base para evitar conflictos)
+  - nmcli con mod enp1s0 ipv4.method manual ipv4.addresses 192.168.122.30/24 ipv4.gateway 192.168.122.1 ipv4.dns "8.8.8.8 1.1.1.1" || true
+  - nmcli con down enp1s0 || true
+  - nmcli con up enp1s0
+  - echo "[V03] IP fija aplicada: 192.168.122.30" > /var/log/j01-v03-network.log
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 2. SERVICIOS BASE - NGINX ACTIVO PUERTO 8080 (NO 80!)
+#═══════════════════════════════════════════════════════════════════════════════
+  # Firewall ABIERTO puerto 80 (¡PERO NGINX NO lo usa!)
+  - systemctl enable --now firewalld
+  - firewall-cmd --permanent --add-service=http
+  - firewall-cmd --permanent --add-service=ssh
+  - firewall-cmd --reload
+  - echo "[V03] Firewall permite HTTP (nginx usa 8080)" >> /var/log/j01-v03-network.log
+
+  # Nginx en puerto 8080 (FALLO ESPECÍFICO V03)
+  - dnf install -y nginx || true
+  - |
+    sed -i 's/listen\s*80;/listen 8080;/g' /etc/nginx/nginx.conf
+  - nginx -t || true
+  - systemctl enable --now nginx
+  - echo "[V03] Nginx reconfigurado puerto 8080" >> /var/log/j01-v03-network.log
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 3. FALLLO ESPECÍFICO V03 - NGINX ESCUCHA PUERTO 8080
+#═══════════════════════════════════════════════════════════════════════════════
+  # Config nginx explícita puerto 8080
+  - |
+    cat << 'EOF' > /etc/nginx/conf.d/j01-v03.conf
+    server {
+        listen 8080;
+        server_name _;
+        
+        location / {
+            root /var/www/html;
+            index index.html;
+        }
+    }
+    EOF
+  - nginx -t && systemctl reload nginx || true
+  - echo "[V03] nginx.conf: listen 8080 (FALLO INTENCIONAL)" >> /var/log/j01-v03-network.log
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 4. CONTENIDO ESPECÍFICO DEL LABORATORIO
+#═══════════════════════════════════════════════════════════════════════════════
+  # Página de bienvenida NOC Lab (nginx sirve en :8080)
+  - |
+    cat << 'EOF' > /var/www/html/index.html
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>J01-V03 NOC Junior Lab - Puerto Incorrecto</title>
+        <meta charset="UTF-8">
+        <style>
+            body { font-family: monospace; background: #000; color: #0f0; padding: 20px; }
+            h1 { color: #00ff00; }
+            .status { background: #111; padding: 15px; border: 1px solid #0f0; }
+        </style>
+    </head>
+    <body>
+        <h1>🏆 J01-V03 RESUELTO CORRECTAMENTE</h1>
+        <div class="status">
+            <h2>Diagnóstico Estudiante:</h2>
+            <ul>
+                <li><b>✓</b> Firewall puerto 80 permitido</li>
+                <li><b>✓</b> Nginx service: active</li>
+                <li><b>✗→✓</b> nginx escuchaba puerto 8080</li>
+                <li><b>✓</b> Corregido: listen 80</li>
+            </ul>
+            <h2>Comando de corrección:</h2>
+            <pre>sed -i 's/8080/80/g' /etc/nginx/nginx.conf* && systemctl reload nginx</pre>
+        </div>
+    </body>
+    </html>
+    EOF
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 5. DOCUMENTACIÓN DEL ESCENARIO - VISIBLE PARA ESTUDIANTE
+#═══════════════════════════════════════════════════════════════════════════════
+  - |
+    cat << 'EOF' > /etc/j01-scenario.txt
+    ════════════════════════════════════════════════════════════════════════════════
+    
+                 LAB J01-V03: Redes y Conectividad - Puerto Incorrecto
+    
+    ════════════════════════════════════════════════════════════════════════════════
+    
+    ROL: NOC Engineer Junior / SysAdmin en entrenamiento
+    
+    TOPOLOGÍA:
+      HOST (tu laptop)  ───[ INTERNET ]───  SERVER_EU (esta VM: 192.168.122.30)
+    
+    OBJETIVO:
+      Resolver: curl http://192.168.122.30 → página NOC Lab
+    
+    SÍNTOMAS OBSERVADOS:
+    ┌─────────────────────────────────────────────────────────────┐
+    │ HOST$ ping 192.168.122.30              → OK (2ms)           │
+    │ HOST$ curl http://192.168.122.30       → Connection refused │
+    │ HOST$ nc -zv 192.168.122.30 80         → FAIL               │
+    │ HOST$ curl http://192.168.122.30:8080  → NGINX OK!          │
+    └─────────────────────────────────────────────────────────────┘
+    
+    HERRAMIENTAS ESPERADAS:
+      • ss -tuln | grep :80
+      • ss -tuln | grep 8080
+      • cat /etc/nginx/nginx.conf | grep listen
+      • systemctl status nginx
+      • firewall-cmd --list-all
+    
+    RESTRICCIONES:
+      • NO reinstales nginx
+      • NO cierres firewall (¡está correcto!)
+      • FIX nginx.conf + systemctl reload
+    
+    💡 PISTAS:
+      1. Firewall puerto 80 está ABIERTO ✓
+      2. nginx está RUNNING ✓
+      3. ¿NGINX dónde está escuchando realmente?
+    
+    🎯 FLUJO ESPERADO:
+      ss -tuln → nginx.conf → vim → systemctl reload → HOST ✓
+    
+    ════════════════════════════════════════════════════════════════════════════════
+    EOF
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 6. EVIDENCIAS TÉCNICAS - AUTOGRADING / AUDITORÍA
+#═══════════════════════════════════════════════════════════════════════════════
+  # Estado servicios
+  - systemctl is-active nginx > /etc/j01-v03-nginx.status
+  - systemctl is-active firewalld > /etc/j01-v03-firewalld.status
+
+  # Estado red y puertos
+  - cp /etc/nginx/nginx.conf /etc/j01-v03-nginx.conf.state
+  - ss -tuln > /etc/j01-v03-ports.state
+  - ip addr show enp1s0 > /etc/j01-v03-network.state
+  - firewall-cmd --list-all > /etc/j01-v03-firewall.state
+
+  # Flags canónicos
+  - echo "J01 V03 - Nginx puerto 8080 (esperado 80)" > /etc/j01-variant-v03.flag
+  - echo "J01 BASE + V03 aplicada correctamente - IP:192.168.122.30" > /etc/j01-base.flag
+
+  # Log de auditoría completo
+  - echo "=== J01-V03 DEPLOY COMPLETED $(date)" >> /var/log/j01-v03-network.log
+  - echo "IP: 192.168.122.30" >> /var/log/j01-v03-network.log
+  - echo "Nginx FAIL: listen 8080 (esperado 80)" >> /var/log/j01-v03-network.log
+  - echo "Firewall OK: puerto 80 permitido" >> /var/log/j01-v03-network.log
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 7. SELINUX Y PERMISOS - CONSISTENCIA
+#═══════════════════════════════════════════════════════════════════════════════
+  # Asegurar nginx puede servir página
+  - restorecon -R /var/www/html
+  - chown -R nginx:nginx /var/www/html
+  - chmod 644 /var/www/html/index.html
+
+###############################################################################
+# FIN J01-V03 - Documentación Canónica
+# Este archivo es AUTOCONTENIDO - no requiere base/user-data
+###############################################################################
