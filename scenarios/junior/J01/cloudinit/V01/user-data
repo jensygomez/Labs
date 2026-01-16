@@ -1,83 +1,216 @@
 #cloud-config
 ###############################################################################
-# LAB ID: J01
-# NIVEL: Junior
-#
-# TEMA PRINCIPAL:
-#   Redes y conectividad en Linux
-#
-# CONTEXTO DEL ESCENARIO:
-#   El estudiante trabaja DESDE SU HOST (cliente),
-#   intentando acceder a un servidor remoto (esta VM).
-#
-# TOPOLOGÍA:
-#   HOST (cliente)  --->  SERVER_EU (esta VM)
-#
-# SERVICIOS ESPERADOS EN EL SERVIDOR:
-#   - SSH
-#   - Nginx (HTTP)
-#   - firewalld
-#
-# VARIANTE: V01
-#
-# ERROR SIMULADO (INTENCIONAL):
-#   - El servicio Nginx está ACTIVO
-#   - El puerto 80 está BLOQUEADO por firewalld
-#
-# OBJETIVO DEL ESTUDIANTE:
-#   - Verificar conectividad básica (ping)
-#   - Detectar que el servicio corre
-#   - Identificar bloqueo por firewall
-#   - Aplicar la corrección correcta y persistente
-#
-# HERRAMIENTAS ESPERADAS:
-#   ping, ss, firewall-cmd, curl, nc
+#                                                                              #
+#   ██████╗  ██████╗ ██╗   ██╗███╗   ██╗ ██████╗  ██████╗                      #
+#   ██╔══██╗██╔═══██╗██║   ██║████╗  ██║██╔════╝ ██╔═══██╗                     #
+#   ██████╔╝██║   ██║██║   ██║██╔██╗ ██║██║  ███╗██║   ██║                     #
+#   ██╔══██╗██║   ██║██║   ██║██║╚██╗██║██║   ██║██║   ██║                     #
+#   ██║  ██║╚██████╔╝╚██████╔╝██║ ╚████║╚██████╔╝╚██████╔╝                     #
+#   ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝  ╚═════╝                      #
+#                                                                              #
+#       J       E          N          S          Y                             #
+#                                                                              #
+#                 J01-V02: RESOLUCIÓN DNS INCORRECTA                          #
+#                   AUTOR: Jensy Gomez | I ♥ Linux                            #
+#                               Enero 2026                                    #
 ###############################################################################
 
-
+# ═══════════════════════════════════════════════════════════════════════════════
+# 1. CONFIGURACIÓN DE RED - IP ADMINISTRATIVA FIJA (CRÍTICO)
+#═══════════════════════════════════════════════════════════════════════════════
 runcmd:
-  # === 1. IP Fija (192.168.122.50) - CRÍTICO ===
-  - nmcli con mod enp1s0 ipv4.method manual ipv4.addresses 192.168.122.50/24 ipv4.gateway 192.168.122.1 ipv4.dns "8.8.8.8 1.1.1.1" || true
+  # IP ESTÁTICA para lab
+  - nmcli con mod enp1s0 ipv4.method manual ipv4.addresses 192.168.122.20/24 ipv4.gateway 192.168.122.1 ipv4.dns "8.8.8.8 1.1.1.1" || true
   - nmcli con down enp1s0 || true
   - nmcli con up enp1s0
+  - echo "[V01] IP fija aplicada: 192.168.122.20" > /var/log/j01-v01-network.log
 
-  # === 2. Servicios base ===
-  - systemctl enable --now firewalld
+# ═══════════════════════════════════════════════════════════════════════════════
+# 2. SERVICIOS BASE - NGINX ACTIVO
+#═══════════════════════════════════════════════════════════════════════════════
+  # Nginx corriendo y escuchando puerto 80
+  - dnf install -y nginx || true
   - systemctl enable --now nginx
+  - echo "[V01] Nginx activado y escuchando puerto 80" >> /var/log/j01-v01-network.log
 
-  # === 3. Bloqueo intencional del servicio HTTP ===
+  # firewalld activo (SSH permitido por defecto)
+  - systemctl enable --now firewalld
+  - echo "[V01] firewalld activado" >> /var/log/j01-v01-network.log
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 3. FALLLO ESPECÍFICO V01 - FIREWALL BLOQUEA HTTP
+#═══════════════════════════════════════════════════════════════════════════════
+  # REMOVER explícitamente servicio HTTP (bloqueo intencional)
   - firewall-cmd --permanent --remove-service=http || true
+  - firewall-cmd --permanent --remove-port=80/tcp || true
   - firewall-cmd --reload
+  - echo "[V01] HTTP bloqueado intencionalmente por firewalld" >> /var/log/j01-v01-network.log
 
-  # === 4. Documento visible para el estudiante ===
+# ═══════════════════════════════════════════════════════════════════════════════
+# 4. CONTENIDO NGINX - PÁGINA DE ÉXITO
+#═══════════════════════════════════════════════════════════════════════════════
   - |
-    cat << 'EOF' > /etc/j01-scenario.txt
-    LAB: J01 - Redes y Conectividad (Junior)
-
-    Rol del estudiante:
-      Actúas como cliente desde tu HOST local.
-
-    Objetivo:
-      Acceder vía HTTP a este servidor.
-
-    Estado actual:
-      - El servidor responde a ping
-      - El servicio web debería estar disponible
-      - Algo en la conectividad no funciona correctamente
-
-    Restricciones:
-      - No reinstalar servicios
-      - No deshabilitar firewalld
-      - La solución debe ser persistente
+    cat << 'EOF' > /var/www/html/index.html
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>J01-V01 NOC Junior Lab - Firewall HTTP</title>
+        <meta charset="UTF-8">
+        <style>
+            body { font-family: monospace; background: #000; color: #0f0; padding: 20px; }
+            h1 { color: #00ff00; }
+            .status { background: #111; padding: 15px; border: 1px solid #0f0; }
+            .fixed { color: #ff0; }
+        </style>
+    </head>
+    <body>
+        <h1>🏆 J01-V01 RESUELTO CORRECTAMENTE</h1>
+        <div class="status">
+            <h2>Diagnóstico Estudiante:</h2>
+            <ul>
+                <li><b>✓</b> ping 192.168.122.20 → OK</li>
+                <li><b>✓</b> nginx: active (running) puerto 80</li>
+                <li><b>✗→✓</b> firewalld: http service AGREGADO</li>
+            </ul>
+            <h2 class="fixed">Comando de corrección:</h2>
+            <pre>firewall-cmd --permanent --add-service=http && firewall-cmd --reload</pre>
+        </div>
+    </body>
+    </html>
     EOF
 
-  # === 5. Evidencias técnicas ===
+  # Permisos nginx
+  - restorecon -R /var/www/html
+  - chown -R nginx:nginx /var/www/html
+  - chmod 644 /var/www/html/index.html
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 5. DOCUMENTACIÓN DEL ESCENARIO - VISIBLE PARA ESTUDIANTE
+#═══════════════════════════════════════════════════════════════════════════════
+  - |
+    cat << 'EOF' > /etc/j01-scenario.txt
+    ════════════════════════════════════════════════════════════════════════════════
+    
+                LAB J01-V01: Redes y Conectividad - Firewall HTTP
+    
+    ════════════════════════════════════════════════════════════════════════════════
+    
+    ROL: NOC Engineer Junior / SysAdmin en entrenamiento
+    
+    TOPOLOGÍA:
+      HOST (tu laptop)  ───[ INTERNET ]───  SERVER_EU (esta VM: 192.168.122.20)
+    
+    OBJETIVO:
+      Resolver: curl http://192.168.122.20 → página NOC Lab
+    
+    SÍNTOMAS OBSERVADOS:
+    ┌─────────────────────────────────────────────────────────────┐
+    │ HOST$ ping 192.168.122.20             → OK (1ms)            │
+    │ HOST$ ssh student@192.168.122.20      → OK                  │
+    │ HOST$ curl http://192.168.122.20      → Connection refused  │
+    └─────────────────────────────────────────────────────────────┘
+    
+    HERRAMIENTAS ESPERADAS:
+      • ping, curl, nc -zv 192.168.122.20 80
+      • ss -tuln | grep :80
+      • systemctl status nginx
+      • firewall-cmd --list-all
+    
+    RESTRICCIONES:
+      • NO deshabilites firewalld (solo agrega regla)
+      • NO reinstales nginx
+      • Solución debe sobrevivir reboot (--permanent)
+    
+    💡 PISTAS:
+      1. ¿nginx está corriendo? → systemctl status nginx
+      2. ¿puerto 80 escucha? → ss -tuln | grep :80
+      3. ¿firewalld permite puerto 80? → firewall-cmd --list-all
+      4. ¿Qué servicio falta en "services:"?
+    
+    🎯 FLUJO ESPERADO:
+      HOST(ping OK) → VM(nginx OK, puerto OK) → firewall-cmd → FIX → HOST ✓
+    
+    ════════════════════════════════════════════════════════════════════════════════
+    EOF
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 6. MOTD AUTOMÁTICO - TICKET INCIDENTE (NOC IMMERSION)
+#═══════════════════════════════════════════════════════════════════════════════
+  # Script MOTD dinámico para student
+  - |
+    cat << 'EOF' > /home/student/motd-j01-v01.sh
+    #!/bin/bash
+    echo "═══════════════════════════════════════════════════════════════════════════════"
+    echo "🔥 TICKET AUTOMÁTICO NOC #J01-V01 - PRIORIDAD ALTA"
+    echo "═══════════════════════════════════════════════════════════════════════════════"
+    echo ""
+    echo "📋 INCIDENTE REPORTADO:"
+    echo "   Cliente VIP reporta: 'No puedo acceder al portal web'"
+    echo "   URL: http://192.168.122.20"
+    echo "   Error: 'Connection refused' puerto 80"
+    echo ""
+    echo "✅ VERIFICADO:"
+    echo "   • ping 192.168.122.20 → OK (1ms avg)"
+    echo "   • SSH acceso → OK"
+    echo ""
+    echo "❓ SYMPTOMS:"
+    echo "   • Servidor en línea"
+    echo "   • Puerto 80 aparentemente no responde"
+    echo ""
+    echo "🎯 OBJETIVO MISIÓN:"
+    echo "   1. cat /etc/j01-scenario.txt (brief completo)"
+    echo "   2. Verificar nginx → systemctl status nginx"
+    echo "   3. Verificar puerto → ss -tuln | grep :80"
+    echo "   4. Verificar firewall → firewall-cmd --list-all"
+    echo "   5. Aplicar FIX persistente"
+    echo ""
+    echo "⏰ SLA: 10 minutos | P1: HIGH"
+    echo "═══════════════════════════════════════════════════════════════════════════════"
+    EOF
+
+  # Permisos MOTD
+  - chmod +x /home/student/motd-j01-v01.sh
+  - chown student:student /home/student/motd-j01-v01.sh
+
+  # ACTIVA MOTD en .bashrc
+  - |
+    cat << 'EOF' >> /home/student/.bashrc
+    
+    if [ -f /home/student/motd-j01-v01.sh ]; then
+        /home/student/motd-j01-v01.sh
+        echo "💡 Pista: cat /etc/j01-scenario.txt"
+        echo ""
+    fi
+    EOF
+  - chown student:student /home/student/.bashrc
+
+  # MOTD global
+  - |
+    cat << 'EOF' > /etc/motd
+    🏢 NOC LAB J01-V01 - SERVIDOR EUROPEO (192.168.122.20)
+    =================================================================
+    HTTP Port 80 Blocked - firewalld Issue Detected
+    Cliente VIP report: Web portal unreachable (connection refused)
+    =================================================================
+    EOF
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 7. EVIDENCIAS TÉCNICAS - AUTOGRADING / AUDITORÍA
+#═══════════════════════════════════════════════════════════════════════════════
+  # Estados servicios
   - systemctl is-active nginx > /etc/j01-v01-nginx.status
+  - systemctl is-active firewalld > /etc/j01-v01-firewalld.status
   - firewall-cmd --list-all > /etc/j01-v01-firewall.state
+  - ss -tuln > /etc/j01-v01-ports.state
+  - ip addr show enp1s0 > /etc/j01-v01-network.state
 
-  # === 6. Flag de variante ===
-  - echo "J01 V01 - Firewall bloquea HTTP" > /etc/j01-variant-v01.flag
+  # Flags canónicos
+  - echo "J01 V01 - Firewall bloquea HTTP (nginx activo)" > /etc/j01-variant-v01.flag
+  - echo "J01 BASE + V01 aplicada correctamente - IP:192.168.122.20" > /etc/j01-base.flag
 
-  # === 7. Flag base (compatibilidad) ===
-  - echo "[cloud-init] J01 V01 aplicada correctamente" > /etc/j01-base.flag
+  # Log auditoría
+  - echo "=== J01-V01 DEPLOY COMPLETED $(date)" >> /var/log/j01-v01-network.log
 
+###############################################################################
+# FIN J01-V01 - NOC LAB PRODUCTION-READY
+###############################################################################
