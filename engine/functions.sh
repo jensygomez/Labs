@@ -282,7 +282,7 @@ cleanup_vm() {
     find /mnt/vms/labs/tmp/ -mindepth 1 -delete 2>/dev/null || true
     
     # Alternativa más agresiva (si quieres borrar TODO incluyendo subdirs)
-    # rm -rf /mnt/vms/labs/tmp/* 2>/dev/null || true
+    rm -rf /mnt/vms/labs/tmp/* 2>/dev/null || true
     
     echo "[CLEANUP] Cleanup completo - /mnt/vms/labs/tmp/ vacía"
 }
