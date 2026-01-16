@@ -164,7 +164,7 @@ Al completar J01, el estudiante debe ser capaz de:
 * Corregir problemas comunes de conectividad
 * Documentar su diagnóstico
 
-Este laboratorio prepara el camino para **J02 y J03**, donde se incrementa la complejidad.
+Este laboratorio prepara el camino para **J02, J03 y J0x**, donde se irá incrementando la complejidad.
 
 ---
 
