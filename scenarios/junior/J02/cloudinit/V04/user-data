@@ -10,128 +10,143 @@
 #                                                                              #
 #       J       E          N          S          Y                             #
 #                                                                              #
-#                J01-V04: LATENCIA + PÉRDIDA `tc netem`                       #
-#                   AUTOR: Jensy Gomez | I ♥ Linux                            #
-#                               Enero 2026                                    #
+#     J02-V04: SELINUX + RICH RULE (MYSQL PUERTO CUSTOM 3307)                  #
+#     AUTOR: Jensy Gomez | I ♥ Linux SysAdmin                                   #
+#                     Enero 2026                                               #
 ###############################################################################
 
 runcmd:
-  # === 1. IP Fija (192.168.122.40) - V04 ESPECÍFICO ===
-  - nmcli con mod enp1s0 ipv4.method manual ipv4.addresses 192.168.122.40/24 ipv4.gateway 192.168.122.1 ipv4.dns "8.8.8.8 1.1.1.1" || true
-  - nmcli con down enp1s0 || true
-  - nmcli con up enp1s0
+  #===========================================================================
+  # 1. SERVICIOS BASE
+  #===========================================================================
 
-  # === 2. SERVICIOS BASE (NGINX + FIREWALL PERFECTOS) ===
-  - dnf install -y nginx iproute || true
-  - systemctl enable --now firewalld
-  - firewall-cmd --permanent --add-service=http || true
-  - firewall-cmd --permanent --add-service=ssh || true
+  - systemctl enable --now firewalld nginx mariadb
+  - setenforce 1
+
+  #===========================================================================
+  # 2. VIRUS V04-A — MARIADB EN PUERTO CUSTOM + DATADIR NO ESTÁNDAR
+  #===========================================================================
+
+  # Crear nuevo datadir
+  - mkdir -p /data/mysql
+  - chown -R mysql:mysql /data/mysql
+
+  # Cambiar puerto y datadir (SIN ajustar SELinux)
+  - |
+    cat <<EOF > /etc/my.cnf.d/j02-v04.cnf
+    [mysqld]
+    port=3307
+    datadir=/data/mysql
+    bind-address=0.0.0.0
+    EOF
+
+  - systemctl restart mariadb || true
+
+  #===========================================================================
+  # 3. VIRUS V04-B — RICH RULE MAL ESCRITA
+  #===========================================================================
+
+  # Elimina mysql estándar
+  - firewall-cmd --zone=internal --remove-service=mysql --permanent
+
+  # Rich rule INCORRECTA (syntax válida, lógica incorrecta)
+  - firewall-cmd --permanent --add-rich-rule='rule family="ipv4" port port="3307" protocol="tcp" reject'
   - firewall-cmd --reload
-  - systemctl enable --now nginx
 
-  # === 3. FALLLO V04: tc netem LATENCIA 500ms + 10% LOSS ===
-  - tc qdisc del dev enp1s0 root 2>/dev/null || true
-  - tc qdisc add dev enp1s0 root netem delay 500ms 100ms loss 10%
+  #===========================================================================
+  # 4. MOTD — TICKET DE PRODUCCIÓN
+  #===========================================================================
 
-  # === 4. Script diagnóstico ===
-  - |
-    cat << 'EOF' > /usr/local/bin/check-latency.sh
-    #!/bin/bash
-    echo "=== J01-V04 LATENCIA SIMULADA ==="
-    tc qdisc show dev enp1s0
-    echo "FIX: tc qdisc del dev enp1s0 root"
-    EOF
-  - chmod +x /usr/local/bin/check-latency.sh
-
-  # === 5. Página nginx éxito ===
-  - mkdir -p /usr/share/nginx/html
-  - |
-    cat << 'EOF' > /usr/share/nginx/html/index.html
-    <!DOCTYPE html>
-    <html><head><title>J01-V04 NOC Lab - Latencia FIX</title>
-    <meta charset="UTF-8"><style>body{font-family:monospace;background:#000;color:#0f0;}
-    h1{color:#00ff00;}</style></head><body>
-    <h1>🏆 J01-V04 RESUELTO!</h1>
-    <p>ping &lt;2ms ✓<br>
-    tc qdisc del dev enp1s0 root</p>
-    </body></html>
-    EOF
-
-  # ═══════════════════════════════════════════════════════════════════════════════
-  # 6. MOTD TICKET - FORMATO PROFESIONAL 
-  #═══════════════════════════════════════════════════════════════════════════════
   - |
     cat << 'EOF' > /etc/motd
     ════════════════════════════════════════════════════════════════════════════════
     
-                 LAB J01-V04: Redes y Conectividad - Latencia Intermitente
+                LAB J02-V04 — SELINUX + RICH RULE (MYSQL 3307)
     
     ════════════════════════════════════════════════════════════════════════════════
     
-    ROL: NOC Engineer Junior / SysAdmin en entrenamiento
+    📌 TICKET:
+      "La base de datos cambió de puerto y ahora no responde"
     
     TOPOLOGÍA:
-      HOST (tu laptop)  ───[ INTERNET ]───  SERVER_EU (192.168.122.40)
+      WEB → 192.168.122.30 (HTTP)        ✓
+      DB  → 192.168.122.40:3307          ✗
     
-    OBJETIVO:
-      Resolver: ping/HTTP estable &lt; 5ms (actual: 500ms+ intermitente)
+    🔴 SÍNTOMAS DESDE HOST:
+      nc -zv 192.168.122.40 3307       → FAIL
+      curl http://192.168.122.30       → OK
     
-    SÍNTOMAS OBSERVADOS:
-    ┌─────────────────────────────────────────────────────────────┐
-    │ HOST$ ping -c10 192.168.122.40 → 500ms+ | 10% packet loss! │
-    │ HOST$ curl http://192.168.122.40 → timeouts intermitentes │
-    │ VM$ ping -c5 192.168.122.1 → 500ms+                       │
-    └─────────────────────────────────────────────────────────────┘
+    🔍 ESTADO EN VM:
+      systemctl status mariadb         → active (running)
+      ss -tuln | grep 3307             → LISTEN
+      firewall-cmd --list-rich-rules   → regla sospechosa ❌
+      getenforce                       → Enforcing
     
-    HERRAMIENTAS ESPERADAS:
-      • ping -c20 192.168.122.40 (métricas latencia/loss)
-      • mtr 192.168.122.40
-      • tc qdisc show dev enp1s0   ← ¡AQUÍ ESTÁ EL FALLO!
-      • ip link show enp1s0
+    ⚠️ DOBLE PROBLEMA:
+      1. Rich rule mal definida
+      2. SELinux bloquea /data/mysql
     
-    RESTRICCIONES:
-      • NO reinicies servidor
-      • NO modifiques firewall (OK)
-      • NO cambies IP/rutas
+    🎯 OBJETIVO:
+      Restaurar acceso MySQL SIN:
+        • Cambiar puerto de nuevo
+        • Desactivar SELinux
+        • Abrir todo en firewalld
     
-    💡 PISTAS:
-      1. Firewall OK (puertos abiertos)
-      2. nginx OK (puerto 80)
-      3. ¿Latencia dónde se inyecta? → tc qdisc
-      4. ¿Herramienta RedHat para simular red?
-    
-    🎯 FLUJO ESPERADO:
-      ping lento → tc qdisc show → tc qdisc del dev enp1s0 root → ping normal ✓
+    🛠️ COMANDOS CLAVE:
+      firewall-cmd --list-rich-rules
+      firewall-cmd --remove-rich-rule=...
+      firewall-cmd --permanent --add-rich-rule=CORRECTA
+      semanage fcontext -l | grep mysql
+      restorecon -Rv /data/mysql
     
     ════════════════════════════════════════════════════════════════════════════════
     EOF
 
-  # === 7. Documento escenario ===
+  #===========================================================================
+  # 5. DOCUMENTO DEL ESCENARIO
+  #===========================================================================
+
   - |
-    cat << 'EOF' > /etc/j01-scenario.txt
-    LAB: J01-V04 - tc netem Latencia
-
-    OBJETIVO: ping &lt;5ms + curl OK
-
+    cat << 'EOF' > /etc/j02-scenario.txt
+    J02-V04 — SELINUX + RICH RULE (MYSQL 3307)
+    
+    OBJETIVO:
+      nc -zv 192.168.122.40 3307 → OK
+    
     SÍNTOMAS:
-    • ping 192.168.122.40 → 500ms+ 10% loss ✗
-    • curl http://192.168.122.40 → timeout ✗
-    • nginx/firewall OK ✓
-
-    FIX: tc qdisc del dev enp1s0 root
-
-    HERRAMIENTAS: tc qdisc show, ping -c20
+      • ss -tuln → 3307 LISTEN ✓
+      • nc -zv 192.168.122.40 3307 → FAIL
+    
+    DIAGNÓSTICO:
+      • firewalld: rich rule incorrecta
+      • SELinux: datadir /data/mysql sin contexto mysql
+    
+    FIX FIREWALL (ejemplo correcto):
+      firewall-cmd --permanent --add-rich-rule='
+        rule family="ipv4"
+        source address="192.168.122.0/24"
+        port port="3307" protocol="tcp" accept'
+      firewall-cmd --reload
+    
+    FIX SELINUX:
+      semanage fcontext -a -t mysqld_db_t "/data/mysql(/.*)?"
+      restorecon -Rv /data/mysql
+    
+    VALIDACIÓN:
+      nc -zv 192.168.122.40 3307 → OK
     EOF
 
-  # === 8. Evidencias ===
-  - systemctl is-active nginx > /etc/j01-v04-nginx.status
-  - tc qdisc show dev enp1s0 > /etc/j01-v04-tc.state
-  - firewall-cmd --list-all > /etc/j01-v04-firewall.state
+  #===========================================================================
+  # 6. EVIDENCIAS
+  #===========================================================================
 
-  # === 9. Flags ===
-  - echo "J01 V04 - tc netem 500ms 10% loss" > /etc/j01-variant-v04.flag
-  - echo "J01 V04 aplicada - IP:192.168.122.40" > /etc/j01-base.flag
+  - firewall-cmd --list-rich-rules > /etc/j02-v04-richrules.state
+  - ls -Zd /data/mysql > /etc/j02-v04-selinux.context
+  - ss -tuln | grep 3307 > /etc/j02-v04-ports.state
 
-  # === 10. SELinux + permisos ===
-  - restorecon -R /usr/share/nginx/html || true
-  - chown -R nginx:nginx /usr/share/nginx/html || true
+  #===========================================================================
+  # 7. FLAGS
+  #===========================================================================
+
+  - echo "J02-V04 | SELinux + Rich Rule MySQL 3307" > /etc/j02-variant.flag
+  - echo "J02-V04 aplicado - $(date)" >> /var/log/j02-variants.log
