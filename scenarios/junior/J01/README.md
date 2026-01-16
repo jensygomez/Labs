@@ -48,7 +48,7 @@ La VM base clonada para J01 parte del siguiente estado **antes de aplicar varian
 * Sistema operativo: Rocky Linux 9.x
 * SELinux: Enforcing
 * Firewall: firewalld activo
-* IP administrativa fija: `192.168.122.50/24`
+* IP administrativa fija: `192.168.122.20/24`
 * Acceso SSH: solo por clave (usuario `student`)
 * Servicios instalados pero **inactivos**:
 
