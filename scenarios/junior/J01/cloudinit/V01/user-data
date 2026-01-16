@@ -34,16 +34,22 @@
 #   ping, ss, firewall-cmd, curl, nc
 ###############################################################################
 
+
 runcmd:
-  # Asegurar servicios base
+  # === 1. IP Fija (192.168.122.50) - CRÍTICO ===
+  - nmcli con mod enp1s0 ipv4.method manual ipv4.addresses 192.168.122.50/24 ipv4.gateway 192.168.122.1 ipv4.dns "8.8.8.8 1.1.1.1" || true
+  - nmcli con down enp1s0 || true
+  - nmcli con up enp1s0
+
+  # === 2. Servicios base ===
   - systemctl enable --now firewalld
   - systemctl enable --now nginx
 
-  # Bloqueo intencional del servicio HTTP
+  # === 3. Bloqueo intencional del servicio HTTP ===
   - firewall-cmd --permanent --remove-service=http || true
   - firewall-cmd --reload
 
-  # Documento visible para el estudiante (brief del escenario)
+  # === 4. Documento visible para el estudiante ===
   - |
     cat << 'EOF' > /etc/j01-scenario.txt
     LAB: J01 - Redes y Conectividad (Junior)
@@ -65,9 +71,13 @@ runcmd:
       - La solución debe ser persistente
     EOF
 
-  # Evidencias técnicas (para ti / autograding futuro)
+  # === 5. Evidencias técnicas ===
   - systemctl is-active nginx > /etc/j01-v01-nginx.status
   - firewall-cmd --list-all > /etc/j01-v01-firewall.state
 
-  # Flag de variante
+  # === 6. Flag de variante ===
   - echo "J01 V01 - Firewall bloquea HTTP" > /etc/j01-variant-v01.flag
+
+  # === 7. Flag base (compatibilidad) ===
+  - echo "[cloud-init] J01 V01 aplicada correctamente" > /etc/j01-base.flag
+
