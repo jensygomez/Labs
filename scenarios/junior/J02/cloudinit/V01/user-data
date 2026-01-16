@@ -10,126 +10,109 @@
 #                                                                              #
 #       J       E          N          S          Y                             #
 #                                                                              #
-#           J02-V01: FIREWALL BLOQUEA HTTP (puerto 80)                         #
-#             AUTOR: Jensy Gomez | I ♥ Linux SysAdmin                          #
-#                               Enero 2026                                    #
+#          J02-V01: FIREWALLD BLOQUEA HTTP (puerto 80)                          #
+#          AUTOR: Jensy Gomez | I ♥ Linux SysAdmin                              #
+#                          Enero 2026                                          #
 ###############################################################################
 
 runcmd:
-  # === 1. RED: IP fija 192.168.122.20 (auto-detect) ===
-  - 'INTERFACE=$(ip -o link show | awk -F": " "{print $2}" | grep -E "^(eth|enp)" | head -1)'
-  - nmcli con mod "${INTERFACE}" ipv4.method manual ipv4.addresses 192.168.122.20/24 ipv4.gateway 192.168.122.1 ipv4.dns "8.8.8.8 1.1.1.1"
-  - nmcli con down "${INTERFACE}"
-  - nmcli con up "${INTERFACE}"
-  - sleep 3
+  #===========================================================================
+  # 1. SERVICIOS (BASE SANA YA EXISTE)
+  #===========================================================================
 
-  # === 2. PAQUETES + SERVICIOS BASE (nginx + firewalld + mariadb) ===
-  - dnf install -y nginx firewalld mariadb-server policycoreutils-python-utils setroubleshoot-server telnet net-tools bind-utils || true
-  - systemctl enable --now nginx
-  - systemctl enable --now firewalld  
-  - systemctl enable --now mariadb
-
-  # === 3. SELinux ENFORCING ===
+  - systemctl enable --now firewalld nginx mariadb
   - setenforce 1
-  - sed -i 's/^SELINUX=.*$/SELINUX=enforcing/' /etc/selinux/config
 
-  # === 4. NGINX: página perfecta ===
-  - 'echo "<!DOCTYPE html><html><head><title>✅ J02-V01 RESUELTO!</title><meta charset=\"UTF-8\"><style>body{font-family:monospace;background:#000;color:#0f0;}h1{color:#00ff00;}</style></head><body><h1>🏆 J02-V01 Firewall HTTP FIX</h1><p>curl http://192.168.122.20 ✓<br>nginx OK | firewalld configurado correctamente</p></body></html>" > /usr/share/nginx/html/index.html'
-  - chown -R nginx:nginx /usr/share/nginx/html
-  - restorecon -R /usr/share/nginx/html
+  #===========================================================================
+  # 2. VIRUS V01 — FIREWALLD BLOQUEA HTTP (SOLO WEB)
+  #===========================================================================
 
-  # === 5. MARIADB básico ===
-  - mysql -e "SET PASSWORD FOR 'root'@'localhost'=PASSWORD(''); FLUSH PRIVILEGES;" || true
-  - 'echo "[mysqld] bind-address = 0.0.0.0" > /etc/my.cnf.d/lab.cnf'
-  - systemctl restart mariadb
-
-  # === 6. V01 FALLO ESPECÍFICO: FIREWALL BLOQUEA HTTP ===
-  - firewall-cmd --permanent --remove-service=http || true
-  - firewall-cmd --permanent --add-service=ssh || true
+  # Confirmación explícita de zonas
+  - firewall-cmd --zone=internal --remove-service=http --permanent
   - firewall-cmd --reload
 
-  # ═══════════════════════════════════════════════════════════════════════════════
-  # 7. MOTD TICKET - J02-V01 PROFESIONAL 
-  #═══════════════════════════════════════════════════════════════════════════════
+  #===========================================================================
+  # 3. MOTD — TICKET DE PRODUCCIÓN
+  #===========================================================================
+
   - |
     cat << 'EOF' > /etc/motd
     ════════════════════════════════════════════════════════════════════════════════
     
-                 LAB J02-V01: Troubleshooting Firewalld - HTTP Bloqueado
+                  LAB J02-V01 — FIREWALLD BLOQUEA HTTP
     
     ════════════════════════════════════════════════════════════════════════════════
     
-    ROL: SysAdmin Junior | Troubleshooting Security
+    📌 TICKET:
+      "La WEB no carga, pero la base de datos responde correctamente"
     
     TOPOLOGÍA:
-      HOST (tu laptop)  ───  VM Server (192.168.122.20) 
+      ADMIN → 192.168.122.20 (SSH)        ✓
+      WEB   → 192.168.122.30 (HTTP)       ✗
+      DB    → 192.168.122.40 (MySQL 3306) ✓
+    
+    🔴 SÍNTOMAS DESDE HOST:
+      curl http://192.168.122.30        → Connection refused
+      nc -zv 192.168.122.40 3306        → OK
+    
+    🔍 ESTADO EN VM:
+      systemctl status nginx            → active (running)
+      ss -tuln | grep :80               → LISTEN
+      firewall-cmd --list-all --zone=internal → http ❌
     
     🎯 OBJETIVO:
-      Resolver: curl http://192.168.122.20 → página J02 Lab
+      Restaurar acceso HTTP SIN:
+        • Reiniciar nginx
+        • Desactivar firewalld
+        • Romper persistencia
     
-    🔴 SÍNTOMAS:
-    ┌─────────────────────────────────────────────────────────────┐
-    │ HOST$ ping 192.168.122.20              → OK (2ms)           │
-    │ HOST$ curl http://192.168.122.20       → Connection refused │
-    │ HOST$ nc -zv 192.168.122.20 80         → FAIL               │
-    │ VM$ ss -tuln | grep :80                → nginx LISTENING ✓  │
-    │ VM$ systemctl status nginx             → active (running) ✓ │
-    └─────────────────────────────────────────────────────────────┘
-    
-    🛠️ HERRAMIENTAS:
-      • ss -tuln | grep :80
-      • systemctl status nginx  
-      • firewall-cmd --list-all  ← ¡PROBLEMA AQUÍ!
-      • firewall-cmd --permanent --add-service=http
-      • firewall-cmd --reload
-    
-    🚫 RESTRICCIONES:
-      • NO reinstales nginx ✓
-      • NO deshabilites firewalld ✓
-      • FIX debe ser persistente (--permanent)
-    
-    💡 PISTAS:
-      1. Nginx RUNNING ✓ puerto 80 LISTEN ✓
-      2. ping OK ✓ conectividad L3
-      3. ¿firewalld qué servicios permite? → firewall-cmd --list-all
-    
-    🎯 FLUJO:
-      ss -tuln → systemctl status nginx → firewall-cmd --list-all → add-service http → reload → HOST ✓
+    🛠️ COMANDOS CLAVE:
+      firewall-cmd --list-all --zone=internal
+      firewall-cmd --permanent --add-service=http --zone=internal
+      firewall-cmd --reload
     
     ════════════════════════════════════════════════════════════════════════════════
     EOF
 
-  # === 8. Documento escenario ===
+  #===========================================================================
+  # 4. DOCUMENTO DEL ESCENARIO
+  #===========================================================================
+
   - |
     cat << 'EOF' > /etc/j02-scenario.txt
-    J02-V01: FIREWALL BLOQUEA HTTP
-
-    OBJETIVO: curl http://192.168.122.20 → página Lab
-
+    J02-V01 — FIREWALLD BLOQUEA HTTP
+    
+    OBJETIVO:
+      curl http://192.168.122.30 → OK
+    
     SÍNTOMAS:
-    • ping 192.168.122.20 → OK
-    • curl http://192.168.122.20 → Connection refused
-    • ss -tuln → nginx :80 LISTEN ✓
-
+      • ping 192.168.122.30 → OK
+      • curl http://192.168.122.30 → FAIL
+      • nc -zv 192.168.122.40 3306 → OK
+    
     DIAGNÓSTICO:
-    • systemctl status nginx → active ✓
-    • firewall-cmd --list-all → http MISSING ✗
-
+      • nginx activo y escuchando
+      • firewalld (zona internal) sin servicio http
+    
     FIX:
-    firewall-cmd --permanent --add-service=http
-    firewall-cmd --reload
-
-    VERIFICACIÓN: curl http://192.168.122.20 ✓
+      firewall-cmd --permanent --add-service=http --zone=internal
+      firewall-cmd --reload
+    
+    VALIDACIÓN:
+      curl http://192.168.122.30 → OK
     EOF
 
-  # === 9. Evidencias técnicas ===
+  #===========================================================================
+  # 5. EVIDENCIAS
+  #===========================================================================
+
+  - firewall-cmd --list-all --zone=internal > /etc/j02-v01-firewall.state
   - systemctl is-active nginx > /etc/j02-v01-nginx.status
-  - firewall-cmd --list-all > /etc/j02-v01-firewall.state
   - ss -tuln | grep :80 > /etc/j02-v01-ports.state
 
-  # === 10. Flags ===
-  - echo "J02 V01 - Firewall bloquea HTTP" > /etc/j02-variant-v01.flag
-  - echo "J02 V01 aplicada - $(date)" > /etc/j02-base.flag
+  #===========================================================================
+  # 6. FLAGS
+  #===========================================================================
 
-  # === 11. Verificación final ===
-  - bash -c "echo 'J02-V01 OK: $(date)' >> /var/log/j02-setup.log"
+  - echo "J02-V01 | Firewall bloquea HTTP (.30)" > /etc/j02-variant.flag
+  - echo "J02-V01 aplicado - $(date)" >> /var/log/j02-variants.log
