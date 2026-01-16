@@ -1,21 +1,21 @@
 #cloud-config
-
-hostname: j01
-manage_etc_hosts: true
+hostname: j01-base
 
 users:
   - name: student
-    groups: wheel
+    gecos: Student User
     sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: wheel
     shell: /bin/bash
+    lock_passwd: true
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIByFDKwjMDeGJ5GRhXmZHa75h7dK9JcPHvWWtesSO3/x RHCSA Storage Labs
 
-ssh_pwauth: true
-disable_root: false
+ssh_pwauth: false
+disable_root: true
 
-packages:
-  - vim
-  - curl
-  - net-tools
+package_update: false
+package_upgrade: false
 
 runcmd:
-  - echo "BASE cloud-init aplicado correctamente" > /etc/motd
+  - echo "[cloud-init] J01 base aplicada correctamente" > /etc/motd
