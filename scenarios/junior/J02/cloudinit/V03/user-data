@@ -1,0 +1,143 @@
+#cloud-config
+###############################################################################
+#                                                                              #
+#   ██████╗  ██████╗ ██╗   ██╗███╗   ██╗ ██████╗  ██████╗                      #
+#   ██╔══██╗██╔═══██╗██║   ██║████╗  ██║██╔════╝ ██╔═══██╗                     #
+#   ██████╔╝██║   ██║██║   ██║██╔██╗ ██║██║  ███╗██║   ██║                     #
+#   ██╔══██╗██║   ██║██║   ██║██║╚██╗██║██║   ██║██║   ██║                     #
+#   ██║  ██║╚██████╔╝╚██████╔╝██║ ╚████║╚██████╔╝╚██████╔╝                     #
+#   ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝  ╚═════╝                      #
+#                                                                              #
+#       J       E          N          S          Y                             #
+#                                                                              #
+#                 J01-V03: NGINX PUERTO 8080 (NO 80)                          #
+#                   AUTOR: Jensy Gomez | I ♥ Linux                            #
+#                               Enero 2026                                    #
+###############################################################################
+
+runcmd:
+  # === 1. IP Fija (192.168.122.30) - V03 ESPECÍFICO ===
+  - nmcli con mod enp1s0 ipv4.method manual ipv4.addresses 192.168.122.30/24 ipv4.gateway 192.168.122.1 ipv4.dns "8.8.8.8 1.1.1.1" || true
+  - nmcli con down enp1s0 || true
+  - nmcli con up enp1s0
+
+  # === 2. NGINX INSTALL + FIREWALL (Puerto 80 ABIERTO) ===
+  - dnf install -y nginx || true
+  - systemctl enable --now firewalld
+  - firewall-cmd --permanent --add-service=http || true
+  - firewall-cmd --permanent --add-service=ssh || true
+  - firewall-cmd --reload
+
+  # === 3. NGINX CONFIG PUERTO 8080 (FALLO V03) ===
+  - |
+    cat << 'EOF' > /etc/nginx/conf.d/j01-v03.conf
+    server {
+        listen 8080;
+        server_name _;
+        root /usr/share/nginx/html;
+        index index.html;
+        
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+    }
+    EOF
+  - nginx -t || true
+  - systemctl enable --now nginx
+  - systemctl reload nginx || true
+
+  # === 4. Página nginx (directorio correcto) ===
+  - mkdir -p /usr/share/nginx/html
+  - |
+    cat << 'EOF' > /usr/share/nginx/html/index.html
+    <!DOCTYPE html>
+    <html><head><title>J01-V03 NOC Lab - Puerto FIX</title>
+    <meta charset="UTF-8"><style>body{font-family:monospace;background:#000;color:#0f0;}
+    h1{color:#00ff00;}</style></head><body>
+    <h1>🏆 J01-V03 RESUELTO!</h1>
+    <p>curl http://192.168.122.30 ✓<br>
+    sed -i 's/8080/80/g' /etc/nginx/conf.d/j01-v03.conf && systemctl reload nginx</p>
+    </body></html>
+    EOF
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # 5. MOTD TICKET - FORMATO PROFESIONAL 
+  #═══════════════════════════════════════════════════════════════════════════════
+  - |
+    cat << 'EOF' > /etc/motd
+    ════════════════════════════════════════════════════════════════════════════════
+    
+                 LAB J01-V03: Redes y Conectividad - Puerto Incorrecto
+    
+    ════════════════════════════════════════════════════════════════════════════════
+    
+    ROL: NOC Engineer Junior / SysAdmin en entrenamiento
+    
+    TOPOLOGÍA:
+      HOST (tu laptop)  ───[ INTERNET ]───  SERVER_EU (esta VM: 192.168.122.30)
+    
+    OBJETIVO:
+      Resolver: curl http://192.168.122.30 → página NOC Lab
+    
+    SÍNTOMAS OBSERVADOS:
+    ┌─────────────────────────────────────────────────────────────┐
+    │ HOST$ ping 192.168.122.30              → OK (2ms)           │
+    │ HOST$ curl http://192.168.122.30       → Connection refused │
+    │ HOST$ nc -zv 192.168.122.30 80         → FAIL               │
+    │ HOST$ curl http://192.168.122.30:8080  → NGINX OK!          │
+    └─────────────────────────────────────────────────────────────┘
+    
+    HERRAMIENTAS ESPERADAS:
+      • ss -tuln | grep :80
+      • ss -tuln | grep 8080    ← ¡AQUÍ ESTÁ!
+      • cat /etc/nginx/conf.d/j01-v03.conf
+      • systemctl status nginx
+      • firewall-cmd --list-all
+    
+    RESTRICCIONES:
+      • NO reinstales nginx
+      • NO cierres firewall (¡está correcto!)
+      • FIX nginx.conf + systemctl reload
+    
+    💡 PISTAS:
+      1. Firewall puerto 80 ABIERTO ✓
+      2. nginx RUNNING ✓
+      3. ¿NGINX dónde está escuchando REALMENTE?
+    
+    🎯 FLUJO ESPERADO:
+      ss -tuln → cat /etc/nginx/conf.d/j01-v03.conf → sed 8080→80 → reload → HOST ✓
+    
+    ════════════════════════════════════════════════════════════════════════════════
+    EOF
+
+  # === 6. Documento escenario (referencia) ===
+  - |
+    cat << 'EOF' > /etc/j01-scenario.txt
+    LAB: J01-V03 - Nginx Puerto 8080
+
+    OBJETIVO: curl http://192.168.122.30 → página NOC Lab
+
+    SÍNTOMAS:
+    • ping 192.168.122.30 → OK
+    • curl http://192.168.122.30 → Connection refused  
+    • curl http://192.168.122.30:8080 → NGINX OK ✓
+    • ss -tuln → nginx :8080 LISTEN ✗
+
+    FIX: sed -i 's/8080/80/g' /etc/nginx/conf.d/j01-v03.conf → reload
+
+    HERRAMIENTAS: ss, cat nginx.conf, systemctl reload
+    EOF
+
+  # === 7. Evidencias técnicas ===
+  - systemctl is-active nginx > /etc/j01-v03-nginx.status
+  - cp /etc/nginx/conf.d/j01-v03.conf /etc/j01-v03-nginx.conf.state
+  - ss -tuln > /etc/j01-v03-ports.state
+  - firewall-cmd --list-all > /etc/j01-v03-firewall.state
+
+  # === 8. Flags ===
+  - echo "J01 V03 - Nginx puerto 8080" > /etc/j01-variant-v03.flag
+  - echo "J01 V03 aplicada - IP:192.168.122.30" > /etc/j01-base.flag
+
+  # === 9. SELinux + permisos ===
+  - restorecon -R /usr/share/nginx/html || true
+  - chown -R nginx:nginx /usr/share/nginx/html || true

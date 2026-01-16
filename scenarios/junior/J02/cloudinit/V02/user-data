@@ -1,0 +1,137 @@
+#cloud-config
+###############################################################################
+#                                                                              #
+#   ██████╗  ██████╗ ██╗   ██╗███╗   ██╗ ██████╗  ██████╗                      #
+#   ██╔══██╗██╔═══██╗██║   ██║████╗  ██║██╔════╝ ██╔═══██╗                     #
+#   ██████╔╝██║   ██║██║   ██║██╔██╗ ██║██║  ███╗██║   ██║                     #
+#   ██╔══██╗██║   ██║██║   ██║██║╚██╗██║██║   ██║██║   ██║                     #
+#   ██║  ██║╚██████╔╝╚██████╔╝██║ ╚████║╚██████╔╝╚██████╔╝                     #
+#   ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝  ╚═════╝                      #
+#                                                                              #
+#       J       E          N          S          Y                             #
+#                                                                              #
+#                 J01-V02: RESOLUCIÓN DNS INCORRECTA                          #
+#                   AUTOR: Jensy Gomez | I ♥ Linux                            #
+#                               Enero 2026                                    #
+###############################################################################
+
+runcmd:
+  # === 1. IP Fija (192.168.122.50) - CRÍTICO ===
+  - nmcli con mod enp1s0 ipv4.method manual ipv4.addresses 192.168.122.50/24 ipv4.gateway 192.168.122.1 ipv4.dns "8.8.8.8 1.1.1.1" || true
+  - nmcli con down enp1s0 || true
+  - nmcli con up enp1s0
+
+  # === 2. NGINX INSTALL + START (FIX CRÍTICO) ===
+  - dnf install -y nginx || true
+  - systemctl enable --now nginx
+
+  # === 3. Firewall HTTP PERMITIDO (V02 específico) ===
+  - systemctl enable --now firewalld
+  - firewall-cmd --permanent --add-service=http || true
+  - firewall-cmd --permanent --add-service=ssh || true
+  - firewall-cmd --reload
+
+  # === 4. FALLLO DNS: /etc/hosts IP MALA (V02 específico) ===
+  - cp /etc/hosts /etc/hosts.j01-v02.backup.$(date +%s) || true
+  - |
+    cat << 'EOF' > /etc/hosts
+    127.0.0.1   localhost localhost.localdomain
+    ::1         localhost localhost.localdomain
+    
+    # J01-V02 FALLO: IP incorrecta para hostname
+    192.168.122.99    j01-eu.example.com    j01-eu
+    EOF
+
+  # === 5. Página nginx (directorio correcto) ===
+  - mkdir -p /usr/share/nginx/html
+  - |
+    cat << 'EOF' > /usr/share/nginx/html/index.html
+    <!DOCTYPE html>
+    <html><head><title>J01-V02 NOC Lab - DNS FIX</title>
+    <meta charset="UTF-8"><style>body{font-family:monospace;background:#000;color:#0f0;}
+    h1{color:#00ff00;}</style></head><body>
+    <h1>🏆 J01-V02 RESUELTO!</h1>
+    <p>curl http://j01-eu.example.com ✓<br>
+    sed -i 's/192.168.122.99/192.168.122.50/' /etc/hosts</p>
+    </body></html>
+    EOF
+
+  # === 6. Documento escenario (referencia) ===
+  - |
+    cat << 'EOF' > /etc/j01-scenario.txt
+    LAB: J01-V02 - DNS Resolution (Junior)
+
+    OBJETIVO: curl http://j01-eu.example.com → página NOC Lab
+
+    SÍNTOMAS:
+    • ping 192.168.122.50 → OK
+    • curl http://192.168.122.50 → NGINX OK  
+    • ping j01-eu.example.com → FAIL (192.168.122.99?!)
+
+    FIX: cat /etc/hosts → corrige IP → 192.168.122.50
+
+    HERRAMIENTAS: cat /etc/hosts, ping, curl
+    EOF
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # 7. MOTD TICKET - FORMATO V03 (VSCode VERDE) 
+  #═══════════════════════════════════════════════════════════════════════════════
+  - |
+    cat << 'EOF' > /etc/motd
+    ════════════════════════════════════════════════════════════════════════════════
+    
+                 LAB J01-V02: Redes y Conectividad - DNS Resolution
+    
+    ════════════════════════════════════════════════════════════════════════════════
+    
+    ROL: NOC Engineer Junior / SysAdmin en entrenamiento
+    
+    TOPOLOGÍA:
+      HOST (tu laptop)  ───[ INTERNET ]───  SERVER_EU (esta VM: 192.168.122.50)
+    
+    OBJETIVO:
+      Resolver: curl http://j01-eu.example.com → página NOC Lab
+    
+    SÍNTOMAS OBSERVADOS:
+    ┌─────────────────────────────────────────────────────────────┐
+    │ HOST$ ping 192.168.122.50              → OK (2ms)           │
+    │ HOST$ curl http://192.168.122.50       → NGINX OK           │
+    │ HOST$ ping j01-eu.example.com          → FAIL (192.168.122.99?!) │
+    │ HOST$ curl http://j01-eu.example.com   → Name resolution FAIL │
+    └─────────────────────────────────────────────────────────────┘
+    
+    HERRAMIENTAS ESPERADAS:
+      • ping, curl, nslookup, dig
+      • cat /etc/hosts, getent hosts
+      • ss -tuln, systemctl status nginx
+      • firewall-cmd --list-all
+    
+    RESTRICCIONES:
+      • NO modifiques /etc/resolv.conf
+      • NO reinstales servicios
+      • NO deshabilites firewalld
+    
+    💡 PISTAS:
+      1. ¿Por qué IP directa funciona pero hostname no?
+      2. ¿Dónde se resuelve j01-eu.example.com PRIMERO?
+      3. ¿192.168.122.99 existe realmente?
+    
+    🎯 FLUJO ESPERADO:
+      cat /etc/hosts → sed -i 's/192.168.122.99/192.168.122.50/' /etc/hosts → FIX ✓
+    
+    ════════════════════════════════════════════════════════════════════════════════
+    EOF
+
+  # === 8. Evidencias técnicas ===
+  - systemctl is-active nginx > /etc/j01-v02-nginx.status
+  - cp /etc/hosts /etc/j01-v02-hosts.state
+  - firewall-cmd --list-all > /etc/j01-v02-firewall.state
+
+  # === 9. Flags ===
+  - echo "J01 V02 - DNS FAIL /etc/hosts" > /etc/j01-variant-v02.flag
+  - echo "J01 V02 aplicada - IP:192.168.122.50" > /etc/j01-base.flag
+
+  # === 10. SELinux + permisos ===
+  - mkdir -p /usr/share/nginx/html || true
+  - restorecon -R /usr/share/nginx/html || true
+  - chown -R nginx:nginx /usr/share/nginx/html || true
