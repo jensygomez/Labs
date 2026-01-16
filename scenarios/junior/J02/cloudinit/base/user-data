@@ -39,303 +39,34 @@
 #  FECHA: Enero 2026 | RHCSA Journey Junior → Mid                             #
 #                                                                              #
 ###############################################################################
+
 #cloud-config
 hostname: j02-troubleshooting
 
+# Solo configuración de red
+network:
+  version: 2
+  ethernets:
+    enp1s0:
+      addresses:
+        - 192.168.122.20/24
+        - 192.168.122.30/24  
+        - 192.168.122.40/24
+      gateway4: 192.168.122.1
+      dhcp4: false
+
+# Usuario mínimo
 users:
   - name: student
-    gecos: Student User
     sudo: ALL=(ALL) NOPASSWD:ALL
-    groups: wheel
     shell: /bin/bash
     lock_passwd: true
     ssh_authorized_keys:
       - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAAIByFDKwjMDeGJ5GRhXmZHa75h7dK9JcPHvWWtesSO3/x RHCSA Storage Labs
 
 ssh_pwauth: false
-disable_root: true
 
-write_files:
-  - path: /etc/motd
-    content: |
-      J02 MULTI-IP LAB - BASE SANA
-
-      ADMIN: 192.168.122.20  → SSH  ✓
-      WEB:   192.168.122.30  → HTTP ✓
-      DB:    192.168.122.40  → MySQL✓
-
-      Tests:
-        ssh student@192.168.122.20
-        curl http://192.168.122.30
-        nc -zv 192.168.122.40 3306
-
-  # Script para configurar la interfaz principal
-  - path: /root/setup-main-interface.sh
-    content: |
-      #!/bin/bash
-      set -e
-      
-      echo "=== Configurando interfaz principal ==="
-      
-      # Detectar interfaz principal
-      if ip link show enp1s0 2>/dev/null; then
-        MAIN_IFACE="enp1s0"
-      elif ip link show eth0 2>/dev/null; then
-        MAIN_IFACE="eth0"
-      elif ip link show ens3 2>/dev/null; then
-        MAIN_IFACE="ens3"
-      else
-        MAIN_IFACE=$(ip link | grep -E "^[0-9]+: (en|eth)" | head -1 | awk -F: '{print $2}' | tr -d ' ')
-      fi
-      
-      echo "Interfaz detectada: ${MAIN_IFACE}"
-      echo "${MAIN_IFACE}" > /tmp/main-interface.txt
-      
-      # Método 1: Usar NetworkManager si está disponible
-      if command -v nmcli &> /dev/null && systemctl is-active NetworkManager &> /dev/null; then
-        echo "Usando NetworkManager..."
-        
-        # Obtener o crear conexión
-        CON_NAME=$(nmcli -t -f NAME con show --active | head -1)
-        if [ -z "$CON_NAME" ]; then
-          CON_NAME="static-${MAIN_IFACE}"
-          nmcli con add type ethernet ifname ${MAIN_IFACE} con-name ${CON_NAME}
-        fi
-        
-        # Configurar IP estática
-        nmcli con mod "$CON_NAME" \
-          ipv4.method manual \
-          ipv4.addresses "192.168.122.20/24" \
-          ipv4.gateway "192.168.122.1" \
-          ipv4.dns "8.8.8.8 8.8.4.4" \
-          ipv4.dns-search "" \
-          connection.autoconnect yes
-        
-        # Aplicar cambios
-        nmcli con down "$CON_NAME"
-        nmcli con up "$CON_NAME"
-        
-        echo "NetworkManager configurado"
-        
-      # Método 2: Usar network-scripts
-      else
-        echo "Usando network-scripts..."
-        
-        # Crear archivo de configuración
-        cat > /etc/sysconfig/network-scripts/ifcfg-${MAIN_IFACE} <<EOF
-DEVICE=${MAIN_IFACE}
-BOOTPROTO=none
-ONBOOT=yes
-IPADDR=192.168.122.20
-PREFIX=24
-GATEWAY=192.168.122.1
-DNS1=8.8.8.8
-DNS2=8.8.4.4
-DEFROUTE=yes
-IPV4_FAILURE_FATAL=no
-IPV6INIT=no
-EOF
-        
-        # Reiniciar servicio de red
-        if systemctl is-active network &> /dev/null; then
-          systemctl restart network
-        elif systemctl is-active NetworkManager &> /dev/null; then
-          nmcli con reload
-        fi
-        
-        echo "network-scripts configurado"
-      fi
-      
-      # Esperar a que la interfaz esté lista
-      sleep 3
-      
-      # Verificar
-      if ip addr show ${MAIN_IFACE} | grep -q "192.168.122.20"; then
-        echo "✅ IP principal configurada correctamente en ${MAIN_IFACE}"
-        return 0
-      else
-        echo "❌ Error: No se pudo configurar la IP"
-        return 1
-      fi
-    permissions: '0755'
-
-  # Script para crear interfaces dummy
-  - path: /root/setup-dummy-interfaces.sh
-    content: |
-      #!/bin/bash
-      set -e
-      
-      echo "=== Configurando interfaces dummy ==="
-      
-      # Cargar módulo dummy
-      echo 'dummy' > /etc/modules-load.d/dummy.conf
-      modprobe dummy
-      
-      # Crear dummy0 para WEB (192.168.122.30)
-      ip link add dummy0 type dummy
-      ip addr add 192.168.122.30/24 dev dummy0
-      ip link set dummy0 up
-      
-      # Crear dummy1 para DB (192.168.122.40)
-      ip link add dummy1 type dummy
-      ip addr add 192.168.122.40/24 dev dummy1
-      ip link set dummy1 up
-      
-      # Verificar
-      echo "Interfaces dummy creadas:"
-      ip addr show dummy0 | grep inet
-      ip addr show dummy1 | grep inet
-      
-      echo "✅ Interfaces dummy configuradas"
-    permissions: '0755'
-
-  # Script de verificación
-  - path: /root/verify-network.sh
-    content: |
-      #!/bin/bash
-      echo "=== VERIFICACIÓN DE RED ==="
-      echo "Fecha: $(date)"
-      echo ""
-      
-      echo "1. Interfaces de red:"
-      ip -c a
-      echo ""
-      
-      echo "2. Tabla de rutas:"
-      ip -c route
-      echo ""
-      
-      echo "3. Conectividad:"
-      echo "   - IP Principal (192.168.122.20): $(ip addr | grep -c '192.168.122.20' || echo 'NO')"
-      echo "   - IP WEB (192.168.122.30): $(ip addr | grep -c '192.168.122.30' || echo 'NO')"
-      echo "   - IP DB (192.168.122.40): $(ip addr | grep -c '192.168.122.40' || echo 'NO')"
-      echo ""
-      
-      echo "4. Servicios de red:"
-      systemctl status NetworkManager 2>/dev/null | head -5 || true
-      echo ""
-      
-      echo "5. Archivos de configuración:"
-      ls -la /etc/sysconfig/network-scripts/ifcfg-* 2>/dev/null || echo "No hay archivos ifcfg"
-    permissions: '0755'
-
-packages:
-  - firewalld
-  - nginx
-  - mariadb-server
-  - policycoreutils-python-utils
-  - setroubleshoot-server
-  - telnet
-  - net-tools
-  - bind-utils
-  - NetworkManager
-
+# Solo verificar
 runcmd:
-  #===========================================================================
-  # 1. CONFIGURAR INTERFAZ PRINCIPAL
-  #===========================================================================
-  - /root/setup-main-interface.sh
-  
-  #===========================================================================
-  # 2. CONFIGURAR INTERFACES DUMMY
-  #===========================================================================
-  - /root/setup-dummy-interfaces.sh
-  
-  #===========================================================================
-  # 3. CREAR SERVICIOS SYSTEMD PERSISTENTES PARA DUMMY INTERFACES
-  #===========================================================================
-  - |
-    cat > /etc/systemd/system/web-ip.service <<EOF
-[Unit]
-Description=Web IP 192.168.122.30 on dummy0
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=oneshot
-ExecStartPre=-/sbin/modprobe dummy
-ExecStart=/sbin/ip link add dummy0 type dummy
-ExecStart=/sbin/ip addr add 192.168.122.30/24 dev dummy0
-ExecStart=/sbin/ip link set dummy0 up
-ExecStop=/sbin/ip link del dummy0
-RemainAfterExit=yes
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-  - |
-    cat > /etc/systemd/system/db-ip.service <<EOF
-[Unit]
-Description=DB IP 192.168.122.40 on dummy1
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=oneshot
-ExecStartPre=-/sbin/modprobe dummy
-ExecStart=/sbin/ip link add dummy1 type dummy
-ExecStart=/sbin/ip addr add 192.168.122.40/24 dev dummy1
-ExecStart=/sbin/ip link set dummy1 up
-ExecStop=/sbin/ip link del dummy1
-RemainAfterExit=yes
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-  #===========================================================================
-  # 4. ACTIVAR SERVICIOS
-  #===========================================================================
-  - systemctl daemon-reload
-  - systemctl enable web-ip.service db-ip.service
-  - systemctl start web-ip.service db-ip.service
-  
-  #===========================================================================
-  # 5. CONFIGURAR FIREWALL
-  #===========================================================================
-  - |
-    # Leer interfaz principal
-    if [ -f /tmp/main-interface.txt ]; then
-      MAIN_IFACE=$(cat /tmp/main-interface.txt)
-      firewall-cmd --permanent --zone=public --add-interface=${MAIN_IFACE}
-    else
-      firewall-cmd --permanent --zone=public --add-interface=enp1s0
-    fi
-    
-    firewall-cmd --permanent --zone=internal --add-interface=dummy0
-    firewall-cmd --permanent --zone=internal --add-interface=dummy1
-    firewall-cmd --permanent --zone=public --add-service=ssh
-    firewall-cmd --permanent --zone=internal --add-service=http
-    firewall-cmd --permanent --zone=internal --add-service=mysql
-    firewall-cmd --reload
-  
-  #===========================================================================
-  # 6. CONFIGURAR SERVICIOS
-  #===========================================================================
-  - systemctl enable --now nginx
-  - systemctl enable --now mariadb
-  - setenforce 1
-  - echo "<h1>✅ J02 WEB OK - 192.168.122.30</h1>" > /usr/share/nginx/html/index.html
-  - chown -R nginx:nginx /usr/share/nginx/html
-  - |
-    cat > /etc/my.cnf.d/j02-lab.cnf <<EOF
-[mysqld]
-bind-address = 0.0.0.0
-EOF
-  - systemctl restart mariadb
-  
-  #===========================================================================
-  # 7. VERIFICACIÓN FINAL
-  #===========================================================================
-  - /root/verify-network.sh > /var/log/network-setup.log
-  - echo "=== CONFIGURACIÓN COMPLETADA ==="
-  - echo "IPs configuradas:"
-  - echo "  - ADMIN: 192.168.122.20"
-  - echo "  - WEB:   192.168.122.30"
-  - echo "  - DB:    192.168.122.40"
-  - echo ""
-  - echo "Para ver detalles: cat /var/log/network-setup.log"
-  - echo "Para verificar: ip a"
-  
-  - echo "BASE SANA OK - $(date)" >> /var/log/j02-base.log
+  - sleep 3
+  - ip addr
