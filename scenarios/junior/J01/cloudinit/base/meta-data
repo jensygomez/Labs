@@ -1,3 +1,11 @@
+###############################################################################
+# LAB: J01 (Junior)
+# FILE: meta-data
+# ROLE:
+#   - Identidad estática de la instancia cloud-init
+#   - Evita regeneración accidental del estado cloud-init
+#   - Asegura hostname consistente entre boots
+###############################################################################
+
 instance-id: j01-base
 local-hostname: j01-base
-
