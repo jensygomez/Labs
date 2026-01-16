@@ -261,9 +261,8 @@ manage_single_vm() {
 
 
 
-
 #==============================================================================
-# FUNCION DE LIMPIEZA DE VM
+# FUNCION DE LIMPIEZA DE VM (MEJORADA)
 #==============================================================================
 cleanup_vm() {
     local VM_NAME="$1"
@@ -274,9 +273,16 @@ cleanup_vm() {
     echo "[CLEANUP] Eliminando definición y storage..."
     virsh undefine "$VM_NAME" --remove-all-storage >/dev/null 2>&1 || true
 
-    echo "[CLEANUP] Limpiando ISOs cloud-init..."
+    echo "[CLEANUP] Limpiando archivos específicos de $VM_NAME..."
     rm -f /mnt/vms/labs/tmp/"${VM_NAME}.qcow2" 2>/dev/null || true
     rm -f "/tmp/${VM_NAME}-seed.iso" 2>/dev/null || true
 
-    echo "[CLEANUP] Cleanup completo"
+    echo "[CLEANUP] LIMPIANDO DIRECTORIO /mnt/vms/labs/tmp/ COMPLETO..."
+    # ✅ LIMPIEZA TOTAL segura (solo archivos, no directorio)
+    find /mnt/vms/labs/tmp/ -mindepth 1 -delete 2>/dev/null || true
+    
+    # Alternativa más agresiva (si quieres borrar TODO incluyendo subdirs)
+    # rm -rf /mnt/vms/labs/tmp/* 2>/dev/null || true
+    
+    echo "[CLEANUP] Cleanup completo - /mnt/vms/labs/tmp/ vacía"
 }
