@@ -1,0 +1,183 @@
+#cloud-config
+###############################################################################
+#                                                                              #
+#   ██████╗  ██████╗ ██╗   ██╗███╗   ██╗ ██████╗  ██████╗                      #
+#   ██╔══██╗██╔═══██╗██║   ██║████╗  ██║██╔════╝ ██╔═══██╗                     #
+#   ██████╔╝██║   ██║██║   ██║██╔██╗ ██║██║  ███╗██║   ██║                     #
+#   ██╔══██╗██║   ██║██║   ██║██║╚██╗██║██║   ██║██║   ██║                     #
+#   ██║  ██║╚██████╔╝╚██████╔╝██║ ╚████║╚██████╔╝╚██████╔╝                     #
+#   ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝  ╚═════╝                      #
+#                                                                              #
+#       J       E          N          S          Y                             #
+#                                                                              #
+#                 J01-V02: RESOLUCIÓN DNS INCORRECTA                          #
+#                   AUTOR: Jensy Gomez | I ♥ Linux                            #
+#                               Enero 2026                                    #
+###############################################################################
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 1. CONFIGURACIÓN DE RED - IP ADMINISTRATIVA FIJA (CRÍTICO)
+#═══════════════════════════════════════════════════════════════════════════════
+runcmd:
+  # IP ESTÁTICA para lab (distinta de base para evitar conflictos)
+  - nmcli con mod enp1s0 ipv4.method manual ipv4.addresses 192.168.122.50/24 ipv4.gateway 192.168.122.1 ipv4.dns "8.8.8.8 1.1.1.1" || true
+  - nmcli con down enp1s0 || true
+  - nmcli con up enp1s0
+  - echo "[V02] IP fija aplicada: 192.168.122.50" > /var/log/j01-v02-network.log
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 2. SERVICIOS BASE - FUNCIONANDO CORRECTAMENTE
+#═══════════════════════════════════════════════════════════════════════════════
+  # Firewall con HTTP permitido (SOLO conectividad OK)
+  - systemctl enable --now firewalld
+  - firewall-cmd --permanent --add-service=http
+  - firewall-cmd --permanent --add-service=ssh
+  - firewall-cmd --reload
+  - echo "[V02] Servicios firewalld+nginx configurados" >> /var/log/j01-v02-network.log
+
+  # Nginx activo y escuchando puerto 80
+  - systemctl enable --now nginx
+  - echo "[V02] Nginx activado" >> /var/log/j01-v02-network.log
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 3. FALLLO ESPECÍFICO V02 - RESOLUCIÓN DNS LOCAL INCORRECTA
+#═══════════════════════════════════════════════════════════════════════════════
+  # SOBRESCRIBIR /etc/hosts con IP MALA para hostname del lab
+  - cp /etc/hosts /etc/hosts.j01-v02.backup.$(date +%s)
+  - |
+    cat << 'EOF' > /etc/hosts
+    127.0.0.1   localhost localhost.localdomain j01-eu.example.com
+    ::1         localhost localhost.localdomain j01-eu.example.com
+    
+    # ═══ J01-V02 FALLLO INTENCIONAL ═══
+    # hostname lab apunta a IP INEXISTENTE
+    192.168.122.99    j01-eu.example.com    j01-eu
+    # ===================================
+    
+    # IP REAL del servidor (para referencia interna)
+    # 192.168.122.50    j01-eu.example.com
+    EOF
+  - echo "[V02] /etc/hosts modificado - DNS FAIL inyectado" >> /var/log/j01-v02-network.log
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 4. CONTENIDO ESPECÍFICO DEL LABORATORIO
+#═══════════════════════════════════════════════════════════════════════════════
+  # Página de bienvenida NOC Lab (nginx sirve esto)
+  - |
+    cat << 'EOF' > /var/www/html/index.html
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>J01-V02 NOC Junior Lab - DNS Resolution</title>
+        <meta charset="UTF-8">
+        <style>
+            body { font-family: monospace; background: #000; color: #0f0; padding: 20px; }
+            h1 { color: #00ff00; }
+            .status { background: #111; padding: 15px; border: 1px solid #0f0; }
+        </style>
+    </head>
+    <body>
+        <h1>🏆 J01-V02 RESUELTO CORRECTAMENTE</h1>
+        <div class="status">
+            <h2>Diagnóstico Estudiante:</h2>
+            <ul>
+                <li><b>✓</b> IP conectividad OK: curl http://192.168.122.50</li>
+                <li><b>✓</b> Nginx service: active (port 80)</li>
+                <li><b>✓</b> Firewall: http service permitido</li>
+                <li><b>✗→✓</b> /etc/hosts corregido: 192.168.122.50 j01-eu.example.com</li>
+            </ul>
+            <h2>Comando de corrección:</h2>
+            <pre>sed -i 's/192.168.122.99/192.168.122.50/' /etc/hosts</pre>
+        </div>
+    </body>
+    </html>
+    EOF
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 5. DOCUMENTACIÓN DEL ESCENARIO - VISIBLE PARA ESTUDIANTE
+#═══════════════════════════════════════════════════════════════════════════════
+  - |
+    cat << 'EOF' > /etc/j01-scenario.txt
+    ════════════════════════════════════════════════════════════════════════════════
+    
+                 LAB J01-V02: Redes y Conectividad - DNS Resolution
+    
+    ════════════════════════════════════════════════════════════════════════════════
+    
+    ROL: NOC Engineer Junior / SysAdmin en entrenamiento
+    
+    TOPOLOGÍA:
+      HOST (tu laptop)  ───[ INTERNET ]───  SERVER_EU (esta VM: 192.168.122.50)
+    
+    OBJETIVO:
+      Resolver: curl http://j01-eu.example.com  → página NOC Lab
+    
+    SÍNTOMAS OBSERVADOS:
+    ┌─────────────────────────────────────────────────────────────┐
+    │ HOST$ ping 192.168.122.50              → OK (2ms)           │
+    │ HOST$ curl http://192.168.122.50       → NGINX OK           │
+    │ HOST$ ping j01-eu.example.com          → FAIL (192.168.122.99?!) │
+    │ HOST$ curl http://j01-eu.example.com   → Name resolution FAIL │
+    └─────────────────────────────────────────────────────────────┘
+    
+    HERRAMIENTAS ESPERADAS:
+      • ping, curl, nslookup, dig
+      • cat /etc/hosts, getent hosts
+      • ss -tuln, systemctl status nginx
+      • firewall-cmd --list-all
+    
+    RESTRICCIONES:
+      • NO modifiques /etc/resolv.conf (usa DNS real)
+      • NO reinstales servicios
+      • NO deshabilites firewalld
+      • Solución debe sobrevivir reboot
+    
+    💡 PISTAS:
+      1. ¿Por qué IP directa funciona pero hostname no?
+      2. ¿Dónde se resuelve j01-eu.example.com PRIMERO?
+      3. ¿192.168.122.99 existe realmente?
+    
+    🎯 FLUJO ESPERADO:
+      HOST → VM → diagnostico → cat /etc/hosts → vim /etc/hosts → FIX → HOST ✓
+    
+    ════════════════════════════════════════════════════════════════════════════════
+    EOF
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 6. EVIDENCIAS TÉCNICAS - AUTOGRADING / AUDITORÍA
+#═══════════════════════════════════════════════════════════════════════════════
+  # Estado servicios
+  - systemctl is-active nginx > /etc/j01-v02-nginx.status
+  - systemctl is-active firewalld > /etc/j01-v02-firewalld.status
+
+  # Estado red y DNS
+  - cp /etc/hosts /etc/j01-v02-hosts.state
+  - ip addr show enp1s0 > /etc/j01-v02-network.state
+  - firewall-cmd --list-all > /etc/j01-v02-firewall.state
+
+  # Logs de diagnóstico
+  - ss -tuln > /etc/j01-v02-ports.state
+
+  # Flags canónicos
+  - echo "J01 V02 - DNS Resolution via /etc/hosts FAIL (192.168.122.99)" > /etc/j01-variant-v02.flag
+  - echo "J01 BASE + V02 aplicada correctamente - IP:192.168.122.50" > /etc/j01-base.flag
+
+  # Log de auditoría completo
+  - echo "=== J01-V02 DEPLOY COMPLETED $(date)" >> /var/log/j01-v02-network.log
+  - echo "IP: 192.168.122.50" >> /var/log/j01-v02-network.log
+  - echo "Hostname FAIL: j01-eu.example.com → 192.168.122.99" >> /var/log/j01-v02-network.log
+  - echo "Real IP: 192.168.122.50" >> /var/log/j01-v02-network.log
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 7. SELINUX Y PERMISOS - CONSISTENCIA
+#═══════════════════════════════════════════════════════════════════════════════
+  # Asegurar nginx puede servir página
+  - restorecon -R /var/www/html
+  - chown -R nginx:nginx /var/www/html
+  - chmod 644 /var/www/html/index.html
+
+###############################################################################
+# FIN J01-V02 - Documentación Canónica
+# Este archivo es AUTOCONTENIDO - no requiere base/user-data
+###############################################################################
