@@ -1,0 +1,21 @@
+#cloud-config
+
+hostname: j01
+manage_etc_hosts: true
+
+users:
+  - name: student
+    groups: wheel
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+
+ssh_pwauth: true
+disable_root: false
+
+packages:
+  - vim
+  - curl
+  - net-tools
+
+runcmd:
+  - echo "BASE cloud-init aplicado correctamente" > /etc/motd

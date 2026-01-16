@@ -1,0 +1,19 @@
+#cloud-config
+
+runcmd:
+  # 1) Desactivar SELinux en runtime (si está enforcing)
+  - |
+    if command -v getenforce >/dev/null 2>&1; then
+      if [ "$(getenforce)" != "Disabled" ]; then
+        setenforce 0 || true
+      fi
+    fi
+
+  # 2) Desactivar SELinux de forma persistente
+  - sed -ri 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config
+
+  # 3) Evidencia para el alumno
+  - echo "⚠️ SELinux fue DESHABILITADO por la variante V01" > /etc/issue.d/selinux-disabled.issue
+
+  # 4) Log forense
+  - echo "$(date) - SELinux disabled by cloud-init V01" >> /var/log/lab-changes.log
