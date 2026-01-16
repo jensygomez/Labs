@@ -1,0 +1,180 @@
+#cloud-config
+###############################################################################
+#                                                                              #
+#   ██████╗  ██████╗ ██╗   ██╗███╗   ██╗ ██████╗  ██████╗                      #
+#   ██╔══██╗██╔═══██╗██║   ██║████╗  ██║██╔════╝ ██╔═══██╗                     #
+#   ██████╔╝██║   ██║██║   ██║██╔██╗ ██║██║  ███╗██║   ██║                     #
+#   ██╔══██╗██║   ██║██║   ██║██║╚██╗██║██║   ██║██║   ██║                     #
+#   ██║  ██║╚██████╔╝╚██████╔╝██║ ╚████║╚██████╔╝╚██████╔╝                     #
+#   ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝  ╚═════╝                      #
+#                                                                              #
+#       J       E          N          S          Y                             #
+#                                                                              #
+#                J01-V04: LATENCIA Y PÉRDIDA PAQUETES                         #
+#                   AUTOR: Jensy Gomez | I ♥ Linux                            #
+#                               Enero 2026                                    #
+###############################################################################
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 1. CONFIGURACIÓN DE RED - IP ADMINISTRATIVA FIJA (CRÍTICO)
+#═══════════════════════════════════════════════════════════════════════════════
+runcmd:
+  # IP ESTÁTICA para lab (distinta de base para evitar conflictos)
+  - nmcli con mod enp1s0 ipv4.method manual ipv4.addresses 192.168.122.40/24 ipv4.gateway 192.168.122.1 ipv4.dns "8.8.8.8 1.1.1.1" || true
+  - nmcli con down enp1s0 || true
+  - nmcli con up enp1s0
+  - echo "[V04] IP fija aplicada: 192.168.122.40" > /var/log/j01-v04-network.log
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 2. SERVICIOS BASE - TODO FUNCIONANDO PERFECTO
+#═══════════════════════════════════════════════════════════════════════════════
+  # Firewall completamente abierto
+  - systemctl enable --now firewalld
+  - firewall-cmd --permanent --add-service=http
+  - firewall-cmd --permanent --add-service=ssh
+  - firewall-cmd --reload
+  - echo "[V04] Firewall configurado correctamente" >> /var/log/j01-v04-network.log
+
+  # Nginx normal puerto 80
+  - dnf install -y nginx || true
+  - systemctl enable --now nginx
+  - echo "[V04] Nginx puerto 80 activado" >> /var/log/j01-v04-network.log
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 3. FALLLO ESPECÍFICO V04 - LATENCIA + PÉRDIDA CON `tc`
+#═══════════════════════════════════════════════════════════════════════════════
+  # SIMULAR latencia 500ms + 10% pérdida paquetes (INTERMITENTE)
+  - dnf install -y iproute || true
+  - |
+    tc qdisc del dev enp1s0 root 2>/dev/null || true
+    tc qdisc add dev enp1s0 root netem delay 500ms 100ms loss 10%
+  - echo "[V04] tc aplicado: 500ms delay + 10% loss en enp1s0" >> /var/log/j01-v04-network.log
+
+  # Script para mostrar estado tc (estudiante puede ejecutar)
+  - |
+    cat << 'EOF' > /usr/local/bin/check-latency.sh
+    #!/bin/bash
+    echo "=== J01-V04 LATENCIA SIMULADA ==="
+    tc qdisc show dev enp1s0
+    echo ""
+    echo "PING TEST (desde HOST deberías ver alta latencia)"
+    echo "ping -c 10 192.168.122.40"
+    EOF
+  - chmod +x /usr/local/bin/check-latency.sh
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# 4. CONTENIDO ESPECÍFICO DEL LABORATORIO
+#═══════════════════════════════════════════════════════════════════════════════
+  - |
+    cat << 'EOF' > /var/www/html/index.html
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>J01-V04 NOC Junior Lab - Latencia Intermitente</title>
+        <meta charset="UTF-8">
+        <style>
+            body { font-family: monospace; background: #000; color: #0f0; padding: 20px; }
+            h1 { color: #00ff00; }
+            .status { background: #111; padding: 15px; border: 1px solid #0f0; }
+        </style>
+    </head>
+    <body>
+        <h1>🏆 J01-V04 RESUELTO CORRECTAMENTE</h1>
+        <div class="status">
+            <h2>Diagnóstico Estudiante:</h2>
+            <ul>
+                <li><b>✓</b> Nginx puerto 80 OK</li>
+                <li><b>✓</b> Firewall completamente abierto</li>
+                <li><b>✗→✓</b> tc qdisc removido: netem delay/loss</li>
+                <li><b>✓</b> ping normalizado &lt; 2ms</li>
+            </ul>
+            <h2>Comando de corrección:</h2>
+            <pre>tc qdisc del dev enp1s0 root</pre>
+        </div>
+    </body>
+    </html>
+    EOF
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 5. DOCUMENTACIÓN DEL ESCENARIO - VISIBLE PARA ESTUDIANTE
+#═══════════════════════════════════════════════════════════════════════════════
+  - |
+    cat << 'EOF' > /etc/j01-scenario.txt
+    ════════════════════════════════════════════════════════════════════════════════
+    
+                 LAB J01-V04: Redes y Conectividad - Latencia Intermitente
+    
+    ════════════════════════════════════════════════════════════════════════════════
+    
+    ROL: NOC Engineer Junior / SysAdmin en entrenamiento
+    
+    TOPOLOGÍA:
+      HOST (tu laptop)  ───[ INTERNET ]───  SERVER_EU (esta VM: 192.168.122.40)
+    
+    OBJETIVO:
+      Resolver: ping/HTTP estable &lt; 5ms (actual: 500ms+ intermitente)
+    
+    SÍNTOMAS OBSERVADOS:
+    ┌─────────────────────────────────────────────────────────────┐
+    │ HOST$ ping 192.168.122.40 → 500ms+ | 10% packet loss!      │
+    │ HOST$ curl http://192.168.122.40 → timeouts intermitentes  │
+    │ VM$ ping 192.168.122.1 → 500ms+                           │
+    └─────────────────────────────────────────────────────────────┘
+    
+    HERRAMIENTAS ESPERADAS:
+      • ping -c 20 192.168.122.40 (métricas latencia/loss)
+      • mtr 192.168.122.40 (traceroute+ping)
+      • tc qdisc show dev enp1s0 (¡AQUÍ ESTÁ EL FALLO!)
+      • ip link show enp1s0
+    
+    RESTRICCIONES:
+      • NO reinicies servidor
+      • NO modifiques firewall (está OK)
+      • NO cambies IP/rutas
+    
+    💡 PISTAS:
+      1. ¿Firewall? → OK (puertos abiertos)
+      2. ¿nginx? → OK (puerto 80)
+      3. ¿Latencia dónde? → tc qdisc show dev enp1s0
+      4. ¿Qué herramienta de RedHat simula latencia?
+    
+    🎯 FLUJO ESPERADO:
+      ping intermitente → tc qdisc → tc qdisc del → ping normal ✓
+    
+    ════════════════════════════════════════════════════════════════════════════════
+    EOF
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 6. EVIDENCIAS TÉCNICAS - AUTOGRADING / AUDITORÍA
+#═══════════════════════════════════════════════════════════════════════════════
+  # Estado servicios
+  - systemctl is-active nginx > /etc/j01-v04-nginx.status
+  - systemctl is-active firewalld > /etc/j01-v04-firewalld.status
+
+  # Estado red y tc
+  - tc qdisc show dev enp1s0 > /etc/j01-v04-tc.state
+  - ip addr show enp1s0 > /etc/j01-v04-network.state
+  - firewall-cmd --list-all > /etc/j01-v04-firewall.state
+  - ss -tuln > /etc/j01-v04-ports.state
+
+  # Flags canónicos
+  - echo "J01 V04 - tc netem delay 500ms 10% loss" > /etc/j01-variant-v04.flag
+  - echo "J01 BASE + V04 aplicada correctamente - IP:192.168.122.40" > /etc/j01-base.flag
+
+  # Log de auditoría completo
+  - echo "=== J01-V04 DEPLOY COMPLETED $(date)" >> /var/log/j01-v04-network.log
+  - echo "IP: 192.168.122.40" >> /var/log/j01-v04-network.log
+  - echo "tc qdisc: delay 500ms 100ms loss 10%" >> /var/log/j01-v04-network.log
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 7. SELINUX Y PERMISOS - CONSISTENCIA
+#═══════════════════════════════════════════════════════════════════════════════
+  - mkdir -p /var/www/html
+  - restorecon -R /var/www/html
+  - chown -R nginx:nginx /var/www/html
+  - chmod 644 /var/www/html/index.html
+
+###############################################################################
+# FIN J01-V04 - Documentación Canónica
+# Este archivo es AUTOCONTENIDO - no requiere base/user-data
+###############################################################################
