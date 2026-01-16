@@ -1,8 +1,73 @@
 #cloud-config
+###############################################################################
+# LAB ID: J01
+# NIVEL: Junior
+#
+# TEMA PRINCIPAL:
+#   Redes y conectividad en Linux
+#
+# CONTEXTO DEL ESCENARIO:
+#   El estudiante trabaja DESDE SU HOST (cliente),
+#   intentando acceder a un servidor remoto (esta VM).
+#
+# TOPOLOGÍA:
+#   HOST (cliente)  --->  SERVER_EU (esta VM)
+#
+# SERVICIOS ESPERADOS EN EL SERVIDOR:
+#   - SSH
+#   - Nginx (HTTP)
+#   - firewalld
+#
+# VARIANTE: V01
+#
+# ERROR SIMULADO (INTENCIONAL):
+#   - El servicio Nginx está ACTIVO
+#   - El puerto 80 está BLOQUEADO por firewalld
+#
+# OBJETIVO DEL ESTUDIANTE:
+#   - Verificar conectividad básica (ping)
+#   - Detectar que el servicio corre
+#   - Identificar bloqueo por firewall
+#   - Aplicar la corrección correcta y persistente
+#
+# HERRAMIENTAS ESPERADAS:
+#   ping, ss, firewall-cmd, curl, nc
+###############################################################################
 
 runcmd:
-  # ❌ Error clásico de junior
-  - setenforce 0
+  # Asegurar servicios base
+  - systemctl enable --now firewalld
+  - systemctl enable --now nginx
 
-  # ❌ Mala práctica: NO persistente pero peligrosa
-  - echo "SELinux was disabled at runtime (bad practice)" > /etc/j01-variant-v01.flag
+  # Bloqueo intencional del servicio HTTP
+  - firewall-cmd --permanent --remove-service=http || true
+  - firewall-cmd --reload
+
+  # Documento visible para el estudiante (brief del escenario)
+  - |
+    cat << 'EOF' > /etc/j01-scenario.txt
+    LAB: J01 - Redes y Conectividad (Junior)
+
+    Rol del estudiante:
+      Actúas como cliente desde tu HOST local.
+
+    Objetivo:
+      Acceder vía HTTP a este servidor.
+
+    Estado actual:
+      - El servidor responde a ping
+      - El servicio web debería estar disponible
+      - Algo en la conectividad no funciona correctamente
+
+    Restricciones:
+      - No reinstalar servicios
+      - No deshabilitar firewalld
+      - La solución debe ser persistente
+    EOF
+
+  # Evidencias técnicas (para ti / autograding futuro)
+  - systemctl is-active nginx > /etc/j01-v01-nginx.status
+  - firewall-cmd --list-all > /etc/j01-v01-firewall.state
+
+  # Flag de variante
+  - echo "J01 V01 - Firewall bloquea HTTP" > /etc/j01-variant-v01.flag
