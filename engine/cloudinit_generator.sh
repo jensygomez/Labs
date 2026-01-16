@@ -3,14 +3,15 @@ set -euo pipefail
 
 LEVEL="$1"
 LAB_ID="$2"
-VARIANT_DIR="$3"
+VARIANT_NAME="$3"
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 LAB_CLOUDINIT="$ROOT_DIR/scenarios/${LEVEL,,}/${LAB_ID}/cloudinit"
 
 BASE_DIR="$LAB_CLOUDINIT/base"
+VARIANT_DIR="$LAB_CLOUDINIT/$VARIANT_NAME"
 
-WORKDIR="/mnt/vms/labs/tmp/${LAB_ID}_$(basename "$VARIANT_DIR")_$(date +%s)"
+WORKDIR="/mnt/vms/labs/tmp/${LAB_ID}_${VARIANT_NAME}_$(date +%s)"
 ISO_PATH="$WORKDIR/${LAB_ID}.iso"
 
 mkdir -p "$WORKDIR"
@@ -19,15 +20,15 @@ mkdir -p "$WORKDIR"
 [[ -d "$BASE_DIR" ]] || { echo "❌ base no existe"; exit 1; }
 [[ -d "$VARIANT_DIR" ]] || { echo "❌ variante no existe"; exit 1; }
 
-# Copiar base
+# Base SIEMPRE
 cp "$BASE_DIR/user-data" "$WORKDIR/user-data"
 cp "$BASE_DIR/meta-data" "$WORKDIR/meta-data"
 
-# Sobrescribir con variante si aplica
+# Variante SOBREESCRIBE si define
 [[ -f "$VARIANT_DIR/user-data" ]] && cp "$VARIANT_DIR/user-data" "$WORKDIR/user-data"
 [[ -f "$VARIANT_DIR/meta-data" ]] && cp "$VARIANT_DIR/meta-data" "$WORKDIR/meta-data"
 
-# ISO
+# ISO cloud-init
 genisoimage -quiet \
   -output "$ISO_PATH" \
   -volid cidata \
@@ -35,3 +36,4 @@ genisoimage -quiet \
   "$WORKDIR/user-data" "$WORKDIR/meta-data"
 
 echo "$ISO_PATH"
+
