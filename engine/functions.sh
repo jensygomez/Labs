@@ -18,6 +18,8 @@ check_env() {
     echo "[DEBUG] check_env completado OK" >&2
 }
 
+
+
 #==============================================================================
 # SELECCIÓN ALEATORIA DE VARIANTE
 #==============================================================================
@@ -32,9 +34,15 @@ select_variant_file() {
         return 1
     fi
 
-    # Devuelve el nombre del archivo YAML de variante elegido aleatoriamente
-    echo "$(basename "${VARIANTS[RANDOM % ${#VARIANTS[@]}]}")"
+    # Devuelve solo el nombre de la variante sin extensión
+    local SELECTED_FILE
+    SELECTED_FILE="$(basename "${VARIANTS[RANDOM % ${#VARIANTS[@]}]}")"
+    echo "${SELECTED_FILE%.yaml}"
 }
+
+
+
+
 #==============================================================================
 # ASIGNACIÓN DE LAB
 #==============================================================================
