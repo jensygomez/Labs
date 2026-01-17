@@ -2,51 +2,63 @@
 set -euo pipefail
 
 # ============================================================================
-# ARGUMENTOS
+# terraform_runner.sh
+# Refactorizado para levantar varias VMs de un laboratorio de forma automática
 # ============================================================================
-VM_NAME="$1"
-BASE_IMAGE="$2"
-CLOUDINIT_DIR="$3"
-
-TF_ROOT="$(cd "$(dirname "$0")/.." && pwd)/scenarios/terraform"
-MODULE_DIR="$TF_ROOT/modules/rocky_vm"
-
-USER_DATA="$CLOUDINIT_DIR/user-data"
-META_DATA="$CLOUDINIT_DIR/meta-data"
-
+# ARGUMENTOS:
+#   $1 = nivel del lab (ej: Junior)
+#   $2 = ID del lab (ej: J01)
+#   $3 = base image (ej: /mnt/vms/rocky-ir-base-junior-v1.qcow2)
 # ============================================================================
-# VALIDACIONES
-# ============================================================================
-[[ -f "$USER_DATA" ]] || {
-  echo "❌ user-data no encontrado: $USER_DATA" >&2
-  exit 1
-}
+LEVEL="$1"
+LAB_ID="$2"
+BASE_IMAGE="$3"
 
-[[ -f "$META_DATA" ]] || {
-  echo "❌ meta-data no encontrado: $META_DATA" >&2
-  exit 1
-}
+ENGINE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+CLOUDINIT_BASE="/mnt/vms/labs/tmp/cloudinit"
 
 # ============================================================================
-# TERRAFORM WORKDIR (aislado por VM)
+# ROLES A LEVANTAR POR LAB
 # ============================================================================
-TF_WORKDIR="/mnt/vms/labs/tmp/terraform/$VM_NAME"
-mkdir -p "$TF_WORKDIR"
-cd "$TF_WORKDIR"
+ROLES=("web" "db" "dns" "proxy")
 
 # ============================================================================
-# TERRAFORM FILES
+# LOOP: POR CADA ROLE
 # ============================================================================
-cat > main.tf <<EOF
+for ROLE in "${ROLES[@]}"; do
+    VM_NAME="lab-${LAB_ID,,}-${ROLE}-01"
+    CLOUDINIT_DIR="$CLOUDINIT_BASE/$VM_NAME"
+
+    [[ -f "$CLOUDINIT_DIR/user-data" ]] || {
+        echo "❌ user-data no encontrado para $VM_NAME"
+        exit 1
+    }
+    [[ -f "$CLOUDINIT_DIR/meta-data" ]] || {
+        echo "❌ meta-data no encontrado para $VM_NAME"
+        exit 1
+    }
+
+    # Crear workdir aislado para Terraform
+    TF_WORKDIR="/mnt/vms/labs/tmp/terraform/$VM_NAME"
+    mkdir -p "$TF_WORKDIR"
+    cd "$TF_WORKDIR"
+
+    # Generar main.tf para este VM
+    cat > main.tf <<EOF
 module "vm" {
-  source = "$MODULE_DIR"
+  source = "$ENGINE_DIR/scenarios/terraform/modules/rocky_vm"
 
-  vm_name              = "$VM_NAME"
-  base_image           = "$BASE_IMAGE"
-  cloudinit_user_data  = file("$USER_DATA")
-  cloudinit_meta_data  = file("$META_DATA")
+  vm_name             = "$VM_NAME"
+  base_image          = "$BASE_IMAGE"
+  cloudinit_user_data = file("$CLOUDINIT_DIR/user-data")
+  cloudinit_meta_data = file("$CLOUDINIT_DIR/meta-data")
 }
 EOF
 
-terraform init -input=false -no-color
-terraform apply -auto-approve -no-color
+    echo "🔨 Inicializando Terraform para $VM_NAME..."
+    terraform init -input=false -no-color
+    terraform apply -auto-approve -no-color
+    echo "✅ VM '$VM_NAME' aprovisionada con Terraform"
+done
+
+echo "🚀 Todas las VMs del laboratorio '$LAB_ID' han sido levantadas"
