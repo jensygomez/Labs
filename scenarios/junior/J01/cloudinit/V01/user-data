@@ -3,20 +3,16 @@
 # CLOUD-INIT USER-DATA
 # ==============================================================================
 # Escenario: J01 - V01
-# Objetivo: Configuración de RED ESTÁTICA
-# Distribución: Rocky Linux 9.x
-# Network Manager: habilitado
-#
-# Esta variante:
-#  - DESACTIVA DHCP
-#  - Configura IPs estáticas
-#  - No crea usuarios ni instala paquetes
+# Objetivo: Red estática SIN depender del nombre de interfaz
+# Plataforma: Rocky Linux 9.x + NetworkManager
 # ==============================================================================
 
 network:
   version: 2
   ethernets:
-    eth0:
+    primary:
+      match:
+        name: "en*"
       dhcp4: false
       addresses:
         - 192.168.122.20/24
