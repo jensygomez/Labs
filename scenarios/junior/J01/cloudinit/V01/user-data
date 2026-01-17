@@ -78,24 +78,31 @@ write_files:
       FLUSH PRIVILEGES;
 
 # ============================================================================
-# IDENTIDAD DEL LAB - MOTD
+# 🎫 TICKET DE INCIDENTE - MOTD CON COMANDOS DE USUARIO
 # ============================================================================
   - path: /etc/motd
     permissions: '0644'
     content: |
-      =====================================================
-       INCIDENT RESPONSE LAB – V01
-       Firewall bloqueando servicio HTTP
-      =====================================================
-       Servicios:
-         - Web  : 192.168.122.30 (Nginx) ❌ BLOQUEADO
-         - DB   : 192.168.122.40 (MariaDB) ✅ FUNCIONAL
+      ═══════════════════════════════════════════════════════════════════════════════
+                                    🎫 TICKET #001 - PRODUCCIÓN CAÍDA
+      
+      🚨 RECLAMACIÓN USUARIO: "¡El sitio web no funciona!"
+      
+      ✅ LO QUE SÍ FUNCIONA (desde mi laptop/HOST):
+      
+      $ mysql -u labuser -plabpass123 -h 192.168.122.40 labdb -e "SELECT * FROM incidents;" | grep UP 
+                                                   # ✅ OK
+      $ ping -c2 192.168.122.20                    # ✅ OK
+      $ ping -c2 192.168.122.30                    # ✅ OK  
+      $ ping -c2 192.168.122.40                    # ✅ OK
+       
+                                                   
+      ❌ LO QUE FALLA:
+      $ curl -I http://192.168.122.30/             # ❌ Connection refused
+      
+      🤔 Ticket abierto: "Web server caído, revisar conectividad"
+      ════════════════════════════════════════════════════════════════════════════        
 
-       Estado:
-         - ICMP funcional ✅
-         - DB accesible ✅
-         - HTTP bloqueado por firewalld ❌
-      =====================================================
 
 runcmd:
 
