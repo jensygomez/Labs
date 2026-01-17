@@ -35,14 +35,5 @@ resource "libvirt_domain" "this" {
     network_name = "default"
   }
 
-  graphics {
-    type = "none"
-  }
-  
-  video {
-    type = "none"
-  }
-
-  autostart = true
+  autostart = true  # ← SIN graphics/video
 }
-
