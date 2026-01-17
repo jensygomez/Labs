@@ -80,28 +80,47 @@ write_files:
 # ============================================================================
 # 🎫 TICKET DE INCIDENTE - MOTD CON COMANDOS DE USUARIO
 # ============================================================================
+
+
+write_files:
   - path: /etc/motd
     permissions: '0644'
     content: |
-      ═══════════════════════════════════════════════════════════════════════════════
-                                    🎫 TICKET #001 - PRODUCCIÓN CAÍDA
-      
-      🚨 RECLAMACIÓN USUARIO: "¡El sitio web no funciona!"
-      
-      ✅ LO QUE SÍ FUNCIONA (desde mi laptop/HOST):
-      
-      $ mysql -u labuser -plabpass123 -h 192.168.122.40 labdb -e "SELECT * FROM incidents;" | grep UP 
-                                                   # ✅ OK
-      $ ping -c2 192.168.122.20                    # ✅ OK
-      $ ping -c2 192.168.122.30                    # ✅ OK  
-      $ ping -c2 192.168.122.40                    # ✅ OK
-       
-                                                   
-      ❌ LO QUE FALLA:
-      $ curl -I http://192.168.122.30/             # ❌ Connection refused
-      
-      🤔 Ticket abierto: "Web server caído, revisar conectividad"
-      ════════════════════════════════════════════════════════════════════════════        
+      ======================================================================
+                            TICKET #001 - PRODUCCION CAIDA
+      ======================================================================
+
+
+      ----------------------------------------------------------------------
+      NOTA DEL INGENIERO SENIOR
+      ----------------------------------------------------------------------
+      En Linux, que un servicio este activo no implica que sea accesible.
+      La disponibilidad es el resultado de multiples capas actuando de forma
+      explicita, y el firewall es una frontera intencional, no un detalle
+      secundario. Un ingeniero con experiencia valida primero los controles
+      de acceso antes de cuestionar la aplicacion, porque el sistema siempre
+      ejecuta exactamente lo que fue configurado para hacer.
+      ----------------------------------------------------------------------
+
+      RECLAMACION USUARIO:
+      "El sitio web no funciona"
+
+      LO QUE SI FUNCIONA (desde el HOST):
+
+      $ mysql -u labuser -plabpass123 -h 192.168.122.40 labdb \
+        -e "SELECT * FROM incidents;" | grep UP      # OK
+
+      $ ping -c2 192.168.122.20                       # OK
+      $ ping -c2 192.168.122.30                       # OK
+      $ ping -c2 192.168.122.40                       # OK
+
+      LO QUE FALLA:
+      $ curl -I http://192.168.122.30/                # FAIL
+
+      Ticket abierto:
+      "Web server caido, revisar conectividad"
+      ======================================================================
+
 
 
 runcmd:
