@@ -1,52 +1,121 @@
 #!/bin/bash
 set -euo pipefail
 
+# ============================================================================
+# ARGUMENTOS
+# ============================================================================
 LEVEL="$1"
 LAB_ID="$2"
-VARIANT_NAME="$3"
+VARIANT="$3"
+ROLE="$4"
+VM_NAME="$5"
 
+# ============================================================================
+# PATHS BASE
+# ============================================================================
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-VARIANT_DIR="$ROOT_DIR/scenarios/${LEVEL,,}/${LAB_ID}/cloudinit/${VARIANT_NAME}"
+LAB_DIR="$ROOT_DIR/scenarios/${LEVEL,,}/${LAB_ID}/cloudinit"
 
-WORKDIR="/mnt/vms/labs/tmp/${LAB_ID}_${VARIANT_NAME}_$(date +%s)"
-ISO_PATH="$WORKDIR/${LAB_ID}.iso"
+ROLE_FILE="$LAB_DIR/roles/${ROLE}.yaml"
+VARIANT_FILE="$LAB_DIR/variants/${VARIANT}.yaml"
 
-USER_DATA="$VARIANT_DIR/user-data"
-META_DATA="$VARIANT_DIR/meta-data"
+OUT_BASE="/mnt/vms/labs/tmp/cloudinit"
+OUT_DIR="$OUT_BASE/$VM_NAME"
 
-mkdir -p "$WORKDIR"
+USER_DATA="$OUT_DIR/user-data"
+META_DATA="$OUT_DIR/meta-data"
 
-# =========================
-# Validaciones estrictas
-# =========================
-[[ -d "$VARIANT_DIR" ]] || {
-  echo "❌ Variante no existe: $VARIANT_DIR"
+mkdir -p "$OUT_DIR"
+
+# ============================================================================
+# VALIDACIONES ESTRICTAS
+# ============================================================================
+[[ -d "$LAB_DIR" ]] || {
+  echo "❌ LAB no existe: $LAB_DIR" >&2
   exit 1
 }
 
-[[ -f "$USER_DATA" ]] || {
-  echo "❌ Falta user-data en $VARIANT_DIR"
+[[ -f "$ROLE_FILE" ]] || {
+  echo "❌ Role no existe: $ROLE_FILE" >&2
   exit 1
 }
 
-[[ -f "$META_DATA" ]] || {
-  echo "❌ Falta meta-data en $VARIANT_DIR"
+[[ -f "$VARIANT_FILE" ]] || {
+  echo "❌ Variant no existe: $VARIANT_FILE" >&2
   exit 1
 }
 
-# =========================
-# Copia directa (sin base)
-# =========================
-cp "$USER_DATA" "$WORKDIR/user-data"
-cp "$META_DATA" "$WORKDIR/meta-data"
+# ============================================================================
+# META-DATA
+# ============================================================================
+cat > "$META_DATA" <<EOF
+instance-id: $VM_NAME
+local-hostname: $VM_NAME
+EOF
 
-# =========================
-# ISO cloud-init
-# =========================
-genisoimage -quiet \
-  -output "$ISO_PATH" \
-  -volid cidata \
-  -joliet -rock \
-  "$WORKDIR/user-data" "$WORKDIR/meta-data"
+# ============================================================================
+# USER-DATA (cloud-init)
+# ============================================================================
+cat > "$USER_DATA" <<EOF
+#cloud-config
 
-echo "$ISO_PATH"
+# ============================================================================
+# LAB METADATA
+# ============================================================================
+write_files:
+  - path: /etc/lab.info
+    permissions: '0644'
+    content: |
+      LEVEL=$LEVEL
+      LAB=$LAB_ID
+      ROLE=$ROLE
+      VARIANT=$VARIANT
+      VM_NAME=$VM_NAME
+
+EOF
+
+# ============================================================================
+# INYECTAR ROLE
+# ============================================================================
+cat >> "$USER_DATA" <<EOF
+# ============================================================================
+# ROLE: $ROLE
+# ============================================================================
+EOF
+
+cat "$ROLE_FILE" >> "$USER_DATA"
+
+# ============================================================================
+# INYECTAR VARIANT
+# ============================================================================
+cat >> "$USER_DATA" <<EOF
+
+# ============================================================================
+# VARIANT: $VARIANT
+# ============================================================================
+EOF
+
+cat "$VARIANT_FILE" >> "$USER_DATA"
+
+# ============================================================================
+# SCRIPTS COMUNES (SI EXISTEN)
+# ============================================================================
+COMMON_SCRIPT="$LAB_DIR/scripts/common.sh"
+if [[ -f "$COMMON_SCRIPT" ]]; then
+  cat >> "$USER_DATA" <<EOF
+
+# ============================================================================
+# COMMON SCRIPT
+# ============================================================================
+runcmd:
+  - bash /var/lib/cloud/scripts/per-instance/common.sh
+EOF
+
+  mkdir -p "$OUT_DIR/scripts"
+  cp "$COMMON_SCRIPT" "$OUT_DIR/scripts/common.sh"
+fi
+
+# ============================================================================
+# SALIDA PARA TERRAFORM
+# ============================================================================
+echo "$OUT_DIR"
