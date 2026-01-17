@@ -1,126 +1,29 @@
 #cloud-config
-###############################################################################
-#                                                                              #
-#   ██████╗  ██████╗ ██╗   ██╗███╗   ██╗ ██████╗  ██████╗                      #
-#   ██╔══██╗██╔═══██╗██║   ██║████╗  ██║██╔════╝ ██╔═══██╗                     #
-#   ██████╔╝██║   ██║██║   ██║██╔██╗ ██║██║  ███╗██║   ██║                     #
-#   ██╔══██╗██║   ██║██║   ██║██║╚██╗██║██║   ██║██║   ██║                     #
-#   ██║  ██║╚██████╔╝╚██████╔╝██║ ╚████║╚██████╔╝╚██████╔╝                     #
-#   ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝  ╚═════╝                      #
-#                                                                              #
-#       J       E          N          S          Y                             #
-#                                                                              #
-#                 J01-V01: FIREWALL BLOQUEA HTTP                              #
-#                   AUTOR: Jensy Gomez | I ♥ Linux                            #
-#                               Enero 2026                                    #
-###############################################################################
+# ==============================================================================
+# CLOUD-INIT USER-DATA
+# ==============================================================================
+# Escenario: J01 - V01
+# Objetivo: Configuración de RED ESTÁTICA
+# Distribución: Rocky Linux 9.x
+# Network Manager: habilitado
+#
+# Esta variante:
+#  - DESACTIVA DHCP
+#  - Configura IPs estáticas
+#  - No crea usuarios ni instala paquetes
+# ==============================================================================
 
-runcmd:
-  # === 1. IP Fija (192.168.122.20) - V01 ESPECÍFICO ===
-  - nmcli con mod enp1s0 ipv4.method manual ipv4.addresses 192.168.122.20/24 ipv4.gateway 192.168.122.1 ipv4.dns "8.8.8.8 1.1.1.1" || true
-  - nmcli con down enp1s0 || true
-  - nmcli con up enp1s0
-
-  # === 2. NGINX INSTALL + START (FIX CRÍTICO) ===
-  - dnf install -y nginx || true
-  - systemctl enable --now nginx
-
-  # === 3. FIREWALL BLOQUEA HTTP (V01 específico) ===
-  - systemctl enable --now firewalld
-  - firewall-cmd --permanent --remove-service=http || true
-  - firewall-cmd --permanent --add-service=ssh || true
-  - firewall-cmd --reload
-
-  # === 4. Página nginx (directorio correcto) ===
-  - mkdir -p /usr/share/nginx/html
-  - |
-    cat << 'EOF' > /usr/share/nginx/html/index.html
-    <!DOCTYPE html>
-    <html><head><title>J01-V01 NOC Lab - Firewall FIX</title>
-    <meta charset="UTF-8"><style>body{font-family:monospace;background:#000;color:#0f0;}
-    h1{color:#00ff00;}</style></head><body>
-    <h1>🏆 J01-V01 RESUELTO!</h1>
-    <p>curl http://192.168.122.20 ✓<br>
-    firewall-cmd --permanent --add-service=http<br>
-    firewall-cmd --reload</p>
-    </body></html>
-    EOF
-
-  # ═══════════════════════════════════════════════════════════════════════════════
-  # 5. MOTD TICKET - FORMATO PROFESIONAL 
-  #═══════════════════════════════════════════════════════════════════════════════
-  - |
-    cat << 'EOF' > /etc/motd
-    ════════════════════════════════════════════════════════════════════════════════
-    
-                 LAB J01-V01: Redes y Conectividad - Firewall Bloqueado
-    
-    ════════════════════════════════════════════════════════════════════════════════
-    
-    ROL: NOC Engineer Junior / SysAdmin en entrenamiento
-    
-    TOPOLOGÍA:
-      HOST (tu laptop)  ───[ INTERNET ]───  SERVER_EU (esta VM: 192.168.122.20)
-    
-    OBJETIVO:
-      Resolver: curl http://192.168.122.20 → página NOC Lab
-    
-    SÍNTOMAS OBSERVADOS:
-    ┌─────────────────────────────────────────────────────────────┐
-    │ HOST$ ping 192.168.122.20              → OK (2ms)           │
-    │ HOST$ curl http://192.168.122.20       → Connection refused │
-    │ HOST$ nc -zv 192.168.122.20 80         → FAIL               │
-    │ VM$ ss -tuln | grep :80                → nginx LISTENING ✓  │
-    └─────────────────────────────────────────────────────────────┘
-    
-    HERRAMIENTAS ESPERADAS:
-      • ss -tuln | grep :80
-      • systemctl status nginx
-      • firewall-cmd --list-all  ← ¡AQUÍ ESTÁ EL PROBLEMA!
-      • firewall-cmd --permanent --add-service=http
-    
-    RESTRICCIONES:
-      • NO reinstales nginx
-      • NO deshabilites firewalld
-      • FIX debe ser persistente
-    
-    💡 PISTAS:
-      1. Nginx RUNNING ✓ puerto 80
-      2. ping OK ✓ conectividad básica
-      3. Firewall ¿qué servicios permite?
-    
-    🎯 FLUJO ESPERADO:
-      ss -tuln → firewall-cmd --list-all → add-service http → reload → HOST ✓
-    
-    ════════════════════════════════════════════════════════════════════════════════
-    EOF
-
-  # === 6. Documento escenario (referencia) ===
-  - |
-    cat << 'EOF' > /etc/j01-scenario.txt
-    LAB: J01-V01 - Firewall HTTP Bloqueado
-
-    OBJETIVO: curl http://192.168.122.20 → página NOC Lab
-
-    SÍNTOMAS:
-    • ping 192.168.122.20 → OK
-    • curl http://192.168.122.20 → Connection refused  
-    • ss -tuln → nginx :80 LISTEN ✓
-
-    FIX: firewall-cmd --permanent --add-service=http → reload
-
-    HERRAMIENTAS: ss, firewall-cmd, systemctl status
-    EOF
-
-  # === 7. Evidencias técnicas ===
-  - systemctl is-active nginx > /etc/j01-v01-nginx.status
-  - firewall-cmd --list-all > /etc/j01-v01-firewall.state
-  - ss -tuln > /etc/j01-v01-ports.state
-
-  # === 8. Flags ===
-  - echo "J01 V01 - Firewall bloquea HTTP" > /etc/j01-variant-v01.flag
-  - echo "J01 V01 aplicada - IP:192.168.122.20" > /etc/j01-base.flag
-
-  # === 9. SELinux + permisos ===
-  - restorecon -R /usr/share/nginx/html || true
-  - chown -R nginx:nginx /usr/share/nginx/html || true
+network:
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4: false
+      addresses:
+        - 192.168.122.20/24
+        - 192.168.122.30/24
+        - 192.168.122.40/24
+      gateway4: 192.168.122.1
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 1.1.1.1
