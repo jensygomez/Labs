@@ -1,0 +1,101 @@
+#cloud-config
+###############################################################################
+# ROLE: WEB
+# LAB : J01 (Junior)
+# VM  : Web Server
+#
+# PROPÓSITO
+# ----------
+# Este archivo define el estado BASE y SALUDABLE de la VM Web del laboratorio.
+# NO introduce fallos. NO instala paquetes.
+#
+# La imagen base (rocky-ir-base-junior-v1.qcow2) ya contiene:
+# - nginx instalado
+# - configuración base funcional
+# - contenido estático
+# - servicio DESHABILITADO al boot
+#
+# Este rol se limita a:
+# - Configurar red estática
+# - Activar el servicio nginx
+# - Validar que el servicio quede operativo
+#
+# Las VARIANTES (V0x) serán las únicas responsables de introducir incidentes.
+###############################################################################
+
+###############################################################################
+# METADATOS DEL ROL (TRAZABILIDAD OPERATIVA)
+###############################################################################
+write_files:
+  - path: /etc/lab/role
+    permissions: "0644"
+    content: |
+      ROLE=web
+      LAB=J01
+      LEVEL=junior
+      EXPECTED_SERVICE=nginx
+      EXPECTED_PORT=80
+
+###############################################################################
+# CONFIGURACIÓN DE RED
+# IP FIJA PARA ENTORNO DE LABORATORIO
+###############################################################################
+runcmd:
+  # ---------------------------------------------------------------------------
+  # 1. Configuración de red estática
+  # ---------------------------------------------------------------------------
+  # Se asume que la interfaz primaria es enp1s0 (libvirt default network)
+  # Red: 192.168.122.0/24
+  # Gateway/DNS: 192.168.122.1
+  # IP Web Server: 192.168.122.50
+  # ---------------------------------------------------------------------------
+
+  - |
+    echo "[WEB] Configurando red estática..."
+    nmcli connection modify "enp1s0" \
+      ipv4.method manual \
+      ipv4.addresses 192.168.122.50/24 \
+      ipv4.gateway 192.168.122.1 \
+      ipv4.dns 192.168.122.1
+
+  - nmcli connection down "enp1s0"
+  - nmcli connection up "enp1s0"
+
+  # Validación básica de red (no aborta el boot)
+  - ip a show enp1s0 || true
+  - ip route || true
+
+  # ---------------------------------------------------------------------------
+  # 2. Activación del servicio Web
+  # ---------------------------------------------------------------------------
+  # nginx ya está instalado y configurado en la imagen base.
+  # Aquí simplemente se habilita y se inicia.
+  # ---------------------------------------------------------------------------
+
+  - |
+    echo "[WEB] Habilitando e iniciando nginx..."
+    systemctl enable nginx
+    systemctl start nginx
+
+  # ---------------------------------------------------------------------------
+  # 3. Validaciones operativas
+  # ---------------------------------------------------------------------------
+  # Estas validaciones NO rompen el boot.
+  # Sirven como señal clara de estado saludable.
+  # ---------------------------------------------------------------------------
+
+  - |
+    echo "[WEB] Validando estado del servicio nginx..."
+    systemctl --no-pager status nginx || true
+
+  - |
+    echo "[WEB] Validando puerto 80..."
+    ss -lntp | grep ':80' || true
+
+###############################################################################
+# NOTAS OPERATIVAS
+# -----------------------------------------------------------------------------
+# - Si esta VM falla, el problema NO está en el rol.
+# - Cualquier fallo introducido debe vivir EXCLUSIVAMENTE en variants/V0x.yaml
+# - Este archivo representa el "estado ideal" del Web Server.
+###############################################################################
