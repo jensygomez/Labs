@@ -63,23 +63,10 @@ mysql -u user_prueba -pPass1234! -h basededatos -P 3306 -e "SHOW DATABASES;"
 
 
 1. Redes y conectividad
-
-Objetivo: Diagnosticar problemas de red desde cliente a servidor y entre servidores.
-
-Subtemas / escenarios:
-
-Ping y traceroute fallando por firewall o ruta incorrecta.
-
-Problemas de resolución DNS (editar /etc/hosts vs DNS real).
-
-Puertos cerrados (nc / telnet fallando hacia MariaDB o Nginx).
-
-Configuración de VLAN o IP conflictiva simulada.
-
-Simulación de latencia o paquetes perdidos usando tc.
-
-VMs necesarias: 2 mínimo (CLIENT01 → SERVER_EU)
-Servicios necesarios: SSH, Nginx, MariaDB, firewalld
+        Variante V01 – ICMP / Rutas bloqueadas (Firewall)
+        Variante V02 – DNS roto (resolución incorrecta)
+        Variante V03 – Puerto cerrado (Firewall / Servicio)
+        Variante V04 – Latencia / pérdida de paquetes (tc)
 
 2. Troubleshooting de firewalls y SELinux
 
@@ -95,8 +82,7 @@ Reglas ricas vs zonas (public, internal).
 
 Permitir temporalmente puerto y verificar acceso.
 
-VMs necesarias: 1-2
-Servicios necesarios: firewalld, SELinux (enabled), Nginx, MariaDB
+
 
 3. Servicios Web (Nginx/Apache)
 
