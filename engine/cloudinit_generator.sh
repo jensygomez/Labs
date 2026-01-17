@@ -6,29 +6,43 @@ LAB_ID="$2"
 VARIANT_NAME="$3"
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-LAB_CLOUDINIT="$ROOT_DIR/scenarios/${LEVEL,,}/${LAB_ID}/cloudinit"
-
-BASE_DIR="$LAB_CLOUDINIT/base"
-VARIANT_DIR="$LAB_CLOUDINIT/$VARIANT_NAME"
+VARIANT_DIR="$ROOT_DIR/scenarios/${LEVEL,,}/${LAB_ID}/cloudinit/${VARIANT_NAME}"
 
 WORKDIR="/mnt/vms/labs/tmp/${LAB_ID}_${VARIANT_NAME}_$(date +%s)"
 ISO_PATH="$WORKDIR/${LAB_ID}.iso"
 
+USER_DATA="$VARIANT_DIR/user-data"
+META_DATA="$VARIANT_DIR/meta-data"
+
 mkdir -p "$WORKDIR"
 
-# Validaciones
-[[ -d "$BASE_DIR" ]] || { echo "❌ base no existe"; exit 1; }
-[[ -d "$VARIANT_DIR" ]] || { echo "❌ variante no existe"; exit 1; }
+# =========================
+# Validaciones estrictas
+# =========================
+[[ -d "$VARIANT_DIR" ]] || {
+  echo "❌ Variante no existe: $VARIANT_DIR"
+  exit 1
+}
 
-# Base SIEMPRE
-cp "$BASE_DIR/user-data" "$WORKDIR/user-data"
-cp "$BASE_DIR/meta-data" "$WORKDIR/meta-data"
+[[ -f "$USER_DATA" ]] || {
+  echo "❌ Falta user-data en $VARIANT_DIR"
+  exit 1
+}
 
-# Variante SOBREESCRIBE si define
-[[ -f "$VARIANT_DIR/user-data" ]] && cp "$VARIANT_DIR/user-data" "$WORKDIR/user-data"
-[[ -f "$VARIANT_DIR/meta-data" ]] && cp "$VARIANT_DIR/meta-data" "$WORKDIR/meta-data"
+[[ -f "$META_DATA" ]] || {
+  echo "❌ Falta meta-data en $VARIANT_DIR"
+  exit 1
+}
 
+# =========================
+# Copia directa (sin base)
+# =========================
+cp "$USER_DATA" "$WORKDIR/user-data"
+cp "$META_DATA" "$WORKDIR/meta-data"
+
+# =========================
 # ISO cloud-init
+# =========================
 genisoimage -quiet \
   -output "$ISO_PATH" \
   -volid cidata \
@@ -36,4 +50,3 @@ genisoimage -quiet \
   "$WORKDIR/user-data" "$WORKDIR/meta-data"
 
 echo "$ISO_PATH"
-
