@@ -1,3 +1,5 @@
+# scenarios/terraform/modules/rocky_vm/variables.tf
+
 variable "vm_name" {
   type = string
 }
