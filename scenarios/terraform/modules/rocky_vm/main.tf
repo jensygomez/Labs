@@ -2,7 +2,7 @@ terraform {
   required_providers {
     libvirt = {
       source  = "dmacvicar/libvirt"
-      version = "~> 0.7.1"
+      version = "~> 0.7.6"
     }
   }
 }
@@ -35,5 +35,16 @@ resource "libvirt_domain" "this" {
     network_name = "default"
   }
 
-  autostart = true  # ← SIN graphics/video
+  autostart = true
+  
+  # CRÍTICO: Usar VNC en lugar de SPICE
+  graphics {
+    type        = "vnc"
+    listen_type = "address"
+    autoport    = true
+  }
+  
+  video {
+    type = "virtio"
+  }
 }
