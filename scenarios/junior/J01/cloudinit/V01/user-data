@@ -5,26 +5,24 @@
 # Escenario: J01 - V01
 # Objetivo: Red estática con múltiples IPs (Rocky Linux 9)
 # Método: NetworkManager (nmcli)
+# NOTA: Múltiples IPs deben definirse en UNA sola operación
 # ==============================================================================
 
 runcmd:
   # Esperar a NetworkManager
   - until nmcli -t -f RUNNING general | grep -q running; do sleep 1; done
 
-  # Eliminar conexión DHCP automática si existe
+  # Eliminar conexión DHCP automática
   - nmcli -t -f NAME con show | grep '^System enp1s0$' && nmcli con delete "System enp1s0" || true
 
-  # Crear conexión con IP primaria
-  - nmcli con add type ethernet ifname enp1s0 con-name enp1s0 \
-      ipv4.method manual \
-      ipv4.addresses 192.168.122.20/24 \
-      ipv4.gateway 192.168.122.1 \
-      ipv4.dns "8.8.8.8 1.1.1.1" \
-      autoconnect yes
+  # Crear conexión base
+  - nmcli con add type ethernet ifname enp1s0 con-name enp1s0 ipv4.method manual autoconnect yes
 
-  # Agregar IPs secundarias
-  - nmcli con mod enp1s0 +ipv4.addresses 192.168.122.30/24
-  - nmcli con mod enp1s0 +ipv4.addresses 192.168.122.40/24
+  # Definir TODAS las IPs en una sola asignación (CLAVE)
+  - nmcli con mod enp1s0 ipv4.addresses "192.168.122.20/24,192.168.122.30/24,192.168.122.40/24"
+  - nmcli con mod enp1s0 ipv4.gateway 192.168.122.1
+  - nmcli con mod enp1s0 ipv4.dns "8.8.8.8 1.1.1.1"
 
-  # Activar conexión
+  # Reaplicar conexión (forzar)
+  - nmcli con down enp1s0 || true
   - nmcli con up enp1s0
