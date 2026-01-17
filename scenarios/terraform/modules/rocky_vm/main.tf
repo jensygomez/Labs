@@ -35,5 +35,14 @@ resource "libvirt_domain" "this" {
     network_name = "default"
   }
 
-  autostart = true  # ← ¡ESTA ES LA LÍNEA CORREGIDA!
+  graphics {
+    type = "none"
+  }
+  
+  video {
+    type = "none"
+  }
+
+  autostart = true
 }
+
