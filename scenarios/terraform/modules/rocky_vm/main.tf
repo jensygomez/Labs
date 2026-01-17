@@ -6,8 +6,8 @@ resource "libvirt_cloudinit_disk" "this" {
 
 resource "libvirt_domain" "this" {
   name   = var.vm_name
-  memory = 2048
-  vcpu   = 2
+  memory = 1024
+  vcpu   = 1
 
   cloudinit = libvirt_cloudinit_disk.this.id
 
