@@ -3,24 +3,28 @@
 # CLOUD-INIT USER-DATA
 # ==============================================================================
 # Escenario: J01 - V01
-# Objetivo: Configuración de RED estática en Rocky Linux 9
-# Método: nmcli (NetworkManager nativo)
+# Objetivo: Red estática con múltiples IPs (Rocky Linux 9)
+# Método: NetworkManager (nmcli)
 # ==============================================================================
 
 runcmd:
-  # Esperar a que NetworkManager esté listo
-  - nmcli -t -f RUNNING general | grep -q running
+  # Esperar a NetworkManager
+  - until nmcli -t -f RUNNING general | grep -q running; do sleep 1; done
 
-  # Borrar conexión DHCP creada automáticamente
+  # Eliminar conexión DHCP automática si existe
   - nmcli -t -f NAME con show | grep '^System enp1s0$' && nmcli con delete "System enp1s0" || true
 
-  # Crear conexión estática
-  - nmcli con add type ethernet ifname enp1s0 con-name static-enp1s0 \
+  # Crear conexión con IP primaria
+  - nmcli con add type ethernet ifname enp1s0 con-name enp1s0 \
       ipv4.method manual \
-      ipv4.addresses "192.168.122.20/24,192.168.122.30/24,192.168.122.40/24" \
+      ipv4.addresses 192.168.122.20/24 \
       ipv4.gateway 192.168.122.1 \
       ipv4.dns "8.8.8.8 1.1.1.1" \
       autoconnect yes
 
+  # Agregar IPs secundarias
+  - nmcli con mod enp1s0 +ipv4.addresses 192.168.122.30/24
+  - nmcli con mod enp1s0 +ipv4.addresses 192.168.122.40/24
+
   # Activar conexión
-  - nmcli con up static-enp1s0
+  - nmcli con up enp1s0
