@@ -3,26 +3,49 @@
 # CLOUD-INIT USER-DATA
 # ==============================================================================
 # Escenario: J01 - V01
-# Objetivo: Red estática con múltiples IPs (Rocky Linux 9)
-# Método: NetworkManager (nmcli)
-# NOTA: Múltiples IPs deben definirse en UNA sola operación
+# Objetivo:
+#   - enp1s0 con IP ESTÁTICA 192.168.122.20 (NO DHCP)
+#   - IPs adicionales en dummy interfaces
+# Plataforma: Rocky Linux 9.x
+# Método:
+#   - NetworkManager para NIC real
+#   - Kernel dummy para IPs de lab
 # ==============================================================================
 
 runcmd:
-  # Esperar a NetworkManager
+  # ---------------------------------------------------------------------------
+  # ESPERAR A NETWORKMANAGER
+  # ---------------------------------------------------------------------------
   - until nmcli -t -f RUNNING general | grep -q running; do sleep 1; done
 
-  # Eliminar conexión DHCP automática
+  # ---------------------------------------------------------------------------
+  # CONFIGURAR enp1s0 (IP ESTÁTICA)
+  # ---------------------------------------------------------------------------
+  # Eliminar conexión DHCP automática si existe
   - nmcli -t -f NAME con show | grep '^System enp1s0$' && nmcli con delete "System enp1s0" || true
 
-  # Crear conexión base
-  - nmcli con add type ethernet ifname enp1s0 con-name enp1s0 ipv4.method manual autoconnect yes
+  # Crear conexión estática
+  - nmcli con add type ethernet ifname enp1s0 con-name enp1s0 \
+      ipv4.method manual \
+      ipv4.addresses 192.168.122.20/24 \
+      ipv4.gateway 192.168.122.1 \
+      ipv4.dns "8.8.8.8 1.1.1.1" \
+      autoconnect yes
 
-  # Definir TODAS las IPs en una sola asignación (CLAVE)
-  - nmcli con mod enp1s0 ipv4.addresses "192.168.122.20/24,192.168.122.30/24,192.168.122.40/24"
-  - nmcli con mod enp1s0 ipv4.gateway 192.168.122.1
-  - nmcli con mod enp1s0 ipv4.dns "8.8.8.8 1.1.1.1"
-
-  # Reaplicar conexión (forzar)
-  - nmcli con down enp1s0 || true
+  # Activar conexión
   - nmcli con up enp1s0
+
+  # ---------------------------------------------------------------------------
+  # CREAR DUMMY INTERFACES PARA EL LAB
+  # ---------------------------------------------------------------------------
+  - modprobe dummy
+
+  # dummy0 -> 192.168.122.30
+  - ip link add dummy0 type dummy || true
+  - ip addr add 192.168.122.30/32 dev dummy0 || true
+  - ip link set dummy0 up
+
+  # dummy1 -> 192.168.122.40
+  - ip link add dummy1 type dummy || true
+  - ip addr add 192.168.122.40/32 dev dummy1 || true
+  - ip link set dummy1 up
