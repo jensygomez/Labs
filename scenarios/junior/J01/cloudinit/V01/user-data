@@ -3,23 +3,24 @@
 # CLOUD-INIT USER-DATA
 # ==============================================================================
 # Escenario: J01 - V01
-# Objetivo: Red estática SIN depender del nombre de interfaz
-# Plataforma: Rocky Linux 9.x + NetworkManager
+# Objetivo: Configuración de RED estática en Rocky Linux 9
+# Método: nmcli (NetworkManager nativo)
 # ==============================================================================
 
-network:
-  version: 2
-  ethernets:
-    primary:
-      match:
-        name: "en*"
-      dhcp4: false
-      addresses:
-        - 192.168.122.20/24
-        - 192.168.122.30/24
-        - 192.168.122.40/24
-      gateway4: 192.168.122.1
-      nameservers:
-        addresses:
-          - 8.8.8.8
-          - 1.1.1.1
+runcmd:
+  # Esperar a que NetworkManager esté listo
+  - nmcli -t -f RUNNING general | grep -q running
+
+  # Borrar conexión DHCP creada automáticamente
+  - nmcli -t -f NAME con show | grep '^System enp1s0$' && nmcli con delete "System enp1s0" || true
+
+  # Crear conexión estática
+  - nmcli con add type ethernet ifname enp1s0 con-name static-enp1s0 \
+      ipv4.method manual \
+      ipv4.addresses "192.168.122.20/24,192.168.122.30/24,192.168.122.40/24" \
+      ipv4.gateway 192.168.122.1 \
+      ipv4.dns "8.8.8.8 1.1.1.1" \
+      autoconnect yes
+
+  # Activar conexión
+  - nmcli con up static-enp1s0
