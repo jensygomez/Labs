@@ -1,18 +1,16 @@
 # ============================================================================
-# 🔥 INCIDENT RESPONSE LAB V01 - cloud-config COMPLETO 🔥
+# 🔥 INCIDENT RESPONSE LAB V01 - FIREWALL BLOQUEA HTTP
 # ============================================================================
-# 
-# 🎯 OBJETIVO DEL LAB: Simular incidente real de producción
-#    - HTTP (Nginx) BLOQUEADO por firewalld ❌
-#    - MariaDB FUNCIONAL con datos reales ✅  
-#    - ICMP PING funciona ✅
-# 
-# 🦠 VECTOR DE ATAQUE SIMULADO: 
-#    - "Colega malintencionado" o "update automática" quita servicio HTTP
-#    - Firewall mal configurado: solo DB accesible, web caída
-# 
-# 🔍 TAREA DEL ALUMNO: Diagnosticar y arreglar firewall
-# 
+#
+# 🎯 OBJETIVO:
+#    - Web CAÍDA por firewall ❌
+#    - MariaDB FUNCIONAL ✅
+#    - ICMP OK
+#
+# 🔍 TAREA:
+#    - Diagnosticar firewalld
+#    - Restaurar acceso HTTP
+#
 # ============================================================================
 
 #cloud-config
@@ -31,57 +29,9 @@ users:
 ssh_pwauth: false
 disable_root: false
 
-package_update: true
-package_upgrade: false
-
-packages:
-  - nginx
-  - mariadb-server
-  - firewalld
-  - NetworkManager
-  - iproute
-
-write_files:
-
 # ============================================================================
-# NGINX – SERVICIO WEB (dummy0) ❌ BLOQUEADO
+# 🎫 TICKET DE INCIDENTE - MOTD
 # ============================================================================
-  - path: /etc/nginx/conf.d/v01.conf
-    permissions: '0644'
-    content: |
-      server {
-          listen 192.168.122.30:80;
-          server_name v01-web;
-
-          location / {
-              root /usr/share/nginx/html;
-              index index.html;
-          }
-      }
-
-# ============================================================================
-# MARIADB – SERVICIO DB (dummy1) ✅ FUNCIONAL
-# ============================================================================
-  - path: /etc/my.cnf.d/v01-bind.cnf
-    permissions: '0644'
-    content: |
-      [mysqld]
-      bind-address=192.168.122.40
-
-# 🔥 NUEVO: Inicialización completa de MariaDB con datos reales
-  - path: /root/init-mariadb.sql
-    permissions: '0644'
-    content: |
-      CREATE DATABASE IF NOT EXISTS labdb;
-      CREATE USER IF NOT EXISTS 'labuser'@'%' IDENTIFIED BY 'labpass123';
-      GRANT ALL PRIVILEGES ON labdb.* TO 'labuser'@'%';
-      FLUSH PRIVILEGES;
-
-# ============================================================================
-# 🎫 TICKET DE INCIDENTE - MOTD CON COMANDOS DE USUARIO
-# ============================================================================
-
-
 write_files:
   - path: /etc/motd
     permissions: '0644'
@@ -89,7 +39,6 @@ write_files:
       ======================================================================
                             TICKET #001 - PRODUCCION CAIDA
       ======================================================================
-
 
       ----------------------------------------------------------------------
       NOTA DEL INGENIERO SENIOR
@@ -107,81 +56,67 @@ write_files:
 
       LO QUE SI FUNCIONA (desde el HOST):
 
-      $ mysql -u labuser -plabpass123 -h 192.168.122.40 labdb \
-        -e "SELECT * FROM incidents;" | grep UP      # OK
-
       $ ping -c2 192.168.122.20                       # OK
-      $ ping -c2 192.168.122.30                       # OK
-      $ ping -c2 192.168.122.40                       # OK
+      $ ping -c2 192.168.122.50                       # OK
+      $ ping -c2 192.168.122.60                       # OK
+
+      $ systemctl status mariadb                     # ACTIVE
 
       LO QUE FALLA:
-      $ curl -I http://192.168.122.30/                # FAIL
+      $ curl -I http://192.168.122.50/                # FAIL
 
       Ticket abierto:
       "Web server caido, revisar conectividad"
       ======================================================================
 
-
-
 runcmd:
 
   # ---------------------------------------------------------------------------
-  # ⏳ ESPERAR NETWORKMANAGER (crítico para Rocky/RHEL)
+  # ⏳ ESPERAR NETWORKMANAGER
   # ---------------------------------------------------------------------------
   - until nmcli -t -f RUNNING general | grep -q running; do sleep 1; done
 
   # ---------------------------------------------------------------------------
-  # 🌐 CONFIGURAR enp1s0 (IP PRINCIPAL ESTÁTICA)
+  # 🌐 IP ADMINISTRATIVA (SIEMPRE DEFINIDA)
   # ---------------------------------------------------------------------------
-  - nmcli -t -f NAME con show | grep '^System enp1s0$' && nmcli con delete "System enp1s0" || true
-  - nmcli con add type ethernet ifname enp1s0 con-name enp1s0 \
+  - nmcli con modify "enp1s0" \
       ipv4.method manual \
       ipv4.addresses 192.168.122.20/24 \
       ipv4.gateway 192.168.122.1 \
-      ipv4.dns "8.8.8.8 1.1.1.1" \
       autoconnect yes
   - nmcli con up enp1s0
 
   # ---------------------------------------------------------------------------
-  # 🖥️ CREAR INTERFACES DUMMY PARA SERVICIOS
+  # 🖥️ VIPs DE SERVICIOS
   # ---------------------------------------------------------------------------
   - modprobe dummy
 
-  # dummy0 -> WEB SERVER (192.168.122.30)
+  # WEB VIP
   - ip link add dummy0 type dummy || true
-  - ip addr add 192.168.122.30/32 dev dummy0 || true
+  - ip addr add 192.168.122.50/32 dev dummy0 || true
   - ip link set dummy0 up
 
-  # dummy1 -> DATABASE SERVER (192.168.122.40)  
+  # DB VIP
   - ip link add dummy1 type dummy || true
-  - ip addr add 192.168.122.40/32 dev dummy1 || true
+  - ip addr add 192.168.122.60/32 dev dummy1 || true
   - ip link set dummy1 up
 
   # ---------------------------------------------------------------------------
-  # 🔥 INICIALIZAR MARIADB CON DATOS REALES (NUEVO)
-  # ---------------------------------------------------------------------------
-  - systemctl start mariadb
-  - mysql < /root/init-mariadb.sql
-  - mysql -u labuser -plabpass123 -e "USE labdb; CREATE TABLE IF NOT EXISTS incidents (id INT AUTO_INCREMENT PRIMARY KEY, service VARCHAR(50), status VARCHAR(20), timestamp DATETIME DEFAULT CURRENT_TIMESTAMP); INSERT INTO incidents (service, status) VALUES ('nginx', 'DOWN'), ('mariadb', 'UP');"
-
-  # ---------------------------------------------------------------------------
-  # 🚀 SERVICIOS PRINCIPALES
+  # 🚀 ACTIVAR SERVICIOS EXISTENTES
   # ---------------------------------------------------------------------------
   - systemctl enable --now firewalld
   - systemctl enable --now nginx
   - systemctl enable --now mariadb
 
   # ---------------------------------------------------------------------------
-  # 🦠 VIRUS – INYECTAR PROBLEMA (FIREWALL MAL CONFIGURADO)
+  # 🦠 INYECTAR INCIDENTE (HTTP BLOQUEADO)
   # ---------------------------------------------------------------------------
   - firewall-cmd --permanent --remove-service=http
-  - firewall-cmd --permanent --add-service=mysql
   - firewall-cmd --reload
 
   # ---------------------------------------------------------------------------
-  # ✅ VALIDACIÓN FINAL (logs para debug)
+  # 🔎 VALIDACION FINAL
   # ---------------------------------------------------------------------------
-  - ip addr show
+  - ip a
   - ss -lntp | grep -E ':(80|3306)' || true
   - firewall-cmd --list-all
-  - mysql -u labuser -plabpass123 -e "SELECT * FROM labdb.incidents;" || true
