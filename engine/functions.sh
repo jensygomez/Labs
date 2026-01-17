@@ -13,22 +13,11 @@
 # O podemos declararlas aquí también
 
 
-#==============================================================================
-# FUNCIONES DE VALIDACIÓN
-#==============================================================================
-check_env() {
-    echo "[DEBUG] check_env ejecutándose..." >&2
-    [[ -z "${PATH:-}" ]] && {
-        echo "❌ PATH CORRUPTO — abortando" >&2
-        exit 99
-    }
-    echo "[DEBUG] check_env completado OK" >&2
-}
+
 #==============================================================================
 # FUNCION DE ASIGNACIÓN DE LAB (CON CHECKPOINTS)
 #==============================================================================
 assign_lab() {
-    check_env
 
     echo "🚀 [assign_lab] >>> INICIANDO <<<" >&2
     
@@ -198,91 +187,3 @@ run_lab() {
 }
 
 
-
-#==============================================================================
-# FUNCION DE GESTIÓN DIRECTA POST-CREACIÓN DE VM
-#==============================================================================
-manage_single_vm() {
-    local VM_NAME="$1"
-
-    while true; do
-        printf "\033c"
-        STATE=$(sudo virsh domstate "$VM_NAME" 2>/dev/null || echo "unknown")
-        IP=$(sudo virsh domifaddr "$VM_NAME" 2>/dev/null | awk 'NR>1{print $4}' || echo "no-ip")
-
-        echo "=============================================="
-        echo " GESTIÓN DE VM ACTIVA"
-        echo "=============================================="
-        echo " VM    : $VM_NAME"
-        echo " Estado: $STATE"
-        echo " IP    : $IP"
-        echo
-        echo "1) Reiniciar VM"
-        echo "2) Parar VM"
-        echo "3) Prender VM"
-        echo "4) Eliminar VM (TOTAL)"
-        echo "0) Volver al menú principal"
-        echo
-        read -rp "Opción: " opt
-
-        case "$opt" in
-            1)
-                echo "🔄 Reiniciando VM..."
-                sudo virsh reboot "$VM_NAME" >/dev/null 2>&1
-                sleep 2
-                ;;
-            2)
-                echo "⏹️  Parando VM..."
-                sudo virsh shutdown "$VM_NAME" >/dev/null 2>&1
-                sleep 3
-                ;;
-            3)
-                echo "▶️  Encendiendo VM..."
-                sudo virsh start "$VM_NAME" >/dev/null 2>&1
-                sleep 2
-                ;;
-            4)
-                echo "⚠️  Eliminando VM completamente..."
-                cleanup_vm "$VM_NAME"
-                echo "✅ VM eliminada sin residuos"
-                sleep 2
-                return 0   # ← vuelve al menú principal
-                ;;
-            0)
-                return 0
-                ;;
-            *)
-                echo "❌ Opción inválida"
-                sleep 1
-                ;;
-        esac
-    done
-}
-
-
-
-#==============================================================================
-# FUNCION DE LIMPIEZA DE VM (MEJORADA)
-#==============================================================================
-cleanup_vm() {
-    local VM_NAME="$1"
-
-    echo "[CLEANUP] Apagando VM si está activa..."
-    virsh destroy "$VM_NAME" >/dev/null 2>&1 || true
-
-    echo "[CLEANUP] Eliminando definición y storage..."
-    virsh undefine "$VM_NAME" --remove-all-storage >/dev/null 2>&1 || true
-
-    echo "[CLEANUP] Limpiando archivos específicos de $VM_NAME..."
-    rm -f /mnt/vms/labs/tmp/"${VM_NAME}.qcow2" 2>/dev/null || true
-    rm -f "/tmp/${VM_NAME}-seed.iso" 2>/dev/null || true
-
-    echo "[CLEANUP] LIMPIANDO DIRECTORIO /mnt/vms/labs/tmp/ COMPLETO..."
-    # ✅ LIMPIEZA TOTAL segura (solo archivos, no directorio)
-    find /mnt/vms/labs/tmp/ -mindepth 1 -delete 2>/dev/null || true
-    
-    # Alternativa más agresiva (si quieres borrar TODO incluyendo subdirs)
-    rm -rf /mnt/vms/labs/tmp/* 2>/dev/null || true
-    
-    echo "[CLEANUP] Cleanup completo - /mnt/vms/labs/tmp/ vacía"
-}
