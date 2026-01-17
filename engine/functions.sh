@@ -35,7 +35,6 @@ select_variant_file() {
     # Devuelve el nombre del archivo YAML de variante elegido aleatoriamente
     echo "$(basename "${VARIANTS[RANDOM % ${#VARIANTS[@]}]}")"
 }
-
 #==============================================================================
 # ASIGNACIÓN DE LAB
 #==============================================================================
@@ -60,17 +59,25 @@ assign_lab() {
     IFS='|' read -r ID LAB_LEVEL LAB_PATH <<< "$LAB_INFO"
     [[ -n "$ID" && -n "$LAB_PATH" ]] || { echo "💥 LAB_PATH vacío"; return 1; }
 
-    # Para cada rol, generar VM
-    for ROLE in web db dns proxy; do
+    echo "📍 LAB seleccionado: ID='$ID', LEVEL='$LAB_LEVEL', PATH='$LAB_PATH'"
+
+    # Roles que vamos a levantar
+    ROLES=("web" "db" "dns" "proxy")
+
+    # Generar cloud-init para cada rol
+    for ROLE in "${ROLES[@]}"; do
         VARIANT_FILE=$(select_variant_file "$ROOT_DIR/$LAB_PATH") || return 1
         VM_NAME="lab-${ID,,}-${ROLE}-01"
 
         echo "📍 Generando cloud-init para VM '$VM_NAME' con ROLE='$ROLE' y VARIANT='$VARIANT_FILE'"
         "$ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$VARIANT_FILE" "$ROLE" "$VM_NAME"
-
-        # Aquí podrías llamar a terraform_runner.sh para levantar la VM
-        # terraform_runner "$VM_NAME"
     done
+
+    # =========================================================================
+    # Levantar las VMs con Terraform
+    # =========================================================================
+    echo "📍 Levantando todas las VMs del laboratorio '$ID' usando Terraform..."
+    "$ENGINE_DIR/terraform_runner.sh" "$LEVEL" "$ID" "/mnt/vms/rocky-ir-base-junior-v1.qcow2"
 
     echo "🚀 [assign_lab] >>> COMPLETADO <<<" >&2
 }
