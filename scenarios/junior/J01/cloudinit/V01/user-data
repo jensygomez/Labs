@@ -1,18 +1,79 @@
 #cloud-config
-# ==============================================================================
-# CLOUD-INIT USER-DATA
-# ==============================================================================
-# Escenario: J01 - V01
-# Objetivo:
-#   - enp1s0 con IP ESTÁTICA 192.168.122.20 (NO DHCP)
-#   - IPs adicionales en dummy interfaces
-# Plataforma: Rocky Linux 9.x
-# Método:
-#   - NetworkManager para NIC real
-#   - Kernel dummy para IPs de lab
-# ==============================================================================
+hostname: j01-v01
+fqdn: j01-v01.lab.local
+manage_etc_hosts: true
+
+users:
+  - name: student
+    groups: wheel
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+
+ssh_pwauth: false
+disable_root: false
+
+package_update: true
+package_upgrade: false
+
+packages:
+  - nginx
+  - mariadb-server
+  - firewalld
+  - NetworkManager
+  - iproute
+
+write_files:
+
+# ============================================================================
+# NGINX – SERVICIO WEB (dummy0)
+# ============================================================================
+
+- path: /etc/nginx/conf.d/v01.conf
+  permissions: '0644'
+  content: |
+    server {
+        listen 192.168.122.30:80;
+        server_name v01-web;
+
+        location / {
+            root /usr/share/nginx/html;
+            index index.html;
+        }
+    }
+
+# ============================================================================
+# MARIADB – SERVICIO DB (dummy1)
+# ============================================================================
+
+- path: /etc/my.cnf.d/v01-bind.cnf
+  permissions: '0644'
+  content: |
+    [mysqld]
+    bind-address=192.168.122.40
+
+# ============================================================================
+# IDENTIDAD DEL LAB
+# ============================================================================
+
+- path: /etc/motd
+  permissions: '0644'
+  content: |
+    =====================================================
+     INCIDENT RESPONSE LAB – V01
+     Firewall bloqueando servicio HTTP
+    =====================================================
+     Servicios:
+       - Web  : 192.168.122.30 (Nginx)
+       - DB   : 192.168.122.40 (MariaDB)
+
+     Estado:
+       - ICMP funcional
+       - DB accesible
+       - HTTP bloqueado por firewalld
+    =====================================================
 
 runcmd:
+
   # ---------------------------------------------------------------------------
   # ESPERAR A NETWORKMANAGER
   # ---------------------------------------------------------------------------
@@ -21,10 +82,8 @@ runcmd:
   # ---------------------------------------------------------------------------
   # CONFIGURAR enp1s0 (IP ESTÁTICA)
   # ---------------------------------------------------------------------------
-  # Eliminar conexión DHCP automática si existe
   - nmcli -t -f NAME con show | grep '^System enp1s0$' && nmcli con delete "System enp1s0" || true
 
-  # Crear conexión estática
   - nmcli con add type ethernet ifname enp1s0 con-name enp1s0 \
       ipv4.method manual \
       ipv4.addresses 192.168.122.20/24 \
@@ -32,7 +91,6 @@ runcmd:
       ipv4.dns "8.8.8.8 1.1.1.1" \
       autoconnect yes
 
-  # Activar conexión
   - nmcli con up enp1s0
 
   # ---------------------------------------------------------------------------
@@ -40,12 +98,31 @@ runcmd:
   # ---------------------------------------------------------------------------
   - modprobe dummy
 
-  # dummy0 -> 192.168.122.30
+  # dummy0 -> WEB
   - ip link add dummy0 type dummy || true
   - ip addr add 192.168.122.30/32 dev dummy0 || true
   - ip link set dummy0 up
 
-  # dummy1 -> 192.168.122.40
+  # dummy1 -> DB
   - ip link add dummy1 type dummy || true
   - ip addr add 192.168.122.40/32 dev dummy1 || true
   - ip link set dummy1 up
+
+  # ---------------------------------------------------------------------------
+  # SERVICIOS
+  # ---------------------------------------------------------------------------
+  - systemctl enable --now firewalld
+  - systemctl enable --now nginx
+  - systemctl enable --now mariadb
+
+  # ---------------------------------------------------------------------------
+  # 🔴 VIRUS – FIREWALL MAL CONFIGURADO 🔴
+  # ---------------------------------------------------------------------------
+  - firewall-cmd --permanent --remove-service=http
+  - firewall-cmd --reload
+
+  # ---------------------------------------------------------------------------
+  # VALIDACIÓN (LOG)
+  # ---------------------------------------------------------------------------
+  - ip addr show
+  - ss -lntp | grep -E ':(80|3306)' || true
