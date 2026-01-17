@@ -1,3 +1,6 @@
+# engine/terraform_runner.sh
+
+
 #!/bin/bash
 set -euo pipefail
 
@@ -43,8 +46,13 @@ for ROLE in "${ROLES[@]}"; do
     mkdir -p "$TF_WORKDIR"
     cd "$TF_WORKDIR"
 
-    # Generar main.tf para este VM
+    # ✅ FIX: Provider block PRIMERO (requerido por libvirt)
     cat > main.tf <<EOF
+provider "libvirt" {
+  source = "dmacvicar/libvirt"
+  uri    = "qemu:///system"
+}
+
 module "vm" {
   source = "$ENGINE_DIR/scenarios/terraform/modules/rocky_vm"
 
