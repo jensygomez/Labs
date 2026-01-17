@@ -15,7 +15,7 @@
 #                          Enero 2026                                          #
 ###############################################################################
 
-#cloud-config
+
 hostname: j02-firewall-troubleshooting
 
 # ========== PARTE DE RED (DEL BASE) ==========
