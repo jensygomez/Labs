@@ -46,11 +46,19 @@ for ROLE in "${ROLES[@]}"; do
     mkdir -p "$TF_WORKDIR"
     cd "$TF_WORKDIR"
 
-    # ✅ FIX: Provider block PRIMERO (requerido por libvirt)
+    # ✅ VERSIÓN FINAL CORRECTA
     cat > main.tf <<EOF
+terraform {
+  required_providers {
+    libvirt = {
+      source  = "dmacvicar/libvirt"
+      version = "~> 0.7.1"
+    }
+  }
+}
+
 provider "libvirt" {
-  source = "dmacvicar/libvirt"
-  uri    = "qemu:///system"
+  uri = "qemu:///system"
 }
 
 module "vm" {
