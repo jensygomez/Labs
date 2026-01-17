@@ -39,12 +39,13 @@ resource "libvirt_domain" "this" {
   
   # Sin gráficos para servidores
   graphics {
-    type = "none"
+    type = "vnc"
   }
   
   # Consola serial
   console {
     type        = "pty"
     target_type = "serial"
+    target_port = "0"
   }
 }
