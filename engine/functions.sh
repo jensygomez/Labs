@@ -13,11 +13,22 @@
 # O podemos declararlas aquí también
 
 
-
+#==============================================================================
+# FUNCIONES DE VALIDACIÓN
+#==============================================================================
+check_env() {
+    echo "[DEBUG] check_env ejecutándose..." >&2
+    [[ -z "${PATH:-}" ]] && {
+        echo "❌ PATH CORRUPTO — abortando" >&2
+        exit 99
+    }
+    echo "[DEBUG] check_env completado OK" >&2
+}
 #==============================================================================
 # FUNCION DE ASIGNACIÓN DE LAB (CON CHECKPOINTS)
 #==============================================================================
 assign_lab() {
+    check_env
 
     echo "🚀 [assign_lab] >>> INICIANDO <<<" >&2
     
