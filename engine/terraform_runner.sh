@@ -1,4 +1,3 @@
-# engine/terraform_runner.sh
 #!/bin/bash
 set -euo pipefail
 
@@ -45,23 +44,38 @@ TF_WORKDIR="/mnt/vms/labs/tmp/terraform/${VM_NAME}"
 # ============================================================================
 # PREPARAR WORKDIR TERRAFORM
 # ============================================================================
+echo "🧹 Limpiando directorio de trabajo..."
 rm -rf "$TF_WORKDIR"
 mkdir -p "$TF_WORKDIR"
 cd "$TF_WORKDIR"
 
-# Copiar el módulo Terraform al directorio local
+# Copiar el módulo Terraform (excluyendo variables.tf)
 MODULE_SOURCE="$ENGINE_DIR/scenarios/terraform/modules/rocky_vm"
 MODULE_DEST="./modules/rocky_vm"
 
 if [[ -d "$MODULE_SOURCE" ]]; then
     mkdir -p "$(dirname "$MODULE_DEST")"
-    cp -r "$MODULE_SOURCE" "$MODULE_DEST"
+    
+    # ✅ CREAR EL DIRECTORIO DESTINO PRIMERO
+    mkdir -p "$MODULE_DEST"
+    
+    # Copiar todos los archivos EXCEPTO variables.tf
+    echo "📦 Copiando módulo Terraform..."
+    for file in "$MODULE_SOURCE"/*; do
+        if [[ -f "$file" && $(basename "$file") != "variables.tf" ]]; then
+            cp "$file" "$MODULE_DEST/"
+            echo "  ✅ $(basename "$file")"
+        fi
+    done
     echo "✅ Módulo Terraform copiado a $MODULE_DEST"
 else
     echo "❌ Módulo Terraform no encontrado en: $MODULE_SOURCE" >&2
     exit 1
 fi
 
+# ============================================================================
+# CREAR CONFIGURACIÓN TERRAFORM PRINCIPAL
+# ============================================================================
 cat > main.tf <<EOF
 terraform {
   required_providers {
@@ -83,6 +97,8 @@ module "lab_vm" {
   cloudinit_meta_data = file("$CLOUDINIT_DIR/meta-data")
 }
 EOF
+
+echo "📄 Configuración Terraform generada"
 
 # ============================================================================
 # EJECUCIÓN
