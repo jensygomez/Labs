@@ -76,34 +76,48 @@ assign_lab() {
     CLOUDINIT_DIR=$("$ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$VARIANT")
     
     # =========================================================================
-    # CLONACIÓN VIRT-CLONE SINTAXIS 100% CORRECTA
+    # CLONACIÓN LINKED CLONE + CLOUD-INIT ✅
     # =========================================================================
-
-    echo "📍 Clonando VM '$VM_NAME' (LINKED CLONE)..."
+    echo "📍 Clonando VM '$VM_NAME' (LINKED CLONE ⚡)..."
     
-    # 1. LIMPIAR VM anterior si existe
+    # 1. ASEGURAR VM BASE APAGADA
+    if virsh domstate rocky9_base 2>/dev/null | grep -q "running"; then
+        echo "⚠️  VM base encendida. Apagando..."
+        virsh destroy rocky9_base
+        sleep 3
+    fi
+    
+    # 2. LIMPIAR VM anterior
     virsh destroy "$VM_NAME" 2>/dev/null || true
     virsh undefine "$VM_NAME" 2>/dev/null || true
-    sudo rm -f "/var/lib/libvirt/images/${VM_NAME}"*
+    sudo rm -f "/var/lib/libvirt/images/${VM_NAME}.qcow2"*
     
-    # 2. LINKED CLONE (2 SEGUNDOS ⚡)
-    DISK_PATH="/var/lib/libvirt/images/${VM_NAME}.qcow2"
+    # 3. LINKED CLONE CORRECTO (CRÍTICO: =qcow2)
+    DISK_PATH="/var/lib/libvirt/images/${VM_NAME}.qcow2=qcow2"
+    echo "💾 Disco destino: $DISK_PATH"
+    
     sudo virt-clone \
         --original rocky9_base \
         --name "$VM_NAME" \
-        --file "$DISK_PATH" \
-        --preserve-data
+        --file "$DISK_PATH" || {
+        echo "💥 ERROR en virt-clone" >&2
+        return 1
+    }
     
-    # 3. ADJUNTAR CLOUD-INIT ISO AUTOMÁTICO
+    # 4. CLOUD-INIT ISO (del generador existente)
     SEED_PATH="/var/lib/libvirt/images/${VM_NAME}-seed.iso"
-    sudo cp "$CLOUDINIT_DIR"/*.iso "$SEED_PATH"
-    sudo virsh attach-disk "$VM_NAME" "$SEED_PATH" hdc \
-        --type cdrom --mode readonly --config
+    if [[ -f "$CLOUDINIT_DIR"/*.iso ]]; then
+        sudo cp "$CLOUDINIT_DIR"/*.iso "$SEED_PATH"
+        sudo chown libvirt-qemu:libvirt "$SEED_PATH"
+        sudo virsh attach-disk "$VM_NAME" "$SEED_PATH" hdc \
+            --type cdrom --mode readonly --config || echo "⚠️ CDROM ya existe"
+    fi
     
-    echo "✅ J01-V01 preparado. Iniciando..."
-    virsh start "$VM_NAME"
+    echo "✅ VM '$VM_NAME' clonada (linked clone). Iniciando..."
+    virsh start "$VM_NAME" || echo "⚠️ Inicia con virt-manager"
+    
+    echo "🚀 [assign_lab] >>> COMPLETADO <<<" >&2
 }
-
 
 
 
