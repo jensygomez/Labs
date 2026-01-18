@@ -1,3 +1,5 @@
+# /labs/engine/main.sh
+
 #!/bin/bash
 set -euo pipefail
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
@@ -8,7 +10,11 @@ export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENGINE_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$ENGINE_DIR/.." && pwd)"
 DB_FILE="$ENGINE_DIR/labs.db"
+BASE_IMAGE="/mnt/vms/rocky9_base.qcow2" 
 LABS=()
+
+# Exportar también esta variable
+export BASE_IMAGE
 
 #==============================================================================
 # EXPORTAR CONSTANTES A FUNCTIONS.SH
@@ -247,7 +253,7 @@ main_menu() {
         echo "================================================"
         echo " INCIDENT RESPONSE LAB ENGINE v1.1"
         echo "================================================"
-        echo " Base VM: rocky-ir-base-junior-v1.qcow2"
+        echo " Base VM: rocky9_base.qcow2"
         echo
         echo "1) Junior"
         echo "2) Pleno"

@@ -83,7 +83,7 @@ assign_lab() {
     echo "📍 Levantando VM del laboratorio '$ID' ($VARIANT) usando Terraform..."
     
     # ✅ CAMBIO: Pasar la VARIANT a terraform_runner.sh (3er parámetro)
-    "$ENGINE_DIR/terraform_runner.sh" "$LEVEL" "$ID" "$VARIANT" "/mnt/vms/rocky-ir-base-junior-v1.qcow2"
+    "$ENGINE_DIR/terraform_runner.sh" "$LEVEL" "$ID" "$VARIANT" "/mnt/vms/rocky9_base.qcow2"
 
     echo "🚀 [assign_lab] >>> COMPLETADO <<<" >&2
 }
