@@ -18,15 +18,13 @@ check_env() {
     echo "[DEBUG] check_env completado OK" >&2
 }
 
-
-
 #==============================================================================
 # SELECCIÓN ALEATORIA DE VARIANTE
 #==============================================================================
-select_variant_file() {
-    local LAB_DIR="$1/cloudinit/variants"
+select_variant() {  # ← CAMBIÉ EL NOMBRE de select_variant_file
+    local LAB_DIR="$1/cloudinit"
     shopt -s nullglob
-    local VARIANTS=("$LAB_DIR"/*.yaml)
+    local VARIANTS=("$LAB_DIR"/V*)
     shopt -u nullglob
 
     if [[ ${#VARIANTS[@]} -eq 0 ]]; then
@@ -34,14 +32,11 @@ select_variant_file() {
         return 1
     fi
 
-    # Devuelve solo el nombre de la variante sin extensión
-    local SELECTED_FILE
-    SELECTED_FILE="$(basename "${VARIANTS[RANDOM % ${#VARIANTS[@]}]}")"
-    echo "${SELECTED_FILE%.yaml}"
+    # Devuelve solo el nombre de la variante (ej: V01)
+    local SELECTED_VARIANT
+    SELECTED_VARIANT="$(basename "${VARIANTS[RANDOM % ${#VARIANTS[@]}]}")"
+    echo "$SELECTED_VARIANT"
 }
-
-
-
 
 #==============================================================================
 # ASIGNACIÓN DE LAB
@@ -69,23 +64,26 @@ assign_lab() {
 
     echo "📍 LAB seleccionado: ID='$ID', LEVEL='$LAB_LEVEL', PATH='$LAB_PATH'"
 
-    # Roles que vamos a levantar
-    ROLES=("web" "db" "dns" "proxy")
+    # ✅ CAMBIO: Llamar a select_variant (no select_variant_file)
+    VARIANT=$(select_variant "$ROOT_DIR/$LAB_PATH") || return 1
 
-    # Generar cloud-init para cada rol
-    for ROLE in "${ROLES[@]}"; do
-        VARIANT_FILE=$(select_variant_file "$ROOT_DIR/$LAB_PATH") || return 1
-        VM_NAME="lab-${ID,,}-${ROLE}-01"
+    echo "📍 Variante seleccionada: $VARIANT"
 
-        echo "📍 Generando cloud-init para VM '$VM_NAME' con ROLE='$ROLE' y VARIANT='$VARIANT_FILE'"
-        "$ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$VARIANT_FILE" "$ROLE" "$VM_NAME"
-    done
+    # ✅ CAMBIO: Eliminar el loop de roles (1 LAB = 1 VM según cloudinit_generator.sh)
+    VM_NAME="lab-${ID,,}-${VARIANT,,}"
+    
+    echo "📍 Generando cloud-init para VM '$VM_NAME' con VARIANT='$VARIANT'"
+    
+    # ✅ CAMBIO: Llamar a cloudinit_generator.sh sin parámetro ROLE
+    "$ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$VARIANT"
 
     # =========================================================================
     # Levantar las VMs con Terraform
     # =========================================================================
-    echo "📍 Levantando todas las VMs del laboratorio '$ID' usando Terraform..."
-    "$ENGINE_DIR/terraform_runner.sh" "$LEVEL" "$ID" "/mnt/vms/rocky-ir-base-junior-v1.qcow2"
+    echo "📍 Levantando VM del laboratorio '$ID' ($VARIANT) usando Terraform..."
+    
+    # ✅ CAMBIO: Pasar la VARIANT a terraform_runner.sh (3er parámetro)
+    "$ENGINE_DIR/terraform_runner.sh" "$LEVEL" "$ID" "$VARIANT" "/mnt/vms/rocky-ir-base-junior-v1.qcow2"
 
     echo "🚀 [assign_lab] >>> COMPLETADO <<<" >&2
 }
@@ -98,4 +96,3 @@ run_lab() {
     echo "[INFO] run_lab ahora depende de Terraform para aprovisionar VMs"
     echo "Use terraform_runner.sh pasando los VM_NAME generados"
 }
-
