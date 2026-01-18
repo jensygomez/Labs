@@ -1,53 +1,56 @@
 # engine/terraform_runner.sh
 
-
 #!/bin/bash
 set -euo pipefail
 
 # ============================================================================
 # terraform_runner.sh
-# Refactorizado para levantar varias VMs de un laboratorio de forma automática
+# Clona UNA VM base sana y la levanta como laboratorio
 # ============================================================================
 # ARGUMENTOS:
-#   $1 = nivel del lab (ej: Junior)
-#   $2 = ID del lab (ej: J01)
-#   $3 = base image (ej: /mnt/vms/rocky-ir-base-junior-v1.qcow2)
+#   $1 = LEVEL   (ej: Junior)
+#   $2 = LAB_ID  (ej: J01)
+#   $3 = VARIANT (ej: V01)
+#   $4 = BASE_IMAGE (ej: /mnt/vms/rocky-ir-base-junior-v1.qcow2)
 # ============================================================================
+
 LEVEL="$1"
 LAB_ID="$2"
-BASE_IMAGE="$3"
+VARIANT="$3"
+BASE_IMAGE="$4"
 
 ENGINE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-CLOUDINIT_BASE="/mnt/vms/labs/tmp/cloudinit"
+
+CLOUDINIT_DIR="/mnt/vms/labs/tmp/cloudinit/${LAB_ID}-${VARIANT}"
+VM_NAME="lab-${LAB_ID,,}-${VARIANT,,}"
+TF_WORKDIR="/mnt/vms/labs/tmp/terraform/${VM_NAME}"
 
 # ============================================================================
-# ROLES A LEVANTAR POR LAB
+# VALIDACIONES
 # ============================================================================
-ROLES=("web" "db" "dns" "proxy")
+[[ -f "$CLOUDINIT_DIR/user-data" ]] || {
+  echo "❌ user-data no encontrado en $CLOUDINIT_DIR" >&2
+  exit 1
+}
+
+[[ -f "$CLOUDINIT_DIR/meta-data" ]] || {
+  echo "❌ meta-data no encontrado en $CLOUDINIT_DIR" >&2
+  exit 1
+}
+
+[[ -f "$BASE_IMAGE" ]] || {
+  echo "❌ Base image no encontrada: $BASE_IMAGE" >&2
+  exit 1
+}
 
 # ============================================================================
-# LOOP: POR CADA ROLE
+# PREPARAR WORKDIR TERRAFORM
 # ============================================================================
-for ROLE in "${ROLES[@]}"; do
-    VM_NAME="lab-${LAB_ID,,}-${ROLE}-01"
-    CLOUDINIT_DIR="$CLOUDINIT_BASE/$VM_NAME"
+rm -rf "$TF_WORKDIR"
+mkdir -p "$TF_WORKDIR"
+cd "$TF_WORKDIR"
 
-    [[ -f "$CLOUDINIT_DIR/user-data" ]] || {
-        echo "❌ user-data no encontrado para $VM_NAME"
-        exit 1
-    }
-    [[ -f "$CLOUDINIT_DIR/meta-data" ]] || {
-        echo "❌ meta-data no encontrado para $VM_NAME"
-        exit 1
-    }
-
-    # Crear workdir aislado para Terraform
-    TF_WORKDIR="/mnt/vms/labs/tmp/terraform/$VM_NAME"
-    mkdir -p "$TF_WORKDIR"
-    cd "$TF_WORKDIR"
-
-    # ✅ VERSIÓN FINAL CORRECTA
-    cat > main.tf <<EOF
+cat > main.tf <<EOF
 terraform {
   required_providers {
     libvirt = {
@@ -57,10 +60,9 @@ terraform {
   }
 }
 
-provider "libvirt" {
-}
+provider "libvirt" {}
 
-module "vm" {
+module "lab_vm" {
   source = "$ENGINE_DIR/scenarios/terraform/modules/rocky_vm"
 
   vm_name             = "$VM_NAME"
@@ -70,10 +72,13 @@ module "vm" {
 }
 EOF
 
-    echo "🔨 Inicializando Terraform para $VM_NAME..."
-    terraform init -input=false -no-color
-    terraform apply -auto-approve -no-color
-    echo "✅ VM '$VM_NAME' aprovisionada con Terraform"
-done
+# ============================================================================
+# EJECUCIÓN
+# ============================================================================
+echo "🔨 Inicializando Terraform para $VM_NAME..."
+terraform init -input=false -no-color
 
-echo "🚀 Todas las VMs del laboratorio '$LAB_ID' han sido levantadas"
+echo "🚀 Aplicando Terraform para $VM_NAME..."
+terraform apply -auto-approve -no-color
+
+echo "✅ Laboratorio '$LAB_ID ($VARIANT)' levantado correctamente"

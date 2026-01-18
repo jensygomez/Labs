@@ -1,66 +1,90 @@
+# engine/cloudinit_generator.sh
+
 #!/bin/bash
 set -euo pipefail
 
 # ============================================================================
-# ARGUMENTOS
+# cloudinit_generator.sh
+# Generador SIMPLE y DETERMINÍSTICO de cloud-init
+#
+# MODELO:
+#   - 1 LAB  = 1 VM
+#   - 1 VARIANT = lab completo
+#   - Sin roles
+#   - Sin composición dinámica
 # ============================================================================
+#
+# ARGUMENTOS:
+#   $1 = LEVEL   (ej: junior)
+#   $2 = LAB_ID  (ej: J01)
+#   $3 = VARIANT (ej: V01)
+#
+# SALIDA:
+#   stdout -> path del directorio cloud-init generado
+# ============================================================================
+
 LEVEL="$1"
 LAB_ID="$2"
 VARIANT="$3"
-ROLE="$4"
-VM_NAME="$5"
 
 # ============================================================================
-# PATHS BASE
+# PATHS
 # ============================================================================
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-LAB_DIR="$ROOT_DIR/scenarios/${LEVEL,,}/${LAB_ID}/cloudinit"
-
-ROLE_FILE="$LAB_DIR/roles/${ROLE}.yaml"
-VARIANT_FILE="$LAB_DIR/variants/${VARIANT}.yaml"
+SRC_DIR="$ROOT_DIR/scenarios/${LEVEL,,}/${LAB_ID}/cloudinit/${VARIANT}"
 
 OUT_BASE="/mnt/vms/labs/tmp/cloudinit"
-OUT_DIR="$OUT_BASE/$VM_NAME"
+OUT_DIR="$OUT_BASE/${LAB_ID}-${VARIANT}"
 
-USER_DATA="$OUT_DIR/user-data"
-META_DATA="$OUT_DIR/meta-data"
+USER_DATA_SRC="$SRC_DIR/user-data"
+META_DATA_SRC="$SRC_DIR/meta-data"
 
+USER_DATA_OUT="$OUT_DIR/user-data"
+META_DATA_OUT="$OUT_DIR/meta-data"
+
+# ============================================================================
+# VALIDACIONES
+# ============================================================================
+[[ -d "$SRC_DIR" ]] || {
+  echo "❌ Variant no existe: $SRC_DIR" >&2
+  exit 1
+}
+
+[[ -f "$USER_DATA_SRC" ]] || {
+  echo "❌ user-data no encontrado en $SRC_DIR" >&2
+  exit 1
+}
+
+[[ -f "$META_DATA_SRC" ]] || {
+  echo "❌ meta-data no encontrado en $SRC_DIR" >&2
+  exit 1
+}
+
+# ============================================================================
+# CREAR OUTPUT
+# ============================================================================
+rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR"
 
 # ============================================================================
-# VALIDACIONES ESTRICTAS
+# COPIAR CLOUD-INIT
 # ============================================================================
-[[ -d "$LAB_DIR" ]] || {
-  echo "❌ LAB no existe: $LAB_DIR" >&2
-  exit 1
-}
+cp "$USER_DATA_SRC" "$USER_DATA_OUT"
 
-[[ -f "$ROLE_FILE" ]] || {
-  echo "❌ Role no existe: $ROLE_FILE" >&2
-  exit 1
-}
-
-[[ -f "$VARIANT_FILE" ]] || {
-  echo "❌ Variant no existe: $VARIANT_FILE" >&2
-  exit 1
-}
-
-# ============================================================================
-# META-DATA
-# ============================================================================
-cat > "$META_DATA" <<EOF
-instance-id: $VM_NAME
-local-hostname: $VM_NAME
+# Normalizamos instance-id y hostname para evitar colisiones
+cat > "$META_DATA_OUT" <<EOF
+instance-id: lab-${LAB_ID}-${VARIANT}
+local-hostname: lab-${LAB_ID}-${VARIANT}
 EOF
 
 # ============================================================================
-# USER-DATA (cloud-init)
+# INFO DEL LAB (si no existe ya)
 # ============================================================================
-cat > "$USER_DATA" <<EOF
-#cloud-config
+if ! grep -q "/etc/lab.info" "$USER_DATA_OUT"; then
+  cat >> "$USER_DATA_OUT" <<EOF
 
 # ============================================================================
-# LAB METADATA
+# LAB INFO
 # ============================================================================
 write_files:
   - path: /etc/lab.info
@@ -68,54 +92,11 @@ write_files:
     content: |
       LEVEL=$LEVEL
       LAB=$LAB_ID
-      ROLE=$ROLE
       VARIANT=$VARIANT
-      VM_NAME=$VM_NAME
-
 EOF
-
-# ============================================================================
-# INYECTAR ROLE
-# ============================================================================
-cat >> "$USER_DATA" <<EOF
-# ============================================================================
-# ROLE: $ROLE
-# ============================================================================
-EOF
-
-cat "$ROLE_FILE" >> "$USER_DATA"
-
-# ============================================================================
-# INYECTAR VARIANT
-# ============================================================================
-cat >> "$USER_DATA" <<EOF
-
-# ============================================================================
-# VARIANT: $VARIANT
-# ============================================================================
-EOF
-
-cat "$VARIANT_FILE" >> "$USER_DATA"
-
-# ============================================================================
-# SCRIPTS COMUNES (SI EXISTEN)
-# ============================================================================
-COMMON_SCRIPT="$LAB_DIR/scripts/common.sh"
-if [[ -f "$COMMON_SCRIPT" ]]; then
-  cat >> "$USER_DATA" <<EOF
-
-# ============================================================================
-# COMMON SCRIPT
-# ============================================================================
-runcmd:
-  - bash /var/lib/cloud/scripts/per-instance/common.sh
-EOF
-
-  mkdir -p "$OUT_DIR/scripts"
-  cp "$COMMON_SCRIPT" "$OUT_DIR/scripts/common.sh"
 fi
 
 # ============================================================================
-# SALIDA PARA TERRAFORM
+# SALIDA
 # ============================================================================
 echo "$OUT_DIR"
