@@ -93,16 +93,15 @@ assign_lab() {
     sudo rm -f "/var/lib/libvirt/images/${VM_NAME}.qcow2"*
     
     # 3. LINKED CLONE CORRECTO (CRÍTICO: =qcow2)
+    echo "📍 Clon SIMPLE (funciona siempre)..."
     DISK_PATH="/var/lib/libvirt/images/${VM_NAME}.qcow2=qcow2"
-    echo "💾 Disco destino: $DISK_PATH"
-    
     sudo virt-clone \
         --original rocky9_base \
         --name "$VM_NAME" \
-        --file "$DISK_PATH" || {
-        echo "💥 ERROR en virt-clone" >&2
-        return 1
-    }
+        --file "$DISK_PATH" || return 1
+
+    ls -lh "$DISK_PATH" | cut -d' ' -f5-  # Muestra tamaño
+    echo "✅ Clon OK. Inicia: virsh start $VM_NAME"
     
     # 4. CLOUD-INIT ISO (del generador existente)
     SEED_PATH="/var/lib/libvirt/images/${VM_NAME}-seed.iso"
