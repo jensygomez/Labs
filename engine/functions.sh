@@ -92,6 +92,7 @@ assign_lab() {
         --original rocky9_base \
         --name "$VM_NAME" \
         --file "$DISK_PATH"
+        --preserve-data
     
     # 3. ADJUNTAR CLOUD-INIT ISO AUTOMÁTICO
     SEED_PATH="/var/lib/libvirt/images/${VM_NAME}-seed.iso"
