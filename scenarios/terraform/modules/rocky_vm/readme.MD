@@ -1,10 +1,39 @@
 # Módulo Terraform: rocky_vm
 
-Este módulo Terraform define **la unidad básica de máquina virtual Rocky Linux** utilizada por el motor de laboratorios. El módulo describe *cómo* debe construirse una VM (disco, memoria, CPU, red y cloud-init), pero **no cuántas VMs se crean**. Un laboratorio completo (por ejemplo J01) instancia este módulo múltiples veces para componer su ecosistema (Web, DB, DNS, Proxy).
+# rocky_vm Terraform Module
 
-El módulo clona una **imagen base preconfigurada** (`rocky-ir-base-junior-v1.qcow2`), que ya contiene el sistema operativo y los servicios necesarios instalados pero inactivos. De esta forma, cloud-init se limita a activar, desactivar o modificar configuraciones, manteniendo tiempos de despliegue bajos y un comportamiento consistente entre laboratorios.
+## Purpose
 
-Este módulo depende exclusivamente de variables externas suministradas por el motor (`terraform_runner.sh`), incluyendo el rol de la VM y el contenido de `user-data` y `meta-data`. El módulo no contiene lógica de escenarios ni variantes de fallos, lo que garantiza una separación estricta entre infraestructura, configuración y simulación de incidentes.
+This module clones a pre-existing Rocky Linux base VM and boots it as a lab instance.
+
+It does NOT:
+- create networks
+- install services
+- manage roles
+- create multiple VMs
+
+All services (WEB, DB, DNS, PROXY) must already exist in the base image.
+
+## Workflow
+
+1. A healthy base VM is prepared manually
+2. A snapshot or qcow2 base image is created
+3. Terraform clones the image
+4. cloud-init injects lab-specific faults
+
+## Inputs
+
+- lab_name
+- base_image
+- memory
+- vcpus
+- cloudinit_iso
+
+## Outputs
+
+- vm_name
+- vm_id
+
 
 
 jensy@mx:~/Labs/scenarios/terraform/modules/rocky_vm

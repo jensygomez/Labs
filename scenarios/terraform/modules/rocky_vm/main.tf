@@ -1,51 +1,41 @@
-terraform {
-  required_providers {
-    libvirt = {
-      source  = "dmacvicar/libvirt"
-      version = "~> 0.7.6"
-    }
-  }
+# scenarios/terraform/modules/rocky_vm/main.tf
+
+resource "libvirt_volume" "lab_disk" {
+  name           = "${var.lab_name}.qcow2"
+  pool           = var.disk_pool
+  base_volume_id = var.base_image
+  format         = "qcow2"
 }
 
-resource "libvirt_cloudinit_disk" "this" {
-  name      = "${var.vm_name}-cloudinit.iso"
-  user_data = var.cloudinit_user_data
-  meta_data = var.cloudinit_meta_data
+resource "libvirt_cloudinit_disk" "cloudinit" {
+  name      = "${var.lab_name}-cloudinit.iso"
+  pool      = var.disk_pool
+  user_data = file(var.cloudinit_iso)
 }
 
-resource "libvirt_volume" "root" {
-  name   = "${var.vm_name}-root.qcow2"
-  source = var.base_image
-  format = "qcow2"
-  pool   = "default"
-}
-
-resource "libvirt_domain" "this" {
-  name   = var.vm_name
-  memory = 1024
-  vcpu   = 1
-
-  cloudinit = libvirt_cloudinit_disk.this.id
+resource "libvirt_domain" "lab_vm" {
+  name   = var.lab_name
+  memory = var.memory
+  vcpu   = var.vcpus
 
   disk {
-    volume_id = libvirt_volume.root.id
+    volume_id = libvirt_volume.lab_disk.id
   }
+
+  cloudinit = libvirt_cloudinit_disk.cloudinit.id
 
   network_interface {
-    network_name = "default"
+    network_name = var.network
   }
 
-  autostart = true
-  
-  # Sin gráficos para servidores
-  graphics {
-    type = "vnc"
-  }
-  
-  # Consola serial
   console {
     type        = "pty"
-    target_type = "serial"
     target_port = "0"
+    target_type = "serial"
+  }
+
+  graphics {
+    type        = "spice"
+    listen_type = "none"
   }
 }
