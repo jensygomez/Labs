@@ -12,13 +12,28 @@ set -euo pipefail
 
 VM_NAME="$1"
 CLOUDINIT_DIR="$2"
-BASE_VM="rocky9_base"  # ← Tu VM base
+BASE_VM="rocky9_base"
 
 echo "🚀 Creando VM '$VM_NAME' desde '$BASE_VM'..."
 
 # ============================================================================
+# VERIFICAR PERMISOS SUDO AL INICIO
+# ============================================================================
+if [[ $EUID -eq 0 ]]; then
+    echo "✅ Ejecutando como root"
+elif sudo -n true 2>/dev/null; then
+    echo "✅ Sudo configurado sin contraseña"
+else
+    echo "❌ Este script necesita permisos sudo"
+    echo "   Configura sudo sin contraseña o ejecuta manualmente:"
+    echo "   sudo $0 '$VM_NAME' '$CLOUDINIT_DIR'"
+    exit 1
+fi
+
+# ============================================================================
 # VALIDACIONES INICIALES
 # ============================================================================
+# ... resto del script igual ...
 # Verificar comandos necesarios
 for cmd in virt-clone genisoimage; do
     if ! command -v "$cmd" &> /dev/null; then
