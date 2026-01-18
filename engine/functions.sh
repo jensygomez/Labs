@@ -3,7 +3,7 @@
 # engine/functions.sh
 #==============================================================================
 # Funciones auxiliares para el Incident Response Lab Engine
-# Refactorizado para cloud-init + Terraform
+# Refactorizado para bash/libvirt (sin Terraform)
 #==============================================================================
 
 #==============================================================================
@@ -21,7 +21,7 @@ check_env() {
 #==============================================================================
 # SELECCIÓN ALEATORIA DE VARIANTE
 #==============================================================================
-select_variant() {  # ← CAMBIÉ EL NOMBRE de select_variant_file
+select_variant() {
     local LAB_DIR="$1/cloudinit"
     shopt -s nullglob
     local VARIANTS=("$LAB_DIR"/V*)
@@ -64,35 +64,33 @@ assign_lab() {
 
     echo "📍 LAB seleccionado: ID='$ID', LEVEL='$LAB_LEVEL', PATH='$LAB_PATH'"
 
-    # ✅ CAMBIO: Llamar a select_variant (no select_variant_file)
+    # Seleccionar variante
     VARIANT=$(select_variant "$ROOT_DIR/$LAB_PATH") || return 1
 
     echo "📍 Variante seleccionada: $VARIANT"
 
-    # ✅ CAMBIO: Eliminar el loop de roles (1 LAB = 1 VM según cloudinit_generator.sh)
     VM_NAME="lab-${ID,,}-${VARIANT,,}"
     
     echo "📍 Generando cloud-init para VM '$VM_NAME' con VARIANT='$VARIANT'"
     
-    # ✅ CAMBIO: Llamar a cloudinit_generator.sh sin parámetro ROLE
-    "$ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$VARIANT"
-
-    # =========================================================================
-    # Levantar las VMs con Terraform
-    # =========================================================================
-    echo "📍 Levantando VM del laboratorio '$ID' ($VARIANT) usando Terraform..."
+    # Generar cloud-init
+    CLOUDINIT_DIR=$("$ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$VARIANT")
     
-    # ✅ CAMBIO: Pasar la VARIANT a terraform_runner.sh (3er parámetro)
-    "$ENGINE_DIR/terraform_runner.sh" "$LEVEL" "$ID" "$VARIANT" "/mnt/vms/rocky9_base.qcow2"
+    # =========================================================================
+    # Clonar la VM usando bash/libvirt
+    # =========================================================================
+    echo "📍 Clonando VM del laboratorio '$ID' ($VARIANT) usando libvirt..."
+    
+    # Llamar al clonador
+    "$ENGINE_DIR/vm_cloner.sh" "$VM_NAME" "$CLOUDINIT_DIR"
 
     echo "🚀 [assign_lab] >>> COMPLETADO <<<" >&2
 }
 
 #==============================================================================
-# EJEMPLO DE FUNCIÓN DE EJECUCIÓN DE LAB
+# FUNCIÓN DE EJECUCIÓN DE LAB
 #==============================================================================
 run_lab() {
-    # En este flujo Terraform tomará la carpeta /mnt/vms/labs/tmp/cloudinit/$VM_NAME
-    echo "[INFO] run_lab ahora depende de Terraform para aprovisionar VMs"
-    echo "Use terraform_runner.sh pasando los VM_NAME generados"
+    echo "[INFO] run_lab - Usar 'assign_lab' para crear nuevas VMs"
+    echo "Para gestionar VMs existentes, usar las opciones del menú principal"
 }
