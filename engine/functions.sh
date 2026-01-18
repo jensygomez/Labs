@@ -38,6 +38,7 @@ select_variant() {
     echo "$SELECTED_VARIANT"
 }
 
+
 #==============================================================================
 # ASIGNACIÓN DE LAB
 #==============================================================================
@@ -70,22 +71,53 @@ assign_lab() {
     echo "📍 Variante seleccionada: $VARIANT"
 
     VM_NAME="lab-${ID,,}-${VARIANT,,}"
-    
     echo "📍 Generando cloud-init para VM '$VM_NAME' con VARIANT='$VARIANT'"
     
     # Generar cloud-init
     CLOUDINIT_DIR=$("$ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$VARIANT")
     
     # =========================================================================
-    # Clonar la VM usando bash/libvirt
+    # CLONACIÓN CORREGIDA CON APAGADO FUERTE
     # =========================================================================
     echo "📍 Clonando VM del laboratorio '$ID' ($VARIANT) usando libvirt..."
     
-    # Llamar al clonador
-    "$ENGINE_DIR/vm_cloner.sh" "$VM_NAME" "$CLOUDINIT_DIR"
-
+    # 1. ASEGURAR VM BASE APAGADA (CRÍTICO)
+    echo "💾 Preparando clonación..."
+    if virsh domstate rocky9_base 2>/dev/null | grep -q "running"; then
+        echo "⚠️  VM base 'rocky9_base' encendida. Forzando apagado..."
+        virsh destroy rocky9_base
+        sleep 3
+        until virsh domstate rocky9_base 2>/dev/null | grep -q "shut off"; do
+            echo "⏳ Esperando VM apagada..."
+            sleep 2
+        done
+        echo "✅ VM base completamente apagada"
+    fi
+    
+    # 2. CLONAR CON SINTAXIS CORRECTA
+    DISK_PATH="/var/lib/libvirt/images/${VM_NAME}.qcow2"
+    SEED_PATH="/var/lib/libvirt/images/${VM_NAME}-seed.iso"
+    
+    echo "💾 Disco base: /var/lib/libvirt/images/rocky9_base.qcow2"
+    echo "💾 Disco destino: $DISK_PATH"
+    
+    sudo virt-clone \
+        --original rocky9_base \
+        --name "$VM_NAME" \
+        --file "$DISK_PATH=qcow2" \
+        --disk "$SEED_PATH,device=cdrom" \
+        --auto-mac || {
+        echo "💥 ERROR en virt-clone" >&2
+        return 1
+    }
+    
+    echo "✅ VM '$VM_NAME' clonada exitosamente"
+    echo "🚀 Iniciando VM '$VM_NAME'..."
+    virsh start "$VM_NAME" || echo "⚠️ VM iniciada manualmente con virt-manager"
+    
     echo "🚀 [assign_lab] >>> COMPLETADO <<<" >&2
 }
+
 
 #==============================================================================
 # FUNCIÓN DE EJECUCIÓN DE LAB
