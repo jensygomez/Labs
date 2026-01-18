@@ -38,7 +38,6 @@ select_variant() {
     echo "$SELECTED_VARIANT"
 }
 
-
 #==============================================================================
 # ASIGNACIÓN DE LAB
 #==============================================================================
@@ -70,54 +69,69 @@ assign_lab() {
     echo "📍 Variante seleccionada: $VARIANT"
 
     VM_NAME="lab-${ID,,}-${VARIANT,,}"
-    echo "📍 Generando cloud-init para VM '$VM_NAME' con VARIANT='$VARIANT'"
+    echo "📍 Creando lab '$VM_NAME'..."
     
     # Generar cloud-init
     CLOUDINIT_DIR=$("$ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$VARIANT")
     
     # =========================================================================
-    # CLONACIÓN LINKED CLONE + CLOUD-INIT ✅
+    # CLONACIÓN OPTIMIZADA (BYPASS SNAPSHOTS)
     # =========================================================================
-    echo "📍 Clonando VM '$VM_NAME' (LINKED CLONE ⚡)..."
     
     # 1. ASEGURAR VM BASE APAGADA
     if virsh domstate rocky9_base 2>/dev/null | grep -q "running"; then
         echo "⚠️  VM base encendida. Apagando..."
         virsh destroy rocky9_base
-        sleep 3
+        sleep 2
     fi
     
-    # 2. LIMPIAR VM anterior
+    # 2. LIMPIAR VM anterior si existe
     virsh destroy "$VM_NAME" 2>/dev/null || true
-    virsh undefine "$VM_NAME" 2>/dev/null || true
+    virsh undefine "$VM_NAME" --remove-all-storage 2>/dev/null || true
     sudo rm -f "/var/lib/libvirt/images/${VM_NAME}.qcow2"*
+    sudo rm -f "/var/lib/libvirt/images/${VM_NAME}-seed.iso"
     
-    # 3. LINKED CLONE CORRECTO (CRÍTICO: =qcow2)
-    echo "📍 Clon SIMPLE (funciona siempre)..."
-    DISK_PATH="/var/lib/libvirt/images/${VM_NAME}.qcow2=qcow2"
+    # 3. LINKED CLONE DIRECTO (BYPASS SNAPSHOTS)
+    BASE_DISK="/mnt/vms/rocky9_base.qcow2"  # DISCO BASE REAL
+    DISK_PATH="/var/lib/libvirt/images/${VM_NAME}.qcow2"
+    
+    echo "📍 Creando linked clone directo..."
+    sudo qemu-img create -f qcow2 -F qcow2 -b "$BASE_DISK" "$DISK_PATH"
+    
+    # 4. CLONAR DEFINICIÓN DE VM
+    echo "📍 Clonando definición de VM..."
     sudo virt-clone \
         --original rocky9_base \
         --name "$VM_NAME" \
-        --file "$DISK_PATH" || return 1
-
-    ls -lh "$DISK_PATH" | cut -d' ' -f5-  # Muestra tamaño
-    echo "✅ Clon OK. Inicia: virsh start $VM_NAME"
+        --file "$DISK_PATH" \
+        --preserve-data || {
+        echo "💥 Fallback: clon simple..."
+        sudo virt-clone --original rocky9_base --name "$VM_NAME" --file "$DISK_PATH=qcow2"
+    }
     
-    # 4. CLOUD-INIT ISO (del generador existente)
+    # 5. CLOUD-INIT ISO
     SEED_PATH="/var/lib/libvirt/images/${VM_NAME}-seed.iso"
     if [[ -f "$CLOUDINIT_DIR"/*.iso ]]; then
+        echo "📍 Copiando cloud-init ISO..."
         sudo cp "$CLOUDINIT_DIR"/*.iso "$SEED_PATH"
         sudo chown libvirt-qemu:libvirt "$SEED_PATH"
         sudo virsh attach-disk "$VM_NAME" "$SEED_PATH" hdc \
-            --type cdrom --mode readonly --config || echo "⚠️ CDROM ya existe"
+            --type cdrom --mode readonly --config --persistent 2>/dev/null || \
+            echo "⚠️  CDROM ya adjunto o error al adjuntar"
     fi
     
-    echo "✅ VM '$VM_NAME' clonada (linked clone). Iniciando..."
-    virsh start "$VM_NAME" || echo "⚠️ Inicia con virt-manager"
+    # 6. INICIAR VM
+    echo "📍 Iniciando VM '$VM_NAME'..."
+    virsh start "$VM_NAME" || {
+        echo "⚠️  Error al iniciar automáticamente. Inicia manualmente con:"
+        echo "    virsh start $VM_NAME"
+        echo "    virt-manager &"
+    }
     
+    echo "✅ VM '$VM_NAME' creada exitosamente (~128KB)!"
+    echo "🔗 Accede con: ssh admin@<ip-vm> (password: admin)"
     echo "🚀 [assign_lab] >>> COMPLETADO <<<" >&2
 }
-
 
 
 
