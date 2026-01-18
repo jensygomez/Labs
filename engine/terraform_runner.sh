@@ -20,6 +20,9 @@ VARIANT="$3"
 BASE_IMAGE="$4"
 
 ENGINE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+# Justo después de definir ENGINE_DIR, agrega:
+echo "🔧 DEBUG: ENGINE_DIR = $ENGINE_DIR"
+echo "🔧 DEBUG: Ruta del módulo = $ENGINE_DIR/scenarios/terraform/modules/rocky_vm"
 
 CLOUDINIT_DIR="/mnt/vms/labs/tmp/cloudinit/${LAB_ID}-${VARIANT}"
 VM_NAME="lab-${LAB_ID,,}-${VARIANT,,}"
@@ -50,6 +53,8 @@ rm -rf "$TF_WORKDIR"
 mkdir -p "$TF_WORKDIR"
 cd "$TF_WORKDIR"
 
+
+# Reemplaza todo el bloque cat > main.tf <<EOF con esto:
 cat > main.tf <<EOF
 terraform {
   required_providers {
@@ -63,12 +68,12 @@ terraform {
 provider "libvirt" {}
 
 module "lab_vm" {
-  source = "$ENGINE_DIR/scenarios/terraform/modules/rocky_vm"
+  source = "${ENGINE_DIR}/scenarios/terraform/modules/rocky_vm"
 
-  vm_name             = "$VM_NAME"
-  base_image          = "$BASE_IMAGE"
-  cloudinit_user_data = file("$CLOUDINIT_DIR/user-data")
-  cloudinit_meta_data = file("$CLOUDINIT_DIR/meta-data")
+  vm_name             = "${VM_NAME}"
+  base_image          = "${BASE_IMAGE}"
+  cloudinit_user_data = file("${CLOUDINIT_DIR}/user-data")
+  cloudinit_meta_data = file("${CLOUDINIT_DIR}/meta-data")
 }
 EOF
 
