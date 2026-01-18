@@ -1,43 +1,20 @@
 # scenarios/terraform/modules/rocky_vm/main.tf
 
-resource "libvirt_volume" "lab_disk" {
-  name           = "${var.vm_name}.qcow2"
-  pool           = var.disk_pool
-  base_volume_id = var.base_image
-  format         = "qcow2"
+terraform {
+  required_providers {
+    libvirt = {
+      source  = "dmacvicar/libvirt"
+      version = "~> 0.7.6"
+    }
+  }
 }
 
-resource "libvirt_cloudinit_disk" "cloudinit" {
-  name      = "${var.vm_name}-cloudinit.iso"
-  pool      = var.disk_pool
+provider "libvirt" {}
 
-  user_data = var.cloudinit_user_data
-  meta_data = var.cloudinit_meta_data
-}
+module "lab_vm" {
+  source = "$ENGINE_DIR/scenarios/terraform/modules/rocky_vm"
 
-resource "libvirt_domain" "lab_vm" {
-  name   = var.vm_name
-  memory = var.memory
-  vcpu   = var.vcpus
-
-  disk {
-    volume_id = libvirt_volume.lab_disk.id
-  }
-
-  cloudinit = libvirt_cloudinit_disk.cloudinit.id
-
-  network_interface {
-    network_name = var.network
-  }
-
-  console {
-    type        = "pty"
-    target_port = "0"
-    target_type = "serial"
-  }
-
-  graphics {
-    type        = "spice"
-    listen_type = "none"
-  }
+  lab_name      = "$VM_NAME"
+  base_image    = "$BASE_IMAGE"
+  cloudinit_iso = "$CLOUDINIT_DIR/user-data"
 }
