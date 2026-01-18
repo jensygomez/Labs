@@ -1,12 +1,22 @@
 # scenarios/terraform/modules/rocky_vm/variables.tf
 
-variable "lab_name" {
-  description = "Nombre del laboratorio (ej: J01-V01)"
+variable "vm_name" {
+  description = "Nombre de la VM"
   type        = string
 }
 
 variable "base_image" {
   description = "Ruta al qcow2 base sano"
+  type        = string
+}
+
+variable "cloudinit_user_data" {
+  description = "Contenido user-data de cloud-init"
+  type        = string
+}
+
+variable "cloudinit_meta_data" {
+  description = "Contenido meta-data de cloud-init"
   type        = string
 }
 
@@ -22,19 +32,14 @@ variable "vcpus" {
   default     = 2
 }
 
-variable "cloudinit_iso" {
-  description = "Ruta al ISO de cloud-init generado por el engine"
-  type        = string
-}
-
 variable "disk_pool" {
-  description = "Storage pool donde se creará el disco clonado"
+  description = "Storage pool libvirt"
   type        = string
   default     = "default"
 }
 
 variable "network" {
-  description = "Red libvirt a usar (ej: default)"
+  description = "Red libvirt"
   type        = string
   default     = "default"
 }

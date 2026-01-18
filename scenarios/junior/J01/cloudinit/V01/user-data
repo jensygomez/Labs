@@ -1,0 +1,59 @@
+# scenarios/junior/J01/cloudinit/V01/user-data 
+
+
+#cloud-config
+
+# ============================================================================
+# LAB INFO
+# ============================================================================
+write_files:
+  - path: /etc/lab.info
+    permissions: '0644'
+    content: |
+      LAB=J01
+      LEVEL=Junior
+      VARIANT=V01
+      TOPIC=Networking
+      INCIDENT=ICMP_BLOCKED
+      SERVICES=WEB,DB,DNS,PROXY
+
+  - path: /etc/motd
+    permissions: '0644'
+    content: |
+      ============================================================================
+                       🎫 INCIDENT RESPONSE LAB – J01 / V01
+      ============================================================================
+      
+      📚 TEMA    : Redes y Conectividad
+      🧪 VARIANT : V01 – ICMP / Rutas bloqueadas (Firewall)
+      
+      📢 TICKET #101
+      ───────────────────────────────────────────────────────────────────────────
+      Cliente reporta:
+      "No hay conectividad con el servidor. El sitio no responde y no podemos
+       verificar disponibilidad por ping."
+      
+      Infraestructura (1 VM – servicios aislados por IP):
+      
+        WEB     → web.lab.local    (10.10.10.10)
+        DB      → db.lab.local     (10.10.20.10)
+        PROXY   → proxy.lab.local  (10.10.30.10)
+        DNS     → dns.lab.local    (10.10.40.10)
+      
+      🔍 SÍNTOMAS OBSERVADOS:
+        - Ping falla entre redes internas
+        - Servicios aparentan estar activos
+        - DNS responde correctamente
+      
+      🧪 COMANDOS DE PRUEBA (cliente):
+      
+        ping 10.10.10.10
+        dig @10.10.40.10 web.lab.local
+        export http_proxy=http://10.10.30.10:3128
+        curl http://web.lab.local
+      
+      🎯 OBJETIVO:
+        Restaurar conectividad de red (ICMP / rutas).
+      
+      ============================================================================
+

@@ -1,20 +1,22 @@
 # scenarios/terraform/modules/rocky_vm/main.tf
 
 resource "libvirt_volume" "lab_disk" {
-  name           = "${var.lab_name}.qcow2"
+  name           = "${var.vm_name}.qcow2"
   pool           = var.disk_pool
   base_volume_id = var.base_image
   format         = "qcow2"
 }
 
 resource "libvirt_cloudinit_disk" "cloudinit" {
-  name      = "${var.lab_name}-cloudinit.iso"
+  name      = "${var.vm_name}-cloudinit.iso"
   pool      = var.disk_pool
-  user_data = file(var.cloudinit_iso)
+
+  user_data = var.cloudinit_user_data
+  meta_data = var.cloudinit_meta_data
 }
 
 resource "libvirt_domain" "lab_vm" {
-  name   = var.lab_name
+  name   = var.vm_name
   memory = var.memory
   vcpu   = var.vcpus
 
