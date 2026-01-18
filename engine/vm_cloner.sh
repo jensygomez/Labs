@@ -33,7 +33,7 @@ for cmd in virsh virt-clone; do
     if ! command -v "$cmd" &> /dev/null; then
         echo "❌ $cmd no está instalado" >&2
         exit 1
-    done
+    fi
 done
 
 # Verificar genisoimage o mkisofs
