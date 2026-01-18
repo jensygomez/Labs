@@ -91,7 +91,7 @@ assign_lab() {
     sudo virt-clone \
         --original rocky9_base \
         --name "$VM_NAME" \
-        --file "$DISK_PATH"
+        --file "$DISK_PATH" \
         --preserve-data
     
     # 3. ADJUNTAR CLOUD-INIT ISO AUTOMÁTICO
