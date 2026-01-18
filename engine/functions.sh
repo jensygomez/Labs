@@ -67,7 +67,6 @@ assign_lab() {
 
     # Seleccionar variante
     VARIANT=$(select_variant "$ROOT_DIR/$LAB_PATH") || return 1
-
     echo "📍 Variante seleccionada: $VARIANT"
 
     VM_NAME="lab-${ID,,}-${VARIANT,,}"
@@ -77,46 +76,49 @@ assign_lab() {
     CLOUDINIT_DIR=$("$ENGINE_DIR/cloudinit_generator.sh" "$LEVEL" "$ID" "$VARIANT")
     
     # =========================================================================
-    # CLONACIÓN CORREGIDA CON APAGADO FUERTE
+    # CLONACIÓN VIRT-CLONE SINTAXIS 100% CORRECTA
     # =========================================================================
     echo "📍 Clonando VM del laboratorio '$ID' ($VARIANT) usando libvirt..."
     
-    # 1. ASEGURAR VM BASE APAGADA (CRÍTICO)
+    # 1. ASEGURAR VM BASE APAGADA
     echo "💾 Preparando clonación..."
     if virsh domstate rocky9_base 2>/dev/null | grep -q "running"; then
         echo "⚠️  VM base 'rocky9_base' encendida. Forzando apagado..."
         virsh destroy rocky9_base
-        sleep 3
-        until virsh domstate rocky9_base 2>/dev/null | grep -q "shut off"; do
-            echo "⏳ Esperando VM apagada..."
-            sleep 2
-        done
-        echo "✅ VM base completamente apagada"
+        sleep 5
     fi
     
-    # 2. CLONAR CON SINTAXIS CORRECTA
     DISK_PATH="/var/lib/libvirt/images/${VM_NAME}.qcow2"
-    SEED_PATH="/var/lib/libvirt/images/${VM_NAME}-seed.iso"
     
     echo "💾 Disco base: /var/lib/libvirt/images/rocky9_base.qcow2"
     echo "💾 Disco destino: $DISK_PATH"
+    echo "🔄 Ejecutando virt-clone..."
     
+    # 2. VIRT-CLONE SINTAXIS MÍNIMA CORRECTA
     sudo virt-clone \
         --original rocky9_base \
         --name "$VM_NAME" \
-        --file "$DISK_PATH=qcow2" \
-        --disk "$SEED_PATH,device=cdrom" \
-        --auto-mac || {
+        --file "$DISK_PATH" || {
         echo "💥 ERROR en virt-clone" >&2
         return 1
     }
     
+    # 3. AGREGAR CLOUD-INIT CDROM DESPUÉS
+    SEED_PATH="/var/lib/libvirt/images/${VM_NAME}-seed.iso"
+    if [[ -f "$SEED_PATH" ]]; then
+        echo "☁️ Agregando cloud-init CDROM..."
+        sudo virsh attach-disk "$VM_NAME" "$SEED_PATH" hdc \
+            --type cdrom --mode readonly || echo "⚠️ CDROM ya configurado"
+    fi
+    
     echo "✅ VM '$VM_NAME' clonada exitosamente"
-    echo "🚀 Iniciando VM '$VM_NAME'..."
-    virsh start "$VM_NAME" || echo "⚠️ VM iniciada manualmente con virt-manager"
+    echo "🚀 Iniciando VM..."
+    virsh start "$VM_NAME" || echo "⚠️ Inicia manualmente con virt-manager"
     
     echo "🚀 [assign_lab] >>> COMPLETADO <<<" >&2
 }
+
+
 
 
 #==============================================================================
