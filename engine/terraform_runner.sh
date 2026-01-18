@@ -1,5 +1,4 @@
 # engine/terraform_runner.sh
-
 #!/bin/bash
 set -euo pipefail
 
@@ -20,9 +19,6 @@ VARIANT="$3"
 BASE_IMAGE="$4"
 
 ENGINE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-# Justo después de definir ENGINE_DIR, agrega:
-echo "🔧 DEBUG: ENGINE_DIR = $ENGINE_DIR"
-echo "🔧 DEBUG: Ruta del módulo = $ENGINE_DIR/scenarios/terraform/modules/rocky_vm"
 
 CLOUDINIT_DIR="/mnt/vms/labs/tmp/cloudinit/${LAB_ID}-${VARIANT}"
 VM_NAME="lab-${LAB_ID,,}-${VARIANT,,}"
@@ -53,8 +49,19 @@ rm -rf "$TF_WORKDIR"
 mkdir -p "$TF_WORKDIR"
 cd "$TF_WORKDIR"
 
+# Copiar el módulo Terraform al directorio local
+MODULE_SOURCE="$ENGINE_DIR/scenarios/terraform/modules/rocky_vm"
+MODULE_DEST="./modules/rocky_vm"
 
-# Reemplaza todo el bloque cat > main.tf <<EOF con esto:
+if [[ -d "$MODULE_SOURCE" ]]; then
+    mkdir -p "$(dirname "$MODULE_DEST")"
+    cp -r "$MODULE_SOURCE" "$MODULE_DEST"
+    echo "✅ Módulo Terraform copiado a $MODULE_DEST"
+else
+    echo "❌ Módulo Terraform no encontrado en: $MODULE_SOURCE" >&2
+    exit 1
+fi
+
 cat > main.tf <<EOF
 terraform {
   required_providers {
@@ -68,12 +75,12 @@ terraform {
 provider "libvirt" {}
 
 module "lab_vm" {
-  source = "${ENGINE_DIR}/scenarios/terraform/modules/rocky_vm"
+  source = "./modules/rocky_vm"
 
-  vm_name             = "${VM_NAME}"
-  base_image          = "${BASE_IMAGE}"
-  cloudinit_user_data = file("${CLOUDINIT_DIR}/user-data")
-  cloudinit_meta_data = file("${CLOUDINIT_DIR}/meta-data")
+  vm_name             = "$VM_NAME"
+  base_image          = "$BASE_IMAGE"
+  cloudinit_user_data = file("$CLOUDINIT_DIR/user-data")
+  cloudinit_meta_data = file("$CLOUDINIT_DIR/meta-data")
 }
 EOF
 
