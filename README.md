@@ -203,10 +203,15 @@ enabled
 
 ---
 
-Este documento puede guardarse como:
 
-```
-BASE_SANA_OVERVIEW.md
-```
+## 🟢 PRUEBAS DEFINITIVAS
 
-Cuando quieras, pasamos al **diseño del V01** y decidimos **qué romper primero** (DNS, Proxy, Firewall, SELinux, DB o combinación realista).
+dig @10.10.40.10 web.lab.local
+
+export http_proxy=http://10.10.30.10:3128
+curl http://web.lab.local
+
+mysql -u labuser -plabpass -h 10.10.20.10 labdb \
+-e "SELECT * FROM incidents;"
+
+systemctl is-active nginx squid dnsmasq mariadb
