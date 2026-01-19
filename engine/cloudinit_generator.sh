@@ -1,5 +1,3 @@
-# engine/cloudinit_generator.sh
-
 #!/bin/bash
 set -euo pipefail
 
@@ -10,8 +8,7 @@ set -euo pipefail
 # MODELO:
 #   - 1 LAB  = 1 VM
 #   - 1 VARIANT = lab completo
-#   - Sin roles
-#   - Sin composición dinámica
+#   - El user-data NO se modifica
 # ============================================================================
 #
 # ARGUMENTOS:
@@ -37,10 +34,8 @@ OUT_BASE="/mnt/vms/labs/tmp/cloudinit"
 OUT_DIR="$OUT_BASE/${LAB_ID}-${VARIANT}"
 
 USER_DATA_SRC="$SRC_DIR/user-data"
-META_DATA_SRC="$SRC_DIR/meta-data"
-
-USER_DATA_OUT="$OUT_DIR/user-data"
 META_DATA_OUT="$OUT_DIR/meta-data"
+USER_DATA_OUT="$OUT_DIR/user-data"
 
 # ============================================================================
 # VALIDACIONES
@@ -55,11 +50,6 @@ META_DATA_OUT="$OUT_DIR/meta-data"
   exit 1
 }
 
-[[ -f "$META_DATA_SRC" ]] || {
-  echo "❌ meta-data no encontrado en $SRC_DIR" >&2
-  exit 1
-}
-
 # ============================================================================
 # CREAR OUTPUT
 # ============================================================================
@@ -67,34 +57,17 @@ rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR"
 
 # ============================================================================
-# COPIAR CLOUD-INIT
+# COPIAR USER-DATA TAL CUAL
 # ============================================================================
 cp "$USER_DATA_SRC" "$USER_DATA_OUT"
 
-# Normalizamos instance-id y hostname para evitar colisiones
+# ============================================================================
+# META-DATA (identidad única)
+# ============================================================================
 cat > "$META_DATA_OUT" <<EOF
 instance-id: lab-${LAB_ID}-${VARIANT}
 local-hostname: lab-${LAB_ID}-${VARIANT}
 EOF
-
-# ============================================================================
-# INFO DEL LAB (si no existe ya)
-# ============================================================================
-if ! grep -q "/etc/lab.info" "$USER_DATA_OUT"; then
-  cat >> "$USER_DATA_OUT" <<EOF
-
-# ============================================================================
-# LAB INFO
-# ============================================================================
-write_files:
-  - path: /etc/lab.info
-    permissions: '0644'
-    content: |
-      LEVEL=$LEVEL
-      LAB=$LAB_ID
-      VARIANT=$VARIANT
-EOF
-fi
 
 # ============================================================================
 # SALIDA
