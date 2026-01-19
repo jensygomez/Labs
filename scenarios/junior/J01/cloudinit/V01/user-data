@@ -1,84 +1,29 @@
-# scenarios/junior/J01/cloudinit/V01/user-data 
 #cloud-config
 #
 # ============================================================================
-# J01 – V01
-# Tema     : Redes y conectividad
-# Incidente: ICMP bloqueado por Firewall
+# J01 – V01 (DEBUG)
+# Objetivo: Verificar que cloud-init se ejecuta en la VM CLONADA
 # ============================================================================
 
 write_files:
-  # --------------------------------------------------------------------------
-  # Metadata del laboratorio
-  # --------------------------------------------------------------------------
   - path: /etc/lab.info
     permissions: '0644'
     content: |
       LAB=J01
       LEVEL=Junior
       VARIANT=V01
-      TOPIC=Networking
-      INCIDENT=ICMP_BLOCKED_FIREWALL
-      SERVICES=WEB,DB,DNS,PROXY
+      STATUS=cloud-init-ok
 
-  # --------------------------------------------------------------------------
-  # MOTD – Ticket de incidente
-  # --------------------------------------------------------------------------
   - path: /etc/motd
     permissions: '0644'
     content: |
       ============================================================================
                        🎫 INCIDENT RESPONSE LAB – J01 / V01
       ============================================================================
-      
-      📚 TEMA    : Redes y Conectividad
-      🧪 VARIANT : V01 – ICMP bloqueado (Firewall)
-      
-      📢 TICKET #101
-      ───────────────────────────────────────────────────────────────────────────
-      Cliente reporta:
-      "No podemos verificar conectividad. El ping no responde, pero el sistema
-       parece estar encendido."
-      
-      Infraestructura (1 VM – IPs internas):
-      
-        WEB     → web.lab.local    (10.10.10.10)
-        DB      → db.lab.local     (10.10.20.10)
-        PROXY   → proxy.lab.local  (10.10.30.10)
-        DNS     → dns.lab.local    (10.10.40.10)
-      
-      🔍 SÍNTOMAS:
-        - ICMP no responde entre redes internas
-        - DNS resuelve correctamente
-        - Servicios activos
-      
-      🎯 OBJETIVO:
-        Identificar y restaurar ICMP en el firewall.
-      
+      cloud-init FUE EJECUTADO CORRECTAMENTE
+
+      Fecha: $(date)
+      Host : $(hostname)
+
+      Si puedes leer esto, el user-data está siendo aplicado.
       ============================================================================
-
-  # --------------------------------------------------------------------------
-  # Script de inyección del fallo
-  # --------------------------------------------------------------------------
-  - path: /usr/local/bin/inject_v01_icmp_block.sh
-    permissions: '0755'
-    content: |
-      #!/bin/bash
-      set -e
-
-      echo "[J01-V01] Ensuring firewalld is running"
-      systemctl enable --now firewalld
-
-      echo "[J01-V01] Injecting ICMP block via firewalld"
-      firewall-cmd --permanent \
-        --add-rich-rule='rule protocol value="icmp" drop'
-
-      firewall-cmd --reload
-
-      echo "[J01-V01] ICMP blocked successfully"
-
-# --------------------------------------------------------------------------
-# Ejecución del incidente al primer boot
-# --------------------------------------------------------------------------
-runcmd:
-  - /usr/local/bin/inject_v01_icmp_block.sh
