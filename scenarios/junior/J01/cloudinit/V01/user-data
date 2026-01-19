@@ -1,5 +1,4 @@
 # scenarios/junior/J01/cloudinit/V01/user-data 
-
 #cloud-config
 #
 # ============================================================================
@@ -67,9 +66,10 @@ write_files:
       #!/bin/bash
       set -e
 
-      echo "[J01-V01] Injecting ICMP block via firewalld"
+      echo "[J01-V01] Ensuring firewalld is running"
+      systemctl enable --now firewalld
 
-      # Bloquea ICMP globalmente (simple y didáctico)
+      echo "[J01-V01] Injecting ICMP block via firewalld"
       firewall-cmd --permanent \
         --add-rich-rule='rule protocol value="icmp" drop'
 
