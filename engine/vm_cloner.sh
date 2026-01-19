@@ -4,9 +4,10 @@ set -euo pipefail
 # ============================================================================
 # vm_cloner.sh
 # Crea una VM de laboratorio usando disco completo + cloud-init
+# Sin usar XML, usando virt-install --import
 # ============================================================================
 # ARGUMENTOS:
-#   $1 = VM_NAME        (ej: lab-j01-v01)
+#   $1 = VM_NAME        (ej: lab-junior)
 #   $2 = CLOUDINIT_DIR  (ej: /mnt/vms/labs/tmp/cloudinit/J01-V01)
 # ============================================================================
 
@@ -16,13 +17,13 @@ CLOUDINIT_DIR="$2"
 # ============================================================================
 # DISCOS
 # ============================================================================
-BASE_DISK="/var/lib/libvirt/images/lab-junior.qcow2" # disco completo
+BASE_DISK="/var/lib/libvirt/images/lab-junior.qcow2" # disco completo existente
 CLOUDINIT_ISO="/var/lib/libvirt/images/${VM_NAME}-seed.iso"
 
 echo "🚀 Creando laboratorio '$VM_NAME' usando disco completo existente"
 
 # ============================================================================
-# PERMISOS SUDO
+# VALIDAR PERMISOS
 # ============================================================================
 if [[ $EUID -ne 0 ]]; then
     if sudo -n true &>/dev/null; then
@@ -36,14 +37,7 @@ else
 fi
 
 # ============================================================================
-# DEPENDENCIAS
-# ============================================================================
-for cmd in virsh genisoimage; do
-    command -v "$cmd" &>/dev/null || { echo "❌ Requiere: $cmd"; exit 1; }
-done
-
-# ============================================================================
-# VALIDACIONES
+# VALIDAR EXISTENCIA DE ARCHIVOS
 # ============================================================================
 [[ -f "$BASE_DISK" ]] || { echo "❌ Disco base no encontrado: $BASE_DISK"; exit 1; }
 [[ -f "$CLOUDINIT_DIR/user-data" ]] || { echo "❌ Falta user-data"; exit 1; }
@@ -73,52 +67,22 @@ $SUDO chown libvirt-qemu:kvm "$CLOUDINIT_ISO"
 $SUDO chmod 644 "$CLOUDINIT_ISO"
 
 # ============================================================================
-# DEFINIR VM (XML INLINE)
+# CREAR VM CON virt-install (SIN XML)
 # ============================================================================
-echo "🧩 Definiendo dominio libvirt..."
+echo "🖥️  Creando VM con virt-install --import..."
 
-$SUDO virsh define /dev/stdin <<EOF
-<domain type='kvm'>
-  <name>${VM_NAME}</name>
-  <memory unit='MiB'>2048</memory>
-  <vcpu>2</vcpu>
-
-  <os>
-    <type arch='x86_64'>hvm</type>
-  </os>
-
-  <devices>
-    <!-- Disco completo existente -->
-    <disk type='file' device='disk'>
-      <driver name='qemu' type='qcow2'/>
-      <source file='${BASE_DISK}'/>
-      <target dev='vda' bus='virtio'/>
-    </disk>
-
-    <!-- ISO cloud-init -->
-    <disk type='file' device='cdrom'>
-      <driver name='qemu' type='raw'/>
-      <source file='${CLOUDINIT_ISO}'/>
-      <target dev='hdb' bus='ide'/>
-      <readonly/>
-    </disk>
-
-    <interface type='network'>
-      <source network='default'/>
-      <model type='virtio'/>
-    </interface>
-
-    <console type='pty'/>
-    <graphics type='vnc' autoport='yes'/>
-  </devices>
-</domain>
-EOF
-
-# ============================================================================
-# INICIAR VM
-# ============================================================================
-echo "▶️ Iniciando VM..."
-$SUDO virsh start "$VM_NAME"
+$SUDO virt-install \
+  --name "$VM_NAME" \
+  --memory 2048 \
+  --vcpus 2 \
+  --os-type linux \
+  --os-variant rocky9 \
+  --disk path="$BASE_DISK",format=qcow2,bus=virtio \
+  --disk path="$CLOUDINIT_ISO",device=cdrom,bus=ide,readonly=on \
+  --network network=default,model=virtio \
+  --graphics vnc,listen=0.0.0.0 \
+  --noautoconsole \
+  --import
 
 # ============================================================================
 # FINAL
@@ -128,9 +92,12 @@ echo "🎉 Laboratorio '$VM_NAME' creado correctamente"
 echo "   Disco base     : $BASE_DISK"
 echo "   Cloud-init ISO : $CLOUDINIT_ISO"
 echo ""
-echo "🔍 Para ver IP:"
-echo "   sudo virsh domifaddr $VM_NAME"
+echo "🔍 Para ver la VM:"
+echo "   sudo virsh list --all"
 echo ""
-echo "🧹 Para eliminar VM:"
+echo "🔍 Para acceder a la consola:"
+echo "   sudo virsh console $VM_NAME"
+echo ""
+echo "🧹 Para eliminar la VM:"
 echo "   sudo virsh destroy $VM_NAME"
 echo "   sudo virsh undefine $VM_NAME --remove-all-storage"
