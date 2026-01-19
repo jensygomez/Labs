@@ -71,18 +71,19 @@ $SUDO chmod 644 "$CLOUDINIT_ISO"
 # ============================================================================
 echo "🖥️  Creando VM con virt-install --import..."
 
-$SUDO virt-install \
-  --name "$VM_NAME" \
+sudo virt-install \
+  --name lab-j01-v01 \
   --memory 2048 \
   --vcpus 2 \
-  --os-type linux \
   --os-variant rocky9 \
-  --disk path="$BASE_DISK",format=qcow2,bus=virtio \
-  --disk path="$CLOUDINIT_ISO",device=cdrom,bus=ide,readonly=on \
+  --disk path=/var/lib/libvirt/images/lab-junior.qcow2,format=qcow2,bus=virtio \
+  --cdrom /var/lib/libvirt/images/lab-junior-seed.iso \
   --network network=default,model=virtio \
   --graphics vnc,listen=0.0.0.0 \
   --noautoconsole \
   --import
+
+
 
 # ============================================================================
 # FINAL
