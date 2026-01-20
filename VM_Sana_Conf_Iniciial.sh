@@ -307,163 +307,68 @@ sleep 1
 # 5️⃣ SERVICIOS INTERNOS (INTERFACES DUMMY) - VERSIÓN SIMPLIFICADA
 # ---------------------------------------------------------------------------
 echo ""
-echo "[5/12] 🖥️  Configurando servicios internos..."
+echo "[5/12] 🖥️  Configurando servicios internos (dummy interfaces)..."
 
-# PRIMERO: Eliminar todas las interfaces dummy existentes
-for iface in dummy-web dummy-db dummy-proxy dummy-dns; do
-    ip link delete $iface 2>/dev/null && echo "   🧹 Eliminada $iface anterior" || true
+# ---------------------------------------------------------------------------
+# Script real que configura las interfaces dummy
+# ---------------------------------------------------------------------------
+cat > /usr/local/bin/setup-dummy-interfaces.sh <<'EOF'
+#!/bin/bash
+set -e
+
+echo "[lab-dummy-net] Configurando interfaces dummy..."
+
+declare -A IFACES=(
+  [dummy-web]="10.10.10.10/24"
+  [dummy-db]="10.10.20.10/24"
+  [dummy-proxy]="10.10.30.10/24"
+  [dummy-dns]="10.10.40.10/24"
+)
+
+for iface in "${!IFACES[@]}"; do
+    ip link delete "$iface" 2>/dev/null || true
+
+    ip link add "$iface" type dummy
+    ip addr add "${IFACES[$iface]}" dev "$iface"
+    ip link set "$iface" up
+
+    echo "  ✅ $iface -> ${IFACES[$iface]}"
 done
 
-# Crear interfaces dummy directamente (más simple)
-for service in "${!SERVICES[@]}"; do
-    echo -n "   Configurando dummy-$service... "
-    
-    # Crear nueva interfaz dummy
-    if ! ip link add dummy-$service type dummy 2>/dev/null; then
-        echo "ERROR: No se pudo crear"
-        continue
-    fi
-    
-    # Asignar IP según servicio
-    case $service in
-        web) ip="10.10.10.10/24" ;;
-        db) ip="10.10.20.10/24" ;;
-        proxy) ip="10.10.30.10/24" ;;
-        dns) ip="10.10.40.10/24" ;;
-    esac
-    
-    # Asignar IP
-    if ! ip addr add $ip dev dummy-$service 2>/dev/null; then
-        echo "ERROR: No se pudo asignar IP"
-        continue
-    fi
-    
-    # Activar interfaz
-    if ! ip link set dummy-$service up 2>/dev/null; then
-        echo "ERROR: No se pudo activar"
-        continue
-    fi
-    
-    # Verificar
-    if ip addr show dummy-$service | grep -q "${SERVICES[$service]}"; then
-        echo "✅ ${SERVICES[$service]}"
-    else
-        echo "❌ ERROR"
-    fi
-done
+echo "[lab-dummy-net] Estado final:"
+ip -br addr | grep dummy-
+EOF
 
-echo ""
-echo "   Verificando interfaces creadas..."
-ip addr show | grep -A2 "dummy-" || echo "   ⚠️ No se ven interfaces dummy"
+chmod +x /usr/local/bin/setup-dummy-interfaces.sh
 
-# Crear servicio systemd SIMPLIFICADO Y CORRECTO
+# ---------------------------------------------------------------------------
+# Unit file systemd LIMPIO (sin bash interno)
+# ---------------------------------------------------------------------------
 cat > /etc/systemd/system/lab-dummy-net.service <<'EOF'
 [Unit]
-Description=Lab Dummy Interfaces
+Description=Lab Dummy Network Interfaces
 After=network.target
-Before=nginx.service mariadb.service squid.service dnsmasq.service
 Wants=network.target
 
 [Service]
 Type=oneshot
+ExecStart=/usr/local/bin/setup-dummy-interfaces.sh
 RemainAfterExit=yes
-ExecStart=/bin/bash -c '
-    echo "Creando interfaces dummy..."
-    
-    # Crear interfaces dummy si no existen
-    for iface in dummy-web dummy-db dummy-proxy dummy-dns; do
-        ip link add $iface type dummy 2>/dev/null && echo "  Creada $iface" || echo "  $iface ya existe"
-    done
-    
-    # Asignar IPs
-    ip addr add 10.10.10.10/24 dev dummy-web 2>/dev/null && echo "  IP asignada a dummy-web" || true
-    ip addr add 10.10.20.10/24 dev dummy-db 2>/dev/null && echo "  IP asignada a dummy-db" || true
-    ip addr add 10.10.30.10/24 dev dummy-proxy 2>/dev/null && echo "  IP asignada a dummy-proxy" || true
-    ip addr add 10.10.40.10/24 dev dummy-dns 2>/dev/null && echo "  IP asignada a dummy-dns" || true
-    
-    # Activar interfaces
-    for iface in dummy-web dummy-db dummy-proxy dummy-dns; do
-        ip link set $iface up 2>/dev/null && echo "  Activada $iface" || true
-    done
-    
-    echo "Interfaces dummy configuradas"
-'
-ExecStop=/bin/bash -c '
-    echo "Eliminando interfaces dummy..."
-    for iface in dummy-web dummy-db dummy-proxy dummy-dns; do
-        ip link del $iface 2>/dev/null && echo "  Eliminada $iface" || true
-    done
-'
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-# Crear script independiente para mayor control
-cat > /usr/local/bin/setup-dummy-interfaces.sh <<'EOF'
-#!/bin/bash
-set -e
-
-echo "Configurando interfaces dummy..."
-
-# Lista de interfaces e IPs
-declare -A interfaces=(
-    [dummy-web]="10.10.10.10/24"
-    [dummy-db]="10.10.20.10/24"
-    [dummy-proxy]="10.10.30.10/24"
-    [dummy-dns]="10.10.40.10/24"
-)
-
-# Crear y configurar cada interfaz
-for iface in "${!interfaces[@]}"; do
-    # Eliminar si existe
-    ip link delete $iface 2>/dev/null || true
-    
-    # Crear nueva
-    if ip link add $iface type dummy; then
-        echo "  ✅ Creada $iface"
-        
-        # Asignar IP
-        if ip addr add "${interfaces[$iface]}" dev $iface; then
-            echo "    Asignada IP: ${interfaces[$iface]}"
-            
-            # Activar
-            if ip link set $iface up; then
-                echo "    Activada"
-            else
-                echo "    ⚠️ No se pudo activar"
-            fi
-        else
-            echo "    ❌ Error asignando IP"
-        fi
-    else
-        echo "  ❌ No se pudo crear $iface"
-    fi
-done
-
-# Verificar
-echo ""
-echo "Estado final:"
-ip addr show | grep -A1 "dummy-"
-EOF
-
-chmod +x /usr/local/bin/setup-dummy-interfaces.sh
-
-# Recargar systemd y probar el servicio
+# Recargar systemd y arrancar servicio
+systemctl daemon-reexec
 systemctl daemon-reload
+systemctl reset-failed
 
-# Intentar arrancar el servicio
-if systemctl start lab-dummy-net.service; then
-    echo "✅ Servicio lab-dummy-net iniciado"
-    systemctl enable lab-dummy-net.service
-else
-    echo "⚠️  Falló al iniciar servicio, usando método directo..."
-    # Ejecutar directamente
-    /usr/local/bin/setup-dummy-interfaces.sh
-fi
+systemctl enable --now lab-dummy-net.service
 
+echo "✅ Servicio lab-dummy-net configurado correctamente"
 sleep 2
-echo "✅ Interfaces dummy configuradas"
+
 
 
 
@@ -473,237 +378,122 @@ echo "✅ Interfaces dummy configuradas"
 echo ""
 echo "[6/12] ⚙️  Configurando servicios..."
 
-# NGINX - Servicio web simple CON IP EXPLÍCITA
+# ---------------------------------------------------------------------------
+# NGINX – Web service (dummy-web)
+# ---------------------------------------------------------------------------
 cat > /etc/nginx/nginx.conf <<'EOF'
 user nginx;
 worker_processes auto;
 error_log /var/log/nginx/error.log;
 pid /run/nginx.pid;
 
-events {
-    worker_connections 1024;
-}
+events { worker_connections 1024; }
 
 http {
-    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
-                    '$status $body_bytes_sent "$http_referer" '
-                    '"$http_user_agent" "$http_x_forwarded_for"';
-
-    access_log /var/log/nginx/access.log main;
-
-    sendfile            on;
-    tcp_nopush          on;
-    tcp_nodelay         on;
-    keepalive_timeout   65;
-    types_hash_max_size 4096;
-
-    include             /etc/nginx/mime.types;
-    default_type        application/octet-stream;
-
     server {
-        listen       10.10.10.10:80;
-        server_name  _;
-        
+        listen 10.10.10.10:80;
+        server_name web.lab.local;
+
         location / {
-            return 200 "✅ SERVICIO WEB OPERATIVO\nHost: $(hostname)\nTime: $(date)\nIP: 10.10.10.10\n";
-            add_header Content-Type text/plain;
-        }
-        
-        location /status {
-            stub_status on;
-            access_log off;
-            allow 10.10.50.0/24;
-            deny all;
+            default_type text/plain;
+            return 200 "SERVICIO WEB OK\nHost: $hostname\nIP: 10.10.10.10\n";
         }
     }
-    
-    # Servidor adicional para localhost (diagnóstico)
+
     server {
-        listen       127.0.0.1:8080;
-        server_name  localhost;
-        
+        listen 127.0.0.1:8080;
+        server_name localhost;
+
         location / {
-            return 200 "NGINX Local OK\n";
-            add_header Content-Type text/plain;
+            return 200 "NGINX LOCAL OK\n";
         }
     }
 }
 EOF
 
-# DNSmasq - Servidor DNS CON CORRECCIÓN
+# ---------------------------------------------------------------------------
+# DNSMASQ – DNS interno (dummy-dns)
+# ---------------------------------------------------------------------------
 cat > /etc/dnsmasq.conf <<EOF
-# Configuración básica
 interface=dummy-dns
 bind-interfaces
-listen-address=${SERVICES[dns]}
+listen-address=10.10.40.10
 no-dhcp-interface=dummy-dns
 no-resolv
 
-# Cache DNS
-cache-size=1000
-local-ttl=300
-
-# Dominio local
 domain=lab.local
 expand-hosts
-local=/lab.local/
 
-# Registros estáticos
-address=/web.lab.local/${SERVICES[web]}
-address=/db.lab.local/${SERVICES[db]}
-address=/proxy.lab.local/${SERVICES[proxy]}
-address=/dns.lab.local/${SERVICES[dns]}
-address=/edge.lab.local/${EDGE_IP}
-address=/client.lab.local/${CLIENT_IP}
+address=/web.lab.local/10.10.10.10
+address=/db.lab.local/10.10.20.10
+address=/proxy.lab.local/10.10.30.10
+address=/dns.lab.local/10.10.40.10
 
-# Forwarders
 server=8.8.8.8
 server=1.1.1.1
 EOF
 
-# Squid - Proxy CON IP EXPLÍCITA
-cat > /etc/squid/squid.conf <<EOF
-http_port ${SERVICES[proxy]}:3128
+# ---------------------------------------------------------------------------
+# SQUID – Proxy (dummy-proxy)
+# ---------------------------------------------------------------------------
+cat > /etc/squid/squid.conf <<'EOF'
+http_port 10.10.30.10:3128
 
-acl localnet src ${LAN_SUBNET}
-acl SSL_ports port 443
-acl Safe_ports port 80
-acl Safe_ports port 443
-acl CONNECT method CONNECT
-
+acl localnet src 10.10.0.0/16
 http_access allow localnet
 http_access deny all
-
-cache_dir ufs /var/spool/squid 100 16 256
-coredump_dir /var/spool/squid
-
-refresh_pattern ^ftp:           1440    20%     10080
-refresh_pattern ^gopher:        1440    0%      1440
-refresh_pattern -i (/cgi-bin/|\\?) 0     0%      0
-refresh_pattern .               0       20%     4320
 
 visible_hostname proxy.lab.local
 EOF
 
-# MariaDB - Configuración con acceso remoto HABILITADO
-cat > /etc/my.cnf.d/lab.cnf <<EOF
+# ---------------------------------------------------------------------------
+# MARIADB – Base de datos (dummy-db)
+# ---------------------------------------------------------------------------
+cat > /etc/my.cnf.d/lab.cnf <<'EOF'
 [mysqld]
-bind-address = 0.0.0.0  # Escuchar en todas las interfaces
+bind-address = 0.0.0.0
 skip-name-resolve
-innodb_buffer_pool_size = 128M
-max_connections = 50
-character-set-server = utf8mb4
-collation-server = utf8mb4_unicode_ci
-log-error = /var/log/mariadb/mariadb.log
-
-[mysql]
-default-character-set = utf8mb4
-
-[client]
-default-character-set = utf8mb4
 EOF
 
-# Crear directorio de logs para MariaDB si no existe
 mkdir -p /var/log/mariadb
 chown mysql:mysql /var/log/mariadb
 
 echo "✅ Archivos de configuración creados"
 sleep 1
 
-# Habilitar e iniciar servicios EN ORDEN CORRECTO
-echo "   🔄 Iniciando servicios..."
+# ---------------------------------------------------------------------------
+# Arranque ORDENADO de servicios
+# ---------------------------------------------------------------------------
+echo "🔄 Iniciando servicios..."
 
-# 1. Asegurar que las interfaces dummy están activas
 systemctl restart lab-dummy-net.service
 sleep 2
 
-# 2. Iniciar MariaDB primero (porque puede tardar más)
-echo "   🗄️  Configurando MariaDB..."
 systemctl enable --now mariadb
 sleep 3
 
-# Inicializar MariaDB si es primera vez
-if [[ ! -d /var/lib/mysql/mysql ]]; then
-    echo "   🗄️  Inicializando MariaDB por primera vez..."
-    mysql_install_db --user=mysql
-    systemctl restart mariadb
-    sleep 3
-fi
-
-# Configurar root sin password para lab (¡Solo para entornos de prueba!)
-echo "   🔧 Configurando acceso a MariaDB..."
-mysql -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('');" 2>/dev/null || \
-mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '';" 2>/dev/null || true
-
-mysql -e "DELETE FROM mysql.user WHERE User='';"
-mysql -e "DROP USER IF EXISTS 'root'@'%';"
-mysql -e "CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY '';"
-mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;"
-mysql -e "FLUSH PRIVILEGES;"
-
-# Crear base de datos de ejemplo
-mysql -e "CREATE DATABASE IF NOT EXISTS lab_db;"
-mysql -e "CREATE USER IF NOT EXISTS 'lab_user'@'10.10.50.%' IDENTIFIED BY 'LabPass123';"
-mysql -e "GRANT ALL ON lab_db.* TO 'lab_user'@'10.10.50.%';"
-mysql -e "FLUSH PRIVILEGES;"
-
-# 3. Iniciar otros servicios
-echo "   🌐 Iniciando NGINX..."
 systemctl enable --now nginx
-sleep 1
-
-echo "   🔄 Iniciando Squid..."
 systemctl enable --now squid
-sleep 1
-
-echo "   🔗 Iniciando DNSmasq..."
 systemctl enable --now dnsmasq
-sleep 1
 
-# 4. Verificar que los servicios están activos
+# ---------------------------------------------------------------------------
+# Verificación final
+# ---------------------------------------------------------------------------
 echo ""
-echo "   🔍 Verificando estado de servicios..."
-for service in nginx mariadb squid dnsmasq; do
-    if systemctl is-active --quiet $service; then
-        echo "      ✅ $service: ACTIVE"
-    else
-        echo "      ❌ $service: INACTIVE"
-        systemctl status $service --no-pager
-    fi
+echo "🔍 Verificando estado de servicios:"
+for svc in lab-dummy-net mariadb nginx squid dnsmasq; do
+    systemctl is-active --quiet $svc \
+        && echo "  ✅ $svc ACTIVE" \
+        || echo "  ❌ $svc FAILED"
 done
 
-# 5. Verificar que los servicios están escuchando
 echo ""
-echo "   📡 Verificando puertos..."
-for service in nginx mariadb squid dnsmasq; do
-    case $service in
-        nginx)
-            port=80
-            ip=10.10.10.10
-            ;;
-        mariadb)
-            port=3306
-            ip=0.0.0.0
-            ;;
-        squid)
-            port=3128
-            ip=10.10.30.10
-            ;;
-        dnsmasq)
-            port=53
-            ip=10.10.40.10
-            ;;
-    esac
-    
-    if ss -tlnp | grep -q ":$port"; then
-        echo "      ✅ $service: Escuchando en puerto $port"
-    else
-        echo "      ❌ $service: NO escucha en puerto $port"
-    fi
-done
+echo "📡 Puertos en escucha:"
+ss -tlnp | grep -E '(:80|:3128|:53|:3306)' || echo "⚠️ No se detectaron puertos"
 
 echo "✅ Servicios configurados y operativos"
 sleep 2
+
 
 # ---------------------------------------------------------------------------
 # 7️⃣ CREACIÓN DE NAMESPACES
