@@ -1,6 +1,4 @@
-
 #cloud-config
-# scenarios/junior/J01/cloudinit/V01/user-data
 write_files:
   - path: /etc/lab.info
     permissions: '0644'

@@ -8,7 +8,7 @@ write_files:
       LEVEL=Junior
       VARIANT=V01
       STATUS=cloud-init-ok
-      INCIDENT=Firewall bloquea ICMP + Rutas
+      INCIDENT=Firewall bloquea ICMP + Internet
 
   - path: /etc/motd
     permissions: '0644'
@@ -17,14 +17,16 @@ write_files:
       ============================================================================
                        🎫 INCIDENT RESPONSE LAB J01-V01
       ============================================================================
-      🚨 INCIDENTE: FIREWALL BLOQUEA ICMP + RUTAS
+      🚨 INCIDENTE: NO PING HOST + SIN INTERNET
       🎯 OBJETIVO: Restaurar conectividad completa
       📍 student@RHCSA Labs - lab-j01-v01
       ============================================================================
 
 runcmd:
-  # 🔥 FIREWALL V01 - ICMP + RUTAS BLOQUEADAS
+  - sleep 10
+  # 🔥 ICMP DESDE LIBVIRT HOST → DROP
   - firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" source address="192.168.122.1" protocol="icmp" drop'
-  - firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" destination address="8.8.8.8" drop'
+  # 🔥 TODO INTERNET → DROP (MASIVO)
+  - firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" destination not address="192.168.122.0/24" drop'
   - firewall-cmd --reload
   - hostnamectl set-hostname lab-j01-v01
