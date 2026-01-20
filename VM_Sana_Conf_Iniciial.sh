@@ -693,7 +693,7 @@ echo "✅ Servicios:   $(systemctl is-active nginx mariadb squid dnsmasq 2>/dev/
 echo "✅ Namespaces:  $(ip netns list | wc -l)/2 creados"
 echo "✅ Interfaces:  $(ip link show | grep -c 'dummy-' | awk '{print $1"/4"}') dummy UP"
 echo "✅ Conectividad: $(ip netns exec NS-CLIENT ping -c1 -W1 10.10.50.1 >/dev/null 2>&1 && echo 'CLIENT→EDGE OK' || echo 'CLIENT→EDGE FAIL')"
-echo "✅ Web:        $(ip netns exec NS-CLIENT curl -s --max-time 2 http://10.10.10.10 >/dev/null 2>&1 && echo 'RESPONDE' || echo 'NO RESPONDE')"
+echo "✅ Web:        $(ip netns exec NS-CLIENT curl -s --connect-timeout 2 http://web.lab.local >/dev/null && echo 'RESPONDE' || echo 'NO RESPONDE')"
 echo "✅ SSH:        $(systemctl is-active sshd >/dev/null 2>&1 && echo 'ACTIVO' || echo 'INACTIVO')"
 
 echo ""
