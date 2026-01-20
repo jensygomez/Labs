@@ -3,10 +3,9 @@
 # 🔥 SCRIPT DE CONFIGURACIÓN VM BASE SANA - Rocky 9.7 🔥
 # ============================================================================
 # Objetivo: Configurar la VM para laboratorio de Incident Response
-# Incluye actualización del sistema, instalación de paquetes base y servicios.
+# Incluye actualización del sistema, cloud-init, paquetes base y servicios.
 # Autor: Jensy
 # ============================================================================
-
 
 echo "=== DIAGRAMA DE CONECTIVIDAD ==="
 echo ""
@@ -25,10 +24,30 @@ echo "1. DNS: web.lab.local → 10.10.10.10"
 echo "2. Proxy: 10.10.30.10:3128"
 echo "3. Web: 10.10.10.10 → DB:10.10.20.10"
 
-
 set -euo pipefail
 
 echo "=== INICIO: Actualización y preparación de paquetes base ==="
+sleep 2
+
+# ------------------------------
+# 0️⃣ INSTALAR Y CONFIGURAR CLOUD-INIT (NUEVO - CRÍTICO)
+# ------------------------------
+echo "=== 🚀 CONFIGURANDO CLOUD-INIT ==="
+dnf install -y cloud-init cloud-utils-growpart qemu-guest-agent
+
+# Habilitar servicios cloud-init
+systemctl enable cloud-init-local cloud-init cloud-config cloud-final qemu-guest-agent
+
+# Configurar datasource NoCloud para libvirt
+cat > /etc/cloud/cloud.cfg.d/90_libvirt.cfg <<'EOF'
+datasource_list: [ NoCloud, None ]
+disable_ec2_metadata: true
+EOF
+
+# Limpiar estado para clones limpios
+rm -rf /var/lib/cloud/* /var/log/cloud-init*
+
+echo "[+] Cloud-init instalado y configurado para labs"
 sleep 2
 
 # ------------------------------
@@ -54,7 +73,7 @@ sleep 2
 # ------------------------------
 # 2️⃣ Habilitar servicios base (pero no iniciar todos aún)
 # ------------------------------
-systemctl enable nginx mariadb squid dnsmasq firewalld
+systemctl enable nginx mariadb squid dnsmasq firewalld cloud-init-local cloud-init cloud-config cloud-final qemu-guest-agent
 systemctl start firewalld
 echo "[+] Servicios habilitados; firewalld iniciado"
 sleep 2
@@ -138,7 +157,6 @@ systemctl start nginx
 echo "[+] Nginx configurado y activo"
 sleep 2
 
-
 # ------------------------------
 # 7️⃣ Configurar MariaDB
 # ------------------------------
@@ -160,16 +178,13 @@ VALUES
   (4,'PROXY','UP')
 ON DUPLICATE KEY UPDATE service=VALUES(service), status=VALUES(status);
 
--- ⚠ Crear usuario labuser con acceso desde toda la subred 10.10.x.x
 CREATE USER IF NOT EXISTS 'labuser'@'10.10.%' IDENTIFIED BY 'labpass';
 GRANT ALL PRIVILEGES ON labdb.* TO 'labuser'@'10.10.%';
 FLUSH PRIVILEGES;
 EOF
 
-echo "[+] MariaDB configurada con tabla de incidentes y usuario labuser con acceso interno"
+echo "[+] MariaDB configurada con tabla de incidentes y usuario labuser"
 sleep 2
-
-
 
 # ------------------------------
 # 8️⃣ Configurar dnsmasq
@@ -211,17 +226,25 @@ setsebool -P squid_connect_any on
 echo "[+] SELinux configurado para permitir conexión de Squid"
 sleep 1
 
+# ------------------------------
+# 1️⃣1️⃣ Regenerar initramfs con cloud-init
+# ------------------------------
+dracut -f
+echo "[+] Initramfs regenerado con cloud-init"
 
 # ------------------------------
-# 11️⃣ Verificación final
+# 1️⃣2️⃣ Verificación final
 # ------------------------------
 echo "=== VERIFICACIÓN ==="
+echo "Cloud-init:"
+rpm -q cloud-init
+cloud-init --version
 echo "Interfaces:"
 ip a | grep dummy
 echo "Firewall:"
 firewall-cmd --get-active-zones
 echo "Servicios:"
-systemctl is-active nginx squid dnsmasq mariadb
+systemctl is-active nginx squid dnsmasq mariadb cloud-init
 echo "DNS:"
 dig @10.10.40.10 web.lab.local
 echo "WEB:"
@@ -229,6 +252,6 @@ export http_proxy=http://10.10.30.10:3128
 curl -s http://web.lab.local
 echo "MariaDB remoto:"
 mysql -u labuser -plabpass -h 10.10.20.10 labdb -e "SELECT * FROM incidents;"
-echo "Base Sana configurada ✅"
-sleep 2
+echo ""
+echo "🚀 VM BASE SANA + CLOUD-INIT LISTA PARA LABS ✅"
 echo "=== FIN DEL SCRIPT ==="

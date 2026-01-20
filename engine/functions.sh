@@ -89,12 +89,16 @@ assign_lab() {
     local VM_NAME="lab-${ID,,}-${VARIANT,,}"
     echo "📍 Creando lab '$VM_NAME'..."
 
-    #------------------------------------------------------------
-    # Generar cloud-init
-    #------------------------------------------------------------
+#------------------------------------------------------------
+# Generar cloud-init
+#------------------------------------------------------------
+    echo "🔍 DEBUG: LEVEL=$LEVEL ID=$ID VARIANT=$VARIANT"
     local CLOUDINIT_DIR
     CLOUDINIT_DIR="$("$ENGINE_DIR/cloudinit_generator.sh" \
         "$LEVEL" "$ID" "$VARIANT")"
+    echo "🔍 DEBUG: CLOUDINIT_DIR=$CLOUDINIT_DIR"
+    echo "🔍 DEBUG: existe? $(ls -la "$CLOUDINIT_DIR" 2>/dev/null || echo 'NO')"
+
 
     [[ -d "$CLOUDINIT_DIR" ]] || {
         echo "💥 Cloud-init no generado" >&2

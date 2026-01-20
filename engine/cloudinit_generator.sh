@@ -66,15 +66,14 @@ cp "$USER_DATA_SRC" "$USER_DATA_OUT"
 # META-DATA (preserva original si existe, sino genera)
 # ============================================================================
 if [ -f "$META_DATA_SRC" ]; then
-  echo "📋 Usando meta-data original: $META_DATA_SRC"
-  cp "$META_DATA_SRC" "$META_DATA_OUT"
+  cp "$META_DATA_SRC" "$META_DATA_OUT"  # ← SIN echo
 else
-  echo "🆕 Generando meta-data único..."
   cat > "$META_DATA_OUT" <<EOF
 instance-id: lab-${LAB_ID}-${VARIANT}
 local-hostname: lab-${LAB_ID}-${VARIANT}
 EOF
 fi
+
 
 # ============================================================================
 # VERIFICACIÓN
