@@ -42,9 +42,10 @@ virt-install \
   --vcpus 2 \
   --os-variant rocky9 \
   --disk path="$OVERLAY_DISK",format=qcow2,bus=virtio \
-  --disk path="$CLOUDINIT_ISO",device=cdrom \
+  --disk path="$CLOUDINIT_ISO",device=cdrom,format=iso \
   --network network=default,model=virtio \
   --import \
   --noautoconsole
+
 
 echo "✅ Laboratorio '$VM_NAME' creado correctamente"
