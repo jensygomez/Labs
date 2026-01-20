@@ -172,7 +172,7 @@ manage_single_vm() {
         echo " Estado: $STATE"
         echo "🔥 IP    : $IP"
         echo "=============================================="
-        echo "1) 🔗 SSH student@$IP (test ping)"
+        echo "1) 🔗 SSH student@$IP (CLAVE RHCSA)"
         echo "2) 🖥️  Console directo (root)"
         echo "3) 🔄 Reiniciar VM"
         echo "4) ⏹️  Parar VM"
