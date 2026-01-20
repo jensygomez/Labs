@@ -236,8 +236,7 @@ dnf install -y \
     curl \
     vim-enhanced \
     bash-completion \
-    cloud-init \
-    qemu-guest-agent
+    cloud-init 
 
 echo "✅ Paquetes instalados"
 sleep 1
@@ -252,8 +251,7 @@ systemctl enable \
     cloud-init-local \
     cloud-init \
     cloud-config \
-    cloud-final \
-    qemu-guest-agent
+    cloud-final 
 
 cat > /etc/cloud/cloud.cfg.d/90_libvirt.cfg <<'EOF'
 datasource_list: [ NoCloud, None ]
