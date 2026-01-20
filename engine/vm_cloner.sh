@@ -34,12 +34,21 @@ fi
 echo "🧬 Creando overlay qcow2..."
 qemu-img create -f qcow2 -F qcow2 -b "$BASE_DISK" "$OVERLAY_DISK"
 
-# 3. Crear ISO cloud-init
+# 3. AGREGAR CLAVE SSH al cloud-init (ANTES del ISO)
+echo "🔑 Agregando clave SSH RHCSA Labs..."
+SSH_KEY="/home/jensy/Labs/.ssh/id_rhcsalabs.pub"
+if [ -f "$SSH_KEY" ]; then
+  echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIByFDKwjMDeGJ5GRhXmZHa75h7dK9JcPHvWWtesSO3/x RHCSA Storage Labs" >> "$CLOUDINIT_DIR/authorized_keys"
+else
+  echo "⚠️  Clave SSH no encontrada, usando solo config base"
+fi
+
+# 4. Crear ISO cloud-init (AHORA INCLUYE LA CLAVE)
 CLOUDINIT_ISO="${IMAGES_DIR}/${VM_NAME}-cloudinit.iso"
 echo "☁️  Creando ISO cloud-init..."
 genisoimage -quiet -output "$CLOUDINIT_ISO" -volid cidata -joliet -rock "$CLOUDINIT_DIR/"
 
-# 4. Crear VM
+# 5. Crear VM
 echo "☁️  Definiendo VM '$VM_NAME'..."
 virt-install \
   --name "$VM_NAME" \

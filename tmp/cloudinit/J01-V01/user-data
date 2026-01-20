@@ -1,22 +1,38 @@
 # scenarios/junior/J01/cloudinit/V01/user-data
-
 #cloud-config
+# J01 – V01 (Incident Response Lab)
 write_files:
   - path: /etc/lab.info
     permissions: '0644'
     content: |
       LAB=J01
-      LEVEL=Junior  
+      LEVEL=Junior
       VARIANT=V01
       STATUS=cloud-init-ok
+
   - path: /etc/motd
     permissions: '0644'
     content: |
       ============================================================================
                        🎫 INCIDENT RESPONSE LAB – J01 / V01
       ============================================================================
-      cloud-init FUE EJECUTADO CORRECTAMENTE
-      Fecha: $(date)
-      Host: $(hostname)
-      Si puedes leer esto, el user-data está siendo aplicado.
+      cloud-init EJECUTADO ✓
+      
+      LAB: J01 (Junior)
+      VARIANT: V01
+      
+      student@RHCSA Labs Ready!
       ============================================================================
+
+# SSH CONFIGURACIÓN (CRÍTICO)
+ssh_pwauth: true
+users:
+  - name: student
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: wheel
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIByFDKwjMDeGJ5GRhXmZHa75h7dK9JcPHvWWtesSO3/x RHCSA Storage Labs
+
+runcmd:
+  - systemctl restart sshd

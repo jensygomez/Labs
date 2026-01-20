@@ -233,7 +233,50 @@ dracut -f
 echo "[+] Initramfs regenerado con cloud-init"
 
 # ------------------------------
-# 1️⃣2️⃣ Verificación final
+# 1️⃣2️⃣ Usuario student para labs
+# ------------------------------
+useradd -m -G wheel -s /bin/bash student
+echo "student ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/student
+usermod -aG wheel student
+echo "[+] Usuario student creado para labs"
+
+
+
+# ------------------------------
+# 1️⃣3️⃣ USUARIO STUDENT + SSH (PERMANENTE)
+# ------------------------------
+echo "=== 🚀 CONFIGURANDO USUARIO STUDENT + SSH ==="
+
+# Crear usuario student
+useradd -m -G wheel -s /bin/bash student
+
+# Copiar clave pública desde HOST (montar via virtiofs o copiar manual)
+mkdir -p /home/student/.ssh
+cat > /home/student/.ssh/authorized_keys <<'EOF'
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIByFDKwjMDeGJ5GRhXmZHa75h7dK9JcPHvWWtesSO3/x RHCSA Storage Labs
+EOF
+
+# Permisos correctos
+chown -R student:student /home/student/.ssh
+chmod 700 /home/student/.ssh
+chmod 600 /home/student/.ssh/authorized_keys
+
+# Habilitar password auth + root login
+sed -i 's/#PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# Sudo sin contraseña
+echo "student ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/student
+chmod 440 /etc/sudoers.d/student
+
+systemctl restart sshd
+echo "[+] Usuario student + SSH configurado PERMANENTEMENTE"
+
+
+
+# ------------------------------
+# 1️⃣3️⃣ Verificación final
 # ------------------------------
 echo "=== VERIFICACIÓN ==="
 echo "Cloud-init:"

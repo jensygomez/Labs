@@ -6,17 +6,16 @@ write_files:
     permissions: '0644'
     content: |
       LAB=J01
-      LEVEL=Junior  
+      LEVEL=Junior
       VARIANT=V01
       STATUS=cloud-init-ok
+
   - path: /etc/motd
     permissions: '0644'
     content: |
       ============================================================================
                        🎫 INCIDENT RESPONSE LAB – J01 / V01
       ============================================================================
-      cloud-init FUE EJECUTADO CORRECTAMENTE
-      Fecha: $(date)
-      Host: $(hostname)
-      Si puedes leer esto, el user-data está siendo aplicado.
+      🚨 INCIDENTE ACTIVADO
+      📍 student@RHCSA Labs - $(whoami)@$(hostname)
       ============================================================================
