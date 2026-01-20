@@ -153,56 +153,70 @@ update_lab_uses() {
 }
 
 
-
-
 #==============================================================================
-# FUNCION DE GESTIÓN DIRECTA POST-CREACIÓN DE VM
+# GESTIÓN VM POST-CREACIÓN (SIMPLIFICADA)
 #==============================================================================
 manage_single_vm() {
     local VM_NAME="$1"
+    
+    # Esperar que VM esté lista
+    echo "⏳ Esperando VM $VM_NAME... (30s)"
+    sleep 5
+    for i in {1..30}; do
+        STATE=$(sudo virsh domstate "$VM_NAME" 2>/dev/null || echo "unknown")
+        IP=$(sudo virsh domifaddr "$VM_NAME" 2>/dev/null | awk 'NR>1{print $4}' | head -1 || echo "no-ip")
+        [[ "$STATE" == "running" && "$IP" != "no-ip" ]] && break
+        sleep 2
+    done
 
     while true; do
         printf "\033c"
         STATE=$(sudo virsh domstate "$VM_NAME" 2>/dev/null || echo "unknown")
-        IP=$(sudo virsh domifaddr "$VM_NAME" 2>/dev/null | awk 'NR>1{print $4}' || echo "no-ip")
+        IP=$(sudo virsh domifaddr "$VM_NAME" 2>/dev/null | awk 'NR>1{print $4}' | head -1 || echo "no-ip")
 
         echo "=============================================="
-        echo " GESTIÓN DE VM ACTIVA"
+        echo " 🖥️  GESTIÓN VM - $VM_NAME"
         echo "=============================================="
-        echo " VM    : $VM_NAME"
         echo " Estado: $STATE"
         echo " IP    : $IP"
-        echo
-        echo "1) Reiniciar VM"
-        echo "2) Parar VM"
-        echo "3) Prender VM"
-        echo "4) Eliminar VM (TOTAL)"
-        echo "0) Volver al menú principal"
-        echo
+        echo "=============================================="
+        echo "1) 🔗 SSH a VM (student)"
+        echo "2) 🔄 Reiniciar VM"
+        echo "3) ⏹️  Parar VM"
+        echo "4) 🗑️  ELIMINAR VM COMPLETA"
+        echo "0) ← Volver menú principal"
+        echo "=============================================="
         read -rp "Opción: " opt
 
         case "$opt" in
             1)
-                echo "🔄 Reiniciando VM..."
-                sudo virsh reboot "$VM_NAME" >/dev/null 2>&1
-                sleep 2
+                if [[ "$IP" == "no-ip" ]]; then
+                    echo "❌ VM sin IP. Esperando..."
+                    sleep 3
+                    continue
+                fi
+                echo "🚀 Conectando SSH student@$IP..."
+                echo "🔑 Usando clave RHCSA o contraseña"
+                ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no student@"$IP"
+                echo "✅ Sesión SSH cerrada. Presiona Enter..."
+                read -r
                 ;;
             2)
-                echo "⏹️  Parando VM..."
-                sudo virsh shutdown "$VM_NAME" >/dev/null 2>&1
-                sleep 3
+                echo "🔄 Reiniciando VM..."
+                sudo virsh reboot "$VM_NAME" || sudo virsh reset "$VM_NAME"
+                sleep 5
                 ;;
             3)
-                echo "▶️  Encendiendo VM..."
-                sudo virsh start "$VM_NAME" >/dev/null 2>&1
-                sleep 2
+                echo "⏹️  Parando VM..."
+                sudo virsh shutdown "$VM_NAME" || sudo virsh destroy "$VM_NAME"
+                sleep 3
                 ;;
             4)
-                echo "⚠️  Eliminando VM completamente..."
+                echo "🗑️  ELIMINANDO VM $VM_NAME COMPLETAMENTE..."
                 cleanup_vm "$VM_NAME"
-                echo "✅ VM eliminada sin residuos"
-                sleep 2
-                return 0   # ← vuelve al menú principal
+                echo "✅ VM y TODOS sus archivos eliminados"
+                sleep 3
+                return 0  # Vuelve al menú principal
                 ;;
             0)
                 return 0
@@ -215,33 +229,27 @@ manage_single_vm() {
     done
 }
 
-
-
-#==============================================================================
-# FUNCION DE LIMPIEZA DE VM (MEJORADA)
-#==============================================================================
 cleanup_vm() {
     local VM_NAME="$1"
-
-    echo "[CLEANUP] Apagando VM si está activa..."
-    virsh destroy "$VM_NAME" >/dev/null 2>&1 || true
-
-    echo "[CLEANUP] Eliminando definición y storage..."
-    virsh undefine "$VM_NAME" --remove-all-storage >/dev/null 2>&1 || true
-
-    echo "[CLEANUP] Limpiando archivos específicos de $VM_NAME..."
-    rm -f /mnt/vms/labs/tmp/"${VM_NAME}.qcow2" 2>/dev/null || true
-    rm -f "/tmp/${VM_NAME}-seed.iso" 2>/dev/null || true
-
-    echo "[CLEANUP] LIMPIANDO DIRECTORIO /mnt/vms/labs/tmp/ COMPLETO..."
-    # ✅ LIMPIEZA TOTAL segura (solo archivos, no directorio)
-    find /mnt/vms/labs/tmp/ -mindepth 1 -delete 2>/dev/null || true
     
-    # Alternativa más agresiva (si quieres borrar TODO incluyendo subdirs)
-    rm -rf /mnt/vms/labs/tmp/* 2>/dev/null || true
+    echo "[🗑️] Apagando VM..."
+    sudo virsh destroy "$VM_NAME" 2>/dev/null || true
     
-    echo "[CLEANUP] Cleanup completo - /mnt/vms/labs/tmp/ vacía"
+    echo "[🗑️] Eliminando VM + discos..."
+    sudo virsh undefine "$VM_NAME" --remove-all-storage 2>/dev/null || true
+    
+    echo "[🗑️] Limpiando archivos..."
+    sudo rm -f /var/lib/libvirt/images/"${VM_NAME}".qcow2* 2>/dev/null || true
+    sudo rm -f /var/lib/libvirt/images/"${VM_NAME}"-cloudinit.iso 2>/dev/null || true
+    
+    # Limpiar tmp cloud-init
+    sudo find ~/Labs/tmp/cloudinit/ -name "${VM_NAME#lab-*}.*" -delete 2>/dev/null || true
+    sudo rm -rf /mnt/vms/labs/tmp/* 2>/dev/null || true
+    
+    echo "✅ LIMPIEZA TOTAL COMPLETA"
 }
+
+
 
 
 #==============================================================================

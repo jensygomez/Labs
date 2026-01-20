@@ -89,30 +89,37 @@ assign_lab() {
     local VM_NAME="lab-${ID,,}-${VARIANT,,}"
     echo "📍 Creando lab '$VM_NAME'..."
 
-#------------------------------------------------------------
-# Generar cloud-init
-#------------------------------------------------------------
-    echo "🔍 DEBUG: LEVEL=$LEVEL ID=$ID VARIANT=$VARIANT"
+    #------------------------------------------------------------
+    # Generar cloud-init (SIN DEBUG)
+    #------------------------------------------------------------
     local CLOUDINIT_DIR
     CLOUDINIT_DIR="$("$ENGINE_DIR/cloudinit_generator.sh" \
-        "$LEVEL" "$ID" "$VARIANT")"
-    echo "🔍 DEBUG: CLOUDINIT_DIR=$CLOUDINIT_DIR"
-    echo "🔍 DEBUG: existe? $(ls -la "$CLOUDINIT_DIR" 2>/dev/null || echo 'NO')"
-
+        "$(echo "$LAB_LEVEL" | tr '[:upper:]' '[:lower:]')" "$ID" "$VARIANT")"
 
     [[ -d "$CLOUDINIT_DIR" ]] || {
-        echo "💥 Cloud-init no generado" >&2
+        echo "💥 Cloud-init no generado: $CLOUDINIT_DIR" >&2
+        ls -la "$CLOUDINIT_DIR" 2>/dev/null || echo "Directorio NO existe"
         return 1
     }
 
     #------------------------------------------------------------
-    # CREACIÓN REAL DE LA VM (ÚNICO PUNTO)
+    # CREACIÓN REAL DE LA VM
     #------------------------------------------------------------
     echo "📍 Invocando vm_cloner.sh..."
     sudo "$ENGINE_DIR/vm_cloner.sh" "$VM_NAME" "$CLOUDINIT_DIR"
 
     echo "✅ VM '$VM_NAME' creada correctamente"
-    echo "🚀 [assign_lab] >>> COMPLETADO <<<" >&2
+    echo "🚀 [assign_lab] >>> VM LISTA <<<" >&2
+
+    #------------------------------------------------------------
+    # 🎯 NUEVO: GESTIÓN AUTOMÁTICA DE VM
+    #------------------------------------------------------------
+    echo ""
+    echo "🎮 ENTRANDO A GESTIÓN VM AUTOMÁTICA..."
+    echo "======================================"
+    manage_single_vm "$VM_NAME"
+    
+    echo "✅ Lab completado. Volviendo al menú principal..."
 }
 
 #==============================================================================
