@@ -50,6 +50,47 @@ rm -rf /var/lib/cloud/* /var/log/cloud-init*
 echo "[+] Cloud-init instalado y configurado para labs"
 sleep 2
 
+
+
+# ------------------------------
+# 0️⃣1️⃣ SSH + STUDENT + SUDO (CRÍTICO - NUNCA MÁS PROBLEMAS)
+# ------------------------------
+echo "=== 🔑 SSH + STUDENT + SUDO ==="
+
+# Limpiar sudoers rotos
+rm -f /etc/sudoers.d/student
+
+# Crear/actualizar student
+useradd -m -G wheel -s /bin/bash student 2>/dev/null || true
+
+# SUDOERS con visudo (syntax perfecto)
+echo "student ALL=(ALL) NOPASSWD:ALL" | EDITOR="tee" visudo -f /etc/sudoers.d/student
+
+# Clave RHCSA para student Y root
+RHCSA_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIByFDKwjMDeGJ5GRhXmZHa75h7dK9JcPHvWWtesSO3/x RHCSA Storage Labs"
+
+for user in student root; do
+    mkdir -p "/home/$user/.ssh"
+    echo "$RHCSA_KEY" > "/home/$user/.ssh/authorized_keys"
+    chown -R "$user:$user" "/home/$user/.ssh"
+    chmod 700 "/home/$user/.ssh"
+    chmod 600 "/home/$user/.ssh/authorized_keys"
+done
+
+# SSH - FORZAR EN TODOS lados
+echo "PasswordAuthentication yes" > /etc/ssh/sshd_config.d/99-labs.conf
+echo "PermitRootLogin yes" >> /etc/ssh/sshd_config.d/99-labs.conf
+sed -i 's/#PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+systemctl restart sshd
+echo "[+] SSH student/root + clave RHCSA + sudo ✅"
+sleep 2
+
+
+
+
 # ------------------------------
 # 1️⃣ Actualizar sistema y paquetes base
 # ------------------------------
@@ -65,7 +106,8 @@ dnf install -y \
   bind-utils \
   net-tools \
   iproute \
-  policycoreutils-python-utils
+  policycoreutils-python-utils \
+  qemu-guest-agent
 
 echo "[+] Sistema actualizado y paquetes base instalados"
 sleep 2
