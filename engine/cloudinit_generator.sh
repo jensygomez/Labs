@@ -30,7 +30,7 @@ VARIANT="$3"
 # ============================================================================
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 SRC_DIR="$ROOT_DIR/scenarios/${LEVEL,,}/${LAB_ID}/cloudinit/${VARIANT}"
-OUT_BASE="/mnt/vms/labs/tmp/cloudinit"
+OUT_BASE="$ROOT_DIR/tmp/cloudinit"  # ← CAMBIO AQUÍ
 OUT_DIR="$OUT_BASE/${LAB_ID}-${VARIANT}"
 
 USER_DATA_SRC="$SRC_DIR/user-data"
