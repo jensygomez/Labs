@@ -162,79 +162,68 @@ manage_single_vm() {
         printf "\033c"
         STATE=$(sudo virsh domstate "$VM_NAME" 2>/dev/null || echo "unknown")
         
-        # 🔥 COMANDO DEFINITIVO - IP DINÁMICA SIEMPRE
-        IP=$(virsh net-dhcp-leases default | grep "$VM_NAME" | \
-            awk '{for(i=1;i<=NF;i++) if($i~/192\.168\.122\./) {print substr($i,1,index($i,"/")-1); break}}' || echo "no-ip")
+        # 🔥 IP DINÁMICA - ESPERA 3s para actualizar
+        IP=$(timeout 3 virsh net-dhcp-leases default | grep "$VM_NAME" | \
+            awk '{for(i=1;i<=NF;i++) if($i~/192\.168\.122\./) {print substr($i,1,index($i,"/")-1); break}}' || echo "BUSCANDO...")
 
         echo "=============================================="
         echo " 🖥️  LAB $VM_NAME"
         echo "=============================================="
         echo " Estado: $STATE"
-        echo "🔥 IP    : $IP"
+        echo "🔥 IP: $IP"
         echo "=============================================="
-        echo "1) 🔗 SSH student@$IP (test ping)"
-        echo "2) 🖥️  Console directo (root)"
-        echo "3) 🔄 Reiniciar VM"
-        echo "4) ⏹️  Parar VM"
-        echo "5) 🗑️  BORRAR VM COMPLETA"
+        echo "1) 🔗 SSH student@$IP (CLAVE RHCSA)"
+        echo "2) 🔗 SSH contraseña"
+        echo "3) 🖥️  Console directo"
+        echo "4) 🔄 Reiniciar"
+        echo "5) ⏹️  Parar"
+        echo "6) 🗑️  BORRAR TODO"
         echo "0) ← Menú principal"
         echo "=============================================="
         read -rp "➤ " opt
 
         case "$opt" in
             1)
-                if [[ "$IP" != "no-ip" ]]; then
-                    echo "🔍 Testeando conectividad $IP..."
+                if [[ "$IP" != "BUSCANDO..." && "$IP" != "" ]]; then
                     if ping -c 2 "$IP" >/dev/null 2>&1; then
-                        echo "✅ Ping OK → Probando SSH..."
-                        if ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no \
-                            -o BatchMode=no student@"$IP" 2>/dev/null; then
-                            echo "✅ SSH exitoso!"
-                        else
-                            echo "❌ SSH falló → Firewall bloquea puerto 22"
-                            echo "💡 Opción 2 → Console → 'firewall-cmd --add-service=ssh --permanent'"
-                        fi
+                        echo "🚀 SSH con CLAVE RHCSA → student@$IP"
+                        ssh -i /home/jensy/Labs/.ssh/id_rhcsalabs \
+                            -o ConnectTimeout=10 -o StrictHostKeyChecking=no \
+                            student@"$IP"
                     else
-                        echo "❌ Sin conectividad de red"
+                        echo "❌ Sin ping $IP"
                     fi
                 else
-                    echo "❌ IP no detectada"
+                    echo "⏳ Esperando IP..."
                 fi
-                echo ""
-                echo "✅ Presiona Enter para continuar..."
-                read -r
                 ;;
             2)
-                echo "🖥️  Console directo (Ctrl+] para salir)..."
-                sudo virsh console "$VM_NAME"
-                echo "✅ Console cerrada"
-                read -r
+                if [[ "$IP" != "BUSCANDO..." && "$IP" != "" ]]; then
+                    echo "🚀 SSH con CONTRASEÑA → student@$IP"
+                    ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no student@"$IP"
+                fi
                 ;;
             3)
-                echo "🔄 Reiniciando VM..."
+                echo "🖥️  Console (Ctrl+] salir)..."
+                sudo virsh console "$VM_NAME"
+                ;;
+            4)
                 sudo virsh reboot "$VM_NAME" || sudo virsh reset "$VM_NAME"
                 sleep 5
                 ;;
-            4)
-                echo "⏹️  Parando VM..."
+            5)
                 sudo virsh shutdown "$VM_NAME" || sudo virsh destroy "$VM_NAME"
                 sleep 3
                 ;;
-            5)
-                echo "🗑️  ELIMINANDO VM $VM_NAME + TODOS ARCHIVOS..."
+            6)
                 cleanup_vm "$VM_NAME"
-                echo "✅ VM eliminada completamente"
-                sleep 2
                 return 0
                 ;;
-            0)
-                return 0
-                ;;
-            *)
-                echo "❌ Opción inválida"
-                sleep 1
-                ;;
+            0) return 0 ;;
+            *) echo "❌ Inválido" && sleep 1 ;;
         esac
+        echo "✅ Presiona Enter..."
+        read -r
     done
 }
 
