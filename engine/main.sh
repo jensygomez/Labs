@@ -255,6 +255,10 @@ cleanup_vm() {
     sudo rm -f /var/lib/libvirt/images/"${VM_NAME}".qcow2* 2>/dev/null || true
     sudo rm -f /var/lib/libvirt/images/"${VM_NAME}"-cloudinit.iso 2>/dev/null || true
     
+    # 🔥 FIX: ELIMINAR seed ISO + cloud-init ISO
+    sudo rm -f /var/lib/libvirt/images/"${VM_NAME}"-seed.iso 2>/dev/null || true
+    sudo rm -f /var/lib/libvirt/images/"${VM_NAME}"*.iso 2>/dev/null || true  # ← CATCH ALL
+    
     # Limpiar tmp cloud-init
     sudo find ~/Labs/tmp/cloudinit/ -name "${VM_NAME#lab-*}.*" -delete 2>/dev/null || true
     sudo rm -rf /mnt/vms/labs/tmp/* 2>/dev/null || true
