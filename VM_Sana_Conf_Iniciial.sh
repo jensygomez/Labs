@@ -163,13 +163,19 @@ fi
 cleanup_previous() {
     echo "   🧹 Limpiando configuraciones previas..."
     
+    # Detener servicios primero
+    systemctl stop nginx mariadb squid dnsmasq lab-dummy-net lab-namespaces 2>/dev/null || true
+    systemctl disable lab-dummy-net lab-namespaces 2>/dev/null || true
+    
     # Limpiar namespaces si existen
     ip netns delete NS-EDGE 2>/dev/null || true
     ip netns delete NS-CLIENT 2>/dev/null || true
     
-    # Limpiar interfaces dummy antiguas
+    # Limpiar interfaces dummy antiguas (solo si existen)
     for iface in dummy-web dummy-db dummy-proxy dummy-dns; do
-        ip link delete $iface 2>/dev/null || true
+        if ip link show $iface >/dev/null 2>&1; then
+            ip link delete $iface 2>/dev/null || true
+        fi
     done
     
     # Limpiar veth pairs
@@ -179,7 +185,18 @@ cleanup_previous() {
         ip link delete br-$service 2>/dev/null || true
     done
     
-    rm -rf /etc/netns/NS-CLIENT
+    # Limpiar archivos de configuración de red
+    rm -rf /etc/netns/NS-CLIENT /etc/netns/NS-EDGE 2>/dev/null || true
+    
+    # Limpiar reglas iptables persistentes
+    iptables -F
+    iptables -X
+    iptables -t nat -F
+    iptables -t nat -X
+    ip6tables -F
+    ip6tables -X
+    
+    echo "   ✅ Limpieza completada"
 }
 
 cleanup_previous
@@ -199,6 +216,7 @@ dnf install -y \
     epel-release \
     nginx \
     mariadb-server \
+    mariadb \
     squid \
     dnsmasq \
     firewalld \
@@ -287,58 +305,74 @@ echo "✅ SSH y usuario configurados"
 sleep 1
 
 # ---------------------------------------------------------------------------
-# 5️⃣ SERVICIOS INTERNOS (INTERFACES DUMMY)
+# 5️⃣ SERVICIOS INTERNOS (INTERFACES DUMMY) - VERSIÓN SIMPLIFICADA
 # ---------------------------------------------------------------------------
 echo ""
 echo "[5/12] 🖥️  Configurando servicios internos..."
 
-# Crear interfaces dummy para servicios (INMEDIATO)
+# Crear interfaces dummy directamente (más simple)
 for service in "${!SERVICES[@]}"; do
-    ip link add dummy-$service type dummy 2>/dev/null || true
-    ip addr add "${SERVICES[$service]}/24" dev dummy-$service 2>/dev/null || true
-    ip link set dummy-$service up 2>/dev/null || true
-    echo "   ✅ dummy-$service: ${SERVICES[$service]}"
-done
-
-# Crear scripts auxiliares para systemd (SOLUCIÓN DEFINITIVA)
-cat > /usr/local/bin/lab-dummy-start.sh <<'EOF'
-#!/bin/bash
-set -euo pipefail
-for service in web db proxy dns; do
-    ip link add dummy-$service type dummy 2>/dev/null || true
+    # Eliminar si existe
+    ip link delete dummy-$service 2>/dev/null || true
+    
+    # Crear nueva
+    ip link add dummy-$service type dummy
+    
+    # Asignar IP según servicio
     case $service in
-        web) ip="10.10.10.10/24" ;;
-        db) ip="10.10.20.10/24" ;;
-        proxy) ip="10.10.30.10/24" ;;
-        dns) ip="10.10.40.10/24" ;;
+        web) ip addr add "10.10.10.10/24" dev dummy-$service ;;
+        db) ip addr add "10.10.20.10/24" dev dummy-$service ;;
+        proxy) ip addr add "10.10.30.10/24" dev dummy-$service ;;
+        dns) ip addr add "10.10.40.10/24" dev dummy-$ns ;;
     esac
-    ip addr add $ip dev dummy-$service 2>/dev/null || true
-    ip link set dummy-$service up 2>/dev/null || true
+    
+    # Activar interfaz
+    ip link set dummy-$service up
+    
+    # Verificar
+    if ip addr show dummy-$service | grep -q "${SERVICES[$service]}"; then
+        echo "   ✅ dummy-$service: ${SERVICES[$service]}"
+    else
+        echo "   ❌ ERROR: No se pudo configurar dummy-$service"
+    fi
 done
-EOF
 
-cat > /usr/local/bin/lab-dummy-stop.sh <<'EOF'
-#!/bin/bash
-set -euo pipefail
-for service in web db proxy dns; do
-    ip link del dummy-$service 2>/dev/null || true
-done
-EOF
-
-chmod +x /usr/local/bin/lab-dummy-*.sh
-
-# Crear servicio systemd CORRECTO
+# Crear servicio systemd para persistencia
 cat > /etc/systemd/system/lab-dummy-net.service <<'EOF'
 [Unit]
 Description=Lab Dummy Interfaces
 After=network.target
+Before=nginx.service mariadb.service squid.service dnsmasq.service
 Wants=network.target
 
 [Service]
 Type=oneshot
-RemainAfterExit=true
-ExecStart=/usr/local/bin/lab-dummy-start.sh
-ExecStop=/usr/local/bin/lab-dummy-stop.sh
+RemainAfterExit=yes
+ExecStart=/bin/bash -c "
+    # Crear interfaces dummy
+    ip link add dummy-web type dummy 2>/dev/null || true
+    ip link add dummy-db type dummy 2>/dev/null || true
+    ip link add dummy-proxy type dummy 2>/dev/null || true
+    ip link add dummy-dns type dummy 2>/dev/null || true
+    
+    # Asignar IPs
+    ip addr add 10.10.10.10/24 dev dummy-web 2>/dev/null || true
+    ip addr add 10.10.20.10/24 dev dummy-db 2>/dev/null || true
+    ip addr add 10.10.30.10/24 dev dummy-proxy 2>/dev/null || true
+    ip addr add 10.10.40.10/24 dev dummy-dns 2>/dev/null || true
+    
+    # Activar
+    ip link set dummy-web up
+    ip link set dummy-db up
+    ip link set dummy-proxy up
+    ip link set dummy-dns up
+"
+ExecStop=/bin/bash -c "
+    ip link del dummy-web 2>/dev/null || true
+    ip link del dummy-db 2>/dev/null || true
+    ip link del dummy-proxy 2>/dev/null || true
+    ip link del dummy-dns 2>/dev/null || true
+"
 
 [Install]
 WantedBy=multi-user.target
@@ -346,17 +380,18 @@ EOF
 
 systemctl daemon-reload
 systemctl enable --now lab-dummy-net.service
+sleep 2  # Dar tiempo a que las interfaces se creen
+
 echo "✅ Interfaces dummy configuradas"
 sleep 1
 
-
 # ---------------------------------------------------------------------------
-# 6️⃣ CONFIGURACIÓN DE SERVICIOS
+# 6️⃣ CONFIGURACIÓN DE SERVICIOS - CORREGIDA
 # ---------------------------------------------------------------------------
 echo ""
 echo "[6/12] ⚙️  Configurando servicios..."
 
-# NGINX - Servicio web simple
+# NGINX - Servicio web simple CON IP EXPLÍCITA
 cat > /etc/nginx/nginx.conf <<'EOF'
 user nginx;
 worker_processes auto;
@@ -399,16 +434,28 @@ http {
             deny all;
         }
     }
+    
+    # Servidor adicional para localhost (diagnóstico)
+    server {
+        listen       127.0.0.1:8080;
+        server_name  localhost;
+        
+        location / {
+            return 200 "NGINX Local OK\n";
+            add_header Content-Type text/plain;
+        }
+    }
 }
 EOF
 
-# DNSmasq - Servidor DNS
+# DNSmasq - Servidor DNS CON CORRECCIÓN
 cat > /etc/dnsmasq.conf <<EOF
 # Configuración básica
 interface=dummy-dns
 bind-interfaces
 listen-address=${SERVICES[dns]}
 no-dhcp-interface=dummy-dns
+no-resolv
 
 # Cache DNS
 cache-size=1000
@@ -432,7 +479,7 @@ server=8.8.8.8
 server=1.1.1.1
 EOF
 
-# Squid - Proxy
+# Squid - Proxy CON IP EXPLÍCITA
 cat > /etc/squid/squid.conf <<EOF
 http_port ${SERVICES[proxy]}:3128
 
@@ -456,40 +503,122 @@ refresh_pattern .               0       20%     4320
 visible_hostname proxy.lab.local
 EOF
 
-# MariaDB - Configuración básica
+# MariaDB - Configuración con acceso remoto HABILITADO
 cat > /etc/my.cnf.d/lab.cnf <<EOF
 [mysqld]
-bind-address = ${SERVICES[db]}
+bind-address = 0.0.0.0  # Escuchar en todas las interfaces
 skip-name-resolve
 innodb_buffer_pool_size = 128M
 max_connections = 50
 character-set-server = utf8mb4
 collation-server = utf8mb4_unicode_ci
+log-error = /var/log/mariadb/mariadb.log
 
 [mysql]
 default-character-set = utf8mb4
+
+[client]
+default-character-set = utf8mb4
 EOF
 
-# Habilitar e iniciar servicios
-for service in nginx mariadb squid dnsmasq; do
-    systemctl enable --now $service
-done
+# Crear directorio de logs para MariaDB si no existe
+mkdir -p /var/log/mariadb
+chown mysql:mysql /var/log/mariadb
+
+echo "✅ Archivos de configuración creados"
+sleep 1
+
+# Habilitar e iniciar servicios EN ORDEN CORRECTO
+echo "   🔄 Iniciando servicios..."
+
+# 1. Asegurar que las interfaces dummy están activas
+systemctl restart lab-dummy-net.service
+sleep 2
+
+# 2. Iniciar MariaDB primero (porque puede tardar más)
+echo "   🗄️  Configurando MariaDB..."
+systemctl enable --now mariadb
+sleep 3
 
 # Inicializar MariaDB si es primera vez
 if [[ ! -d /var/lib/mysql/mysql ]]; then
-    echo "   🗄️  Inicializando MariaDB..."
+    echo "   🗄️  Inicializando MariaDB por primera vez..."
     mysql_install_db --user=mysql
     systemctl restart mariadb
-    
-    # Configurar root sin password para lab (¡Solo para entornos de prueba!)
-    mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '';"
-    mysql -e "FLUSH PRIVILEGES;"
-    
-    # Crear base de datos de ejemplo
-    mysql -e "CREATE DATABASE IF NOT EXISTS lab_db;"
-    mysql -e "CREATE USER IF NOT EXISTS 'lab_user'@'10.10.50.%' IDENTIFIED BY 'LabPass123';"
-    mysql -e "GRANT ALL ON lab_db.* TO 'lab_user'@'10.10.50.%';"
+    sleep 3
 fi
+
+# Configurar root sin password para lab (¡Solo para entornos de prueba!)
+echo "   🔧 Configurando acceso a MariaDB..."
+mysql -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('');" 2>/dev/null || \
+mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '';" 2>/dev/null || true
+
+mysql -e "DELETE FROM mysql.user WHERE User='';"
+mysql -e "DROP USER IF EXISTS 'root'@'%';"
+mysql -e "CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY '';"
+mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;"
+mysql -e "FLUSH PRIVILEGES;"
+
+# Crear base de datos de ejemplo
+mysql -e "CREATE DATABASE IF NOT EXISTS lab_db;"
+mysql -e "CREATE USER IF NOT EXISTS 'lab_user'@'10.10.50.%' IDENTIFIED BY 'LabPass123';"
+mysql -e "GRANT ALL ON lab_db.* TO 'lab_user'@'10.10.50.%';"
+mysql -e "FLUSH PRIVILEGES;"
+
+# 3. Iniciar otros servicios
+echo "   🌐 Iniciando NGINX..."
+systemctl enable --now nginx
+sleep 1
+
+echo "   🔄 Iniciando Squid..."
+systemctl enable --now squid
+sleep 1
+
+echo "   🔗 Iniciando DNSmasq..."
+systemctl enable --now dnsmasq
+sleep 1
+
+# 4. Verificar que los servicios están activos
+echo ""
+echo "   🔍 Verificando estado de servicios..."
+for service in nginx mariadb squid dnsmasq; do
+    if systemctl is-active --quiet $service; then
+        echo "      ✅ $service: ACTIVE"
+    else
+        echo "      ❌ $service: INACTIVE"
+        systemctl status $service --no-pager
+    fi
+done
+
+# 5. Verificar que los servicios están escuchando
+echo ""
+echo "   📡 Verificando puertos..."
+for service in nginx mariadb squid dnsmasq; do
+    case $service in
+        nginx)
+            port=80
+            ip=10.10.10.10
+            ;;
+        mariadb)
+            port=3306
+            ip=0.0.0.0
+            ;;
+        squid)
+            port=3128
+            ip=10.10.30.10
+            ;;
+        dnsmasq)
+            port=53
+            ip=10.10.40.10
+            ;;
+    esac
+    
+    if ss -tlnp | grep -q ":$port"; then
+        echo "      ✅ $service: Escuchando en puerto $port"
+    else
+        echo "      ❌ $service: NO escucha en puerto $port"
+    fi
+done
 
 echo "✅ Servicios configurados y operativos"
 sleep 2
@@ -729,144 +858,9 @@ systemctl enable --now lab-namespaces.service
 
 
 
-
-
-
-
-
-
-
-
-
-# Crear archivo de información del lab
-cat > /etc/lab.info <<EOF
-=== 🏗️ LAB COMPLETO - ECOSISTEMA OPERATIVO ===
-Creado: $(date)
-Versión: 2.0 (Arquitectura Oficial)
-Estado: OPERATIVO
-
-📐 ARQUITECTURA (Documentación Ejecutable):
-├── Una sola VM (limitación de hardware)
-├── Infraestructura interna simulada con Linux puro
-├── Acceso remoto SIEMPRE por SSH (Home Office / NOC)
-├── Plano de gestión separado del plano de datos
-└── Puntos de fallo controlados: NS-EDGE, NS-CLIENT, Servicios
-
-📊 TOPOLOGÍA:
-├── VM Principal (Gestión)
-│   ├── SSH: 192.168.122.0/24 (siempre disponible)
-│   └── Servicios internos (dummy interfaces)
-├── NS-EDGE (Router/Firewall)
-│   ├── LAN: 10.10.50.1/24
-│   ├── NAT: Habilitado
-│   └── Firewall: Configurado
-└── NS-CLIENT (Usuario)
-    ├── IP: 10.10.50.10/24
-    ├── GW: 10.10.50.1
-    └── DNS: 10.10.40.10
-
-🌐 SERVICIOS:
-• 🌐 Web:     10.10.10.10 (nginx)
-• 🗄️  DB:      10.10.20.10 (mariadb)
-• 🔄 Proxy:   10.10.30.10:3128 (squid)
-• 🔗 DNS:     10.10.40.10 (dnsmasq)
-
-🔧 COMANDOS ÚTILES:
-# Entrar a namespaces
-sudo ip netns exec NS-EDGE bash
-sudo ip netns exec NS-CLIENT bash
-
-# Diagnóstico
-sudo ip netns exec NS-CLIENT client-diag
-sudo ip netns exec NS-EDGE iptables -L -n -v
-
-# Ver estado
-sudo systemctl status lab-namespaces
-sudo systemctl status lab-dummy-net
-
-📈 ESCALABILIDAD:
-• 👶 Junior: Diagnóstico básico (ping, DNS, puertos)
-• 👨‍💼 Pleno: Routing, NAT, firewall stateful, tc
-• 👨‍🔬 Senior: Observabilidad, hardening, simulación realista
-
-🎯 MODELO DE INCIDENTES:
-Los fallos SIEMPRE se inyectan en:
-- NS-EDGE (router/firewall)
-- NS-CLIENT (usuario/cliente)
-- Servicios internos
-
-⚠️  El plano de gestión (SSH) NO se rompe nunca.
-
-🔐 AUTOR: Jensy Gomez
-🖥️  OS BASE: Rocky Linux 9.x
-EOF
-
-# Script de verificación rápida
-cat > /usr/local/bin/lab-status <<'EOF'
-#!/bin/bash
-echo "=== 🧪 LAB STATUS CHECK ==="
-echo ""
-echo "📦 Servicios del host:"
-for svc in nginx mariadb squid dnsmasq lab-dummy-net lab-namespaces; do
-    if systemctl is-active --quiet $svc; then
-        echo "  ✅ $svc: ACTIVE"
-    else
-        echo "  ❌ $svc: INACTIVE"
-    fi
-done
-
-echo ""
-echo "🏗️  Namespaces:"
-for ns in NS-EDGE NS-CLIENT; do
-    if ip netns list | grep -q $ns; then
-        echo "  ✅ $ns: EXISTS"
-        if ip netns exec $ns ip link show 2>/dev/null | grep -q "state UP"; then
-            echo "     📡 Interfaces: UP"
-        else
-            echo "     ⚠️  Interfaces: DOWN or missing"
-        fi
-    else
-        echo "  ❌ $ns: MISSING"
-    fi
-done
-
-echo ""
-echo "🌐 Interfaces dummy:"
-for iface in dummy-web dummy-db dummy-proxy dummy-dns; do
-    if ip link show $iface >/dev/null 2>&1; then
-        ip_addr=$(ip -4 addr show $iface | grep inet | awk '{print $2}')
-        echo "  ✅ $iface: UP ($ip_addr)"
-    else
-        echo "  ❌ $iface: DOWN"
-    fi
-done
-
-echo ""
-echo "🔗 Conectividad básica:"
-if ip netns exec NS-CLIENT ping -c 1 -W 1 10.10.50.1 >/dev/null 2>&1; then
-    echo "  ✅ NS-CLIENT → NS-EDGE: OK"
-else
-    echo "  ❌ NS-CLIENT → NS-EDGE: FAIL"
-fi
-
-if ip netns exec NS-CLIENT ping -c 1 -W 1 10.10.10.10 >/dev/null 2>&1; then
-    echo "  ✅ NS-CLIENT → Web Service: OK"
-else
-    echo "  ❌ NS-CLIENT → Web Service: FAIL"
-fi
-
-echo ""
-echo "=== 📋 FIN DEL REPORTE ==="
-echo ""
-echo "💡 Para diagnóstico detallado: sudo ip netns exec NS-CLIENT client-diag"
-EOF
-
-chmod +x /usr/local/bin/lab-status
-
 # ---------------------------------------------------------------------------
-# 🎉 RESUMEN VISUAL SIMPLE
+# FINAL: VERIFICACIÓN SIMPLE (lo que acordamos)
 # ---------------------------------------------------------------------------
-clear
 echo ""
 echo "=========================================================="
 echo "🎉 ¡LAB COMPLETO - READY FOR INCIDENTS!"
@@ -903,3 +897,6 @@ echo ""
 echo "💡 Comando para empezar: sudo ip netns exec NS-CLIENT bash"
 echo "=========================================================="
 echo ""
+
+
+
