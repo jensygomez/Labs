@@ -16,11 +16,22 @@ write_files:
       ============================================================================
       INCIDENTE: No hay ping al gateway ni a Internet
       OBJETIVO : Diagnosticar bloqueo de red (Firewall)
-      Jensy Gomez
+      JENSY GOMEZ
+      ============================================================================
+      NOTA: Acceso remoto disponible (SSH)
       ============================================================================
 
 runcmd:
   - sleep 10
-  - firewall-cmd --set-default-zone=drop
+
+  # 1. Garantizar canal de gestión (SSH desde host)
+  - firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" source address="192.168.122.1" port port="22" protocol="tcp" accept'
+
+  # 2. Bloquear ICMP (entrada y salida)
+  - firewall-cmd --permanent --zone=public --add-rich-rule='rule protocol="icmp" drop'
+
+  # 3. Bloquear salida a Internet (excepto red local)
+  - firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" destination NOT address="192.168.122.0/24" drop'
+
   - firewall-cmd --reload
   - hostnamectl set-hostname lab-j01-v01

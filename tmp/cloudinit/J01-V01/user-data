@@ -2,31 +2,25 @@
 write_files:
   - path: /etc/lab.info
     permissions: '0644'
-    owner: root:root
     content: |
       LAB=J01
       LEVEL=Junior
       VARIANT=V01
-      STATUS=cloud-init-ok
-      INCIDENT=Firewall bloquea ICMP + Internet
+      INCIDENT=ICMP y conectividad externa bloqueadas por firewall
 
   - path: /etc/motd
     permissions: '0644'
-    owner: root:root
     content: |
       ============================================================================
-                       🎫 INCIDENT RESPONSE LAB J01-V01
+                    INCIDENT RESPONSE LAB J01 – V01
       ============================================================================
-      🚨 INCIDENTE: NO PING HOST + SIN INTERNET
-      🎯 OBJETIVO: Restaurar conectividad completa
-      📍 student@RHCSA Labs - lab-j01-v01
+      INCIDENTE: No hay ping al gateway ni a Internet
+      OBJETIVO : Diagnosticar bloqueo de red (Firewall)
+      Jensy Gomez
       ============================================================================
 
 runcmd:
   - sleep 10
-  # 🔥 ICMP DESDE LIBVIRT HOST → DROP
-  - firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" source address="192.168.122.1" protocol="icmp" drop'
-  # 🔥 TODO INTERNET → DROP (MASIVO)
-  - firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" destination not address="192.168.122.0/24" drop'
+  - firewall-cmd --set-default-zone=drop
   - firewall-cmd --reload
   - hostnamectl set-hostname lab-j01-v01
