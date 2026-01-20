@@ -674,13 +674,34 @@ cp /usr/local/bin/client-diag /etc/netns/NS-CLIENT/
 echo "✅ NS-CLIENT configurado"
 sleep 1
 
-# ---------------------------------------------------------------------------
-# 1️⃣2️⃣ FINALIZACIÓN Y VERIFICACIÓN
-# ---------------------------------------------------------------------------
-echo ""
-echo "[12/12] ✅ Finalizando y verificando..."
+# Crear scripts auxiliares para namespaces
+mkdir -p /usr/local/bin/lab-ns
+cat > /usr/local/bin/lab-ns-start.sh <<'EOF'
+#!/bin/bash
+set -euo pipefail
+# Crear namespaces si no existen
+ip netns add NS-EDGE 2>/dev/null || true
+ip netns add NS-CLIENT 2>/dev/null || true
+# Loopback UP
+ip netns exec NS-EDGE ip link set lo up 2>/dev/null || true
+ip netns exec NS-CLIENT ip link set lo up 2>/dev/null || true
+# Forwarding
+ip netns exec NS-EDGE sysctl -w net.ipv4.ip_forward=1 2>/dev/null || true
+# Restaurar iptables si existe
+if [ -f /etc/netns/NS-EDGE/iptables.rules ]; then
+    ip netns exec NS-EDGE iptables-restore < /etc/netns/NS-EDGE/iptables.rules 2>/dev/null || true
+fi
+EOF
 
-# Crear servicio systemd para persistencia de namespaces
+cat > /usr/local/bin/lab-ns-stop.sh <<'EOF'
+#!/bin/bash
+# No destruimos namespaces (persistencia)
+true
+EOF
+
+chmod +x /usr/local/bin/lab-ns-*.sh
+
+# Crear servicio systemd CORRECTO para namespaces
 cat > /etc/systemd/system/lab-namespaces.service <<'EOF'
 [Unit]
 Description=Lab Network Namespaces
@@ -689,43 +710,20 @@ Requires=lab-dummy-net.service
 
 [Service]
 Type=oneshot
-RemainAfterExit=yes
-ExecStart=/bin/bash -c '
-    # Crear namespaces si no existen
-    ip netns add NS-EDGE 2>/dev/null || true
-    ip netns add NS-CLIENT 2>/dev/null || true
-    
-    # Configurar interfaces dentro de namespaces
-    if ip netns exec NS-EDGE ip link show veth-edge >/dev/null 2>&1; then
-        ip netns exec NS-EDGE ip link set veth-edge up
-        ip netns exec NS-EDGE ip addr add 10.10.50.1/24 dev veth-edge 2>/dev/null || true
-    fi
-    
-    if ip netns exec NS-CLIENT ip link show veth-client >/dev/null 2>&1; then
-        ip netns exec NS-CLIENT ip link set veth-client up
-        ip netns exec NS-CLIENT ip addr add 10.10.50.10/24 dev veth-client 2>/dev/null || true
-        ip netns exec NS-CLIENT ip route add default via 10.10.50.1 2>/dev/null || true
-    fi
-    
-    # Habilitar forwarding en NS-EDGE
-    ip netns exec NS-EDGE sysctl -w net.ipv4.ip_forward=1
-    
-    # Restaurar reglas iptables si existen
-    if [ -f /etc/netns/NS-EDGE/iptables.rules ]; then
-        ip netns exec NS-EDGE iptables-restore < /etc/netns/NS-EDGE/iptables.rules
-    fi
-'
-ExecStop=/bin/bash -c '
-    # No destruimos namespaces al detener, para mantener estado
-    true
-'
+RemainAfterExit=true
+ExecStart=/usr/local/bin/lab-ns-start.sh
+ExecStop=/usr/local/bin/lab-ns-stop.sh
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload
-systemctl enable --now lab-namespaces
+systemctl enable --now lab-namespaces.service
+
+# Resto del código original (lab.info, lab-status, verificación final)...
+# [Mantén TODO lo que viene después sin cambios]
+
 
 # Crear archivo de información del lab
 cat > /etc/lab.info <<EOF
