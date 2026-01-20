@@ -255,7 +255,7 @@ echo "[4/12] 👤 Configurando usuario student y SSH..."
 # Crear usuario student si no existe
 if ! id "student" &>/dev/null; then
     useradd -m -G wheel -s /bin/bash student
-    echo "student:Student123!" | chpasswd
+    echo "student:redhat" | chpasswd
 fi
 
 # Configurar sudo sin password
