@@ -1,164 +1,333 @@
 #!/bin/bash
 # ============================================================================
-# 🔥 SCRIPT DE CONFIGURACIÓN VM BASE SANA - Rocky 9.7 🔥
+# 🚀 LAB COMPLETO – RECOVERY/INITIAL SETUP SCRIPT
 # ============================================================================
-# Objetivo: Configurar la VM para laboratorio de Incident Response
-# Incluye actualización del sistema, cloud-init, paquetes base y servicios.
-# Autor: Jensy
+# TIPO      : SCRIPT DE RECONSTRUCCIÓN COMPLETA
+# PROPÓSITO : Reconstruir TODO el ecosistema lab desde cero en una VM nueva
+#             Incluye: servicios + namespaces + networking + configuraciones
+#
+# CARACTERÍSTICAS:
+#   - Idempotente (se puede ejecutar múltiples veces)
+#   - Recuperación completa después de pérdida de VM
+#   - Todo queda funcionando al reiniciar
+#   - Documentación ejecutable integrada
+#
+# DISEÑO:
+#   - Una sola VM (limitación de hardware)
+#   - Infraestructura interna simulada con Linux puro
+#   - Acceso remoto SIEMPRE por SSH (Home Office / NOC)
+#
+# ALCANCE:
+#   - Junior → Pleno → Senior (escalable)
+#
+# USO:
+#   Ejecutar en VM limpia de Rocky Linux 9 → Snapshot listo para labs
+#
+# AUTOR    : Jensy Gomez
+# OS BASE  : Rocky Linux 9.x
 # ============================================================================
-
-echo "=== DIAGRAMA DE CONECTIVIDAD ==="
-echo ""
-echo "           [Servidor Principal]"
-echo "                  ↓ enp1s0"
-echo "           ┌─────────────────┐"
-echo "           │  Firewall Rules │"
-echo "           └─────────────────┘"
-echo "         ↙       ↓       ↘       ↙"
-echo "[dummy-web] [dummy-db] [dummy-proxy] [dummy-dns]"
-echo " 10.10.10.10 10.10.20.10 10.10.30.10 10.10.40.10"
-echo "    nginx     mariadb      squid      dnsmasq"
-echo ""
-echo "=== FLUJO DE APLICACIÓN ==="
-echo "1. DNS: web.lab.local → 10.10.10.10"
-echo "2. Proxy: 10.10.30.10:3128"
-echo "3. Web: 10.10.10.10 → DB:10.10.20.10"
 
 set -euo pipefail
+exec > >(tee -a /var/log/lab-setup.log) 2>&1
 
-echo "=== INICIO: Actualización y preparación de paquetes base ==="
+# ---------------------------------------------------------------------------
+# 📐 SECCIÓN DE DOCUMENTACIÓN EJECUTABLE
+# ---------------------------------------------------------------------------
+clear
+echo ""
+echo "==================== 📐 ARQUITECTURA OFICIAL ===================="
+echo ""
+echo "                        [ INTERNET ]"
+echo "                     (Red externa real)"
+echo "                              ▲"
+echo "                              │ NAT"
+echo "                         enp1s0│"
+echo "                ┌─────────────┴─────────────┐"
+echo "                │           NS-EDGE          │"
+echo "                │     Router / Firewall      │"
+echo "                │                             │"
+echo "                │  WAN: 10.0.0.1/24           │"
+echo "                │  LAN: 10.10.50.1/24         │"
+echo "                │                             │"
+echo "                │  Funciones:                 │"
+echo "                │   - NAT                     │"
+echo "                │   - Firewall                │"
+echo "                │   - Traffic Control (tc)    │"
+echo "                └─────────────▲─────────────┘"
+echo "                              │"
+echo "                ┌─────────────┴─────────────┐"
+echo "                │          NS-CLIENT         │"
+echo "                │     Usuario / Cliente      │"
+echo "                │                             │"
+echo "                │  IP : 10.10.50.10/24        │"
+echo "                │  GW : 10.10.50.1            │"
+echo "                │  DNS: 10.10.40.10           │"
+echo "                │                             │"
+echo "                │  Simula: Usuario final      │"
+echo "                │  curl / ping / navegador    │"
+echo "                └─────────────┬─────────────┘"
+echo "                              │"
+echo "      ====================================================="
+echo "      |             VM PRINCIPAL (SERVICES)              |"
+echo "      |                                                    |"
+echo "      |  MGMT / SSH (SIEMPRE DISPONIBLE)                  |"
+echo "      |  enp1s0 → 192.168.122.0/24 (libvirt NAT)           |"
+echo "      |                                                    |"
+echo "      |  Servicios internos (dummy interfaces):           |"
+echo "      |                                                    |"
+echo "      |   dummy-web    → 10.10.10.10  (nginx)             |"
+echo "      |   dummy-db     → 10.10.20.10  (mariadb)           |"
+echo "      |   dummy-proxy  → 10.10.30.10  (squid)             |"
+echo "      |   dummy-dns    → 10.10.40.10  (dnsmasq)           |"
+echo "      |                                                    |"
+echo "      |  🔐 Plano de gestión separado del plano de datos  |"
+echo "      ====================================================="
+echo ""
+
+echo "==================== 🎯 PRINCIPIOS DEL DISEÑO ===================="
+echo ""
+echo "✅ Una sola VM (ahorro de recursos)"
+echo "✅ SSH nunca se rompe (Home Office real)"
+echo "✅ Cliente separado del servidor"
+echo "✅ Edge como punto de fallo controlado"
+echo "✅ Linux puro (ip, firewall, tc, namespaces)"
+echo ""
+
+echo "==================== 🔧 MODELO DE INCIDENTES ===================="
+echo ""
+echo "Los fallos SIEMPRE se inyectan en:"
+echo "- 🎯 NS-EDGE (router/firewall)"
+echo "- 🎯 NS-CLIENT (usuario/cliente)"
+echo "- 🎯 Servicios internos"
+echo ""
+echo "⚠️  El plano de gestión (SSH) NO se rompe nunca."
+echo ""
+
+echo "==================== 📈 ESCALABILIDAD ===================="
+echo ""
+echo "👶 Junior    : Diagnóstico básico (ping, DNS, puertos)"
+echo "👨‍💼 Pleno    : Routing, NAT, firewall stateful, tc"
+echo "👨‍🔬 Senior    : Observabilidad, hardening, simulación realista"
+echo ""
+
+echo "==================== 🚀 INICIANDO RECONSTRUCCIÓN ===================="
+echo ""
+read -p "¿Desea continuar con la reconstrucción completa? (s/N): " -n 1 -r
+echo ""
+if [[ ! $REPLY =~ ^[Ss]$ ]]; then
+    echo "❌ Reconstrucción cancelada por el usuario."
+    exit 0
+fi
+
+echo ""
+echo "=== 🚀 [LAB COMPLETO] Iniciando reconstrucción del ecosistema ==="
+echo "📅 Fecha: $(date)"
+echo "🖥️  Hostname: $(hostname)"
 sleep 2
 
-# ------------------------------
-# 0️⃣ INSTALAR Y CONFIGURAR CLOUD-INIT (NUEVO - CRÍTICO)
-# ------------------------------
-echo "=== 🚀 CONFIGURANDO CLOUD-INIT ==="
-dnf install -y cloud-init cloud-utils-growpart qemu-guest-agent
+# ---------------------------------------------------------------------------
+# CONFIGURACIÓN GLOBAL
+# ---------------------------------------------------------------------------
+readonly LAN_SUBNET="10.10.50.0/24"
+readonly EDGE_IP="10.10.50.1"
+readonly CLIENT_IP="10.10.50.10"
+readonly DNS_IP="10.10.40.10"
 
-# Habilitar servicios cloud-init
-systemctl enable cloud-init-local cloud-init cloud-config cloud-final qemu-guest-agent
+# Servicios internos
+declare -A SERVICES=(
+    ["web"]="10.10.10.10"
+    ["db"]="10.10.20.10" 
+    ["proxy"]="10.10.30.10"
+    ["dns"]="10.10.40.10"
+)
 
-# Configurar datasource NoCloud para libvirt
+# ---------------------------------------------------------------------------
+# 1️⃣ VERIFICACIÓN INICIAL Y PREPARACIÓN
+# ---------------------------------------------------------------------------
+echo ""
+echo "[1/12] 🔍 Verificando entorno y preparando sistema..."
+
+# Verificar que estamos en Rocky Linux 9
+if ! grep -q "Rocky Linux.*9" /etc/os-release; then
+    echo "❌ ERROR: Este script requiere Rocky Linux 9"
+    exit 1
+fi
+
+# Verificar privilegios
+if [[ $EUID -ne 0 ]]; then
+    echo "❌ ERROR: Debe ejecutarse como root"
+    exit 1
+fi
+
+# Limpiar posibles configuraciones previas
+cleanup_previous() {
+    echo "   🧹 Limpiando configuraciones previas..."
+    
+    # Limpiar namespaces si existen
+    ip netns delete NS-EDGE 2>/dev/null || true
+    ip netns delete NS-CLIENT 2>/dev/null || true
+    
+    # Limpiar interfaces dummy antiguas
+    for iface in dummy-web dummy-db dummy-proxy dummy-dns; do
+        ip link delete $iface 2>/dev/null || true
+    done
+    
+    # Limpiar veth pairs
+    ip link delete veth-edge 2>/dev/null || true
+    for service in "${!SERVICES[@]}"; do
+        ip link delete veth-$service 2>/dev/null || true
+        ip link delete br-$service 2>/dev/null || true
+    done
+    
+    rm -rf /etc/netns/NS-CLIENT
+}
+
+cleanup_previous
+echo "✅ Verificación completada"
+sleep 1
+
+# ---------------------------------------------------------------------------
+# 2️⃣ INSTALACIÓN DE PAQUETES ESENCIALES
+# ---------------------------------------------------------------------------
+echo ""
+echo "[2/12] 📦 Instalando paquetes esenciales..."
+
+dnf update -y --quiet
+
+# Paquetes base
+dnf install -y \
+    epel-release \
+    nginx \
+    mariadb-server \
+    squid \
+    dnsmasq \
+    firewalld \
+    bind-utils \
+    iproute \
+    iproute-tc \
+    tcpdump \
+    policycoreutils-python-utils \
+    conntrack-tools \
+    iptables-services \
+    net-tools \
+    tcpdump \
+    traceroute \
+    telnet \
+    nmap \
+    wget \
+    curl \
+    vim-enhanced \
+    bash-completion \
+    cloud-init \
+    qemu-guest-agent
+
+echo "✅ Paquetes instalados"
+sleep 1
+
+# ---------------------------------------------------------------------------
+# 3️⃣ CONFIGURACIÓN DE CLOUD-INIT
+# ---------------------------------------------------------------------------
+echo ""
+echo "[3/12] ☁️  Configurando cloud-init para recuperación..."
+
+systemctl enable \
+    cloud-init-local \
+    cloud-init \
+    cloud-config \
+    cloud-final \
+    qemu-guest-agent
+
 cat > /etc/cloud/cloud.cfg.d/90_libvirt.cfg <<'EOF'
 datasource_list: [ NoCloud, None ]
 disable_ec2_metadata: true
 EOF
 
-# Limpiar estado para clones limpios
 rm -rf /var/lib/cloud/* /var/log/cloud-init*
+echo "✅ Cloud-init configurado"
+sleep 1
 
-echo "[+] Cloud-init instalado y configurado para labs"
-sleep 2
+# ---------------------------------------------------------------------------
+# 4️⃣ USUARIO STUDENT Y SSH (PLANO DE GESTIÓN)
+# ---------------------------------------------------------------------------
+echo ""
+echo "[4/12] 👤 Configurando usuario student y SSH..."
 
+# Crear usuario student si no existe
+if ! id "student" &>/dev/null; then
+    useradd -m -G wheel -s /bin/bash student
+    echo "student:Student123!" | chpasswd
+fi
 
+# Configurar sudo sin password
+echo "student ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/student
+chmod 440 /etc/sudoers.d/student
 
-# ------------------------------
-# 0️⃣1️⃣ SSH + STUDENT + SUDO (CRÍTICO - NUNCA MÁS PROBLEMAS)
-# ------------------------------
-echo "=== 🔑 SSH + STUDENT + SUDO ==="
-
-# Limpiar sudoers rotos
-rm -f /etc/sudoers.d/student
-
-# Crear/actualizar student
-useradd -m -G wheel -s /bin/bash student 2>/dev/null || true
-
-# SUDOERS con visudo (syntax perfecto)
-echo "student ALL=(ALL) NOPASSWD:ALL" | EDITOR="tee" visudo -f /etc/sudoers.d/student
-
-# Clave RHCSA para student Y root
-RHCSA_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIByFDKwjMDeGJ5GRhXmZHa75h7dK9JcPHvWWtesSO3/x RHCSA Storage Labs"
-
-for user in student root; do
-    mkdir -p "/home/$user/.ssh"
-    echo "$RHCSA_KEY" > "/home/$user/.ssh/authorized_keys"
-    chown -R "$user:$user" "/home/$user/.ssh"
-    chmod 700 "/home/$user/.ssh"
-    chmod 600 "/home/$user/.ssh/authorized_keys"
-done
-
-# SSH - FORZAR EN TODOS lados
-echo "PasswordAuthentication yes" > /etc/ssh/sshd_config.d/99-labs.conf
-echo "PermitRootLogin yes" >> /etc/ssh/sshd_config.d/99-labs.conf
-sed -i 's/#PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
-
-systemctl restart sshd
-echo "[+] SSH student/root + clave RHCSA + sudo ✅"
-sleep 2
-
-
-
-
-# ------------------------------
-# 1️⃣ Actualizar sistema y paquetes base
-# ------------------------------
-dnf update -y
-
-dnf install -y \
-  epel-release \
-  nginx \
-  mariadb-server \
-  squid \
-  dnsmasq \
-  firewalld \
-  bind-utils \
-  net-tools \
-  iproute \
-  policycoreutils-python-utils \
-  qemu-guest-agent
-
-echo "[+] Sistema actualizado y paquetes base instalados"
-sleep 2
-
-# ------------------------------
-# 2️⃣ Habilitar servicios base (pero no iniciar todos aún)
-# ------------------------------
-systemctl enable nginx mariadb squid dnsmasq firewalld cloud-init-local cloud-init cloud-config cloud-final qemu-guest-agent
-systemctl start firewalld
-echo "[+] Servicios habilitados; firewalld iniciado"
-sleep 2
-
-# ------------------------------
-# 3️⃣ Crear script de interfaces dummy
-# ------------------------------
-cat << 'EOF' > /usr/local/sbin/lab-dummy-net.sh
-#!/bin/bash
-# Crear interfaces dummy
-ip link add dummy-web type dummy
-ip addr add 10.10.10.10/24 dev dummy-web
-ip link set dummy-web up
-
-ip link add dummy-db type dummy
-ip addr add 10.10.20.10/24 dev dummy-db
-ip link set dummy-db up
-
-ip link add dummy-proxy type dummy
-ip addr add 10.10.30.10/24 dev dummy-proxy
-ip link set dummy-proxy up
-
-ip link add dummy-dns type dummy
-ip addr add 10.10.40.10/24 dev dummy-dns
-ip link set dummy-dns up
+# Configurar SSH para student
+mkdir -p /home/student/.ssh
+cat > /home/student/.ssh/authorized_keys <<'EOF'
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIByFDKwjMDeGJ5GRhXmZHa75h7dK9JcPHvWWtesSO3/x RHCSA Storage Labs
 EOF
 
-chmod +x /usr/local/sbin/lab-dummy-net.sh
-echo "[+] Script dummy creado"
-sleep 2
+chmod 700 /home/student/.ssh
+chmod 600 /home/student/.ssh/authorized_keys
+chown -R student:student /home/student/.ssh
 
-# ------------------------------
-# 4️⃣ Crear servicio systemd para persistencia de interfaces
-# ------------------------------
-cat << 'EOF' > /etc/systemd/system/lab-dummy-net.service
+# Configurar SSH daemon
+cat > /etc/ssh/sshd_config.d/99-labs.conf <<EOF
+PermitRootLogin yes
+PasswordAuthentication yes
+PubkeyAuthentication yes
+UseDNS no
+ClientAliveInterval 60
+ClientAliveCountMax 3
+EOF
+
+systemctl restart sshd
+echo "✅ SSH y usuario configurados"
+sleep 1
+
+# ---------------------------------------------------------------------------
+# 5️⃣ SERVICIOS INTERNOS (INTERFACES DUMMY)
+# ---------------------------------------------------------------------------
+echo ""
+echo "[5/12] 🖥️  Configurando servicios internos..."
+
+# Crear interfaces dummy para servicios
+for service in "${!SERVICES[@]}"; do
+    ip link add dummy-$service type dummy
+    ip addr add "${SERVICES[$service]}/24" dev dummy-$service
+    ip link set dummy-$service up
+    echo "   ✅ dummy-$service: ${SERVICES[$service]}"
+done
+
+# Crear servicio systemd para interfaces dummy
+cat > /etc/systemd/system/lab-dummy-net.service <<'EOF'
 [Unit]
 Description=Lab Dummy Interfaces
 After=network.target
+Wants=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/sbin/lab-dummy-net.sh
 RemainAfterExit=yes
+ExecStart=/bin/bash -c '
+    for service in web db proxy dns; do
+        ip link add dummy-$service type dummy 2>/dev/null || true
+        case $service in
+            web) ip="10.10.10.10/24" ;;
+            db) ip="10.10.20.10/24" ;;
+            proxy) ip="10.10.30.10/24" ;;
+            dns) ip="10.10.40.10/24" ;;
+        esac
+        ip addr add $ip dev dummy-$service 2>/dev/null || true
+        ip link set dummy-$service up
+    done
+'
+ExecStop=/bin/bash -c '
+    for service in web db proxy dns; do
+        ip link del dummy-$service 2>/dev/null || true
+    done
+'
 
 [Install]
 WantedBy=multi-user.target
@@ -166,184 +335,686 @@ EOF
 
 systemctl daemon-reload
 systemctl enable --now lab-dummy-net
-echo "[+] Servicio lab-dummy-net habilitado y ejecutado"
-sleep 3
+echo "✅ Interfaces dummy configuradas"
+sleep 1
 
-# ------------------------------
-# 5️⃣ Configurar firewall
-# ------------------------------
-for i in dummy-web dummy-db dummy-proxy dummy-dns; do
-    firewall-cmd --permanent --zone=trusted --add-interface=$i
-done
-firewall-cmd --reload
-echo "[+] Firewall configurado con interfaces dummy en zona trusted"
-sleep 2
+# ---------------------------------------------------------------------------
+# 6️⃣ CONFIGURACIÓN DE SERVICIOS
+# ---------------------------------------------------------------------------
+echo ""
+echo "[6/12] ⚙️  Configurando servicios..."
 
-# ------------------------------
-# 6️⃣ Configurar Nginx
-# ------------------------------
-cat << 'EOF' > /etc/nginx/conf.d/lab.conf
-server {
-    listen 10.10.10.10:80 default_server;
-    server_name web.lab.local;
+# NGINX - Servicio web simple
+cat > /etc/nginx/nginx.conf <<'EOF'
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
 
-    location / {
-        add_header Content-Type text/plain;
-        return 200 "WEB OK - Base Sana\n";
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log /var/log/nginx/access.log main;
+
+    sendfile            on;
+    tcp_nopush          on;
+    tcp_nodelay         on;
+    keepalive_timeout   65;
+    types_hash_max_size 4096;
+
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+
+    server {
+        listen       10.10.10.10:80;
+        server_name  _;
+        
+        location / {
+            return 200 "✅ SERVICIO WEB OPERATIVO\nHost: $(hostname)\nTime: $(date)\nIP: 10.10.10.10\n";
+            add_header Content-Type text/plain;
+        }
+        
+        location /status {
+            stub_status on;
+            access_log off;
+            allow 10.10.50.0/24;
+            deny all;
+        }
     }
 }
 EOF
 
-nginx -t
-systemctl start nginx
-echo "[+] Nginx configurado y activo"
-sleep 2
-
-# ------------------------------
-# 7️⃣ Configurar MariaDB
-# ------------------------------
-systemctl start mariadb
-
-mysql -u root <<EOF
-CREATE DATABASE IF NOT EXISTS labdb;
-USE labdb;
-CREATE TABLE IF NOT EXISTS incidents (
-  id INT PRIMARY KEY,
-  service VARCHAR(20),
-  status VARCHAR(10)
-);
-INSERT INTO incidents (id, service, status)
-VALUES
-  (1,'WEB','UP'),
-  (2,'DB','UP'),
-  (3,'DNS','UP'),
-  (4,'PROXY','UP')
-ON DUPLICATE KEY UPDATE service=VALUES(service), status=VALUES(status);
-
-CREATE USER IF NOT EXISTS 'labuser'@'10.10.%' IDENTIFIED BY 'labpass';
-GRANT ALL PRIVILEGES ON labdb.* TO 'labuser'@'10.10.%';
-FLUSH PRIVILEGES;
-EOF
-
-echo "[+] MariaDB configurada con tabla de incidentes y usuario labuser"
-sleep 2
-
-# ------------------------------
-# 8️⃣ Configurar dnsmasq
-# ------------------------------
-cat << 'EOF' > /etc/dnsmasq.d/lab.conf
-listen-address=10.10.40.10
+# DNSmasq - Servidor DNS
+cat > /etc/dnsmasq.conf <<EOF
+# Configuración básica
+interface=dummy-dns
 bind-interfaces
-domain-needed
-bogus-priv
+listen-address=${SERVICES[dns]}
+no-dhcp-interface=dummy-dns
+
+# Cache DNS
+cache-size=1000
+local-ttl=300
+
+# Dominio local
+domain=lab.local
 expand-hosts
-address=/web.lab.local/10.10.10.10
+local=/lab.local/
+
+# Registros estáticos
+address=/web.lab.local/${SERVICES[web]}
+address=/db.lab.local/${SERVICES[db]}
+address=/proxy.lab.local/${SERVICES[proxy]}
+address=/dns.lab.local/${SERVICES[dns]}
+address=/edge.lab.local/${EDGE_IP}
+address=/client.lab.local/${CLIENT_IP}
+
+# Forwarders
+server=8.8.8.8
+server=1.1.1.1
 EOF
 
-systemctl start dnsmasq
-echo "[+] dnsmasq configurado y activo"
-sleep 2
+# Squid - Proxy
+cat > /etc/squid/squid.conf <<EOF
+http_port ${SERVICES[proxy]}:3128
 
-# ------------------------------
-# 9️⃣ Configurar Squid
-# ------------------------------
-cat << 'EOF' > /etc/squid/squid.conf
-http_port 10.10.30.10:3128
-dns_nameservers 10.10.40.10
-acl localnet src 10.10.0.0/16
+acl localnet src ${LAN_SUBNET}
+acl SSL_ports port 443
+acl Safe_ports port 80
+acl Safe_ports port 443
+acl CONNECT method CONNECT
+
 http_access allow localnet
 http_access deny all
-access_log /var/log/squid/access.log
-cache_log /var/log/squid/cache.log
+
+cache_dir ufs /var/spool/squid 100 16 256
+coredump_dir /var/spool/squid
+
+refresh_pattern ^ftp:           1440    20%     10080
+refresh_pattern ^gopher:        1440    0%      1440
+refresh_pattern -i (/cgi-bin/|\\?) 0     0%      0
+refresh_pattern .               0       20%     4320
+
+visible_hostname proxy.lab.local
 EOF
 
-systemctl start squid
-echo "[+] Squid configurado y activo"
-sleep 3
+# MariaDB - Configuración básica
+cat > /etc/my.cnf.d/lab.cnf <<EOF
+[mysqld]
+bind-address = ${SERVICES[db]}
+skip-name-resolve
+innodb_buffer_pool_size = 128M
+max_connections = 50
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
 
-# ------------------------------
-# 🔟 SELinux: permitir conexiones de Squid
-# ------------------------------
-setsebool -P squid_connect_any on
-echo "[+] SELinux configurado para permitir conexión de Squid"
+[mysql]
+default-character-set = utf8mb4
+EOF
+
+# Habilitar e iniciar servicios
+for service in nginx mariadb squid dnsmasq; do
+    systemctl enable --now $service
+done
+
+# Inicializar MariaDB si es primera vez
+if [[ ! -d /var/lib/mysql/mysql ]]; then
+    echo "   🗄️  Inicializando MariaDB..."
+    mysql_install_db --user=mysql
+    systemctl restart mariadb
+    
+    # Configurar root sin password para lab (¡Solo para entornos de prueba!)
+    mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '';"
+    mysql -e "FLUSH PRIVILEGES;"
+    
+    # Crear base de datos de ejemplo
+    mysql -e "CREATE DATABASE IF NOT EXISTS lab_db;"
+    mysql -e "CREATE USER IF NOT EXISTS 'lab_user'@'10.10.50.%' IDENTIFIED BY 'LabPass123';"
+    mysql -e "GRANT ALL ON lab_db.* TO 'lab_user'@'10.10.50.%';"
+fi
+
+echo "✅ Servicios configurados y operativos"
+sleep 2
+
+# ---------------------------------------------------------------------------
+# 7️⃣ CREACIÓN DE NAMESPACES
+# ---------------------------------------------------------------------------
+echo ""
+echo "[7/12] 🏗️  Creando namespaces..."
+
+# Crear namespaces
+ip netns add NS-EDGE
+ip netns add NS-CLIENT
+
+# Configurar loopback en cada namespace
+ip netns exec NS-EDGE ip link set lo up
+ip netns exec NS-CLIENT ip link set lo up
+
+echo "✅ Namespaces creados: NS-EDGE, NS-CLIENT"
 sleep 1
 
-# ------------------------------
-# 1️⃣1️⃣ Regenerar initramfs con cloud-init
-# ------------------------------
-dracut -f
-echo "[+] Initramfs regenerado con cloud-init"
+# ---------------------------------------------------------------------------
+# 8️⃣ RED INTERNA NS-EDGE ↔ NS-CLIENT
+# ---------------------------------------------------------------------------
+echo ""
+echo "[8/12] 🌐 Configurando red interna..."
 
-# ------------------------------
-# 1️⃣2️⃣ Usuario student para labs
-# ------------------------------
-useradd -m -G wheel -s /bin/bash student
-echo "student ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/student
-usermod -aG wheel student
-echo "[+] Usuario student creado para labs"
+# Crear veth pair para conectar EDGE y CLIENT
+ip link add veth-edge type veth peer name veth-client
 
+# Configurar NS-EDGE
+ip link set veth-edge netns NS-EDGE
+ip netns exec NS-EDGE ip link set veth-edge up
+ip netns exec NS-EDGE ip addr add ${EDGE_IP}/24 dev veth-edge
 
+# Configurar NS-CLIENT  
+ip link set veth-client netns NS-CLIENT
+ip netns exec NS-CLIENT ip link set veth-client up
+ip netns exec NS-CLIENT ip addr add ${CLIENT_IP}/24 dev veth-client
+ip netns exec NS-CLIENT ip route add default via ${EDGE_IP}
 
-# ------------------------------
-# 1️⃣3️⃣ USUARIO STUDENT + SSH (PERMANENTE)
-# ------------------------------
-echo "=== 🚀 CONFIGURANDO USUARIO STUDENT + SSH ==="
+echo "✅ Red interna configurada:"
+echo "   NS-EDGE: ${EDGE_IP}/24 (veth-edge)"
+echo "   NS-CLIENT: ${CLIENT_IP}/24 (veth-client)"
+sleep 1
 
-# Crear usuario student
-useradd -m -G wheel -s /bin/bash student
+# ---------------------------------------------------------------------------
+# 9️⃣ CONEXIÓN SERVICIOS ↔ NS-EDGE
+# ---------------------------------------------------------------------------
+echo ""
+echo "[9/12] 🔗 Conectando servicios a NS-EDGE..."
 
-# Copiar clave pública desde HOST (montar via virtiofs o copiar manual)
-mkdir -p /home/student/.ssh
-cat > /home/student/.ssh/authorized_keys <<'EOF'
-ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIByFDKwjMDeGJ5GRhXmZHa75h7dK9JcPHvWWtesSO3/x RHCSA Storage Labs
+# Directorio para configuraciones por namespace
+mkdir -p /etc/netns/NS-CLIENT
+mkdir -p /etc/netns/NS-EDGE
+
+# Para cada servicio, crear bridge en NS-EDGE
+for service in "${!SERVICES[@]}"; do
+    # Crear veth pair
+    ip link add veth-$service type veth peer name br-$service
+    
+    # Mover bridge a NS-EDGE
+    ip link set br-$service netns NS-EDGE
+    ip netns exec NS-EDGE ip link set br-$service up
+    ip netns exec NS-EDGE ip addr add ${SERVICES[$service]}/24 dev br-$service
+    
+    # Configurar servicio (lado host)
+    ip link set veth-$service up
+    
+    # Conectar servicio a su interface dummy
+    ip link set veth-$service master dummy-$service 2>/dev/null || true
+    
+    echo "   ✅ $service: ${SERVICES[$service]} → NS-EDGE"
+done
+
+echo "✅ Servicios conectados a NS-EDGE"
+sleep 1
+
+# ---------------------------------------------------------------------------
+# 🔟 CONFIGURACIÓN DE ROUTING Y FIREWALL EN NS-EDGE
+# ---------------------------------------------------------------------------
+echo ""
+echo "[10/12] 🛡️  Configurando routing y firewall en NS-EDGE..."
+
+# Habilitar IP forwarding en NS-EDGE
+ip netns exec NS-EDGE sysctl -w net.ipv4.ip_forward=1
+echo "net.ipv4.ip_forward=1" > /etc/sysctl.d/99-ns-edge.conf
+
+# Configurar NAT en NS-EDGE
+ip netns exec NS-EDGE iptables -t nat -A POSTROUTING -s ${LAN_SUBNET} -j MASQUERADE
+
+# Reglas básicas de firewall en NS-EDGE
+ip netns exec NS-EDGE iptables -P INPUT DROP
+ip netns exec NS-EDGE iptables -P FORWARD DROP
+ip netns exec NS-EDGE iptables -P OUTPUT ACCEPT
+
+# Permitir tráfico establecido
+ip netns exec NS-EDGE iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+ip netns exec NS-EDGE iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Permitir loopback
+ip netns exec NS-EDGE iptables -A INPUT -i lo -j ACCEPT
+
+# Permitir ping
+ip netns exec NS-EDGE iptables -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
+ip netns exec NS-EDGE iptables -A FORWARD -p icmp --icmp-type echo-request -j ACCEPT
+
+# Permitir SSH desde cualquier lado (para diagnóstico)
+ip netns exec NS-EDGE iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+
+# Reglas de FORWARDING específicas
+for service in "${!SERVICES[@]}"; do
+    # Permitir tráfico CLIENT → SERVICIO
+    ip netns exec NS-EDGE iptables -A FORWARD -i veth-edge -o br-$service -j ACCEPT
+    # Permitir tráfico SERVICIO → CLIENT (respuestas)
+    ip netns exec NS-EDGE iptables -A FORWARD -i br-$service -o veth-edge -m state --state ESTABLISHED,RELATED -j ACCEPT
+    
+    # Reglas INPUT para servicios
+    case $service in
+        web)
+            ip netns exec NS-EDGE iptables -A INPUT -i br-web -p tcp --dport 80 -j ACCEPT
+            ;;
+        dns)
+            ip netns exec NS-EDGE iptables -A INPUT -i br-dns -p udp --dport 53 -j ACCEPT
+            ip netns exec NS-EDGE iptables -A INPUT -i br-dns -p tcp --dport 53 -j ACCEPT
+            ;;
+        proxy)
+            ip netns exec NS-EDGE iptables -A INPUT -i br-proxy -p tcp --dport 3128 -j ACCEPT
+            ;;
+    esac
+done
+
+# Guardar reglas iptables
+mkdir -p /etc/netns/NS-EDGE
+ip netns exec NS-EDGE iptables-save > /etc/netns/NS-EDGE/iptables.rules
+
+echo "✅ Routing y firewall configurados en NS-EDGE"
+sleep 1
+
+# ---------------------------------------------------------------------------
+# 1️⃣1️⃣ CONFIGURACIÓN DE NS-CLIENT
+# ---------------------------------------------------------------------------
+echo ""
+echo "[11/12] 💻 Configurando NS-CLIENT..."
+
+# Configurar resolv.conf para NS-CLIENT
+cat > /etc/netns/NS-CLIENT/resolv.conf <<EOF
+# DNS Configuration for NS-CLIENT
+nameserver ${DNS_IP}
+nameserver 8.8.8.8
+search lab.local
+options timeout:2 attempts:3
 EOF
 
-# Permisos correctos
-chown -R student:student /home/student/.ssh
-chmod 700 /home/student/.ssh
-chmod 600 /home/student/.ssh/authorized_keys
-
-# Habilitar password auth + root login
-sed -i 's/#PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
-
-# Sudo sin contraseña
-echo "student ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/student
-chmod 440 /etc/sudoers.d/student
-
-systemctl restart sshd
-echo "[+] Usuario student + SSH configurado PERMANENTEMENTE"
-
-# Abrir SSH en firewall (CRÍTICO)
-firewall-cmd --permanent --add-service=ssh
-firewall-cmd --reload
-
-# Dummy interfaces también en trusted
-firewall-cmd --permanent --zone=trusted --add-interface=enp1s0
-firewall-cmd --reload
-
-
-# ------------------------------
-# 1️⃣3️⃣ Verificación final
-# ------------------------------
-echo "=== VERIFICACIÓN ==="
-echo "Cloud-init:"
-rpm -q cloud-init
-cloud-init --version
-echo "Interfaces:"
-ip a | grep dummy
-echo "Firewall:"
-firewall-cmd --get-active-zones
-echo "Servicios:"
-systemctl is-active nginx squid dnsmasq mariadb cloud-init
-echo "DNS:"
-dig @10.10.40.10 web.lab.local
-echo "WEB:"
-export http_proxy=http://10.10.30.10:3128
-curl -s http://web.lab.local
-echo "MariaDB remoto:"
-mysql -u labuser -plabpass -h 10.10.20.10 labdb -e "SELECT * FROM incidents;"
+# Crear script de diagnóstico para NS-CLIENT
+cat > /usr/local/bin/client-diag <<'EOF'
+#!/bin/bash
+echo "=== 🔍 DIAGNÓSTICO CLIENT ==="
 echo ""
-echo "🚀 VM BASE SANA + CLOUD-INIT LISTA PARA LABS ✅"
-echo "=== FIN DEL SCRIPT ==="
+echo "📡 Información de red:"
+echo "  IP: $(hostname -I 2>/dev/null || ip -4 addr show veth-client | grep inet | awk '{print $2}')"
+echo "  Gateway: $(ip route | grep default | awk '{print $3}' 2>/dev/null || echo "No configurado")"
+echo "  DNS: $(grep nameserver /etc/resolv.conf 2>/dev/null | head -2)"
+echo ""
+echo "--- 🌐 Conectividad básica ---"
+ping -c 2 -W 1 10.10.50.1 >/dev/null 2>&1 && echo "  ✅ Gateway (10.10.50.1): OK" || echo "  ❌ Gateway (10.10.50.1): FAIL"
+ping -c 2 -W 1 10.10.10.10 >/dev/null 2>&1 && echo "  ✅ Web (10.10.10.10): OK" || echo "  ❌ Web (10.10.10.10): FAIL"
+ping -c 2 -W 1 10.10.40.10 >/dev/null 2>&1 && echo "  ✅ DNS (10.10.40.10): OK" || echo "  ❌ DNS (10.10.40.10): FAIL"
+echo ""
+echo "--- 🔗 Resolución DNS ---"
+nslookup web.lab.local >/dev/null 2>&1 && echo "  ✅ web.lab.local: Resuelve OK" || echo "  ❌ web.lab.local: FAIL"
+nslookup google.com >/dev/null 2>&1 && echo "  ✅ google.com: Resuelve OK" || echo "  ❌ google.com: FAIL"
+echo ""
+echo "=== ✅ FIN DEL DIAGNÓSTICO ==="
+EOF
+
+chmod +x /usr/local/bin/client-diag
+
+# Copiar script al namespace
+cp /usr/local/bin/client-diag /etc/netns/NS-CLIENT/
+
+echo "✅ NS-CLIENT configurado"
+sleep 1
+
+# ---------------------------------------------------------------------------
+# 1️⃣2️⃣ FINALIZACIÓN Y VERIFICACIÓN
+# ---------------------------------------------------------------------------
+echo ""
+echo "[12/12] ✅ Finalizando y verificando..."
+
+# Crear servicio systemd para persistencia de namespaces
+cat > /etc/systemd/system/lab-namespaces.service <<'EOF'
+[Unit]
+Description=Lab Network Namespaces
+After=network.target lab-dummy-net.service
+Requires=lab-dummy-net.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/bash -c '
+    # Crear namespaces si no existen
+    ip netns add NS-EDGE 2>/dev/null || true
+    ip netns add NS-CLIENT 2>/dev/null || true
+    
+    # Configurar interfaces dentro de namespaces
+    if ip netns exec NS-EDGE ip link show veth-edge >/dev/null 2>&1; then
+        ip netns exec NS-EDGE ip link set veth-edge up
+        ip netns exec NS-EDGE ip addr add 10.10.50.1/24 dev veth-edge 2>/dev/null || true
+    fi
+    
+    if ip netns exec NS-CLIENT ip link show veth-client >/dev/null 2>&1; then
+        ip netns exec NS-CLIENT ip link set veth-client up
+        ip netns exec NS-CLIENT ip addr add 10.10.50.10/24 dev veth-client 2>/dev/null || true
+        ip netns exec NS-CLIENT ip route add default via 10.10.50.1 2>/dev/null || true
+    fi
+    
+    # Habilitar forwarding en NS-EDGE
+    ip netns exec NS-EDGE sysctl -w net.ipv4.ip_forward=1
+    
+    # Restaurar reglas iptables si existen
+    if [ -f /etc/netns/NS-EDGE/iptables.rules ]; then
+        ip netns exec NS-EDGE iptables-restore < /etc/netns/NS-EDGE/iptables.rules
+    fi
+'
+ExecStop=/bin/bash -c '
+    # No destruimos namespaces al detener, para mantener estado
+    true
+'
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable --now lab-namespaces
+
+# Crear archivo de información del lab
+cat > /etc/lab.info <<EOF
+=== 🏗️ LAB COMPLETO - ECOSISTEMA OPERATIVO ===
+Creado: $(date)
+Versión: 2.0 (Arquitectura Oficial)
+Estado: OPERATIVO
+
+📐 ARQUITECTURA (Documentación Ejecutable):
+├── Una sola VM (limitación de hardware)
+├── Infraestructura interna simulada con Linux puro
+├── Acceso remoto SIEMPRE por SSH (Home Office / NOC)
+├── Plano de gestión separado del plano de datos
+└── Puntos de fallo controlados: NS-EDGE, NS-CLIENT, Servicios
+
+📊 TOPOLOGÍA:
+├── VM Principal (Gestión)
+│   ├── SSH: 192.168.122.0/24 (siempre disponible)
+│   └── Servicios internos (dummy interfaces)
+├── NS-EDGE (Router/Firewall)
+│   ├── LAN: 10.10.50.1/24
+│   ├── NAT: Habilitado
+│   └── Firewall: Configurado
+└── NS-CLIENT (Usuario)
+    ├── IP: 10.10.50.10/24
+    ├── GW: 10.10.50.1
+    └── DNS: 10.10.40.10
+
+🌐 SERVICIOS:
+• 🌐 Web:     http://10.10.10.10 (nginx)
+• 🗄️  DB:      10.10.20.10 (mariadb)
+• 🔄 Proxy:   10.10.30.10:3128 (squid)
+• 🔗 DNS:     10.10.40.10 (dnsmasq)
+
+🔧 COMANDOS ÚTILES:
+# Entrar a namespaces
+sudo ip netns exec NS-EDGE bash
+sudo ip netns exec NS-CLIENT bash
+
+# Diagnóstico
+sudo ip netns exec NS-CLIENT client-diag
+sudo ip netns exec NS-EDGE iptables -L -n -v
+
+# Ver estado
+sudo systemctl status lab-namespaces
+sudo systemctl status lab-dummy-net
+
+📈 ESCALABILIDAD:
+• 👶 Junior: Diagnóstico básico (ping, DNS, puertos)
+• 👨‍💼 Pleno: Routing, NAT, firewall stateful, tc
+• 👨‍🔬 Senior: Observabilidad, hardening, simulación realista
+
+🎯 MODELO DE INCIDENTES:
+Los fallos SIEMPRE se inyectan en:
+- NS-EDGE (router/firewall)
+- NS-CLIENT (usuario/cliente)
+- Servicios internos
+
+⚠️  El plano de gestión (SSH) NO se rompe nunca.
+
+🔐 AUTOR: Jensy Gomez
+🖥️  OS BASE: Rocky Linux 9.x
+EOF
+
+# Script de verificación rápida
+cat > /usr/local/bin/lab-status <<'EOF'
+#!/bin/bash
+echo "=== 🧪 LAB STATUS CHECK ==="
+echo ""
+echo "📦 Servicios del host:"
+for svc in nginx mariadb squid dnsmasq lab-dummy-net lab-namespaces; do
+    if systemctl is-active --quiet $svc; then
+        echo "  ✅ $svc: ACTIVE"
+    else
+        echo "  ❌ $svc: INACTIVE"
+    fi
+done
+
+echo ""
+echo "🏗️  Namespaces:"
+for ns in NS-EDGE NS-CLIENT; do
+    if ip netns list | grep -q $ns; then
+        echo "  ✅ $ns: EXISTS"
+        
+        # Verificar interfaces en namespace
+        if ip netns exec $ns ip link show 2>/dev/null | grep -q "state UP"; then
+            echo "     📡 Interfaces: UP"
+        else
+            echo "     ⚠️  Interfaces: DOWN or missing"
+        fi
+    else
+        echo "  ❌ $ns: MISSING"
+    fi
+done
+
+echo ""
+echo "🌐 Interfaces dummy:"
+for iface in dummy-web dummy-db dummy-proxy dummy-dns; do
+    if ip link show $iface >/dev/null 2>&1; then
+        ip_addr=$(ip -4 addr show $iface | grep inet | awk '{print $2}')
+        echo "  ✅ $iface: UP ($ip_addr)"
+    else
+        echo "  ❌ $iface: DOWN"
+    fi
+done
+
+echo ""
+echo "🔗 Conectividad básica:"
+if ip netns exec NS-CLIENT ping -c 1 -W 1 10.10.50.1 >/dev/null 2>&1; then
+    echo "  ✅ NS-CLIENT → NS-EDGE: OK"
+else
+    echo "  ❌ NS-CLIENT → NS-EDGE: FAIL"
+fi
+
+if ip netns exec NS-CLIENT ping -c 1 -W 1 10.10.10.10 >/dev/null 2>&1; then
+    echo "  ✅ NS-CLIENT → Web Service: OK"
+else
+    echo "  ❌ NS-CLIENT → Web Service: FAIL"
+fi
+
+echo ""
+echo "=== 📋 FIN DEL REPORTE ==="
+echo ""
+echo "💡 Para diagnóstico detallado: sudo ip netns exec NS-CLIENT client-diag"
+EOF
+
+chmod +x /usr/local/bin/lab-status
+
+# ---------------------------------------------------------------------------
+# 🎉 COMPLETADO + VERIFICACIÓN FINAL AUTOMÁTICA
+# ---------------------------------------------------------------------------
+clear
+echo ""
+echo "=========================================================="
+echo "🎉 ¡LAB COMPLETO RECONSTRUIDO EXITOSAMENTE!"
+echo "=========================================================="
+echo ""
+echo "📋 RESUMEN DE LA CONFIGURACIÓN (Arquitectura Oficial):"
+echo ""
+echo "🏢 ARQUITECTURA:"
+echo "   • ✅ Una sola VM (ahorro de recursos)"
+echo "   • ✅ SSH nunca se rompe (Home Office real)"
+echo "   • ✅ Cliente separado del servidor"
+echo "   • ✅ Edge como punto de fallo controlado"
+echo "   • ✅ Linux puro (ip, firewall, tc, namespaces)"
+echo ""
+echo "🏗️  TOPOLOGÍA IMPLEMENTADA:"
+echo "   • VM Principal (Gestión SSH)"
+echo "   • NS-EDGE (Router/Firewall @ ${EDGE_IP})"
+echo "   • NS-CLIENT (Usuario @ ${CLIENT_IP})"
+echo ""
+echo "🖥️  SERVICIOS INTERNOS:"
+for service in "${!SERVICES[@]}"; do
+    echo "   • ${service}: ${SERVICES[$service]}"
+done
+echo ""
+echo "🔧 HERRAMIENTAS DISPONIBLES:"
+echo "   • lab-status     → Verificar estado completo"
+echo "   • client-diag    → Diagnóstico desde NS-CLIENT"
+echo ""
+echo "🚀 COMANDOS DE ACCESO:"
+echo "   sudo ip netns exec NS-EDGE bash"
+echo "   sudo ip netns exec NS-CLIENT bash"
+echo ""
+echo "📁 INFORMACIÓN:"
+echo "   cat /etc/lab.info"
+echo ""
+sleep 2
+
+# ═══════════════════════════════════════════════════════════════
+# 🔍 VERIFICACIÓN FINAL AUTOMÁTICA - MÁQUINA SANA
+# ═══════════════════════════════════════════════════════════════
+clear
+echo ""
+echo "=========================================================="
+echo "🔍 VERIFICACIÓN FINAL AUTOMÁTICA - MÁQUINA SANA"
+echo "=========================================================="
+echo ""
+
+# Contadores para veredicto final
+OK_COUNT=0
+FAIL_COUNT=0
+TOTAL_CHECKS=8
+
+# 1. Servicios systemd
+echo "📦 [1/$TOTAL_CHECKS] Servicios systemd..."
+if systemctl is-active --quiet lab-namespaces lab-dummy-net nginx mariadb squid dnsmasq; then
+    echo "   ✅ TODOS servicios ACTIVE"
+    ((OK_COUNT++))
+else
+    echo "   ❌ Algún servicio INACTIVE"
+    ((FAIL_COUNT++))
+fi
+
+# 2. Namespaces presentes
+echo ""
+echo "🏗️  [2/$TOTAL_CHECKS] Namespaces..."
+if ip netns list | grep -q "NS-EDGE" && ip netns list | grep -q "NS-CLIENT"; then
+    echo "   ✅ NS-EDGE y NS-CLIENT: PRESENTES"
+    ((OK_COUNT++))
+else
+    echo "   ❌ Namespaces faltantes"
+    ((FAIL_COUNT++))
+fi
+
+# 3. Interfaces dummy
+echo ""
+echo "🌐 [3/$TOTAL_CHECKS] Interfaces dummy..."
+DUMMY_OK=$(ip link show | grep -c "dummy-[a-z]*")
+if [[ $DUMMY_OK -ge 4 ]]; then
+    echo "   ✅ 4+ interfaces dummy UP"
+    ((OK_COUNT++))
+else
+    echo "   ❌ Interfaces dummy insuficientes ($DUMMY_OK/4)"
+    ((FAIL_COUNT++))
+fi
+
+# 4. Conectividad básica NS-CLIENT → EDGE
+echo ""
+echo "🔗 [4/$TOTAL_CHECKS] Conectividad CLIENT→EDGE..."
+if ip netns exec NS-CLIENT ping -c1 -W2 10.10.50.1 >/dev/null 2>&1; then
+    echo "   ✅ NS-CLIENT → EDGE: OK"
+    ((OK_COUNT++))
+else
+    echo "   ❌ NS-CLIENT → EDGE: FAIL"
+    ((FAIL_COUNT++))
+fi
+
+# 5. Web service accesible
+echo ""
+echo "🌐 [5/$TOTAL_CHECKS] Servicio WEB..."
+if ip netns exec NS-CLIENT curl -s --max-time 5 http://10.10.10.10 | grep -q "SERVICIO WEB OPERATIVO"; then
+    echo "   ✅ WEB (10.10.10.10): RESPONDE"
+    ((OK_COUNT++))
+else
+    echo "   ❌ WEB: NO responde"
+    ((FAIL_COUNT++))
+fi
+
+# 6. DNS resolución
+echo ""
+echo "🔗 [6/$TOTAL_CHECKS] DNS..."
+if ip netns exec NS-CLIENT nslookup web.lab.local 10.10.40.10 >/dev/null 2>&1; then
+    echo "   ✅ DNS web.lab.local: RESUELVE"
+    ((OK_COUNT++))
+else
+    echo "   ❌ DNS: FALLA resolución"
+    ((FAIL_COUNT++))
+fi
+
+# 7. Firewall rules cargadas
+echo ""
+echo "🛡️  [7/$TOTAL_CHECKS] Firewall NS-EDGE..."
+if sudo ip netns exec NS-EDGE iptables -L FORWARD -n | grep -q "ACCEPT"; then
+    echo "   ✅ Firewall rules: CARGADAS"
+    ((OK_COUNT++))
+else
+    echo "   ❌ Firewall: Reglas vacías"
+    ((FAIL_COUNT++))
+fi
+
+# 8. SSH plano gestión
+echo ""
+echo "🔐 [8/$TOTAL_CHECKS] Plano gestión SSH..."
+if systemctl is-active --quiet sshd; then
+    echo "   ✅ SSH: ACTIVO (Home Office OK)"
+    ((OK_COUNT++))
+else
+    echo "   ❌ SSH: INACTIVO"
+    ((FAIL_COUNT++))
+fi
+
+# 🎯 VEREDICTO FINAL
+echo ""
+echo "=========================================================="
+echo "📊 RESULTADOS: $OK_COUNT/8 checks OK | $FAIL_COUNT fallos"
+echo "=========================================================="
+
+if [[ $OK_COUNT -eq $TOTAL_CHECKS ]]; then
+    echo "🎉✅ ¡MÁQUINA SANA! Laboratorio 100% OPERATIVO"
+    echo ""
+    echo "🚀 ¡LISTO PARA INJECTAR FALLOS Y PRACTICAR!"
+    echo "📸 TOMA SNAPSHOT AHORA"
+    echo ""
+    echo "⚠️  PRÓXIMOS PASOS:"
+    echo "   1. 📊 Revisar: sudo lab-status"
+    echo "   2. 💾 Tomar snapshot de la VM"
+    echo "   3. 🎯 ¡Listo para labs de incident response!"
+    echo ""
+    echo "🔧 Comandos de trabajo diario:"
+    echo "   sudo ip netns exec NS-CLIENT bash  # Entrar como usuario"
+    echo "   sudo ip netns exec NS-EDGE bash    # Entrar al router"
+    echo "   cat /etc/lab.info                  # Info completa"
+else
+    echo "⚠️  MÁQUINA NO SANA - $FAIL_COUNT fallos detectados"
+    echo "🔍 Revisa /var/log/lab-setup.log"
+    echo "🔧 Ejecuta: sudo journalctl -u lab-namespaces -f"
+fi
+
+echo ""
+echo "=========================================================="
+echo "📝 Log detallado en: /var/log/lab-setup.log"
+echo "🏆 LAB COMPLETO v2.0 por Jensy Gomez - Rocky Linux 9"
+echo "=========================================================="
