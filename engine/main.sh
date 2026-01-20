@@ -152,9 +152,8 @@ update_lab_uses() {
     echo "✅ Updated uses for $TARGET_ID → $NEW_USES" >&2
 }
 
-
 #==============================================================================
-# GESTIÓN VM POST-CREACIÓN (SIMPLIFICADA)
+# GESTIÓN VM POST-CREACIÓN (DEFINITIVA)
 #==============================================================================
 manage_single_vm() {
     local VM_NAME="$1"
@@ -163,7 +162,7 @@ manage_single_vm() {
         printf "\033c"
         STATE=$(sudo virsh domstate "$VM_NAME" 2>/dev/null || echo "unknown")
         
-        # 🔥 COMANDO DEFINITIVO QUE FUNCIONA
+        # 🔥 COMANDO DEFINITIVO - IP DINÁMICA SIEMPRE
         IP=$(virsh net-dhcp-leases default | grep "$VM_NAME" | \
             awk '{for(i=1;i<=NF;i++) if($i~/192\.168\.122\./) {print substr($i,1,index($i,"/")-1); break}}' || echo "no-ip")
 
@@ -173,11 +172,11 @@ manage_single_vm() {
         echo " Estado: $STATE"
         echo "🔥 IP    : $IP"
         echo "=============================================="
-        echo "1) 🔗 SSH student@$IP"
-        echo "2) 🖥️  Console directo"
-        echo "3) 🔄 Reiniciar"
-        echo "4) ⏹️  Parar"
-        echo "5) 🗑️  BORRAR TODO"
+        echo "1) 🔗 SSH student@$IP (test ping)"
+        echo "2) 🖥️  Console directo (root)"
+        echo "3) 🔄 Reiniciar VM"
+        echo "4) ⏹️  Parar VM"
+        echo "5) 🗑️  BORRAR VM COMPLETA"
         echo "0) ← Menú principal"
         echo "=============================================="
         read -rp "➤ " opt
@@ -185,32 +184,47 @@ manage_single_vm() {
         case "$opt" in
             1)
                 if [[ "$IP" != "no-ip" ]]; then
-                    echo "🚀 Conectando SSH student@$IP..."
-                    ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no student@"$IP"
+                    echo "🔍 Testeando conectividad $IP..."
+                    if ping -c 2 "$IP" >/dev/null 2>&1; then
+                        echo "✅ Ping OK → Probando SSH..."
+                        if ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no \
+                            -o BatchMode=no student@"$IP" 2>/dev/null; then
+                            echo "✅ SSH exitoso!"
+                        else
+                            echo "❌ SSH falló → Firewall bloquea puerto 22"
+                            echo "💡 Opción 2 → Console → 'firewall-cmd --add-service=ssh --permanent'"
+                        fi
+                    else
+                        echo "❌ Sin conectividad de red"
+                    fi
                 else
-                    echo "❌ Sin IP detectada"
+                    echo "❌ IP no detectada"
                 fi
-                echo "✅ Presiona Enter..."
+                echo ""
+                echo "✅ Presiona Enter para continuar..."
                 read -r
                 ;;
             2)
-                echo "🖥️  Console directo (Ctrl+] salir)..."
+                echo "🖥️  Console directo (Ctrl+] para salir)..."
                 sudo virsh console "$VM_NAME"
+                echo "✅ Console cerrada"
                 read -r
                 ;;
             3)
-                echo "🔄 Reiniciando..."
+                echo "🔄 Reiniciando VM..."
                 sudo virsh reboot "$VM_NAME" || sudo virsh reset "$VM_NAME"
                 sleep 5
                 ;;
             4)
-                echo "⏹️  Parando..."
+                echo "⏹️  Parando VM..."
                 sudo virsh shutdown "$VM_NAME" || sudo virsh destroy "$VM_NAME"
                 sleep 3
                 ;;
             5)
-                echo "🗑️  BORRAR VM COMPLETA..."
+                echo "🗑️  ELIMINANDO VM $VM_NAME + TODOS ARCHIVOS..."
                 cleanup_vm "$VM_NAME"
+                echo "✅ VM eliminada completamente"
+                sleep 2
                 return 0
                 ;;
             0)
@@ -223,6 +237,7 @@ manage_single_vm() {
         esac
     done
 }
+
 
 
 #==============================================================================

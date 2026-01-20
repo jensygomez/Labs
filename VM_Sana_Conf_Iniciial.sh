@@ -315,6 +315,13 @@ chmod 440 /etc/sudoers.d/student
 systemctl restart sshd
 echo "[+] Usuario student + SSH configurado PERMANENTEMENTE"
 
+# Abrir SSH en firewall (CRÍTICO)
+firewall-cmd --permanent --add-service=ssh
+firewall-cmd --reload
+
+# Dummy interfaces también en trusted
+firewall-cmd --permanent --zone=trusted --add-interface=enp1s0
+firewall-cmd --reload
 
 
 # ------------------------------
