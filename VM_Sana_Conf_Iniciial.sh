@@ -309,34 +309,54 @@ sleep 1
 echo ""
 echo "[5/12] 🖥️  Configurando servicios internos..."
 
+# PRIMERO: Eliminar todas las interfaces dummy existentes
+for iface in dummy-web dummy-db dummy-proxy dummy-dns; do
+    ip link delete $iface 2>/dev/null && echo "   🧹 Eliminada $iface anterior" || true
+done
+
 # Crear interfaces dummy directamente (más simple)
 for service in "${!SERVICES[@]}"; do
-    # Eliminar si existe
-    ip link delete dummy-$service 2>/dev/null || true
+    echo -n "   Configurando dummy-$service... "
     
-    # Crear nueva
-    ip link add dummy-$service type dummy
+    # Crear nueva interfaz dummy
+    if ! ip link add dummy-$service type dummy 2>/dev/null; then
+        echo "ERROR: No se pudo crear"
+        continue
+    fi
     
     # Asignar IP según servicio
     case $service in
-        web) ip addr add "10.10.10.10/24" dev dummy-$service ;;
-        db) ip addr add "10.10.20.10/24" dev dummy-$service ;;
-        proxy) ip addr add "10.10.30.10/24" dev dummy-$service ;;
-        dns) ip addr add "10.10.40.10/24" dev dummy-$service ;;  # ¡CORREGIDO!
+        web) ip="10.10.10.10/24" ;;
+        db) ip="10.10.20.10/24" ;;
+        proxy) ip="10.10.30.10/24" ;;
+        dns) ip="10.10.40.10/24" ;;
     esac
     
+    # Asignar IP
+    if ! ip addr add $ip dev dummy-$service 2>/dev/null; then
+        echo "ERROR: No se pudo asignar IP"
+        continue
+    fi
+    
     # Activar interfaz
-    ip link set dummy-$service up
+    if ! ip link set dummy-$service up 2>/dev/null; then
+        echo "ERROR: No se pudo activar"
+        continue
+    fi
     
     # Verificar
     if ip addr show dummy-$service | grep -q "${SERVICES[$service]}"; then
-        echo "   ✅ dummy-$service: ${SERVICES[$service]}"
+        echo "✅ ${SERVICES[$service]}"
     else
-        echo "   ❌ ERROR: No se pudo configurar dummy-$service"
+        echo "❌ ERROR"
     fi
 done
 
-# Crear servicio systemd para persistencia
+echo ""
+echo "   Verificando interfaces creadas..."
+ip addr show | grep -A2 "dummy-" || echo "   ⚠️ No se ven interfaces dummy"
+
+# Crear servicio systemd SIMPLIFICADO Y CORRECTO
 cat > /etc/systemd/system/lab-dummy-net.service <<'EOF'
 [Unit]
 Description=Lab Dummy Interfaces
@@ -347,42 +367,103 @@ Wants=network.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/bin/bash -c "
-    # Crear interfaces dummy
-    ip link add dummy-web type dummy 2>/dev/null || true
-    ip link add dummy-db type dummy 2>/dev/null || true
-    ip link add dummy-proxy type dummy 2>/dev/null || true
-    ip link add dummy-dns type dummy 2>/dev/null || true
+ExecStart=/bin/bash -c '
+    echo "Creando interfaces dummy..."
+    
+    # Crear interfaces dummy si no existen
+    for iface in dummy-web dummy-db dummy-proxy dummy-dns; do
+        ip link add $iface type dummy 2>/dev/null && echo "  Creada $iface" || echo "  $iface ya existe"
+    done
     
     # Asignar IPs
-    ip addr add 10.10.10.10/24 dev dummy-web 2>/dev/null || true
-    ip addr add 10.10.20.10/24 dev dummy-db 2>/dev/null || true
-    ip addr add 10.10.30.10/24 dev dummy-proxy 2>/dev/null || true
-    ip addr add 10.10.40.10/24 dev dummy-dns 2>/dev/null || true
+    ip addr add 10.10.10.10/24 dev dummy-web 2>/dev/null && echo "  IP asignada a dummy-web" || true
+    ip addr add 10.10.20.10/24 dev dummy-db 2>/dev/null && echo "  IP asignada a dummy-db" || true
+    ip addr add 10.10.30.10/24 dev dummy-proxy 2>/dev/null && echo "  IP asignada a dummy-proxy" || true
+    ip addr add 10.10.40.10/24 dev dummy-dns 2>/dev/null && echo "  IP asignada a dummy-dns" || true
     
-    # Activar
-    ip link set dummy-web up
-    ip link set dummy-db up
-    ip link set dummy-proxy up
-    ip link set dummy-dns up
-"
-ExecStop=/bin/bash -c "
-    ip link del dummy-web 2>/dev/null || true
-    ip link del dummy-db 2>/dev/null || true
-    ip link del dummy-proxy 2>/dev/null || true
-    ip link del dummy-dns 2>/dev/null || true
-"
+    # Activar interfaces
+    for iface in dummy-web dummy-db dummy-proxy dummy-dns; do
+        ip link set $iface up 2>/dev/null && echo "  Activada $iface" || true
+    done
+    
+    echo "Interfaces dummy configuradas"
+'
+ExecStop=/bin/bash -c '
+    echo "Eliminando interfaces dummy..."
+    for iface in dummy-web dummy-db dummy-proxy dummy-dns; do
+        ip link del $iface 2>/dev/null && echo "  Eliminada $iface" || true
+    done
+'
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-systemctl daemon-reload
-systemctl enable --now lab-dummy-net.service
-sleep 2  # Dar tiempo a que las interfaces se creen
+# Crear script independiente para mayor control
+cat > /usr/local/bin/setup-dummy-interfaces.sh <<'EOF'
+#!/bin/bash
+set -e
 
+echo "Configurando interfaces dummy..."
+
+# Lista de interfaces e IPs
+declare -A interfaces=(
+    [dummy-web]="10.10.10.10/24"
+    [dummy-db]="10.10.20.10/24"
+    [dummy-proxy]="10.10.30.10/24"
+    [dummy-dns]="10.10.40.10/24"
+)
+
+# Crear y configurar cada interfaz
+for iface in "${!interfaces[@]}"; do
+    # Eliminar si existe
+    ip link delete $iface 2>/dev/null || true
+    
+    # Crear nueva
+    if ip link add $iface type dummy; then
+        echo "  ✅ Creada $iface"
+        
+        # Asignar IP
+        if ip addr add "${interfaces[$iface]}" dev $iface; then
+            echo "    Asignada IP: ${interfaces[$iface]}"
+            
+            # Activar
+            if ip link set $iface up; then
+                echo "    Activada"
+            else
+                echo "    ⚠️ No se pudo activar"
+            fi
+        else
+            echo "    ❌ Error asignando IP"
+        fi
+    else
+        echo "  ❌ No se pudo crear $iface"
+    fi
+done
+
+# Verificar
+echo ""
+echo "Estado final:"
+ip addr show | grep -A1 "dummy-"
+EOF
+
+chmod +x /usr/local/bin/setup-dummy-interfaces.sh
+
+# Recargar systemd y probar el servicio
+systemctl daemon-reload
+
+# Intentar arrancar el servicio
+if systemctl start lab-dummy-net.service; then
+    echo "✅ Servicio lab-dummy-net iniciado"
+    systemctl enable lab-dummy-net.service
+else
+    echo "⚠️  Falló al iniciar servicio, usando método directo..."
+    # Ejecutar directamente
+    /usr/local/bin/setup-dummy-interfaces.sh
+fi
+
+sleep 2
 echo "✅ Interfaces dummy configuradas"
-sleep 1
 
 
 
