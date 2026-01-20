@@ -159,70 +159,57 @@ update_lab_uses() {
 manage_single_vm() {
     local VM_NAME="$1"
     
-    echo "⏳ Esperando VM $VM_NAME..."
-    sleep 5
-
     while true; do
         printf "\033c"
         STATE=$(sudo virsh domstate "$VM_NAME" 2>/dev/null || echo "unknown")
-        IP=$(sudo virsh domifaddr "$VM_NAME" 2>/dev/null | awk 'NR>1{print $4}' | head -1 || echo "no-ip")
+        
+        # 🔥 COMANDO DEFINITIVO QUE FUNCIONA
+        IP=$(virsh net-dhcp-leases default | grep "$VM_NAME" | \
+            awk '{for(i=1;i<=NF;i++) if($i~/192\.168\.122\./) {print substr($i,1,index($i,"/")-1); break}}' || echo "no-ip")
 
         echo "=============================================="
-        echo " 🖥️  GESTIÓN VM - $VM_NAME"
+        echo " 🖥️  LAB $VM_NAME"
         echo "=============================================="
         echo " Estado: $STATE"
-        echo " IP    : $IP"
+        echo "🔥 IP    : $IP"
         echo "=============================================="
-        echo "1) 🔗 SSH/Console VM"
-        echo "2) 🔄 Reiniciar VM"
-        echo "3) ⏹️  Parar VM"
-        echo "4) 🗑️  ELIMINAR VM COMPLETA"
-        echo "0) ← Volver menú principal"
+        echo "1) 🔗 SSH student@$IP"
+        echo "2) 🖥️  Console directo"
+        echo "3) 🔄 Reiniciar"
+        echo "4) ⏹️  Parar"
+        echo "5) 🗑️  BORRAR TODO"
+        echo "0) ← Menú principal"
         echo "=============================================="
-        read -rp "Opción: " opt
+        read -rp "➤ " opt
 
         case "$opt" in
             1)
-                echo "🔗 Conexión VM - Selecciona (a/b):"
-                echo "  a) Esperar IP auto (60s)"
-                echo "  b) Console directa (100% funciona)"
-                read -rp "Opción: " method
-                
-                if [[ "$method" == "a" ]]; then
-                    echo "🔍 Buscando IP (60s max)..."
-                    for i in {1..30}; do
-                        IP=$(sudo virsh domifaddr "$VM_NAME" 2>/dev/null | awk 'NR>1{print $4; exit}' || echo "")
-                        [[ -n "$IP" ]] && break
-                        sleep 2
-                    done
-                    
-                    if [[ -n "$IP" ]]; then
-                        echo "✅ SSH student@$IP..."
-                        ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no student@"$IP"
-                    else
-                        echo "❌ Sin IP. Console..."
-                        sudo virsh console "$VM_NAME"
-                    fi
+                if [[ "$IP" != "no-ip" ]]; then
+                    echo "🚀 Conectando SSH student@$IP..."
+                    ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no student@"$IP"
                 else
-                    echo "▶️  Console directa..."
-                    sudo virsh console "$VM_NAME"
+                    echo "❌ Sin IP detectada"
                 fi
-                
                 echo "✅ Presiona Enter..."
                 read -r
                 ;;
             2)
+                echo "🖥️  Console directo (Ctrl+] salir)..."
+                sudo virsh console "$VM_NAME"
+                read -r
+                ;;
+            3)
                 echo "🔄 Reiniciando..."
                 sudo virsh reboot "$VM_NAME" || sudo virsh reset "$VM_NAME"
                 sleep 5
                 ;;
-            3)
+            4)
                 echo "⏹️  Parando..."
                 sudo virsh shutdown "$VM_NAME" || sudo virsh destroy "$VM_NAME"
                 sleep 3
                 ;;
-            4)
-                echo "🗑️  ELIMINANDO VM COMPLETA..."
+            5)
+                echo "🗑️  BORRAR VM COMPLETA..."
                 cleanup_vm "$VM_NAME"
                 return 0
                 ;;
