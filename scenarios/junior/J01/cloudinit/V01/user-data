@@ -1,8 +1,10 @@
-# scenarios/junior/J01/cloudinit/V01/user-data
+
 #cloud-config
+# scenarios/junior/J01/cloudinit/V01/user-data
 write_files:
   - path: /etc/lab.info
     permissions: '0644'
+    owner: root:root
     content: |
       LAB=J01
       LEVEL=Junior
@@ -11,17 +13,14 @@ write_files:
 
   - path: /etc/motd
     permissions: '0644'
+    owner: root:root
     content: |
       ============================================================================
-                       🎫 INCIDENT RESPONSE LAB – J01 / V01
+                       🎫 INCIDENT RESPONSE LAB J01-V01
       ============================================================================
-      🚨 INCIDENTE ACTIVADO
+      🚨 INCIDENTE: $(hostname)
       📍 student@RHCSA Labs
       ============================================================================
 
-network:
-  version: 2
-  ethernets:
-    enp1s0:
-      dhcp4: true
-
+runcmd:
+  - systemctl restart cloud-init
