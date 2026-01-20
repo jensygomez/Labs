@@ -537,37 +537,6 @@ echo "   NS-EDGE: ${EDGE_IP}/24 (veth-edge)"
 echo "   NS-CLIENT: ${CLIENT_IP}/24 (veth-client)"
 sleep 1
 
-# ---------------------------------------------------------------------------
-# 9️⃣ CONEXIÓN SERVICIOS ↔ NS-EDGE
-# ---------------------------------------------------------------------------
-echo ""
-echo "[9/12] 🔗 Conectando servicios a NS-EDGE..."
-
-# Directorio para configuraciones por namespace
-mkdir -p /etc/netns/NS-CLIENT
-mkdir -p /etc/netns/NS-EDGE
-
-# Para cada servicio, crear bridge en NS-EDGE
-for service in "${!SERVICES[@]}"; do
-    # Crear veth pair
-    ip link add veth-$service type veth peer name br-$service
-    
-    # Mover bridge a NS-EDGE
-    ip link set br-$service netns NS-EDGE
-    ip netns exec NS-EDGE ip link set br-$service up
-    ip netns exec NS-EDGE ip addr add ${SERVICES[$service]}/24 dev br-$service
-    
-    # Configurar servicio (lado host)
-    ip link set veth-$service up
-    
-    # Conectar servicio a su interface dummy
-    ip link set veth-$service master dummy-$service 2>/dev/null || true
-    
-    echo "   ✅ $service: ${SERVICES[$service]} → NS-EDGE"
-done
-
-echo "✅ Servicios conectados a NS-EDGE"
-sleep 1
 
 # ---------------------------------------------------------------------------
 # 🔟 CONFIGURACIÓN DE ROUTING Y FIREWALL EN NS-EDGE
@@ -636,6 +605,9 @@ sleep 1
 echo ""
 echo "[11/12] 💻 Configurando NS-CLIENT..."
 
+# Asegurar directorio del namespace
+mkdir -p /etc/netns/NS-CLIENT
+
 # Configurar resolv.conf para NS-CLIENT
 cat > /etc/netns/NS-CLIENT/resolv.conf <<EOF
 # DNS Configuration for NS-CLIENT
@@ -645,32 +617,6 @@ search lab.local
 options timeout:2 attempts:3
 EOF
 
-# Crear script de diagnóstico para NS-CLIENT
-cat > /usr/local/bin/client-diag <<'EOF'
-#!/bin/bash
-echo "=== 🔍 DIAGNÓSTICO CLIENT ==="
-echo ""
-echo "📡 Información de red:"
-echo "  IP: $(hostname -I 2>/dev/null || ip -4 addr show veth-client | grep inet | awk '{print $2}')"
-echo "  Gateway: $(ip route | grep default | awk '{print $3}' 2>/dev/null || echo "No configurado")"
-echo "  DNS: $(grep nameserver /etc/resolv.conf 2>/dev/null | head -2)"
-echo ""
-echo "--- 🌐 Conectividad básica ---"
-ping -c 2 -W 1 10.10.50.1 >/dev/null 2>&1 && echo "  ✅ Gateway (10.10.50.1): OK" || echo "  ❌ Gateway (10.10.50.1): FAIL"
-ping -c 2 -W 1 10.10.10.10 >/dev/null 2>&1 && echo "  ✅ Web (10.10.10.10): OK" || echo "  ❌ Web (10.10.10.10): FAIL"
-ping -c 2 -W 1 10.10.40.10 >/dev/null 2>&1 && echo "  ✅ DNS (10.10.40.10): OK" || echo "  ❌ DNS (10.10.40.10): FAIL"
-echo ""
-echo "--- 🔗 Resolución DNS ---"
-nslookup web.lab.local >/dev/null 2>&1 && echo "  ✅ web.lab.local: Resuelve OK" || echo "  ❌ web.lab.local: FAIL"
-nslookup google.com >/dev/null 2>&1 && echo "  ✅ google.com: Resuelve OK" || echo "  ❌ google.com: FAIL"
-echo ""
-echo "=== ✅ FIN DEL DIAGNÓSTICO ==="
-EOF
-
-chmod +x /usr/local/bin/client-diag
-cp /usr/local/bin/client-diag /etc/netns/NS-CLIENT/
-echo "✅ NS-CLIENT configurado"
-sleep 1
 
 # ---------------------------------------------------------------------------
 # 1️⃣2️⃣ FINALIZACIÓN Y VERIFICACIÓN
