@@ -292,15 +292,42 @@ sleep 1
 echo ""
 echo "[5/12] 🖥️  Configurando servicios internos..."
 
-# Crear interfaces dummy para servicios
+# Crear interfaces dummy para servicios (INMEDIATO)
 for service in "${!SERVICES[@]}"; do
-    ip link add dummy-$service type dummy
-    ip addr add "${SERVICES[$service]}/24" dev dummy-$service
-    ip link set dummy-$service up
+    ip link add dummy-$service type dummy 2>/dev/null || true
+    ip addr add "${SERVICES[$service]}/24" dev dummy-$service 2>/dev/null || true
+    ip link set dummy-$service up 2>/dev/null || true
     echo "   ✅ dummy-$service: ${SERVICES[$service]}"
 done
 
-# Crear servicio systemd para interfaces dummy
+# Crear scripts auxiliares para systemd (SOLUCIÓN DEFINITIVA)
+cat > /usr/local/bin/lab-dummy-start.sh <<'EOF'
+#!/bin/bash
+set -euo pipefail
+for service in web db proxy dns; do
+    ip link add dummy-$service type dummy 2>/dev/null || true
+    case $service in
+        web) ip="10.10.10.10/24" ;;
+        db) ip="10.10.20.10/24" ;;
+        proxy) ip="10.10.30.10/24" ;;
+        dns) ip="10.10.40.10/24" ;;
+    esac
+    ip addr add $ip dev dummy-$service 2>/dev/null || true
+    ip link set dummy-$service up 2>/dev/null || true
+done
+EOF
+
+cat > /usr/local/bin/lab-dummy-stop.sh <<'EOF'
+#!/bin/bash
+set -euo pipefail
+for service in web db proxy dns; do
+    ip link del dummy-$service 2>/dev/null || true
+done
+EOF
+
+chmod +x /usr/local/bin/lab-dummy-*.sh
+
+# Crear servicio systemd CORRECTO
 cat > /etc/systemd/system/lab-dummy-net.service <<'EOF'
 [Unit]
 Description=Lab Dummy Interfaces
@@ -309,34 +336,19 @@ Wants=network.target
 
 [Service]
 Type=oneshot
-RemainAfterExit=yes
-ExecStart=/bin/bash -c '
-    for service in web db proxy dns; do
-        ip link add dummy-$service type dummy 2>/dev/null || true
-        case $service in
-            web) ip="10.10.10.10/24" ;;
-            db) ip="10.10.20.10/24" ;;
-            proxy) ip="10.10.30.10/24" ;;
-            dns) ip="10.10.40.10/24" ;;
-        esac
-        ip addr add $ip dev dummy-$service 2>/dev/null || true
-        ip link set dummy-$service up
-    done
-'
-ExecStop=/bin/bash -c '
-    for service in web db proxy dns; do
-        ip link del dummy-$service 2>/dev/null || true
-    done
-'
+RemainAfterExit=true
+ExecStart=/usr/local/bin/lab-dummy-start.sh
+ExecStop=/usr/local/bin/lab-dummy-stop.sh
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload
-systemctl enable --now lab-dummy-net
+systemctl enable --now lab-dummy-net.service
 echo "✅ Interfaces dummy configuradas"
 sleep 1
+
 
 # ---------------------------------------------------------------------------
 # 6️⃣ CONFIGURACIÓN DE SERVICIOS
