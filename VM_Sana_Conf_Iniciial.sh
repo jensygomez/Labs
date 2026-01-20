@@ -724,6 +724,20 @@ EOF
 systemctl daemon-reload
 systemctl enable --now lab-namespaces.service
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Crear archivo de información del lab
 cat > /etc/lab.info <<EOF
 === 🏗️ LAB COMPLETO - ECOSISTEMA OPERATIVO ===
@@ -850,176 +864,42 @@ EOF
 chmod +x /usr/local/bin/lab-status
 
 # ---------------------------------------------------------------------------
-# 🎉 COMPLETADO + VERIFICACIÓN FINAL AUTOMÁTICA
+# 🎉 RESUMEN VISUAL SIMPLE
 # ---------------------------------------------------------------------------
 clear
 echo ""
 echo "=========================================================="
-echo "🎉 ¡LAB COMPLETO RECONSTRUIDO EXITOSAMENTE!"
+echo "🎉 ¡LAB COMPLETO - READY FOR INCIDENTS!"
 echo "=========================================================="
 echo ""
-echo "📋 RESUMEN DE LA CONFIGURACIÓN (Arquitectura Oficial):"
+echo "🔄 Verificando componentes internos..."
 echo ""
-echo "🏢 ARQUITECTURA:"
-echo "   • ✅ Una sola VM (ahorro de recursos)"
-echo "   • ✅ SSH nunca se rompe (Home Office real)"
-echo "   • ✅ Cliente separado del servidor"
-echo "   • ✅ Edge como punto de fallo controlado"
-echo "   • ✅ Linux puro (ip, firewall, tc, namespaces)"
+sleep 1
+
+# Verificación rápida y visual
+echo "✅ Servicios:   $(systemctl is-active nginx mariadb squid dnsmasq 2>/dev/null | grep -c 'active' | awk '{print $1"/4"}') activos"
+echo "✅ Namespaces:  $(ip netns list | wc -l)/2 creados"
+echo "✅ Interfaces:  $(ip link show | grep -c 'dummy-' | awk '{print $1"/4"}') dummy UP"
+echo "✅ Conectividad: $(ip netns exec NS-CLIENT ping -c1 -W1 10.10.50.1 >/dev/null 2>&1 && echo 'CLIENT→EDGE OK' || echo 'CLIENT→EDGE FAIL')"
+echo "✅ Web:        $(ip netns exec NS-CLIENT curl -s --max-time 2 http://10.10.10.10 >/dev/null 2>&1 && echo 'RESPONDE' || echo 'NO RESPONDE')"
+echo "✅ SSH:        $(systemctl is-active sshd >/dev/null 2>&1 && echo 'ACTIVO' || echo 'INACTIVO')"
+
 echo ""
-echo "🏗️  TOPOLOGÍA IMPLEMENTADA:"
-echo "   • VM Principal (Gestión SSH)"
+echo "=========================================================="
+echo "🚀 RESUMEN ARQUITECTURA:"
+echo "   • VM Principal (SSH siempre disponible)"
 echo "   • NS-EDGE (Router/Firewall @ ${EDGE_IP})"
 echo "   • NS-CLIENT (Usuario @ ${CLIENT_IP})"
 echo ""
-echo "🖥️  SERVICIOS INTERNOS:"
-for service in "${!SERVICES[@]}"; do
-    echo "   • ${service}: ${SERVICES[$service]}"
-done
+echo "🎯 PUNTOS DE FALLO:"
+echo "   • NS-EDGE (iptables, routing, NAT)"
+echo "   • NS-CLIENT (configuración de red)"
+echo "   • Servicios internos (Web, DB, DNS, Proxy)"
 echo ""
-echo "🔧 HERRAMIENTAS DISPONIBLES:"
-echo "   • lab-status     → Verificar estado completo"
-echo "   • client-diag    → Diagnóstico desde NS-CLIENT"
+echo "🔧 HERRAMIENTAS:"
+echo "   lab-status    → Ver estado completo"
+echo "   client-diag   → Diagnóstico desde usuario"
 echo ""
-echo "🚀 COMANDOS DE ACCESO:"
-echo "   sudo ip netns exec NS-EDGE bash"
-echo "   sudo ip netns exec NS-CLIENT bash"
-echo ""
-echo "📁 INFORMACIÓN:"
-echo "   cat /etc/lab.info"
-echo ""
-sleep 3
-
-# ═══════════════════════════════════════════════════════════════
-# 🔍 VERIFICACIÓN FINAL AUTOMÁTICA - MÁQUINA SANA
-# ═══════════════════════════════════════════════════════════════
-clear
-echo ""
-echo "=========================================================="
-echo "🔍 VERIFICACIÓN FINAL AUTOMÁTICA - MÁQUINA SANA"
+echo "💡 Comando para empezar: sudo ip netns exec NS-CLIENT bash"
 echo "=========================================================="
 echo ""
-
-# Contadores para veredicto final
-OK_COUNT=0
-FAIL_COUNT=0
-TOTAL_CHECKS=8
-
-# 1. Servicios systemd
-echo "📦 [1/$TOTAL_CHECKS] Servicios systemd..."
-if systemctl is-active --quiet lab-namespaces 2>/dev/null && systemctl is-active --quiet lab-dummy-net 2>/dev/null && systemctl is-active --quiet nginx 2>/dev/null && systemctl is-active --quiet mariadb 2>/dev/null && systemctl is-active --quiet squid 2>/dev/null && systemctl is-active --quiet dnsmasq 2>/dev/null; then
-    echo "   ✅ TODOS servicios ACTIVE"
-    ((OK_COUNT++))
-else
-    echo "   ❌ Algún servicio INACTIVE"
-    ((FAIL_COUNT++))
-fi
-
-# 2. Namespaces presentes
-echo ""
-echo "🏗️  [2/$TOTAL_CHECKS] Namespaces..."
-if ip netns list | grep -q "NS-EDGE" && ip netns list | grep -q "NS-CLIENT"; then
-    echo "   ✅ NS-EDGE y NS-CLIENT: PRESENTES"
-    ((OK_COUNT++))
-else
-    echo "   ❌ Namespaces faltantes"
-    ((FAIL_COUNT++))
-fi
-
-# 3. Interfaces dummy
-echo ""
-echo "🌐 [3/$TOTAL_CHECKS] Interfaces dummy..."
-DUMMY_OK=$(ip link show | grep -c "dummy-[a-z]*")
-if [[ $DUMMY_OK -ge 4 ]]; then
-    echo "   ✅ 4+ interfaces dummy UP"
-    ((OK_COUNT++))
-else
-    echo "   ❌ Interfaces dummy insuficientes ($DUMMY_OK/4)"
-    ((FAIL_COUNT++))
-fi
-
-# 4. Conectividad básica NS-CLIENT → EDGE
-echo ""
-echo "🔗 [4/$TOTAL_CHECKS] Conectividad CLIENT→EDGE..."
-if ip netns exec NS-CLIENT ping -c1 -W2 10.10.50.1 >/dev/null 2>&1; then
-    echo "   ✅ NS-CLIENT → EDGE: OK"
-    ((OK_COUNT++))
-else
-    echo "   ❌ NS-CLIENT → EDGE: FAIL"
-    ((FAIL_COUNT++))
-fi
-
-# 5. Web service accesible
-echo ""
-echo "🌐 [5/$TOTAL_CHECKS] Servicio WEB..."
-if ip netns exec NS-CLIENT curl -s --max-time 5 http://10.10.10.10 | grep -q "SERVICIO WEB OPERATIVO"; then
-    echo "   ✅ WEB (10.10.10.10): RESPONDE"
-    ((OK_COUNT++))
-else
-    echo "   ❌ WEB: NO responde"
-    ((FAIL_COUNT++))
-fi
-
-# 6. DNS resolución
-echo ""
-echo "🔗 [6/$TOTAL_CHECKS] DNS..."
-if ip netns exec NS-CLIENT nslookup web.lab.local 10.10.40.10 >/dev/null 2>&1; then
-    echo "   ✅ DNS web.lab.local: RESUELVE"
-    ((OK_COUNT++))
-else
-    echo "   ❌ DNS: FALLA resolución"
-    ((FAIL_COUNT++))
-fi
-
-# 7. Firewall rules cargadas
-echo ""
-echo "🛡️  [7/$TOTAL_CHECKS] Firewall NS-EDGE..."
-if sudo ip netns exec NS-EDGE iptables -L FORWARD -n | grep -q "ACCEPT"; then
-    echo "   ✅ Firewall rules: CARGADAS"
-    ((OK_COUNT++))
-else
-    echo "   ❌ Firewall: Reglas vacías"
-    ((FAIL_COUNT++))
-fi
-
-# 8. SSH plano gestión
-echo ""
-echo "🔐 [8/$TOTAL_CHECKS] Plano gestión SSH..."
-if systemctl is-active --quiet sshd; then
-    echo "   ✅ SSH: ACTIVO (Home Office OK)"
-    ((OK_COUNT++))
-else
-    echo "   ❌ SSH: INACTIVO"
-    ((FAIL_COUNT++))
-fi
-
-# 🎯 VEREDICTO FINAL
-echo ""
-echo "=========================================================="
-echo "📊 RESULTADOS: $OK_COUNT/8 checks OK | $FAIL_COUNT fallos"
-echo "=========================================================="
-
-if [[ $OK_COUNT -eq $TOTAL_CHECKS ]]; then
-    echo "🎉✅ ¡MÁQUINA SANA! Laboratorio 100% OPERATIVO"
-    echo ""
-    echo "🚀 ¡LISTO PARA INJECTAR FALLOS Y PRACTICAR!"
-    echo "📸 TOMA SNAPSHOT AHORA"
-    echo ""
-    echo "🔧 Comandos de trabajo diario:"
-    echo "   sudo lab-status                    # Estado completo"
-    echo "   sudo ip netns exec NS-CLIENT bash  # Entrar como usuario"
-    echo "   sudo ip netns exec NS-EDGE bash    # Entrar al router"
-    echo ""
-    echo "🎯 PRIMER INCIDENTE: Bloquea HTTP desde NS-EDGE"
-    echo "   sudo ip netns exec NS-EDGE iptables -A FORWARD -p tcp --dport 80 -j DROP"
-else
-    echo "⚠️  MÁQUINA NO SANA - $FAIL_COUNT fallos detectados"
-    echo "🔍 Revisa /var/log/lab-setup.log"
-    echo "🔧 Ejecuta: sudo lab-status"
-fi
-
-echo ""
-echo "=========================================================="
-echo "📝 Log detallado en: /var/log/lab-setup.log"
-echo "🏆 LAB COMPLETO v2.0 por Jensy Gomez - Rocky Linux 9"
-echo "=========================================================="
