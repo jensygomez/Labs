@@ -667,14 +667,17 @@ echo "=== ✅ FIN DEL DIAGNÓSTICO ==="
 EOF
 
 chmod +x /usr/local/bin/client-diag
-
-# Copiar script al namespace
 cp /usr/local/bin/client-diag /etc/netns/NS-CLIENT/
-
 echo "✅ NS-CLIENT configurado"
 sleep 1
 
-# Crear scripts auxiliares para namespaces
+# ---------------------------------------------------------------------------
+# 1️⃣2️⃣ FINALIZACIÓN Y VERIFICACIÓN
+# ---------------------------------------------------------------------------
+echo ""
+echo "[12/12] ✅ Finalizando y verificando..."
+
+# Crear scripts auxiliares para namespaces (SOLUCIÓN DEFINITIVA)
 mkdir -p /usr/local/bin/lab-ns
 cat > /usr/local/bin/lab-ns-start.sh <<'EOF'
 #!/bin/bash
@@ -685,7 +688,7 @@ ip netns add NS-CLIENT 2>/dev/null || true
 # Loopback UP
 ip netns exec NS-EDGE ip link set lo up 2>/dev/null || true
 ip netns exec NS-CLIENT ip link set lo up 2>/dev/null || true
-# Forwarding
+# Forwarding permanente
 ip netns exec NS-EDGE sysctl -w net.ipv4.ip_forward=1 2>/dev/null || true
 # Restaurar iptables si existe
 if [ -f /etc/netns/NS-EDGE/iptables.rules ]; then
@@ -721,10 +724,6 @@ EOF
 systemctl daemon-reload
 systemctl enable --now lab-namespaces.service
 
-# Resto del código original (lab.info, lab-status, verificación final)...
-# [Mantén TODO lo que viene después sin cambios]
-
-
 # Crear archivo de información del lab
 cat > /etc/lab.info <<EOF
 === 🏗️ LAB COMPLETO - ECOSISTEMA OPERATIVO ===
@@ -753,7 +752,7 @@ Estado: OPERATIVO
     └── DNS: 10.10.40.10
 
 🌐 SERVICIOS:
-• 🌐 Web:     http://10.10.10.10 (nginx)
+• 🌐 Web:     10.10.10.10 (nginx)
 • 🗄️  DB:      10.10.20.10 (mariadb)
 • 🔄 Proxy:   10.10.30.10:3128 (squid)
 • 🔗 DNS:     10.10.40.10 (dnsmasq)
@@ -807,8 +806,6 @@ echo "🏗️  Namespaces:"
 for ns in NS-EDGE NS-CLIENT; do
     if ip netns list | grep -q $ns; then
         echo "  ✅ $ns: EXISTS"
-        
-        # Verificar interfaces en namespace
         if ip netns exec $ns ip link show 2>/dev/null | grep -q "state UP"; then
             echo "     📡 Interfaces: UP"
         else
@@ -891,7 +888,7 @@ echo ""
 echo "📁 INFORMACIÓN:"
 echo "   cat /etc/lab.info"
 echo ""
-sleep 2
+sleep 3
 
 # ═══════════════════════════════════════════════════════════════
 # 🔍 VERIFICACIÓN FINAL AUTOMÁTICA - MÁQUINA SANA
@@ -910,7 +907,7 @@ TOTAL_CHECKS=8
 
 # 1. Servicios systemd
 echo "📦 [1/$TOTAL_CHECKS] Servicios systemd..."
-if systemctl is-active --quiet lab-namespaces lab-dummy-net nginx mariadb squid dnsmasq; then
+if systemctl is-active --quiet lab-namespaces 2>/dev/null && systemctl is-active --quiet lab-dummy-net 2>/dev/null && systemctl is-active --quiet nginx 2>/dev/null && systemctl is-active --quiet mariadb 2>/dev/null && systemctl is-active --quiet squid 2>/dev/null && systemctl is-active --quiet dnsmasq 2>/dev/null; then
     echo "   ✅ TODOS servicios ACTIVE"
     ((OK_COUNT++))
 else
@@ -1008,19 +1005,17 @@ if [[ $OK_COUNT -eq $TOTAL_CHECKS ]]; then
     echo "🚀 ¡LISTO PARA INJECTAR FALLOS Y PRACTICAR!"
     echo "📸 TOMA SNAPSHOT AHORA"
     echo ""
-    echo "⚠️  PRÓXIMOS PASOS:"
-    echo "   1. 📊 Revisar: sudo lab-status"
-    echo "   2. 💾 Tomar snapshot de la VM"
-    echo "   3. 🎯 ¡Listo para labs de incident response!"
-    echo ""
     echo "🔧 Comandos de trabajo diario:"
+    echo "   sudo lab-status                    # Estado completo"
     echo "   sudo ip netns exec NS-CLIENT bash  # Entrar como usuario"
     echo "   sudo ip netns exec NS-EDGE bash    # Entrar al router"
-    echo "   cat /etc/lab.info                  # Info completa"
+    echo ""
+    echo "🎯 PRIMER INCIDENTE: Bloquea HTTP desde NS-EDGE"
+    echo "   sudo ip netns exec NS-EDGE iptables -A FORWARD -p tcp --dport 80 -j DROP"
 else
     echo "⚠️  MÁQUINA NO SANA - $FAIL_COUNT fallos detectados"
     echo "🔍 Revisa /var/log/lab-setup.log"
-    echo "🔧 Ejecuta: sudo journalctl -u lab-namespaces -f"
+    echo "🔧 Ejecuta: sudo lab-status"
 fi
 
 echo ""
