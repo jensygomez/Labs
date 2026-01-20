@@ -572,58 +572,58 @@ sleep 1
 # ---------------------------------------------------------------------------
 # 🔟 CONFIGURACIÓN DE ROUTING Y FIREWALL EN NS-EDGE
 # ---------------------------------------------------------------------------
+
 echo ""
 echo "[10/12] 🛡️  Configurando routing y firewall en NS-EDGE..."
 
-# Habilitar IP forwarding en NS-EDGE
+# Habilitar forwarding
 ip netns exec NS-EDGE sysctl -w net.ipv4.ip_forward=1
-echo "net.ipv4.ip_forward=1" > /etc/sysctl.d/99-ns-edge.conf
 
-# Configurar NAT en NS-EDGE
-ip netns exec NS-EDGE iptables -t nat -A POSTROUTING -s ${LAN_SUBNET} -j MASQUERADE
+# Limpiar reglas previas
+ip netns exec NS-EDGE iptables -F
+ip netns exec NS-EDGE iptables -t nat -F
 
-# Reglas básicas de firewall en NS-EDGE
+# Políticas por defecto
 ip netns exec NS-EDGE iptables -P INPUT DROP
 ip netns exec NS-EDGE iptables -P FORWARD DROP
 ip netns exec NS-EDGE iptables -P OUTPUT ACCEPT
 
-# Permitir tráfico establecido
-ip netns exec NS-EDGE iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-ip netns exec NS-EDGE iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
-
-# Permitir loopback
+# Loopback
 ip netns exec NS-EDGE iptables -A INPUT -i lo -j ACCEPT
 
-# Permitir ping
-ip netns exec NS-EDGE iptables -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
-ip netns exec NS-EDGE iptables -A FORWARD -p icmp --icmp-type echo-request -j ACCEPT
+# Conexiones establecidas
+ip netns exec NS-EDGE iptables -A INPUT   -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+ip netns exec NS-EDGE iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
-# Permitir SSH desde cualquier lado (para diagnóstico)
+# NAT para red cliente
+ip netns exec NS-EDGE iptables -t nat -A POSTROUTING -s ${LAN_SUBNET} -j MASQUERADE
+
+# ICMP (diagnóstico)
+ip netns exec NS-EDGE iptables -A INPUT   -p icmp -j ACCEPT
+ip netns exec NS-EDGE iptables -A FORWARD -p icmp -j ACCEPT
+
+# SSH al EDGE
 ip netns exec NS-EDGE iptables -A INPUT -p tcp --dport 22 -j ACCEPT
 
-# Reglas de FORWARDING específicas
-for service in "${!SERVICES[@]}"; do
-    # Permitir tráfico CLIENT → SERVICIO
-    ip netns exec NS-EDGE iptables -A FORWARD -i veth-edge -o br-$service -j ACCEPT
-    # Permitir tráfico SERVICIO → CLIENT (respuestas)
-    ip netns exec NS-EDGE iptables -A FORWARD -i br-$service -o veth-edge -m state --state ESTABLISHED,RELATED -j ACCEPT
-    
-    # Reglas INPUT para servicios
-    case $service in
-        web)
-            ip netns exec NS-EDGE iptables -A INPUT -i br-web -p tcp --dport 80 -j ACCEPT
-            ;;
-        dns)
-            ip netns exec NS-EDGE iptables -A INPUT -i br-dns -p udp --dport 53 -j ACCEPT
-            ip netns exec NS-EDGE iptables -A INPUT -i br-dns -p tcp --dport 53 -j ACCEPT
-            ;;
-        proxy)
-            ip netns exec NS-EDGE iptables -A INPUT -i br-proxy -p tcp --dport 3128 -j ACCEPT
-            ;;
-    esac
-done
+# -----------------------------
+# FORWARD: CLIENT → SERVICIOS
+# -----------------------------
+ip netns exec NS-EDGE iptables -A FORWARD -i veth-edge -o dummy-web   -p tcp --dport 80   -j ACCEPT
+ip netns exec NS-EDGE iptables -A FORWARD -i veth-edge -o dummy-dns   -p udp --dport 53   -j ACCEPT
+ip netns exec NS-EDGE iptables -A FORWARD -i veth-edge -o dummy-dns   -p tcp --dport 53   -j ACCEPT
+ip netns exec NS-EDGE iptables -A FORWARD -i veth-edge -o dummy-proxy -p tcp --dport 3128 -j ACCEPT
+ip netns exec NS-EDGE iptables -A FORWARD -i veth-edge -o dummy-db    -p tcp --dport 3306 -j ACCEPT
 
-# Guardar reglas iptables
+# -----------------------------
+# INPUT: EDGE → SERVICIOS
+# -----------------------------
+ip netns exec NS-EDGE iptables -A INPUT -i dummy-web   -p tcp --dport 80   -j ACCEPT
+ip netns exec NS-EDGE iptables -A INPUT -i dummy-dns   -p udp --dport 53   -j ACCEPT
+ip netns exec NS-EDGE iptables -A INPUT -i dummy-dns   -p tcp --dport 53   -j ACCEPT
+ip netns exec NS-EDGE iptables -A INPUT -i dummy-proxy -p tcp --dport 3128 -j ACCEPT
+ip netns exec NS-EDGE iptables -A INPUT -i dummy-db    -p tcp --dport 3306 -j ACCEPT
+
+# Guardar reglas
 mkdir -p /etc/netns/NS-EDGE
 ip netns exec NS-EDGE iptables-save > /etc/netns/NS-EDGE/iptables.rules
 
