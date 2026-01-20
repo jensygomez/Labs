@@ -304,6 +304,7 @@ systemctl restart sshd
 echo "✅ SSH y usuario configurados"
 sleep 1
 
+
 # ---------------------------------------------------------------------------
 # 5️⃣ SERVICIOS INTERNOS (INTERFACES DUMMY) - VERSIÓN SIMPLIFICADA
 # ---------------------------------------------------------------------------
@@ -323,7 +324,7 @@ for service in "${!SERVICES[@]}"; do
         web) ip addr add "10.10.10.10/24" dev dummy-$service ;;
         db) ip addr add "10.10.20.10/24" dev dummy-$service ;;
         proxy) ip addr add "10.10.30.10/24" dev dummy-$service ;;
-        dns) ip addr add "10.10.40.10/24" dev dummy-$ns ;;
+        dns) ip addr add "10.10.40.10/24" dev dummy-$service ;;  # ¡CORREGIDO!
     esac
     
     # Activar interfaz
@@ -384,6 +385,8 @@ sleep 2  # Dar tiempo a que las interfaces se creen
 
 echo "✅ Interfaces dummy configuradas"
 sleep 1
+
+
 
 # ---------------------------------------------------------------------------
 # 6️⃣ CONFIGURACIÓN DE SERVICIOS - CORREGIDA
