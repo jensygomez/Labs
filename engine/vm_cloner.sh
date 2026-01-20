@@ -48,4 +48,5 @@ virt-install \
   --noautoconsole
 
 
+
 echo "✅ Laboratorio '$VM_NAME' creado correctamente"
