@@ -8,6 +8,14 @@
 #   - Los servicios Nginx y Dnsmasq están operando dentro de sus Namespaces.
 #   - La persistencia mediante Systemd ha sido validada y activada.
 #
+# 🧪 VALIDACIÓN DE PERSISTENCIA (POST-REBOOT SCRIPT 4):
+#   Verifique que los servicios orquestados arrancaron automáticamente:
+#   1. Status Nginx:    # systemctl is-active lab-nginx
+#   2. Status DNS:      # systemctl is-active lab-dnsmasq
+#   3. Procesos en NS:  # ip netns exec NS-SERVICES ps aux | grep -E 'nginx|dnsmasq'
+#   4. Puertos en NS:   # ip netns exec NS-SERVICES ss -tlnp (Ver 80 y 53)
+#   5. Conectividad:    # ip netns exec NS-CLIENT curl -I http://10.10.100.10
+#
 # 🎯 OBJETIVO DE ESTA FASE (SCRIPT 5):
 #   Realizar el control de calidad final (QA) y preparar la VM para su 
 #   distribución. Este script transforma un entorno de desarrollo en una 
@@ -18,9 +26,8 @@
 #   2. MOTD (Message of the Day): Creación de un banner de bienvenida legal 
 #      e informativo para el usuario final del laboratorio.
 #   3. LOG PURGE: Limpieza total de logs de instalación y rastros de DNF.
-#   4. BASH CLEANUP: Eliminación de historiales de comandos para que el 
-#      estudiante inicie con una terminal limpia.
-#   5. SEALING: Preparación del sistema para el clonado (limpieza de IDs).
+#   4. BASH CLEANUP: Eliminación de historiales de comandos.
+#   5. SEALING: Preparación para clonado (limpieza de machine-id).
 #
 # ============================================================================
 set -e

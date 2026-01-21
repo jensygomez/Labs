@@ -9,6 +9,14 @@
 #   - La base de datos MariaDB está inicializada y con privilegios remotos.
 #   - El contenido web de diagnóstico está desplegado en disco.
 #
+# 🧪 VALIDACIÓN DE PERSISTENCIA (POST-REBOOT SCRIPT 3):
+#   Tras reiniciar, verifique que la capa de aplicación y datos está lista:
+#   1. DB Activa:       # systemctl is-active mariadb
+#   2. Datos en DB:     # mysql -u labuser -predhat -h localhost labdb -e "show tables;"
+#   3. Configs Web:     # ls -l /etc/lab-configs/nginx.conf
+#   4. Configs DNS:     # ls -l /etc/lab-configs/dnsmasq.conf
+#   5. HTML Root:       # ls -l /usr/share/nginx/html/index.html
+#
 # 🎯 OBJETIVO DE ESTA FASE (SCRIPT 4):
 #   Dar vida a los servicios. Este script crea las "Unidades de Servicio" 
 #   de Systemd que encapsulan procesos de usuario dentro de Namespaces 

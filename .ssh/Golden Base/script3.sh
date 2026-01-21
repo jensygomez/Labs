@@ -10,6 +10,13 @@
 #   - Se configuró la persistencia de red para que los Namespaces 'NS-CLIENT', 
 #     'NS-EDGE' y 'NS-SERVICES' existan post-reboot.
 #
+# 🧪 VALIDACIÓN DE PERSISTENCIA (POST-REBOOT SCRIPT 2):
+#   Antes de iniciar este script, verifique que la red sobrevivió al reinicio:
+#   1. Listar Namespaces:  # ip netns list (Deben aparecer los 3)
+#   2. Probar enlace:      # ip netns exec NS-CLIENT ping -c 2 10.10.50.1
+#   3. Estado Servicio:    # systemctl status lab-network.service
+#   4. Verificar Forward:  # ip netns exec NS-EDGE sysctl net.ipv4.ip_forward
+#
 # 🎯 OBJETIVO DE ESTA FASE (SCRIPT 3):
 #   Preparar el "Payload" o carga útil. Este script no arranca los servicios 
 #   en los namespaces todavía, sino que garantiza que todos los archivos de 
