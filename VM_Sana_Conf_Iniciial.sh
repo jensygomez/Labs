@@ -76,7 +76,7 @@ echo "   Instalando paquetes base..."
 dnf install -y nginx mariadb-server mariadb squid dnsmasq firewalld \
     bind-utils iproute iproute-tc tcpdump conntrack-tools iptables-services \
     net-tools nmap wget curl vim-enhanced cloud-init socat lsof htop \
-    tree lua-devel lua-resty-mysql --quiet
+    tree --quiet
 
 echo "   ✅ Paquetes instalados correctamente"
 
@@ -324,7 +324,41 @@ cat > /usr/share/nginx/html/status.html <<EOF
 </ul>
 EOF
 
-# Nginx (NS-SERVICES)
+# 🔥 API endpoints ESTÁTICOS (reemplazan Lua)
+echo "   📱 Creando APIs estáticas..."
+cat > /usr/share/nginx/html/api/db-test.json <<EOF
+{
+  "status": "success",
+  "message": "Endpoint de prueba de base de datos",
+  "database": "$DB_NAME",
+  "timestamp": "$(date +%Y-%m-%dT%H:%M:%S)",
+  "services_ip": "$IP_SERVICES"
+}
+EOF
+
+cat > /usr/share/nginx/html/api/users.json <<EOF
+{
+  "users": [
+    {"id": 1, "name": "Juan Pérez", "email": "juan@lab.local", "departamento": "IT"},
+    {"id": 2, "name": "María García", "email": "maria@lab.local", "departamento": "Desarrollo"},
+    {"id": 3, "name": "Carlos López", "email": "carlos@lab.local", "departamento": "Operaciones"},
+    {"id": 4, "name": "Ana Rodríguez", "email": "ana@lab.local", "departamento": "Seguridad"},
+    {"id": 5, "name": "Pedro Sánchez", "email": "pedro@lab.local", "departamento": "Soporte"}
+  ],
+  "total": 5
+}
+EOF
+
+cat > /usr/share/nginx/html/api/system.json <<EOF
+{
+  "system": "$(uname -a)",
+  "ip": "$IP_SERVICES",
+  "architecture": "3-Tier (CLIENT-EDGE-SERVICES)",
+  "timestamp": "$(date +%Y-%m-%dT%H:%M:%S)"
+}
+EOF
+
+# Nginx (NS-SERVICES) - SIN LUA
 cat > /etc/lab-configs/nginx.conf <<EOF
 user nginx;
 worker_processes auto;
@@ -371,30 +405,20 @@ http {
             alias /usr/share/nginx/html/status.html;
         }
         
+        # 🔥 APIs ESTÁTICAS (reemplazan Lua)
         location /api/db-test {
-            default_type application/json;
-            return 200 '{"status": "success", "message": "Endpoint de prueba de base de datos", "database": "$DB_NAME", "timestamp": "$(date +%Y-%m-%dT%H:%M:%S)"}\n';
+            alias /usr/share/nginx/html/api/db-test.json;
+            add_header Content-Type application/json;
         }
         
         location /api/users {
-            default_type application/json;
-            content_by_lua_block {
-                ngx.say('{"users": [')
-                ngx.say('  {"id": 1, "name": "Juan Pérez", "email": "juan@lab.local"},')
-                ngx.say('  {"id": 2, "name": "María García", "email": "maria@lab.local"},')
-                ngx.say('  {"id": 3, "name": "Carlos López", "email": "carlos@lab.local"}')
-                ngx.say(']}')
-            }
+            alias /usr/share/nginx/html/api/users.json;
+            add_header Content-Type application/json;
         }
         
         location /api/system {
-            default_type application/json;
-            content_by_lua_block {
-                local f = io.popen("uname -a")
-                local uname = f:read("*a")
-                f:close()
-                ngx.say('{"system": "' .. uname:gsub("\n", "") .. '", "ip": "$IP_SERVICES"}')
-            }
+            alias /usr/share/nginx/html/api/system.json;
+            add_header Content-Type application/json;
         }
         
         error_page 404 /404.html;
@@ -458,6 +482,11 @@ log-facility=/var/log/dnsmasq.log
 EOF
 
 echo "   ✅ Configuraciones generadas"
+echo "      • index.html + status.html"
+echo "      • APIs estáticas: /api/users /api/db-test /api/system"
+echo "      • nginx.conf (sin Lua - 100% Rocky Linux)"
+echo "      • dnsmasq.conf mejorado"
+
 
 # ---------------------------------------------------------------------------
 # 7️⃣ SCRIPT DE RED Y NAMESPACES (EL NÚCLEO)
