@@ -779,48 +779,118 @@ chmod +x /usr/local/bin/lab-health-check.sh
 
 
 # ---------------------------------------------------------------------------
-# 9️⃣ PERSISTENCIA CON SYSTEMD - ULTRA SIMPLE
+# 9️⃣ PERSISTENCIA CON SYSTEMD - ROBUSTO E IDEMPOTENTE
 # ---------------------------------------------------------------------------
-echo "[9/14] 🔄 Configurando servicios (MODO MANUAL)..."
+echo "[9/14] 🔄 Configurando servicios persistentes..."
 
-# 1. EJECUTAR RED MANUALMENTE (para evitar systemd oneshot)
-echo "   🌐 Levantando namespaces + red..."
-/usr/local/bin/lab-net-setup.sh
+# 1. CREAR SCRIPT DE INICIO COMPLETO (que incluye cleanup)
+cat > /usr/local/bin/lab-systemd-start.sh << 'EOF'
+#!/bin/bash
 
-# 2. EJECUTAR SERVICIOS MANUALMENTE  
-echo "   🖥️  Iniciando nginx + dnsmasq en NS-SERVICES..."
-ip netns exec NS-SERVICES /usr/sbin/nginx -g "daemon off;" -c /etc/lab-configs/nginx.conf &
-sleep 2
-ip netns exec NS-SERVICES /usr/sbin/dnsmasq -C /etc/lab-configs/dnsmasq.conf --no-daemon &
-sleep 2
+# Cargar variables de entorno
+source /usr/local/bin/lab-config.sh 2>/dev/null || true
 
-# 3. SERVICIO SOLO PARA STOP/START (SIN ExecStart complejo)
-cat > /etc/systemd/system/lab-infrastructure.service <<EOF
-[Unit]
-Description=Lab 3-Tier Control
-After=network.target
-Wants=network.target
+# Función de limpieza (la misma del script principal)
+cleanup_systemd() {
+    echo "[lab-systemd] Limpiando infraestructura anterior..."
+    
+    # Detener servicios en namespaces
+    ip netns exec NS-SERVICES pkill nginx 2>/dev/null || true
+    ip netns exec NS-SERVICES pkill dnsmasq 2>/dev/null || true
+    
+    # Eliminar namespaces si existen
+    for ns in NS-CLIENT NS-EDGE NS-SERVICES; do
+        if ip netns list | grep -q "$ns"; then
+            echo "  Eliminando namespace $ns..."
+            ip netns delete $ns 2>/dev/null
+        fi
+    done
+    
+    # Limpiar interfaces residuales
+    for iface in veth-client veth-edge-cli veth-edge-srv veth-srv; do
+        if ip link show "$iface" &>/dev/null; then
+            echo "  Eliminando interface $iface..."
+            ip link delete "$iface" 2>/dev/null
+        fi
+    done
+    
+    # Pequeña pausa
+    sleep 1
+    echo "[lab-systemd] Limpieza completada"
+}
 
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/usr/local/bin/lab-net-setup.sh
-ExecStartPost=/bin/sleep 3
-ExecStartPost=/usr/bin/ip netns exec NS-SERVICES pkill nginx dnsmasq || true
-ExecStartPost=/usr/bin/ip netns exec NS-SERVICES /usr/sbin/nginx -g "daemon off;" -c /etc/lab-configs/nginx.conf
-ExecStartPost=/usr/bin/ip netns exec NS-SERVICES /usr/sbin/dnsmasq -C /etc/lab-configs/dnsmasq.conf --no-daemon
-ExecStop=/bin/ip netns exec NS-SERVICES pkill nginx dnsmasq || true
-ExecStop=/bin/ip netns delete NS-CLIENT NS-EDGE NS-SERVICES 2>/dev/null || true
+# Función principal de inicio
+start_lab() {
+    echo "[lab-systemd] Iniciando infraestructura 3-Tier..."
+    
+    # Ejecutar setup de red
+    /usr/local/bin/lab-net-setup.sh
+    
+    # Pequeña pausa para estabilizar
+    sleep 2
+    
+    # Iniciar nginx en NS-SERVICES (en background)
+    echo "[lab-systemd] Iniciando nginx..."
+    ip netns exec NS-SERVICES /usr/sbin/nginx -g "daemon off;" -c /etc/lab-configs/nginx.conf &
+    NGINX_PID=$!
+    echo $NGINX_PID > /var/run/lab-nginx.pid 2>/dev/null || true
+    
+    sleep 1
+    
+    # Iniciar dnsmasq en NS-SERVICES (en background)
+    echo "[lab-systemd] Iniciando dnsmasq..."
+    ip netns exec NS-SERVICES /usr/sbin/dnsmasq -C /etc/lab-configs/dnsmasq.conf --no-daemon &
+    DNSMASQ_PID=$!
+    echo $DNSMASQ_PID > /var/run/lab-dnsmasq.pid 2>/dev/null || true
+    
+    echo "[lab-systemd] Infraestructura iniciada"
+}
 
-[Install]
-WantedBy=multi-user.target
+# Función de parada
+stop_lab() {
+    echo "[lab-systemd] Deteniendo infraestructura..."
+    
+    # Matar procesos por PID si existen
+    if [ -f /var/run/lab-nginx.pid ]; then
+        kill $(cat /var/run/lab-nginx.pid) 2>/dev/null || true
+        rm -f /var/run/lab-nginx.pid
+    fi
+    
+    if [ -f /var/run/lab-dnsmasq.pid ]; then
+        kill $(cat /var/run/lab-dnsmasq.pid) 2>/dev/null || true
+        rm -f /var/run/lab-dnsmasq.pid
+    fi
+    
+    # Limpiar namespaces
+    cleanup_systemd
+    
+    echo "[lab-systemd] Infraestructura detenida"
+}
+
+# Manejo de argumentos
+case "$1" in
+    start)
+        cleanup_systemd
+        start_lab
+        ;;
+    stop)
+        stop_lab
+        ;;
+    restart)
+        stop_lab
+        sleep 2
+        start_lab
+        ;;
+    *)
+        echo "Uso: $0 {start|stop|restart}"
+        exit 1
+        ;;
+esac
 EOF
 
-systemctl daemon-reload
-systemctl enable lab-infrastructure
+chmod +x /usr/local/bin/lab-systemd-start.sh
 
-echo "   ✅ Servicios activos - MODO MANUAL"
-echo "   🔍 Verificar: lab-health-check.sh"
+# 
 
 
 
