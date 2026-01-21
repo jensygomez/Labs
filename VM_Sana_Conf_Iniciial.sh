@@ -779,118 +779,113 @@ chmod +x /usr/local/bin/lab-health-check.sh
 
 
 # ---------------------------------------------------------------------------
-# 9️⃣ PERSISTENCIA CON SYSTEMD - ROBUSTO E IDEMPOTENTE
+# 9️⃣ PERSISTENCIA CON SYSTEMD - VERSIÓN CON DAEMONS PERSISTENTES
 # ---------------------------------------------------------------------------
-echo "[9/14] 🔄 Configurando servicios persistentes..."
+echo "[9/14] 🔄 Configurando servicios y persistencia..."
 
-# 1. CREAR SCRIPT DE INICIO COMPLETO (que incluye cleanup)
-cat > /usr/local/bin/lab-systemd-start.sh << 'EOF'
-#!/bin/bash
+# 1. EJECUTAR RED 
+echo "   🌐 Levantando namespaces + red..."
+/usr/local/bin/lab-net-setup.sh
+echo "   ✅ Red configurada"
 
-# Cargar variables de entorno
-source /usr/local/bin/lab-config.sh 2>/dev/null || true
+# 2. CREAR SYSTEMD SERVICE PARA SERVICIOS DENTRO DE NAMESPACES
+echo "   🔧 Creando servicios persistentes dentro de namespaces..."
 
-# Función de limpieza (la misma del script principal)
-cleanup_systemd() {
-    echo "[lab-systemd] Limpiando infraestructura anterior..."
-    
-    # Detener servicios en namespaces
-    ip netns exec NS-SERVICES pkill nginx 2>/dev/null || true
-    ip netns exec NS-SERVICES pkill dnsmasq 2>/dev/null || true
-    
-    # Eliminar namespaces si existen
-    for ns in NS-CLIENT NS-EDGE NS-SERVICES; do
-        if ip netns list | grep -q "$ns"; then
-            echo "  Eliminando namespace $ns..."
-            ip netns delete $ns 2>/dev/null
-        fi
-    done
-    
-    # Limpiar interfaces residuales
-    for iface in veth-client veth-edge-cli veth-edge-srv veth-srv; do
-        if ip link show "$iface" &>/dev/null; then
-            echo "  Eliminando interface $iface..."
-            ip link delete "$iface" 2>/dev/null
-        fi
-    done
-    
-    # Pequeña pausa
-    sleep 1
-    echo "[lab-systemd] Limpieza completada"
-}
+# Servicio para nginx en NS-SERVICES
+cat > /etc/systemd/system/lab-nginx.service << 'EOF'
+[Unit]
+Description=Nginx Web Server in NS-SERVICES namespace
+After=lab-infrastructure.service
+Requires=lab-infrastructure.service
+PartOf=lab-infrastructure.service
 
-# Función principal de inicio
-start_lab() {
-    echo "[lab-systemd] Iniciando infraestructura 3-Tier..."
-    
-    # Ejecutar setup de red
-    /usr/local/bin/lab-net-setup.sh
-    
-    # Pequeña pausa para estabilizar
-    sleep 2
-    
-    # Iniciar nginx en NS-SERVICES (en background)
-    echo "[lab-systemd] Iniciando nginx..."
-    ip netns exec NS-SERVICES /usr/sbin/nginx -g "daemon off;" -c /etc/lab-configs/nginx.conf &
-    NGINX_PID=$!
-    echo $NGINX_PID > /var/run/lab-nginx.pid 2>/dev/null || true
-    
-    sleep 1
-    
-    # Iniciar dnsmasq en NS-SERVICES (en background)
-    echo "[lab-systemd] Iniciando dnsmasq..."
-    ip netns exec NS-SERVICES /usr/sbin/dnsmasq -C /etc/lab-configs/dnsmasq.conf --no-daemon &
-    DNSMASQ_PID=$!
-    echo $DNSMASQ_PID > /var/run/lab-dnsmasq.pid 2>/dev/null || true
-    
-    echo "[lab-systemd] Infraestructura iniciada"
-}
+[Service]
+Type=simple
+ExecStart=/usr/bin/ip netns exec NS-SERVICES /usr/sbin/nginx -g "daemon off;" -c /etc/lab-configs/nginx.conf
+ExecStop=/usr/bin/ip netns exec NS-SERVICES /usr/sbin/nginx -s stop
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=30
 
-# Función de parada
-stop_lab() {
-    echo "[lab-systemd] Deteniendo infraestructura..."
-    
-    # Matar procesos por PID si existen
-    if [ -f /var/run/lab-nginx.pid ]; then
-        kill $(cat /var/run/lab-nginx.pid) 2>/dev/null || true
-        rm -f /var/run/lab-nginx.pid
-    fi
-    
-    if [ -f /var/run/lab-dnsmasq.pid ]; then
-        kill $(cat /var/run/lab-dnsmasq.pid) 2>/dev/null || true
-        rm -f /var/run/lab-dnsmasq.pid
-    fi
-    
-    # Limpiar namespaces
-    cleanup_systemd
-    
-    echo "[lab-systemd] Infraestructura detenida"
-}
-
-# Manejo de argumentos
-case "$1" in
-    start)
-        cleanup_systemd
-        start_lab
-        ;;
-    stop)
-        stop_lab
-        ;;
-    restart)
-        stop_lab
-        sleep 2
-        start_lab
-        ;;
-    *)
-        echo "Uso: $0 {start|stop|restart}"
-        exit 1
-        ;;
-esac
+[Install]
+WantedBy=lab-infrastructure.service
 EOF
 
-chmod +x /usr/local/bin/lab-systemd-start.sh
+# Servicio para dnsmasq en NS-SERVICES  
+cat > /etc/systemd/system/lab-dnsmasq.service << 'EOF'
+[Unit]
+Description=Dnsmasq DNS/DHCP in NS-SERVICES namespace
+After=lab-infrastructure.service
+Requires=lab-infrastructure.service
+PartOf=lab-infrastructure.service
 
-# 
+[Service]
+Type=simple
+ExecStart=/usr/bin/ip netns exec NS-SERVICES /usr/sbin/dnsmasq -C /etc/lab-configs/dnsmasq.conf --no-daemon
+ExecStop=/usr/bin/ip netns exec NS-SERVICES /usr/bin/pkill dnsmasq
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=30
+
+[Install]
+WantedBy=lab-infrastructure.service
+EOF
+
+# 3. MODIFICAR EL SERVICIO PRINCIPAL PARA SOLO CREAR INFRAESTRUCTURA
+cat > /etc/systemd/system/lab-infrastructure.service << 'EOF'
+[Unit]
+Description=Lab 3-Tier Network Infrastructure (Namespaces only)
+After=network.target
+Wants=network.target
+Before=lab-nginx.service lab-dnsmasq.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+
+# Limpiar si existe
+ExecStartPre=-/usr/bin/ip netns delete NS-CLIENT NS-EDGE NS-SERVICES 2>/dev/null
+ExecStartPre=/bin/sleep 1
+
+# Crear infraestructura
+ExecStart=/usr/local/bin/lab-net-setup.sh
+
+# Esperar estabilización
+ExecStartPost=/bin/sleep 2
+
+# Detener al apagar
+ExecStop=-/usr/bin/ip netns delete NS-CLIENT NS-EDGE NS-SERVICES 2>/dev/null
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# 4. CREAR UN TARGET QUE AGREGE TODOS LOS SERVICIOS
+cat > /etc/systemd/system/lab.target << 'EOF'
+[Unit]
+Description=Lab 3-Tier Complete Environment
+Requires=lab-infrastructure.service lab-nginx.service lab-dnsmasq.service
+After=lab-infrastructure.service lab-nginx.service lab-dnsmasq.service
+AllowIsolate=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# 5. HABILITAR Y ACTIVAR
+systemctl daemon-reload
+systemctl enable lab-infrastructure lab-nginx lab-dnsmasq
+systemctl enable lab.target
+
+# 6. INICIAR TODO
+echo "   🚀 Iniciando servicios persistentes..."
+systemctl start lab-infrastructure
+sleep 3
+systemctl start lab-nginx
+systemctl start lab-dnsmasq
+
+echo "   ✅ Servicios persistentes configurados"
+echo "   📊 Estado: systemctl status lab.target"
 
 
 
@@ -978,7 +973,7 @@ echo "   ✅ Aliases configurados"
 echo "[12/14] 🔍 Realizando verificación inicial..."
 
 # Esperar a que los servicios se estabilicen
-sleep 3
+sleep 5
 
 echo ""
 echo "   Verificando namespaces..."
@@ -990,24 +985,38 @@ fi
 
 echo ""
 echo "   Verificando conectividad básica..."
-if ip netns exec NS-CLIENT ping -c 2 -W 1 $IP_SERVICES > /dev/null 2>&1; then
-    echo "   ✅ Conectividad: Cliente → Servicios OK"
+if ip netns list | grep -q "NS-CLIENT" && ip netns list | grep -q "NS-SERVICES"; then
+    if ip netns exec NS-CLIENT ping -c 2 -W 1 $IP_SERVICES > /dev/null 2>&1; then
+        echo "   ✅ Conectividad: Cliente → Servicios OK"
+    else
+        echo "   ⚠️  Advertencia: Problema de conectividad"
+    fi
 else
-    echo "   ⚠️  Advertencia: Problema de conectividad"
+    echo "   ⚠️  Advertencia: Namespaces no disponibles para prueba"
 fi
 
 echo ""
 echo "   Verificando servicios..."
-if ip netns exec NS-SERVICES pgrep nginx > /dev/null; then
-    echo "   ✅ Nginx activo en NS-SERVICES"
+if systemctl is-active --quiet lab-nginx; then
+    echo "   ✅ Nginx activo (via systemd)"
 else
-    echo "   ❌ Nginx no está activo"
+    echo "   ⚠️  Nginx inactivo - Verificando proceso..."
+    if ip netns exec NS-SERVICES pgrep nginx > /dev/null 2>&1; then
+        echo "   ✅ Nginx corriendo en NS-SERVICES"
+    else
+        echo "   ❌ Nginx no está activo"
+    fi
 fi
 
-if ip netns exec NS-SERVICES pgrep dnsmasq > /dev/null; then
-    echo "   ✅ Dnsmasq activo en NS-SERVICES"
+if systemctl is-active --quiet lab-dnsmasq; then
+    echo "   ✅ Dnsmasq activo (via systemd)"
 else
-    echo "   ❌ Dnsmasq no está activo"
+    echo "   ⚠️  Dnsmasq inactivo - Verificando proceso..."
+    if ip netns exec NS-SERVICES pgrep dnsmasq > /dev/null 2>&1; then
+        echo "   ✅ Dnsmasq corriendo en NS-SERVICES"
+    else
+        echo "   ❌ Dnsmasq no está activo"
+    fi
 fi
 
 # ---------------------------------------------------------------------------
