@@ -1055,6 +1055,117 @@ else
     echo "   ✅ Servicios iniciados manualmente"
 fi
 
+echo ""
+echo "   🔍 Verificación final del lab..."
+sleep 3
+
+echo "   🧪 Ejecutando pruebas integrales..."
+
+# Test 1: Conectividad básica
+echo -n "   🔗 Conectividad (ping 10.10.100.10)... "
+if ip netns exec NS-CLIENT ping -c 2 -W 1 10.10.100.10 >/dev/null 2>&1; then
+    echo "✅ OK"
+    PING_OK=true
+else
+    echo "❌ FALLÓ"
+    PING_OK=false
+fi
+
+# Test 2: Servicio Web
+echo -n "   🌐 Servicio Web (HTTP)... "
+WEB_CODE=$(ip netns exec NS-CLIENT curl -s -o /dev/null -w "%{http_code}" http://10.10.100.10 2>/dev/null || echo "000")
+if [[ "$WEB_CODE" == "200" ]]; then
+    echo "✅ HTTP 200"
+    WEB_OK=true
+elif [[ "$WEB_CODE" == "000" ]]; then
+    echo "❌ Sin conexión"
+    WEB_OK=false
+else
+    echo "⚠️  HTTP $WEB_CODE"
+    WEB_OK=false
+fi
+
+# Test 3: Resolución DNS
+echo -n "   📡 Resolución DNS (web.lab.local)... "
+if ip netns exec NS-CLIENT timeout 2 nslookup web.lab.local 10.10.100.10 >/dev/null 2>&1; then
+    echo "✅ Funcional"
+    DNS_OK=true
+else
+    echo "❌ Falló"
+    DNS_OK=false
+fi
+
+# Test 4: Base de datos
+echo -n "   🗄️  Base de datos MariaDB... "
+if mysql -u labuser -predhat -h 10.10.100.10 -e "SELECT 1" labdb 2>/dev/null | grep -q "1"; then
+    echo "✅ Conectada"
+    DB_OK=true
+else
+    echo "❌ Sin conexión"
+    DB_OK=false
+fi
+
+echo ""
+echo "   📊 RESUMEN DE PRUEBAS:"
+echo "   "$(printf '=%.0s' {1..40})
+
+# Contar éxitos
+SUCCESS_COUNT=0
+[[ "$PING_OK" = true ]] && SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+[[ "$WEB_OK" = true ]] && SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+[[ "$DNS_OK" = true ]] && SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+[[ "$DB_OK" = true ]] && SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+
+if [[ $SUCCESS_COUNT -eq 4 ]]; then
+    echo "   🎉🎉🎉 ¡LAB 3-TIER 100% OPERATIVO! 🎉🎉🎉"
+    echo ""
+    echo "   ✅ Todas las pruebas exitosas (4/4)"
+    echo "      • Conectividad de red: ✅"
+    echo "      • Servicio Web (Nginx): ✅ HTTP 200"
+    echo "      • Resolución DNS: ✅ web.lab.local → 10.10.100.10"
+    echo "      • Base de datos: ✅ MariaDB conectada"
+    echo ""
+    echo "   🚀 ¡Lab listo para snapshot y producción!"
+elif [[ $SUCCESS_COUNT -ge 2 ]]; then
+    echo "   ⚠️  Lab parcialmente funcional ($SUCCESS_COUNT/4 pruebas)"
+    echo "   💡 Ejecuta 'lab-ctl test' para diagnóstico detallado"
+else
+    echo "   ❌ Lab con problemas significativos"
+    echo "   🔧 Ejecuta '/root/fix-services.sh' para reparar"
+fi
+
+echo "   "$(printf '=%.0s' {1..40})
+echo ""
+
+# ============================================================================
+# 🛠️ CREAR SCRIPT DE REPARACIÓN POR SI ACASO
+# ============================================================================
+cat > /root/fix-lab-services.sh << 'EOF'
+#!/bin/bash
+echo "🔧 Reparando servicios del lab 3-Tier..."
+
+# Detener servicios problemáticos
+systemctl stop lab-nginx-ns lab-dnsmasq-ns 2>/dev/null || true
+
+# Matar procesos residuales
+ip netns exec NS-SERVICES pkill nginx 2>/dev/null || true
+ip netns exec NS-SERVICES pkill dnsmasq 2>/dev/null || true
+sleep 1
+
+# Iniciar servicios manualmente (siempre funciona)
+ip netns exec NS-SERVICES /usr/sbin/nginx -g "daemon off;" -c /etc/lab-configs/nginx.conf &
+ip netns exec NS-SERVICES /usr/sbin/dnsmasq -C /etc/lab-configs/dnsmasq.conf --no-daemon &
+
+echo "✅ Servicios reparados"
+echo "📊 Verifica con: lab-ctl test"
+EOF
+
+chmod +x /root/fix-lab-services.sh
+
+echo "   🛡️  Script de reparación creado: /root/fix-lab-services.sh"
+
+
+
 # 6. CREAR SCRIPT DE CONTROL FÁCIL
 cat > /usr/local/bin/lab-ctl << 'EOF'
 #!/bin/bash
