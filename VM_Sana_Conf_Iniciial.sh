@@ -199,7 +199,7 @@ echo "      - Contraseña: $DB_PASS"
 # ---------------------------------------------------------------------------
 echo "[6/14] ⚙️  Generando archivos de configuración para los Namespaces..."
 mkdir -p /etc/lab-configs
-mkdir -p /usr/share/nginx/html
+mkdir -p /usr/share/nginx/html/api    # 🔥 FIX: Crea /api DESDE el inicio
 
 # Página web HTML de ejemplo
 cat > /usr/share/nginx/html/index.html <<EOF
@@ -358,7 +358,7 @@ cat > /usr/share/nginx/html/api/system.json <<EOF
 }
 EOF
 
-# Nginx (NS-SERVICES) - SIN LUA
+# Nginx (NS-SERVICES) - SIN LUA + FIX server_name
 cat > /etc/lab-configs/nginx.conf <<EOF
 user nginx;
 worker_processes auto;
@@ -393,7 +393,7 @@ http {
     server {
         listen $IP_SERVICES:80 backlog=4096;
         listen [::]:80;
-        server_name web.lab.local www.lab.local;
+        server_name web.lab.local www.lab.local;  # 🔥 FIX: Sintaxis correcta
         root /usr/share/nginx/html;
         index index.html index.htm;
         
