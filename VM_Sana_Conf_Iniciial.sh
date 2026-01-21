@@ -99,12 +99,12 @@ users:
 EOF
 
 echo "   ✅ Cloud-init configurado"
-
 # ---------------------------------------------------------------------------
-# 4️⃣ USUARIO STUDENT Y SSH (PLANO DE GESTIÓN)
+# 4️⃣ USUARIO STUDENT Y SSH (PLANO DE GESTIÓN) - LAB PROOF
 # ---------------------------------------------------------------------------
 echo "[4/14] 👤 Configurando usuario student y SSH..."
 
+# 1. Crear usuario student (idempotente)
 if ! id "student" &>/dev/null; then
     echo "   Creando usuario student..."
     useradd -m -G wheel -s /bin/bash student
@@ -112,22 +112,79 @@ if ! id "student" &>/dev/null; then
     echo "   Usuario student creado"
 else
     echo "   Usuario student ya existe"
+    echo "student:redhat" | chpasswd  # Refrescar password siempre
 fi
 
+# 2. Sudo sin password
 echo "student ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/student
 chmod 440 /etc/sudoers.d/student
 
+# 3. Configurar .ssh con permisos correctos
 mkdir -p /home/student/.ssh
-cat > /home/student/.ssh/authorized_keys <<EOF
+chown student:student /home/student/.ssh
+chmod 700 /home/student/.ssh
+
+# 🔑 Claves SSH de ejemplo (funcionan para pruebas)
+cat > /home/student/.ssh/authorized_keys <<'EOF'
 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIByFDKwjMDeGJ5GRhXmZHa75h7dK9JcPHvWWtesSO3/x student@lab
-ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC9wIxI... student@backup
 EOF
 
-chown -R student:student /home/student/.ssh
-chmod 700 /home/student/.ssh
+chown student:student /home/student/.ssh/authorized_keys
 chmod 600 /home/student/.ssh/authorized_keys
 
-echo "   ✅ Usuario y SSH configurados"
+# 4. 🔐 SSH CONFIGURACIÓN LAB (CRÍTICA - reemplaza todo lo restrictivo)
+echo "   🔐 Configurando SSH lab-friendly..."
+cat >> /etc/ssh/sshd_config <<EOF
+
+# =====================================================
+# LAB RHCSA 3-TIER - Configuración SSH LAB
+# =====================================================
+PasswordAuthentication yes
+PermitRootLogin yes
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+StrictModes no
+LoginGraceTime 120
+MaxAuthTries 6
+MaxSessions 20
+MaxStartups 10:30:100
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+UsePAM yes
+X11Forwarding yes
+PrintLastLog no
+TCPKeepAlive yes
+ClientAliveInterval 30
+ClientAliveCountMax 3
+EOF
+
+# 5. Validar y reiniciar SSH
+sshd -t  # Test config
+systemctl restart sshd
+sleep 2
+systemctl is-active sshd && echo "   ✅ SSH service activo" || echo "   ❌ SSH service fallo"
+
+# 6. Crear aliases para el lab
+cat > /etc/profile.d/lab-aliases.sh <<'EOF'
+# LAB 3-TIER Aliases
+alias ns-client='ip netns exec NS-CLIENT bash'
+alias ns-edge='ip netns exec NS-EDGE bash'  
+alias ns-services='ip netns exec NS-SERVICES bash'
+alias lab-check='ip netns exec NS-CLIENT curl -s http://10.10.100.10 | head -5'
+alias lab-reset='/usr/local/bin/lab-reset.sh'
+alias lab-health='lab-health-check.sh'
+EOF
+
+chmod +x /etc/profile.d/lab-aliases.sh
+
+# 7. Verificación final
+echo "student:redhat" | chpasswd 2>/dev/null
+echo "   ✅ Usuario y SSH LAB configurados:"
+echo "      • student/redhat (password + sudo)"
+echo "      • SSH: password + claves habilitado"
+echo "      • Aliases: ns-client, lab-check, lab-reset"
+echo "      • source /etc/profile.d/lab-aliases.sh para cargar"
+
 
 # ---------------------------------------------------------------------------
 # 5️⃣ CONFIGURACIÓN DE BASE DE DATOS MARIA DB
