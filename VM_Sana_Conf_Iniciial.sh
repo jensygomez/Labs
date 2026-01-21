@@ -722,120 +722,61 @@ chmod +x /usr/local/bin/lab-health-check.sh
 
 
 # ---------------------------------------------------------------------------
-# 9️⃣ PERSISTENCIA CON SYSTEMD
+# 9️⃣ PERSISTENCIA CON SYSTEMD - TODO EN UNO
 # ---------------------------------------------------------------------------
-echo "[9/14] 🔄 Creando servicio de infraestructura..."
+echo "[9/14] 🔄 Creando servicio maestro..."
 
-# 9a. Scripts de persistencia iptables (SIN ejecutar todavía)
-echo "   🛡️ Configurando persistencia de firewall..."
 mkdir -p /etc/lab-configs/iptables.d
 
+# Scripts FW (simplificados)
 cat > /usr/local/bin/lab-fw-save.sh <<'EOF'
 #!/bin/bash
-set -euo pipefail
 ip netns exec NS-EDGE iptables-save > /etc/lab-configs/iptables-edge.rules 2>/dev/null || true
-echo "✅ Reglas iptables guardadas"
 EOF
 
 cat > /usr/local/bin/lab-fw-restore.sh <<'EOF'
 #!/bin/bash
-set -euo pipefail
-if [[ -f /etc/lab-configs/iptables-edge.rules ]]; then
-    ip netns exec NS-EDGE iptables-restore < /etc/lab-configs/iptables-edge.rules
-    echo "✅ Reglas iptables restauradas"
-else
-    echo "ℹ️ Sin reglas previas"
-fi
+[[ -f /etc/lab-configs/iptables-edge.rules ]] && ip netns exec NS-EDGE iptables-restore < /etc/lab-configs/iptables-edge.rules
 EOF
 
 chmod +x /usr/local/bin/lab-fw-{save,restore}.sh
 
-# 🔥 QUITAR ESTA LÍNEA QUE CAUSABA ERROR:
-# ip netns exec NS-EDGE /usr/local/bin/lab-fw-save.sh || true  ← ❌ ELIMINAR
-
+# 🔥 SERVICIO TODO-EN-UNO (SIN dependencias externas)
 cat > /etc/systemd/system/lab-infrastructure.service <<EOF
 [Unit]
-Description=Infraestructura Lab 3-Tier (Red + FW)
-After=network.target 
+Description="Lab 3-Tier: Namespaces + Nginx + Dnsmasq + FW"
+After=network.target
 Wants=network.target
-Before=nginx-ns.service dnsmasq-ns.service
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
 ExecStartPre=/usr/local/bin/lab-fw-restore.sh
 ExecStart=/usr/local/bin/lab-net-setup.sh
-ExecStartPost=/bin/sleep 2
-ExecStartPost=/usr/local/bin/lab-fw-save.sh    # 🔥 GUARDAR después de setup
+ExecStartPost=/bin/sleep 3
+ExecStartPost=/usr/bin/ip netns exec NS-SERVICES /usr/sbin/nginx -g "daemon off;" -c /etc/lab-configs/nginx.conf
+ExecStartPost=/usr/bin/ip netns exec NS-SERVICES /usr/sbin/dnsmasq -C /etc/lab-configs/dnsmasq.conf --no-daemon
+ExecStartPost=/usr/local/bin/lab-fw-save.sh
 ExecStartPost=/usr/local/bin/lab-health-check.sh
 
 ExecStop=/usr/local/bin/lab-fw-save.sh
-ExecStop=/bin/ip netns delete NS-CLIENT 2>/dev/null || true
-ExecStop=/bin/ip netns delete NS-EDGE 2>/dev/null || true
-ExecStop=/bin/ip netns delete NS-SERVICES 2>/dev/null || true
-ExecStop=/bin/sleep 1
+ExecStop=/bin/ip netns delete NS-CLIENT NS-EDGE NS-SERVICES 2>/dev/null || true
 
 Restart=on-failure
 RestartSec=10s
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=lab-infra
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# 🔥 nginx-ns.service CORREGIDO
-cat > /etc/systemd/system/nginx-ns.service <<EOF
-[Unit]
-Description=Nginx en NS-SERVICES
-After=lab-infrastructure.service
-PartOf=lab-infrastructure.service
-BindsTo=lab-infrastructure.service
-
-[Service]
-Type=simple              # 🔥 CAMBIADO: simple en vez de notify
-NetworkNamespacePath=/var/run/netns/NS-SERVICES
-ExecStart=/usr/sbin/nginx -g "daemon off;" -c /etc/lab-configs/nginx.conf
-ExecReload=/bin/kill -s HUP \$MAINPID
-KillMode=mixed
-Restart=on-failure
-RestartSec=5s
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# 🔥 dnsmasq-ns.service CORREGIDO  
-cat > /etc/systemd/system/dnsmasq-ns.service <<EOF
-[Unit]
-Description=Dnsmasq en NS-SERVICES
-After=lab-infrastructure.service nginx-ns.service
-PartOf=lab-infrastructure.service
-BindsTo=lab-infrastructure.service
-
-[Service]
-Type=simple              # 🔥 CAMBIADO: simple en vez de notify
-NetworkNamespacePath=/var/run/netns/NS-SERVICES
-ExecStart=/usr/sbin/dnsmasq -C /etc/lab-configs/dnsmasq.conf --no-daemon
-ExecReload=/bin/kill -s HUP \$MAINPID
-KillMode=mixed
-Restart=on-failure
-RestartSec=5s
+SyslogIdentifier=lab-3tier
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload
-systemctl enable lab-infrastructure nginx-ns dnsmasq-ns
-systemctl start lab-infrastructure nginx-ns dnsmasq-ns    # 🔥 ARRANCAR TODOS
+systemctl enable --now lab-infrastructure
 
-echo "   ✅ Servicios systemd configurados:"
-echo "      • lab-infrastructure (red + FW persistente)"
-echo "      • nginx-ns (web en namespace)"
-echo "      • dnsmasq-ns (DNS en namespace)"
-
+echo "   ✅ Lab 3-Tier TODO-EN-UNO activo"
+echo "   🔧 Probar: systemctl status lab-infrastructure"
 
 
 # ---------------------------------------------------------------------------
