@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================================================================
 # PROYECTO: Automatización de Golden Base Image (Rocky Linux)
-# SCRIPT:   2 de 4 - Orquestación de Red y Persistencia de Namespaces
+# SCRIPT:   2 de 5 - Orquestación de Red y Persistencia de Namespaces
 # ============================================================================
 #
 # RESUMEN SCRIPT 1 (CIMENTACIÓN):

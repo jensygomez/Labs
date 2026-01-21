@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================================================================
 # PROYECTO: Automatización de Golden Base Image (Rocky Linux)
-# SCRIPT:   1 de 4 - Cimentación y Preparación del Sistema (Base Layer)
+# SCRIPT:   1 de 5 - Cimentación y Preparación del Sistema (Base Layer)
 # ============================================================================
 #
 # OBJETIVO PRINCIPAL:
