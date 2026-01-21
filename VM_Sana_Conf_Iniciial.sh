@@ -722,61 +722,49 @@ chmod +x /usr/local/bin/lab-health-check.sh
 
 
 # ---------------------------------------------------------------------------
-# 9️⃣ PERSISTENCIA CON SYSTEMD - TODO EN UNO
+# 9️⃣ PERSISTENCIA CON SYSTEMD - ULTRA SIMPLE
 # ---------------------------------------------------------------------------
-echo "[9/14] 🔄 Creando servicio maestro..."
+echo "[9/14] 🔄 Configurando servicios (MODO MANUAL)..."
 
-mkdir -p /etc/lab-configs/iptables.d
+# 1. EJECUTAR RED MANUALMENTE (para evitar systemd oneshot)
+echo "   🌐 Levantando namespaces + red..."
+/usr/local/bin/lab-net-setup.sh
 
-# Scripts FW (simplificados)
-cat > /usr/local/bin/lab-fw-save.sh <<'EOF'
-#!/bin/bash
-ip netns exec NS-EDGE iptables-save > /etc/lab-configs/iptables-edge.rules 2>/dev/null || true
-EOF
+# 2. EJECUTAR SERVICIOS MANUALMENTE  
+echo "   🖥️  Iniciando nginx + dnsmasq en NS-SERVICES..."
+ip netns exec NS-SERVICES /usr/sbin/nginx -g "daemon off;" -c /etc/lab-configs/nginx.conf &
+sleep 2
+ip netns exec NS-SERVICES /usr/sbin/dnsmasq -C /etc/lab-configs/dnsmasq.conf --no-daemon &
+sleep 2
 
-cat > /usr/local/bin/lab-fw-restore.sh <<'EOF'
-#!/bin/bash
-[[ -f /etc/lab-configs/iptables-edge.rules ]] && ip netns exec NS-EDGE iptables-restore < /etc/lab-configs/iptables-edge.rules
-EOF
-
-chmod +x /usr/local/bin/lab-fw-{save,restore}.sh
-
-# 🔥 SERVICIO TODO-EN-UNO (SIN dependencias externas)
+# 3. SERVICIO SOLO PARA STOP/START (SIN ExecStart complejo)
 cat > /etc/systemd/system/lab-infrastructure.service <<EOF
 [Unit]
-Description="Lab 3-Tier: Namespaces + Nginx + Dnsmasq + FW"
+Description=Lab 3-Tier Control
 After=network.target
 Wants=network.target
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStartPre=/usr/local/bin/lab-fw-restore.sh
 ExecStart=/usr/local/bin/lab-net-setup.sh
 ExecStartPost=/bin/sleep 3
+ExecStartPost=/usr/bin/ip netns exec NS-SERVICES pkill nginx dnsmasq || true
 ExecStartPost=/usr/bin/ip netns exec NS-SERVICES /usr/sbin/nginx -g "daemon off;" -c /etc/lab-configs/nginx.conf
 ExecStartPost=/usr/bin/ip netns exec NS-SERVICES /usr/sbin/dnsmasq -C /etc/lab-configs/dnsmasq.conf --no-daemon
-ExecStartPost=/usr/local/bin/lab-fw-save.sh
-ExecStartPost=/usr/local/bin/lab-health-check.sh
-
-ExecStop=/usr/local/bin/lab-fw-save.sh
+ExecStop=/bin/ip netns exec NS-SERVICES pkill nginx dnsmasq || true
 ExecStop=/bin/ip netns delete NS-CLIENT NS-EDGE NS-SERVICES 2>/dev/null || true
-
-Restart=on-failure
-RestartSec=10s
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=lab-3tier
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload
-systemctl enable --now lab-infrastructure
+systemctl enable lab-infrastructure
 
-echo "   ✅ Lab 3-Tier TODO-EN-UNO activo"
-echo "   🔧 Probar: systemctl status lab-infrastructure"
+echo "   ✅ Servicios activos - MODO MANUAL"
+echo "   🔍 Verificar: lab-health-check.sh"
+
 
 
 # ---------------------------------------------------------------------------
