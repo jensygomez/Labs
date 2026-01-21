@@ -1,6 +1,35 @@
 #!/bin/bash
 # ============================================================================
-# SCRIPT 3: SERVICIOS PERSISTENTES EN NAMESPACE
+# PROYECTO: Automatización de Golden Base Image (Rocky Linux)
+# SCRIPT:   3 de 4 - Despliegue de Servicios en Micro-Segmentación
+# ============================================================================
+#
+# RESUMEN SCRIPT 2 (INFRAESTRUCTURA DE RED):
+#   ✅ Creación de Namespaces persistentes: CLIENT, EDGE y SERVICES.
+#   ✅ Interconexión mediante pares Veth (VIRTUAL ETHERNET).
+#   ✅ Configuración de Gateway y NAT en NS-EDGE (Ruteo Inter-Namespace).
+#   ✅ Persistencia garantizada mediante Systemd y Timers de salud.
+#
+# OBJETIVO SCRIPT 3:
+#   Poblar la infraestructura de red con servicios reales, simulando un entorno
+#   productivo donde la base de datos, el servidor web y el DNS conviven
+#   en capas aisladas pero comunicadas.
+#
+# LOGROS DE ESTE SCRIPT:
+# 1. Base de Datos (Host Layer): Configuración de MariaDB con seguridad 
+#    básica, esquema de datos 'labdb' y permisos para acceso remoto.
+# 2. Virtualización de Servicios (Namespace Layer): Ejecución de Nginx y 
+#    Dnsmasq DENTRO del namespace NS-SERVICES.
+# 3. Orquestación con Systemd: Creación de Unit Files personalizados que 
+#    utilizan 'ip netns exec' para lanzar servicios en entornos aislados.
+# 4. API & Web Content: Despliegue de una página de estado y endpoints JSON 
+#    para pruebas de conectividad nivel 7 (Aplicación).
+# 5. Tooling de Diagnóstico: Aliases (lab-status, lab-test) para auditoría 
+#    rápida del estado de los servicios desde el shell del host.
+#
+# REQUISITOS:
+#   - Script 2 ejecutado y namespaces activos.
+#   - Los servicios MariaDB y Nginx deben estar instalados (hecho en Script 1).
 # ============================================================================
 set -e
 

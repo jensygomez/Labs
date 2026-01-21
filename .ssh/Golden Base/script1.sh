@@ -1,8 +1,35 @@
 #!/bin/bash
 # ============================================================================
-# SCRIPT 1: BASE SYSTEM - Paquetes + SSH + Usuario
+# PROYECTO: Automatización de Golden Base Image (Rocky Linux)
+# SCRIPT:   1 de 4 - Cimentación y Preparación del Sistema (Base Layer)
+# ============================================================================
+#
+# OBJETIVO PRINCIPAL:
+#   Transformar una instalación limpia de Rocky Linux en una plantilla (Golden
+#   Image) que servirá como host físico para una arquitectura 3-Tier.
+#
+# ACCIONES REALIZADAS EN ESTE SCRIPT (FASE 1):
+#   1. Actualización integral de paquetes y habilitación de repositorio EPEL.
+#   2. Instalación de utilidades de red y diagnóstico (tcpdump, nmap, net-tools).
+#   3. Despliegue de servicios Core (MariaDB, Nginx, SSH) que serán aislados
+#      en fases posteriores.
+#   4. Creación del usuario de laboratorio 'student' con privilegios Sudo.
+#   5. Habilitación de IP Forwarding a nivel de Kernel (Preparación para Ruteo).
+#
+# VÍNCULO CON EL SCRIPT 2 (PRÓXIMA FASE):
+#   Este script sienta las bases de software para que el SCRIPT 2 pueda:
+#   - Segmentar el tráfico mediante Network Namespaces (NS-CLIENT, NS-EDGE, etc).
+#   - Utilizar las herramientas instaladas aquí para validar la conectividad.
+#   - Implementar la persistencia mediante Systemd, asegurando que la 
+#     configuración de red sea resiliente a reinicios.
+#
+# REQUISITOS:
+#   - Ejecución como Root.
+#   - Acceso a Internet para descarga de dependencias.
 # ============================================================================
 set -e
+
+# (Aquí continúa el resto de tu código...)
 
 echo "=== 📦 SCRIPT 1: CONFIGURACIÓN BASE ==="
 echo "📅 Fecha: $(date)"

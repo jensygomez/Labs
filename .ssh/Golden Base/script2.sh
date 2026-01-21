@@ -1,8 +1,30 @@
 #!/bin/bash
 # ============================================================================
-# SCRIPT 2: NETWORK NAMESPACES CON PERSISTENCIA
+# PROYECTO: Automatización de Golden Base Image (Rocky Linux)
+# SCRIPT:   2 de 4 - Orquestación de Red y Persistencia de Namespaces
 # ============================================================================
-set -e
+#
+# RESUMEN SCRIPT 1 (CIMENTACIÓN):
+#   ✅ Sistema actualizado y herramientas de diagnóstico instaladas.
+#   ✅ Usuario 'student' configurado y servicios base descargados.
+#
+# OBJETIVO SCRIPT 2:
+#   Construir la topología de red virtual donde vivirán los servicios.
+#   Este script es el "puente" entre el software instalado (Script 1) 
+#   y la lógica de servicios aislados (Script 3).
+#
+# ACTUALIZACIONES PARA INTEGRACIÓN CON SCRIPT 3:
+# 1. Configuración de /etc/netns: Prepara la resolución DNS específica 
+#    para que el CLIENTE vea automáticamente al servidor DNS del Lab.
+# 2. Idempotencia Reforzada: Limpia interfaces veth previas para evitar
+#    conflictos con el servicio de Nginx que se levantará después.
+# 3. Preparación de Gateway: Configura las reglas de Iptables necesarias
+#    para que la base de datos (en el host) sea accesible desde el namespace.
+#
+# PRÓXIMO PASO (SCRIPT 3):
+#   Inyectar los servicios de Nginx y Dnsmasq dentro de la estructura 
+#   de red que este script deja activa y persistente.
+# ============================================================================
 
 echo "=== 🌐 SCRIPT 2: RED CON PERSISTENCIA ==="
 echo "📅 Fecha: $(date)"
