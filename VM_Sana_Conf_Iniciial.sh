@@ -26,7 +26,16 @@ readonly DB_PASS="redhat"
 readonly DB_NAME="labdb"
 
 # ---------------------------------------------------------------------------
-# 1️⃣ VERIFICACIÓN Y LIMPIEZA
+# 1️⃣ VERIFICACIÓN DE ENTORNO Y LIMPIEZA DE RESIDUOS
+# ---------------------------------------------------------------------------
+# El objetivo de este bloque es garantizar un entorno "limpio" y con permisos suficientes.
+# Se limpia la terminal, se imprimen variables de entorno críticas ($NET_CLIENT, $NET_SERVICES) 
+# y se verifica que el usuario sea 'root', ya que la manipulación de interfaces de red y 
+# namespaces requiere privilegios de kernel. Finalmente, la función 'cleanup' actúa como 
+# un mecanismo de idempotencia: detiene servicios (Nginx, MariaDB, DNS) y destruye 
+# de forma forzada los Namespaces (NS-CLIENT, NS-EDGE, NS-SERVICES) junto con sus 
+# túneles virtuales (veth), eliminando cualquier rastro de ejecuciones previas que 
+# pudiera causar conflictos de enrutamiento o nombres de interfaz duplicados.
 # ---------------------------------------------------------------------------
 clear
 echo "=== 🚀 Iniciando Reconstrucción Total del Ecosistema 3-Tier ==="
@@ -65,6 +74,14 @@ cleanup
 # ---------------------------------------------------------------------------
 # 2️⃣ INSTALACIÓN DE PAQUETES (FULL STACK)
 # ---------------------------------------------------------------------------
+# Esta sección se encarga de preparar el entorno de software necesario para toda la arquitectura 3-Tier.
+# Primero, sincroniza los repositorios y añade EPEL para acceder a paquetes extendidos. 
+# La instalación masiva cubre los cuatro pilares del laboratorio: 1) Servicios de Aplicación y Datos 
+# (Nginx, MariaDB), 2) Infraestructura de Red y Proxy (Squid, Dnsmasq), 3) Seguridad y Control de Tráfico 
+# (Firewalld, Iptables, TC para QoS, Conntrack) y 4) Diagnóstico Avanzado (Tcpdump, Nmap, Lsof, Iproute). 
+# Esto garantiza que el sistema operativo tenga todas las herramientas de bajo nivel requeridas para 
+# la manipulación de paquetes, túneles y servicios de red sin interrupciones por dependencias faltantes.
+# ---------------------------------------------------------------------------
 echo "[2/14] 📦 Instalando paquetes esenciales..."
 echo "   Actualizando sistema..."
 dnf update -y --quiet
@@ -83,6 +100,15 @@ echo "   ✅ Paquetes instalados correctamente"
 # ---------------------------------------------------------------------------
 # 3️⃣ CONFIGURACIÓN DE CLOUD-INIT
 # ---------------------------------------------------------------------------
+# Este bloque automatiza la personalización inicial del sistema mediante Cloud-Init, 
+# permitiendo que el entorno sea "clonable" y autoconfigurable. Se habilitan los 
+# servicios de arranque para que reconozcan metadatos de tipo 'NoCloud' (ideal para 
+# entornos locales o KVM/Libvirt) y se sobrescribe la configuración para permitir 
+# el acceso directo como usuario 'root' y mediante contraseña por SSH. Además, se 
+# define un usuario estándar llamado 'student' con privilegios de sudo sin contraseña, 
+# estableciendo un entorno de trabajo listo para el uso sin intervención manual tras 
+# el despliegue de las instancias o contenedores.
+# ---------------------------------------------------------------------------
 echo "[3/14] ☁️  Configurando cloud-init..."
 systemctl enable cloud-init-local cloud-init cloud-config cloud-final --now 2>/dev/null || true
 
@@ -99,8 +125,20 @@ users:
 EOF
 
 echo "   ✅ Cloud-init configurado"
+
+
 # ---------------------------------------------------------------------------
 # 4️⃣ USUARIO STUDENT Y SSH (PLANO DE GESTIÓN) - LAB PROOF
+# ---------------------------------------------------------------------------
+# Este bloque establece la capa de gestión y acceso al laboratorio, garantizando que el entorno 
+# sea manejable y accesible para el estudiante. Se asegura la existencia del usuario 'student' 
+# con privilegios de sudo ilimitados y se inyectan claves SSH para un acceso sin fricciones. 
+# La reconfiguración del servicio SSH (`sshd_config`) es crítica: se relajan restricciones de 
+# seguridad estándar (permitiendo login de root y autenticación por contraseña) para priorizar 
+# la disponibilidad en un entorno de pruebas. Finalmente, se inyectan 'aliases' globales en el 
+# sistema, permitiendo al administrador saltar rápidamente entre los diferentes contextos de red 
+# (Namespaces) mediante comandos cortos, lo que optimiza drásticamente el flujo de trabajo en 
+# la resolución de problemas (troubleshooting) y validación de servicios.
 # ---------------------------------------------------------------------------
 echo "[4/14] 👤 Configurando usuario student y SSH..."
 
@@ -189,6 +227,16 @@ echo "      • source /etc/profile.d/lab-aliases.sh para cargar"
 # ---------------------------------------------------------------------------
 # 5️⃣ CONFIGURACIÓN DE BASE DE DATOS MARIA DB
 # ---------------------------------------------------------------------------
+# Este bloque despliega y asegura la capa de datos del ecosistema 3-Tier. Primero, inicializa 
+# el motor MariaDB y ejecuta un saneamiento de seguridad (hardening) eliminando usuarios 
+# anónimos y bases de datos de prueba. Posteriormente, aprovisiona la base de datos operativa 
+# y define permisos granulares: permite el acceso tanto local como desde el segmento de red 
+# de servicios ($NET_SERVICES), utilizando comodines de IP para facilitar la conectividad entre 
+# nodos del laboratorio. Finalmente, se inyecta un esquema relacional básico con tablas de 
+# 'usuarios' y 'servidores' pobladas con datos ficticios, lo que permite validar de inmediato 
+# la consistencia de la base de datos y realizar pruebas de consultas SQL desde las capas 
+# superiores de la aplicación (Web/App Tier).
+# ---------------------------------------------------------------------------
 echo "[5/14] 🗄️  Configurando base de datos de ejemplo..."
 
 # Iniciar y habilitar MariaDB
@@ -254,6 +302,17 @@ echo "      - Contraseña: $DB_PASS"
 # ---------------------------------------------------------------------------
 # 6️⃣ PREPARACIÓN DE CONFIGURACIONES DE SERVICIOS
 # ---------------------------------------------------------------------------
+# En esta fase se genera la "personalidad" de cada servicio mediante la creación de archivos de 
+# configuración personalizados que serán inyectados en los Namespaces. Se construye una interfaz 
+# web enriquecida (HTML/CSS) y una serie de endpoints API en formato JSON que simulan una 
+# arquitectura desacoplada, permitiendo realizar pruebas de conectividad y consumo de datos 
+# sin dependencias complejas como Lua o PHP. Además, se define la configuración de Nginx para 
+# actuar como servidor web de alto rendimiento y se parametriza Dnsmasq para gestionar la 
+# resolución de nombres interna del laboratorio (FQDNs como web.lab.local). Esto asegura que 
+# cada componente tenga sus rutas, registros DNS y archivos de sistema listos antes de que las 
+# interfaces de red sean levantadas, facilitando una puesta en marcha inmediata y predecible.
+# ---------------------------------------------------------------------------
+
 echo "[6/14] ⚙️  Generando archivos de configuración para los Namespaces..."
 mkdir -p /etc/lab-configs
 mkdir -p /usr/share/nginx/html/api    # 🔥 FIX: Crea /api DESDE el inicio
@@ -548,6 +607,16 @@ echo "      • dnsmasq.conf mejorado"
 # ---------------------------------------------------------------------------
 # 7️⃣ SCRIPT DE RED Y NAMESPACES (EL NÚCLEO)
 # ---------------------------------------------------------------------------
+# Este bloque genera el "corazón" lógico del laboratorio: un script de automatización que 
+# orquestra la topología de red virtual. Su función principal es segmentar el sistema en 
+# tres áreas aisladas (Namespaces: CLIENT, EDGE y SERVICES), interconectándolas mediante 
+# pares de cables virtuales (veth). El script no solo establece el direccionamiento IP y 
+# el enrutamiento estático para que el tráfico fluya entre capas, sino que también 
+# transforma al nodo EDGE en un router/firewall activo. Para ello, habilita el reenvío de 
+# paquetes (IP Forwarding) y aplica políticas estrictas de seguridad mediante IPTables, 
+# implementando NAT, inspección de estado (conntrack) y filtrado por puertos, emulando 
+# así el comportamiento real de un firewall perimetral en un entorno de producción.
+# ---------------------------------------------------------------------------
 echo "[7/14] 🌐 Generando script de configuración de red..."
 
 cat > /usr/local/bin/lab-net-setup.sh <<'EOF'
@@ -671,7 +740,17 @@ EOF
 chmod +x /usr/local/bin/lab-net-setup.sh
 
 # ---------------------------------------------------------------------------
-# 8️⃣ SCRIPT DE VERIFICACIÓN DE SALUD
+# 8️⃣ SCRIPT DE VERIFICACIÓN DE SALUD (HEALTH CHECK)
+# ---------------------------------------------------------------------------
+# Este bloque crea una herramienta de diagnóstico integral diseñada para validar la 
+# integridad de toda la arquitectura 3-Tier desde un solo punto. El script automatiza 
+# pruebas de conectividad extremo a extremo (end-to-end), verificando que los saltos 
+# entre Namespaces sean correctos, que los servicios críticos (Nginx, MariaDB, Dnsmasq) 
+# estén escuchando en sus respectivos puertos y que la resolución DNS interna sea 
+# funcional. Al incluir pruebas de nivel de aplicación (como 'curl' a los endpoints) 
+# y auditoría de reglas de firewall, este componente permite al administrador confirmar 
+# instantáneamente si la segmentación de red y las políticas de seguridad están operando 
+# según lo previsto, facilitando la detección temprana de errores de configuración.
 # ---------------------------------------------------------------------------
 echo "[8/14] 🩺 Creando script de verificación de salud..."
 
@@ -781,6 +860,18 @@ chmod +x /usr/local/bin/lab-health-check.sh
 # ---------------------------------------------------------------------------
 # 9️⃣ PERSISTENCIA CON SYSTEMD - VERSIÓN DEFINITIVA
 # ---------------------------------------------------------------------------
+# Este bloque transforma el laboratorio de una configuración manual y volátil en un servicio 
+# de sistema robusto y persistente. Su función principal es orquestar el ciclo de vida de 
+# los servicios (Nginx y Dnsmasq) para que se ejecuten estrictamente dentro de sus 
+# respectivos Namespaces de red, utilizando unidades de Systemd personalizadas. Mediante 
+# el uso de dependencias (`After`, `Wants`, `Requires`), se garantiza un orden de arranque 
+# lógico: primero se levanta la infraestructura de red (namespaces y veth), y solo cuando 
+# el entorno está listo, se inician los servicios. Además, se incluye la herramienta 
+# 'lab-ctl', una interfaz de línea de comandos simplificada que permite al usuario gestionar 
+# todo el ecosistema (iniciar, detener, ver logs o estado) sin necesidad de interactuar 
+# directamente con la complejidad de los comandos de red o de sistema subyacentes.
+# ---------------------------------------------------------------------------
+
 echo "[9/14] 🔄 Configurando servicios y persistencia..."
 
 # 1. REEMPLAZAR EL SCRIPT ORIGINAL CON EL IDEMPOTENTE
@@ -1015,8 +1106,19 @@ echo "      systemctl status lab-complete.target"
 
 
 # ---------------------------------------------------------------------------
-# 🔟 ACCESO EXTERNO Y ROUTING
+# 🔟 ACCESO EXTERNO Y ROUTING (COMUNICACIÓN HOST-LAB)
 # ---------------------------------------------------------------------------
+# Este bloque actúa como el "puente" definitivo entre la infraestructura virtualizada y el 
+# exterior. Su objetivo es habilitar el enrutamiento a nivel de kernel en el sistema Host, 
+# permitiendo que los paquetes de datos fluyan desde los Namespaces aislados hacia la red 
+# física o Internet. Mediante la activación de 'ip_forward' y la configuración de reglas 
+# NAT (Masquerade) en el Host, se garantiza que los nodos del laboratorio (como el cliente 
+# o el servidor de servicios) puedan realizar actualizaciones de paquetes o consultas 
+# externas, enmascarando sus IPs privadas bajo la IP real del host. Básicamente, esto 
+# convierte a la máquina anfitriona en el último salto de salida (Gateway) para todo el 
+# tráfico generado dentro del ecosistema 3-Tier.
+# ---------------------------------------------------------------------------
+
 echo "[10/14] 🌉 Configurando routing en el Host..."
 
 # Habilitar forwarding
@@ -1034,7 +1136,17 @@ sysctl -p /etc/sysctl.d/99-lab-kernel.conf
 echo "   ✅ Routing configurado"
 
 # ---------------------------------------------------------------------------
-# 11️⃣ ALIASES Y COMODIDAD
+# 11️⃣ ALIASES Y COMODIDAD (UX & TROUBLESHOOTING)
+# ---------------------------------------------------------------------------
+# Este bloque optimiza la interacción del administrador con el entorno mediante la creación 
+# de un ecosistema de comandos personalizados y herramientas de "atajo". Su propósito es 
+# eliminar la complejidad de los comandos largos de 'ip netns', encapsulando tareas críticas 
+# como el salto entre redes, la verificación de bases de datos, el monitoreo de tráfico con 
+# tcpdump y las pruebas de resolución DNS en alias cortos y memorizables. Al cargar estas 
+# funciones en el perfil global del sistema, se facilita un flujo de trabajo ágil para el 
+# diagnóstico de fallos (troubleshooting) y se proporciona un script de reinicio rápido 
+# ('lab-reset') que garantiza que el estudiante pueda restaurar el entorno a un estado 
+# conocido en segundos, minimizando el tiempo perdido en tareas repetitivas de terminal.
 # ---------------------------------------------------------------------------
 echo "[11/14] 🎯 Configurando aliases y herramientas..."
 
@@ -1093,7 +1205,17 @@ chmod +x /usr/local/bin/lab-reset.sh
 echo "   ✅ Aliases configurados"
 
 # ---------------------------------------------------------------------------
-# 12️⃣ VERIFICACIÓN INICIAL
+# 12️⃣ VERIFICACIÓN INICIAL (SMOKE TEST)
+# ---------------------------------------------------------------------------
+# Este bloque actúa como una prueba de "humo" o validación rápida para asegurar que la 
+# infraestructura desplegada es operativa inmediatamente después de su creación. Tras una 
+# breve pausa de estabilización, el script audita tres pilares fundamentales: 1) Existencia 
+# de los Namespaces, 2) Conectividad básica mediante ICMP (ping) entre los extremos de la 
+# red (Cliente a Servicios), y 3) Estado de ejecución de los procesos críticos (Nginx y 
+# Dnsmasq), verificando tanto su gestión vía Systemd como su presencia real en el espacio 
+# de usuario del Namespace. Esta verificación proporciona un feedback instantáneo al 
+# administrador, permitiendo confirmar que el aislamiento de red y el enrutamiento a 
+# través del nodo EDGE funcionan antes de entregar el entorno para su uso final.
 # ---------------------------------------------------------------------------
 echo "[12/14] 🔍 Realizando verificación inicial..."
 
@@ -1143,8 +1265,20 @@ else
         echo "   ❌ Dnsmasq no está activo"
     fi
 fi
+
+
 # ---------------------------------------------------------------------------
-# 13️⃣ CONFIGURACIÓN DE LOGGING
+# 13️⃣ CONFIGURACIÓN DE LOGGING (TRAZABILIDAD Y MANTENIMIENTO)
+# ---------------------------------------------------------------------------
+# Este bloque establece la infraestructura de auditoría y persistencia de logs para el 
+# laboratorio. Su propósito es doble: por un lado, configura políticas de rotación de 
+# archivos mediante 'logrotate', lo que previene el agotamiento del espacio en disco 
+# al gestionar automáticamente la compresión y el purgado de registros antiguos de salud 
+# y reconstrucción. Por otro lado, centraliza los puntos de salida de los servicios 
+# que corren aislados (Nginx y Dnsmasq) en directorios específicos del host físico. 
+# Esto facilita la monitorización en tiempo real y la resolución de problemas (debugging) 
+# sin necesidad de entrar constantemente en los Namespaces, permitiendo que todas 
+# las trazas de red y de servicio sean auditables desde el plano de gestión principal.
 # ---------------------------------------------------------------------------
 echo "[13/14] 📝 Configurando sistema de logging..."
 
@@ -1179,7 +1313,17 @@ touch /var/log/lab/dnsmasq.log
 echo "   ✅ Logging configurado"
 
 # ---------------------------------------------------------------------------
-# 14️⃣ MENSAJE FINAL Y RESUMEN
+# 14️⃣ MENSAJE FINAL Y RESUMEN (CIERRE Y ENTREGA DEL ENTORNO)
+# ---------------------------------------------------------------------------
+# Este bloque finaliza el despliegue consolidando toda la información operativa en un 
+# panel de control visual y un archivo de persistencia (/root/lab-summary.txt). Su 
+# objetivo es proporcionar al usuario una "hoja de ruta" inmediata que incluye 
+# credenciales de acceso, el mapa completo de direccionamiento IP de la arquitectura 
+# 3-Tier y un catálogo de comandos de diagnóstico. Al ejecutar automáticamente una 
+# última verificación de salud y generar un archivo de resumen, se asegura de que el 
+# estudiante o administrador tenga a mano todos los puntos de entrada (Endpoints) y 
+# herramientas de control necesarias para comenzar a trabajar, garantizando una 
+# transición fluida desde la fase de construcción hacia la fase de uso del laboratorio.
 # ---------------------------------------------------------------------------
 echo "[14/14] ✅ RECONSTRUCCIÓN COMPLETADA"
 echo ""
