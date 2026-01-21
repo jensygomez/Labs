@@ -1,221 +1,73 @@
-CLIENT01 (192.168.122.21)
-↓ /etc/hosts
-Server_EU (192.168.122.22 - SSH/Admin)
-├─ 192.168.122.50:80 ← www.paginaweb.com (Nginx) ✅
-└─ 192.168.122.60:3306 ← basededatos (MariaDB) ✅
 
-text
 
-## 🔑 CLIENT01 CONFIGURACIÓN
 
-**IP**: `192.168.122.21`
-**/etc/hosts**:
-
-127.0.0.1 localhost
-192.168.122.50 www.paginaweb.com
-192.168.122.60 basededatos
-
-text
-
-**Tests**:
-```bash
-ping -c 2 www.paginaweb.com    # 192.168.122.50 ✓
-ping -c 2 basededatos          # 192.168.122.60 ✓
-curl http://www.paginaweb.com  # Página web ✓
-nc -zv basededatos 3306        # DB puerto ✓
-
-🖥️ SERVER_EU CONFIGURACIÓN
-
-IP Admin: 192.168.122.22 (SSH)
-VIPs activas:
-
-text
-enp1s0:
-├── 192.168.122.22/24  (Admin/MariaDB)
-├── 192.168.122.50/24  (Nginx Web) 
-└── 192.168.122.60/24  (MariaDB VIP)
-
-Servicios corriendo:
-
-text
-nginx        → systemctl status nginx      # Port 80 (VIP .50)
-mariadb      → systemctl status mariadb    # Port 3306 (VIP .60)
-firewalld    → firewall-cmd --list-all
-
-🗝️ BASE DE DATOS CREDENCIALES
-
-text
-Usuario: user_prueba
-Password: Pass1234!
-Database: db_prueba
-Host: basededatos (192.168.122.60)
-Puerto: 3306
-
-Test completo:
-
-bash
-mysql -u user_prueba -pPass1234! -h basededatos -P 3306 -e "SHOW DATABASES;"
-
-=========================================
-=========================================
-
-
-
-
-1. Redes y conectividad
-        Variante V01 – ICMP / Rutas bloqueadas (Firewall)
-        Variante V02 – DNS roto (resolución incorrecta)
-        Variante V03 – Puerto cerrado (Firewall / Servicio)
-        Variante V04 – Latencia / pérdida de paquetes (tc)
-
-2. Troubleshooting de firewalls y SELinux
-
-Objetivo: Aprender a detectar problemas de conectividad por seguridad.
-
-Subtemas / escenarios:
-
-Firewalld bloqueando puerto HTTP o MySQL.
-
-SELinux en modo enforcing bloqueando Nginx o MariaDB.
-
-Reglas ricas vs zonas (public, internal).
-
-Permitir temporalmente puerto y verificar acceso.
-
-
-
-3. Servicios Web (Nginx/Apache)
-
-Objetivo: Diagnosticar problemas de web server y contenido dinámico.
-
-Subtemas / escenarios:
-
-Nginx no inicia → error de puerto ocupado o configuración malformada.
-
-Página no carga → problema de permisos o root incorrecto.
-
-Logs (error.log / access.log) mostrando errores.
-
-Redirecciones incorrectas o certificados SSL faltantes.
-
-VMs necesarias: 1 (SERVER_EU con .50)
-Servicios necesarios: Nginx, opcional PHP o contenido estático
-
-4. Bases de datos (MariaDB/MySQL)
-
-Objetivo: Diagnosticar conexión, permisos y rendimiento.
-
-Subtemas / escenarios:
-
-Cliente no puede conectar → firewall, puerto o VIP incorrecto.
-
-Credenciales incorrectas → Access denied for user.
-
-Base corrupta o tabla bloqueada → uso de mysqlcheck.
-
-Consumo de recursos → detectar procesos lentos o locks.
-
-VMs necesarias: 1 (SERVER_EU con .60)
-Servicios necesarios: MariaDB
-
-5. Administración de usuarios y permisos
-
-Objetivo: Resolver problemas de acceso a archivos y servicios.
-
-Subtemas / escenarios:
-
-Usuario no puede escribir/leer logs de Nginx o MariaDB.
-
-sudo no funciona por configuración incorrecta.
-
-Problemas de grupos y permisos en /var/www/html.
-
-Archivos críticos de configuración con permisos root-only.
-
-VMs necesarias: 1-2
-Servicios necesarios: Nginx, MariaDB, SSH
-
-6. Logs y monitoreo
-
-Objetivo: Localizar errores a partir de logs y métricas.
-
-Subtemas / escenarios:
-
-Nginx o MariaDB caído → revisar logs (journalctl, /var/log/).
-
-Detectar saturación de CPU/memoria.
-
-Monitorización de conexiones TCP usando ss o netstat.
-
-Crear alertas manuales simulando un incidente.
-
-VMs necesarias: 2
-Servicios necesarios: todos los servicios instalados, journalctl, top, htop, ss
-
-7. Problemas de DNS y resolución de nombres
-
-Objetivo: Diagnosticar fallas de resolución interna y externa.
-
-Subtemas / escenarios:
-
-/etc/hosts incorrecto → curl/nc fallan.
-
-DNS caching roto → systemd-resolve --flush-caches.
-
-Conexión externa bloqueada por firewall pero interna funciona.
-
-Simular subdominio faltante.
-
-VMs necesarias: 2 (CLIENT01 + SERVER_EU)
-Servicios necesarios: Nginx, MariaDB, resolvers locales (opcional BIND)
-
-8. Backup y restauración de servicios
-
-Objetivo: Resolver problemas de pérdida de datos o configuración.
-
-Subtemas / escenarios:
-
-Restaurar MariaDB desde dump (mysqldump).
-
-Restaurar configuración de Nginx corrupta.
-
-Verificar integridad de archivos con md5sum / sha256sum.
-
-Simulación de caída de servidor y recuperación en otra VM.
-
-VMs necesarias: 2 (CLIENT01 + SERVER_EU)
-Servicios necesarios: MariaDB, Nginx, SCP/RSYNC
-
-9. Actualizaciones y parches
-
-Objetivo: Resolver problemas tras actualización de paquetes.
-
-Subtemas / escenarios:
-
-Nginx/MariaDB falla tras yum update.
-
-Kernel nuevo y servicios que no arrancan.
-
-Dependencias faltantes → librerías faltantes en logs.
-
-Rollback de paquetes y testing.
-
-VMs necesarias: 1-2
-Servicios necesarios: todos los servicios
-
-10. Troubleshooting de conectividad avanzada / redes corporativas
-
-Objetivo: Resolver problemas que simulan entornos corporativos complejos.
-
-Subtemas / escenarios:
-
-Multi-VIP, cliente accede a la IP equivocada.
-
-Redirección NAT simulada con iptables → HTTP o DB no responde.
-
-Proxy inverso mal configurado → Nginx → Backend MariaDB.
-
-Pruebas con herramientas de red: tcpdump, iptables -L, traceroute.
-
-VMs necesarias: 2-3
-Servicios necesarios: todos los servicios, firewalld, tcpdump
+1. Usuarios, Permisos y SSH
+        V1: Usuario student pierde acceso sudo (error de sintaxis en /etc/sudoers.d/).
+        V2: Nginx da error 403 Forbidden porque los permisos de /var/www/html son 700 y pertenecen a root.
+        V3: No se puede entrar por SSH al NS-SERVICES porque las llaves en .ssh/authorized_keys tienen permisos 777 (SSH las ignora por seguridad).
+        V4: Usuario bloqueado por demasiados intentos fallidos (PAM modules).
+        V5: El servicio SSH en el servidor se cambió al puerto 2222 y el firewall del Edge lo bloquea.
+
+2. Gestión de Almacenamiento y LVM
+        V1: La partición /var/log se llena al 100%, provocando que MariaDB no pueda escribir el log binario y se apague.
+        V2: Agotamiento de Inodos: El disco tiene espacio, pero hay millones de archivos pequeños que impiden crear nuevos archivos.
+        V3: Extender un volumen lógico (LVM) en caliente porque la base de datos se quedó sin espacio.
+        V4: Sistema de archivos montado en Read-Only tras un error simulado.
+        V5: Identificar qué proceso tiene "secuestrado" un archivo que no permite desmontar una partición (fuser / lsof).
+
+3. Logs, Monitoreo y Procesos
+        V1: Un proceso "zombie" o "runaway" consume el 100% de la CPU en NS-SERVICES.
+        V2: journalctl no muestra logs recientes (servicio systemd-journald colgado).
+        V3: Identificar una fuga de memoria (Memory Leak) usando top/htop antes de que el OOM Killer actúe.
+        V4: Error en la rotación de logs (logrotate) que hace que los logs crezcan indefinidamente.
+        V5: Rastrear qué está haciendo un proceso lento usando strace o lsof.
+
+4. Sincronización de Tiempo (NTP/Chrony)
+        V1: El servidor tiene un desfase de 10 minutos; los certificados SSL fallan al validar en el cliente.
+        V2: El servicio chronyd no sincroniza porque el puerto UDP 123 está cerrado en el NS-EDGE.
+        V3: Zona horaria incorrecta causando que los backups programados se ejecuten a la hora que no es.
+        V4: Logs con marcas de tiempo incoherentes entre el Cliente y el Servidor.
+        V5: Error de "Step time" vs "Slew time" en servidores de bases de datos sensibles.
+
+
+5. Networking L3/L4 (Conectividad)
+        V1: El NS-CLIENT pierde su "Default Gateway" y no llega a la red de servicios.
+        V2: Problema de MTU: El ping funciona (paquetes pequeños), pero la web no carga (paquetes grandes se descartan).
+        V3: Conflicto de IPs: Una interfaz dummy en el host tiene la misma IP que el NS-SERVICES.
+        V4: El reenvío de paquetes (ip_forward) se desactivó en el NS-EDGE.
+        V5: Interfaz de red en modo "Promiscuo" o con errores de colisión simulados.
+
+6. DNS y Resolución de Nombres
+        V1: El archivo /etc/resolv.conf en el cliente está vacío o apunta a 127.0.0.1.
+        V2: El archivo /etc/hosts tiene una entrada vieja que sobreescribe al DNS real.
+        V3: dnsmasq en el servidor solo escucha en 127.0.0.1 y no en la IP de la red.
+        V4: Resolución recursiva fallida: El DNS interno funciona, pero no puede resolver google.com.
+        V5: Orden de resolución incorrecto en /etc/nsswitch.conf.
+
+7. Firewall (Iptables/Firewalld) y SELinux
+        V1: SELinux bloquea a Nginx para leer archivos en una carpeta que no es /var/www/.
+        V2: firewalld tiene la interfaz en la zona public en lugar de internal, bloqueando MySQL.
+        V3: Una regla de Iptables en el NS-EDGE hace DROP silencioso, causando "Timeout" en lugar de "Connection Refused".
+        V4: SELinux bloquea a Nginx para actuar como Proxy Inverso (httpd_can_network_connect).
+        V5: Reglas de firewall "limpias" que se pierden tras reiniciar (falta el --permanent).
+
+8. Servicios Web (Nginx)
+        V1: Error de sintaxis en nginx.conf impide el reinicio (nginx -t).
+        V2: El puerto 80 está ocupado por otro proceso (o por un Apache olvidado).
+        V3: Error 502 Bad Gateway: Nginx funciona, pero el backend (PHP/App) está caído.
+        V4: El servidor web no muestra el index.html por falta de permisos de ejecución en los directorios padres.
+        V5: Certificado SSL autofirmado que el cliente rechaza.
+
+9. Bases de Datos (MariaDB)
+        V1: MariaDB configurado para escuchar solo en localhost (bind-address), impidiendo acceso externo.
+        V2: Se perdió la contraseña de root de la base de datos (procedimiento de recuperación).
+        V3: Error "Too many connections": Ajustar límites de archivos abiertos en el sistema (ulimits).
+        V4: Corrupción de una tabla específica tras un apagado forzoso (uso de REPAIR TABLE).
+        V5: Identificar una "Slow Query" que está bloqueando las demás tablas.
+
+10. Backup, Actualizaciones y Recuperación
+        V1: Un mysqldump falla porque el usuario de backup no tiene permisos de LOCK TABLES.
+        V2: Tras un dnf update, el Kernel nuevo no arranca y hay que hacer rollback al anterior.
+        V3: Restaurar un archivo de configuración crítico desde un backup comprimido .tar.gz.
+        V4: Una tarea de cron de backup falló porque el script no tiene rutas absolutas (/usr/bin/).
+        V5: Verificar la integridad de un archivo transferido entre namespaces usando sha256sum.
