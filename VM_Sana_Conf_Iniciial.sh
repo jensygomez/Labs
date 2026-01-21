@@ -617,127 +617,166 @@ echo "      • dnsmasq.conf mejorado"
 # implementando NAT, inspección de estado (conntrack) y filtrado por puertos, emulando 
 # así el comportamiento real de un firewall perimetral en un entorno de producción.
 # ---------------------------------------------------------------------------
+
 echo "[7/14] 🌐 Generando script de configuración de red..."
 
-cat > /usr/local/bin/lab-net-setup.sh <<'EOF'
+# Crear DIRECTORIO de configuraciones primero
+mkdir -p /etc/lab-configs/
+
+# 1. PRIMERO CREAR LA VERSIÓN IDEMPOTENTE
+cat > /usr/local/bin/lab-net-setup-idempotent.sh << 'EOF'
 #!/bin/bash
-# ============================================================================
-# SCRIPT DE CONFIGURACIÓN DE RED PARA LAB 3-TIER
-# ============================================================================
 
 set -e
 
-# Variables (heredadas del script principal)
-IP_CLIENT="10.10.50.10"
-IP_EDGE_LAN="10.10.50.1"
-IP_EDGE_WAN="10.10.100.1"
-IP_SERVICES="10.10.100.10"
+echo "🔧 Configurando network namespaces (IDEMPOTENTE)..."
 
-NET_CLIENT="10.10.50.0/24"
-NET_SERVICES="10.10.100.0/24"
+# Cargar variables si existen
+NET_CLIENT=${NET_CLIENT:-"10.10.50.0/24"}
+NET_SERVICES=${NET_SERVICES:-"10.10.100.0/24"}
+IP_CLIENT=${IP_CLIENT:-"10.10.50.10"}
+IP_SERVICES=${IP_SERVICES:-"10.10.100.10"}
+IP_EDGE_LAN=${IP_EDGE_LAN:-"10.10.50.1"}
+IP_EDGE_WAN=${IP_EDGE_WAN:-"10.10.100.1"}
 
-echo "🔧 Configurando network namespaces..."
-
-# Crear Namespaces
+# 1. CREAR NAMESPACES (si no existen)
 for ns in NS-CLIENT NS-EDGE NS-SERVICES; do
     if ! ip netns list | grep -q "$ns"; then
+        echo "   ✅ Creando namespace $ns..."
         ip netns add "$ns"
-        echo "   ✅ Namespace $ns creado"
     else
         echo "   ℹ️  Namespace $ns ya existe"
     fi
-    # Activar loopback
-    ip netns exec "$ns" ip link set lo up
 done
 
-# Conectar CLIENT <-> EDGE
+# 2. CONFIGURAR INTERFACES (manejo idempotente)
+configure_interface() {
+    local ns=$1
+    local iface=$2
+    local ip=$3
+    
+    # Verificar si la interfaz ya está configurada
+    if ip netns exec "$ns" ip addr show "$iface" 2>/dev/null | grep -q "$ip"; then
+        echo "   ℹ️  Interfaz $iface en $ns ya tiene IP $ip"
+        return 0
+    fi
+    
+    # Si no existe, crearla
+    if ! ip netns exec "$ns" ip link show "$iface" &>/dev/null; then
+        echo "   🔗 Creando interfaz $iface en $ns..."
+        
+        case "$iface" in
+            veth-client)
+                ip link add veth-client type veth peer name veth-edge-cli
+                ip link set veth-client netns NS-CLIENT
+                ip link set veth-edge-cli netns NS-EDGE
+                ;;
+            veth-srv)
+                ip link add veth-srv type veth peer name veth-edge-srv
+                ip link set veth-srv netns NS-SERVICES
+                ip link set veth-edge-srv netns NS-EDGE
+                ;;
+        esac
+    fi
+    
+    # Configurar IP solo si no está configurada
+    echo "   ⚙️  Configurando $iface con IP $ip en $ns..."
+    ip netns exec "$ns" ip addr add "$ip" dev "$iface" 2>/dev/null || true
+    ip netns exec "$ns" ip link set "$iface" up
+    ip netns exec "$ns" ip link set lo up
+}
+
+# 3. CONFIGURAR INTERFACES CON MANEJO DE ERRORES
 echo "🔗 Conectando CLIENT <-> EDGE..."
-ip link add veth-client type veth peer name veth-edge-cli 2>/dev/null || true
+configure_interface NS-CLIENT veth-client "$IP_CLIENT/24"
+configure_interface NS-EDGE veth-edge-cli "$IP_EDGE_LAN/24"
 
-ip link set veth-client netns NS-CLIENT 2>/dev/null || true
-ip link set veth-edge-cli netns NS-EDGE 2>/dev/null || true
-
-ip netns exec NS-CLIENT ip link set veth-client up
-ip netns exec NS-CLIENT ip addr add $IP_CLIENT/24 dev veth-client
-ip netns exec NS-CLIENT ip route add default via $IP_EDGE_LAN
-
-ip netns exec NS-EDGE ip link set veth-edge-cli up
-ip netns exec NS-EDGE ip addr add $IP_EDGE_LAN/24 dev veth-edge-cli
-
-# Conectar EDGE <-> SERVICES
 echo "🔗 Conectando EDGE <-> SERVICES..."
-ip link add veth-edge-srv type veth peer name veth-srv 2>/dev/null || true
+configure_interface NS-SERVICES veth-srv "$IP_SERVICES/24"
+configure_interface NS-EDGE veth-edge-srv "$IP_EDGE_WAN/24"
 
-ip link set veth-edge-srv netns NS-EDGE 2>/dev/null || true
-ip link set veth-srv netns NS-SERVICES 2>/dev/null || true
+# 4. CONFIGURAR ROUTING (idempotente)
+echo "🌐 Configurando routing..."
 
-ip netns exec NS-EDGE ip link set veth-edge-srv up
-ip netns exec NS-EDGE ip addr add $IP_EDGE_WAN/24 dev veth-edge-srv
-ip netns exec NS-EDGE sysctl -w net.ipv4.ip_forward=1
-ip netns exec NS-EDGE sysctl -w net.ipv4.conf.all.rp_filter=0
+# En CLIENT: default route hacia EDGE
+if ! ip netns exec NS-CLIENT ip route | grep -q "default via $IP_EDGE_LAN"; then
+    ip netns exec NS-CLIENT ip route add default via "$IP_EDGE_LAN"
+fi
 
-ip netns exec NS-SERVICES ip link set veth-srv up
-ip netns exec NS-SERVICES ip addr add $IP_SERVICES/24 dev veth-srv
-ip netns exec NS-SERVICES ip route add default via $IP_EDGE_WAN
-ip netns exec NS-SERVICES sysctl -w net.ipv4.conf.all.arp_announce=2
+# En SERVICES: default route hacia EDGE
+if ! ip netns exec NS-SERVICES ip route | grep -q "default via $IP_EDGE_WAN"; then
+    ip netns exec NS-SERVICES ip route add default via "$IP_EDGE_WAN"
+fi
 
-# Configurar Firewall en EDGE (NAT + Filtrado)
+# En EDGE: habilitar forwarding
+ip netns exec NS-EDGE sysctl -w net.ipv4.ip_forward=1 >/dev/null
+ip netns exec NS-EDGE sysctl -w net.ipv4.conf.all.rp_filter=0 >/dev/null
+ip netns exec NS-EDGE sysctl -w net.ipv4.conf.all.arp_announce=2 >/dev/null
+
+# 5. CONFIGURAR FIREWALL (idempotente)
 echo "🛡️  Configurando firewall en EDGE..."
+
+# Limpiar reglas existentes
 ip netns exec NS-EDGE iptables -F
 ip netns exec NS-EDGE iptables -t nat -F
 ip netns exec NS-EDGE iptables -X
 
-# NAT para salida a internet (simulada)
-ip netns exec NS-EDGE iptables -t nat -A POSTROUTING -s $NET_CLIENT -o veth-edge-srv -j MASQUERADE
-
-# Reglas de FORWARD
-ip netns exec NS-EDGE iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-ip netns exec NS-EDGE iptables -A FORWARD -i veth-edge-cli -o veth-edge-srv -j ACCEPT
-ip netns exec NS-EDGE iptables -A FORWARD -i veth-edge-srv -o veth-edge-cli -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-
-# Reglas específicas por puerto
-ip netns exec NS-EDGE iptables -A FORWARD -p tcp --dport 80 -j ACCEPT      # HTTP
-ip netns exec NS-EDGE iptables -A FORWARD -p tcp --dport 443 -j ACCEPT     # HTTPS
-ip netns exec NS-EDGE iptables -A FORWARD -p tcp --dport 3306 -j ACCEPT    # MySQL
-ip netns exec NS-EDGE iptables -A FORWARD -p udp --dport 53 -j ACCEPT      # DNS
-ip netns exec NS-EDGE iptables -A FORWARD -p icmp -j ACCEPT                # Ping
-ip netns exec NS-EDGE iptables -A FORWARD -p tcp --dport 22 -j ACCEPT      # SSH (para gestión)
-
-# Política por defecto DROP
-ip netns exec NS-EDGE iptables -P FORWARD DROP
-
-# Reglas de INPUT para EDGE
-ip netns exec NS-EDGE iptables -A INPUT -i lo -j ACCEPT
-ip netns exec NS-EDGE iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-ip netns exec NS-EDGE iptables -A INPUT -p icmp -j ACCEPT
+# Políticas por defecto
 ip netns exec NS-EDGE iptables -P INPUT DROP
+ip netns exec NS-EDGE iptables -P FORWARD DROP
+ip netns exec NS-EDGE iptables -P OUTPUT ACCEPT
+
+# Permitir tráfico forward entre redes
+ip netns exec NS-EDGE iptables -A FORWARD -i veth-edge-cli -o veth-edge-srv -j ACCEPT
+ip netns exec NS-EDGE iptables -A FORWARD -i veth-edge-srv -o veth-edge-cli -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# NAT para salida a internet (simulada)
+ip netns exec NS-EDGE iptables -t nat -A POSTROUTING -o veth-edge-srv -j MASQUERADE
+
+# Permitir ping y DNS
+ip netns exec NS-EDGE iptables -A FORWARD -p icmp -j ACCEPT
+ip netns exec NS-EDGE iptables -A FORWARD -p udp --dport 53 -j ACCEPT
+ip netns exec NS-EDGE iptables -A FORWARD -p tcp --dport 53 -j ACCEPT
 
 # Logging para debugging
-ip netns exec NS-EDGE iptables -A FORWARD -j LOG --log-prefix "[LAB-FW-FORWARD] " --log-level 4
-ip netns exec NS-EDGE iptables -A INPUT -j LOG --log-prefix "[LAB-FW-INPUT] " --log-level 4
+ip netns exec NS-EDGE iptables -A FORWARD -j LOG --log-prefix "[LAB-FW-FORWARD] "
 
 # Habilitar logging en kernel
-ip netns exec NS-EDGE sysctl -w net.netfilter.nf_log.2=nf_log_ipv4
+ip netns exec NS-EDGE sysctl -w net.netfilter.nf_log.2=nf_log_ipv4 >/dev/null
 
-echo "✅ Configuración de red completada"
+echo "✅ Configuración de red completada (IDEMPOTENTE)"
 
-# Mostrar resumen
+# 6. MOSTRAR RESUMEN
 echo ""
 echo "📊 RESUMEN DE CONFIGURACIÓN:"
 echo "   Namespaces:"
 ip netns list
 echo ""
 echo "   Interfaces en NS-CLIENT:"
-ip netns exec NS-CLIENT ip addr show | grep -E "(inet|^[0-9]:)" | grep -v lo
+ip netns exec NS-CLIENT ip addr show veth-client 2>/dev/null || echo "    No configurada"
 echo ""
 echo "   Interfaces en NS-EDGE:"
-ip netns exec NS-EDGE ip addr show | grep -E "(inet|^[0-9]:)" | grep -v lo
+ip netns exec NS-EDGE ip addr show veth-edge-cli 2>/dev/null || echo "    No configurada"
+ip netns exec NS-EDGE ip addr show veth-edge-srv 2>/dev/null || echo "    No configurada"
 echo ""
 echo "   Interfaces en NS-SERVICES:"
-ip netns exec NS-SERVICES ip addr show | grep -E "(inet|^[0-9]:)" | grep -v lo
+ip netns exec NS-SERVICES ip addr show veth-srv 2>/dev/null || echo "    No configurada"
+EOF
+
+chmod +x /usr/local/bin/lab-net-setup-idempotent.sh
+
+# 2. LUEGO CREAR LA VERSIÓN REGULAR QUE USA LA IDEMPOTENTE
+cat > /usr/local/bin/lab-net-setup.sh << 'EOF'
+#!/bin/bash
+# Este es un wrapper que usa la versión idempotente
+/usr/local/bin/lab-net-setup-idempotent.sh
 EOF
 
 chmod +x /usr/local/bin/lab-net-setup.sh
+
+echo "   ✅ Scripts de red generados:"
+echo "      • /usr/local/bin/lab-net-setup-idempotent.sh"
+echo "      • /usr/local/bin/lab-net-setup.sh"
 
 # ---------------------------------------------------------------------------
 # 8️⃣ SCRIPT DE VERIFICACIÓN DE SALUD (HEALTH CHECK)
@@ -858,36 +897,24 @@ chmod +x /usr/local/bin/lab-health-check.sh
 
 
 # ---------------------------------------------------------------------------
-# 9️⃣ PERSISTENCIA CON SYSTEMD - VERSIÓN DEFINITIVA
+# 9️⃣ PERSISTENCIA CON SYSTEMD - VERSIÓN DEFINITIVA Y SIMPLIFICADA
 # ---------------------------------------------------------------------------
 # Este bloque transforma el laboratorio de una configuración manual y volátil en un servicio 
-# de sistema robusto y persistente. Su función principal es orquestar el ciclo de vida de 
-# los servicios (Nginx y Dnsmasq) para que se ejecuten estrictamente dentro de sus 
-# respectivos Namespaces de red, utilizando unidades de Systemd personalizadas. Mediante 
-# el uso de dependencias (`After`, `Wants`, `Requires`), se garantiza un orden de arranque 
-# lógico: primero se levanta la infraestructura de red (namespaces y veth), y solo cuando 
-# el entorno está listo, se inician los servicios. Además, se incluye la herramienta 
-# 'lab-ctl', una interfaz de línea de comandos simplificada que permite al usuario gestionar 
-# todo el ecosistema (iniciar, detener, ver logs o estado) sin necesidad de interactuar 
-# directamente con la complejidad de los comandos de red o de sistema subyacentes.
+# de sistema robusto y persistente. Ahora que el script lab-net-setup.sh ES IDEMPOTENTE por
+# diseño (creado en el bloque 7), podemos crear servicios systemd que funcionarán correctamente
+# tanto en la instalación inicial como en reinicios posteriores.
 # ---------------------------------------------------------------------------
-
 echo "[9/14] 🔄 Configurando servicios y persistencia..."
 
-# 1. REEMPLAZAR EL SCRIPT ORIGINAL CON EL IDEMPOTENTE
-echo "   🔧 Actualizando script de red a versión idempotente..."
-cp /usr/local/bin/lab-net-setup-idempotent.sh /usr/local/bin/lab-net-setup.sh
-chmod +x /usr/local/bin/lab-net-setup.sh
-
-# 2. EJECUTAR RED (ahora es idempotente)
+# 1. EJECUTAR RED (script ya es idempotente gracias al bloque 7)
 echo "   🌐 Configurando red (idempotente)..."
 /usr/local/bin/lab-net-setup.sh
 echo "   ✅ Red configurada"
 
-# 3. CREAR SERVICIOS SYSTEMD SIMPLIFICADOS Y ROBUSTOS
+# 2. CREAR SERVICIOS SYSTEMD SIMPLIFICADOS Y ROBUSTOS
 echo "   🛠️  Configurando systemd services..."
 
-# Servicio para nginx (DENTRO del namespace)
+# Servicio para nginx (DENTRO del namespace) - SIMPLIFICADO
 cat > /etc/systemd/system/lab-nginx-ns.service << 'EOF'
 [Unit]
 Description=Nginx Web Server inside NS-SERVICES namespace
@@ -897,8 +924,9 @@ ConditionPathExists=/var/run/netns/NS-SERVICES
 
 [Service]
 Type=simple
-# Esperar a que el namespace exista
-ExecStartPre=/bin/bash -c 'while [ ! -e /var/run/netns/NS-SERVICES ]; do sleep 0.5; done'
+# Esperar a que el namespace exista (máximo 10 segundos)
+ExecStartPre=/bin/bash -c 'count=0; while [ ! -e /var/run/netns/NS-SERVICES ] && [ $count -lt 20 ]; do sleep 0.5; count=$((count+1)); done'
+ExecStartPre=/bin/bash -c 'if [ ! -e /var/run/netns/NS-SERVICES ]; then echo "ERROR: NS-SERVICES namespace not found"; exit 1; fi'
 # Ejecutar nginx DENTRO del namespace
 ExecStart=/usr/bin/ip netns exec NS-SERVICES /usr/sbin/nginx -g "daemon off;" -c /etc/lab-configs/nginx.conf
 ExecStop=/usr/bin/ip netns exec NS-SERVICES /usr/sbin/nginx -s quit
@@ -917,18 +945,19 @@ SyslogIdentifier=lab-nginx
 WantedBy=multi-user.target
 EOF
 
-# Servicio para dnsmasq (DENTRO del namespace)
+# Servicio para dnsmasq (DENTRO del namespace) - SIMPLIFICADO
 cat > /etc/systemd/system/lab-dnsmasq-ns.service << 'EOF'
 [Unit]
 Description=Dnsmasq DNS/DHCP inside NS-SERVICES namespace
-After=lab-nginx-ns.service
-Wants=lab-nginx-ns.service
+After=network.target
+Wants=network.target
 ConditionPathExists=/var/run/netns/NS-SERVICES
 
 [Service]
 Type=simple
-# Esperar a que el namespace exista
-ExecStartPre=/bin/bash -c 'while [ ! -e /var/run/netns/NS-SERVICES ]; do sleep 0.5; done'
+# Esperar a que el namespace exista (máximo 10 segundos)
+ExecStartPre=/bin/bash -c 'count=0; while [ ! -e /var/run/netns/NS-SERVICES ] && [ $count -lt 20 ]; do sleep 0.5; count=$((count+1)); done'
+ExecStartPre=/bin/bash -c 'if [ ! -e /var/run/netns/NS-SERVICES ]; then echo "ERROR: NS-SERVICES namespace not found"; exit 1; fi'
 # Ejecutar dnsmasq DENTRO del namespace
 ExecStart=/usr/bin/ip netns exec NS-SERVICES /usr/sbin/dnsmasq --keep-in-foreground -C /etc/lab-configs/dnsmasq.conf
 ExecStop=/usr/bin/ip netns exec NS-SERVICES /usr/bin/pkill dnsmasq
@@ -947,7 +976,7 @@ SyslogIdentifier=lab-dnsmasq
 WantedBy=multi-user.target
 EOF
 
-# Servicio PRINCIPAL que maneja solo los namespaces
+# Servicio PRINCIPAL que maneja solo los namespaces - SIMPLIFICADO
 cat > /etc/systemd/system/lab-infrastructure.service << 'EOF'
 [Unit]
 Description=Lab 3-Tier Network Infrastructure (Namespaces Setup)
@@ -958,13 +987,10 @@ Before=lab-nginx-ns.service lab-dnsmasq-ns.service
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-# Usar script IDEMPOTENTE
+# Usar script IDEMPOTENTE (gracias al bloque 7)
 ExecStart=/usr/local/bin/lab-net-setup.sh
 # Pequeña pausa para estabilización
 ExecStartPost=/bin/sleep 2
-
-# Limpiar al detener (solo si realmente queremos limpiar)
-# ExecStop=-/usr/bin/ip netns delete NS-CLIENT NS-EDGE NS-SERVICES 2>/dev/null
 
 StandardOutput=journal
 StandardError=journal
@@ -974,105 +1000,120 @@ SyslogIdentifier=lab-infra
 WantedBy=multi-user.target
 EOF
 
-# 4. CREAR UN TARGET QUE ORQUESTE TODO
-cat > /etc/systemd/system/lab-complete.target << 'EOF'
-[Unit]
-Description=Complete Lab 3-Tier Environment
-Requires=lab-infrastructure.service lab-nginx-ns.service lab-dnsmasq-ns.service
-After=lab-infrastructure.service lab-nginx-ns.service lab-dnsmasq-ns.service
-AllowIsolate=yes
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# 5. RECARGAR SYSTEMD
+# 3. RECARGAR SYSTEMD
 systemctl daemon-reload
 
-# 6. HABILITAR SERVICIOS (para inicio automático post-reinicio)
+# 4. HABILITAR SERVICIOS (para inicio automático post-reinicio)
 systemctl enable lab-infrastructure
 systemctl enable lab-nginx-ns
 systemctl enable lab-dnsmasq-ns
-systemctl enable lab-complete.target
 
-echo "   ✅ Servicios systemd configurados"
+echo "   ✅ Servicios systemd configurados y habilitados"
 
-# 7. INICIAR SERVICIOS AHORA MISMO (no esperar al reinicio)
-echo "   🚀 Iniciando servicios ahora..."
+# 5. INICIAR SERVICIOS AHORA MISMO (no esperar al reinicio)
+echo "   🚀 Iniciando servicios..."
 
-# Iniciar infraestructura (ya está corriendo, pero por si acaso)
+# Iniciar infraestructura - SEGURO porque es idempotente
+echo "   🔹 Iniciando infraestructura de red..."
 systemctl start lab-infrastructure
-
-# Pequeña pausa
 sleep 3
 
-# Iniciar nginx
-echo "   🔹 Iniciando nginx..."
-systemctl start lab-nginx-ns
-sleep 2
-
-# Iniciar dnsmasq
-echo "   🔹 Iniciando dnsmasq..."
-systemctl start lab-dnsmasq-ns
-sleep 2
-
-# 8. VERIFICAR QUE TODO FUNCIONE
-echo "   🔍 Verificando estado..."
-if systemctl is-active --quiet lab-nginx-ns && systemctl is-active --quiet lab-dnsmasq-ns; then
-    echo "   ✅ Todos los servicios activos via systemd"
+# Verificar que los namespaces existen antes de continuar
+if ip netns list | grep -q "NS-SERVICES"; then
+    echo "   ✅ Namespaces creados correctamente"
+    
+    # Iniciar nginx
+    echo "   🔹 Iniciando nginx..."
+    if systemctl start lab-nginx-ns; then
+        echo "   ✅ Nginx iniciado via systemd"
+    else
+        echo "   ⚠️  Falló systemd, iniciando nginx manualmente..."
+        ip netns exec NS-SERVICES /usr/sbin/nginx -g "daemon off;" -c /etc/lab-configs/nginx.conf &
+        echo $! > /tmp/lab-nginx.pid
+    fi
+    sleep 2
+    
+    # Iniciar dnsmasq
+    echo "   🔹 Iniciando dnsmasq..."
+    if systemctl start lab-dnsmasq-ns; then
+        echo "   ✅ Dnsmasq iniciado via systemd"
+    else
+        echo "   ⚠️  Falló systemd, iniciando dnsmasq manualmente..."
+        ip netns exec NS-SERVICES /usr/sbin/dnsmasq -C /etc/lab-configs/dnsmasq.conf --no-daemon &
+        echo $! > /tmp/lab-dnsmasq.pid
+    fi
+    sleep 2
 else
-    echo "   ⚠️  Algunos servicios no están activos, iniciando manualmente..."
+    echo "   ❌ ERROR: No se pudieron crear los namespaces"
+    echo "   🔧 Creando namespaces manualmente..."
+    /usr/local/bin/lab-net-setup.sh
+    sleep 3
     
-    # Fallback manual
-    ip netns exec NS-SERVICES pkill nginx 2>/dev/null || true
-    ip netns exec NS-SERVICES pkill dnsmasq 2>/dev/null || true
-    sleep 1
-    
+    # Iniciar servicios manualmente
     ip netns exec NS-SERVICES /usr/sbin/nginx -g "daemon off;" -c /etc/lab-configs/nginx.conf &
-    echo $! > /tmp/lab-nginx.pid
-    
     ip netns exec NS-SERVICES /usr/sbin/dnsmasq -C /etc/lab-configs/dnsmasq.conf --no-daemon &
-    echo $! > /tmp/lab-dnsmasq.pid
-    
     echo "   ✅ Servicios iniciados manualmente"
 fi
 
-# 9. CREAR SCRIPT DE CONTROL FÁCIL
+# 6. CREAR SCRIPT DE CONTROL FÁCIL
 cat > /usr/local/bin/lab-ctl << 'EOF'
 #!/bin/bash
 
 case "$1" in
     start)
         echo "🚀 Iniciando lab completo..."
-        systemctl start lab-complete.target
+        systemctl start lab-infrastructure
+        sleep 3
+        systemctl start lab-nginx-ns
+        systemctl start lab-dnsmasq-ns
+        echo "✅ Lab iniciado"
         ;;
     stop)
         echo "🛑 Deteniendo lab..."
         systemctl stop lab-dnsmasq-ns lab-nginx-ns lab-infrastructure
+        echo "✅ Lab detenido"
         ;;
     restart)
         echo "🔁 Reiniciando lab..."
-        systemctl restart lab-complete.target
+        systemctl stop lab-dnsmasq-ns lab-nginx-ns 2>/dev/null || true
+        systemctl restart lab-infrastructure
+        sleep 3
+        systemctl start lab-nginx-ns
+        systemctl start lab-dnsmasq-ns
+        echo "✅ Lab reiniciado"
         ;;
     status)
         echo "=== 🏷️  NAMESPACES ==="
         ip netns list
         echo ""
-        echo "=== 🖥️  SERVICIOS ==="
-        systemctl status lab-infrastructure lab-nginx-ns lab-dnsmasq-ns --no-pager | grep -A1 "●\|Active:"
+        echo "=== 🖥️  SERVICIOS SYSTEMD ==="
+        systemctl status lab-infrastructure lab-nginx-ns lab-dnsmasq-ns --no-pager | grep -A1 "●\|Active:" | head -12
         echo ""
         echo "=== 🔗 CONECTIVIDAD ==="
         if ip netns exec NS-CLIENT ping -c 1 -W 1 10.10.100.10 >/dev/null 2>&1; then
             echo "✅ Cliente -> Servicios: CONECTADO"
+            echo "🌐 Web: http://10.10.100.10"
         else
             echo "❌ Cliente -> Servicios: SIN CONEXIÓN"
         fi
         ;;
     logs)
+        echo "📋 Mostrando logs del lab (Ctrl+C para salir)..."
         journalctl -u lab-infrastructure -u lab-nginx-ns -u lab-dnsmasq-ns -f
         ;;
+    test)
+        echo "🧪 Ejecutando pruebas..."
+        echo "1. Probando conectividad..."
+        ip netns exec NS-CLIENT ping -c 2 10.10.100.10
+        echo ""
+        echo "2. Probando web..."
+        ip netns exec NS-CLIENT curl -s -o /dev/null -w "Código HTTP: %{http_code}\n" http://10.10.100.10
+        echo ""
+        echo "3. Probando DNS..."
+        ip netns exec NS-CLIENT nslookup web.lab.local 10.10.100.10
+        ;;
     *)
-        echo "Uso: $0 {start|stop|restart|status|logs}"
+        echo "Uso: $0 {start|stop|restart|status|logs|test}"
         echo ""
         echo "Comandos:"
         echo "  start   - Iniciar todo el lab"
@@ -1080,6 +1121,7 @@ case "$1" in
         echo "  restart - Reiniciar todo el lab"
         echo "  status  - Ver estado completo"
         echo "  logs    - Ver logs en tiempo real"
+        echo "  test    - Ejecutar pruebas de conectividad"
         exit 1
         ;;
 esac
@@ -1087,21 +1129,53 @@ EOF
 
 chmod +x /usr/local/bin/lab-ctl
 
+# 7. CREAR ARCHIVO DE RESUMEN
+cat > /root/lab-systemd-summary.txt << EOF
+=== RESUMEN DE CONFIGURACIÓN SYSTEMD ===
+Fecha: $(date)
+
+SERVICIOS CREADOS:
+1. lab-infrastructure.service
+   - Descripción: Configura namespaces y red
+   - Tipo: oneshot (RemainAfterExit=yes)
+   - Script: /usr/local/bin/lab-net-setup.sh (IDEMPOTENTE)
+
+2. lab-nginx-ns.service  
+   - Descripción: Nginx dentro de NS-SERVICES
+   - Depende de: lab-infrastructure.service
+   - Verifica: namespace existe antes de iniciar
+
+3. lab-dnsmasq-ns.service
+   - Descripción: Dnsmasq dentro de NS-SERVICES
+   - Depende de: lab-infrastructure.service
+   - Verifica: namespace existe antes de iniciar
+
+HERRAMIENTAS:
+- lab-ctl: Control completo del lab
+  Comandos: start, stop, restart, status, logs, test
+
+VERIFICACIÓN POST-INSTALACIÓN:
+1. systemctl status lab-infrastructure
+2. lab-ctl status
+3. lab-ctl test
+
+PERSISTENCIA AL REINICIO:
+Los servicios están habilitados (enable) y se iniciarán automáticamente.
+EOF
+
 echo "   ✅ Configuración de persistencia COMPLETADA"
 echo ""
-echo "   📋 RESUMEN:"
-echo "   • Script de red actualizado a versión idempotente"
-echo "   • 3 servicios systemd creados:"
-echo "     - lab-infrastructure (namespaces)"
-echo "     - lab-nginx-ns (nginx en namespace)"
-echo "     - lab-dnsmasq-ns (dnsmasq en namespace)"
-echo "   • Target: lab-complete.target (orquesta todo)"
-echo "   • Herramienta: lab-ctl {start|stop|restart|status|logs}"
+echo "   📋 RESUMEN FINAL:"
+echo "   • Script de red: IDEMPOTENTE por diseño"
+echo "   • 3 servicios systemd creados y habilitados"
+echo "   • Herramienta: lab-ctl {start|stop|restart|status|logs|test}"
 echo ""
-echo "   🔧 Comandos útiles:"
+echo "   🔧 Comandos para probar AHORA:"
 echo "      lab-ctl status   # Ver estado completo"
-echo "      lab-ctl logs     # Ver logs"
-echo "      systemctl status lab-complete.target"
+echo "      lab-ctl test     # Ejecutar pruebas"
+echo "      lab-ctl logs     # Ver logs en tiempo real"
+echo ""
+echo "   💾 Resumen guardado en: /root/lab-systemd-summary.txt"
 
 
 
