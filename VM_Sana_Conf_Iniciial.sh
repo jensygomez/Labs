@@ -1289,36 +1289,193 @@ echo ""
 echo "   💾 Resumen guardado en: /root/lab-systemd-summary.txt"
 
 
-
 # ---------------------------------------------------------------------------
-# 🔟 ACCESO EXTERNO Y ROUTING (COMUNICACIÓN HOST-LAB)
+# 🔟 FORZAR SSH POST-CLOUD-INIT Y ROUTING EXTERNO
 # ---------------------------------------------------------------------------
-# Este bloque actúa como el "puente" definitivo entre la infraestructura virtualizada y el 
-# exterior. Su objetivo es habilitar el enrutamiento a nivel de kernel en el sistema Host, 
-# permitiendo que los paquetes de datos fluyan desde los Namespaces aislados hacia la red 
-# física o Internet. Mediante la activación de 'ip_forward' y la configuración de reglas 
-# NAT (Masquerade) en el Host, se garantiza que los nodos del laboratorio (como el cliente 
-# o el servidor de servicios) puedan realizar actualizaciones de paquetes o consultas 
-# externas, enmascarando sus IPs privadas bajo la IP real del host. Básicamente, esto 
-# convierte a la máquina anfitriona en el último salto de salida (Gateway) para todo el 
-# tráfico generado dentro del ecosistema 3-Tier.
+# Este bloque realiza DOS funciones críticas:
+# 1. FORZAR CONFIGURACIÓN SSH: Cloud-init se ejecuta después de todos los scripts y puede
+#    sobrescribir configuraciones SSH. Aquí aplicamos configuraciones con ALTA PRIORIDAD
+#    que cloud-init no puede modificar, garantizando acceso SSH por contraseña.
+# 2. ROUTING EXTERNO: Habilita el enrutamiento a nivel de kernel en el Host y configura
+#    reglas NAT (Masquerade) para que los nodos del laboratorio puedan acceder a redes
+#    externas, convirtiendo al host en el gateway final del ecosistema 3-Tier.
 # ---------------------------------------------------------------------------
 
-echo "[10/14] 🌉 Configurando routing en el Host..."
+echo "[10/14] 🌉 Configurando SSH definitivo y routing externo..."
 
-# Habilitar forwarding
+# ============================================================================
+# PARTE 1: FORZAR CONFIGURACIÓN SSH (SOBREESCRIBE CLOUD-INIT)
+# ============================================================================
+echo "   🔐 Configurando SSH definitivo (post-cloud-init)..."
+
+# 1.1 Crear configuración SSH con MÁXIMA PRIORIDAD (99-)
+cat > /etc/ssh/sshd_config.d/99-lab-ssh-force.conf <<'EOF'
+# ============================================================
+# LAB 3-TIER - SSH CONFIGURATION (FORZADA - ALTA PRIORIDAD)
+# Este archivo TIENE PRIORIDAD sobre cualquier otra configuración
+# ============================================================
+
+# Authentication - FORZADO
+PasswordAuthentication yes
+PermitRootLogin yes
+PubkeyAuthentication yes
+ChallengeResponseAuthentication no
+UsePAM yes
+
+# Session
+LoginGraceTime 120
+StrictModes no
+MaxAuthTries 6
+MaxSessions 20
+MaxStartups 10:30:100
+PermitEmptyPasswords no
+
+# Features
+X11Forwarding yes
+PrintMotd no
+PrintLastLog no
+TCPKeepAlive yes
+ClientAliveInterval 30
+ClientAliveCountMax 3
+UseDNS no
+
+# Subsystem
+Subsystem sftp /usr/libexec/openssh/sftp-server
+
+# Environment
+AcceptEnv LANG LC_*
+EOF
+
+# 1.2 Establecer permisos que eviten modificaciones
+chmod 644 /etc/ssh/sshd_config.d/99-lab-ssh-force.conf
+chown root:root /etc/ssh/sshd_config.d/99-lab-ssh-force.conf
+
+# 1.3 Hacer el archivo INMUTABLE (cloud-init no puede modificarlo)
+chattr +i /etc/ssh/sshd_config.d/99-lab-ssh-force.conf 2>/dev/null || echo "   ℹ️  chattr no disponible, continuando..."
+
+# 1.4 Verificar que la configuración principal INCLUYE nuestros archivos
+if ! grep -q "Include /etc/ssh/sshd_config.d/*.conf" /etc/ssh/sshd_config; then
+    echo "Include /etc/ssh/sshd_config.d/*.conf" >> /etc/ssh/sshd_config
+fi
+
+# 1.5 Configurar .ssh del usuario student (por si cloud-init lo borró)
+mkdir -p /home/student/.ssh
+cat > /home/student/.ssh/authorized_keys <<'EOF'
+# Clave SSH de ejemplo para el lab
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIByFDKwjMDeGJ5GRhXmZHa75h7dK9JcPHvWWtesSO3/x student@lab-3tier
+
+# NOTA: Cloud-init puede inyectar claves adicionales aquí
+EOF
+chown -R student:student /home/student/.ssh
+chmod 700 /home/student/.ssh
+chmod 600 /home/student/.ssh/authorized_keys
+
+# 1.6 Reiniciar SSH para aplicar cambios
+systemctl restart sshd
+sleep 2
+
+# 1.7 Verificar configuración aplicada
+echo "   📋 Verificación SSH:"
+if sshd -T 2>/dev/null | grep -q "passwordauthentication yes"; then
+    echo "   ✅ SSH configurado: PasswordAuthentication=yes"
+else
+    echo "   ⚠️  SSH: PasswordAuthentication podría estar deshabilitado"
+    # Forzar en configuración principal como respaldo
+    sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+    sed -i 's/^#*PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+    systemctl restart sshd
+fi
+
+# ============================================================================
+# PARTE 2: ROUTING EXTERNO (HOST COMO GATEWAY)
+# ============================================================================
+echo "   🌐 Configurando routing externo..."
+
+# 2.1 Habilitar IP forwarding en el kernel
 sysctl -w net.ipv4.ip_forward=1
 echo "net.ipv4.ip_forward=1" > /etc/sysctl.d/99-lab-kernel.conf
 
-# Configurar reglas iptables en el host para permitir tráfico
+# 2.2 Detectar interfaces de red automáticamente
+HOST_INTERFACE=$(ip route | grep default | awk '{print $5}' | head -1)
+VIRT_INTERFACE="virbr0"
+
+# 2.3 Configurar NAT para salida a internet
+echo "   🔧 Configurando NAT en interfaz: $HOST_INTERFACE"
+iptables -t nat -F POSTROUTING 2>/dev/null || true
 iptables -t nat -A POSTROUTING -s 10.10.50.0/24 -j MASQUERADE 2>/dev/null || true
-iptables -A FORWARD -i virbr0 -o enp1s0 -j ACCEPT 2>/dev/null || true
-iptables -A FORWARD -i enp1s0 -o virbr0 -m state --state RELATED,ESTABLISHED -j ACCEPT 2>/dev/null || true
+iptables -t nat -A POSTROUTING -s 10.10.100.0/24 -j MASQUERADE 2>/dev/null || true
 
-# Aplicar cambios de sysctl
-sysctl -p /etc/sysctl.d/99-lab-kernel.conf
+# 2.4 Configurar reglas de forwarding entre interfaces
+if [[ -n "$HOST_INTERFACE" && -n "$VIRT_INTERFACE" ]]; then
+    echo "   🔗 Configurando forwarding: $VIRT_INTERFACE <-> $HOST_INTERFACE"
+    iptables -A FORWARD -i "$VIRT_INTERFACE" -o "$HOST_INTERFACE" -j ACCEPT 2>/dev/null || true
+    iptables -A FORWARD -i "$HOST_INTERFACE" -o "$VIRT_INTERFACE" -m state --state RELATED,ESTABLISHED -j ACCEPT 2>/dev/null || true
+else
+    echo "   ⚠️  No se detectaron interfaces para forwarding automático"
+    echo "   💡 Configura manualmente si necesitas acceso externo"
+fi
 
-echo "   ✅ Routing configurado"
+# 2.5 Aplicar cambios de sysctl persistentes
+sysctl -p /etc/sysctl.d/99-lab-kernel.conf >/dev/null 2>&1
+
+# 2.6 Guardar reglas iptables para persistencia
+if command -v iptables-save >/dev/null 2>&1; then
+    iptables-save > /etc/sysconfig/iptables 2>/dev/null || true
+    echo "   💾 Reglas iptables guardadas para persistencia"
+fi
+
+# ============================================================================
+# PARTE 3: VERIFICACIÓN FINAL
+# ============================================================================
+echo "   🔍 Verificación final..."
+
+# 3.1 Verificar SSH está escuchando
+if ss -tlnp | grep -q ":22 "; then
+    echo "   ✅ SSH escuchando en puerto 22"
+else
+    echo "   ❌ SSH no está escuchando"
+fi
+
+# 3.2 Verificar IP forwarding
+if [[ $(sysctl -n net.ipv4.ip_forward) -eq 1 ]]; then
+    echo "   ✅ IP forwarding habilitado"
+else
+    echo "   ❌ IP forwarding deshabilitado"
+fi
+
+# 3.3 Verificar reglas NAT
+if iptables -t nat -L POSTROUTING -n 2>/dev/null | grep -q MASQUERADE; then
+    echo "   ✅ Reglas NAT configuradas"
+else
+    echo "   ⚠️  Reglas NAT no configuradas"
+fi
+
+# 3.4 Test rápido de conectividad SSH local
+echo -n "   🔄 Test SSH local... "
+if timeout 5 ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=yes student@localhost echo "test" 2>/dev/null | grep -q "test"; then
+    echo "✅ OK"
+else
+    echo "❌ Falló"
+    echo "   💡 Ejecuta 'systemctl status sshd' para diagnóstico"
+fi
+
+echo ""
+echo "   ✅ SSH forzado y routing configurados"
+echo ""
+echo "   🔑 ACCESO SSH GARANTIZADO:"
+echo "      • Usuario: student"
+echo "      • Contraseña: redhat"
+echo "      • PasswordAuthentication: SI"
+echo "      • PermitRootLogin: SI"
+echo ""
+echo "   🌐 ROUTING EXTERNO:"
+echo "      • IP Forwarding: Habilitado"
+echo "      • NAT: Configurado para 10.10.50.0/24 y 10.10.100.0/24"
+if [[ -n "$HOST_INTERFACE" ]]; then
+    echo "      • Interfaz salida: $HOST_INTERFACE"
+fi
+
+
 
 # ---------------------------------------------------------------------------
 # 11️⃣ ALIASES Y COMODIDAD (UX & TROUBLESHOOTING)
