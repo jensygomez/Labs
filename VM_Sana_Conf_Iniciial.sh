@@ -719,12 +719,14 @@ echo "      - MySQL: mysql -u $DB_USER -p$DB_PASS -h $IP_SERVICES $DB_NAME"
 EOF
 
 chmod +x /usr/local/bin/lab-health-check.sh
+
+
 # ---------------------------------------------------------------------------
 # 9️⃣ PERSISTENCIA CON SYSTEMD
 # ---------------------------------------------------------------------------
 echo "[9/14] 🔄 Creando servicio de infraestructura..."
 
-# 9a. Scripts de persistencia iptables (ANTES del servicio principal)
+# 9a. Scripts de persistencia iptables (SIN ejecutar todavía)
 echo "   🛡️ Configurando persistencia de firewall..."
 mkdir -p /etc/lab-configs/iptables.d
 
@@ -740,16 +742,16 @@ cat > /usr/local/bin/lab-fw-restore.sh <<'EOF'
 set -euo pipefail
 if [[ -f /etc/lab-configs/iptables-edge.rules ]]; then
     ip netns exec NS-EDGE iptables-restore < /etc/lab-configs/iptables-edge.rules
-    echo "✅ Reglas iptables restauradas desde backup"
+    echo "✅ Reglas iptables restauradas"
 else
-    echo "ℹ️ Sin reglas previas, ejecutando setup inicial..."
+    echo "ℹ️ Sin reglas previas"
 fi
 EOF
 
 chmod +x /usr/local/bin/lab-fw-{save,restore}.sh
 
-# Guardar reglas iniciales (después de que lab-net-setup.sh las cree)
-ip netns exec NS-EDGE /usr/local/bin/lab-fw-save.sh || true
+# 🔥 QUITAR ESTA LÍNEA QUE CAUSABA ERROR:
+# ip netns exec NS-EDGE /usr/local/bin/lab-fw-save.sh || true  ← ❌ ELIMINAR
 
 cat > /etc/systemd/system/lab-infrastructure.service <<EOF
 [Unit]
@@ -761,13 +763,12 @@ Before=nginx-ns.service dnsmasq-ns.service
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-# 🔥 RESTAURAR FW ANTES de levantar red
 ExecStartPre=/usr/local/bin/lab-fw-restore.sh
 ExecStart=/usr/local/bin/lab-net-setup.sh
 ExecStartPost=/bin/sleep 2
+ExecStartPost=/usr/local/bin/lab-fw-save.sh    # 🔥 GUARDAR después de setup
 ExecStartPost=/usr/local/bin/lab-health-check.sh
 
-# 🔥 GUARDAR FW ANTES de limpiar
 ExecStop=/usr/local/bin/lab-fw-save.sh
 ExecStop=/bin/ip netns delete NS-CLIENT 2>/dev/null || true
 ExecStop=/bin/ip netns delete NS-EDGE 2>/dev/null || true
@@ -784,7 +785,7 @@ SyslogIdentifier=lab-infra
 WantedBy=multi-user.target
 EOF
 
-# 🔥 SERVICIOS DEDICADOS EN NS-SERVICES (reemplazan ExecStartPost)
+# 🔥 nginx-ns.service CORREGIDO
 cat > /etc/systemd/system/nginx-ns.service <<EOF
 [Unit]
 Description=Nginx en NS-SERVICES
@@ -793,7 +794,7 @@ PartOf=lab-infrastructure.service
 BindsTo=lab-infrastructure.service
 
 [Service]
-Type=notify
+Type=simple              # 🔥 CAMBIADO: simple en vez de notify
 NetworkNamespacePath=/var/run/netns/NS-SERVICES
 ExecStart=/usr/sbin/nginx -g "daemon off;" -c /etc/lab-configs/nginx.conf
 ExecReload=/bin/kill -s HUP \$MAINPID
@@ -805,6 +806,7 @@ RestartSec=5s
 WantedBy=multi-user.target
 EOF
 
+# 🔥 dnsmasq-ns.service CORREGIDO  
 cat > /etc/systemd/system/dnsmasq-ns.service <<EOF
 [Unit]
 Description=Dnsmasq en NS-SERVICES
@@ -813,9 +815,9 @@ PartOf=lab-infrastructure.service
 BindsTo=lab-infrastructure.service
 
 [Service]
-Type=notify
+Type=simple              # 🔥 CAMBIADO: simple en vez de notify
 NetworkNamespacePath=/var/run/netns/NS-SERVICES
-ExecStart=/usr/sbin/dnsmasq -C /etc/lab-configs/dnsmasq.conf
+ExecStart=/usr/sbin/dnsmasq -C /etc/lab-configs/dnsmasq.conf --no-daemon
 ExecReload=/bin/kill -s HUP \$MAINPID
 KillMode=mixed
 Restart=on-failure
@@ -827,12 +829,13 @@ EOF
 
 systemctl daemon-reload
 systemctl enable lab-infrastructure nginx-ns dnsmasq-ns
-systemctl start lab-infrastructure
+systemctl start lab-infrastructure nginx-ns dnsmasq-ns    # 🔥 ARRANCAR TODOS
 
 echo "   ✅ Servicios systemd configurados:"
 echo "      • lab-infrastructure (red + FW persistente)"
 echo "      • nginx-ns (web en namespace)"
 echo "      • dnsmasq-ns (DNS en namespace)"
+
 
 
 # ---------------------------------------------------------------------------
