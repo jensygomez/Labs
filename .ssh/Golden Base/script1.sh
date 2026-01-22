@@ -196,6 +196,34 @@ chmod +x /root/check-post-reboot.sh
 echo "   ✅ Script de verificación creado"
 
 # ---------------------------------------------------------------------------
+# 5. CONFIGURACIÓN DE PROMPT PARA NAMESPACES
+# ---------------------------------------------------------------------------
+cat >> /root/.bashrc << 'EOF'
+
+# --- Lógica de Prompt para Namespaces (Golden Image) ---
+CURRENT_NS=$(ip netns identify $$)
+
+if [ -n "$CURRENT_NS" ]; then
+    case "$CURRENT_NS" in
+        NS-SERVICES)
+            # Rojo: servicios críticos
+            export PS1="\[\e[1;31m\]($CURRENT_NS)\[\e[0m\] \u@\h:\w# "
+            ;;
+        NS-SYSADMIN)
+            # Azul: administración
+            export PS1="\[\e[1;34m\]($CURRENT_NS)\[\e[0m\] \u@\h:\w# "
+            ;;
+        *)
+            # Verde: clientes u otros
+            export PS1="\[\e[1;32m\]($CURRENT_NS)\[\e[0m\] \u@\h:\w# "
+            ;;
+    esac
+fi
+
+EOF
+
+
+# ---------------------------------------------------------------------------
 # RESUMEN
 # ---------------------------------------------------------------------------
 echo ""
