@@ -24,9 +24,10 @@
 #
 # 🛠️ MECANISMOS DE INGENIERÍA IMPLEMENTADOS:
 #   1. ENCAPSULAMIENTO EXECUTOR: Se utiliza 'ip netns exec' como wrapper 
-#      principal para los binarios de Nginx y Dnsmasq.
-#   2. GESTIÓN DE PIDs INDEPENDIENTE: Se redirigen los archivos de control 
-#      (.pid) a rutas personalizadas para evitar conflictos con el host.
+#      principal utilizando rutas absolutas de binarios (/usr/sbin/ip).
+#   2. GESTIÓN DE PROCESOS (Type=simple): Se configuran los servicios para 
+#      ejecutarse en primer plano (daemon off) permitiendo que Systemd 
+#      monitoree el ciclo de vida real del proceso dentro del namespace.
 #   3. CADENA DE DEPENDENCIAS: Se configuran las unidades para que esperen 
 #      obligatoriamente a 'lab-network.service' (Script 2).
 #   4. AUTO-SANACIÓN (Self-Healing): Reinicio automático en caso de fallo 
@@ -37,9 +38,14 @@
 #   conectividad extremo a extremo y el sellado de la Golden Image.
 #
 # ============================================================================
+#!/bin/bash
+# ============================================================================
+# PROYECTO: Automatización de Golden Base Image (Rocky Linux)
+# SCRIPT:   4 de 5 - Orquestación y Automatización (Orchestration Layer) - CORREGIDO
+# ============================================================================
 set -e
 
-echo "=== 🚀 SCRIPT 4: ORQUESTACIÓN DE SERVICIOS EN NAMESPACES ==="
+echo "=== 🚀 SCRIPT 4: ORQUESTACIÓN DE SERVICIOS EN NAMESPACES (VERSIÓN FINAL) ==="
 echo "📅 Fecha: $(date)"
 
 # ---------------------------------------------------------------------------
@@ -52,10 +58,8 @@ if [[ ! -f /etc/lab-configs/nginx.conf ]] || [[ ! -f /etc/lab-configs/dnsmasq.co
 fi
 
 # ---------------------------------------------------------------------------
-# 2. CREACIÓN DE LA UNIDAD: NGINX-NAMESPACE
+# 2. CREACIÓN DE LA UNIDAD: NGINX-NAMESPACE (CORREGIDO)
 # ---------------------------------------------------------------------------
-# Este servicio lanza Nginx dentro de NS-SERVICES. 
-# Se usa 'forking' porque Nginx genera procesos hijos.
 echo "[2/4] 🌐 Orquestando Nginx para NS-SERVICES..."
 
 cat > /etc/systemd/system/lab-nginx.service << 'EOF'
@@ -66,17 +70,13 @@ Wants=lab-network.service
 PartOf=lab-network.service
 
 [Service]
-Type=forking
-# Definimos una ruta de PID única para el namespace
-PIDFile=/run/nginx-ns-services.pid
-
-# Pre-ejecución: Asegurar que el directorio de runtime existe
-ExecStartPre=/usr/bin/mkdir -p /run/nginx
-
-# Ejecución: Wrapper ip netns exec + comando nginx con PID personalizado
-ExecStart=/usr/bin/ip netns exec NS-SERVICES /usr/sbin/nginx -c /etc/lab-configs/nginx.conf -g "pid /run/nginx-ns-services.pid;"
-ExecStop=/usr/bin/ip netns exec NS-SERVICES /usr/sbin/nginx -s stop
-ExecReload=/usr/bin/ip netns exec NS-SERVICES /usr/sbin/nginx -s reload
+# Se usa Type=simple para evitar bloqueos con ip netns exec
+Type=simple
+# Se especifica la ruta completa /usr/sbin/ip detectada con which
+# Se añade 'daemon off' para que el proceso no se pierda de la vista de Systemd
+ExecStart=/usr/sbin/ip netns exec NS-SERVICES /usr/sbin/nginx -c /etc/lab-configs/nginx.conf -g "daemon off;"
+ExecStop=/usr/sbin/ip netns exec NS-SERVICES /usr/sbin/nginx -s stop
+ExecReload=/usr/sbin/ip netns exec NS-SERVICES /usr/sbin/nginx -s reload
 
 Restart=on-failure
 RestartSec=5
@@ -86,20 +86,19 @@ WantedBy=multi-user.target
 EOF
 
 # ---------------------------------------------------------------------------
-# 3. CREACIÓN DE LA UNIDAD: DNSMASQ-NAMESPACE
+# 3. CREACIÓN DE LA UNIDAD: DNSMASQ-NAMESPACE (CORREGIDO)
 # ---------------------------------------------------------------------------
-# Dnsmasq provee resolución DNS interna para que el CLIENTE encuentre a la WEB.
 echo "[3/4] 📡 Orquestando Dnsmasq para NS-SERVICES..."
 
 cat > /etc/systemd/system/lab-dnsmasq.service << 'EOF'
 [Unit]
 Description=Dnsmasq DNS Server (Aislado en NS-SERVICES)
-After=lab-network.service lab-nginx.service
+After=lab-network.service
 
 [Service]
 Type=simple
-# Ejecución: Modo keep-in-foreground para que Systemd pueda monitorearlo fácilmente
-ExecStart=/usr/bin/ip netns exec NS-SERVICES /usr/sbin/dnsmasq -k -C /etc/lab-configs/dnsmasq.conf
+# Se usa la ruta /usr/sbin/ip y el flag -k (keep-in-foreground)
+ExecStart=/usr/sbin/ip netns exec NS-SERVICES /usr/sbin/dnsmasq -k -C /etc/lab-configs/dnsmasq.conf
 
 Restart=on-failure
 RestartSec=5
@@ -113,25 +112,21 @@ EOF
 # ---------------------------------------------------------------------------
 echo "[4/4] 🔌 Activando orquestación y cargando unidades..."
 
-# Recargar el daemon de systemd para reconocer las nuevas unidades
+# Recargar el daemon para registrar los cambios
 systemctl daemon-reload
 
-# Habilitar para que inicien en el próximo arranque (Persistencia)
+# Habilitar persistencia
 systemctl enable lab-nginx.service
 systemctl enable lab-dnsmasq.service
 
-# Iniciar los servicios en orden
-echo "   ➡️ Iniciando Nginx en Namespace..."
-systemctl start lab-nginx.service
+# Iniciar servicios
+echo "   ➡️ Iniciando Nginx y Dnsmasq en Namespaces..."
+systemctl restart lab-nginx.service
+systemctl restart lab-dnsmasq.service
+
+# Pequeña espera para estabilización
 sleep 2
 
-echo "   ➡️ Iniciando DNS en Namespace..."
-systemctl start lab-dnsmasq.service
-sleep 1
-
-# ---------------------------------------------------------------------------
-# RESUMEN DE OPERACIÓN
-# ---------------------------------------------------------------------------
 echo ""
 echo "===================================================="
 echo "✅ FASE 4 COMPLETADA: SERVICIOS ORQUESTADOS"
@@ -139,10 +134,6 @@ echo "===================================================="
 echo "📊 ESTADO DE LOS PROCESOS:"
 echo "   • lab-nginx:   $(systemctl is-active lab-nginx)"
 echo "   • lab-dnsmasq: $(systemctl is-active lab-dnsmasq)"
-echo ""
-echo "⚙️  VERIFICACIÓN TÉCNICA DE AISLAMIENTO:"
-echo "   PIDs detectados en NS-SERVICES:"
-ip netns exec NS-SERVICES ps aux | grep -E 'nginx|dnsmasq' | grep -v grep
 echo ""
 echo "🚀 PRÓXIMO PASO: Script 5 (Validación Final y Hardening)"
 echo "===================================================="
