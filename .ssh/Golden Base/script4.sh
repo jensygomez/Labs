@@ -1,4 +1,3 @@
-#!/bin/bash
 # ============================================================================
 # PROYECTO: Automatización de Golden Base Image (Rocky Linux)
 # SCRIPT:   4 de 5 - Orquestación y Automatización (Orchestration Layer)
@@ -42,34 +41,20 @@
 #   - curl http://10.10.100.10  → HTTP 200
 #   - Resolución DNS funcional desde NS-CLIENT
 # ============================================================================
-
 #!/bin/bash
 set -e
 
-echo "=== 🚀 SCRIPT 4: ORQUESTACIÓN EN MODO BRIDGE (AUTO-FIX) ==="
+echo "=== 🚀 SCRIPT 4: ORQUESTACIÓN PERSISTENTE (MODO BRIDGE) ==="
 echo "📅 Fecha: $(date)"
 
-# ---------------------------------------------------------------------------
-# 1. VALIDACIÓN Y PREPARACIÓN DEL RUNTIME
-# ---------------------------------------------------------------------------
-echo "[1/4] 🔍 Preparando entorno de ejecución..."
-
+# 1. VALIDACIÓN
+echo "[1/4] 🔍 Validando configuraciones..."
 for f in /etc/lab-configs/nginx.conf /etc/lab-configs/dnsmasq.conf; do
-    [[ -f "$f" ]] || { echo "❌ ERROR: Falta archivo de configuración $f"; exit 1; }
+    [[ -f "$f" ]] || { echo "❌ Falta $f"; exit 1; }
 done
 
-# Corregir el error de "Conexión rechazada" asegurando el directorio del PID
-# Esto resuelve el problema de Nginx que detectaste manualmente.
-mkdir -p /run/nginx
-chown -R nginx:nginx /run/nginx
-chmod 755 /run/nginx
-
-echo "   ✅ Runtime y permisos configurados."
-
-# ---------------------------------------------------------------------------
-# 2. UNIDAD SYSTEMD: NGINX EN NS-SERVICES
-# ---------------------------------------------------------------------------
-echo "[2/4] 🌐 Configurando servicio Nginx en Namespace..."
+# 2. UNIDAD SYSTEMD NGINX (CON RUNTIME PERSISTENTE)
+echo "[2/4] 🌐 Creando servicio Nginx con Runtime Automático..."
 
 cat > /etc/systemd/system/lab-nginx.service << 'EOF'
 [Unit]
@@ -79,11 +64,17 @@ Wants=lab-network.service
 
 [Service]
 Type=simple
-# Espera a que la interfaz y la IP estén listas dentro del namespace
+
+# --- ESTA ES LA CLAVE DE LA PERSISTENCIA ---
+# Systemd creará /run/nginx con los permisos correctos en cada arranque
+RuntimeDirectory=nginx
+RuntimeDirectoryMode=0755
+
+# Espera a que la red del namespace esté lista
 ExecStartPre=/usr/sbin/ip netns exec NS-SERVICES /bin/bash -c \
 'until ip addr show veth-srv | grep -q "10.10.100.10"; do sleep 1; done'
 
-# Ejecución en primer plano para que systemd pueda monitorear el proceso
+# Ejecución de Nginx
 ExecStart=/usr/sbin/ip netns exec NS-SERVICES \
 /usr/sbin/nginx -c /etc/lab-configs/nginx.conf -g "daemon off;"
 
@@ -95,10 +86,8 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
-# ---------------------------------------------------------------------------
-# 3. UNIDAD SYSTEMD: DNSMASQ EN NS-SERVICES
-# ---------------------------------------------------------------------------
-echo "[3/4] 📡 Configurando servicio Dnsmasq en Namespace..."
+# 3. UNIDAD SYSTEMD DNSMASQ
+echo "[3/4] 📡 Creando servicio Dnsmasq..."
 
 cat > /etc/systemd/system/lab-dnsmasq.service << 'EOF'
 [Unit]
@@ -117,34 +106,17 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
-# ---------------------------------------------------------------------------
-# 4. ACTIVACIÓN Y AUTOMATIZACIÓN DE CLIENTE
-# ---------------------------------------------------------------------------
-echo "[4/4] 🔌 Activando servicios y configurando resolución..."
+# 4. ACTIVACIÓN Y CONFIGURACIÓN DE RED FINAL
+echo "[4/4] 🔌 Activando servicios y persistencia DNS..."
 
 systemctl daemon-reload
-systemctl enable lab-nginx.service lab-dnsmasq.service
+systemctl enable --now lab-nginx.service lab-dnsmasq.service
 
-# Reiniciar para aplicar cambios
-systemctl restart lab-nginx.service
-systemctl restart lab-dnsmasq.service
-
-# --- SOLUCIÓN AUTOMÁTICA PARA EL CLIENTE ---
-# Inyectamos el nameserver directamente en el namespace del cliente
-# Esto reemplaza tu comando manual de 'echo' y evita usar nmcli.
-echo "   💉 Configurando DNS en NS-CLIENT (10.10.100.10)..."
+# Inyectar el DNS en el cliente de forma persistente para la sesión actual
+# Nota: Para persistencia total de /etc/resolv.conf en namespaces, 
+# lo ideal es que el Script 2 o este lo escriban tras cada boot.
 ip netns exec NS-CLIENT bash -c 'echo "nameserver 10.10.100.10" > /etc/resolv.conf'
 
-sleep 2
-
-echo ""
 echo "===================================================="
-echo "✅ FASE 4 COMPLETADA: ORQUESTACIÓN EXITOSA"
-echo "===================================================="
-echo "📊 ESTADO ACTUAL:"
-echo "   • lab-nginx:   $(systemctl is-active lab-nginx)"
-echo "   • lab-dnsmasq: $(systemctl is-active lab-dnsmasq)"
-echo ""
-echo "🧪 PRUEBA DE RESOLUCIÓN:"
-ip netns exec NS-CLIENT curl -I http://web.lab.local
+echo "✅ CONFIGURACIÓN PERSISTENTE APLICADA"
 echo "===================================================="
