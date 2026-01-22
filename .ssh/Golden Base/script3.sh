@@ -1,82 +1,71 @@
-#!/bin/bash
 # ============================================================================
 # PROYECTO: Automatización de Golden Base Image (Rocky Linux)
-# SCRIPT:   2 de 5 – Infraestructura de Red Centralizada (Bridge Layer)
+# SCRIPT:   3 de 5 – Aprovisionamiento de Lógica y Datos (Application Layer)
 # ============================================================================
 #
-# OBJETIVO GENERAL:
-#   Construir la capa de red central del laboratorio mediante un Bridge Linux
-#   que actúa como Switch Virtual y Gateway único para todos los componentes.
+# OBJETIVO DE ESTE SCRIPT:
+#   Preparar la capa lógica del laboratorio una vez que la infraestructura
+#   de red (Bridge Layer) ya está operativa y persistente.
 #
-# DESCRIPCIÓN DE LA ARQUITECTURA:
-#   - Se implementa una topología en ESTRELLA.
-#   - El Bridge 'br-lab' funciona como:
-#       • Switch virtual (capa 2)
-#       • Gateway IP (capa 3)
-#   - El Host (VM raíz) posee la IP 10.10.100.1/24.
-#   - Los Namespaces se conectan directamente al Bridge mediante veth.
+# ESTE SCRIPT SE ENCARGA DE:
+#   1) Endurecer y configurar MariaDB en el Host (VM raíz).
+#   2) Crear y mantener una base de datos de estado del laboratorio (labdb).
+#   3) Generar un Config-Store centralizado para los servicios:
+#        - Nginx
+#        - Dnsmasq
+#   4) Desplegar contenido web de diagnóstico reutilizable.
 #
-# COMPONENTES CREADOS POR ESTE SCRIPT:
-#   1) Bridge Linux:
-#      - Nombre: br-lab
-#      - IP:     10.10.100.1/24
+# DISEÑO:
+#   - Este script es IDEMPOTENTE.
+#   - Puede ejecutarse múltiples veces sin generar estados inconsistentes.
+#   - Está pensado para ejecutarse después de snapshots.
 #
-#   2) Namespace de Servicios:
-#      - Nombre: NS-SERVICES
-#      - IP:     10.10.100.10/24
-#      - Rol:    Ejecutar Nginx, Dnsmasq y consumir MariaDB del Host
+# ---------------------------------------------------------------------------
+# VALIDACIONES OBLIGATORIAS PREVIAS (SCRIPT 2 – BRIDGE LAYER)
 #
-#   3) Namespace de Cliente:
-#      - Nombre: NS-CLIENT
-#      - IP:     10.10.100.20/24
-#      - Rol:    Simular tráfico de usuarios / clientes
+# Antes de ejecutar este Script 3, el operador DEBE confirmar que el Script 2
+# se ejecutó correctamente y que la red está funcional.
 #
-# PRINCIPIOS DE DISEÑO:
-#   - Arquitectura simplificada (sin namespaces intermedios).
-#   - Baja latencia (sin saltos innecesarios).
-#   - Comunicación directa Host ↔ Servicios.
-#   - Totalmente compatible con snapshots.
+# VALIDACIONES RECOMENDADAS:
 #
-# IDEMPOTENCIA:
-#   - El script elimina configuraciones previas antes de recrearlas.
-#   - Puede ejecutarse múltiples veces sin degradar el sistema.
+# 1) Verificar que el Bridge central existe y tiene la IP correcta:
+#    ip addr show br-lab
+#    → Debe mostrar: 10.10.100.1/24
 #
-# PERSISTENCIA:
-#   - Se instala un servicio systemd tipo "oneshot".
-#   - El cableado virtual se reconstruye automáticamente en cada arranque.
-#   - Garantiza que Scripts 3, 4 y 5 encuentren la red lista tras reboot.
+# 2) Verificar que el servicio de persistencia de red está activo:
+#    systemctl status lab-network.service
+#    → Estado esperado: active (exited)
 #
-# VALIDACIONES MANUALES RECOMENDADAS (POST-EJECUCIÓN):
+# 3) Verificar que los namespaces existen:
+#    ip netns list
+#    → Deben existir: NS-SERVICES y NS-CLIENT
 #
-#   1) Verificar que el Bridge existe y tiene IP:
-#      ip addr show br-lab
-#      → Debe mostrar 10.10.100.1/24
+# 4) Verificar conectividad desde NS-SERVICES hacia el Host (Gateway):
+#    ip netns exec NS-SERVICES ping -c 2 10.10.100.1
+#    → Debe responder
 #
-#   2) Verificar estado del servicio de persistencia:
-#      systemctl status lab-network.service
-#      → Estado esperado: active (exited)
+# 5) Verificar conectividad Cliente → Servicios:
+#    ip netns exec NS-CLIENT ping -c 2 10.10.100.10
+#    → Debe responder
 #
-#   3) Verificar namespaces creados:
-#      ip netns list
-#      → Deben existir: NS-SERVICES y NS-CLIENT
+# 6) Validación rápida usando la herramienta del Script 2:
+#    lab-network-status
+#    → Todos los checks deben mostrar OK
 #
-#   4) Probar conectividad desde NS-SERVICES al Host:
-#      ping 10.10.100.1
-#      → Debe responder
+# SI ALGUNA VALIDACIÓN FALLA:
+#   ❌ NO ejecutar este Script 3
+#   ✔️ Revisar y corregir el Script 2
 #
-#   5) Probar conectividad Cliente → Servicios:
-#      ping 10.10.100.10
-#      → Debe responder
-#
-# CONDICIONES PARA CONTINUAR:
-#   - Si alguna validación falla:
-#       ❌ No ejecutar Script 3
-#       ✔️ Revisar logs y corregir Script 2
+# ---------------------------------------------------------------------------
+# DEPENDENCIAS:
+#   - Script 1 ejecutado correctamente.
+#   - Script 2 ejecutado y persistido vía systemd.
 #
 # PRÓXIMO PASO:
-#   - Script 3: Aprovisionamiento de lógica, datos y configuraciones
-#     (MariaDB, Nginx, Dnsmasq – Application Layer)
+#   - Script 4: Ejecución real de Nginx y Dnsmasq dentro de NS-SERVICES,
+#     utilizando las configuraciones generadas aquí.
 # ============================================================================
+
 
 
 set -e
