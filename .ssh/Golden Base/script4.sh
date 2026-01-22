@@ -43,50 +43,51 @@
 #   - Resolución DNS funcional desde NS-CLIENT
 # ============================================================================
 
+#!/bin/bash
 set -e
 
-echo "=== 🚀 SCRIPT 4: ORQUESTACIÓN EN MODO BRIDGE ==="
+echo "=== 🚀 SCRIPT 4: ORQUESTACIÓN EN MODO BRIDGE (AUTO-FIX) ==="
 echo "📅 Fecha: $(date)"
 
 # ---------------------------------------------------------------------------
-# 1. VALIDACIÓN DE ARTEFACTOS CRÍTICOS
+# 1. VALIDACIÓN Y PREPARACIÓN DEL RUNTIME
 # ---------------------------------------------------------------------------
-echo "[1/4] 🔍 Validando precondiciones..."
+echo "[1/4] 🔍 Preparando entorno de ejecución..."
 
 for f in /etc/lab-configs/nginx.conf /etc/lab-configs/dnsmasq.conf; do
-    [[ -f "$f" ]] || { echo "❌ Falta $f"; exit 1; }
+    [[ -f "$f" ]] || { echo "❌ ERROR: Falta archivo de configuración $f"; exit 1; }
 done
 
-# Runtime requerido por Nginx (systemd + daemon off)
+# Corregir el error de "Conexión rechazada" asegurando el directorio del PID
+# Esto resuelve el problema de Nginx que detectaste manualmente.
 mkdir -p /run/nginx
 chown -R nginx:nginx /run/nginx
+chmod 755 /run/nginx
 
-echo "   ✅ Configuraciones y runtime listos."
+echo "   ✅ Runtime y permisos configurados."
 
 # ---------------------------------------------------------------------------
 # 2. UNIDAD SYSTEMD: NGINX EN NS-SERVICES
 # ---------------------------------------------------------------------------
-echo "[2/4] 🌐 Definiendo servicio Nginx (namespace)..."
+echo "[2/4] 🌐 Configurando servicio Nginx en Namespace..."
 
 cat > /etc/systemd/system/lab-nginx.service << 'EOF'
 [Unit]
-Description=Nginx Web Server (Aislado en NS-SERVICES - Bridge Mode)
+Description=Nginx Web Server (Aislado en NS-SERVICES)
 After=lab-network.service
 Wants=lab-network.service
 
 [Service]
 Type=simple
-
-# Espera activa hasta que la IP exista en el namespace
+# Espera a que la interfaz y la IP estén listas dentro del namespace
 ExecStartPre=/usr/sbin/ip netns exec NS-SERVICES /bin/bash -c \
 'until ip addr show veth-srv | grep -q "10.10.100.10"; do sleep 1; done'
 
-# Ejecución explícita sin daemonización
+# Ejecución en primer plano para que systemd pueda monitorear el proceso
 ExecStart=/usr/sbin/ip netns exec NS-SERVICES \
 /usr/sbin/nginx -c /etc/lab-configs/nginx.conf -g "daemon off;"
 
 ExecStop=/usr/sbin/ip netns exec NS-SERVICES /usr/sbin/nginx -s stop
-
 Restart=on-failure
 RestartSec=5
 
@@ -97,20 +98,18 @@ EOF
 # ---------------------------------------------------------------------------
 # 3. UNIDAD SYSTEMD: DNSMASQ EN NS-SERVICES
 # ---------------------------------------------------------------------------
-echo "[3/4] 📡 Definiendo servicio Dnsmasq (namespace)..."
+echo "[3/4] 📡 Configurando servicio Dnsmasq en Namespace..."
 
 cat > /etc/systemd/system/lab-dnsmasq.service << 'EOF'
 [Unit]
-Description=Dnsmasq DNS Server (Aislado en NS-SERVICES - Bridge Mode)
+Description=Dnsmasq DNS Server (Aislado en NS-SERVICES)
 After=lab-network.service
 Wants=lab-network.service
 
 [Service]
 Type=simple
-
 ExecStart=/usr/sbin/ip netns exec NS-SERVICES \
 /usr/sbin/dnsmasq -k -C /etc/lab-configs/dnsmasq.conf
-
 Restart=on-failure
 RestartSec=5
 
@@ -119,15 +118,22 @@ WantedBy=multi-user.target
 EOF
 
 # ---------------------------------------------------------------------------
-# 4. ACTIVACIÓN Y VALIDACIÓN
+# 4. ACTIVACIÓN Y AUTOMATIZACIÓN DE CLIENTE
 # ---------------------------------------------------------------------------
-echo "[4/4] 🔌 Activando servicios..."
+echo "[4/4] 🔌 Activando servicios y configurando resolución..."
 
 systemctl daemon-reload
 systemctl enable lab-nginx.service lab-dnsmasq.service
 
+# Reiniciar para aplicar cambios
 systemctl restart lab-nginx.service
 systemctl restart lab-dnsmasq.service
+
+# --- SOLUCIÓN AUTOMÁTICA PARA EL CLIENTE ---
+# Inyectamos el nameserver directamente en el namespace del cliente
+# Esto reemplaza tu comando manual de 'echo' y evita usar nmcli.
+echo "   💉 Configurando DNS en NS-CLIENT (10.10.100.10)..."
+ip netns exec NS-CLIENT bash -c 'echo "nameserver 10.10.100.10" > /etc/resolv.conf'
 
 sleep 2
 
@@ -135,11 +141,10 @@ echo ""
 echo "===================================================="
 echo "✅ FASE 4 COMPLETADA: ORQUESTACIÓN EXITOSA"
 echo "===================================================="
-echo "📊 ESTADO:"
+echo "📊 ESTADO ACTUAL:"
 echo "   • lab-nginx:   $(systemctl is-active lab-nginx)"
 echo "   • lab-dnsmasq: $(systemctl is-active lab-dnsmasq)"
 echo ""
-echo "🧪 VALIDACIÓN MANUAL:"
-echo "   ip netns exec NS-SERVICES ss -lntp | grep :80"
-echo "   curl http://10.10.100.10"
+echo "🧪 PRUEBA DE RESOLUCIÓN:"
+ip netns exec NS-CLIENT curl -I http://web.lab.local
 echo "===================================================="
