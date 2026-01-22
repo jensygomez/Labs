@@ -74,7 +74,8 @@ dnf install -y \
     htop \
     cronie \
     openssh-server \
-    openssh-clients
+    openssh-clients \
+    lynx
 
 echo "   ✅ Paquetes instalados"
 
