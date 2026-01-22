@@ -138,6 +138,7 @@ mkdir -p /etc/lab-configs
 # NGINX – Namespace NS-SERVICES
 cat > /etc/lab-configs/nginx.conf << 'EOF'
 worker_processes 1;
+pid /run/nginx/nginx.pid;
 error_log /var/log/nginx/lab-error.log;
 events { worker_connections 1024; }
 
