@@ -5,42 +5,24 @@
 # ============================================================================
 #
 # ⏪ RETROSPECTIVA TÉCNICA (SCRIPT 4 - ORCHESTRATION):
-#   - Los servicios Nginx y Dnsmasq están operando dentro de sus Namespaces.
-#   - La persistencia mediante Systemd ha sido validada y activada.
-#
-# 🧪 VALIDACIÓN DE PERSISTENCIA (POST-REBOOT SCRIPT 4):
-#   Verifique que los servicios orquestados arrancaron automáticamente:
-#   1. Status Nginx:    # systemctl is-active lab-nginx
-#   2. Status DNS:      # systemctl is-active lab-dnsmasq
-#   3. Procesos en NS:  # ip netns exec NS-SERVICES ps aux | grep -E 'nginx|dnsmasq'
-#   4. Puertos en NS:   # ip netns exec NS-SERVICES ss -tlnp (Ver 80 y 53)
-#   5. Conectividad:    # ip netns exec NS-CLIENT curl -I http://10.10.100.10
+#   - Servicios Nginx y Dnsmasq operando en 'NS-SERVICES'.
+#   - Orquestación mediante Systemd (lab-nginx y lab-dnsmasq) validada.
 #
 # 🎯 OBJETIVO DE ESTA FASE (SCRIPT 5):
-#   Realizar el control de calidad final (QA) y preparar la VM para su 
-#   distribución. Este script transforma un entorno de desarrollo en una 
-#   "Golden Image" limpia, segura y documentada.
-#
-# 🛠️ ACCIONES DE CIERRE:
-#   1. END-TO-END TESTING: Pruebas de conectividad real entre las 3 capas.
-#   2. MOTD (Message of the Day): Creación de un banner de bienvenida legal 
-#      e informativo para el usuario final del laboratorio.
-#   3. LOG PURGE: Limpieza total de logs de instalación y rastros de DNF.
-#   4. BASH CLEANUP: Eliminación de historiales de comandos.
-#   5. SEALING: Preparación para clonado (limpieza de machine-id).
-#
+#   Control de calidad final (QA) y sanitización. Transforma la VM en una 
+#   "Golden Image" profesional lista para ser clonada o distribuida.
 # ============================================================================
 set -e
 
-echo "=== 🏁 SCRIPT 5: AUDIT LAYER & GOLDEN IMAGE SEALING ==="
+echo "=== 🏁 SCRIPT 5: AUDIT LAYER & GOLDEN IMAGE SEALING (BRIDGE MODE) ==="
 echo "📅 Fecha: $(date)"
 
 # ---------------------------------------------------------------------------
-# 1. AUDITORÍA DE CONECTIVIDAD (PRUEBAS DE ESTRÉS)
+# 1. AUDITORÍA DE CONECTIVIDAD (PRUEBAS DE INTEGRACIÓN)
 # ---------------------------------------------------------------------------
-echo "[1/4] 🧪 Ejecutando pruebas de integración final..."
+echo "[1/4] 🧪 Ejecutando pruebas de certificación de red..."
 
-# Prueba A: Resolución DNS desde el Cliente
+# Prueba A: Resolución DNS (Capa 7 -> Capa 3)
 echo -n "   • Test DNS (web.lab.local): "
 if ip netns exec NS-CLIENT nslookup web.lab.local 10.10.100.10 >/dev/null 2>&1; then
     echo "✅ EXITOSO"
@@ -48,8 +30,8 @@ else
     echo "❌ FALLIDO"
 fi
 
-# Prueba B: Acceso Web (Capa 7) desde el Cliente pasando por el Edge
-echo -n "   • Test HTTP (CLIENT -> EDGE -> SERVICES): "
+# Prueba B: Acceso Web desde el Cliente al Servidor a través del Bridge
+echo -n "   • Test HTTP (CLIENT -> BRIDGE -> SERVICES): "
 HTTP_CODE=$(ip netns exec NS-CLIENT curl -s -o /dev/null -w "%{http_code}" http://10.10.100.10)
 if [ "$HTTP_CODE" == "200" ]; then
     echo "✅ EXITOSO (HTTP 200)"
@@ -57,18 +39,18 @@ else
     echo "❌ FALLIDO (HTTP $HTTP_CODE)"
 fi
 
-# Prueba C: Conexión DB desde el Cliente al Host
-echo -n "   • Test DB (SQL Query across layers): "
-if ip netns exec NS-CLIENT mysql -u labuser -predhat -h 10.10.100.10 -e "SELECT 1" labdb >/dev/null 2>&1; then
+# Prueba C: Conexión DB desde el Namespace de Servicios al Host
+echo -n "   • Test DB (SERVICES -> HOST 10.10.100.1): "
+if ip netns exec NS-SERVICES mysql -u labuser -predhat -h 10.10.100.1 -e "SELECT 1" labdb >/dev/null 2>&1; then
     echo "✅ EXITOSO"
 else
     echo "❌ FALLIDO"
 fi
 
 # ---------------------------------------------------------------------------
-# 2. EXPERIENCIA DE USUARIO (MOTD & ALIASES)
+# 2. EXPERIENCIA DE USUARIO (MOTD ACTUALIZADO)
 # ---------------------------------------------------------------------------
-echo "[2/4] 📝 Configurando interfaz de bienvenida y ayuda..."
+echo "[2/4] 📝 Configurando interfaz de bienvenida..."
 
 cat > /etc/motd << 'EOF'
 
@@ -76,62 +58,59 @@ cat > /etc/motd << 'EOF'
 #             🛡️  BIENVENIDO AL LABORATORIO ROCKY GOLDEN BASE  🛡️             #
 ###############################################################################
 #                                                                             #
-#  ARQUITECTURA: 3-TIER (CLIENT <-> EDGE <-> SERVICES)                        #
-#  USUARIO: student / redhat                                                  #
+#  ARQUITECTURA: Hub & Spoke (Bridge Centralizado br-lab)                     #
+#  TOPOLOGÍA:                                                                 #
+#    - HOST (DB/Gateway) : 10.10.100.1                                        #
+#    - NS-SERVICES       : 10.10.100.10 (Nginx + DNS)                         #
+#    - NS-CLIENT         : 10.10.100.20                                       #
 #                                                                             #
-#  COMANDOS DE AYUDA:                                                         #
-#  • lab-status     : Muestra el estado de la red y los servicios.            #
-#  • ns-client      : Entra al namespace del Cliente.                         #
-#  • ns-services    : Entra al namespace de Servicios.                        #
-#  • lab-restart    : Reinicia toda la infraestructura del lab.               #
+#  COMANDOS ÚTILES:                                                           #
+#  • lab-net-status    : Verifica el Bridge y los Namespaces.                 #
+#  • ns-client         : Entra al Shell del Cliente.                          #
+#  • ns-services       : Entra al Shell de Servicios.                         #
 #                                                                             #
-#  ¡Cuidado! Esta VM está configurada con Namespaces persistentes.            #
 ###############################################################################
 EOF
 
 # ---------------------------------------------------------------------------
-# 3. LIMPIEZA PROFUNDA (SYSTEM PURGE)
+# 3. LIMPIEZA PROFUNDA (SANITIZACIÓN)
 # ---------------------------------------------------------------------------
-echo "[3/4] 🧹 Limpiando rastros de construcción (Sanitización)..."
+echo "[3/4] 🧹 Limpiando rastros de aprovisionamiento..."
 
-# Limpieza de DNF/YUM
+# Limpieza de paquetes y caché
 dnf clean all
 rm -rf /var/cache/dnf
 
-# Rotación y vaciado de logs
+# Vaciado de Logs (sin borrar archivos para preservar permisos)
 find /var/log -type f -exec truncate -s 0 {} \;
-echo "   ✅ Logs del sistema vaciados."
+echo "   ✅ Logs vaciados."
 
-# Eliminación de archivos temporales
-rm -rf /tmp/*
-rm -rf /var/tmp/*
+# Eliminación de temporales
+rm -rf /tmp/* /var/tmp/*
 
 # ---------------------------------------------------------------------------
 # 4. SELLADO PARA CLONACIÓN (SEALING)
 # ---------------------------------------------------------------------------
-echo "[4/4] 🔒 Sellando imagen para clonación..."
+echo "[4/4] 🔒 Sellando imagen para distribución..."
 
-# Eliminar Machine-ID (se regenerará al clonar)
+# Resetear Machine-ID para evitar conflictos de IP/DHCP en clones
 truncate -s 0 /etc/machine-id
 [ -f /var/lib/dbus/machine-id ] && rm -f /var/lib/dbus/machine-id
 
-# Limpiar historial de Bash de Root y Student
+# Limpieza total de historiales
 history -c
 cat /dev/null > ~/.bash_history
 cat /dev/null > /home/student/.bash_history 2>/dev/null || true
 
 echo ""
 echo "===================================================="
-echo "🎊 GOLDEN IMAGE CREADA CON ÉXITO"
+echo "🎊 GOLDEN IMAGE FINALIZADA EXITOSAMENTE"
 echo "===================================================="
-echo "📊 RESUMEN FINAL:"
-echo "   1. Sistema base y paquetes: LISTO"
-echo "   2. Red de Namespaces: PERSISTENTE"
-echo "   3. Servicios Nginx/DNS/DB: ORQUESTADOS"
-echo "   4. Auditoría de Seguridad: COMPLETA"
+echo "   1. RED: Bridge Centralizado (br-lab)"
+echo "   2. SERVICIOS: Aislados y Orquestados"
+echo "   3. HARDENING: Logs y Machine-ID limpios"
 echo ""
-echo "⚠️  AVISO: La VM se apagará en 60 segundos."
-echo "   Una vez apagada, se recomienda convertirla en TEMPLATE."
+echo "VM se apagará en 60 segundos. ¡Listo para clonar!"
 echo "===================================================="
 
 sleep 60
