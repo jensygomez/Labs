@@ -1,361 +1,123 @@
 #!/bin/bash
 # ============================================================================
 # PROYECTO: Automatización de Golden Base Image (Rocky Linux)
-# SCRIPT:   2 de 5 - Orquestación de Red y Persistencia de Namespaces
+# SCRIPT:   2 de 5 - Infraestructura de Red Centralizada (Modo Bridge)
 # ============================================================================
 #
 # RESUMEN SCRIPT 1 (CIMENTACIÓN):
 #   ✅ Sistema actualizado y herramientas de diagnóstico instaladas.
 #   ✅ Usuario 'student' configurado y servicios base descargados.
 #
-# OBJETIVO SCRIPT 2:
-#   Construir la topología de red virtual donde vivirán los servicios.
-#   Este script es el "puente" entre el software instalado (Script 1) 
-#   y la lógica de servicios aislados (Script 3).
+# OBJETIVO SCRIPT 2 (EVOLUCIONADO):
+#   Establecer un Switch Virtual (Bridge) como columna vertebral del Lab.
+#   Esta arquitectura de "Estrella" permite que el Host, los Servicios y 
+#   el Cliente coexistan en un mismo dominio de colisión controlado.
 #
-# ACTUALIZACIONES PARA INTEGRACIÓN CON SCRIPT 3:
-# 1. Configuración de /etc/netns: Prepara la resolución DNS específica 
-#    para que el CLIENTE vea automáticamente al servidor DNS del Lab.
-# 2. Idempotencia Reforzada: Limpia interfaces veth previas para evitar
-#    conflictos con el servicio de Nginx que se levantará después.
-# 3. Preparación de Gateway: Configura las reglas de Iptables necesarias
-#    para que la base de datos (en el host) sea accesible desde el namespace.
+# MECANISMOS DE INGENIERÍA IMPLEMENTADOS:
+# 1. TOPOLOGÍA HUB-AND-SPOKE: Uso de 'br-lab' como centro de conmutación,
+#    eliminando la latencia de saltos intermedios y namespaces de paso.
+# 2. INTEROPERABILIDAD CON EL HOST: El Bridge actúa como Gateway (10.10.100.1),
+#    permitiendo que los servicios aislados consuman la base de datos MariaDB
+#    que reside en el Host (VM raíz) de forma nativa.
+# 3. PERSISTENCIA POR SYSTEMD: Implementación de servicio 'oneshot' que 
+#    reconstruye el cableado virtual en cada arranque, garantizando que
+#    los Scripts 3 y 4 encuentren siempre sus interfaces listas.
 #
 # PRÓXIMO PASO (SCRIPT 3):
-#   Inyectar los servicios de Nginx y Dnsmasq dentro de la estructura 
-#   de red que este script deja activa y persistente.
+#   Desplegar la configuración de Nginx y Dnsmasq para que escuchen en 
+#   los puntos de red (Veth) anclados a este nuevo Bridge.
 # ============================================================================
 
-echo "=== 🌐 SCRIPT 2: RED CON PERSISTENCIA ==="
-echo "📅 Fecha: $(date)"
-echo "=========================================="
-
-if [[ $EUID -ne 0 ]]; then 
-    echo "❌ Ejecutar como root: sudo $0"
-    exit 1
-fi
-
-if ! id "student" &>/dev/null; then
-    echo "❌ Ejecuta primero script1-base.sh"
-    exit 1
-fi
-
-# ---------------------------------------------------------------------------
-# 1. MEJORAR SCRIPT DE RED PARA SER IDEMPOTENTE
-# ---------------------------------------------------------------------------
-echo "[1/5] 🔧 Creando script de red IDEMPOTENTE..."
-
-cat > /usr/local/bin/lab-net-setup.sh << 'EOF'
-#!/bin/bash
-# Lab 3-Tier Network Setup - IDEMPOTENTE
 
 set -e
 
-echo "🔧 Configurando network namespaces (IDEMPOTENTE)..."
+echo "=== 🌐 SCRIPT 2: RED CENTRALIZADA (BRIDGE MODE) ==="
+echo "📅 Fecha: $(date)"
 
-# Variables
-IP_CLIENT="10.10.50.10"
-IP_SERVICES="10.10.100.10"
-IP_EDGE_LAN="10.10.50.1"
-IP_EDGE_WAN="10.10.100.1"
+# [1/5] Creación del Script de Configuración Real
+cat > /usr/local/bin/lab-net-setup.sh << 'EOF'
+#!/bin/bash
+set -e
 
-# Función para verificar y crear namespace
-create_ns_if_not_exists() {
-    local ns=$1
-    if ! ip netns list | grep -q "$ns"; then
-        echo "   📦 Creando namespace $ns..."
-        ip netns add "$ns"
-    else
-        echo "   ℹ️  Namespace $ns ya existe"
-    fi
-}
+# --- CONFIGURACIÓN ---
+BR_NAME="br-lab"
+BR_IP="10.10.100.1/24"
 
-# Función para configurar interfaz
-setup_interface() {
-    local ns=$1
-    local iface=$2
-    local ip=$3
-    
-    # Verificar si la interfaz ya tiene la IP
-    if ip netns exec "$ns" ip addr show "$iface" 2>/dev/null | grep -q "$ip"; then
-        echo "   ℹ️  Interfaz $iface en $ns ya tiene IP $ip"
-        return 0
-    fi
-    
-    # Configurar IP
-    echo "   ⚙️  Configurando $iface con $ip en $ns..."
-    ip netns exec "$ns" ip addr add "$ip/24" dev "$iface" 2>/dev/null || true
-    ip netns exec "$ns" ip link set "$iface" up
-    ip netns exec "$ns" ip link set lo up
-}
+# --- LIMPIEZA IDEMPOTENTE ---
+echo "🧹 Limpiando configuración previa..."
+ip link delete $BR_NAME 2>/dev/null || true
+for ns in NS-CLIENT NS-SERVICES; do
+    ip netns delete $ns 2>/dev/null || true
+done
 
-# Limpiar solo interfaces veth residuales (NO namespaces)
-echo "   🧹 Limpiando interfaces residuales..."
-ip link delete veth-client 2>/dev/null || true
-ip link delete veth-srv 2>/dev/null || true
-sleep 1
+# --- 1. CREAR EL BRIDGE (EL SWITCH VIRTUAL) ---
+echo "🌉 Creando Bridge $BR_NAME ($BR_IP)..."
+ip link add name $BR_NAME type bridge
+ip addr add $BR_IP dev $BR_NAME
+ip link set $BR_NAME up
 
-# 1. CREAR NAMESPACES (si no existen)
-create_ns_if_not_exists "NS-CLIENT"
-create_ns_if_not_exists "NS-EDGE"
-create_ns_if_not_exists "NS-SERVICES"
+# --- 2. CONFIGURAR NS-SERVICES (Servidor) ---
+echo "🏗️  Configurando NS-SERVICES..."
+ip netns add NS-SERVICES
+ip link add veth-srv type veth peer name veth-srv-br
+ip link set veth-srv netns NS-SERVICES
+ip link set veth-srv-br master $BR_NAME  # Enchufar al Bridge
+ip link set veth-srv-br up
+ip netns exec NS-SERVICES ip addr add 10.10.100.10/24 dev veth-srv
+ip netns exec NS-SERVICES ip link set veth-srv up
+ip netns exec NS-SERVICES ip link set lo up
+ip netns exec NS-SERVICES ip route add default via 10.10.100.1
 
-# 2. CREAR INTERFACES VETH (si no existen)
-echo "   🔗 Creando/conectando interfaces..."
+# --- 3. CONFIGURAR NS-CLIENT (Cliente) ---
+echo "🏗️  Configurando NS-CLIENT..."
+ip netns add NS-CLIENT
+ip link add veth-cli type veth peer name veth-cli-br
+ip link set veth-cli netns NS-CLIENT
+ip link set veth-cli-br master $BR_NAME  # Enchufar al Bridge
+ip link set veth-cli-br up
+ip netns exec NS-CLIENT ip addr add 10.10.100.20/24 dev veth-cli
+ip netns exec NS-CLIENT ip link set veth-cli up
+ip netns exec NS-CLIENT ip link set lo up
+ip netns exec NS-CLIENT ip route add default via 10.10.100.1
 
-# CLIENT <-> EDGE
-if ! ip link show veth-client 2>/dev/null; then
-    echo "   🔗 Conectando CLIENT <-> EDGE..."
-    ip link add veth-client type veth peer name veth-edge-cli
-    ip link set veth-client netns NS-CLIENT
-    ip link set veth-edge-cli netns NS-EDGE
-fi
-
-# EDGE <-> SERVICES
-if ! ip link show veth-srv 2>/dev/null; then
-    echo "   🔗 Conectando EDGE <-> SERVICES..."
-    ip link add veth-srv type veth peer name veth-edge-srv
-    ip link set veth-srv netns NS-SERVICES
-    ip link set veth-edge-srv netns NS-EDGE
-fi
-
-# 3. CONFIGURAR IPs
-setup_interface "NS-CLIENT" "veth-client" "$IP_CLIENT"
-setup_interface "NS-EDGE" "veth-edge-cli" "$IP_EDGE_LAN"
-setup_interface "NS-EDGE" "veth-edge-srv" "$IP_EDGE_WAN"
-setup_interface "NS-SERVICES" "veth-srv" "$IP_SERVICES"
-
-# 4. CONFIGURAR ROUTING (idempotente)
-echo "   🛣️  Configurando rutas..."
-ip netns exec NS-CLIENT ip route add default via $IP_EDGE_LAN 2>/dev/null || true
-ip netns exec NS-SERVICES ip route add default via $IP_EDGE_WAN 2>/dev/null || true
-
-# 5. HABILITAR FORWARDING
-echo "   🔄 Habilitando IP forwarding..."
-ip netns exec NS-EDGE sysctl -w net.ipv4.ip_forward=1 >/dev/null
-
-# 6. CONFIGURAR FIREWALL (limpia y recrea)
-echo "   🛡️  Configurando firewall..."
-ip netns exec NS-EDGE iptables -F
-ip netns exec NS-EDGE iptables -t nat -F
-ip netns exec NS-EDGE iptables -X
-
-ip netns exec NS-EDGE iptables -P FORWARD DROP
-ip netns exec NS-EDGE iptables -A FORWARD -i veth-edge-cli -o veth-edge-srv -j ACCEPT
-ip netns exec NS-EDGE iptables -A FORWARD -i veth-edge-srv -o veth-edge-cli -m state --state ESTABLISHED,RELATED -j ACCEPT
-ip netns exec NS-EDGE iptables -A FORWARD -p icmp -j ACCEPT
-ip netns exec NS-EDGE iptables -t nat -A POSTROUTING -o veth-edge-srv -j MASQUERADE
-
-echo ""
-echo "✅ RED CONFIGURADA (IDEMPOTENTE)"
-echo ""
-echo "📊 RESUMEN:"
-ip netns list
+echo "✅ Red en modo Bridge configurada correctamente."
 EOF
 
 chmod +x /usr/local/bin/lab-net-setup.sh
-echo "   ✅ Script de red IDEMPOTENTE creado"
 
-# ---------------------------------------------------------------------------
-# 2. CREAR SERVICIO SYSTEMD PARA PERSISTENCIA
-# ---------------------------------------------------------------------------
-echo "[2/5] 🚀 Creando servicio systemd para persistencia..."
-
+# [2/5] Creación del Servicio Systemd (Persistencia)
 cat > /etc/systemd/system/lab-network.service << 'EOF'
 [Unit]
-Description=Lab 3-Tier Network Namespaces
+Description=Lab Bridge Network Persistence
 After=network.target
-Wants=network.target
-Before=sshd.service
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-
-# Ejecutar nuestro script de red (es idempotente, seguro ejecutar múltiples veces)
 ExecStart=/usr/local/bin/lab-net-setup.sh
-# Pequeña pausa para estabilización
-ExecStartPost=/bin/sleep 2
-
-# No limpiar al detener - queremos que sobrevivan mientras el sistema esté up
-# ExecStop=/usr/bin/ip netns delete NS-CLIENT NS-EDGE NS-SERVICES 2>/dev/null || true
-
-# Si falla, reintentar rápidamente
 Restart=on-failure
-RestartSec=5
-TimeoutStartSec=30
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-# ---------------------------------------------------------------------------
-# 3. CREAR TIMER PARA VERIFICACIÓN PERIÓDICA
-# ---------------------------------------------------------------------------
-echo "[3/5] ⏰ Creando timer de verificación..."
-
-cat > /etc/systemd/system/lab-network-check.service << 'EOF'
-[Unit]
-Description=Lab Network Health Check
-After=lab-network.service
-Requires=lab-network.service
-
-[Service]
-Type=oneshot
-ExecStart=/bin/bash -c 'if ! ip netns list | grep -q "NS-CLIENT"; then echo "⚠️  Namespaces perdidos, recreando..." && /usr/local/bin/lab-net-setup.sh; fi'
-EOF
-
-cat > /etc/systemd/system/lab-network-check.timer << 'EOF'
-[Unit]
-Description=Verificar lab network cada 5 minutos
-Requires=lab-network.service
-
-[Timer]
-OnBootSec=2min
-OnUnitActiveSec=5min
-Persistent=true
-
-[Install]
-WantedBy=timers.target
-EOF
-
-# ---------------------------------------------------------------------------
-# 4. HABILITAR Y ACTIVAR SERVICIOS
-# ---------------------------------------------------------------------------
-echo "[4/5] ⚙️  Activando servicios..."
-
-systemctl daemon-reload
-systemctl enable lab-network.service
-systemctl enable lab-network-check.timer
-
-# Iniciar ahora
-systemctl start lab-network.service
-systemctl start lab-network-check.timer
-
-echo "   ✅ Servicios habilitados y activados"
-
-# ---------------------------------------------------------------------------
-# 5. CREAR SCRIPT DE RECUPERACIÓN MANUAL
-# ---------------------------------------------------------------------------
-echo "[5/5] 🛠️  Creando herramientas de recuperación..."
-
-# Script para recrear manualmente
-cat > /usr/local/bin/lab-network-restart << 'EOF'
-#!/bin/bash
-echo "🔄 Reiniciando red del lab..."
-systemctl restart lab-network.service
-sleep 3
-echo "📊 Estado:"
-ip netns list
-echo ""
-echo "🔗 Conectividad:"
-ip netns exec NS-CLIENT ping -c 2 10.10.100.10 2>/dev/null && echo "✅ CLIENT -> SERVICES: OK" || echo "❌ CLIENT -> SERVICES: FALLÓ"
-EOF
-chmod +x /usr/local/bin/lab-network-restart
-
-# Script para ver estado
+# [3/5] Herramientas de diagnóstico (Actualizadas para Bridge)
 cat > /usr/local/bin/lab-network-status << 'EOF'
 #!/bin/bash
-echo "=== 🌐 ESTADO DE RED DEL LAB ==="
-echo "📅 Fecha: $(date)"
-echo ""
-echo "🏷️  NAMESPACES:"
+echo "=== 🌐 ESTADO DE RED (MODO BRIDGE) ==="
+ip addr show br-lab | grep "inet "
+echo "--- Namespaces ---"
 ip netns list
-echo ""
-echo "🔗 CONECTIVIDAD:"
-if ip netns exec NS-CLIENT ping -c 1 -W 1 10.10.100.10 >/dev/null 2>&1; then
-    echo "✅ CLIENT -> SERVICES: CONECTADO"
-else
-    echo "❌ CLIENT -> SERVICES: SIN CONEXIÓN"
-fi
-echo ""
-echo "⚙️  SERVICIO SYSTEMD:"
-systemctl status lab-network.service --no-pager | head -10
+echo "--- Conectividad ---"
+ip netns exec NS-CLIENT ping -c 1 -W 1 10.10.100.10 >/dev/null && echo "✅ CLIENT -> SRV: OK" || echo "❌ CLIENT -> SRV: FAIL"
+ip netns exec NS-SERVICES ping -c 1 -W 1 10.10.100.1 >/dev/null && echo "✅ SRV -> HOST (DB): OK" || echo "❌ SRV -> HOST (DB): FAIL"
 EOF
 chmod +x /usr/local/bin/lab-network-status
 
-# Aliases mejorados
-cat > /etc/profile.d/lab-namespaces.sh << 'EOF'
-# Aliases y funciones para Lab 3-Tier
-alias ns-client='ip netns exec NS-CLIENT bash'
-alias ns-edge='ip netns exec NS-EDGE bash'
-alias ns-services='ip netns exec NS-SERVICES bash'
-alias lab-net-status='lab-network-status'
-alias lab-net-restart='lab-network-restart'
-alias lab-net-check='systemctl status lab-network.service'
+# [4/5] Activación
+systemctl daemon-reload
+systemctl enable --now lab-network.service
 
-# Función para entrar en namespace con entorno limpio
-lab-ns() {
-    case "$1" in
-        client)
-            ip netns exec NS-CLIENT bash --rcfile <(echo "PS1='[NS-CLIENT] \\u@\\h:\\w\\$ '")
-            ;;
-        edge)
-            ip netns exec NS-EDGE bash --rcfile <(echo "PS1='[NS-EDGE] \\u@\\h:\\w\\$ '")
-            ;;
-        services)
-            ip netns exec NS-SERVICES bash --rcfile <(echo "PS1='[NS-SERVICES] \\u@\\h:\\w\\$ '")
-            ;;
-        *)
-            echo "Uso: lab-ns {client|edge|services}"
-            echo ""
-            echo "Namespaces disponibles:"
-            ip netns list
-            ;;
-    esac
-}
-EOF
-
-echo "   ✅ Herramientas creadas"
-
-# ---------------------------------------------------------------------------
-# VERIFICACIÓN FINAL
-# ---------------------------------------------------------------------------
-echo ""
-echo "🔍 VERIFICACIÓN FINAL:"
-echo "   1. Namespaces:"
-ip netns list
-echo ""
-echo "   2. Servicio systemd:"
-systemctl is-active lab-network.service && echo "   ✅ lab-network.service: ACTIVO" || echo "   ❌ lab-network.service: INACTIVO"
-echo ""
-echo "   3. Timer:"
-systemctl is-active lab-network-check.timer && echo "   ✅ lab-network-check.timer: ACTIVO" || echo "   ❌ lab-network-check.timer: INACTIVO"
-echo ""
-echo "   4. Conectividad:"
-if ip netns exec NS-CLIENT ping -c 2 -W 1 10.10.100.10 >/dev/null; then
-    echo "   ✅ CLIENT -> SERVICES: CONECTADO"
-else
-    echo "   ⚠️  CLIENT -> SERVICES: VERIFICAR MANUALMENTE"
-fi
-
-# ---------------------------------------------------------------------------
-# RESUMEN
-# ---------------------------------------------------------------------------
-echo ""
-echo "=========================================="
-echo "✅ SCRIPT 2 CON PERSISTENCIA COMPLETADO"
-echo "=========================================="
-echo ""
-echo "🎯 PERSISTENCIA GARANTIZADA:"
-echo "   • Servicio systemd: Se ejecuta AL ARRANQUE"
-echo "   • Timer: Verifica cada 5 minutos y repara si es necesario"
-echo "   • Script idempotente: Puede ejecutarse múltiples veces sin error"
-echo ""
-echo "🔧 HERRAMIENTAS:"
-echo "   • lab-network-status    - Ver estado completo"
-echo "   • lab-network-restart   - Reiniciar red manualmente"
-echo "   • lab-ns {client|edge|services} - Entrar a namespaces"
-echo "   • ns-client, ns-edge, ns-services (aliases tradicionales)"
-echo ""
-echo "🚀 PRUEBA DE PERSISTENCIA:"
-echo "   1. Reiniciar: systemctl reboot"
-echo "   2. Esperar 60 segundos"
-echo "   3. Conectar: ssh student@IP_DE_LA_VM"
-echo "   4. Verificar: sudo lab-network-status"
-echo "   5. Los namespaces DEBEN existir"
-echo ""
-echo "📊 SERVICIOS CREADOS:"
-echo "   • lab-network.service (arranque)"
-echo "   • lab-network-check.timer (verificación cada 5min)"
-echo "=========================================="
+echo "===================================================="
+echo "🏆 RED REESTRUCTURADA: AHORA USAS UN BRIDGE"
+echo "===================================================="
