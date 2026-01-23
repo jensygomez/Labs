@@ -1,0 +1,21 @@
+---
+- name: "Configurar Escenario J01"
+  hosts: all
+  become: yes  # Esto es para que use sudo
+  tasks:
+    - name: "Cambiar el MOTD"
+      copy:
+        dest: /etc/motd
+        content: |
+          ==================================================
+          LABORATORIO J01 - NIVEL JUNIOR
+          PROBLEMA: No hay respuesta de ICMP (Ping).
+          OBJETIVO: Identificar y limpiar la regla de Firewall.
+          ==================================================
+
+    - name: "Aplicar bloqueo de ICMP (Rich Rule)"
+      firewalld:
+        rich_rule: 'rule protocol value="icmp" drop'
+        state: enabled
+        immediate: yes  # Aplica el cambio ahora mismo
+        permanent: no   # Solo en memoria (si reinicias, desaparece)
