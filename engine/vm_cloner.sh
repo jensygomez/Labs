@@ -43,15 +43,22 @@ else
   echo "⚠️  Clave SSH no encontrada, usando solo config base"
 fi
 
-# ... (todo igual arriba)
+
 
 # 4. Crear ISO cloud-init
-# IMPORTANTE: Entramos al directorio para que los archivos queden en la raíz del ISO
 CLOUDINIT_ISO="${IMAGES_DIR}/${VM_NAME}-cloudinit.iso"
 echo "☁️  Creando ISO cloud-init en $CLOUDINIT_ISO..."
 
-# Usamos -C para cambiar al directorio y que meta-data/user-data queden en el root de la ISO
-genisoimage -quiet -output "$CLOUDINIT_ISO" -volid cidata -joliet -rock -C "$CLOUDINIT_DIR" .
+# Usamos (cd ...) para que genisoimage vea los archivos en el "." actual
+# Esto garantiza que user-data y meta-data queden en el root de la ISO
+(cd "$CLOUDINIT_DIR" && genisoimage -quiet -output "$CLOUDINIT_ISO" -volid cidata -joliet -rock .)
+
+# Verificación rápida
+if [ ! -f "$CLOUDINIT_ISO" ]; then
+    echo "❌ Falló la creación de la ISO"
+    exit 1
+fi
+
 
 # 5. Crear VM
 echo "☁️  Definiendo VM '$VM_NAME'..."
