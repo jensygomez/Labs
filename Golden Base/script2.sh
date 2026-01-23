@@ -90,6 +90,9 @@ ip netns exec NS-ROUTER bash << 'FW'
   # Acceso a DB (Alemania e India al Búnker)
   iptables -A FORWARD -s 10.10.0.10 -d 10.90.0.50 -p tcp --dport 3306 -j ACCEPT
   iptables -A FORWARD -s 10.30.0.0/24 -d 10.90.0.50 -j ACCEPT
+  # En Script 2, agregar estas reglas adicionales:
+  iptables -A FORWARD -s 10.10.0.10 -d 10.90.0.50 -p icmp --icmp-type echo-request -j ACCEPT
+  iptables -A FORWARD -s 10.90.0.50 -d 10.10.0.10 -p icmp --icmp-type echo-reply -j ACCEPT
   # Acceso Total (SysAdmin)
   iptables -A FORWARD -s 172.16.0.0/24 -j ACCEPT
 FW
