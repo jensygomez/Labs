@@ -43,10 +43,15 @@ else
   echo "⚠️  Clave SSH no encontrada, usando solo config base"
 fi
 
-# 4. Crear ISO cloud-init (AHORA INCLUYE LA CLAVE)
+# ... (todo igual arriba)
+
+# 4. Crear ISO cloud-init
+# IMPORTANTE: Entramos al directorio para que los archivos queden en la raíz del ISO
 CLOUDINIT_ISO="${IMAGES_DIR}/${VM_NAME}-cloudinit.iso"
-echo "☁️  Creando ISO cloud-init..."
-genisoimage -quiet -output "$CLOUDINIT_ISO" -volid cidata -joliet -rock "$CLOUDINIT_DIR/"
+echo "☁️  Creando ISO cloud-init en $CLOUDINIT_ISO..."
+
+# Usamos -C para cambiar al directorio y que meta-data/user-data queden en el root de la ISO
+genisoimage -quiet -output "$CLOUDINIT_ISO" -volid cidata -joliet -rock -C "$CLOUDINIT_DIR" .
 
 # 5. Crear VM
 echo "☁️  Definiendo VM '$VM_NAME'..."
@@ -61,6 +66,8 @@ virt-install \
   --import \
   --noautoconsole
 
-# Cleanup
-rm -f "$CLOUDINIT_ISO"
+# 6. Cleanup SEGURO
+# En lugar de borrarlo inmediatamente, deja que persista. 
+# O, si quieres borrarlo, asegúrate de que la VM ya lo leyó (no recomendado en labs).
 echo "✅ Laboratorio '$VM_NAME' creado correctamente"
+echo "ℹ️  La ISO de configuración se mantiene en: $CLOUDINIT_ISO"
