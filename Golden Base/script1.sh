@@ -75,7 +75,9 @@ dnf install -y \
     cronie \
     openssh-server \
     openssh-clients \
-    lynx
+    lynx \
+    php-fpm \
+    php-mysqlnd
 
 echo "   ✅ Paquetes instalados"
 
