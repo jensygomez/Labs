@@ -45,9 +45,16 @@ echo "📅 $(date)"
 echo "========================================"
 
 # [1] LIMPIEZA TOTAL (idempotencia)
-echo "🧹 Cleanup..."
-ip netns show 2>/dev/null | grep NS- | xargs -r ip netns del 2>/dev/null || true
-ip link show type bridge 2>/dev/null | awk '{print $2}' | xargs -r ip link del 2>/dev/null || true
+echo "🧹 Cleanup namespaces..."
+
+# Eliminar namespaces conocidos
+for ns in $(ip netns list | awk '{print $1}' | grep '^NS-'); do
+  ip netns del "$ns" 2>/dev/null || true
+done
+
+# Eliminar restos huérfanos
+rm -f /var/run/netns/NS-* 2>/dev/null || true
+
 
 # [2] ROUTER CENTRAL (.1 en todos los segmentos)
 echo "🧠 NS-ROUTER..."
