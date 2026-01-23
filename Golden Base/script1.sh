@@ -1,32 +1,22 @@
 #!/bin/bash
-# ============================================================================
-# PROYECTO: Automatización de Golden Base Image (Rocky Linux)
-# SCRIPT:   1 de 5 - Cimentación y Preparación del Sistema (Base Layer)
-# ============================================================================
+# =============================================================================
+# PROYECTO: Golden Base Image para Labs 3-Tier (Rocky Linux)
+# SCRIPT:  1/5 - Base Layer: "Do One Thing Well" (Unix Philosophy)
+# =============================================================================
 #
-# OBJETIVO PRINCIPAL:
-#   Transformar una instalación limpia de Rocky Linux en una plantilla (Golden
-#   Image) que servirá como host físico para una arquitectura 3-Tier.
+# FILOSOFÍA UNIX APLICADA:
+# - KISS: Cada sección una responsabilidad única (SRP).
+# - Idempotente: Re-ejecutable sin side-effects (chequeos previos).
+# - Modular: Base para scripts 2-5 (namespaces, services, hardening).
+# - Transparente: Logs, verificaciones post-reboot, prompt contextual.
 #
-# ACCIONES REALIZADAS EN ESTE SCRIPT (FASE 1):
-#   1. Actualización integral de paquetes y habilitación de repositorio EPEL.
-#   2. Instalación de utilidades de red y diagnóstico (tcpdump, nmap, net-tools).
-#   3. Despliegue de servicios Core (MariaDB, Nginx, SSH) que serán aislados
-#      en fases posteriores.
-#   4. Creación del usuario de laboratorio 'student' con privilegios Sudo.
-#   5. Habilitación de IP Forwarding a nivel de Kernel (Preparación para Ruteo).
+# OBJETIVO: De instalación limpia → plantilla reproducible para host físico.
+#           Prepara ruteo L3, servicios core y usuario lab sin estado residual.
 #
-# VÍNCULO CON EL SCRIPT 2 (PRÓXIMA FASE):
-#   Este script sienta las bases de software para que el SCRIPT 2 pueda:
-#   - Segmentar el tráfico mediante Network Namespaces (NS-CLIENT, NS-EDGE, etc).
-#   - Utilizar las herramientas instaladas aquí para validar la conectividad.
-#   - Implementar la persistencia mediante Systemd, asegurando que la 
-#     configuración de red sea resiliente a reinicios.
-#
-# REQUISITOS:
-#   - Ejecución como Root.
-#   - Acceso a Internet para descarga de dependencias.
-# ============================================================================
+# DEPENDENCIAS: Root + Internet (dnf repos).
+# SIGUIENTE: script2-network.sh (despliega NS-ROUTER, bridges globales).
+# =============================================================================
+
 set -e
 
 # (Aquí continúa el resto de tu código...)
@@ -44,21 +34,24 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# 2. INSTALAR PAQUETES ESENCIALES
+# 2. INSTALAR PAQUETES ESENCIALES (Idempotente + Limpio)
 # ---------------------------------------------------------------------------
-echo "[1/4] 📦 Instalando paquetes base..."
-dnf update -y --nobest
+echo "[1/4] 📦 Actualizando sistema e instalando paquetes base..."
 
-# Instalar EPEL si no existe
+# Upgrade completo (mejor que update --nobest)
+dnf upgrade -y
+
+# EPEL: Instalar + refresh (best practice Rocky 9+)
 if ! dnf repolist | grep -q epel; then
     dnf install -y epel-release
+    dnf upgrade -y  # Refresh post-EPEL
 fi
 
-# Paquetes CRÍTICOS para el lab
+# Paquetes CRÍTICOS para el lab (nftables compat + legacy si legacy iptables)
 dnf install -y \
     iproute \
     iptables \
-    iptables-services \
+    iptables-nft \
     nginx \
     mariadb-server \
     mariadb \
@@ -79,7 +72,12 @@ dnf install -y \
     php-fpm \
     php-mysqlnd
 
-echo "   ✅ Paquetes instalados"
+# Cleanup para Golden Image ligera (Unix: least resource)
+dnf autoremove -y
+dnf clean all
+
+echo "   ✅ Paquetes instalados y sistema limpio"
+
 
 # ---------------------------------------------------------------------------
 # 3. CONFIGURAR SSH Y USUARIO
@@ -121,7 +119,7 @@ MaxSessions 20
 # Features
 UsePAM yes
 X11Forwarding yes
-PrintMotd no
+PrintMotd yes
 TCPKeepAlive yes
 UseDNS no
 
@@ -143,6 +141,30 @@ systemctl restart sshd
 systemctl enable sshd
 
 echo "   ✅ SSH y usuario configurados"
+
+# ---------------------------------------------------------------------------
+# 3.5 CONFIGURACIÓN DE RED ESTÁTICA
+# ---------------------------------------------------------------------------
+echo "[2.5/4] 🌐 Fijando IP estática..."
+
+# Obtener el nombre de la interfaz principal (la que tiene la ruta por defecto)
+IFACE=$(ip route | grep default | awk '{print $5}' | head -n1)
+
+if [ -n "$IFACE" ]; then
+    nmcli connection modify "$IFACE" \
+        ipv4.addresses 192.168.122.211/24 \
+        ipv4.gateway 192.168.122.1 \
+        ipv4.dns "8.8.8.8,1.1.1.1" \
+        ipv4.method manual \
+        connection.autoconnect yes
+
+    # Aplicar cambios sin desconectar la sesión actual (importante si corres esto por SSH)
+    nmcli connection up "$IFACE"
+    echo "   ✅ IP fijada en 192.168.122.211 sobre $IFACE"
+else
+    echo "   ⚠️ No se detectó interfaz activa para fijar IP"
+fi
+
 
 # ---------------------------------------------------------------------------
 # 4. CONFIGURACIÓN BÁSICA DEL SISTEMA
@@ -198,31 +220,30 @@ chmod +x /root/check-post-reboot.sh
 echo "   ✅ Script de verificación creado"
 
 # ---------------------------------------------------------------------------
-# 5. CONFIGURACIÓN DE PROMPT PARA NAMESPACES
+# 5. CONFIGURACIÓN DE PROMPT DINÁMICO PARA NAMESPACES
 # ---------------------------------------------------------------------------
-cat >> /root/.bashrc << 'EOF'
+echo "[5/5] 🐚 Configurando prompt dinámico..."
 
-# --- Lógica de Prompt para Namespaces (Golden Image) ---
-CURRENT_NS=$(ip netns identify $$)
+# Aplicar tanto para root como para el usuario student
+for BASHRC in /root/.bashrc /home/student/.bashrc; do
+    cat >> "$BASHRC" << 'EOF'
 
-if [ -n "$CURRENT_NS" ]; then
-    case "$CURRENT_NS" in
-        NS-SERVICES)
-            # Rojo: servicios críticos
-            export PS1="\[\e[1;31m\]($CURRENT_NS)\[\e[0m\] \u@\h:\w# "
-            ;;
-        NS-SYSADMIN)
-            # Azul: administración
-            export PS1="\[\e[1;34m\]($CURRENT_NS)\[\e[0m\] \u@\h:\w# "
-            ;;
-        *)
-            # Verde: clientes u otros
-            export PS1="\[\e[1;32m\]($CURRENT_NS)\[\e[0m\] \u@\h:\w# "
-            ;;
-    esac
-fi
+# --- Lógica de Prompt para Namespaces (Scalable) ---
+# Esta función se ejecuta cada vez que el prompt se dibuja
+get_ns_prompt() {
+    # Detecta si el proceso actual pertenece a un network namespace
+    local ns=$(ip netns identify $$ 2>/dev/null)
+    if [ -n "$ns" ]; then
+        echo "($ns) "
+    fi
+}
 
+# PS1: [Nombre-NS] Usuario@Host:Directorio$ 
+export PS1='$(get_ns_prompt)\u@\h:\w\$ '
 EOF
+done
+
+echo "   ✅ Prompt configurado para root y student"
 
 
 # ---------------------------------------------------------------------------
