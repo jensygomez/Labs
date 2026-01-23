@@ -152,7 +152,7 @@ IFACE=$(ip route | grep default | awk '{print $5}' | head -n1)
 
 if [ -n "$IFACE" ]; then
     nmcli connection modify "$IFACE" \
-        ipv4.addresses 192.168.122.211/24 \
+        ipv4.addresses 192.168.122.100/24 \
         ipv4.gateway 192.168.122.1 \
         ipv4.dns "8.8.8.8,1.1.1.1" \
         ipv4.method manual \
