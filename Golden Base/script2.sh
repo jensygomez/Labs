@@ -55,22 +55,28 @@ done
 # Eliminar restos huérfanos
 rm -f /var/run/netns/NS-* 2>/dev/null || true
 
+# Limpiar bridges
+for br in $(ip link show type bridge | grep -o 'br-[a-z]*' | uniq); do
+  ip link del "$br" 2>/dev/null || true
+done
 
 # [2] ROUTER CENTRAL (.1 en todos los segmentos)
 echo "🧠 NS-ROUTER..."
 ip netns add NS-ROUTER
 ip netns exec NS-ROUTER sysctl -w net.ipv4.ip_forward=1
+ip netns exec NS-ROUTER ip link set lo up
 
 # [3] NS-ANSIBLE (directo desde HOST físico)
 echo "🔧 NS-ANSIBLE..."
 ip netns add NS-ANSIBLE
-ip link add br-ansible type bridge
+ip link add br-ansible type bridge 2>/dev/null || true
 ip link set br-ansible up
 ip link add veth-host type veth peer name veth-ansible 2>/dev/null || true
 ip link set veth-host up
 ip link set veth-ansible netns NS-ANSIBLE
-ip netns exec NS-ANSIBLE ip addr add 172.17.0.1/24 dev veth-ansible
+ip netns exec NS-ANSIBLE ip addr add 172.17.0.1/24 dev veth-ansible 2>/dev/null || true
 ip netns exec NS-ANSIBLE ip link set veth-ansible up
+ip netns exec NS-ANSIBLE ip link set lo up
 
 # [4] CARRETERA POR SEGMENTO (Bridge → Router → Cliente)
 declare -A IPS=(["srv"]="10.10.0.10" ["cli"]="10.20.0.20" ["dev"]="10.30.0.30" ["data"]="10.90.0.50" ["adm"]="172.16.0.100")
@@ -88,8 +94,7 @@ for seg in "${!IPS[@]}"; do
   ip link set v-r$seg master br-$seg
   ip link set v-r$seg up
   ip link set v-nr$seg netns NS-ROUTER 2>/dev/null || true
-  ip netns exec NS-ROUTER ip addr flush dev v-nr$seg 2>/dev/null || true
-  ip netns exec NS-ROUTER ip addr add ${GWs[$seg]}/24 dev v-nr$seg
+  ip netns exec NS-ROUTER ip addr add ${GWs[$seg]}/24 dev v-nr$seg 2>/dev/null || true
   ip netns exec NS-ROUTER ip link set v-nr$seg up
   
   # Bridge ↔ Cliente (.10/.20/etc)
@@ -98,11 +103,10 @@ for seg in "${!IPS[@]}"; do
   ip link set v-$seg master br-$seg
   ip link set v-$seg up
   ip link set v-n$seg netns "NS-${seg^^}"
-  ip netns exec "NS-${seg^^}" ip addr flush dev v-n$seg 2>/dev/null || true
-  ip netns exec "NS-${seg^^}" ip addr add ${IPS[$seg]}/24 dev v-n$seg
-  ip netns exec "NS-${seg^^}" ip link set v-n$seg up lo up
-  ip netns exec "NS-${seg^^}" ip route flush table main 2>/dev/null || true
-  ip netns exec "NS-${seg^^}" ip route add default via ${GWs[$seg]}
+  ip netns exec "NS-${seg^^}" ip addr add ${IPS[$seg]}/24 dev v-n$seg 2>/dev/null || true
+  ip netns exec "NS-${seg^^}" ip link set v-n$seg up
+  ip netns exec "NS-${seg^^}" ip link set lo up
+  ip netns exec "NS-${seg^^}" ip route add default via ${GWs[$seg]} 2>/dev/null || true
 done
 
 # [5] ANSIBLE LINKS DIRECTOS (bypass router)
@@ -114,7 +118,6 @@ for seg in "${!IPS[@]}"; do
   ip link set v-ansible-$seg up
   ip link set v-$seg-ansible up
   ip netns exec NS-ANSIBLE ip addr add ${GWs[$seg]%.*}.254/24 dev v-ansible-$seg 2>/dev/null || true
-  ip netns exec NS-ANSIBLE ip link set v-ansible-$seg up
 done
 
 echo "=============================================="
@@ -142,6 +145,16 @@ ExecStart=/usr/local/bin/lab-net-setup.sh
 
 [Install]
 WantedBy=multi-user.target
+EOF
+
+# También necesitarás crear el script de systemd
+cat > /usr/local/bin/lab-net-setup.sh << 'EOF'
+#!/bin/bash
+# Script de configuración de red para systemd
+set -e
+
+# Tu lógica de configuración de red aquí
+# (puedes copiar la parte relevante del script principal)
 EOF
 
 chmod +x /usr/local/bin/lab-net-setup.sh
