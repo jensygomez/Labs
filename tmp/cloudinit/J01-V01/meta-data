@@ -1,0 +1,4 @@
+# scenarios/junior/J01/cloudinit/V01/meta-data
+
+instance-id: lab-J01-V01
+local-hostname: lab-j01-v01

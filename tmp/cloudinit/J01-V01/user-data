@@ -1,0 +1,30 @@
+#cloud-config
+write_files:
+  - path: /etc/lab.info
+    permissions: '0644'
+    content: |
+      LAB=J01
+      LEVEL=Junior
+      VARIANT=V01
+      INCIDENT=ICMP y conectividad externa bloqueadas por firewall
+
+  - path: /etc/motd
+    permissions: '0644'
+    content: |
+      ============================================================================
+                    INCIDENT RESPONSE LAB J01 – V01
+      ============================================================================
+      INCIDENTE: No hay ping al gateway ni a Internet
+      OBJETIVO : Diagnosticar bloqueo de red (Firewall)
+      ============================================================================
+      NOTA: Acceso remoto disponible (SSH)
+      ============================================================================
+
+# Forzamos a que el sistema no lo borre y aplicamos cambios de red para el lab
+runcmd:
+  - [ systemctl, restart, sshd ]
+  - [ chmod, 644, /etc/motd ]
+  # AQUÍ ES DONDE CREAS EL "PROBLEMA" DEL LABORATORIO:
+  - [ nmcli, connection, modify, eth0, +ipv4.routes, "10.0.0.0/8 127.0.0.1" ] # Ruta falsa o...
+  - [ firewall-cmd, --permanent, --add-rich-rule='rule protocol value="icmp" drop' ]
+  - [ firewall-cmd, --reload ]
