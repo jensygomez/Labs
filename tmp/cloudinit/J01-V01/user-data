@@ -20,17 +20,3 @@ write_files:
       NOTA: Acceso remoto disponible (SSH)
       ============================================================================
 
-runcmd:
-  - sleep 10
-
-  # 1. Garantizar canal de gestión
-  - firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" source address="192.168.122.1" port port="22" protocol="tcp" accept'
-  - firewall-cmd --reload
-
-  # 2. BLOQUEO REAL ICMP (saliente)
-  - iptables -I OUTPUT -p icmp -j DROP
-
-  # 3. BLOQUEO REAL Internet (saliente)
-  - iptables -I OUTPUT -d 0.0.0.0/0 ! -d 192.168.122.0/24 -j DROP
-
-  - hostnamectl set-hostname lab-j01-v01
