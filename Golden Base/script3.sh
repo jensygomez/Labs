@@ -1,95 +1,151 @@
 #!/bin/bash
 # ============================================================================
 # PROYECTO: Automatización de Golden Base Image (Rocky Linux 9.7)
-# SCRIPT:   3 de 5 - Despliegue de Servicios Web y Capa de Gestión
+# SCRIPT:   3 de 5 - Despliegue de Servicios Web (Capa de Aplicación)
 # ============================================================================
 #
-# DESCRIPCIÓN:
-#   Este script aprovisiona la lógica de aplicación inicial sobre la red 
-#   construida en el Script 2. Se centra en establecer el servidor web 
-#   en la sede de Alemania y validar la visibilidad desde China y SysAdmin.
+# OBJETIVO:
+#   Desplegar un servicio Web (Nginx) en la sede Alemania (NS-SERVICES),
+#   validando el control de acceso desde China (NS-CLIENT) y SysAdmin
+#   (NS-SYSADMIN), sobre la infraestructura creada en el Script 2.
 #
-# OBJETIVOS TÉCNICOS:
-#   1. Instalar y configurar Nginx como servidor nativo.
-#   2. Desplegar contenido web corporativo en el segmento SRV-1 (10.10.0.10).
-#   3. Configurar el entorno de gestión para el nodo ADM-1 (Home Office).
-#   4. Preparar el sistema para las pruebas de conectividad de Capa 7 (HTTP).
+# MODELO OPERATIVO (IMPORTANTE):
+#   - Nginx se instala en el HOST.
+#   - El proceso se ejecuta dentro del namespace NS-SERVICES usando
+#     `ip netns exec`.
+#   - Esto simula un servidor remoto SIN usar contenedores ni VMs.
 #
-# ARQUITECTURA ACTIVA EN ESTE MÓDULO:
-#   - Origen: NS-CLI-1 (China) ----> Destino: NS-SRV-1 (Alemania:80)
-#   - Gestión: NS-ADM-1 (Admin) ---> Control Total sobre la Infraestructura.
-#
-# CONSIDERACIONES DE TROUBLESHOOTING PARA JUNIORS:
-#   - Los servicios NO corren en el Host principal; corren dentro de Namespaces.
-#   - Para verificar puertos abiertos, usar: ip netns exec NS-SRV-1 ss -ntlp
-#   - Los logs de acceso se encuentran en la ruta estándar, pero filtrados
-#     por la configuración específica de este laboratorio.
-#
-# REQUISITOS PREVIOS:
-#   - Script 2 ejecutado y persistente (Interfaces br- y Namespaces NS-).
-#   - Conectividad de Capa 3 (ICMP/Ping) verificada entre nodos.
+# PRERREQUISITOS:
+#   - Script 2 ejecutado y activo.
+#   - Namespaces existentes:
+#       NS-SERVICES, NS-CLIENT, NS-SYSADMIN
 # ============================================================================
 
 set -e
-set -e
 
-echo "=== 🖥️  SCRIPT 3: DESPLEGANDO SERVICIOS INICIALES (WEB/ADMIN) ==="
+echo "=== 🖥️  SCRIPT 3: CAPA DE APLICACIÓN (WEB) ==="
+echo "📅 Fecha: $(date)"
 
-# 1. Instalación de paquetes en el Host
-echo "📦 Instalando Nginx..."
-dnf install -y nginx
+# ============================================================================
+# [1/5] Validaciones Previas (Fail Fast)
+# ============================================================================
+for ns in NS-SERVICES NS-CLIENT NS-SYSADMIN; do
+  ip netns list | grep -qw "$ns" || {
+    echo "❌ Namespace requerido no encontrado: $ns"
+    exit 1
+  }
+done
 
-# 2. Configuración de la página web nativa (Alemania - SRV-1)
-echo "🌐 Configurando contenido web para Alemania..."
-mkdir -p /var/www/html/alemania
-cat > /var/www/html/alemania/index.html << 'EOF'
+# ============================================================================
+# [2/5] Instalación de Paquetes en el Host
+# ============================================================================
+echo "📦 Instalando Nginx (host)..."
+dnf install -y nginx >/dev/null
+
+# ============================================================================
+# [3/5] Contenido Web (Alemania)
+# ============================================================================
+echo "🌐 Desplegando contenido web corporativo (Alemania)..."
+
+WEB_ROOT="/var/www/ns-services"
+mkdir -p "$WEB_ROOT"
+
+cat > "$WEB_ROOT/index.html" << 'EOF'
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sede Central - Alemania</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; background: #2c3e50; color: white; padding: 50px; }
-        .status { background: #27ae60; padding: 10px; border-radius: 5px; display: inline-block; }
-    </style>
+  <title>Sede Central - Alemania</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #1f2d3d;
+      color: #ecf0f1;
+      text-align: center;
+      padding-top: 60px;
+    }
+    .status {
+      background: #27ae60;
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-    <h1>🇩🇪 Bienvenidos a la Sede Central (Alemania)</h1>
-    <div class="status">SISTEMA OPERATIVO</div>
-    <p>Accediendo desde la IP: 10.10.0.10</p>
-    <hr>
-    <p><small>Golden Image Lab - Entrenamiento para Juniors/Plenos</small></p>
+  <h1>🇩🇪 Sede Central - Alemania</h1>
+  <div class="status">SERVICIO WEB OPERATIVO</div>
+  <p>IP del Servicio: <strong>10.10.0.10</strong></p>
+  <hr>
+  <small>Golden Image Lab — Capa de Aplicación</small>
 </body>
 </html>
 EOF
 
-# 3. Configuración de Nginx para correr dentro del Namespace
-# Creamos un config file específico que no use los puertos estándar del host
-cat > /etc/nginx/conf.d/alemania.conf << 'EOF'
+chown -R nginx:nginx "$WEB_ROOT"
+chmod -R 755 "$WEB_ROOT"
+
+# ============================================================================
+# [4/5] Configuración de Nginx (Bind explícito al Namespace)
+# ============================================================================
+echo "🛠️  Configurando Nginx para NS-SERVICES..."
+
+cat > /etc/nginx/conf.d/ns-services.conf << 'EOF'
 server {
     listen 10.10.0.10:80;
     server_name _;
-    root /var/www/html/alemania;
+    root /var/www/ns-services;
     index index.html;
+
+    access_log /var/log/nginx/ns-services.access.log;
+    error_log  /var/log/nginx/ns-services.error.log;
 }
 EOF
 
-# 4. Ajuste de permisos para evitar errores de Nginx
-chmod -R 755 /var/www/html/alemania
-chown -R nginx:nginx /var/www/html/alemania
+# Validación de sintaxis
+nginx -t >/dev/null
 
-# 5. LANZADOR DE SERVICIOS (Lab Control)
-# Este script es el que el Junior usará para "subir la palanca"
+# ============================================================================
+# [5/5] Lanzador de Servicios (Control del Lab)
+# ============================================================================
 cat > /usr/local/bin/lab-start-services << 'EOF'
 #!/bin/bash
-echo "🚀 Iniciando Nginx en NS-SRV-1..."
-# Ejecutamos Nginx dentro del namespace de Alemania
-ip netns exec NS-SRV-1 nginx -g "daemon off;" &
-echo "✅ Servicios web activos."
+
+echo "🚀 Iniciando servicio Web en NS-SERVICES..."
+
+# Verificación defensiva
+ip netns list | grep -qw NS-SERVICES || {
+  echo "❌ Namespace NS-SERVICES no existe"
+  exit 1
+}
+
+# Arranque del servicio dentro del namespace
+ip netns exec NS-SERVICES nginx -g "daemon off;" &
+
+sleep 1
+
+# Verificación local (desde el propio namespace)
+ip netns exec NS-SERVICES ss -lnt | grep -q ":80" \
+  && echo "✅ Nginx escuchando correctamente en 10.10.0.10:80" \
+  || echo "⚠️  Nginx no está escuchando como se esperaba"
 EOF
+
 chmod +x /usr/local/bin/lab-start-services
 
+# ============================================================================
+# Finalización
+# ============================================================================
 echo "===================================================="
-echo "🏆 CAPA WEB LISTA"
-echo "Para iniciar la web ejecuta: lab-start-services"
-echo "Desde China prueba con: ip netns exec NS-CLI-1 curl 10.10.0.10"
+echo "🏆 CAPA WEB DESPLEGADA Y ALINEADA"
+echo
+echo "▶ Iniciar servicio:"
+echo "   lab-start-services"
+echo
+echo "▶ Pruebas recomendadas:"
+echo "   China:     ip netns exec NS-CLIENT curl http://10.10.0.10"
+echo "   SysAdmin: ip netns exec NS-SYSADMIN curl http://10.10.0.10"
+echo
+echo "▶ Debugging:"
+echo "   ip netns exec NS-SERVICES ss -lntp"
+echo "   tail -f /var/log/nginx/ns-services.access.log"
 echo "===================================================="
