@@ -6,44 +6,34 @@ Este repositorio documenta tu ecosistema de lab actual en MX Linux host con libv
 ## Arquitectura General
 
 El setup simula un entorno production con enrutamiento, firewalls (firewalld/iptables en namespaces) y acceso segmentado. Host OS actúa como gateway con bridges para VLANs.
-
-```
-[ MUNDO EXTERIOR ]
-(VPN Sysadmin)
-       |
-       ▼
-                                         |
-                          ┌──────────────┴──────────────┐
-                          |      ACCESO GESTIÓN SSH     | (IP: 192.168.122.x)
-                          └──────────────┬──────────────┘
-                                         ▼
-                          [ FW / GATEWAY (HOST OS) ]
-                          (Enrutamiento y Seguridad)
-                                         |
-          ┌──────────────────────────────┼──────────────────────────────┐
-          |                              |                              |
-  [ VLAN 10: SERVICIOS ]       [ VLAN 20: USUARIOS ]          [ VLAN 30: GESTIÓN ]
-    (Bridge: br-srv)             (Bridge: br-cli)               
-     10.10.10.0/24                10.10.20.0/24                  
-          |                              |                       
-          ▼                              ▼                       
-    [ NS-SERVICES ]                [ NS-CLIENT ]                 
-    (10.10.10.10)                  (10.10.20.20)                 
-    - Nginx Web                    - Estación de                 
-    - Dnsmasq DNS                    Trabajo                     
-          |                                                     
-          └──────────────┬──────────────┐                        
-                         ▼              |                        
-               [ VLAN 90: BÚNKER DATOS ] |                        
-                 (Bridge: br-data)      |                        
-                  10.10.90.0/24         |                        
-                         |              |                        
-                         ▼              |                        
-                   [ NS-STORAGE ] ──────┼────────────────────────
-                   (10.10.90.50)           [ NS-SYSADMIN ]
-                   - MariaDB Server       (172.16.0.100)
-                                         - Monitoreo
-                                         - Auditoría
+[ EL NÚCLEO: ROCKY LINUX HOST ]
+                                     (Actuando como Router & Firewall)
+                                                   |
+          ┌────────────────────────────────────────┼────────────────────────────────────────┐
+          │                                        │                                        │
+    [ VLAN 10: DMZ ]                       [ VLAN 20: USERS ]                      [ VLAN 30: DEV-NET ]
+    (Bridge: br-srv)                       (Bridge: br-cli)                        (Bridge: br-dev)
+     Red: 10.10.0.0/24                      Red: 10.20.0.0/24                       Red: 10.30.0.0/24
+     Loc: 🇪🇺 Alemania                       Loc: 🌏 China                           Loc: 🇮🇳 India
+          │                                        │                                        │
+          ▼                                        ▼                                        ▼
+    [ NS-SERVICES ]                         [ NS-CLIENT ]                            [ NS-DEV ]
+    (10.10.0.10)                            (10.20.0.20)                             (10.30.0.30)
+    • Nginx (Web)                           • Navegador Web                         • Acceso SQL
+    • Dnsmasq (DNS)                         • Pruebas UX                            • Migraciones DB
+          │                                        │                                        │
+          └───────────────────┬────────────────────┘                                        │
+                              │      (Ruteo L3)                                             │
+                              ▼                                                             │
+                    [ VLAN 90: STORAGE ] <──────────────────────────────────────────────────┘
+                    (Bridge: br-data)
+                     Red: 10.90.0.0/24
+                     Loc: 🔐 Búnker Seguro
+                              │
+                              ▼
+                        [ NS-STORAGE ]
+                        (10.90.0.50)
+                        • MariaDB Engine
 ```
 
 

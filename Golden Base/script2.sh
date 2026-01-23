@@ -1,123 +1,151 @@
 #!/bin/bash
 # ============================================================================
 # PROYECTO: Automatización de Golden Base Image (Rocky Linux)
-# SCRIPT:   2 de 5 - Infraestructura de Red Centralizada (Modo Bridge)
+# SCRIPT:   2 de 5 - Infraestructura de Red Global Segmentada (Layer 3)
 # ============================================================================
 #
 # RESUMEN SCRIPT 1 (CIMENTACIÓN):
-#   ✅ Sistema actualizado y herramientas de diagnóstico instaladas.
-#   ✅ Usuario 'student' configurado y servicios base descargados.
+#   ✅ Sistema base preparado y herramientas de red instaladas.
 #
-# OBJETIVO SCRIPT 2 (EVOLUCIONADO):
-#   Establecer un Switch Virtual (Bridge) como columna vertebral del Lab.
-#   Esta arquitectura de "Estrella" permite que el Host, los Servicios y 
-#   el Cliente coexistan en un mismo dominio de colisión controlado.
+# OBJETIVO SCRIPT 2 (ARQUITECTURA ENTERPRISE):
+#   Evolucionar de una red plana a una topología de "Core Router" dedicada.
+#   Se crean islas tecnológicas (Namespaces) que representan sedes globales,
+#   interconectadas por un Router virtualizado que gestiona el tráfico.
 #
 # MECANISMOS DE INGENIERÍA IMPLEMENTADOS:
-# 1. TOPOLOGÍA HUB-AND-SPOKE: Uso de 'br-lab' como centro de conmutación,
-#    eliminando la latencia de saltos intermedios y namespaces de paso.
-# 2. INTEROPERABILIDAD CON EL HOST: El Bridge actúa como Gateway (10.10.100.1),
-#    permitiendo que los servicios aislados consuman la base de datos MariaDB
-#    que reside en el Host (VM raíz) de forma nativa.
-# 3. PERSISTENCIA POR SYSTEMD: Implementación de servicio 'oneshot' que 
-#    reconstruye el cableado virtual en cada arranque, garantizando que
-#    los Scripts 3 y 4 encuentren siempre sus interfaces listas.
+# 1. SEGMENTACIÓN POR VLAN (Bridges): Cada región (Alemania, China, India, 
+#    Búnker) posee su propio switch virtual (br-srv, br-cli, br-dev, br-data).
+# 2. CORE ROUTER (NS-ROUTER): Se despliega un Namespace dedicado que actúa 
+#    como Gateway central. Es el único punto con IP Forwarding habilitado.
+# 3. AISLAMIENTO DEL HOST: El Host OS actúa únicamente como chasis (Capa 2).
+#    No posee IPs en las redes del laboratorio, reforzando la seguridad.
+# 4. SIMULACIÓN DE LATENCIA Y TRÁFICO: Esta base permite implementar reglas
+#    de QoS o Firewall (iptables) dentro del Router en fases posteriores.
 #
 # PRÓXIMO PASO (SCRIPT 3):
-#   Desplegar la configuración de Nginx y Dnsmasq para que escuchen en 
-#   los puntos de red (Veth) anclados a este nuevo Bridge.
+#   Configurar los servicios internos (Nginx/DNS) en NS-SERVICES para que
+#   respondan a peticiones ruteadas desde cualquier parte del mundo.
 # ============================================================================
-
 
 set -e
 
-echo "=== 🌐 SCRIPT 2: RED CENTRALIZADA (BRIDGE MODE) ==="
+echo "=== 🌐 SCRIPT 2: DESPLEGANDO CORE-ROUTER Y SEGMENTACIÓN GLOBAL ==="
 echo "📅 Fecha: $(date)"
 
-# [1/5] Creación del Script de Configuración Real
+# [1/5] Creación del Script de Configuración (El "Arquitecto")
 cat > /usr/local/bin/lab-net-setup.sh << 'EOF'
 #!/bin/bash
 set -e
 
-# --- CONFIGURACIÓN ---
-BR_NAME="br-lab"
-BR_IP="10.10.100.1/24"
+# --- CONFIGURACIÓN DE SEGMENTOS ---
+# Mapeo de redes para simular ubicaciones geográficas
+declare -A SEGMENTOS=( 
+  ["srv"]="10.10.0"   # 🇪🇺 ALEMANIA (Servicios)
+  ["cli"]="10.20.0"   # 🌏 CHINA (Cliente)
+  ["dev"]="10.30.0"   # 🇮🇳 INDIA (Desarrollo)
+  ["data"]="10.90.0"  # 🔐 BÚNKER (Almacenamiento)
+  ["adm"]="172.16.0"  # 🏠 HOME OFFICE (Gestión)
+)
 
-# --- LIMPIEZA IDEMPOTENTE ---
-echo "🧹 Limpiando configuración previa..."
-ip link delete $BR_NAME 2>/dev/null || true
-for ns in NS-CLIENT NS-SERVICES; do
+# --- LIMPIEZA TOTAL (Idempotencia) ---
+echo "🧹 Limpiando escenarios previos..."
+for seg in "${!SEGMENTOS[@]}"; do ip link delete br-$seg 2>/dev/null || true; done
+ip link delete br-lab 2>/dev/null || true
+for ns in NS-ROUTER NS-SERVICES NS-CLIENT NS-DEV NS-STORAGE NS-SYSADMIN; do
     ip netns delete $ns 2>/dev/null || true
 done
 
-# --- 1. CREAR EL BRIDGE (EL SWITCH VIRTUAL) ---
-echo "🌉 Creando Bridge $BR_NAME ($BR_IP)..."
-ip link add name $BR_NAME type bridge
-ip addr add $BR_IP dev $BR_NAME
-ip link set $BR_NAME up
+# --- 1. CREAR EL CORAZÓN: NS-ROUTER ---
+echo "🧠 Creando NS-ROUTER (El Cerebro del Lab)..."
+ip netns add NS-ROUTER
+ip netns exec NS-ROUTER sysctl -w net.ipv4.ip_forward=1 > /dev/null
 
-# --- 2. CONFIGURAR NS-SERVICES (Servidor) ---
-echo "🏗️  Configurando NS-SERVICES..."
-ip netns add NS-SERVICES
-ip link add veth-srv type veth peer name veth-srv-br
-ip link set veth-srv netns NS-SERVICES
-ip link set veth-srv-br master $BR_NAME  # Enchufar al Bridge
-ip link set veth-srv-br up
-ip netns exec NS-SERVICES ip addr add 10.10.100.10/24 dev veth-srv
-ip netns exec NS-SERVICES ip link set veth-srv up
-ip netns exec NS-SERVICES ip link set lo up
-ip netns exec NS-SERVICES ip route add default via 10.10.100.1
+# --- 2. CREACIÓN DE BRIDGES Y CONEXIÓN AL ROUTER ---
+for seg in "${!SEGMENTOS[@]}"; do
+    BR="br-$seg"
+    RED="${SEGMENTOS[$seg]}"
+    echo "🌉 Configurando Switch $BR y conectando al Router..."
 
-# --- 3. CONFIGURAR NS-CLIENT (Cliente) ---
-echo "🏗️  Configurando NS-CLIENT..."
-ip netns add NS-CLIENT
-ip link add veth-cli type veth peer name veth-cli-br
-ip link set veth-cli netns NS-CLIENT
-ip link set veth-cli-br master $BR_NAME  # Enchufar al Bridge
-ip link set veth-cli-br up
-ip netns exec NS-CLIENT ip addr add 10.10.100.20/24 dev veth-cli
-ip netns exec NS-CLIENT ip link set veth-cli up
-ip netns exec NS-CLIENT ip link set lo up
-ip netns exec NS-CLIENT ip route add default via 10.10.100.1
+    # Crear Bridge (Switch de Capa 2, sin IP en el host)
+    ip link add name $BR type bridge
+    ip link set $BR up
 
-echo "✅ Red en modo Bridge configurada correctamente."
+    # Crear cable Veth (Patch cord virtual)
+    ip link add v-r-$seg type veth peer name v-nic-r-$seg
+    ip link set v-r-$seg master $BR
+    ip link set v-r-$seg up
+    
+    # Conectar al Router y asignar IP del Gateway (.1)
+    ip link set v-nic-r-$seg netns NS-ROUTER
+    ip netns exec NS-ROUTER ip addr add $RED.1/24 dev v-nic-r-$seg
+    ip netns exec NS-ROUTER ip link set v-nic-r-$seg up
+done
+
+# --- 3. CREACIÓN DE LOS NODOS FINALES (ENDPOINTS) ---
+conectar_nodo() {
+    local ns=$1; local seg=$2; local ip_final=$3
+    local BR="br-$seg"
+    local GW="${SEGMENTOS[$seg]}.1"
+    
+    echo "🏗️  Desplegando $ns en segmento $seg..."
+    ip netns add $ns
+    ip link add v-$ns type veth peer name v-nic-$ns
+    ip link set v-$ns master $BR
+    ip link set v-$ns up
+    
+    ip link set v-nic-$ns netns $ns
+    ip netns exec $ns ip addr add $ip_final dev v-nic-$ns
+    ip netns exec $ns ip link set v-nic-$ns up
+    ip netns exec $ns ip link set lo up
+    # Apuntar al Router para salir de su propia red
+    ip netns exec $ns ip route add default via $GW
+}
+
+# Ejecutar despliegue de nodos geográficos
+conectar_nodo "NS-SERVICES" "srv"  "10.10.0.10/24"
+conectar_nodo "NS-CLIENT"   "cli"  "10.20.0.20/24"
+conectar_nodo "NS-DEV"      "dev"  "10.30.0.30/24"
+conectar_nodo "NS-STORAGE"  "data" "10.90.0.50/24"
+conectar_nodo "NS-SYSADMIN" "adm"  "172.16.0.100/24"
+
+echo "✅ Red Global con Router Dedicado configurada."
 EOF
 
 chmod +x /usr/local/bin/lab-net-setup.sh
 
-# [2/5] Creación del Servicio Systemd (Persistencia)
+# [2/5] Persistencia Systemd (Asegura el cableado al reiniciar)
 cat > /etc/systemd/system/lab-network.service << 'EOF'
 [Unit]
-Description=Lab Bridge Network Persistence
+Description=Enterprise Router Network Persistence
 After=network.target
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/usr/local/bin/lab-net-setup.sh
-Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-# [3/5] Herramientas de diagnóstico (Actualizadas para Bridge)
+# [3/5] Herramienta de Diagnóstico "Visual Router"
 cat > /usr/local/bin/lab-network-status << 'EOF'
 #!/bin/bash
-echo "=== 🌐 ESTADO DE RED (MODO BRIDGE) ==="
-ip addr show br-lab | grep "inet "
-echo "--- Namespaces ---"
-ip netns list
-echo "--- Conectividad ---"
-ip netns exec NS-CLIENT ping -c 1 -W 1 10.10.100.10 >/dev/null && echo "✅ CLIENT -> SRV: OK" || echo "❌ CLIENT -> SRV: FAIL"
-ip netns exec NS-SERVICES ping -c 1 -W 1 10.10.100.1 >/dev/null && echo "✅ SRV -> HOST (DB): OK" || echo "❌ SRV -> HOST (DB): FAIL"
+echo "=== 🛰️  TOPOLOGÍA GLOBAL (VIA NS-ROUTER) ==="
+echo "RUTA: [ORIGEN] -> [GATEWAY ROUTER] -> [DESTINO]"
+echo "--------------------------------------------------------"
+ip netns exec NS-CLIENT ping -c 1 -W 1 10.10.0.10 >/dev/null && echo "✅ CHINA -> NS-ROUTER -> ALEMANIA: OK" || echo "❌ CONEXIÓN ROTA"
+ip netns exec NS-DEV ping -c 1 -W 1 10.90.0.50 >/dev/null && echo "✅ INDIA -> NS-ROUTER -> BÚNKER: OK" || echo "❌ CONEXIÓN ROTA"
+echo "--------------------------------------------------------"
+echo "Tabla de ruteo interna del NS-ROUTER:"
+ip netns exec NS-ROUTER ip -4 route | grep -v "lo"
 EOF
 chmod +x /usr/local/bin/lab-network-status
 
-# [4/5] Activación
+# [4/5] Activación de la Infraestructura
 systemctl daemon-reload
 systemctl enable --now lab-network.service
 
 echo "===================================================="
-echo "🏆 RED REESTRUCTURADA: AHORA USAS UN BRIDGE"
+echo "🏆 CORE-ROUTER INSTALADO Y OPERATIVO"
 echo "===================================================="
