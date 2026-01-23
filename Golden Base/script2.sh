@@ -84,17 +84,26 @@ ip netns exec NS-ROUTER bash << 'FW'
   iptables -P FORWARD DROP
   # Permitir tráfico de retorno
   iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
-  # Acceso a Web (China a Alemania)
+  
+  # ========== REGLAS CORREGIDAS ==========
+  
+  # 1. CHINA -> ALEMANIA (Solo Web + ICMP)
   iptables -A FORWARD -s 10.20.0.0/24 -d 10.10.0.10 -p tcp -m multiport --dports 80,443 -j ACCEPT
   iptables -A FORWARD -s 10.20.0.0/24 -d 10.10.0.10 -p icmp -j ACCEPT
-  # Acceso a DB (Alemania e India al Búnker)
+  
+  # 2. ALEMANIA -> BÚNKER (MySQL + ICMP para verificación)
   iptables -A FORWARD -s 10.10.0.10 -d 10.90.0.50 -p tcp --dport 3306 -j ACCEPT
+  iptables -A FORWARD -s 10.10.0.10 -d 10.90.0.50 -p icmp -j ACCEPT
+  
+  # 3. INDIA -> BÚNKER (Todo el tráfico - Desarrollo)
   iptables -A FORWARD -s 10.30.0.0/24 -d 10.90.0.50 -j ACCEPT
-  # En Script 2, agregar estas reglas adicionales:
-  iptables -A FORWARD -s 10.10.0.10 -d 10.90.0.50 -p icmp --icmp-type echo-request -j ACCEPT
-  iptables -A FORWARD -s 10.90.0.50 -d 10.10.0.10 -p icmp --icmp-type echo-reply -j ACCEPT
-  # Acceso Total (SysAdmin)
+  
+  # 4. SYSADMIN -> TODOS (Acceso total)
   iptables -A FORWARD -s 172.16.0.0/24 -j ACCEPT
+  
+  # ========== LOGGING OPCIONAL ==========
+  # iptables -A FORWARD -s 10.20.0.0/24 -d 10.90.0.50 -j LOG --log-prefix "[FIREWALL-BLOCK-CHINA]: "
+  # iptables -A FORWARD -s 10.30.0.0/24 -d 10.10.0.10 -j LOG --log-prefix "[FIREWALL-BLOCK-DEV]: "
 FW
 EOF
 
