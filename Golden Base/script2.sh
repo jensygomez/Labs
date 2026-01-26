@@ -156,12 +156,12 @@ ensure_ip(){
   fi
   # Idempotencia: IP ya Asignada...?
   if ip netns exec "$ns" ip addr show dev "$iface" | grep -qw "$ip_cidr"; then
-    echo "✔ IP $ip_cidr ya existe en $nsen para su interface $iface"
+    echo "+ [$ns] $iface <-- $ip_cidr"
     return 0
   fi
   # Asignar IP
   if ip netns exec "$ns" ip addr add "$ip_cidr" dev "$iface"; then
-    echo "+ IP $ip_cidr asignada a $ns en la interface $iface"
+    echo "+ [$ns] $iface <-- $ip_cidr"
   fi
 }
 
