@@ -197,8 +197,11 @@ fase_cables(){
 fase_ips(){
   echo "[FASE 3] IP's"
   for ipdef in "${IPS[@]}";do
-    IFS=":" read -r ns iface ip <<< "$ipdef"
-    if ! ensure_ip
+    IFS=":" read -r ns iface ip_cidr <<< "$ipdef"
+    if ! ensure_ip "$ns" "$iface" "$ip_cidr"; then
+      exit 1
+    fi
+  done  
 }
 # ==============================================================================
 # BLOQUE 100- MAIN ( MOTOR MINIMO FUNCIONAL)
@@ -211,6 +214,9 @@ main() {
   echo "----------------------------------------"
   
   fase_cables
+  echo "----------------------------------------"
+
+  fase_ips
   echo "----------------------------------------"
   
   echo "✅ Topología desplegada exitosamente"
