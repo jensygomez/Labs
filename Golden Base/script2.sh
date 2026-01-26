@@ -37,7 +37,14 @@
 #                      NS-DEV-INDIA    NS-DEV-STAGING
 #                      10.30.0.30      10.30.0.31
 
-
+# FASES DEL MOTOR
+# ✔ Namespaces (hecho)
+# 👉 Cables (veth) idempotentes
+# Bridges
+# IPs
+# Rutas
+# Políticas (iptables, nftables)
+# Tests automáticos
 
 set -Eeuo pipefail
 
@@ -152,12 +159,50 @@ fase_bridges(){
   done
 }
 
+
 # ==============================================================================
-# BLOQUE 8 - MAIN ( MOTOR MINIMO FUNCIONAL)
+# BLOQUE 8 - PRIMITIVA 3: ENSURE CABLES
+# ==============================================================================
+ensure_cable(){
+  local ns_a="$1"
+  local if_a="$2"
+  local ns_b="$3"
+  local if_b="$4"
+
+if link_exists "$if_a" && link_exists "$if_b";then
+  echo "✔ Cable $if_a <--> $if_b existe"
+  sleep 1
+  return
+fi
+
+echo "+ Creando cable $if_a <--> $if_b ..."
+sleep 1
+ip link add "$if_a" type veth peer name "$if_b"
+ip link set "$if_a" netns "$ns_a"
+ip link set "$if_b" netns "$ns_b"
+
+ip netns exec "$ns_a" ip link set "$if_a" up
+ip netns exec "$ns_b" ip link set "$if_b" up
+}
+
+
+# ==============================================================================
+# BLOQUE 8 - FASE 2: CONVERGENCIA DE BRIDGES
+# ==============================================================================
+fase_cables(){
+  echo "[FASE] Cables"
+  for cables in "${CABLES[@]}";do
+    IFS=":" read -r ns_a if_a ns_b if_b <<< "$cables"
+    ensure_cable "$ns_a" "$if_a" "$ns_b" "$if_b"
+  done
+}
+
+# ==============================================================================
+# BLOQUE 100- MAIN ( MOTOR MINIMO FUNCIONAL)
 # ==============================================================================
 main() {
   fase_namespaces
-  
+  fase_cables
 }
 
 main "$@"
