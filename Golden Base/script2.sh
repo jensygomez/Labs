@@ -13,15 +13,12 @@
 #                 │ NS-EDGE  │ 10.255.255.1 (WAN: dhcp/simulado)
 #                 └────┬─────┘
 #                      │
-#                [BR-EDGE-CORE] 10.255.255.0/30
 #                      │
 #                 ┌────┴─────┐
 #                 │ NS-CORE  │ 10.255.255.2
 #                 └─┬──┬──┬──┘
 #          ┌────────┘  │  └────────┐
 #          │           │           │
-#    [BR-CORE-MGMT] [BR-PROD] [BR-DATABASE]
-#     10.0.0.0/24   10.10.0/24  10.20.0.0/24
 #          │           │           │
 #      ┌───┴───┐   ┌───┴───┐   ┌───┴────┐
 #  NS-ANSIBLE  │ NS-SRV-WEB│ NS-SRV-DATA│
@@ -30,12 +27,11 @@
 #  10.0.0.100  │ 10.10.0.40│            │
 #              └───────────┘            │
 #                                       │
-#                            [BR-SERVICES]
-#                             10.30.0.0/24
-#                                  │
-#                          ┌───────┴────────┐
-#                      NS-DEV-INDIA    NS-DEV-STAGING
-#                      10.30.0.30      10.30.0.31
+#                                       |
+#                                       │
+#                               ┌───────┴────────┐
+#                         NS-DEV-INDIA    NS-DEV-STAGING
+#                         10.30.0.30      10.30.0.31
 
 # FASES DEL MOTOR
 # ✔ Namespaces (hecho)
@@ -62,26 +58,22 @@ fi
 # ------------------------------------------------------------------------------
 # A - Modelos de NameSpaces
 # ------------------------------------------------------------------------------
+NS_EDGE_1="EDGE-1"
+NS_CORE_1="CORE-1"
+
+# Lista para iterar (opcional, para compatibilidad)
 NAMESPACES=(
-  "EDGE-1"
-  "CORE-1"
+  "$NS_EDGE_1"
+  "$NS_CORE_1"
 )
 
+
 # ------------------------------------------------------------------------------
-# B - Modelo de Cables
-# Formato:
-# A:ip_a:B:ip:b:Type[vlan]
+# B - Modelo de Cables (usando VARIABLES)
+# Formato: $NS_A:$INTERFACE_A:$NS_B:$INTERFACE_B
 # ------------------------------------------------------------------------------
 CABLES=(
-  "EDGE-1:eth0-edge-1:CORE-1:eth0-core-1"
-  "EDGE-1:eth1-edge-1:CORE-1:eth1-core-1"
-)
-# ------------------------------------------------------------------------------
-# C - Modelo de IPs
-# ------------------------------------------------------------------------------
-IP_CONFIGS=(
-    "EDGE-1:v.10:192.168.10.1/24"
-
+  "$NS_EDGE_1:eth0:$NS_CORE_1:eth0"
 )
 
 # ==============================================================================
@@ -90,8 +82,6 @@ IP_CONFIGS=(
 ns_exists(){
   ip netns list | grep -qw "$1"
 }
-
-
 
 # ==============================================================================
 # BLOQUE 4 - PRIMITIVAS
@@ -116,31 +106,50 @@ ensure_namespaces(){
     fi
   fi
 }
-
 # ------------------------------------------------------------------------------
 # PRIMITIVA 2: ENSURE CABLES
 # ------------------------------------------------------------------------------
 ensure_cable(){
-  local ns_a="$1"
-  local if_a="$2"
-  local ns_b="$3"
-  local if_b="$4"
-
-if ip netns exec "$ns_a" ip link show "$if_a" &>/dev/null && ip netns exec "$ns_b" ip link show "$if_b" &>/dev/null; then
-  echo "✔ Cable $if_a <--> $if_b existe"
-  sleep 1
-  return
-fi
-
-echo "+ Creando cable $if_a <--> $if_b ..."
-sleep 1
-ip link add "$if_a" type veth peer name "$if_b"
-ip link set "$if_a" netns "$ns_a"
-ip link set "$if_b" netns "$ns_b"
-
-ip netns exec "$ns_a" ip link set "$if_a" up
-ip netns exec "$ns_b" ip link set "$if_b" up
+  local ns_a="$1" if_a="$2" ns_b="$3" if_b="$4"
+  
+  if ! ns_exists "$ns_a" || ! ns_exists "$ns_b"; then
+    echo "❌ Namespaces faltantes"
+    return 1
+  fi
+  
+  if ip netns exec "$ns_a" ip link show "$if_a" 2>/dev/null 1>&2 &&
+     ip netns exec "$ns_b" ip link show "$if_b" 2>/dev/null 1>&2; then
+    echo "✔ Cable existe"
+    return 0
+  fi
+  
+  echo "🔗 Creando cable..."
+  
+  local counter=$(cat "$VETH_COUNTER_FILE" 2>/dev/null || echo 0)
+  local temp_a="veth${ns_a//-}a${counter}"
+  local temp_b="veth${ns_b//-}b${counter}"
+  ((counter++))
+  echo $counter > "$VETH_COUNTER_FILE"
+  
+  if ip link add "$temp_a" type veth peer name "$temp_b"; then
+    ip link set "$temp_a" netns "$ns_a"
+    ip link set "$temp_b" netns "$ns_b"
+    ip netns exec "$ns_a" ip link set "$temp_a" name "$if_a" up || true
+    ip netns exec "$ns_b" ip link set "$temp_b" name "$if_b" up || true
+    echo "✅ Cable UP ($temp_a ↔ $temp_b)"
+  else
+    echo "❌ FALLO veth"
+    ip link delete "$temp_a" 2>/dev/null || true
+    return 1
+  fi
+  return 0
 }
+
+
+
+
+
+
 # ==============================================================================
 # BLOQUE 5 - CONVERGENCIAS
 # ==============================================================================
@@ -173,9 +182,23 @@ fase_cables(){
 # BLOQUE 100- MAIN ( MOTOR MINIMO FUNCIONAL)
 # ==============================================================================
 main() {
+  echo "🚀 Iniciando motor de topología..."
+  echo "----------------------------------------"
+  
   fase_namespaces
-  fase_cables  
-
+  echo "----------------------------------------"
+  
+  fase_cables
+  echo "----------------------------------------"
+  
+  echo "✅ Topología desplegada exitosamente"
+  echo ""
+  echo "Resumen:"
+  for ns in "${NAMESPACES[@]}"; do
+    echo "--- $ns ---"
+    ip netns exec "$ns" ip -brief addr show
+    echo ""
+  done
 }
 
 main "$@"
