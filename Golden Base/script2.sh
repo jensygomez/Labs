@@ -160,8 +160,9 @@ ensure_ip(){
     return 0
   fi
   # Asignar IP
-  if ip netns exec "$ns" ip addr add "$ip_cidr" dev "$iface"
+  if ip netns exec "$ns" ip addr add "$ip_cidr" dev "$iface"; then
     echo "+ IP $ip_cidr asignada a $ns en la interface $iface"
+  fi
 }
 
 # ==============================================================================
