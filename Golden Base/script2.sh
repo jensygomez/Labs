@@ -109,6 +109,8 @@ ensure_namespaces(){
 # ------------------------------------------------------------------------------
 # PRIMITIVA 2: ENSURE CABLES
 # ------------------------------------------------------------------------------
+VETH_COUNTER_FILE="/tmp/veth_counter"
+if [[ ! -f "$VETH_COUNTER_FILE" ]]; then echo 0 > "$VETH_COUNTER_FILE"; fi
 ensure_cable(){
   local ns_a="$1" if_a="$2" ns_b="$3" if_b="$4"
   
@@ -144,7 +146,6 @@ ensure_cable(){
   fi
   return 0
 }
-
 
 
 
