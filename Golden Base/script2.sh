@@ -7,10 +7,6 @@
 # Fecha: 2026-01-26
 # Versión: 0.1
 #==============================================================================
-
-set -e # Si CUALQUIER comando falla, detén INMEDIATAMENTE todo el script
-set -u # Si intentas usar una variable que NO existe, detén TODO inmediatamente
-
 # INTERNET
 #                       ↓
 #                 ┌──────────┐
@@ -41,11 +37,62 @@ set -u # Si intentas usar una variable que NO existe, detén TODO inmediatamente
 #                      NS-DEV-INDIA    NS-DEV-STAGING
 #                      10.30.0.30      10.30.0.31
 
+
+set -e  # Detener el script si hay algún error
+set -u  # Detectar variables no definidas
+
+#==============================================================================
+# VARIABLES 
+#==============================================================================
 NS_EDGE="NS-EDGE"
 
 
+
 # ==============================================================================
-# CREAACION DEL ROUTER
+# FUNCIONES PRIMITIVAS (crear_namespace)
+# ==============================================================================
+log(){
+  echo -e "\n[$(date +%H:%M:$S)] $1"
+}
+
+# ==============================================================================
+# FUNCIONES PRIMITIVAS (crear_namespace)
 # ==============================================================================
 
-ip netns add $NS_EDGE
+crear_namespace(){
+  local ns="$1"
+
+  if ip netns list | grep -qw "$ns"; then
+    echo "NameSpace $ns ya existe"
+  else
+    ip netns add "$ns" 
+    echo "NameSpace $ns creado"
+  fi
+}
+
+
+
+# ==============================================================================
+# FASES (fase_crear_namespace)
+# ==============================================================================
+
+fase_crear_namespace(){
+  log "FASE 1: Creando namespcaes..."
+  
+  crear_namespace "$NS_EDGE"
+
+  sleep 1
+}
+
+
+# ==============================================================================
+# FUNCION MAIN
+# ==============================================================================
+main() {
+  fase_crear_namespace
+}
+
+main "$@"
+
+
+
