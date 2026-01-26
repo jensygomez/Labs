@@ -1,5 +1,4 @@
 #!/bin/bash
-
 #==============================================================================
 # Script: setup-network-lab.sh
 # Descripción: Configuración persistente de topología de red con namespaces
@@ -71,6 +70,14 @@ NAMESPACES=(
 CABLES=(
   "$NS_EDGE_1:eth0:$NS_CORE_1:eth0"
 )
+# ------------------------------------------------------------------------------
+# C - Modelo de IPs
+# Formato: $NAMESPACE:$INTERFACE:$IP_CIDR
+# ------------------------------------------------------------------------------
+IPS=(
+  "$NS_EDGE_1:eth0:10.255.255.1/30"
+  "$NS_CORE_1:eth0:10.255.255.2/30"
+)
 # ==============================================================================
 # BLOQUE 3 - UTILIDADES (MOTOR SILENCIOSO)
 # ==============================================================================
@@ -130,10 +137,39 @@ ensure_cable(){
   fi
   return 0
 }
+# ------------------------------------------------------------------------------
+# PRIMITIVA 3: ENSURE IP
+# ------------------------------------------------------------------------------
+ensure_ip(){
+  local ns="$1"
+  local iface="$2"
+  local ip_cidr="$3"
+  # Verificar namespaces
+  if ! ns_exists "$ns"; then
+    echo "❌ Namespace $ns no existe"
+    return 1
+  fi
+  # Verificar Interfaz
+  if ! ip netns exec "$ns" ip link show "$iface" &>dev/null; then
+    echo "❌ Interfaz $iface no existe en $ns"
+    return 1
+  fi
+  # Idempotencia: IP ya Asignada...?
+  if ip netns exec "$ns" ip addr show dev "$iface" | grep -qw "$ip_cidr"; then
+    echo "✔ IP $ip_cidr ya existe en $nsen para su interface $iface"
+    return 0
+  fi
+  # Asignar IP
+  if ip netns exec "$ns" ip addr add "$ip_cidr" dev "$iface"
+    echo "+ IP $ip_cidr asignada a $ns en la interface $iface"
+}
+
 # ==============================================================================
 # BLOQUE 5 - CONVERGENCIAS
 # ==============================================================================
+# ------------------------------------------------------------------------------
 # FASE 1: CONVERGENCIA DE NAMESPACES
+# ------------------------------------------------------------------------------
 fase_namespaces(){
   echo "[FASE 1] Namespaces"
   for ns in "${NAMESPACES[@]}"; do
@@ -142,7 +178,9 @@ fase_namespaces(){
     fi
   done
 }
+# ------------------------------------------------------------------------------
 # FASE 2: CONVERGENCIA DE CABLES
+# ------------------------------------------------------------------------------
 fase_cables(){
   echo "[FASE 2] Cables"
   for c in "${CABLES[@]}"; do
@@ -151,6 +189,16 @@ fase_cables(){
       exit 1
     fi
   done
+}
+
+# ------------------------------------------------------------------------------
+# FASE 3: CONVERGENCIA DE IP's
+# ------------------------------------------------------------------------------
+fase_ips(){
+  echo "[FASE 3] IP's"
+  for ipdef in "${IPS[@]}";do
+    IFS=":" read -r ns iface ip <<< "$ipdef"
+    if ! ensure_ip
 }
 # ==============================================================================
 # BLOQUE 100- MAIN ( MOTOR MINIMO FUNCIONAL)
