@@ -39,9 +39,8 @@
 
 # FASES DEL MOTOR
 # ✔ Namespaces (hecho)
-# 👉 Cables (veth) idempotentes
-# Bridges
-# IPs
+# ✔ Cables (veth) idempotentes (hecho)
+# IPs (despues)
 # Rutas
 # Políticas (iptables, nftables)
 # Tests automáticos
@@ -69,22 +68,16 @@ NAMESPACES=(
 )
 
 # ------------------------------------------------------------------------------
-# B - Modelo de Bridges
-# ------------------------------------------------------------------------------
-BRIDGES=()
-
-# ------------------------------------------------------------------------------
-# C - Modelo de Cables
+# B - Modelo de Cables
 # Formato:
 # A:ip_a:B:ip:b:Type[vlan]
 # ------------------------------------------------------------------------------
 CABLES=(
   "EDGE-1:eth0-edge-1:CORE-1:eth0-core-1"
   "EDGE-1:eth1-edge-1:CORE-1:eth1-core-1"
-  )
-
+)
 # ------------------------------------------------------------------------------
-# D - Modelo de IPs
+# C - Modelo de IPs
 # ------------------------------------------------------------------------------
 IP_CONFIGS=(
     "EDGE-1:v.10:192.168.10.1/24"
@@ -98,78 +91,42 @@ ns_exists(){
   ip netns list | grep -qw "$1"
 }
 
-bridge_exists(){
-  ip link show "$1" &>/dev/null
-}
-
-link_exists(){
-  ip link show "$1" &>/dev/null
-}
 
 
 # ==============================================================================
-# BLOQUE 4 - PRIMITIVA 1: ENSURE NAMESPACES
+# BLOQUE 4 - PRIMITIVAS
 # ==============================================================================
 
+# ------------------------------------------------------------------------------
+# PRIMITIVA 1: ENSURE NAMESPACES
+# ------------------------------------------------------------------------------
 ensure_namespaces(){
   local ns="$1"
 
   if ns_exists "$ns"; then
     echo "✔ Namespace $ns existe"
-    sleep 1
+    return 0
   else
-    ip netns add "$ns"
-    echo "➕ Namespace $ns creado"
-    sleep 1
+    if ip netns add "$ns"; then
+      echo "➕ Namespace $ns creado"
+      return 0
+    else
+      echo "❌ Error creando namespace $ns"
+      return 1
+    fi
   fi
 }
 
-# ==============================================================================
-# BLOQUE 5 - FASE 1: CONVERGENCIA DE NAMESPACES
-# ==============================================================================
-
-fase_namespaces(){
-  echo "[FASE] Namespaces"
-  for ns in "${NAMESPACES[@]}";do
-    ensure_namespaces "$ns"
-  done
-}
-
-
-# ==============================================================================
-# BLOQUE 6 - PRIMITIVA 2: ENSURE BRIDGE
-# ==============================================================================
-ensure_bridge(){
-  local br="$1"
-  if bridge_exists "$br"; then
-    echo "✔ Bridge $br existe"
-  else
-    ip link add "$br" type bridge
-    ip link set "$br" up
-    echo "➕ Bridge $br creado"
-  fi
-}
-
-# ==============================================================================
-# BLOQUE 7 - FASE 2: CONVERGENCIA DE BRIDGES
-# ==============================================================================
-fase_bridges(){
-  for br in "${BRIDGES[@]}";do
-    ensure_bridge "$br"
-  done
-}
-
-
-# ==============================================================================
-# BLOQUE 8 - PRIMITIVA 3: ENSURE CABLES
-# ==============================================================================
+# ------------------------------------------------------------------------------
+# PRIMITIVA 2: ENSURE CABLES
+# ------------------------------------------------------------------------------
 ensure_cable(){
   local ns_a="$1"
   local if_a="$2"
   local ns_b="$3"
   local if_b="$4"
 
-if link_exists "$if_a" && link_exists "$if_b";then
+if ip netns exec "$ns_a" ip link show "$if_a" &>/dev/null && ip netns exec "$ns_b" ip link show "$if_b" &>/dev/null; then
   echo "✔ Cable $if_a <--> $if_b existe"
   sleep 1
   return
@@ -184,16 +141,31 @@ ip link set "$if_b" netns "$ns_b"
 ip netns exec "$ns_a" ip link set "$if_a" up
 ip netns exec "$ns_b" ip link set "$if_b" up
 }
-
-
 # ==============================================================================
-# BLOQUE 8 - FASE 2: CONVERGENCIA DE BRIDGES
+# BLOQUE 5 - CONVERGENCIAS
 # ==============================================================================
+
+# ------------------------------------------------------------------------------
+# FASE 1: CONVERGENCIA DE NAMESPACES
+# ------------------------------------------------------------------------------
+fase_namespaces(){
+  echo "[FASE 1] Namespaces"
+  for ns in "${NAMESPACES[@]}"; do
+    if ! ensure_namespaces "$ns"; then
+      exit 1
+    fi
+  done
+}
+# ------------------------------------------------------------------------------
+# FASE 2: CONVERGENCIA DE CABLES
+# ------------------------------------------------------------------------------
 fase_cables(){
-  echo "[FASE] Cables"
-  for cables in "${CABLES[@]}";do
-    IFS=":" read -r ns_a if_a ns_b if_b <<< "$cables"
-    ensure_cable "$ns_a" "$if_a" "$ns_b" "$if_b"
+  echo "[FASE 2] Cables"
+  for c in "${CABLES[@]}"; do
+    IFS=":" read -r ns_a if_a ns_b if_b <<< "$c"
+    if ! ensure_cable "$ns_a" "$if_a" "$ns_b" "$if_b"; then
+      exit 1
+    fi
   done
 }
 
@@ -202,7 +174,8 @@ fase_cables(){
 # ==============================================================================
 main() {
   fase_namespaces
-  fase_cables
+  fase_cables  
+
 }
 
 main "$@"
