@@ -54,20 +54,16 @@ fi
 # ==============================================================================
 # BLOQUE 2 - MODELOS GENERALES
 # ==============================================================================
-
 # ------------------------------------------------------------------------------
 # A - Modelos de NameSpaces
 # ------------------------------------------------------------------------------
 NS_EDGE_1="EDGE-1"
 NS_CORE_1="CORE-1"
-
 # Lista para iterar (opcional, para compatibilidad)
 NAMESPACES=(
   "$NS_EDGE_1"
   "$NS_CORE_1"
 )
-
-
 # ------------------------------------------------------------------------------
 # B - Modelo de Cables (usando VARIABLES)
 # Formato: $NS_A:$INTERFACE_A:$NS_B:$INTERFACE_B
@@ -75,24 +71,18 @@ NAMESPACES=(
 CABLES=(
   "$NS_EDGE_1:eth0:$NS_CORE_1:eth0"
 )
-
 # ==============================================================================
 # BLOQUE 3 - UTILIDADES (MOTOR SILENCIOSO)
 # ==============================================================================
 ns_exists(){
   ip netns list | grep -qw "$1"
 }
-
 # ==============================================================================
 # BLOQUE 4 - PRIMITIVAS
 # ==============================================================================
-
-# ------------------------------------------------------------------------------
 # PRIMITIVA 1: ENSURE NAMESPACES
-# ------------------------------------------------------------------------------
 ensure_namespaces(){
   local ns="$1"
-
   if ns_exists "$ns"; then
     echo "✔ Namespace $ns existe"
     return 0
@@ -107,33 +97,26 @@ ensure_namespaces(){
     fi
   fi
 }
-# ------------------------------------------------------------------------------
 # PRIMITIVA 2: ENSURE CABLES
-# ------------------------------------------------------------------------------
 VETH_COUNTER_FILE="/tmp/veth_counter"
 if [[ ! -f "$VETH_COUNTER_FILE" ]]; then echo 0 > "$VETH_COUNTER_FILE"; fi
 ensure_cable(){
   local ns_a="$1" if_a="$2" ns_b="$3" if_b="$4"
-  
   if ! ns_exists "$ns_a" || ! ns_exists "$ns_b"; then
     echo "❌ Namespaces faltantes"
     return 1
   fi
-  
   if ip netns exec "$ns_a" ip link show "$if_a" 2>/dev/null 1>&2 &&
      ip netns exec "$ns_b" ip link show "$if_b" 2>/dev/null 1>&2; then
     echo "✔ Cable existe"
     return 0
   fi
-  
   echo "🔗 Creando cable..."
-  
   local counter=$(cat "$VETH_COUNTER_FILE" 2>/dev/null || echo 0)
   local temp_a="veth${ns_a//-}a${counter}"
   local temp_b="veth${ns_b//-}b${counter}"
   ((counter++))
   echo $counter > "$VETH_COUNTER_FILE"
-  
   if ip link add "$temp_a" type veth peer name "$temp_b"; then
     ip link set "$temp_a" netns "$ns_a"
     ip link set "$temp_b" netns "$ns_b"
@@ -147,18 +130,10 @@ ensure_cable(){
   fi
   return 0
 }
-
-
-
-
-
 # ==============================================================================
 # BLOQUE 5 - CONVERGENCIAS
 # ==============================================================================
-
-# ------------------------------------------------------------------------------
 # FASE 1: CONVERGENCIA DE NAMESPACES
-# ------------------------------------------------------------------------------
 fase_namespaces(){
   echo "[FASE 1] Namespaces"
   for ns in "${NAMESPACES[@]}"; do
@@ -167,9 +142,7 @@ fase_namespaces(){
     fi
   done
 }
-# ------------------------------------------------------------------------------
 # FASE 2: CONVERGENCIA DE CABLES
-# ------------------------------------------------------------------------------
 fase_cables(){
   echo "[FASE 2] Cables"
   for c in "${CABLES[@]}"; do
@@ -179,7 +152,6 @@ fase_cables(){
     fi
   done
 }
-
 # ==============================================================================
 # BLOQUE 100- MAIN ( MOTOR MINIMO FUNCIONAL)
 # ==============================================================================
@@ -202,5 +174,4 @@ main() {
     echo ""
   done
 }
-
 main "$@"
