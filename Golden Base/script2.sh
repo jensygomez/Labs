@@ -150,7 +150,7 @@ ensure_ip(){
     return 1
   fi
   # Verificar Interfaz
-  if ! ip netns exec "$ns" ip link show "$iface" &>dev/null; then
+  if ! ip netns exec "$ns" ip link show "$iface" &>/dev/null; then
     echo "❌ Interfaz $iface no existe en $ns"
     return 1
   fi
