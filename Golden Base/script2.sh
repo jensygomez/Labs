@@ -98,6 +98,7 @@ ensure_namespaces(){
     return 0
   else
     if ip netns add "$ns"; then
+      ip netns exec "$ns" ip link set lo up
       echo "➕ Namespace $ns creado"
       return 0
     else
