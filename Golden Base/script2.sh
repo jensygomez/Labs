@@ -38,67 +38,126 @@
 #                      10.30.0.30      10.30.0.31
 
 
-set -e  # Detener el script si hay algún error
-set -u  # Detectar variables no definidas
 
-#==============================================================================
-# VARIABLES 
-#==============================================================================
-NS_EDGE=(
-  "NS-EDGE"
-)
-
-NS_CORE=(
-  "NS-CORE-1"
-)
-
-
+set -Eeuo pipefail
 
 # ==============================================================================
-# FUNCIONES PRIMITIVAS (crear_namespace)
+# BLOQUE 1 - CHECK ROOT
 # ==============================================================================
-log(){
-  echo -e "\n[$(date +%H:%M:$S)] $1"
+if [[ $EUID -ne 0 ]]; then
+  echo "Ejecuta como root"
+  exit 1
+fi
+
+# ==============================================================================
+# BLOQUE 2 - MODELOS GENERALES
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# A - Modelos de NameSpaces
+# ------------------------------------------------------------------------------
+NAMESPACES=(
+  "EDGE-1"
+  "CORE-1"
+)
+
+# ------------------------------------------------------------------------------
+# B - Modelo de Bridges
+# ------------------------------------------------------------------------------
+BRIDGES=()
+
+# ------------------------------------------------------------------------------
+# C - Modelo de Cables
+# Formato:
+# A:ip_a:B:ip:b:Type[vlan]
+# ------------------------------------------------------------------------------
+CABLES=(
+  "EDGE-1:eth0-edge-1:CORE-1:eth0-core-1"
+  "EDGE-1:eth1-edge-1:CORE-1:eth1-core-1"
+  )
+
+# ------------------------------------------------------------------------------
+# D - Modelo de IPs
+# ------------------------------------------------------------------------------
+IP_CONFIGS=(
+    "EDGE-1:v.10:192.168.10.1/24"
+
+)
+
+# ==============================================================================
+# BLOQUE 3 - UTILIDADES (MOTOR SILENCIOSO)
+# ==============================================================================
+ns_exists(){
+  ip netns list | grep -qw "$1"
 }
 
+bridge_exists(){
+  ip link show "$1" &>/dev/null
+}
+
+link_exists(){
+  ip link show "$1" &>/dev/null
+}
+
+
 # ==============================================================================
-# FUNCIONES PRIMITIVAS (crear_namespace)
+# BLOQUE 4 - PRIMITIVA 1: ENSURE NAMESPACES
 # ==============================================================================
 
-crear_namespace(){
+ensure_namespaces(){
   local ns="$1"
 
-  if ip netns list | grep -qw "$ns"; then
-    echo "NameSpace $ns ya existe"
+  if ns_exists "$ns"; then
+    echo "✔ Namespace $ns existe"
+    sleep 1
   else
-    ip netns add "$ns" 
-    echo "NameSpace $ns creado"
+    ip netns add "$ns"
+    echo "➕ Namespace $ns creado"
+    sleep 1
   fi
 }
 
-
-
 # ==============================================================================
-# FASES (fase_crear_namespace)
+# BLOQUE 5 - FASE 1: CONVERGENCIA DE NAMESPACES
 # ==============================================================================
 
-fase_crear_namespace(){
-  log "FASE 1: Creando namespcaes..."
-  
-  crear_namespace "$NS_EDGE"
-
-  sleep 1
+fase_namespaces(){
+  echo "[FASE] Namespaces"
+  for ns in "${NAMESPACES[@]}";do
+    ensure_namespaces "$ns"
+  done
 }
 
 
 # ==============================================================================
-# FUNCION MAIN
+# BLOQUE 6 - PRIMITIVA 2: ENSURE BRIDGE
+# ==============================================================================
+ensure_bridge(){
+  local br="$1"
+  if bridge_exists "$br"; then
+    echo "✔ Bridge $br existe"
+  else
+    ip link add "$br" type bridge
+    ip link set "$br" up
+    echo "➕ Bridge $br creado"
+  fi
+}
+
+# ==============================================================================
+# BLOQUE 7 - FASE 2: CONVERGENCIA DE BRIDGES
+# ==============================================================================
+fase_bridges(){
+  for br in "${BRIDGES[@]}";do
+    ensure_bridge "$br"
+  done
+}
+
+# ==============================================================================
+# BLOQUE 8 - MAIN ( MOTOR MINIMO FUNCIONAL)
 # ==============================================================================
 main() {
-  fase_crear_namespace
+  fase_namespaces
+  
 }
 
 main "$@"
-
-
-
