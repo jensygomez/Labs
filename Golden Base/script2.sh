@@ -11,9 +11,9 @@
 # • Modular: Base sólida para Script 3 (nftables), Script 4 (servicios).
 #
 # 🏗️  ARQUITECTURA L2/L3:
-# HOST FÍSICO
+# HOST FÍSICO VM Rocky 9.7
 #    ↓ veth-host
-# NS-ANSIBLE (.254) ← Ansible orquesta directo a bridges
+# NS-ANSIBLE (.254) ← Ansible orquesta directo a bridges (el esta dentro de la estructura como si fuera una PC dentro de la empresa)
 #    ↓ bridges L2
 # [NS-ROUTER] ← IP forwarding (.1 gateways)
 #    ↓ veth pairs
