@@ -1,0 +1,22 @@
+#!/bin/bash
+set -Eeuo pipefail
+
+BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+source "$BASE_DIR/lib/guard.sh"
+source "$BASE_DIR/lib/idempotency.sh"
+
+require_root
+
+run() {
+  local phase="$1"
+  source "$BASE_DIR/phases/$phase"
+  run_phase
+}
+
+run 01-netns.sh
+run 02-links.sh
+run 03-addressing.sh
+run 04-routing.sh
+
+echo "✅ Topología convergida"
