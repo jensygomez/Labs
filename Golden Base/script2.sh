@@ -94,7 +94,10 @@ ns_exists(){
 # ==============================================================================
 # BLOQUE 4 - PRIMITIVAS
 # ==============================================================================
+
+# ------------------------------------------------------------------------------
 # PRIMITIVA 1: ENSURE NAMESPACES
+# ------------------------------------------------------------------------------
 ensure_namespaces(){
   local ns="$1"
   if ns_exists "$ns"; then
@@ -111,7 +114,9 @@ ensure_namespaces(){
     fi
   fi
 }
+# ------------------------------------------------------------------------------
 # PRIMITIVA 2: ENSURE CABLES
+# ------------------------------------------------------------------------------
 VETH_COUNTER_FILE="/tmp/veth_counter"
 if [[ ! -f "$VETH_COUNTER_FILE" ]]; then echo 0 > "$VETH_COUNTER_FILE"; fi
 ensure_cable(){
@@ -171,6 +176,37 @@ ensure_ip(){
     echo "+ [$ns] $iface <-- $ip_cidr"
   fi
 }
+
+# ------------------------------------------------------------------------------
+# PRIMITIVA 4: ENSURE ROUTE
+# ------------------------------------------------------------------------------
+ensure_route(){
+  local ns="$1"
+  local dest="$2"
+  local via="$3"
+  if ! ns_exists "$ns"; then
+    echo "❌ Namespace $ns no existe"
+    return 1
+  fi
+  # Normalizar Destino
+  local route_dest
+  if [["$dest" == "default"]]; then 
+    route_dest="default"
+  else  
+    route_dest="$dest"
+  fi
+  # Ruta ya Existe...?
+  if ip netns exec "$ns" ip route show | grep -qw "$route_dest" via "$via"; then
+    echo  "✔ Ruta $route_dest via $via ya existe en $ns"
+    return 0
+  fi
+  # Agregar Ruta
+  ip netns exec "$ns" ip route add "$route_dest" via "$via"
+  echo "+ Ruta $route_dest via $via agregada en $ns"
+}
+
+
+
 
 # ==============================================================================
 # BLOQUE 5 - CONVERGENCIAS
