@@ -281,7 +281,7 @@ main() {
   fase_ips
   echo "----------------------------------------"
   
-  #fase_rutas
+  fase_rutas
   echo "----------------------------------------"
 
   echo "✅ Topología desplegada exitosamente"
