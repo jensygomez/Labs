@@ -205,9 +205,6 @@ ensure_route(){
   echo "+ Ruta $route_dest via $via agregada en $ns"
 }
 
-
-
-
 # ==============================================================================
 # BLOQUE 5 - CONVERGENCIAS
 # ==============================================================================
@@ -215,38 +212,59 @@ ensure_route(){
 # FASE 1: CONVERGENCIA DE NAMESPACES
 # ------------------------------------------------------------------------------
 fase_namespaces(){
-  echo "[FASE 1] Namespaces"
+  echo "[FASE 1] Namespaces..."
   for ns in "${NAMESPACES[@]}"; do
     if ! ensure_namespaces "$ns"; then
       exit 1
     fi
   done
+  sleep 1
 }
 # ------------------------------------------------------------------------------
 # FASE 2: CONVERGENCIA DE CABLES
 # ------------------------------------------------------------------------------
 fase_cables(){
-  echo "[FASE 2] Cables"
+  echo "[FASE 2] Cables..."
   for c in "${CABLES[@]}"; do
     IFS=":" read -r ns_a if_a ns_b if_b <<< "$c"
     if ! ensure_cable "$ns_a" "$if_a" "$ns_b" "$if_b"; then
       exit 1
     fi
   done
+  sleep 1
 }
 
 # ------------------------------------------------------------------------------
 # FASE 3: CONVERGENCIA DE IP's
 # ------------------------------------------------------------------------------
 fase_ips(){
-  echo "[FASE 3] IP's"
+  echo "[FASE 3] IP's..."
   for ipdef in "${IPS[@]}";do
     IFS=":" read -r ns iface ip_cidr <<< "$ipdef"
     if ! ensure_ip "$ns" "$iface" "$ip_cidr"; then
       exit 1
     fi
   done  
+  sleep 1
 }
+
+# ------------------------------------------------------------------------------
+# FASE 4: CONVERGENCIA DE RUTAS
+# ------------------------------------------------------------------------------
+fase_rutas(){
+  echo "[FASE 4] Rutas..."
+  for r in "${ROUTES[@]}"; do
+    IFS=":" read -r ns dest via <<< "$r"
+    if ! ensure_route "$ns" "$dest" "$via"; then
+      exit 1
+    fi
+  done
+  sleep 1
+}
+
+
+
+
 # ==============================================================================
 # BLOQUE 100- MAIN ( MOTOR MINIMO FUNCIONAL)
 # ==============================================================================
@@ -263,6 +281,9 @@ main() {
   fase_ips
   echo "----------------------------------------"
   
+    fase_rutas
+  echo "----------------------------------------"
+
   echo "✅ Topología desplegada exitosamente"
   echo ""
   echo "Resumen:"
