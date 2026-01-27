@@ -263,12 +263,11 @@ fase_rutas(){
 }
 
 
-
-
 # ==============================================================================
 # BLOQUE 100- MAIN ( MOTOR MINIMO FUNCIONAL)
 # ==============================================================================
-main() {
+
+run_engine(){
   echo "🚀 Iniciando motor de topología..."
   echo "----------------------------------------"
   
@@ -280,17 +279,74 @@ main() {
 
   fase_ips
   echo "----------------------------------------"
-  
+
   fase_rutas
   echo "----------------------------------------"
-
+  
   echo "✅ Topología desplegada exitosamente"
   echo ""
   echo "Resumen:"
   for ns in "${NAMESPACES[@]}"; do
     echo "--- $ns ---"
     ip netns exec "$ns" ip -brief addr show
+    ip netns exec "$ns" ip route
     echo ""
   done
 }
+
+
+test_idempotency(){
+  local runs=50
+  echo "🧪 Iniciando test de idempotencia ($runs ejecuciones)"
+  echo "----------------------------------------"
+
+  for i in $(seq 1 "$runs"); do
+    echo "▶ Test run #$i"
+    if ! run_engine >/dev/null 2>&1; then
+      echo "❌ FALLO en ejecución #$i"
+      exit 1
+    fi
+  done
+
+  echo "----------------------------------------"
+  echo "✅ Test de idempotencia SUPERADO ($runs ejecuciones)"
+}
+
+
+
+menu(){
+  while true; do
+    echo ""
+    echo "=============================="
+    echo " Network Lab - Control Panel"
+    echo "=============================="
+    echo "1) Ejecutar motor"
+    echo "2) Test de idempotencia (50x)"
+    echo "3) Salir"
+    echo "------------------------------"
+    read -rp "Selecciona una opción: " opt
+
+    case "$opt" in
+      1)
+        run_engine
+        ;;
+      2)
+        test_idempotency
+        ;;
+      3)
+        echo "👋 Saliendo"
+        exit 0
+        ;;
+      *)
+        echo "❌ Opción inválida"
+        ;;
+    esac
+  done
+}
+
+
+main(){
+  menu
+}
+
 main "$@"
