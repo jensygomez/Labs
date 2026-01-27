@@ -5,37 +5,36 @@
 # Autor: Jensy Gomez
 # Fecha: 2026-01-26
 # Versión: 0.1
-#==============================================================================
-# INTERNET
-#                       ↓
-#                 ┌──────────┐
-#                 │ NS-EDGE  │ 10.255.255.1 (WAN: dhcp/simulado)
-#                 └────┬─────┘
+#
+#                    INTERNET
+#                      ↓ WAN /30
+#                ┌───────────┐ 10.255.255.1
+#                │  EDGE-1   │
+#                └─────┬─────┘
 #                      │
-#                      │
-#                 ┌────┴─────┐
-#                 │ NS-CORE  │ 10.255.255.2
-#                 └─┬──┬──┬──┘
-#          ┌────────┘  │  └────────┐
-#          │           │           │
-#          │           │           │
-#      ┌───┴───┐   ┌───┴───┐   ┌───┴────┐
-#  NS-ANSIBLE  │ NS-SRV-WEB│ NS-SRV-DATA│
-#  10.0.0.50   │ 10.10.0.10│ 10.20.0.50 │
-#  NS-CLI      │ NS-MONITOR│            │
-#  10.0.0.100  │ 10.10.0.40│            │
-#              └───────────┘            │
-#                                       │
-#                                       |
-#                                       │
-#                               ┌───────┴────────┐
-#                         NS-DEV-INDIA    NS-DEV-STAGING
-#                         10.30.0.30      10.30.0.31
+#                ┌─────┴────┐ 10.255.255.2 (WAN) | 10.1.1.1/24 (LAN)
+#                │  CORE-1  │  ← L3 ROUTER
+#                │          │ Trunk VLANs 10,20,30,40
+#                └────┬─────┘
+#                     │ Trunk 802.1q (10,20,30,40)
+#                     │
+#┌────────────────────┴──────────────────┐
+#│              ACCESS LAYER             │
+#├───────────────────────────────────────┤
+#│SW-PROD   │ SW-ADM  │ SW-SER │ SW-TI   │
+#│VLAN10    │ VLAN20  │ VLAN30 │ VLAN40  │
+#├──────────┼─────────┼────────┼─────────┤
+#│WEB       │ ANSIBLE │ DEV-IN │ CLI     │
+#│10.10...  │ 10.0... │ 30...  │ 10.0..  │
+#│DATA      │ CLI     │ DEV-ST │ MONITOR │
+#│20.0...   │ 0.100   │ .31    │ 10.10.  │
+#└──────────┴─────────┴────────┴─────────┘
+
 
 # FASES DEL MOTOR
-# ✔ Namespaces (hecho)
-# ✔ Cables (veth) idempotentes (hecho)
-# IPs (despues)
+# ✔ Namespaces (hecho é idempotente)
+# ✔ Cables veth (hecho é idempotente)
+# ✔ IPs (hecho é idempotente)
 # Rutas
 # Políticas (iptables, nftables)
 # Tests automáticos
@@ -77,6 +76,14 @@ CABLES=(
 IPS=(
   "$NS_EDGE_1:eth0:10.255.255.1/30"
   "$NS_CORE_1:eth0:10.255.255.2/30"
+)
+# ------------------------------------------------------------------------------
+# D - Modelo de Rutas
+# Formato:
+# $NAMESPACE:$DESTINO:$VIA
+# ------------------------------------------------------------------------------
+ROUTES=(
+  "$NS_EDGE_1:default:10.255.255.2"
 )
 # ==============================================================================
 # BLOQUE 3 - UTILIDADES (MOTOR SILENCIOSO)
