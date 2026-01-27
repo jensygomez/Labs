@@ -6,38 +6,53 @@
 # Fecha: 2026-01-26
 # Versión: 0.1
 #
-#                    INTERNET
-#                      ↓ WAN /30
-#                ┌───────────┐ 10.255.255.1
-#                │  EDGE-1   │
-#                └─────┬─────┘
-#                      │
-#                ┌─────┴────┐ 10.255.255.2 (WAN) | 10.1.1.1/24 (LAN)
-#                │  CORE-1  │  ← L3 ROUTER
-#                │          │ Trunk VLANs 10,20,30,40
-#                └────┬─────┘
-#                     │ Trunk 802.1q (10,20,30,40)
+#                               INTERNET
+#                                  ↓ WAN /30
+#                          ┌────────────────┐
+#                          │    EDGE-1      │
+#                          │ 10.255.255.1   │
+#                          └────────┬───────┘
+#                                   │
+#                     ┌─────────────┴─────────────┐
+#                     │                           │
+#             ┌───────┴────────┐          ┌───────┴────────┐
+#             │   CORE-EDGE    │          │   CORE-MGMT    │
+#             │ 10.255.255.2  │          │ 10.255.255.3  │
+#             │ NAT / FW      │          │ Bastion / Mon │
+#             └───────┬───────┘          └───────┬────────┘
+#                     │                           │
+#               ┌─────┴────────┐                  │
+#               │   CORE-SVC   │◄─────────────────┘
+#               │ 10.255.255.4 │
+#               │ L3 + VLANs   │
+#               │ 10/20/30/40  │
+#               └─────┬────────┘
+#                     │ 802.1q Trunk
 #                     │
-#┌────────────────────┴──────────────────┐
-#│              ACCESS LAYER             │
-#├───────────────────────────────────────┤
-#│SW-PROD   │ SW-ADM  │ SW-SER │ SW-TI   │
-#│VLAN10    │ VLAN20  │ VLAN30 │ VLAN40  │
-#├──────────┼─────────┼────────┼─────────┤
-#│WEB       │ ANSIBLE │ DEV-IN │ CLI     │
-#│10.10...  │ 10.0... │ 30...  │ 10.0..  │
-#│DATA      │ CLI     │ DEV-ST │ MONITOR │
-#│20.0...   │ 0.100   │ .31    │ 10.10.  │
-#└──────────┴─────────┴────────┴─────────┘
+#┌────────────────────┴──────────────────────────────┐
+#│                     ACCESS LAYER                  │
+#├───────────────────────────────────────────────────┤
+#│ SW-PROD │ SW-ADM  │ SW-SER   │ SW-TI              │
+#│ VLAN10  │ VLAN20  │ VLAN30   │ VLAN40             │
+#├─────────┼─────────┼──────────┼───────────────────┤
+#│ WEB     │ ANSIBLE │ DEV-IN   │ CLI                │
+#│ 10.10.x │ 10.0.x  │ 10.30.30 │ 10.0.x             │
+#│ DATA    │ CLI     │ DEV-ST   │ MONITOR            │
+#│ 10.20.x │ 0.100   │ .31      │ 10.10.40           │
+#└─────────┴─────────┴──────────┴───────────────────┘
 
 
-# FASES DEL MOTOR
-# ✔ Namespaces (hecho é idempotente)
-# ✔ Cables veth (hecho é idempotente)
-# ✔ IPs (hecho é idempotente)
-# Rutas
-# Políticas (iptables, nftables)
-# Tests automáticos
+
+# FASES DEL MOTOR (v2 – Enterprise)
+# ✔ FASE 1: Namespaces
+# ✔ FASE 2: Enlaces (veth / trunks)
+# ✔ FASE 3: Direccionamiento (IPs)
+# ⏳ FASE 4: Forwarding & Kernel
+# ⏳ FASE 5: Routing por Rol
+# ⏳ FASE 6: NAT & Egress
+# ⏳ FASE 7: Políticas (FW)
+# ⏳ FASE 8: Tests de Flujo
+
 
 set -Eeuo pipefail
 
