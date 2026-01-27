@@ -190,13 +190,13 @@ ensure_route(){
   fi
   # Normalizar Destino
   local route_dest
-  if [["$dest" == "default"]]; then 
+  if [[ "$dest" == "default" ]]; then 
     route_dest="default"
   else  
     route_dest="$dest"
   fi
   # Ruta ya Existe...?
-  if ip netns exec "$ns" ip route show | grep -qw "$route_dest" via "$via"; then
+  if ip netns exec "$ns" ip route show | grep -qw "$route_dest via $via"; then
     echo  "✔ Ruta $route_dest via $via ya existe en $ns"
     return 0
   fi
