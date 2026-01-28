@@ -19,5 +19,6 @@ run 01-netns.sh
 run 02-links.sh
 run 03-addressing.sh
 run 04-routing.sh
+run 05-forwarding.sh
 
 echo "✅ Topología convergida"
