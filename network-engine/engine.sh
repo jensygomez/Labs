@@ -21,7 +21,7 @@ run 03-addressing.sh
 run 04-routing.sh
 run 05-forwarding.sh
 run 06-nat.sh
-
+run 07-firewall.sh
 
 
 echo "✅ Topología convergida"
