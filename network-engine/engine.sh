@@ -1,10 +1,9 @@
 #!/bin/bash
 # network-engine/engine.sh
-set -Eeuxo pipefail
-
+set -Eeuo pipefail
+[[ "${DEBUG:-0}" == "1" ]] && set -x
 
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
-
 source "$BASE_DIR/lib/guard.sh"
 source "$BASE_DIR/lib/idempotency.sh"
 
