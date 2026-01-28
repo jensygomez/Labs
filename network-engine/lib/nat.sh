@@ -14,12 +14,12 @@ ensure_nat(){
         echo "❌ Namespace $ns no existe"
         return 1
     fi
-    if ! ip netns exec "$ns" ip link show "$out_if" &>/dev/nulll
+    if ! ip netns exec "$ns" ip link show "$out_if" &>/dev/nulll; then
         echo "❌ Interfaz $out_if no existe en $ns"
         return 1
     fi
     # Idempotencia NAT
-    if ip netns exec "$ns" iptables -t nat -C POSTROUTTING -o "$out_if" -j MASQUERADE 2>/dev/null
+    if ip netns exec "$ns" iptables -t nat -C POSTROUTTING -o "$out_if" -j MASQUERADE 2>/dev/null; then
         echo "✔ NAT ya activo en $ns ($out_if)"
         return 0
     fi
