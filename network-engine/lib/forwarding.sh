@@ -1,5 +1,5 @@
 #!/bin/bash
-set -Eeuo pipfail
+set -Eeuo pipefail
 
 ensure_forwarding(){
     local ns="$1"
