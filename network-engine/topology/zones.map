@@ -1,0 +1,10 @@
+# topology/zones.map
+ZONE_MAP=(
+  "EDGE-1:eth0:INSIDE"
+  "EDGE-1:eth1:OUTSIDE"
+
+  "CORE-EDGE:eth0:TRANSIT"
+  "CORE-EDGE:eth1:INSIDE"
+
+  "CORE-MGMT:eth0:MGMT"
+)
