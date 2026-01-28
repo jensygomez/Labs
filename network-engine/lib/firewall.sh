@@ -3,14 +3,14 @@
 set -Eeuo pipefail
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$BASE_DIR/lib/netns.sh"
-source "$BASE_DIR/lib/idempotency.sh" 
+source "$BASE_DIR/lib/idempotency.sh"  # ← AGREGAR ESTA LÍNEA (para ns_exists)
 source "$BASE_DIR/topology/lab.conf"
 
 ensure_firewall() {
   local ns="$1"
   echo "🔒 Configurando FW en $ns"
   
-  ensure_ns_exists "$ns" || return 1
+  ns_exists "$ns" || { echo "❌ Namespace $ns no existe"; return 1; }  # ← FIX
   
   # Flush idempotente
   ip netns exec "$ns" nft flush ruleset 2>/dev/null || true
@@ -31,7 +31,6 @@ table inet ${ns}_filter {
     type filter hook forward priority 0; policy drop;
     ct state related,established accept
     ip protocol icmp accept
-    # Zona-based (LAN→WAN ok)
     iifname "eth0" accept
     iifname "eth1" oifname "eth0" drop
   }
