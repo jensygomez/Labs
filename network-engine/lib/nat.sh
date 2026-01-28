@@ -13,7 +13,6 @@ ensure_nat(){
     if ! ns_exists "$ns"; then
         echo "❌ Namespace $ns no existe"
         return 1
-    done
     if ! ip netns exec "$ns" ip link show "$out_if" &>/dev/nulll
         echo "❌ Interfaz $out_if no existe en $ns"
         return 1
