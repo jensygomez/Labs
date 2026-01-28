@@ -1,11 +1,11 @@
 #!/bin/bash
-
+# network-engine/lib/routing.sh
+set -Eeuo pipefail
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
 source "$BASE_DIR/lib/netns.sh"
 source "$BASE_DIR/topology/lab.conf"
 
-set -Eeuo pipefail
+
 
 # ------------------------------------------------------------------------------
 # PRIMITIVA 4: ENSURE ROUTE
