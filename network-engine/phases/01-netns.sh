@@ -1,5 +1,5 @@
-# network-engine/phases/01-netns.sh
 #!/bin/bash
+# network-engine/phases/01-netns.sh
 
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 

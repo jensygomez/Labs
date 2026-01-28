@@ -1,16 +1,18 @@
 #!/bin/bash
+# network-engine/lib/netns.sh
 
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-source "$BASE_DIR/lib/netns.sh"
+set -Eeuo pipefail
+
 source "$BASE_DIR/topology/lab.conf"
 
-set -Eeuo pipefail
+
 
 # ------------------------------------------------------------------------------
 # PRIMITIVA 1: ENSURE NAMESPACES
 # ------------------------------------------------------------------------------
-ensure_namespaces(){
+ensure_namespace(){
   local ns="$1"
   if ns_exists "$ns"; then
     echo "✔ Namespace $ns existe"
