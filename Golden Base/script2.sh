@@ -67,15 +67,18 @@
 
 
 
-# FASES DEL MOTOR (v2 – Enterprise)
-# ✔ FASE 1: Namespaces
-# ✔ FASE 2: Enlaces (veth / trunks)
-# ✔ FASE 3: Direccionamiento (IPs)
-# ⏳ FASE 4: Forwarding & Kernel
-# ⏳ FASE 5: Routing por Rol
-# ⏳ FASE 6: NAT & Egress
-# ⏳ FASE 7: Políticas (FW)
-# ⏳ FASE 8: Tests de Flujo
+# FASE 1  → Namespaces base
+# FASE 2  → Enlaces (veth / trunks)
+# FASE 3  → Direccionamiento IP
+# FASE 4  → Forwarding & sysctl
+# FASE 5  → Routing por rol
+# FASE 6  → NAT & Egress (EDGE)
+# FASE 7  → Firewall por zonas
+# FASE 8  → Tests de flujo
+# FASE 9  → CORE-SVC (L3 + VLANs)
+# FASE 10 → Access Layer
+# FASE 11 → Servicios reales (web, ansible, mon)
+
 
 
 set -Eeuo pipefail
