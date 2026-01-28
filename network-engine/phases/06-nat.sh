@@ -11,6 +11,6 @@ run_phase(){
     echo "[FASE 6] Nat & Egress..."
     for nat in "${NAT_ROUTERS[@]}"; do
         IFS=":" read -r ns iface <<< "$nat"
-        ensure_nat "$ns" "$out_if"
+        ensure_nat "$ns" "$iface"
     done
 }
