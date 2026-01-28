@@ -1,6 +1,7 @@
 #!/bin/bash
 # network-engine/engine.sh
-set -Eeuo pipefail
+set -Eeuxo pipefail
+
 
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
 
