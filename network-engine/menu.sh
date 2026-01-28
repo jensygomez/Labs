@@ -1,4 +1,6 @@
 # rsync -avz ./ root@192.168.122.100:/root/network-engine/
+# Ejecutar en la VM: 
+# DEBUG=1 sudo bash network-engine/menu.sh 
 # network-engine/menu.sh
 #!/bin/bash
 set -Eeuo pipefail
