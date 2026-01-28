@@ -1,7 +1,0 @@
-# topology/roles.map
-NS_ROLES=(
-  "EDGE-1:EDGE"
-  "CORE-EDGE:CORE-EDGE"
-  "CORE-SVC:CORE-SVC"
-  "CORE-MGMT:CORE-MGMT"
-)
