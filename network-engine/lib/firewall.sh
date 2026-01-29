@@ -6,51 +6,48 @@ source "$BASE_DIR/lib/netns.sh"
 source "$BASE_DIR/lib/idempotency.sh"  
 source "$BASE_DIR/topology/lab.conf"
 
-ensure_firewall(){
+ensure_firewall() {
   local ns="$1"
   echo "🔒 Configurando FW en $ns"
-  ns_exists "$ns" || {echo "❌ Namespace $ns no existe"; return 1;}
 
-  ip netns exec "$ns" nft flush ruleeset 2>/dev/null || true
+  ns_exists "$ns" || { echo "❌ Namespace $ns no existe"; return 1; }
 
-  # INPUT rules (por namespace)
+  ip netns exec "$ns" nft flush ruleset 2>/dev/null || true
+
+  local ruleset=""
   local input_rules="${FW_RULES[$ns]:-}"
 
-  ip netns exec "$ns" nft -f <(cat <<EOF
-table inet fw_${ns} {
+  ruleset+="table inet fw_${ns} {\n"
+  ruleset+="  chain input {\n"
+  ruleset+="    type filter hook input priority 0; policy drop;\n"
+  ruleset+="    iifname \"lo\" accept\n"
+  ruleset+="    ct state established,related accept\n"
+  [[ -n "$input_rules" ]] && ruleset+="    $input_rules\n"
+  ruleset+="  }\n\n"
 
-  chain input {
-    type filter hook input priority 0; policy drop;
-    iifname "lo" accept
-    ct state established,related accept
-    ${input_rules}
-  }
+  ruleset+="  chain forward {\n"
+  ruleset+="    type filter hook forward priority 0; policy drop;\n"
+  ruleset+="    ct state established,related accept\n"
 
-  chain forward {
-    type filter hook forward priority 0; policy drop;
-    ct state established,related accept
-EOF
-)
-  # Generar Reglas zone-based dinámicas
   for key in "${!FW_ZONES[@]}"; do
-    IFS=":" read -r z_ns z_if <<< "$key"
-    [[ "$z_ns"  != "$ns" ]]  && continue
+    IFS=":" read -r src_ns src_if <<< "$key"
+    [[ "$src_ns" != "$ns" ]] && continue
+    src_zone="${FW_ZONES[$key]}"
 
-    local src_zone="${FW_ZONES[$key]}"
+    for key2 in "${!FW_ZONES[@]}"; do
+      IFS=":" read -r dst_ns dst_if <<< "$key2"
+      [[ "$dst_ns" != "$ns" ]] && continue
+      dst_zone="${FW_ZONES[$key2]}"
 
-    for key2 in "${FW_ZONES[@]}"; do
-      IFS=":" read -r d_ns d_if <<< "$key2"
-      [[ "$d_ns" != "$ns" ]] && continue
-
-      local dst_zone="${FW_ZONES[$key2]}"
-      local policy="${FW_POLICIES[$src_zone->$dst_zone]:-drop}"
-
-      ip netns exec "$ns" nft add rule inet fw_${ns} forward \
-        iifname "$z_if" oifname "$d_if" $policy
+      policy="${FW_POLICIES[$src_zone->$dst_zone]:-drop}"
+      ruleset+="    iifname \"$src_if\" oifname \"$dst_if\" $policy\n"
     done
   done
-  echo "}"
-  echo "EOF"
-  echo "✅ FW ${ns} zone-based activo"
 
+  ruleset+="  }\n"
+  ruleset+="}\n"
+
+  echo -e "$ruleset" | ip netns exec "$ns" nft -f -
+
+  echo "✅ FW ${ns} zone-based activo"
 }
