@@ -49,4 +49,8 @@ EOF
         iifname "$z_if" oifname "$d_if" $policy
     done
   done
+  echo "}"
+  echo "EOF"
+  echo "✅ FW ${ns} zone-based activo"
+
 }
