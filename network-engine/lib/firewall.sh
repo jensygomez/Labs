@@ -6,7 +6,7 @@ source "$BASE_DIR/lib/netns.sh"
 source "$BASE_DIR/lib/idempotency.sh"  
 source "$BASE_DIR/topology/lab.conf"
 
-wensure_firewall(){
+ensure_firewall(){
   local ns="$1"
   echo "🔒 Configurando FW en $ns"
   ns_exists "$ns" || {echo "❌ Namespace $ns no existe"; return 1;}
