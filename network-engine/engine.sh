@@ -12,8 +12,14 @@ require_root
 run() {
   local phase="$1"
   source "$BASE_DIR/phases/$phase"
+
+  declare -F run_phase >/dev/null \
+    || { echo "❌ $phase no define run_phase()"; exit 1; }
+
   run_phase
+  unset -f run_phase
 }
+
 
 run 01-netns.sh
 run 02-links.sh

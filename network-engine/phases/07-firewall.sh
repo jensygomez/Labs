@@ -8,9 +8,7 @@ source "$BASE_DIR/lib/idempotency.sh"
 source "$BASE_DIR/lib/firewall.sh"
 source "$BASE_DIR/topology/lab.conf"
 
-
-
-fase_firewall() {
+run_phase() {
   echo "[FASE 7] Firewall"
   for ns in "${FW_NAMESPACES[@]}"; do
     ensure_firewall "$ns"
