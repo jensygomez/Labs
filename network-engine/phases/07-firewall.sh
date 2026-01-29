@@ -17,4 +17,4 @@ fase_firewall() {
   done
   echo "✅ Políticas stateful convergidas"
 }
-fase_firewall "$@"
+
