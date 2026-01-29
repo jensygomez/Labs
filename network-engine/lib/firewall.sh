@@ -39,7 +39,8 @@ ensure_firewall() {
       [[ "$dst_ns" != "$ns" ]] && continue
       dst_zone="${FW_ZONES[$key2]}"
 
-      policy="${FW_POLICIES[$src_zone->$dst_zone]:-drop}"
+      policy="${FW_POLICIES["$src_zone->$dst_zone"]:-drop}"
+
       ruleset+="    iifname \"$src_if\" oifname \"$dst_if\" $policy\n"
     done
   done
