@@ -4,7 +4,7 @@
 # Descripción: Configuración persistente de topología de red con namespaces
 # Autor: Jensy Gomez
 # Fecha: 2026-01-26
-# Versión: 0.1
+# Versión: 0.3
 #
 #                                 INTERNET
 #                                    │
