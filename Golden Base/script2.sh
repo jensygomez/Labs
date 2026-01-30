@@ -4,7 +4,7 @@
 # Descripción: Configuración persistente de topología de red con namespaces
 # Autor: Jensy Gomez
 # Fecha: 2026-01-26
-# Versión: 0.3
+# Versión: 0.4 (Firewall + NAT validados)
 #
 #                                 INTERNET
 #                                    │
@@ -14,70 +14,77 @@
 #                          ┌─────────┴─────────┐
 #                          │      EDGE-1       │
 #                          │-------------------│
-#                          │ WAN : 203.0.113.1 │
-#                          │ LAN : 10.255.255.1│
+#                          │ eth1 (WAN)        │
+#                          │ 203.0.113.1/30    │
 #                          │-------------------│
-#                          │ Roles:            │
-#                          │ - Border Router   │
-#                          │ - NAT / Egress    │
-#                          │ - FW (stateful)   │
+#                          │ eth0 (TRANSIT)    │
+#                          │ 10.255.255.1/30   │
+#                          │-------------------│
+#                          │ Roles activos:    │
+#                          │ ✔ Border Router  │
+#                          │ ✔ NAT / Egress   │
+#                          │ ✔ FW stateful    │
+#                          │   (zone-based)   │
 #                          └─────────┬─────────┘
-#                                    │ Transit /30
+#                                    │ Transit L3 /30
 #                           10.255.255.0/30
 #                                    │
-#        ┌───────────────────────────┴────────────────────────────┐
-#        │                                                        │
-#┌───────┴────────┐                                      ┌────────┴────────┐
-#│   CORE-EDGE    │                                      │   CORE-MGMT     │
-#│----------------│                                      │-----------------│
-#│ 10.255.255.2   │                                      │ 10.255.255.3    │
-#│----------------│                                      │-----------------│
-#│ Roles:         │                                      │ Roles:          │
-#│ - Transit L3   │                                      │ - Bastion Host  │
-#│ - Policy handoff│                                     │ - Monitoring    │
-#└───────┬────────┘                                      └─────────┬───────┘
-#        │                                                         │
-#        │ Internal Core Link                                      │ Mgmt / OOB
-#        │                                                         │
-#        │                                     ┌───────────────────┘
-#        │                                     │
-#┌───────┴────────┐                            │
-#│   CORE-SVC     │◄───────────────────────────┘
-#│----------------│
-#│ 10.255.255.4   │
-#│----------------│
-#│ Roles:         │
-#│ - L3 Services  │
-#│ - Inter-VLAN   │
-#│ - Gateway VLAN │
-#└───────┬────────┘
-#        │
-#        │ 802.1Q Trunk
-#        │
-#┌───────┴───────────────────────────────────────────────────────┐
-#│                          ACCESS LAYER                         │
-#├───────────┬───────────┬───────────┬───────────┬───────────────┤
-#│ SW-PROD   │ SW-ADM    │ SW-SER    │ SW-TI     │ (futuro)      │
-#│ VLAN 10   │ VLAN 20   │ VLAN 30   │ VLAN 40   │               │
-#├───────────┼───────────┼───────────┼───────────┼───────────────┤
-#│ WEB       │ ANSIBLE   │ DEV-IN    │ CLI       │               │
-#│ 10.10.x   │ 10.20.x   │ 10.30.30  │ 10.40.x   │               │
-#│ DATA      │ MGMT      │ DEV-ST    │ MONITOR   │               │
-#└───────────┴───────────┴───────────┴───────────┴───────────────┘
+#                ┌───────────────────┴───────────────────┐
+#                │                                       │
+#        ┌───────┴────────┐                     ┌────────┴────────┐
+#        │     CORE-1     │                     │   (Reservado)   │
+#        │----------------│                     │  CORE-MGMT ❌   │
+#        │ eth0 (EDGE)    │                     │ (no activo aún)│
+#        │ 10.255.255.2   │                     └─────────────────┘
+#        │----------------│
+#        │ eth1 (SVC)     │
+#        │ 10.255.255.5   │
+#        │----------------│
+#        │ Roles activos: │
+#        │ ✔ L3 Transit   │
+#        │ ✔ Forwarding   │
+#        │ ✔ FW stateful  │
+#        └───────┬────────┘
+#                │ Core Service Link /30
+#                │ 10.255.255.4/30
+#                │
+#        ┌───────┴────────┐
+#        │   CORE-SVC     │
+#        │----------------│
+#        │ eth1 (UPLINK)  │
+#        │ 10.255.255.6   │
+#        │----------------│
+#        │ Roles activos: │
+#        │ ✔ L3 Router    │
+#        │ ✔ FW stateful  │
+#        │ ✔ ICMP allowed │
+#        └───────┬────────┘
+#                │
+#                │ (Futuro)
+#                │ 802.1Q trunk
+#                │
+#     ┌──────────┴────────────────────────────────────┐
+#     │              ACCESS LAYER (PLAN)               │
+#     ├───────────┬───────────┬───────────┬───────────┤
+#     │ VLAN 10   │ VLAN 20   │ VLAN 30   │ VLAN 40   │
+#     │ PROD      │ ADMIN     │ SERVICES  │ MONITOR   │
+#     │ 10.10.0.0 │ 10.20.0.0 │ 10.30.0.0 │ 10.40.0.0 │
+#     └───────────┴───────────┴───────────┴───────────┘
 
 
 
-# FASE 1  → Namespaces base
-# FASE 2  → Enlaces (veth / trunks)
-# FASE 3  → Direccionamiento IP
-# FASE 4  → Forwarding & sysctl
-# FASE 5  → Routing por rol
-# FASE 6  → NAT & Egress (EDGE)
-# FASE 7  → Firewall por zonas
-# FASE 8  → Tests de flujo
-# FASE 9  → CORE-SVC (L3 + VLANs)
-# FASE 10 → Access Layer
-# FASE 11 → Servicios reales (web, ansible, mon)
+# FASE 1  → Namespaces base                ✔
+# FASE 2  → Enlaces (veth / trunks)        ✔
+# FASE 3  → Direccionamiento IP            ✔
+# FASE 4  → Forwarding & sysctl            ✔
+# FASE 5  → Routing por rol                ✔
+# FASE 6  → NAT & Egress (EDGE)            ✔
+# FASE 7  → Firewall por zonas (stateful)  ✔
+# FASE 8  → Tests de flujo / validación    ✔
+# FASE 9  → CORE-SVC (VLANs, Inter-VLAN)   ⏳
+# FASE 10 → Access Layer (SW logic)        ⏳
+# FASE 11 → Servicios reales               ⏳
+
 
 
 
