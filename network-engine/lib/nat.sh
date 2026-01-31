@@ -20,8 +20,9 @@ ensure_nat(){
     if ip netns exec "$ns" iptables -t nat -C POSTROUTING -o "$out_if" -j MASQUERADE 2>/dev/null; then
         echo "✔ NAT ya activo en $ns ($out_if)"
         return 0
+    else
+        # Aplicar NAT
+        ip netns exec "$ns" iptables -t nat -A POSTROUTING -o "$out_if" -j MASQUERADE
+        echo "🔥 NAT habilitado en $ns ($out_if)" 
     fi
-    # Aplicar NAT
-    ip netns exec "$ns" iptables -t nat -A POSTROUTING -o "$out_if" -j MASQUERADE
-    echo "🔥 NAT habilitado en $ns ($out_if)" 
 }
