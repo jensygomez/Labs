@@ -5,7 +5,7 @@ BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$BASE_DIR/lib/netns.sh"
 source "$BASE_DIR/topology/lab.conf"
 
-create_vlan() {
+ensure_vlan() {
   local ns="$1"
   local parent_if="$2"
   local vlan_id="$3"
