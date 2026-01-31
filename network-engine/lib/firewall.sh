@@ -50,7 +50,7 @@ ensure_firewall() {
 
       # CAMBIO CLAVE: Usamos "$src_if*" y "$dst_if*" 
       # El asterisco en nftables es un wildcard que permite que eth1 coincida con eth1.10, eth1.20, etc.
-      ruleset+="    iifname \"$src_if*\" oifname \"$dst_if*\" $policy\n"
+      ruleset+="    iifname \"$src_if*\" oifname \"$dst_if*\" counter $policy\n"
     done
   done
 
