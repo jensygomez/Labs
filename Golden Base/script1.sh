@@ -70,7 +70,8 @@ dnf install -y \
     openssh-clients \
     lynx \
     php-fpm \
-    php-mysqlnd
+    php-mysqlnd \
+    traceroute
 
 # Cleanup para Golden Image ligera (Unix: least resource)
 dnf autoremove -y
