@@ -12,7 +12,8 @@ ensure_firewall() {
 
   ns_exists "$ns" || { echo "❌ Namespace $ns no existe"; return 1; }
 
-  ip netns exec "$ns" nft flush ruleset 2>/dev/null || true
+  # SOLO borrar nuestra tabla específica, NO todo el ruleset
+  ip netns exec "$ns" nft delete table inet fw_${ns} 2>/dev/null || true
 
   local ruleset=""
   local input_rules="${FW_RULES[$ns]:-}"
