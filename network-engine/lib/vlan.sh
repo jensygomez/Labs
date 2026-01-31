@@ -21,6 +21,6 @@ ensure_vlan() {
   ip netns exec "$ns" ip addr add "$ip_cidr" dev "$vlan_if"
 
   # 3. Levantar la IP
-  ip netns exec "$ns" ip linkx set "$vlan_if" up
+  ip netns exec "$ns" ip link set "$vlan_if" up
 
 }

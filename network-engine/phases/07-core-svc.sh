@@ -1,5 +1,5 @@
 #!/bin/bash
-# network-engine/phases/08-core-svc.sh
+# network-engine/phases/07-core-svc.sh
 set -Eeuo pipefail
 
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

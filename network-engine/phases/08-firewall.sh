@@ -1,5 +1,5 @@
 #!/bin/bash
-# network-engine/phases/07-firewall.sh
+# network-engine/phases/08-firewall.sh
 set -Eeuo pipefail
 
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
