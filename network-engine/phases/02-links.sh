@@ -8,7 +8,7 @@ source "$BASE_DIR/lib/idempotency.sh"
 source "$BASE_DIR/lib/netns.sh"
 source "$BASE_DIR/lib/links.sh"
 source "$BASE_DIR/topology/lab.conf"
-source "$BASE_DIR/topology/lab.conf"
+
 
 run_phase() {
   echo "[FASE 2] Cables"
