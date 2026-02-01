@@ -1,20 +1,19 @@
 #!/bin/bash
 # =============================================================================
-# PROYECTO: Golden Base Image para Labs 3-Tier (Rocky Linux)
-# SCRIPT:  1/5 - Base Layer: "Do One Thing Well" (Unix Philosophy)
+# PROYECTO: Golden Base Image Rocky 9.7 Linux
+# SCRIPT:  1 - Base Layer: "Do One Thing Well" (Unix Philosophy)
 # =============================================================================
 #
 # FILOSOFÍA UNIX APLICADA:
 # - KISS: Cada sección una responsabilidad única (SRP).
 # - Idempotente: Re-ejecutable sin side-effects (chequeos previos).
-# - Modular: Base para scripts 2-5 (namespaces, services, hardening).
+# - Modular: Base para scripts
 # - Transparente: Logs, verificaciones post-reboot, prompt contextual.
 #
 # OBJETIVO: De instalación limpia → plantilla reproducible para host físico.
-#           Prepara ruteo L3, servicios core y usuario lab sin estado residual.
 #
-# DEPENDENCIAS: Root + Internet (dnf repos).
-# SIGUIENTE: script2-network.sh (despliega NS-ROUTER, bridges globales).
+#
+#
 # =============================================================================
 
 set -e
@@ -161,7 +160,8 @@ if [ -n "$IFACE" ]; then
 
     # Aplicar cambios sin desconectar la sesión actual (importante si corres esto por SSH)
     nmcli connection up "$IFACE"
-    echo "   ✅ IP fijada en 192.168.122.211 sobre $IFACE"
+    echo "   ✅ IP fijada en 192.168.122.100 sobre $IFACE"
+
 else
     echo "   ⚠️ No se detectó interfaz activa para fijar IP"
 fi
