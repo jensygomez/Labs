@@ -1,35 +1,50 @@
 #!/bin/bash
 
-echo -e "\n${BOLD}[FASE 100] Verificación Dinámica de Flujo${NC}"
+# Definir colores localmente para evitar errores de "unbound variable"
+G='\033[0;32m'
+B='\033[0;34m'
+R='\033[0;31m'
+Y='\033[1;33m'
+NC='\033[0m' 
+BOLD='\033[1m'
 
-# Función interna para capturar un paquete de prueba
-check_flow() {
+echo -e "\n${BOLD}====================================================${NC}"
+echo -e "${BOLD}[FASE 100] TEST DE TRAZABILIDAD DINÁMICA${NC}"
+echo -e "${BOLD}====================================================${NC}"
+
+# Función para monitorear en segundo plano de forma silenciosa
+check_node() {
     local ns=$1
-    local name=$2
-    # Escucha en background por 2 segundos buscando ICMP
-    timeout 2 sudo ip netns exec "$ns" tcpdump -l -nn -i any icmp 2>/dev/null &
+    local label=$2
+    local color=$3
+    # Escuchamos solo 1 paquete ICMP (request o reply)
+    sudo ip netns exec "$ns" tcpdump -l -nn -i any icmp -c 2 2>/dev/null | while read line; do
+        if [[ "$line" == *"echo request"* ]]; then
+            echo -e "  ${color}[➡ REQ]${NC} Pasando por: ${BOLD}$label${NC}"
+        elif [[ "$line" == *"echo reply"* ]]; then
+            echo -e "  ${color}[⬅ REP]${NC} Retornando por: ${BOLD}$label${NC}"
+        fi
+    done &
 }
 
-echo "🔍 Iniciando monitor de tráfico en cascada..."
+echo -e "🔍 ${Y}Iniciando sensores en los nodos...${NC}"
 
-# 1. Lanzamos escuchas en los puntos clave usando tus variables de lab.conf
-check_flow "$NS_CORE_SVC"  "CORE-SVC"
-check_flow "$NS_CORE_EDGE" "CORE-EDGE"
-check_flow "$NS_EDGE_1"    "EDGE-1"
-check_flow "$NS_INTERNET"  "INTERNET"
+# Lanzamos los sensores usando las variables del lab.conf
+check_node "$NS_CORE_SVC"  "CORE-SVC (Origen)"  "$B"
+check_node "$NS_CORE_EDGE" "CORE-EDGE (Tránsito)" "$G"
+check_node "$NS_EDGE_1"    "EDGE-1 (Gateway)"    "$G"
+check_node "$NS_INTERNET"  "INTERNET (Destino)"   "$R"
 
-sleep 1 # Dar tiempo a tcpdump a engancharse
+sleep 2 # Tiempo para que tcpdump se estabilice
 
-echo "🚀 Lanzando PING de prueba desde $NS_CORE_SVC (VLAN 10) -> Internet..."
+echo -e "🚀 ${Y}Lanzando PING de prueba: VLAN 10 -> Internet (203.0.113.2)${NC}"
+echo -e "----------------------------------------------------"
 
-# 2. Ejecutar un solo ping para ver el rastro
-sudo ip netns exec "$NS_CORE_SVC" ping -c 1 -I eth1.10 203.0.113.2 > /dev/null 2>&1
+# Ejecutamos el ping con un timeout corto
+sudo ip netns exec "$NS_CORE_SVC" ping -c 1 -W 2 -I eth1.10 203.0.113.2 > /dev/null 2>&1
 
-if [ $? -eq 0 ]; then
-    echo -e "✅ ${GREEN}¡EL PAQUETE LLEGÓ Y VOLVIÓ!${NC}"
-else
-    echo -e "❌ ${RED}EL PAQUETE SE PERDIÓ EN EL CAMINO.${NC}"
-    echo "💡 Revisa los logs de arriba para ver hasta qué nodo llegó el REQUEST."
-fi
+# Esperar un poco a que los tcpdumps terminen de imprimir
+sleep 2
 
-# El script terminará solo gracias al 'timeout' de los tcpdumps
+echo -e "----------------------------------------------------"
+echo -e "✅ ${BOLD}Test finalizado.${NC}"
