@@ -1,7 +1,5 @@
 #!/bin/bash
 # network-engine/lib/forwarding.sh
-
-
 ensure_forwarding(){
     local ns="$1"
 

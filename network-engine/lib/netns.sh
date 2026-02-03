@@ -1,6 +1,5 @@
 #!/bin/bash
 # network-engine/lib/netns.sh
-
 ns_exists() {
   # Usamos -w para palabra exacta y enviamos errores a /dev/null
   ip netns list | grep -qw "$1" 2>/dev/null

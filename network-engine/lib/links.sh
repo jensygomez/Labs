@@ -1,12 +1,5 @@
 #!/bin/bash
 # network-engine/lib/links.sh
-
-
-
-# ------------------------------------------------------------------------------
-# PRIMITIVA 2: ENSURE CABLES
-# ------------------------------------------------------------------------------
-
 VETH_COUNTER_FILE="/tmp/veth_counter"
 [[ -f "$VETH_COUNTER_FILE" ]] || echo 0 > "$VETH_COUNTER_FILE"
 

@@ -1,9 +1,5 @@
 #!/bin/bash
 # network-engine/lib/routing.sh
-
-# ------------------------------------------------------------------------------
-# PRIMITIVA 4: ENSURE ROUTE (Versión Corregida)
-# ------------------------------------------------------------------------------
 ensure_route(){
   local ns="$1"
   local dest="$2"

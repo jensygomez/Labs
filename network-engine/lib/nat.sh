@@ -1,7 +1,5 @@
 #!/bin/bash
 # network-engine/lib/nat.sh
-
-
 ensure_nat(){
     local ns="$1"
     local out_if="$2"
