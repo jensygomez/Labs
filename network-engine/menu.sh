@@ -6,17 +6,16 @@
 set -Eeuo pipefail
 
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
-
 ENGINE="$BASE_DIR/engine.sh"
 
 run_engine() {
-  exec sudo bash "$ENGINE"
+  echo "🚀 DEBUG=$DEBUG ejecutando engine..."
+  bash "$ENGINE"
 }
 
 test_idempotency() {
   local runs=50
   echo "🧪 Test de idempotencia ($runs ejecuciones)"
-
   for i in $(seq 1 "$runs"); do
     echo "▶ Run $i"
     if ! bash "$ENGINE" >/dev/null 2>&1; then
@@ -24,7 +23,6 @@ test_idempotency() {
       exit 1
     fi
   done
-
   echo "✅ Test de idempotencia SUPERADO"
 }
 
@@ -39,7 +37,6 @@ menu() {
     echo "0) Salir"
     echo "------------------------------"
     read -rp "Selecciona una opción: " opt
-
     case "$opt" in
       1) run_engine ;;
       2) test_idempotency ;;
