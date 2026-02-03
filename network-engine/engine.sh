@@ -25,9 +25,9 @@ load_component "lib/guard.sh"
 load_component "lib/netns.sh"
 load_component "lib/links.sh"
 load_component "lib/addressing.sh"
-load_component "lib/routing.sh"    # <--- ¡ESTA ES LA QUE FALTA AHORA!
+load_component "lib/routing.sh"   
 load_component "lib/firewall.sh"
-load_component "lib/idempotency.sh"a fase 08
+load_component "lib/idempotency.sh"
 load_component "lib/idempotency.sh"
 
 # 3. Validar privilegios
