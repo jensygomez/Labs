@@ -7,16 +7,14 @@ ensure_firewall() {
 
   ns_exists "$ns" || { echo "❌ Namespace $ns no existe"; return 1; }
 
-  # 1. Limpiar tabla previa
+  # 1. Limpiar tabla
   ip netns exec "$ns" nft delete table inet "fw_${ns}" 2>/dev/null || true
 
-  # --- EL TRUCO DEL PUENTE ---
-  # Usamos una variable intermedia para que Bash no se confunda con el guion del índice
+  # 2. Extracción Ultra-Segura de Reglas
+  # Usamos una variable intermedia para evitar que Bash parsee el guion en $ns
   local input_rules=""
-  if [[ -v "FW_RULES[$ns]" ]]; then
-      input_rules="${FW_RULES[$ns]}"
-  fi
-  # ---------------------------
+  local index="$ns"
+  input_rules="${FW_RULES["$index"]:-}"
 
   local ruleset=""
   ruleset+="table inet fw_${ns} {\n"
@@ -32,23 +30,24 @@ ensure_firewall() {
   ruleset+="    type filter hook forward priority 0; policy drop;\n"
   ruleset+="    ct state established,related counter accept\n"
 
-  for key in "${!FW_ZONES[@]}"; do
-    IFS=":" read -r src_ns src_if <<< "$key"
+  # Iterar sobre las llaves de zonas
+  for k in "${!FW_ZONES[@]}"; do
+    # Usamos una variable de limpieza para el split
+    local current_key="$k"
+    IFS=":" read -r src_ns src_if <<< "$current_key"
+    
     [[ "$src_ns" != "$ns" ]] && continue
     
-    # Extracción segura de zona
-    local src_zone="${FW_ZONES[$key]}"
+    local src_zone="${FW_ZONES["$current_key"]}"
 
-    for key2 in "${!FW_ZONES[@]}"; do
-      IFS=":" read -r dst_ns dst_if <<< "$key2"
+    for k2 in "${!FW_ZONES[@]}"; do
+      local target_key="$k2"
+      IFS=":" read -r dst_ns dst_if <<< "$target_key"
       [[ "$dst_ns" != "$ns" ]] && continue
       
-      local dst_zone="${FW_ZONES[$key2]}"
-      local policy_key="${src_zone}->${dst_zone}"
-      
-      # Extracción segura de política
-      local policy="drop"
-      [[ -v "FW_POLICIES[$policy_key]" ]] && policy="${FW_POLICIES[$policy_key]}"
+      local dst_zone="${FW_ZONES["$target_key"]}"
+      local p_key="${src_zone}->${dst_zone}"
+      local policy="${FW_POLICIES["$p_key"]:-drop}"
 
       ruleset+="    iifname \"$src_if*\" oifname \"$dst_if*\" counter $policy\n"
     done
