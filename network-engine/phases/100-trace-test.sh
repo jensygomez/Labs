@@ -1,77 +1,114 @@
+#!/bin/bash
+# ------------------------------------------------------------------------------
+# FASE 100 - Connectivity & Policy Trace Test (Declarativo)
+# ------------------------------------------------------------------------------
+set -Eeuo pipefail
+
 run_phase() {
-    
-    # network-engine/phases/100-connectivity-test.sh
-    set -Eeuo pipefail
 
     echo "===================================================="
-    echo "[FASE 100] CONNECTIVITY MATRIX (DINÁMICO)"
+    echo "[FASE 100] CONNECTIVITY MATRIX + DECLARATIVE TESTS"
     echo "===================================================="
 
-    # 1. Obtener todos los namespaces
+    # --------------------------------------------------------------------------
+    # 1. Descubrir namespaces dinámicamente
+    # --------------------------------------------------------------------------
     namespaces=($(ip netns list | awk '{print $1}'))
 
     declare -A ip_map
 
-    # 2. Obtener IPs de cada namespace
+    # --------------------------------------------------------------------------
+    # 2. Descubrir IPs por namespace / interfaz
+    # --------------------------------------------------------------------------
     for ns in "${namespaces[@]}"; do
-        # Obtener todas las IPs del namespace
-        ips=$(ip netns exec "$ns" ip -4 addr show | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
-        
-        for ip in $ips; do
-            # Guardar con clave única: NAMESPACE o NAMESPACE_INTERFAZ
-            iface=$(ip netns exec "$ns" ip -4 addr show | grep "$ip" | awk '{print $NF}')
-            key="${ns}_${iface}"
-            ip_map["$key"]="$ip"
-            
-            # También guardar solo por namespace (última IP encontrada)
+        ips=$(ip netns exec "$ns" ip -4 addr show \
+            | awk '/inet / {print $2,$NF}' | cut -d/ -f1)
+
+        while read -r ip iface; do
+            [[ -z "$ip" ]] && continue
+
+            # key por interfaz
+            ip_map["${ns}_${iface}"]="$ip"
+            # key por namespace (última IP válida)
             ip_map["$ns"]="$ip"
-        done
+        done <<< "$ips"
     done
 
-    # 3. Función de test
-    test_ping() {
+    # --------------------------------------------------------------------------
+    # 3. Función base de ping (no declarativa)
+    # --------------------------------------------------------------------------
+    raw_ping() {
         local src_ns="$1"
         local dst_ip="$2"
-        local dst_name="$3"
-        
-        printf "%-15s → %-25s : " "$src_ns" "$dst_name"
-        
-        if timeout 2 ip netns exec "$src_ns" ping -c 1 -W 1 "$dst_ip" &>/dev/null; then
-            echo "✅"
-        else
-            echo "❌"
-        fi
+
+        timeout 2 ip netns exec "$src_ns" ping -c 1 -W 1 "$dst_ip" &>/dev/null
     }
 
-    # 4. Ejecutar tests
-    echo "🔍 Probando conectividad entre ${#namespaces[@]} namespaces..."
+    # --------------------------------------------------------------------------
+    # 4. Declaración de EXPECTATIVAS (INTENCIÓN DE DISEÑO)
+    # --------------------------------------------------------------------------
+    # FORMATO: SRC|DST|ALLOW|DESCRIPCIÓN
+    EXPECTATIONS=(
+        "CORE-MGMT|CORE-EDGE|ALLOW|MGMT debe acceder al core"
+        "CORE-MGMT|CORE-SVC|ALLOW|MGMT administra servicios"
+        "CORE-MGMT|EDGE-1|ALLOW|MGMT accede al perímetro"
+
+        "CORE-ADM|CORE-SVC|ALLOW|ADM opera servicios"
+        "CORE-ADM|EDGE-1|ALLOW|ADM puede llegar a edge"
+
+        "CORE-SVC|CORE-MGMT|DENY|Servicios no administran"
+        "CORE-SVC|CORE-ADM|DENY|Servicios no operan"
+
+        "EDGE-1|CORE-MGMT|DENY|Edge no accede mgmt"
+        "EDGE-1|CORE-SVC|DENY|Edge no accede servicios"
+
+        "INTERNET|CORE-EDGE|DENY|Internet aislado del core"
+        "INTERNET|CORE-MGMT|DENY|Internet no entra a mgmt"
+    )
+
+    # --------------------------------------------------------------------------
+    # 5. Ejecutar tests declarativos
+    # --------------------------------------------------------------------------
+    TEST_FAILURE=0
+
+    echo "🧪 Ejecutando tests declarativos..."
     echo ""
 
-    for src_ns in "${namespaces[@]}"; do
-        echo "--- Desde $src_ns ---"
-        
-        for key in "${!ip_map[@]}"; do
-            dst_ip="${ip_map[$key]}"
-            
-            # No probarse a sí mismo (misma IP)
-            if [[ "$key" =~ ^${src_ns}_ ]] || [[ "$key" == "$src_ns" ]]; then
-                continue
-            fi
-            
-            # Extraer namespace destino del key
-            dst_ns="${key%%_*}"
-            if [[ "$dst_ns" == "$key" ]]; then
-                # Key es solo namespace (sin interfaz)
-                dst_ns="$key"
-            fi
-            
-            test_ping "$src_ns" "$dst_ip" "$key"
-        done
-        echo ""
+    for rule in "${EXPECTATIONS[@]}"; do
+        IFS='|' read -r src dst expected desc <<< "$rule"
+
+        dst_ip="${ip_map[$dst]}"
+
+        # Si no existe IP destino, ignorar (topología parcial)
+        [[ -z "${dst_ip:-}" ]] && continue
+
+        if raw_ping "$src" "$dst_ip"; then
+            real="ALLOW"
+        else
+            real="DENY"
+        fi
+
+        printf "%-12s → %-12s | esperado: %-5s | real: %-5s : " \
+            "$src" "$dst" "$expected" "$real"
+
+        if [[ "$expected" == "$real" ]]; then
+            echo "✅"
+        else
+            echo "❌  ($desc)"
+            TEST_FAILURE=1
+        fi
     done
 
-    echo "===================================================="
-    echo "✅ Matriz de conectividad completada"
-    echo "===================================================="
+    echo ""
+    echo "----------------------------------------------------"
 
+    if [[ "$TEST_FAILURE" -eq 1 ]]; then
+        echo "❌ La topología NO cumple la intención declarada"
+        exit 1
+    else
+        echo "✅ La topología cumple la intención declarada"
+    fi
+
+    echo "===================================================="
 }
+
