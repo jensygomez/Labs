@@ -26,7 +26,8 @@ ensure_vlan() {
     :
     # echo "  ✔ VLAN $vlan_id ya existe en $ns ($vlan_if)"
   else
-    echo "  🏷️  Creando VLAN $vlan_id en $ns (parent: $parent_if)"
+    :
+    #echo "  🏷️  Creando VLAN $vlan_id en $ns (parent: $parent_if)"
     # Crear la interfaz VLAN etiquetada
     ip netns exec "$ns" ip link add link "$parent_if" name "$vlan_if" type vlan id "$vlan_id"
     # Levantar la interfaz físicamente
