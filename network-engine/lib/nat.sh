@@ -1,8 +1,6 @@
 #!/bin/bash
 # network-engine/lib/nat.sh
-set -Eeuo pipefail
-BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-source "$BASE_DIR/lib/idempotency.sh"
+
 
 ensure_nat(){
     local ns="$1"

@@ -1,6 +1,6 @@
 #!/bin/bash
 # network-engine/lib/forwarding.sh
-set -Eeuo pipefail
+
 
 ensure_forwarding(){
     local ns="$1"
