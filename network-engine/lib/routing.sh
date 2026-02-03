@@ -31,6 +31,7 @@ ensure_route(){
   # si existe con otro gateway la actualiza, y nunca lanza "File exists".
   if ip netns exec "$ns" ip route replace "$dest" via "$via"; then
     # echo "+ Ruta $dest via $via agregada/actualizada en $ns"
+    return 0
   else
     # echo "❌ Error al configurar ruta $dest en $ns"
     return 1
