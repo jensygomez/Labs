@@ -10,7 +10,7 @@ ENGINE="$BASE_DIR/engine.sh"
 
 run_engine() {
   echo "🚀 DEBUG=$DEBUG ejecutando engine..."
-  bash "$ENGINE"
+  DEBUG=$DEBUG bash "$ENGINE"  # ← FIX: pasa DEBUG
 }
 
 test_idempotency() {
@@ -18,7 +18,7 @@ test_idempotency() {
   echo "🧪 Test de idempotencia ($runs ejecuciones)"
   for i in $(seq 1 "$runs"); do
     echo "▶ Run $i"
-    if ! bash "$ENGINE" >/dev/null 2>&1; then
+    if ! DEBUG=1 bash "$ENGINE" >/dev/null 2>&1; then  # ← FIX: DEBUG=1 aquí también
       echo "❌ FALLO en run #$i"
       exit 1
     fi
