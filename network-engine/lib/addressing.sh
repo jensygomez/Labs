@@ -31,6 +31,6 @@ ensure_ip(){
   fi
   # Asignar IP
   if ip netns exec "$ns" ip addr add "$ip_cidr" dev "$iface"; then
-    # echo "+ [$ns] $iface <-- $ip_cidr"
+    echo "+ [$ns] $iface <-- $ip_cidr"
   fi
 }
