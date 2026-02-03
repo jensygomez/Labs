@@ -1,15 +1,15 @@
 #!/bin/bash
 # network-engine/lib/netns.sh
 
-
 ns_exists() {
-  ip netns list | grep -qW "$1"
+  # Usamos -w para palabra exacta y enviamos errores a /dev/null
+  ip netns list | grep -qw "$1" 2>/dev/null
 }
 
 ensure_namespace(){
   local ns="$1"
   if ns_exists "$ns"; then
-    echo "✔ Namespace $ns existe"
+    echo "✔ Namespace $ns ya existe"
     return 0
   fi
 
@@ -18,7 +18,7 @@ ensure_namespace(){
     echo "➕ Namespace $ns creado"
     return 0
   else
-    echo "❌ Error creando namespace $ns"
+    echo "❌ Error fatal creando namespace $ns"
     return 1
   fi
 }
