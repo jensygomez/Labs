@@ -17,17 +17,19 @@ load_component() {
   fi
 }
 
-# 1. Cargar la configuración
+# 1. Cargar la configuración (Los datos)
 load_component "topology/lab.conf"
 
-# 2. Cargar TODAS las librerías necesarias
+# 2. Cargar TODAS las librerías (Las funciones/herramientas)
 load_component "lib/guard.sh"
 load_component "lib/netns.sh"
 load_component "lib/links.sh"
 load_component "lib/addressing.sh"
-load_component "lib/routing.sh"   
-load_component "lib/firewall.sh"
-load_component "lib/idempotency.sh"
+load_component "lib/routing.sh"
+load_component "lib/forwarding.sh"
+load_component "lib/nat.sh"        
+load_component "lib/vlan.sh"        
+load_component "lib/firewall.sh"    
 load_component "lib/idempotency.sh"
 
 # 3. Validar privilegios
