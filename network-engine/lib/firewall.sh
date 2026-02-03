@@ -14,6 +14,13 @@ ensure_firewall() {
   # Usamos una variable intermedia para evitar que Bash parsee el guion en $ns
   local input_rules=""
   local index="$ns"
+
+  echo "DEBUG: ns = $ns"
+  echo "DEBUG: index = $index"
+  echo "DEBUG: Todas las claves de FW_RULES:"
+  for key in "${!FW_RULES[@]}"; do
+    echo "  '$key' -> '${FW_RULES[$key]}'"
+  done
   input_rules="${FW_RULES["$index"]:-}"
 
   local ruleset=""
