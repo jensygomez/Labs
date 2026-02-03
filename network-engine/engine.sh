@@ -3,6 +3,11 @@
 set -Eeo pipefail
 
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
+# En engine.sh
+source "$BASE_DIR/topology/lab.conf"  # 1. Primero los datos
+source "$BASE_DIR/lib/guard.sh"       # 2. Luego las validaciones
+source "$BASE_DIR/lib/netns.sh"       # 3. Luego las herramientas
+source "$BASE_DIR/lib/idempotency.sh"
 
 echo "🚀 Iniciando engine..." >&2
 
