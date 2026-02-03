@@ -21,6 +21,9 @@ load_component() {
 load_component "topology/lab.conf"
 load_component "lib/guard.sh"
 load_component "lib/netns.sh"
+load_component "lib/links.sh"       # <--- ¡ESTA FALTABA!
+load_component "lib/addressing.sh"  # <--- Asegúrate de que esta también esté
+load_component "lib/firewall.sh"    # <--- Y esta para la fase 08
 load_component "lib/idempotency.sh"
 
 # 2. Validar privilegios
