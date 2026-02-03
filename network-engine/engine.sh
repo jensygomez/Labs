@@ -32,7 +32,7 @@ load_component "topology/firewall/core-edge.conf"
 load_component "topology/firewall/core-mgmt.conf"
 load_component "topology/firewall/core-svc.conf"
 load_component "topology/firewall/core-adm.conf"
-load_component "topology/firewall/edge-1.conf"
+load_component "topology/firewall/edge.conf"  # <-- CAMBIADO de edge-1.conf a edge.conf
 
 # 4. Cargar TODAS las librerías (Las funciones/herramientas)
 load_component "lib/guard.sh"
