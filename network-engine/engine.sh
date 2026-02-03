@@ -17,20 +17,24 @@ load_component() {
   fi
 }
 
-# 1. Cargar dependencias en orden lógico
+# 1. Cargar la configuración
 load_component "topology/lab.conf"
+
+# 2. Cargar TODAS las librerías necesarias
 load_component "lib/guard.sh"
 load_component "lib/netns.sh"
-load_component "lib/links.sh"       # <--- ¡ESTA FALTABA!
-load_component "lib/addressing.sh"  # <--- Asegúrate de que esta también esté
-load_component "lib/firewall.sh"    # <--- Y esta para la fase 08
+load_component "lib/links.sh"
+load_component "lib/addressing.sh"
+load_component "lib/routing.sh"    # <--- ¡ESTA ES LA QUE FALTA AHORA!
+load_component "lib/firewall.sh"
+load_component "lib/idempotency.sh"a fase 08
 load_component "lib/idempotency.sh"
 
-# 2. Validar privilegios
+# 3. Validar privilegios
 require_root
 echo "🔍 Privilegios de root verificados." >&2
 
-# 3. Definir ejecutor de fases
+# 4. Definir ejecutor de fases
 run() {
   local phase="$1"
   local phase_path="$BASE_DIR/phases/$phase"
@@ -53,7 +57,7 @@ run() {
   unset -f run_phase
 }
 
-# 4. Ejecución secuencial
+# 5. Ejecución secuencial
 run 01-netns.sh
 run 02-links.sh
 run 03-addressing.sh
