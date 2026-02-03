@@ -1,36 +1,33 @@
 #!/bin/bash
 # network-engine/engine.sh
-set -Eeuo pipefail
-
-# Debug handling mejorado
-[[ "${DEBUG:-0}" == "1" ]] && set -x
+set -Eeo pipefail  # Quitamos la -u para que no sea tan sensible con las variables
 
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Cargar dependencias CRÍTICAS primero
+# Cargar dependencias CRÍTICAS
 source "$BASE_DIR/lib/guard.sh"
 source "$BASE_DIR/lib/idempotency.sh"
-source "$BASE_DIR/topology/lab.conf"           # ← FIX PRINCIPAL
+source "$BASE_DIR/topology/lab.conf"
 
 require_root
 
-echo "🚀 Iniciando engine - DEBUG=$DEBUG" >&2
+echo "🚀 Iniciando engine..." >&2
 
 run() {
   local phase="$1"
   echo "📦 Ejecutando fase: $phase" >&2
   
-  [[ -f "$BASE_DIR/phases/$phase" ]] || {
+  if [[ ! -f "$BASE_DIR/phases/$phase" ]]; then
     echo "❌ Fase $phase no existe" >&2
     exit 1
-  }
+  fi
   
   source "$BASE_DIR/phases/$phase"
   
-  declare -F run_phase >/dev/null || {
+  if ! declare -F run_phase >/dev/null; then
     echo "❌ $phase no define run_phase()" >&2
     exit 1
-  }
+  fi
   
   run_phase
   unset -f run_phase

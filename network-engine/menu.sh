@@ -3,27 +3,26 @@
 # DEBUG=1 sudo bash network-engine/menu.sh 
 # network-engine/menu.sh
 #!/bin/bash
-set -Eeuo pipefail
+set -Eeo pipefail
 
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENGINE="$BASE_DIR/engine.sh"
 
 run_engine() {
-  # Usamos :-0 para que si no existe, valga 0 y no rompa el script
-  local valor_debug="${DEBUG:-0}" 
-  echo "🚀 DEBUG=$valor_debug ejecutando engine..."
-  DEBUG="$valor_debug" bash "$ENGINE"
+  echo "🚀 Ejecutando motor de red..."
+  bash "$ENGINE"
 }
 
 test_idempotency() {
   local runs=50
   echo "🧪 Test de idempotencia ($runs ejecuciones)"
   for i in $(seq 1 "$runs"); do
-    echo "▶ Run $i"
-    if ! DEBUG=1 bash "$ENGINE" >/dev/null 2>&1; then  # ← FIX: DEBUG=1 aquí también
-      echo "❌ FALLO en run #$i"
+    echo -n "▶ Run $i... "
+    if ! bash "$ENGINE" >/dev/null 2>&1; then
+      echo "❌ FALLO"
       exit 1
     fi
+    echo "OK"
   done
   echo "✅ Test de idempotencia SUPERADO"
 }
