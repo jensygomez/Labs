@@ -9,7 +9,7 @@ source "$BASE_DIR/lib/vlan.sh"
 source "$BASE_DIR/topology/lab.conf"
 
 run_phase(){
-    echo "[FASE 8] Configurando Core Services (Vlan Trunking)"
+    echo "[FASE 7] Configurando Core Services (Vlan Trunking)"
 
     for vlan_entry in "${VLANS[@]}";do
         IFS=':' read -r ns parent_if vlan_id ip_cidr <<< "$vlan_entry"

@@ -9,7 +9,7 @@ source "$BASE_DIR/lib/firewall.sh"
 source "$BASE_DIR/topology/lab.conf"
 
 run_phase() {
-  echo "[FASE 7] Firewall"
+  echo "[FASE 8] Firewall"
   for ns in "${FW_NAMESPACES[@]}"; do
     ensure_firewall "$ns"
   done
