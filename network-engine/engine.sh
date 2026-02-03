@@ -20,7 +20,21 @@ load_component() {
 # 1. Cargar la configuración (Los datos)
 load_component "topology/lab.conf"
 
-# 2. Cargar TODAS las librerías (Las funciones/herramientas)
+# 2. DECLARAR ARRAYS ASOCIATIVOS PRIMERO (IMPORTANTE)
+declare -A FW_ZONES
+declare -A FW_POLICIES
+declare -A FW_RULES
+FW_NAMESPACES=()
+
+# 3. Cargar configuraciones de firewall ANTES que las funciones
+load_component "topology/firewall/base.conf"
+load_component "topology/firewall/core-edge.conf"
+load_component "topology/firewall/core-mgmt.conf"
+load_component "topology/firewall/core-svc.conf"
+load_component "topology/firewall/core-adm.conf"
+load_component "topology/firewall/edge-1.conf"
+
+# 4. Cargar TODAS las librerías (Las funciones/herramientas)
 load_component "lib/guard.sh"
 load_component "lib/netns.sh"
 load_component "lib/links.sh"
@@ -29,14 +43,14 @@ load_component "lib/routing.sh"
 load_component "lib/forwarding.sh"
 load_component "lib/nat.sh"        
 load_component "lib/vlan.sh"        
-load_component "lib/firewall.sh"    
+load_component "lib/firewall.sh"    # AHORA ya tiene las variables definidas
 load_component "lib/idempotency.sh"
 
-# 3. Validar privilegios
+# 5. Validar privilegios
 require_root
 echo "🔍 Privilegios de root verificados." >&2
 
-# 4. Definir ejecutor de fases
+# 6. Definir ejecutor de fases
 run() {
   local phase="$1"
   local phase_path="$BASE_DIR/phases/$phase"
@@ -59,7 +73,7 @@ run() {
   unset -f run_phase
 }
 
-# 5. Ejecución secuencial
+# 7. Ejecución secuencial
 run 01-netns.sh
 run 02-links.sh
 run 03-addressing.sh
