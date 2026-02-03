@@ -9,10 +9,10 @@ BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENGINE="$BASE_DIR/engine.sh"
 
 run_engine() {
-  # Si DEBUG no existe, usa "0"
-  local current_debug="${DEBUG:-0}"
-  echo "🚀 DEBUG=$current_debug ejecutando engine..."
-  DEBUG="$current_debug" bash "$ENGINE"
+  # Usamos :-0 para que si no existe, valga 0 y no rompa el script
+  local valor_debug="${DEBUG:-0}" 
+  echo "🚀 DEBUG=$valor_debug ejecutando engine..."
+  DEBUG="$valor_debug" bash "$ENGINE"
 }
 
 test_idempotency() {
