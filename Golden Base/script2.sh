@@ -5,48 +5,80 @@
 # Autor: Jensy Gomez
 # Fecha: 2026-01-26
 # Versión: 0.5 (Segmentación Departamental + Control de Acceso)
+# ==============================================================================
+# NETWORK-ENGINE — TOPOLOGÍA LÓGICA COMPLETA
+# ==============================================================================
 #
-#                                 INTERNET
-#                                    │
-#                            (ISP simulado)
-#                             203.0.113.2/30
-#                                    │
-#                          ┌─────────┴─────────┐
-#                          │      EDGE-1       │
-#                          │ (Border Gateway)  │
-#                          └─────────┬─────────┘
-#                                    │ 10.255.255.0/30 (Transit)
-#                                    │
-#                          ┌─────────┴─────────┐
-#                          │    CORE-EDGE      │
-#            ┌────────────>│ (Inter-VLAN Hub)  │<────────────┐
-#            |             |                   |             |
-#            |             └─────────┬─────────┘             |
-#            |                       │                       |  
-#            |                       |                       |
-#            │                       │                       │
-#    ┌───────┴───────┐       ┌───────┴───────┐       ┌───────┴───────┐
-#    │   CORE-MGMT   │       │   CORE-SVC    │       │    CORE-RH    │
-#    │ (Gestión)     │       │ (Data Center) │       │ (Rec. Humanos)│
-#    │---------------│       │---------------│       │---------------│
-#    │ eth2: .255.10 │       │ eth1: .255.6  │       │ eth4: .255.18 │
-#    │               │       │               │       │               │
-#    │               │       │ [SRV-ARCHIVOS]│       │ [USER-RH-01]  │
-#    │               │       │   (VLAN 30)   │       │   (VLAN 60)   │
-#    └───────────────┘       └───────────────┘       └───────────────┘
-
-
-# FASE 1  → Namespaces base                ✔
-# FASE 2  → Enlaces (veth / trunks)        ✔
-# FASE 3  → Direccionamiento IP            ✔
-# FASE 4  → Forwarding & sysctl            ✔
-# FASE 5  → Routing por rol                ✔
-# FASE 6  → NAT & Egress (EDGE)            ✔
-# FASE 7  → Firewall por zonas (stateful)  ✔
-# FASE 8  → Tests de flujo / validación    ✔
-# FASE 9  → CORE-SVC (VLANs, Inter-VLAN)   ⏳
-# FASE 10 → Access Layer (SW logic)        ⏳
-# FASE 11 → Servicios reales               ⏳
+#                                   INTERNET
+#                                      │
+#                              (ISP simulado)
+#                               203.0.113.2/30
+#                                      │
+#                            ┌─────────┴─────────┐
+#                            │      EDGE-1       │
+#                            │  Border Gateway   │
+#                            │  NAT / Firewall   │
+#                            └─────────┬─────────┘
+#                                      │
+#                          Transit L3  │ 10.255.255.0/30
+#                                      │
+#                            ┌─────────┴─────────┐
+#                            │    CORE-EDGE      │
+#                            │  Inter-VLAN Hub   │
+#                            │  L3 Routing + FW  │
+#                            └─────────┬─────────┘
+#                                      │
+#        ┌───────────────┬─────────────┼───────────────┬───────────────┐
+#        │               │             │               │               │
+# ┌──────┴──────┐ ┌──────┴──────┐ ┌─────┴──────┐ ┌──────┴──────┐ ┌──────┴──────┐
+# │  CORE-MGMT  │ │  CORE-SVC   │ │  CORE-RH   │ │  CORE-ADM   │ │  (FUTURO)   │
+# │ (Gestión)   │ │ (DataCenter)│ │ (Usuarios) │ │ (Administr.)│ │   OTROS     │
+# │-------------│ │-------------│ │------------│ │-------------│ │ DEPARTAM.   │
+# │ VLAN 10     │ │ VLAN 30     │ │ VLAN 60    │ │ VLAN 40     │ │             │
+# │ 10.255.10.0 │ │ 10.255.30.0 │ │ 10.255.60.0│ │ 10.255.40.0 │ │             │
+# │ /24         │ │ /24         │ │ /24        │ │ /24         │ │             │
+# │             │ │             │ │            │ │             │ │             │
+# │ Sysadmins   │ │ SRV-APP     │ │ USER-RH-01 │ │ APP-ADM-01  │ │             │
+# │ Jump Hosts  │ │ SRV-FILES   │ │ USER-RH-02 │ │ APP-ADM-02  │ │             │
+# │ Monitoring  │ │ SRV-DB      │ │            │ │             │ │             │
+# └─────────────┘ └─────────────┘ └────────────┘ └─────────────┘ └─────────────┘
+#
+# ==============================================================================
+# MODELO DE CONFIANZA (RESUMEN)
+# ==============================================================================
+#
+# CORE-MGMT:
+#   - Acceso administrativo a TODOS los segmentos internos
+#   - Soporte a usuarios (RH) y administración (ADM)
+#
+# CORE-SVC:
+#   - Red pasiva de servicios
+#   - No inicia conexiones
+#
+# CORE-RH:
+#   - Usuarios finales
+#   - Acceso a servicios internos
+#   - Salida a Internet vía EDGE
+#
+# CORE-ADM:
+#   - Área administrativa / operativa
+#   - Acceso a servicios internos
+#   - Sin privilegios de gestión
+#
+# EDGE-1 / INTERNET:
+#   - Perímetro no confiable
+#   - Sin acceso al core
+#
+# ==============================================================================
+# NOTAS DE DISEÑO
+# ==============================================================================
+#
+# - CORE-EDGE es el ÚNICO punto de enrutamiento inter-VLAN
+# - El firewall se aplica en CORE-EDGE (stateful)
+# - EDGE-1 solo maneja NAT y egress
+# - Todo acceso se valida mediante FASE 100 (tests declarativos)
+#
+# ==============================================================================
 
 
 

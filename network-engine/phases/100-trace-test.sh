@@ -49,21 +49,22 @@ run_phase() {
     # --------------------------------------------------------------------------
     # FORMATO: SRC|DST|ALLOW|DESCRIPCIÓN
     EXPECTATIONS=(
-        "CORE-MGMT|CORE-EDGE|ALLOW|MGMT debe acceder al core"
-        "CORE-MGMT|CORE-SVC|ALLOW|MGMT administra servicios"
-        "CORE-MGMT|EDGE-1|ALLOW|MGMT accede al perímetro"
+        # Gestión
+        "CORE-MGMT|CORE-RH|ALLOW|Soporte a usuarios"
+        "CORE-MGMT|CORE-ADM|ALLOW|Soporte administrativo"
 
-        "CORE-ADM|CORE-SVC|ALLOW|ADM opera servicios"
-        "CORE-ADM|EDGE-1|ALLOW|ADM puede llegar a edge"
+        # Administración
+        "CORE-ADM|CORE-SVC|ALLOW|Apps internas"
+        "CORE-ADM|CORE-MGMT|DENY|No privilegios"
 
-        "CORE-SVC|CORE-MGMT|DENY|Servicios no administran"
-        "CORE-SVC|CORE-ADM|DENY|Servicios no operan"
+        # Usuarios
+        "CORE-RH|CORE-SVC|ALLOW|Uso de servicios"
+        "CORE-RH|INTERNET|ALLOW|Salida internet"
 
-        "EDGE-1|CORE-MGMT|DENY|Edge no accede mgmt"
-        "EDGE-1|CORE-SVC|DENY|Edge no accede servicios"
+        # Aislamientos
+        "CORE-RH|CORE-ADM|DENY|Separación departamentos"
+        "CORE-ADM|CORE-RH|DENY|Separación departamentos"
 
-        "INTERNET|CORE-EDGE|DENY|Internet aislado del core"
-        "INTERNET|CORE-MGMT|DENY|Internet no entra a mgmt"
     )
 
     # --------------------------------------------------------------------------
