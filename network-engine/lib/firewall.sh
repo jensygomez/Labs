@@ -8,7 +8,7 @@ source "$BASE_DIR/lib/idempotency.sh"
 
 ensure_firewall() {
   local ns="$1"
-  # echo "🔒 Configurando FW en $ns"
+  echo "🔒 Configurando FW en $ns"
 
   ns_exists "$ns" || { echo "❌ Namespace $ns no existe"; return 1; }
 
@@ -53,5 +53,5 @@ ensure_firewall() {
   ruleset+="}\n"
 
   echo -e "$ruleset" | ip netns exec "$ns" nft -f -
-  # echo "✅ FW ${ns} zone-based activo (VLAN-aware + Counters)"
+  echo "✅ FW ${ns} zone-based activo (VLAN-aware + Counters)"
 }

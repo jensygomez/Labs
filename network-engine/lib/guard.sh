@@ -13,7 +13,7 @@ source "$BASE_DIR/topology/lab.conf"
 
 require_root() {
   if [[ $EUID -ne 0 ]]; then
-    # echo "❌ Ejecuta como root"
+    echo "❌ Ejecuta como root"
     exit 1
   fi
 }

@@ -22,7 +22,7 @@ ensure_route(){
   # 1. Comprobación robusta
   # Filtramos por el destino exacto. Si el output no está vacío, la ruta existe.
   if ip netns exec "$ns" ip route show to "$dest" | grep -q "via $via"; then
-    # echo "✔ Ruta $dest via $via ya existe en $ns"
+    echo "✔ Ruta $dest via $via ya existe en $ns"
     return 0
   fi
 
@@ -30,10 +30,10 @@ ensure_route(){
   # 'replace' es la clave de la idempotencia: si no existe la crea, 
   # si existe con otro gateway la actualiza, y nunca lanza "File exists".
   if ip netns exec "$ns" ip route replace "$dest" via "$via"; then
-    # echo "+ Ruta $dest via $via agregada/actualizada en $ns"
+    echo "+ Ruta $dest via $via agregada/actualizada en $ns"
     return 0
   else
-    # echo "❌ Error al configurar ruta $dest en $ns"
+    echo "❌ Error al configurar ruta $dest en $ns"
     return 1
   fi
 }
