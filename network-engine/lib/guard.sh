@@ -1,19 +1,14 @@
 #!/bin/bash
 # network-engine/lib/guard.sh
-set -Eeuo pipefail
-BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-source "$BASE_DIR/lib/netns.sh"
-source "$BASE_DIR/topology/lab.conf"
+#!/bin/bash
+# network-engine/lib/guard.sh
 
-
-
-# ==============================================================================
-# BLOQUE 1 - CHECK ROOT
-# ==============================================================================
+# Quitamos el set -Eeuo y los source redundantes. 
+# El engine ya se encarga de las rutas y la configuración.
 
 require_root() {
   if [[ $EUID -ne 0 ]]; then
-    echo "❌ Ejecuta como root"
+    echo "❌ Error: Este script debe ejecutarse con privilegios de root (sudo)." >&2
     exit 1
   fi
 }

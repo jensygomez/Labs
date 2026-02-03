@@ -1,17 +1,24 @@
 #!/bin/bash
 # network-engine/engine.sh
-set -Eeo pipefail  # Quitamos la -u para que no sea tan sensible con las variables
+set -Eeo pipefail
 
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Cargar dependencias CRÍTICAS
+echo "🚀 Iniciando engine..." >&2
+
+# Verificamos archivos antes de hacer source para que no muera en silencio
+[[ -f "$BASE_DIR/lib/guard.sh" ]] || { echo "❌ ERROR: No existe lib/guard.sh"; exit 1; }
 source "$BASE_DIR/lib/guard.sh"
+
+[[ -f "$BASE_DIR/lib/idempotency.sh" ]] || { echo "❌ ERROR: No existe lib/idempotency.sh"; exit 1; }
 source "$BASE_DIR/lib/idempotency.sh"
+
+[[ -f "$BASE_DIR/topology/lab.conf" ]] || { echo "❌ ERROR: No existe topology/lab.conf"; exit 1; }
 source "$BASE_DIR/topology/lab.conf"
 
+# Verificamos si require_root está fallando
+echo "🔍 Verificando privilegios..." >&2
 require_root
-
-echo "🚀 Iniciando engine..." >&2
 
 run() {
   local phase="$1"
@@ -33,7 +40,7 @@ run() {
   unset -f run_phase
 }
 
-# Ejecutar fases secuencialmente
+# Ejecutar fases
 run 01-netns.sh
 run 02-links.sh
 run 03-addressing.sh
