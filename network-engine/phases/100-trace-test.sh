@@ -87,31 +87,48 @@ run_phase() {
     # 6. TRUST MODEL - EXPECTATIVAS DECLARATIVAS (Políticas de negocio)
     # --------------------------------------------------------------------------
     EXPECTATIONS=(
-        # Infraestructura básica (verificación doble)
+        # ----------------------------------------------------------------------
+        # Infraestructura básica (reachability mínima)
+        # ----------------------------------------------------------------------
         "CORE-EDGE|CORE-MGMT|ALLOW|Infraestructura básica"
         "CORE-MGMT|CORE-EDGE|ALLOW|Infraestructura básica"
-        
-        # CORE-MGMT (Bastión): Acceso administrativo completo
-        "CORE-MGMT|CORE-ADM|ALLOW|Soporte administrativo"
-        "CORE-MGMT|CORE-SVC|ALLOW|Gestión servicios"
-        
-        # CORE-ADM (Administración): Acceso limitado a servicios
-        "CORE-ADM|CORE-SVC|ALLOW|Apps internas"
-        "CORE-ADM|CORE-MGMT|DENY|Sin privilegios de gestión"
-        
-        # CORE-SVC (Servicios): Pasivo, no inicia conexiones
-        "CORE-SVC|CORE-MGMT|DENY|Servicios pasivos"
+
+        # ----------------------------------------------------------------------
+        # CORE-MGMT (Bastión de gestión)
+        # ----------------------------------------------------------------------
+        "CORE-MGMT|CORE-ADM|ALLOW|Gestión administrativa"
+        "CORE-MGMT|CORE-SVC|ALLOW|Gestión de servicios"
+
+        # Nadie inicia conexiones hacia CORE-MGMT
+        "CORE-ADM|CORE-MGMT|DENY|Protección bastión"
+        "CORE-SVC|CORE-MGMT|DENY|Protección bastión"
+
+        # ----------------------------------------------------------------------
+        # CORE-ADM (Administración)
+        # ----------------------------------------------------------------------
+        "CORE-ADM|CORE-SVC|ALLOW|Acceso a aplicaciones"
         "CORE-SVC|CORE-ADM|DENY|Servicios pasivos"
-        
-        # INTERNET (Perímetro): Solo respuestas stateful
-        "INTERNET|CORE-EDGE|ALLOW|Respuestas stateful Internet"
-        "INTERNET|CORE-MGMT|DENY|Sin acceso directo interno"
-        
-        # CORE-RH (Usuarios): Topología parcial (pendiente)
-        "CORE-RH|CORE-SVC|ALLOW|Uso de servicios"
+
+        # ----------------------------------------------------------------------
+        # CORE-SVC (Servicios)
+        # ----------------------------------------------------------------------
+        "CORE-SVC|CORE-MGMT|DENY|Servicios no inician conexiones"
+        "CORE-SVC|CORE-EDGE|DENY|Servicios no exponen perímetro"
+
+        # ----------------------------------------------------------------------
+        # INTERNET (Perímetro)
+        # ----------------------------------------------------------------------
+        "INTERNET|CORE-EDGE|DENY|Internet no inicia conexiones"
+        "INTERNET|CORE-MGMT|DENY|Aislamiento total del bastión"
+
+        # ----------------------------------------------------------------------
+        # CORE-RH (Usuarios) - pendiente de implementación
+        # ----------------------------------------------------------------------
+        "CORE-RH|CORE-SVC|ALLOW|Consumo de servicios"
         "CORE-RH|INTERNET|ALLOW|Salida a Internet"
-        "CORE-RH|CORE-ADM|DENY|Aislamiento departamentos"
+        "CORE-RH|CORE-ADM|DENY|Separación de dominios"
     )
+
 
     # --------------------------------------------------------------------------
     # 7. EJECUTAR VALIDACIÓN DECLARATIVA
