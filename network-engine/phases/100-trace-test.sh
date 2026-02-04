@@ -100,7 +100,7 @@ run_phase() {
         "CORE-MGMT|CORE-SVC|ALLOW|Gestión de servicios"
 
         "CORE-ADM|CORE-MGMT|DENY|Protección del bastión"
-        "CORE-SVC|CORE-MGMT|NO-ROUTE|Separación L3 de dominios"
+        "CORE-SVC|CORE-MGMT|DENY|Separación de dominios"
 
         # ----------------------------------------------------------------------
         # CORE-ADM
