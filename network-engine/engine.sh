@@ -32,7 +32,12 @@ load_component "topology/firewall/core-edge.conf"
 load_component "topology/firewall/core-mgmt.conf"
 load_component "topology/firewall/core-svc.conf"
 load_component "topology/firewall/core-adm.conf"
-load_component "topology/firewall/edge-1.conf"  # <-- CAMBIADO de edge-1.conf a edge.conf
+load_component "topology/firewall/edge-1.conf"  
+
+# 🔄 NUEVO: Carga DINÁMICA de TODOS routing/*.conf
+for routing_conf in "$BASE_DIR"/topology/routing/*.conf; do
+    [[ -f "$routing_conf" ]] && load_component "${routing_conf#"$BASE_DIR"/}"
+done
 
 # 4. Cargar TODAS las librerías (Las funciones/herramientas)
 load_component "lib/guard.sh"
