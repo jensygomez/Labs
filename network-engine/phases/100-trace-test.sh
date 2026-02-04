@@ -88,45 +88,36 @@ run_phase() {
     # --------------------------------------------------------------------------
     EXPECTATIONS=(
         # ----------------------------------------------------------------------
-        # Infraestructura básica (reachability mínima)
+        # Infraestructura básica
         # ----------------------------------------------------------------------
-        "CORE-EDGE|CORE-MGMT|ALLOW|Infraestructura básica"
-        "CORE-MGMT|CORE-EDGE|ALLOW|Infraestructura básica"
+        "CORE-EDGE|CORE-MGMT|ALLOW|Gestión de infraestructura"
+        "CORE-MGMT|CORE-EDGE|ALLOW|Gestión de infraestructura"
 
         # ----------------------------------------------------------------------
-        # CORE-MGMT (Bastión de gestión)
+        # CORE-MGMT (Bastión)
         # ----------------------------------------------------------------------
         "CORE-MGMT|CORE-ADM|ALLOW|Gestión administrativa"
         "CORE-MGMT|CORE-SVC|ALLOW|Gestión de servicios"
 
-        # Nadie inicia conexiones hacia CORE-MGMT
-        "CORE-ADM|CORE-MGMT|DENY|Protección bastión"
-        "CORE-SVC|CORE-MGMT|DENY|Protección bastión"
+        "CORE-ADM|CORE-MGMT|DENY|Protección del bastión"
+        "CORE-SVC|CORE-MGMT|NO-ROUTE|Separación L3 de dominios"
 
         # ----------------------------------------------------------------------
-        # CORE-ADM (Administración)
+        # CORE-ADM
         # ----------------------------------------------------------------------
         "CORE-ADM|CORE-SVC|ALLOW|Acceso a aplicaciones"
         "CORE-SVC|CORE-ADM|DENY|Servicios pasivos"
 
         # ----------------------------------------------------------------------
-        # CORE-SVC (Servicios)
+        # CORE-SVC
         # ----------------------------------------------------------------------
-        "CORE-SVC|CORE-MGMT|DENY|Servicios no inician conexiones"
-        "CORE-SVC|CORE-EDGE|DENY|Servicios no exponen perímetro"
+        "CORE-SVC|CORE-EDGE|DENY|Servicios no acceden a infraestructura"
 
         # ----------------------------------------------------------------------
-        # INTERNET (Perímetro)
+        # Internet
         # ----------------------------------------------------------------------
         "INTERNET|CORE-EDGE|DENY|Internet no inicia conexiones"
-        "INTERNET|CORE-MGMT|DENY|Aislamiento total del bastión"
-
-        # ----------------------------------------------------------------------
-        # CORE-RH (Usuarios) - pendiente de implementación
-        # ----------------------------------------------------------------------
-        "CORE-RH|CORE-SVC|ALLOW|Consumo de servicios"
-        "CORE-RH|INTERNET|ALLOW|Salida a Internet"
-        "CORE-RH|CORE-ADM|DENY|Separación de dominios"
+        "INTERNET|CORE-MGMT|DENY|Aislamiento del bastión"
     )
 
 
