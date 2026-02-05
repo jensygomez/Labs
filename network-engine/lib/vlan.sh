@@ -28,6 +28,6 @@ ensure_vlan() {
     #echo "  + Asignando IP $ip_cidr a $vlan_if"
     ip netns exec "$ns" ip addr add "$ip_cidr" dev "$vlan_if"
   else
-    #echo "  ✔ IP $ip_cidr ya configurada en $vlan_if"
+    echo "  ✔ IP $ip_cidr ya configurada en $vlan_if"
   fi
 }
