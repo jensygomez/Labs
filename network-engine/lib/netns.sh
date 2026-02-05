@@ -8,16 +8,16 @@ ns_exists() {
 ensure_namespace(){
   local ns="$1"
   if ns_exists "$ns"; then
-    echo "✔ Namespace $ns ya existe"
+    #echo "✔ Namespace $ns ya existe"
     return 0
   fi
 
   if ip netns add "$ns"; then
     ip netns exec "$ns" ip link set lo up
-    echo "➕ Namespace $ns creado"
+    #echo "➕ Namespace $ns creado"
     return 0
   else
-    echo "❌ Error fatal creando namespace $ns"
+    #echo "❌ Error fatal creando namespace $ns"
     return 1
   fi
 }
