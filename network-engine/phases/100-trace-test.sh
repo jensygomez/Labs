@@ -118,6 +118,23 @@ run_phase() {
         # ----------------------------------------------------------------------
         "INTERNET|CORE-EDGE|DENY|Internet no inicia conexiones"
         "INTERNET|CORE-MGMT|DENY|Aislamiento del bastión"
+
+                # ----------------------------------------------------------------------
+        # CORE-RH (Usuarios)
+        # ----------------------------------------------------------------------
+        "CORE-RH|CORE-SVC|ALLOW|Usuarios RH acceden a servicios internos"
+        "CORE-RH|CORE-EDGE|ALLOW|Usuarios RH tránsito hacia Internet"
+        "CORE-RH|INTERNET|ALLOW|Usuarios RH acceso a Internet"
+
+        "CORE-RH|CORE-MGMT|DENY|Usuarios RH no acceden a MGMT"
+        "CORE-RH|CORE-ADM|DENY|Usuarios RH no acceden a ADM"
+
+        "CORE-MGMT|CORE-RH|ALLOW|Gestión de usuarios RH"
+
+        "CORE-SVC|CORE-RH|DENY|Servicios no inician hacia usuarios"
+        "CORE-ADM|CORE-RH|DENY|Administración no accede a usuarios"
+        "INTERNET|CORE-RH|DENY|Internet no accede a usuarios"
+
     )
 
 
