@@ -14,7 +14,7 @@ ensure_vlan() {
 
   # 2. Verificar si la sub-interfaz VLAN ya existe
   if ip netns exec "$ns" ip link show "$vlan_if" &>/dev/null; then
-    #echo "  ✔ VLAN $vlan_id ya existe en $ns ($vlan_if)"
+    echo "  ✔ VLAN $vlan_id ya existe en $ns ($vlan_if)"
   else
     #echo "  🏷️  Creando VLAN $vlan_id en $ns (parent: $parent_if)"
     # Crear la interfaz VLAN etiquetada
