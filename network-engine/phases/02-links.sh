@@ -6,4 +6,10 @@ run_phase() {
     IFS=":" read -r a ia b ib <<< "$c"
     ensure_cable "$a" "$ia" "$b" "$ib"
   done
+    echo
+    echo "ejecuntando..."
+    sleep 2
+    echo
+    echo "[FASE 2] ejecutada com sucesso"
+    echo "-----------------------------------"
 }

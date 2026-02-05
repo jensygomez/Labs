@@ -7,4 +7,10 @@ run_phase(){
         # echo "  Configurando NAT para $ns en interfaz $iface"
         ensure_nat "$ns" "$iface"
     done
+    echo
+    echo "ejecuntando..."
+    sleep 2
+    echo
+    echo "[FASE 6] ejecutada com sucesso"
+    echo "-----------------------------------"
 }

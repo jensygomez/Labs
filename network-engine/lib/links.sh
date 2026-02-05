@@ -28,7 +28,7 @@ ensure_cable() {
 
   # Crear par veth (manejo explícito de error)
   if ! ip link add "$veth_a" type veth peer name "$veth_b"; then
-    echo "❌ ip link add falló"
+    #echo "❌ ip link add falló"
     return 1
   fi
 
@@ -38,5 +38,5 @@ ensure_cable() {
   ip netns exec "$ns_a" ip link set "$veth_a" name "$if_a" up
   ip netns exec "$ns_b" ip link set "$veth_b" name "$if_b" up
 
-  echo "✅ Cable UP ($if_a ↔ $if_b)"
+  #echo "✅ Cable UP ($if_a ↔ $if_b)"
 }

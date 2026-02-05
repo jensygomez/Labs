@@ -6,4 +6,10 @@ run_phase() {
     IFS=":" read -r ns ifc ip <<< "$i"
     ensure_ip "$ns" "$ifc" "$ip"
   done
+    echo
+    echo "ejecuntando..."
+    sleep 2
+    echo
+    echo "[FASE 3] ejecutada com sucesso"
+    echo "-----------------------------------"
 }

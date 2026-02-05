@@ -3,7 +3,7 @@
 
 ensure_firewall() {
   local ns="$1"
-  echo "🔒 Configurando FW en $ns"
+  #echo "🔒 Configurando FW en $ns"
 
   ns_exists "$ns" || { echo "❌ Namespace $ns no existe"; return 1; }
 
@@ -15,9 +15,9 @@ ensure_firewall() {
   local input_rules=""
   local index="$ns"
 
-  echo "DEBUG: ns = $ns"
-  echo "DEBUG: index = $index"
-  echo "DEBUG: Todas las claves de FW_RULES:"
+  #echo "DEBUG: ns = $ns"
+  #echo "DEBUG: index = $index"
+  #echo "DEBUG: Todas las claves de FW_RULES:"
   for key in "${!FW_RULES[@]}"; do
     echo "  '$key' -> '${FW_RULES[$key]}'"
   done
@@ -63,6 +63,6 @@ ensure_firewall() {
   ruleset+="  }\n"
   ruleset+="}\n"
 
-  echo -e "$ruleset" | ip netns exec "$ns" nft -f -
-  echo "✅ FW ${ns} zone-based activo (VLAN-aware + Counters)"
+  #echo -e "$ruleset" | ip netns exec "$ns" nft -f -
+  #echo "✅ FW ${ns} zone-based activo (VLAN-aware + Counters)"
 }
