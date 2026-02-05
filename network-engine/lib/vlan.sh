@@ -9,7 +9,7 @@ ensure_vlan() {
 
   # 1. Validación de existencia del Namespace
   if ! ns_exists "$ns"; then
-    #echo "❌ Namespace $ns no existe para crear VLAN"
+    echo "❌ Namespace $ns no existe para crear VLAN"
   fi
 
   # 2. Verificar si la sub-interfaz VLAN ya existe
