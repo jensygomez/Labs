@@ -10,6 +10,6 @@ run_phase() {
     echo "ejecuntando..."
     sleep 2
     echo
-    echo "[FASE 5] ejecutada com sucesso"
+    echo "[FASE 1] ejecutada com sucesso"
     echo "-----------------------------------"
 }
