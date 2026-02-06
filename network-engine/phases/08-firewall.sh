@@ -5,8 +5,5 @@ run_phase() {
   for ns in "${FW_NAMESPACES[@]}"; do
     ensure_firewall "$ns"
   done
-    sleep 2
-    echo "[FASE 8] ejecutada com sucesso"
-    echo "-----------------------------------"
 }
 

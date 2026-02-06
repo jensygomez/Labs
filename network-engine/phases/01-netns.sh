@@ -5,7 +5,4 @@ run_phase() {
   for ns in "${NAMESPACES[@]}"; do
     ensure_namespace "$ns"
   done
-    sleep 2
-    echo "[FASE 1] ejecutada com sucesso"
-    echo "-----------------------------------"
 }

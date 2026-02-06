@@ -5,7 +5,4 @@ run_phase(){
     for ns in "${ROUTERS[@]}";do
         ensure_forwarding "$ns"
     done
-    sleep 2
-    echo "[FASE 5] ejecutada com sucesso"
-    echo "-----------------------------------"
 }

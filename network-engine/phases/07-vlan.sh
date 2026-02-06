@@ -8,7 +8,4 @@ run_phase(){
         # Usamos la funcion de la Lib
         ensure_vlan "$ns" "$parent_if" "$vlan_id" "$ip_cidr"
     done
-    sleep 2
-    echo "[FASE 7] ejecutada com sucesso"
-    echo "-----------------------------------"
 }

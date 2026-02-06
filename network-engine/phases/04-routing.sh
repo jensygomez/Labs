@@ -6,7 +6,4 @@ run_phase() {
     IFS=":" read -r ns dest via <<< "$r"
     ensure_route "$ns" "$dest" "$via"
   done
-    sleep 2
-    echo "[FASE 4] ejecutada com sucesso"
-    echo "-----------------------------------"
 }
