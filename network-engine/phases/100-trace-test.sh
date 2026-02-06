@@ -129,7 +129,8 @@ run_phase() {
         "CORE-RH|CORE-MGMT|DENY|Usuarios RH no acceden a MGMT"
         "CORE-RH|CORE-ADM|DENY|Usuarios RH no acceden a ADM"
 
-        "CORE-MGMT|CORE-RH|ALLOW|Gestión de usuarios RH"
+        "CORE-MGMT|CORE-RH|ALLOW|Gestión de gateway RH"
+
 
         "CORE-SVC|CORE-RH|DENY|Servicios no inician hacia usuarios"
         "CORE-ADM|CORE-RH|DENY|Administración no accede a usuarios"
