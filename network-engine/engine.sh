@@ -87,6 +87,7 @@ run 05-forwarding.sh
 run 06-nat.sh
 run 07-vlan.sh
 run 08-firewall.sh
+run 09-services.sh
 run 100-trace-test.sh
 
 echo "✅ Topología convergida completamente"
