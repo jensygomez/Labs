@@ -61,6 +61,7 @@ load_component "lib/forwarding.sh"
 load_component "lib/nat.sh"
 load_component "lib/vlan.sh"
 load_component "lib/firewall.sh"
+load_component "lib/services.sh"
 load_component "lib/idempotency.sh"
 
 # ------------------------------------------------------------------------------

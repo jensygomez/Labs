@@ -1,6 +1,5 @@
 #!/bin/bash
 # network-engine/lib/services.sh
-# lib/services.sh
 
 SERVICES=()
 
@@ -9,7 +8,6 @@ ensure_service() {
   local conf="$BASE_DIR/topology/services/$svc/service.conf"
 
   [[ -f "$conf" ]] || return 0
-
   source "$conf"
 
   ns_exists "$SERVICE_NAMESPACE" || return 1
@@ -21,9 +19,11 @@ ensure_service() {
     "$SERVICE_ROOT/index.html" 2>/dev/null || true
 
   if ip netns exec "$SERVICE_NAMESPACE" ss -tln | grep -q ":$SERVICE_PORT"; then
+    echo "✅ Servicio $SERVICE_NAME ya activo"
     return 0
   fi
 
-  ip netns exec "$SERVICE_NAMESPACE" bash -c \
-    "cd $SERVICE_ROOT && nohup $SERVICE_CMD > service.log 2>&1 &"
+  ip netns exec "$SERVICE_NAMESPACE" \
+    nohup bash -c "cd $SERVICE_ROOT && $SERVICE_CMD" \
+    > /dev/null 2>&1 &
 }
