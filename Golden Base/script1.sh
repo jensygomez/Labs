@@ -71,7 +71,8 @@ dnf install -y \
     lynx \
     php-fpm \
     php-mysqlnd \
-    traceroute
+    traceroute \
+    python3
 
 # Cleanup para Golden Image ligera (Unix: least resource)
 dnf autoremove -y
