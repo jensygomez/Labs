@@ -49,6 +49,12 @@ ensure_firewall() {
     done
   done
 
+  # Reglas forward adicionales específicas (DESPUÉS del bucle de zonas)
+  local forward_rules="${FW_FORWARD["$ns"]:-}"
+  if [[ -n "$forward_rules" ]]; then
+    ruleset+="    $forward_rules\n"
+  fi
+
   ruleset+="  }\n"
   ruleset+="}\n"
 
