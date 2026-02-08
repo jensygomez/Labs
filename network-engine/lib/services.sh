@@ -68,7 +68,7 @@ EOF
       fi
       
       echo "🚀 Iniciando nginx..."
-      if ! ip netns exec "$SERVICE_NAMESPACE" nginx -c "$nginx_conf" -g "daemon on; pid /tmp/$SERVICE_NAME.pid;" >/dev/null 2>&1; then
+      if ! ip netns exec "$SERVICE_NAMESPACE" nginx -c "$nginx_conf" -g "daemon off; error_log /var/log/nginx/error_$SERVICE_NAME.log debug;" >/dev/null 2>&1; then
         echo "❌ Nginx FAILED to start en $SERVICE_NAMESPACE"
         ip netns exec "$SERVICE_NAMESPACE" nginx -c "$nginx_conf" -g "daemon off;" 2>&1 || true
         return 1
