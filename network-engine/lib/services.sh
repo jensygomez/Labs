@@ -71,4 +71,18 @@ EOF
     echo "❌ Falló el inicio. Log de error:"
     ip netns exec "$SERVICE_NAMESPACE" cat "/var/log/nginx/error_$SERVICE_NAME.log"
   fi
+
+  # Configuracion del DNS
+  if [[ "$SERVICE_CMD" == "dnsmasq" ]]; then
+    echo "🚀 Configurando DNS Record: ${DNS_RECORDS[@]}"
+    local hosts_file="/tmp/hosts_$SERVICE_NAME"
+    printf "%s\n" "${DNS_RECORDS[@]}" > "$hosts_file"
+    
+    # Arrancar dnsmasq apuntando a nuestro archivo de hosts
+    ip netns exec "$SERVICE_NAMESPACE" dnsmasq \
+        --no-daemon \
+        --listen-address=0.0.0.0 \
+        --no-hosts \
+        --addn-hosts="$hosts_file" &
+fi
 }
