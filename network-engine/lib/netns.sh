@@ -39,7 +39,7 @@ ensure_namespace(){
 
 
 
-'''
+<< 'COMENTARIO'
 ns_exists() {
   # Usamos -w para palabra exacta y enviamos errores a /dev/null
   ip netns list | grep -qw "$1" 2>/dev/null
@@ -61,4 +61,4 @@ ensure_namespace(){
     return 1
   fi
 }
-'''
+COMENTARIO
