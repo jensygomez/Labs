@@ -2,7 +2,7 @@
 # network-engine/lib/firewall.sh
 ensure_firewall() {
   local ns="$1"
-  "🔒 Configurando FW en $ns"
+  echo "🔒 Configurando FW en $ns"
 
   ns_exists "$ns" || { "❌ Namespace $ns no existe"; return 1; }
 
