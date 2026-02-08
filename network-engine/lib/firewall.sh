@@ -61,6 +61,6 @@ ensure_firewall() {
   # ESTE SÍ DEBE EJECUTARSE
   echo -e "$ruleset" | ip netns exec "$ns" nft -f -
 
-  "✅ FW ${ns} zone-based activo"
+  echo "✅ FW ${ns} zone-based activo"
   return 0
 }
