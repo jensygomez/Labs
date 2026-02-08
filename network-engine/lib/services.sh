@@ -1,7 +1,6 @@
 #!/bin/bash
 # network-engine/lib/services.sh
 
-SERVICES=()
 
 ensure_service() {
   local svc="$1"
@@ -10,39 +9,54 @@ ensure_service() {
   [[ -f "$conf" ]] || { echo "❌ Config $conf no existe"; return 1; }
   source "$conf"
 
-  # Verificar que el namespace existe
-  if ! ns_exists "$SERVICE_NAMESPACE"; then
-    echo "❌ Namespace $SERVICE_NAMESPACE no existe para servicio $svc"
-    return 1
-  fi
+  # 1. Asegurar loopback UP (vital para Nginx)
+  ip netns exec "$SERVICE_NAMESPACE" ip link set lo up
 
-  # Crear directorio si no existe
+  # 2. Preparar directorios
   ip netns exec "$SERVICE_NAMESPACE" mkdir -p "$SERVICE_ROOT"
+  ip netns exec "$SERVICE_NAMESPACE" mkdir -p /var/log/nginx /var/lib/nginx
 
-  # Copiar archivos web
+  # 3. Copiar index.html
   if [[ -f "$BASE_DIR/topology/services/$svc/index.html" ]]; then
     ip netns exec "$SERVICE_NAMESPACE" cp \
       "$BASE_DIR/topology/services/$svc/index.html" \
       "$SERVICE_ROOT/index.html"
   fi
 
-  # Verificar si ya está corriendo
+  # 4. Verificar si ya está corriendo
   if ip netns exec "$SERVICE_NAMESPACE" ss -tln | grep -q ":$SERVICE_PORT"; then
-    echo "✅ Servicio $SERVICE_NAME ya activo"
+    echo "✅ Servicio $SERVICE_NAME ya activo en puerto $SERVICE_PORT"
     return 0
   fi
 
-  echo "🚀 Iniciando $SERVICE_NAME en puerto $SERVICE_PORT..."
+  # 5. Generar config mínima de Nginx para el namespace
+  local nginx_conf="/tmp/nginx_$SERVICE_NAME.conf"
+  cat <<EOF > "$nginx_conf"
+error_log /var/log/nginx/error.log;
+pid /run/nginx_$SERVICE_NAME.pid;
+events { worker_connections 1024; }
+http {
+    access_log /var/log/nginx/access_$SERVICE_NAME.log;
+    server {
+        listen $SERVICE_PORT;
+        server_name localhost;
+        location / {
+            root $SERVICE_ROOT;
+            index index.html;
+        }
+    }
+}
+EOF
+
+  echo "🚀 Iniciando $SERVICE_NAME (Nginx) en puerto $SERVICE_PORT..."
   
-  # SOLUCIÓN: Usar screen o tminkeeper en lugar de nohup
-  ip netns exec "$SERVICE_NAMESPACE" \
-    sh -c "cd $SERVICE_ROOT && $SERVICE_CMD &" 2>/dev/null
+  # Ejecutar Nginx dentro del namespace
+  ip netns exec "$SERVICE_NAMESPACE" nginx -c "$nginx_conf" -g "daemon on;"
   
-  # Esperar un momento y verificar
-  sleep 0.5
+  sleep 1
   if ip netns exec "$SERVICE_NAMESPACE" ss -tln | grep -q ":$SERVICE_PORT"; then
     echo "✅ $SERVICE_NAME iniciado correctamente"
   else
-    echo "⚠️  $SERVICE_NAME podría no haberse iniciado"
+    echo "❌ Falló el inicio de $SERVICE_NAME. Revisa 'ip netns exec $SERVICE_NAMESPACE dmesg'"
   fi
 }
