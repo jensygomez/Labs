@@ -14,7 +14,7 @@ ensure_firewall() {
   local index="$ns"
 
   for key in "${!FW_RULES[@]}"; do
-    "FW_RULE: '$key' -> '${FW_RULES[$key]}'"
+    echo "FW_RULE: '$key' -> '${FW_RULES[$key]}'"
   done
 
   input_rules="${FW_RULES["$index"]:-}"
