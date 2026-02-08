@@ -13,22 +13,22 @@ ensure_cable() {
   # Idempotencia
   if ip netns exec "$ns_a" ip link show "$if_a" &>/dev/null &&
      ip netns exec "$ns_b" ip link show "$if_b" &>/dev/null; then
-     #echo "✔ Cable $ns_a:$if_a ↔ $ns_b:$if_b existe"
+     echo "✔ Cable $ns_a:$if_a ↔ $ns_b:$if_b existe"
     return 0
   fi
 
-  # echo "🔗 Creando cable $ns_a:$if_a ↔ $ns_b:$if_b"
+  echo "🔗 Creando cable $ns_a:$if_a ↔ $ns_b:$if_b"
 
   local counter
   counter=$(<"$VETH_COUNTER_FILE")
-  # echo $((counter + 1)) > "$VETH_COUNTER_FILE"
+  echo $((counter + 1)) > "$VETH_COUNTER_FILE"
 
   local veth_a="v${counter}a"
   local veth_b="v${counter}b"
 
   # Crear par veth (manejo explícito de error)
   if ! ip link add "$veth_a" type veth peer name "$veth_b"; then
-    #echo "❌ ip link add falló"
+    echo "❌ ip link add falló"
     return 1
   fi
 
@@ -38,5 +38,5 @@ ensure_cable() {
   ip netns exec "$ns_a" ip link set "$veth_a" name "$if_a" up
   ip netns exec "$ns_b" ip link set "$veth_b" name "$if_b" up
 
-  #echo "✅ Cable UP ($if_a ↔ $if_b)"
+  echo "✅ Cable UP ($if_a ↔ $if_b)"
 }

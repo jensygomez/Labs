@@ -2,9 +2,9 @@
 # network-engine/lib/firewall.sh
 ensure_firewall() {
   local ns="$1"
-  : "🔒 Configurando FW en $ns"
+  "🔒 Configurando FW en $ns"
 
-  ns_exists "$ns" || { : "❌ Namespace $ns no existe"; return 1; }
+  ns_exists "$ns" || { "❌ Namespace $ns no existe"; return 1; }
 
   # 1. Limpiar tabla
   ip netns exec "$ns" nft delete table inet "fw_${ns}" 2>/dev/null || true
@@ -14,7 +14,7 @@ ensure_firewall() {
   local index="$ns"
 
   for key in "${!FW_RULES[@]}"; do
-    : "FW_RULE: '$key' -> '${FW_RULES[$key]}'"
+    "FW_RULE: '$key' -> '${FW_RULES[$key]}'"
   done
 
   input_rules="${FW_RULES["$index"]:-}"
@@ -61,6 +61,6 @@ ensure_firewall() {
   # ESTE SÍ DEBE EJECUTARSE
   echo -e "$ruleset" | ip netns exec "$ns" nft -f -
 
-  : "✅ FW ${ns} zone-based activo"
+  "✅ FW ${ns} zone-based activo"
   return 0
 }

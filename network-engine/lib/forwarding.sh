@@ -13,5 +13,5 @@ ensure_forwarding(){
     ip netns exec "$ns" sysctl -w net.ipv4.conf.all.rp_filter=0 >/dev/null
     ip netns exec "$ns" sysctl -w net.ipv4.conf.default.rp_filter=0 >/dev/null
 
-    #echo "✔ Forwarding OK en $ns"
+    echo "✔ Forwarding OK en $ns"
 }

@@ -4,7 +4,7 @@ run_phase(){
     echo "[FASE 6] ejecutando Nat & Egress"
     for nat in "${NAT_ROUTERS[@]}"; do
         IFS=":" read -r ns iface <<< "$nat"
-        # echo "  Configurando NAT para $ns en interfaz $iface"
+        echo "  Configurando NAT para $ns en interfaz $iface"
         ensure_nat "$ns" "$iface"
     done
 }
