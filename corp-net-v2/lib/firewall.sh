@@ -1,6 +1,6 @@
 #!/bin/bash
 # lib/firewall.sh - Microsegmentación Dinámica
-
+[[ -z "$YQ" ]] && YQ="$BASE_DIR/.bin/yq"
 apply_firewall() {
     echo "🛡️  Configurando Microsegmentación Zero-Trust..."
 

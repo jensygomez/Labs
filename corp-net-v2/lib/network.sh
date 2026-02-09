@@ -1,6 +1,6 @@
 #!/bin/bash
 # lib/network.sh - Maestro Electricista con Soporte para Bridges
-
+[[ -z "$YQ" ]] && YQ="$BASE_DIR/.bin/yq"
 VETH_COUNTER_FILE="/tmp/veth_counter"
 
 setup_counter() {

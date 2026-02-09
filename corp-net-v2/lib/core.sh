@@ -1,6 +1,8 @@
 #!/bin/bash
 # lib/core.sh - Gestión de ciclo de vida de nodos
 
+
+[[ -z "$YQ" ]] && YQ="$BASE_DIR/.bin/yq"
 # Usamos la ruta que definimos en el orquestador
 YQ="./.bin/yq"
 
