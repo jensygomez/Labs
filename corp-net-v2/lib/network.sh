@@ -6,16 +6,16 @@ YQ="./.bin/yq"
 setup_network() {
     echo "🔗 Iniciando cableado dinámico..."
 
-    # 1. Obtener todos los nodos que NO sean el router
-    local nodes=$($YQ '.nodes[] | select(.role != "router") | .name' topology/nodes.yml)
+    # USAMOS "$BASE_DIR/topology/nodes.yml" para que yq siempre lo encuentre
+    local nodes=$($YQ '.nodes[] | select(.role != "router") | .name' "$BASE_DIR/topology/nodes.yml")
 
     for node in $nodes; do
-        # Extraer datos del YAML para este nodo
-        local ip=$($YQ ".nodes[] | select(.name == \"$node\") | .ip" topology/nodes.yml)
-        local subnet=$($YQ ".nodes[] | select(.name == \"$node\") | .subnet" topology/nodes.yml)
+        # Extraer datos usando la ruta absoluta
+        local ip=$($YQ ".nodes[] | select(.name == \"$node\") | .ip" "$BASE_DIR/topology/nodes.yml")
+        local subnet=$($YQ ".nodes[] | select(.name == \"$node\") | .subnet" "$BASE_DIR/topology/nodes.yml")
         
-        # El Gateway es la IP .1 de esa subred (según nuestro diseño en nodes.yml)
-        local gw_ip=$($YQ ".nodes[] | select(.role == \"router\") | .subnets[] | select(.name == \"$subnet\") | .network" topology/nodes.yml | sed 's/0\/24/1/')
+        # El Gateway (usamos de nuevo la ruta absoluta)
+        local gw_ip=$($YQ ".nodes[] | select(.role == \"router\") | .subnets[] | select(.name == \"$subnet\") | .network" "$BASE_DIR/topology/nodes.yml" | sed 's/0\/24/1/')
 
         echo "🌐 Conectando $node ($ip) a la subred $subnet..."
 
