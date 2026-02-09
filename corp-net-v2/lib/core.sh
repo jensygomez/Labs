@@ -3,8 +3,6 @@
 
 
 [[ -z "$YQ" ]] && YQ="$BASE_DIR/.bin/yq"
-# Usamos la ruta que definimos en el orquestador
-YQ="./.bin/yq"
 
 create_namespaces() {
     # Usamos BASE_DIR para encontrar siempre el YAML y el binario
