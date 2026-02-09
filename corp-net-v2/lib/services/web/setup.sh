@@ -1,22 +1,23 @@
 #!/bin/bash
 # lib/services/web/setup.sh
+source "$BASE_DIR/lib/services/web/ssl.sh"
 
 setup_web_service() {
     local ns="SVC-WEB"
-    local source_html="$BASE_DIR/lib/services/web/html"
+    local cert_src="$BASE_DIR/lib/services/web/certs"
     
-    echo "🌐 Sincronizando contenido web en $ns..."
+    # 1. Generar certificados en el host
+    generate_certs
 
-    # Crear la ruta dentro del namespace
-    ip netns exec "$ns" mkdir -p /var/www/html
+    # 2. Preparar carpetas en el Namespace
+    ip netns exec "$ns" mkdir -p /var/www/html /etc/nginx/ssl /var/lib/nginx /var/log/nginx
 
-    # Copiar todos los archivos de nuestra carpeta html/ al namespace
-    # Esto permite tener imágenes, CSS, o múltiples páginas .html
-    cp -r $source_html/* /tmp/html_temp/ 2>/dev/null # Ejemplo de paso intermedio si fuera necesario
-    
-    # Lo más directo para este lab:
-    cat "$source_html/index.html" | ip netns exec "$ns" tee /var/www/html/index.html > /dev/null
-    
-    # Lanzar Nginx
+    # 3. Inyectar Certificados y HTML
+    cat "$BASE_DIR/lib/services/web/html/index.html" | ip netns exec "$ns" tee /var/www/html/index.html > /dev/null
+    cat "$cert_src/server.crt" | ip netns exec "$ns" tee /etc/nginx/ssl/server.crt > /dev/null
+    cat "$cert_src/server.key" | ip netns exec "$ns" tee /etc/nginx/ssl/server.key > /dev/null
+
+    # 4. Lanzar Nginx
     ip netns exec "$ns" nginx -c "$BASE_DIR/lib/services/web/nginx.conf" -g "daemon on;"
+    echo "✅ Nginx HTTPS (443) desplegado en $ns."
 }
