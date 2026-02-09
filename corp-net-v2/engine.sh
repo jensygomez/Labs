@@ -1,5 +1,6 @@
 #!/bin/bash
 # engine.sh - Orquestador CorpNet-v2
+# DEBUG=1 sudo bash corp-net-v2/engine.sh 
 
 # 1. --- DIRECTORIO BASE Y VARIABLES ---
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
