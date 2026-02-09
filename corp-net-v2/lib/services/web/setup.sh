@@ -3,24 +3,20 @@
 
 setup_web_service() {
     local ns="SVC-WEB"
-    echo "🌐 Configurando Nginx en el namespace $ns..."
+    local source_html="$BASE_DIR/lib/services/web/html"
+    
+    echo "🌐 Sincronizando contenido web en $ns..."
 
-    # 1. Crear directorios temporales para que Nginx no choque con el host
-    # Nginx necesita carpetas para logs y temporales
-    ip netns exec "$ns" mkdir -p /var/log/nginx /var/lib/nginx /var/www/html
+    # Crear la ruta dentro del namespace
+    ip netns exec "$ns" mkdir -p /var/www/html
 
-    # 2. Crear una página index básica
-    echo "<h1>CorpNet V2: Servidor Web Real</h1><p>Nodo: $ns</p>" | \
-        ip netns exec "$ns" tee /var/www/html/index.html > /dev/null
-
-    # 3. Lanzar Nginx usando el archivo de configuración personalizado
-    # Usamos -c para pasarle nuestra ruta y -g para que no corra como daemon
-    # (Para que el proceso sea controlado o rastreable)
+    # Copiar todos los archivos de nuestra carpeta html/ al namespace
+    # Esto permite tener imágenes, CSS, o múltiples páginas .html
+    cp -r $source_html/* /tmp/html_temp/ 2>/dev/null # Ejemplo de paso intermedio si fuera necesario
+    
+    # Lo más directo para este lab:
+    cat "$source_html/index.html" | ip netns exec "$ns" tee /var/www/html/index.html > /dev/null
+    
+    # Lanzar Nginx
     ip netns exec "$ns" nginx -c "$BASE_DIR/lib/services/web/nginx.conf" -g "daemon on;"
-
-    if [ $? -eq 0 ]; then
-        echo "✅ Nginx iniciado correctamente en $ns."
-    else
-        echo "❌ Error al iniciar Nginx."
-    fi
 }

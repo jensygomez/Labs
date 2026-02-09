@@ -57,6 +57,7 @@ if [ -f "$BASE_DIR/lib/core.sh" ] && [ -f "$BASE_DIR/lib/network.sh" ]; then
     source "$BASE_DIR/lib/core.sh"
     source "$BASE_DIR/lib/network.sh"
     source "$BASE_DIR/lib/firewall.sh" 
+    source "$BASE_DIR/lib/services/web/setup.sh"
 else
     echo "❌ Error: No se encontraron las librerías en $BASE_DIR/lib/"
     exit 1
@@ -69,6 +70,8 @@ deploy_lab() {
     create_namespaces   
     setup_network      
     apply_firewall  
+    # Lanzar el servicio web
+    setup_web_service
     echo -e "\n✨ Red establecida y ruteo configurado."
     echo "✨ Laboratorio desplegado correctamente."
     read -p "Presiona Enter para volver..."
