@@ -138,10 +138,10 @@ show_menu() {
     echo "=========================================="
     echo "       CORPNET-V2 - CONTROL PANEL         "
     echo "=========================================="
-    echo "1) 🚀 Desplegar Infraestructura"
+    echo "1) 🚀 Desplegar Infraestructura (RH + TI)"
     echo "2) 🧹 Limpiar Laboratorio (Destroy)"
     echo "3) 🔍 Status de la Red (Namespaces/IPs)"
-    echo "4) 🖥️  SOC Monitor (Acceso seguro HTTPS)"
+    echo "4) 🧪 Panel de Pruebas y Diagnóstico (YAML)"
     echo "0) 🚪 Salir"
     echo "------------------------------------------"
     read -p "Selecciona una opción: " opt
@@ -151,9 +151,14 @@ show_menu() {
         2) destroy_lab ;;
         3) show_status ;;
         4) 
-            # Cargamos y ejecutamos la lógica del monitor
-            source "$BASE_DIR/lib/services/web/monitor.sh"
-            check_monitor
+            # Invocamos el motor dinámico que creamos en lib/tester.sh
+            if [ -f "$BASE_DIR/lib/tester.sh" ]; then
+                source "$BASE_DIR/lib/tester.sh"
+                run_dynamic_tests
+            else
+                echo "❌ Error: No se encuentra el motor de pruebas en lib/tester.sh"
+                sleep 2
+            fi
             ;;
         0) exit 0 ;;
         *) echo "❌ Opción inválida."; sleep 1 ;;

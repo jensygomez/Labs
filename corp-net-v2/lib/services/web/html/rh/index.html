@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; padding: 0; background-color: #f4f7f6; color: #333;
+        }
+        .navbar { background-color: #005a9c; color: white; padding: 1rem; text-align: center; }
+        .container { padding: 20px; max-width: 800px; margin: auto; }
+        .card { 
+            background: white; padding: 20px; margin-bottom: 20px; 
+            border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+        .status-badge { 
+            background-color: #d4edda; color: #155724; 
+            padding: 5px 10px; border-radius: 15px; font-size: 0.8em; 
+        }
+        h2 { color: #005a9c; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .footer { text-align: center; font-size: 0.8em; color: #777; margin-top: 40px; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>CorpNet V2 - Portal del Empleado</h1>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>👋 Bienvenido al Departamento de RH</h2>
+            <p>Has accedido correctamente desde el nodo: <strong>${NODE_NAME}</strong></p>
+            <p>Estado del sistema: <span class="status-badge">Conexión Segura Estándar</span></p>
+        </div>
+
+        <div class="card">
+            <h2>📢 Anuncios Recientes</h2>
+            <ul>
+                <li>📅 Próximo cierre de nómina: Viernes 15.</li>
+                <li>🏖️ Ya puedes solicitar tus vacaciones de verano.</li>
+                <li>🍎 Charla de bienestar y salud el próximo lunes.</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>🔗 Enlaces Rápidos</h2>
+            <p>• Descargar recibos de sueldo</p>
+            <p>• Directorio de contactos</p>
+            <p>• Reglamento interno</p>
+        </div>
+
+        <div class="footer">
+            © 2026 CorpNet Global Services | Acceso restringido a personal autorizado.
+        </div>
+    </div>
+</body>
+</html>

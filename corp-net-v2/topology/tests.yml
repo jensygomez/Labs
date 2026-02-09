@@ -1,0 +1,10 @@
+tests:
+  - name: "Portal Empleados (RRHH)"
+    from: "USR-RH-1"
+    cmd: "lynx http://10.0.1.10"
+  - name: "Monitor de Seguridad (TI)"
+    from: "USR-IT-ADMIN"
+    cmd: "echo 'FORCE_SSL_PROMPT:YES' > /tmp/lynx.cfg && lynx -cfg=/tmp/lynx.cfg https://10.0.1.10"
+  - name: "Verificar Firewall (RH intentando entrar a IT)"
+    from: "USR-RH-1"
+    cmd: "curl -m 3 -k https://10.0.1.10 || echo 'BLOQUEADO CORRECTAMENTE'"
