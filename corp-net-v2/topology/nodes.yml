@@ -17,3 +17,8 @@ nodes:
     role: client
     subnet: USERS
     ip: 10.0.2.10
+
+  - name: USR-RH-2
+    role: client
+    subnet: USERS
+    ip: 10.0.2.20
