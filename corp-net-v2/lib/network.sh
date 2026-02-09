@@ -1,52 +1,76 @@
 #!/bin/bash
-# lib/network.sh - El "Maestro electricista" de la red
+# lib/network.sh - El "Maestro electricista" con lógica de abstracción
 
-YQ="./.bin/yq"
+VETH_COUNTER_FILE="/tmp/veth_counter"
+
+# Inicializar contador si no existe
+setup_counter() {
+    echo 0 > "$VETH_COUNTER_FILE"
+}
+
+# La función core que mencionaste, adaptada
+ensure_cable() {
+    local ns_a="$1" if_a="$2" ns_b="$3" if_b="$4"
+
+    # Idempotencia: Si ya existe el cable en ambos lados, no hacer nada
+    if ip netns exec "$ns_a" ip link show "$if_a" &>/dev/null && \
+       ip netns exec "$ns_b" ip link show "$if_b" &>/dev/null; then
+        return 0
+    fi
+
+    local counter=$(<"$VETH_COUNTER_FILE")
+    echo $((counter + 1)) > "$VETH_COUNTER_FILE"
+
+    local tmp_veth_a="v${counter}a"
+    local tmp_veth_b="v${counter}b"
+
+    # Crear par veth en el host temporalmente
+    ip link add "$tmp_veth_a" type veth peer name "$tmp_veth_b"
+
+    # Mover a los namespaces
+    ip link set "$tmp_veth_a" netns "$ns_a"
+    ip link set "$tmp_veth_b" netns "$ns_b"
+
+    # Renombrar a nombres estándar (ej: eth0 o v-ethX) y levantar
+    ip netns exec "$ns_a" ip link set "$tmp_veth_a" name "$if_a" up
+    ip netns exec "$ns_b" ip link set "$tmp_veth_b" name "$if_b" up
+}
 
 setup_network() {
-    echo "🔗 Iniciando cableado dinámico..."
+    echo "🔗 Iniciando cableado dinámico (Modo Abstracción)..."
+    setup_counter
 
-    # USAMOS "$BASE_DIR/topology/nodes.yml" para que yq siempre lo encuentre
+    # 1. Obtener nodos que necesitan conexión al router
     local nodes=$($YQ '.nodes[] | select(.role != "router") | .name' "$BASE_DIR/topology/nodes.yml")
 
     for node in $nodes; do
-        # Extraer datos usando la ruta absoluta
         local ip=$($YQ ".nodes[] | select(.name == \"$node\") | .ip" "$BASE_DIR/topology/nodes.yml")
         local subnet=$($YQ ".nodes[] | select(.name == \"$node\") | .subnet" "$BASE_DIR/topology/nodes.yml")
         
-        # El Gateway (usamos de nuevo la ruta absoluta)
+        # Obtener la IP del GW para esa subred
         local gw_ip=$($YQ ".nodes[] | select(.role == \"router\") | .subnets[] | select(.name == \"$subnet\") | .network" "$BASE_DIR/topology/nodes.yml" | sed 's/0\/24/1/')
 
-        echo "🌐 Conectando $node ($ip) a la subred $subnet..."
+        # Definimos nombres estandarizados
+        local if_en_nodo="eth0"
+        local if_en_router="v-${node:0:12}" # Recortamos a 12 char para evitar el límite de 15 de Linux
 
-        # Nombres de las interfaces del cable
-        local veth_node="eth0"
-        local veth_core="v-${node}" # Nombre único en el router, ej: v-USR-RH-1
-
-        # 2. Crear el cable Veth
-        ip link add $veth_node type veth peer name $veth_core
-
-        # 3. Mover un extremo al Nodo y el otro al Router
-        ip link set $veth_node netns $node
-        ip link set $veth_core netns CORE-GW
-
-        # 4. Configurar IP en el Nodo y levantarlo
-        ip netns exec $node ip addr add $ip/24 dev $veth_node
-        ip netns exec $node ip link set $veth_node up
+        echo "🌐 Conectando $node ↔ CORE-GW..."
         
-        # 5. Configurar IP en el lado del Router (Gateway) y levantarlo
-        # Solo lo hacemos si la IP no existe ya en el router (idempotencia)
+        # USAMOS TU LÓGICA DINÁMICA
+        ensure_cable "$node" "$if_en_nodo" "CORE-GW" "$if_en_router"
+
+        # Configuración de IPs y Rutas
+        ip netns exec "$node" ip addr add "$ip/24" dev "$if_en_nodo" 2>/dev/null
+        
+        # Solo poner la IP en el router si esa subred no tiene interfaz aún
         if ! ip netns exec CORE-GW ip addr show | grep -q "$gw_ip"; then
-            ip netns exec CORE-GW ip addr add $gw_ip/24 dev $veth_core
+            ip netns exec CORE-GW ip addr add "$gw_ip/24" dev "$if_en_router"
         fi
-        ip netns exec CORE-GW ip link set $veth_core up
 
-        # 6. Configurar la Ruta por Defecto en el Nodo
-        ip netns exec $node ip route add default via $gw_ip
-        
-        echo "   ✅ Cable estirado y configurado."
+        # Ruta por defecto
+        ip netns exec "$node" ip route add default via "$gw_ip" 2>/dev/null
     done
 
-    # 7. Habilitar Forwarding en el CORE-GW (Vital para que sea Router)
+    # Habilitar Forwarding
     ip netns exec CORE-GW sysctl -w net.ipv4.ip_forward=1 > /dev/null
 }
