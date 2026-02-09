@@ -6,17 +6,24 @@ nodes:
         network: 10.0.1.0/24
       - name: USERS
         network: 10.0.2.0/24
-  
+
   - name: SVC-WEB
     role: server
     subnet: MGMT
     ip: 10.0.1.10
     services: [80, 443]
+    # Quién puede entrar a este servidor
+    allow_inbound:
+      - from: USR-RH-1
+        port: 80
+      - from: USR-RH-2
+        port: 443
 
   - name: USR-RH-1
     role: client
     subnet: USERS
     ip: 10.0.2.10
+    # Un cliente no suele ofrecer servicios, así que no tiene allow_inbound
 
   - name: USR-RH-2
     role: client

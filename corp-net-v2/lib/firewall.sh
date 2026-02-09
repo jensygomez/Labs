@@ -1,45 +1,46 @@
 #!/bin/bash
-# corp-net-v2/lib/firewall.sh
-# Orquestador de seguridad distribuida
+# lib/firewall.sh - Microsegmentación Dinámica
 
 apply_firewall() {
-    echo "🛡️  Iniciando Microsegmentación de red..."
+    echo "🛡️  Configurando Microsegmentación Zero-Trust..."
 
     local nodes=$($YQ '.nodes[].name' "$BASE_DIR/topology/nodes.yml")
 
     for node in $nodes; do
-        echo "   🔒 Aplicando políticas locales en: $node"
-        
-        # 1. Limpiar reglas actuales del nodo
+        echo "   🔒 Nodo: $node"
+
+        # 1. Reset y Políticas base (Cerrar todo)
         ip netns exec "$node" iptables -F
-        
-        # 2. Configurar política por defecto
         ip netns exec "$node" iptables -P INPUT DROP
         ip netns exec "$node" iptables -P FORWARD DROP
         ip netns exec "$node" iptables -P OUTPUT ACCEPT
-
-        # 3. Reglas básicas comunes (Loopback y Estado)
+        
+        # 2. Permitir lo esencial (Loopback y conexiones establecidas)
         ip netns exec "$node" iptables -A INPUT -i lo -j ACCEPT
         ip netns exec "$node" iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-        
-        # 4. Permitir PING (Opcional, para tus pruebas)
-        ip netns exec "$node" iptables -A INPUT -p icmp -j ACCEPT
+        ip netns exec "$node" iptables -A INPUT -p icmp -j ACCEPT # Ping permitido para tests
 
-        # 5. DINAMISMO: Abrir puertos del YAML para este nodo específico
-        local ports=$($YQ ".nodes[] | select(.name == \"$node\") | .services[]" "$BASE_DIR/topology/nodes.yml" 2>/dev/null)
-        
-        for port in $ports; do
-            if [ "$port" != "null" ]; then
-                ip netns exec "$node" iptables -A INPUT -p tcp --dport "$port" -j ACCEPT
-                echo "      ✅ Puerto $port abierto en $node"
-            fi
-        done
+        # 3. Leer reglas de acceso (Microsegmentación)
+        # Obtenemos cuántas reglas de 'allow_inbound' tiene este nodo
+        local num_rules=$($YQ ".nodes[] | select(.name == \"$node\") | .allow_inbound | length" "$BASE_DIR/topology/nodes.yml")
+
+        if [ "$num_rules" -gt 0 ]; then
+            for (( i=0; i<$num_rules; i++ )); do
+                local remote_name=$($YQ ".nodes[] | select(.name == \"$node\") | .allow_inbound[$i].from" "$BASE_DIR/topology/nodes.yml")
+                local port=$($YQ ".nodes[] | select(.name == \"$node\") | .allow_inbound[$i].port" "$BASE_DIR/topology/nodes.yml")
+                
+                # Buscamos la IP del nodo que quiere entrar
+                local remote_ip=$($YQ ".nodes[] | select(.name == \"$remote_name\") | .ip" "$BASE_DIR/topology/nodes.yml")
+
+                if [ "$remote_ip" != "null" ]; then
+                    ip netns exec "$node" iptables -A INPUT -s "$remote_ip" -p tcp --dport "$port" -j ACCEPT
+                    echo "      ✅ Acceso permitido: $remote_name ($remote_ip) -> Puerto $port"
+                fi
+            done
+        fi
     done
-}
-configure_router_security() {
-    echo "🌐 Configurando políticas de tránsito en CORE-GW..."
-    # Por ahora, permitimos que el tráfico fluya (FORWARD ACCEPT) 
-    # pero solo si ya está establecida la conexión o es tráfico nuevo permitido
-    ip netns exec CORE-GW iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-    # Aquí es donde podrías decir: "Solo permite de USERS a MGMT puerto 80"
+
+    # 4. El Router (CORE-GW) debe ser permisivo en el tránsito (FORWARD) 
+    # para dejar que los nodos decidan en sus propias fronteras.
+    ip netns exec CORE-GW iptables -P FORWARD ACCEPT
 }
