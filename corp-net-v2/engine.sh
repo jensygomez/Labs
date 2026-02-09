@@ -2,7 +2,7 @@
 # engine.sh - Orquestador CorpNet-v2
 
 # 1. --- DIRECTORIO BASE Y VARIABLES ---
-BASE_DIR=$(dirname "$(readlink -f "$0")")
+BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
 BIN_DIR="$BASE_DIR/.bin"
 YQ="$BIN_DIR/yq"
 YQ_VERSION="v4.35.2"

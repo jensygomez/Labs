@@ -5,19 +5,14 @@
 YQ="./.bin/yq"
 
 create_namespaces() {
-    echo "📂 Leyendo nodos desde topology/nodes.yml..."
-    
-    # Extraer nombres de nodos del YAML
-    local nodes=$($YQ '.nodes[].name' topology/nodes.yml)
+    # Usamos BASE_DIR para encontrar siempre el YAML y el binario
+    local nodes=$($YQ '.nodes[].name' "$BASE_DIR/topology/nodes.yml")
 
     for name in $nodes; do
         if ! ip netns list | grep -q "$name"; then
             ip netns add "$name"
-            # Importante para que servicios como Nginx o DNS funcionen internamente
             ip netns exec "$name" ip link set lo up
             echo "   ✅ Namespace [$name] creado."
-        else
-            echo "   ℹ️  Namespace [$name] ya existe, omitiendo..."
         fi
     done
 }
