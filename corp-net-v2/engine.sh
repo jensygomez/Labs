@@ -10,6 +10,7 @@ YQ_URL="https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux
 
 # Exportamos BASE_DIR para que las librerías lo vean
 export BASE_DIR
+export YQ
 
 # 2. --- AUTO-INSTALACIÓN DE DEPENDENCIAS ---
 install_dependencies() {
@@ -46,7 +47,7 @@ deploy_lab() {
     echo "🚀 Iniciando despliegue de CorpNet-v2..."
     create_namespaces   
     setup_network      
-    # apply_firewall    # Descomentar cuando lo tengamos listo
+    apply_firewall  
     echo -e "\n✨ Red establecida y ruteo configurado."
     echo "✨ Laboratorio desplegado correctamente."
     read -p "Presiona Enter para volver..."
