@@ -2,6 +2,36 @@
 # engine.sh - Orquestador CorpNet-v2
 # DEBUG=1 sudo bash corp-net-v2/engine.sh 
 
+#               ARQUITECTURA EMPRESARIAL CORPNET-V2
+#              (Segmentación por Switches Departamentales)
+#
+#                            ┌─────────────────┐
+#                            │     CORE-GW     │
+#                            │  (Router / FW)  │
+#                            └────────┬────────┘
+#                                     │
+#           ┌─────────────────────────┴────────────────────────┐
+#           │                                                 │
+#    [VLAN 10 - MGMT]                                  [VLAN 20 - USERS]
+#     Subred 10.0.1.0                                   Subred 10.0.2.0
+#           │                                                 │
+#  ┌────────┴────────┐               ┌────────────────────────┴────────────────────────┐
+#  │  SWITCH SERVER  │               │                 SWITCH CORE / AGG               │
+#  └────────┬────────┘               └───────────┬───────────────────────────┬─────────┘
+#           │                                    │                           │
+#  ┌────────┴────────┐              ┌────────────┴────┐             ┌────────┴────────┐
+#  │     SVC-WEB     │              │   SWITCH RH     │             │    SWITCH IT    │
+#  │ (Portal Corp)   │              │ (Acceso Empleados)            │ (Acceso Técnico)│
+#  └─────────────────┘              └────────┬────────┘             └────────┬────────┘
+#                                            │                               │
+#                            ┌───────────────┴───────┐           ┌───────────┴───────────┐
+#                            │  (Capacidad: n users) │           │ (Devs, Infra, NOC)    │
+#                            │   - USR-RH-1          │           │  - USR-IT-ADMIN       │
+#                            │   - USR-RH-2          │           │  - USR-IT-DEV         │
+#                            │   - ...               │           │  - USR-IT-NOC         │
+#                            └───────────────────────┘           └───────────────────────┘
+
+
 # 1. --- DIRECTORIO BASE Y VARIABLES ---
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
 BIN_DIR="$BASE_DIR/.bin"
