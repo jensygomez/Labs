@@ -20,12 +20,15 @@ install_dependencies() {
 
 # --- IMPORTAR LIBRERÍAS (Después de instalar dependencias) ---
 # Nota: Aquí sourcearemos tus libs que iremos creando
-# source ./lib/core.sh
+source ./lib/core.sh
+source ./lib/network.sh
 
 # --- FUNCIONES DE ACCIÓN ---
 deploy_lab() {
     echo "🚀 Iniciando despliegue de CorpNet-v2..."
-    # Aquí irá: create_namespaces, create_links, setup_routing...
+    create_namespaces   # De lib/core.sh
+    setup_network      # De lib/network.sh
+    echo "✨ Red establecida y ruteo configurado."
     echo "✨ Laboratorio desplegado correctamente."
     read -p "Presiona Enter para volver..."
 }
