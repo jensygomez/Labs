@@ -6,31 +6,40 @@ setup_web_service() {
     local ns="SVC-WEB"
     local cert_src="$BASE_DIR/lib/services/web/certs"
     local web_root="/var/www/html"
+    local template="$BASE_DIR/lib/services/web/html/index.html"
     
-    # 1. Generar certificados en el host
+    # 1. Asegurar certificados
     generate_certs
 
-    # 2. Preparar carpetas en el Namespace
-    ip netns exec "$ns" mkdir -p $web_root /etc/nginx/ssl /var/lib/nginx /var/log/nginx
+    # 2. Limpieza total de procesos previos en el NS para evitar bloqueos
+    ip netns exec "$ns" pkill -9 nginx 2>/dev/null
 
-    # 3. PROCESAR HTML DINÁMICO
-    # Leemos la plantilla y reemplazamos las variables antes de enviarla al namespace
-    local template="$BASE_DIR/lib/services/web/html/index.html"
-    local deploy_time=$(date +'%d/%m/%Y %H:%M:%S')
+    # 3. Preparar estructura de carpetas dentro del Namespace
+    ip netns exec "$ns" mkdir -p $web_root /etc/nginx/ssl /var/log/nginx /var/lib/nginx
+
+    # 4. PROCESAR HTML DINÁMICO (Método Seguro)
+    local deploy_time=$(date +'%H:%M:%S')
     
-    # Usamos sed para inyectar los datos reales en las "marcas" del HTML
-    cat "$template" | \
-        sed "s/\${NODE_NAME}/$ns/g" | \
-        sed "s/\${DEPLOY_DATE}/$deploy_time/g" | \
-        ip netns exec "$ns" tee $web_root/index.html > /dev/null
+    # Creamos el archivo final en el host reemplazando las variables
+    sed -e "s/\${NODE_NAME}/$ns/g" \
+        -e "s/\${DEPLOY_DATE}/$deploy_time/g" \
+        "$template" > /tmp/index_final.html
+    
+    # Lo movemos al interior del namespace
+    cat /tmp/index_final.html | ip netns exec "$ns" tee $web_root/index.html > /dev/null
+    rm /tmp/index_final.html
 
-    # 4. Inyectar Certificados
+    # 5. Inyectar Certificados SSL
     cat "$cert_src/server.crt" | ip netns exec "$ns" tee /etc/nginx/ssl/server.crt > /dev/null
     cat "$cert_src/server.key" | ip netns exec "$ns" tee /etc/nginx/ssl/server.key > /dev/null
 
-    # 5. Lanzar Nginx (Limpiando procesos previos si existen)
-    ip netns exec "$ns" pkill nginx 2>/dev/null
+    # 6. Lanzar Nginx
+    # Importante: Usamos la ruta absoluta al config
     ip netns exec "$ns" nginx -c "$BASE_DIR/lib/services/web/nginx.conf" -g "daemon on;"
     
-    echo "✅ Dashboard dinámico y Nginx HTTPS desplegado en $ns."
+    if [ $? -eq 0 ]; then
+        echo "✅ Dashboard Dinámico y Nginx HTTPS (443) activo en $ns."
+    else
+        echo "❌ Error al iniciar Nginx. Revisa la configuración."
+    fi
 }
