@@ -1,9 +1,7 @@
 #!/bin/bash
 # network-engine/engine.sh
 set -Eeo pipefail
-
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
-
 echo "🚀 Iniciando engine..." >&2
 
 # ------------------------------------------------------------------------------
@@ -33,14 +31,17 @@ declare -A FW_RULES
 FW_NAMESPACES=()
 
 # ------------------------------------------------------------------------------
-# 3. Cargar configuraciones de firewall
+# 3. Cargar configuraciones de firewall DINÁMICAMENTE
 # ------------------------------------------------------------------------------
-load_component "topology/firewall/base.conf"
-load_component "topology/firewall/core-edge.conf"
-load_component "topology/firewall/core-mgmt.conf"
-load_component "topology/firewall/core-svc.conf"
-load_component "topology/firewall/core-adm.conf"
-load_component "topology/firewall/edge-1.conf"
+# Primero cargar base.conf si existe
+[[ -f "$BASE_DIR/topology/firewall/base.conf" ]] && load_component "topology/firewall/base.conf"
+
+# Luego cargar todos los demás .conf en firewall/ (excepto base.conf)
+for fw_conf in "$BASE_DIR"/topology/firewall/*.conf; do
+  [[ -f "$fw_conf" ]] || continue
+  [[ "$(basename "$fw_conf")" == "base.conf" ]] && continue
+  load_component "${fw_conf#"$BASE_DIR"/}"
+done
 
 # ------------------------------------------------------------------------------
 # 4. Carga dinámica de routing/*.conf
@@ -50,9 +51,14 @@ for routing_conf in "$BASE_DIR"/topology/routing/*.conf; do
 done
 
 # ------------------------------------------------------------------------------
-# 5. Cargar TODAS las librerías (primitivas del engine)
+# 5. Guardia de root
 # ------------------------------------------------------------------------------
 load_component "lib/guard.sh"
+require_root
+
+# ------------------------------------------------------------------------------
+# 6. Librerías de funciones
+# ------------------------------------------------------------------------------
 load_component "lib/netns.sh"
 load_component "lib/links.sh"
 load_component "lib/addressing.sh"
@@ -65,48 +71,23 @@ load_component "lib/services.sh"
 load_component "lib/idempotency.sh"
 
 # ------------------------------------------------------------------------------
-# 6. Validar privilegios
+# 7. Control de idempotencia
 # ------------------------------------------------------------------------------
-require_root
-echo "🔍 Privilegios de root verificados." >&2
+echo "🔍 Privilegios de root verificados."
 
 # ------------------------------------------------------------------------------
-# 7. Ejecutor estándar de fases
-# Cada fase DEBE definir run_phase()
+# 8. Ejecutar fases dinámicamente
 # ------------------------------------------------------------------------------
-run() {
-  local phase="$1"
-  local phase_path="$BASE_DIR/phases/$phase"
+echo "📦 Ejecutando fases dinámicamente..."
 
-  echo "📦 Ejecutando fase: $phase" >&2
-
-  if [[ ! -f "$phase_path" ]]; then
-    echo "❌ Error: Archivo de fase $phase no encontrado." >&2
+for phase in "$BASE_DIR"/phases/*.sh; do
+  [[ -f "$phase" ]] || continue
+  echo "📦 Ejecutando fase: $(basename "$phase")"
+  source "$phase"
+  run_phase || {
+    echo "❌ ERROR en fase $(basename "$phase")" >&2
     exit 1
-  fi
-
-  source "$phase_path"
-
-  if ! declare -F run_phase >/dev/null; then
-    echo "❌ Error: $phase no define la función run_phase()" >&2
-    exit 1
-  fi
-
-  run_phase
-  unset -f run_phase
-}
-
-# ------------------------------------------------------------------------------
-# 8. Ejecución dinámica de fases (orden = prefijo numérico)
-# ------------------------------------------------------------------------------
-echo "📦 Ejecutando fases dinámicamente..." >&2
-
-shopt -s nullglob
-for phase in "$BASE_DIR"/phases/[0-9][0-9]-*.sh \
-             "$BASE_DIR"/phases/[0-9][0-9][0-9]-*.sh; do
-  run "$(basename "$phase")"
+  }
 done
-shopt -u nullglob
 
-# ------------------------------------------------------------------------------
 echo "✅ Topología convergida completamente"
