@@ -141,6 +141,7 @@ show_menu() {
     echo "1) 🚀 Desplegar Infraestructura"
     echo "2) 🧹 Limpiar Laboratorio (Destroy)"
     echo "3) 🔍 Status de la Red (Namespaces/IPs)"
+    echo "4) 🖥️  SOC Monitor (Acceso seguro HTTPS)"
     echo "0) 🚪 Salir"
     echo "------------------------------------------"
     read -p "Selecciona una opción: " opt
@@ -149,11 +150,15 @@ show_menu() {
         1) deploy_lab ;;
         2) destroy_lab ;;
         3) show_status ;;
+        4) 
+            # Cargamos y ejecutamos la lógica del monitor
+            source "$BASE_DIR/lib/services/web/monitor.sh"
+            check_monitor
+            ;;
         0) exit 0 ;;
         *) echo "❌ Opción inválida."; sleep 1 ;;
     esac
 }
-
 # 7. --- BUCLE PRINCIPAL ---
 while true; do
     show_menu
