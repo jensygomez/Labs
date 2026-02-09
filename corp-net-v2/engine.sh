@@ -34,7 +34,7 @@ install_dependencies
 if [ -f "$BASE_DIR/lib/core.sh" ] && [ -f "$BASE_DIR/lib/network.sh" ]; then
     source "$BASE_DIR/lib/core.sh"
     source "$BASE_DIR/lib/network.sh"
-    # source "$BASE_DIR/lib/firewall.sh" # Descomentar cuando lo creemos
+    source "$BASE_DIR/lib/firewall.sh" 
 else
     echo "❌ Error: No se encontraron las librerías en $BASE_DIR/lib/"
     exit 1
