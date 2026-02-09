@@ -15,12 +15,32 @@ export YQ
 
 # 2. --- AUTO-INSTALACIÓN DE DEPENDENCIAS ---
 install_dependencies() {
+    # A. Instalamos yq (Binario local para el script)
     if [ ! -f "$YQ" ]; then
         echo "📥 Preparando dependencias locales (yq)..."
         mkdir -p "$BIN_DIR"
-        curl -sL "$YQ_URL" -o "$YQ"
-        chmod +x "$YQ"
-        echo "✅ Dependencias listas."
+        if curl -sL "$YQ_URL" -o "$YQ"; then
+            chmod +x "$YQ"
+            echo "✅ yq listo."
+        else
+            echo "❌ Error descargando yq. Verifica internet."
+            exit 1
+        fi
+    fi
+
+    # B. Instalamos paquetes del sistema (Nginx para el server y Lynx para el test)
+    # Verificamos si nginx O lynx faltan
+    if ! command -v nginx &> /dev/null || ! command -v lynx &> /dev/null; then
+        echo "📥 Instalando paquetes del sistema (nginx, lynx)..."
+        # Usamos -y para que no pida confirmación
+        dnf install -y nginx lynx &> /dev/null
+        
+        if [ $? -eq 0 ]; then
+            echo "✅ Paquetes de sistema instalados."
+        else
+            echo "❌ Error instalando paquetes. ¿Eres root?"
+            exit 1
+        fi
     fi
 }
 
