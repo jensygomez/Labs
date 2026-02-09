@@ -62,23 +62,48 @@ destroy_lab() {
 
 show_status() {
     clear
-    echo "🔍 --- [ STATUS DE LA RED ] ---"
+    echo -e "\e[1;34m===============================================================\e[0m"
+    echo -e "🔍 \e[1;37m        ESTADO GLOBAL DE RED Y SEGURIDAD (ZERO-TRUST)\e[0m"
+    echo -e "\e[1;34m===============================================================\e[0m"
+
     local namespaces=$(ip netns list | cut -d' ' -f1)
     
     if [ -z "$namespaces" ]; then
-        echo "⚠️  No hay namespaces activos."
+        echo -e "\n  \e[1;31m⚠️  No hay infraestructura desplegada.\e[0m"
     else
         for ns in $namespaces; do
-            echo -e "\n📦 Nodo: \e[1;32m$ns\e[0m"
-            # Mostrar IPs
-            echo -n "   🌐 IPs: "
-            ip netns exec "$ns" ip -4 addr show scope global | awk '{print $2}' | xargs
-            # Mostrar Rutas principales
-            echo -n "   🛣️  Ruta Default: "
-            ip netns exec "$ns" ip route show default | awk '{print $3}'
+            echo -e "\n\e[1;32m📦 Nodo: $ns\e[0m"
+            
+            # 1. Información de Red
+            local ips=$(ip netns exec "$ns" ip -4 addr show scope global | awk '{print $2}' | xargs)
+            local gw=$(ip netns exec "$ns" ip route show default | awk '{print $3}')
+            echo -e "   \e[1;37m🌐 Red:\e[0m  IP(s): [ ${ips:-N/A} ]  |  GW: [ ${gw:-None} ]"
+
+            # 2. Matriz de Seguridad (Microsegmentación)
+            echo -e "   \e[1;37m🛡️  Políticas Inbound (Firewall):\e[0m"
+            
+            # Extraer reglas ACCEPT de iptables que tengan origen específico
+            local rules=$(ip netns exec "$ns" iptables -L INPUT -n -v | grep "ACCEPT" | grep -E "[0-9]+\.[0-9]+")
+            
+            if [ -z "$rules" ]; then
+                # Si no hay reglas específicas, revisamos si es el Router o está todo cerrado
+                if [ "$ns" == "CORE-GW" ]; then
+                    echo -e "      \e[0;33m⚡ Router: Tránsito Permitido (Forwarding UP)\e[0m"
+                else
+                    echo -e "      \e[0;90m🔒 Locked: Solo tráfico de salida permitido\e[0m"
+                fi
+            else
+                # Formatear las reglas encontradas
+                echo "$rules" | while read -r line; do
+                    local src=$(echo "$line" | awk '{print $8}')
+                    local proto=$(echo "$line" | awk '{print $4}')
+                    local port=$(echo "$line" | grep "dpt:" | sed 's/.*dpt://')
+                    echo -e "      \e[0;36m-> Permite $proto/$port desde $src\e[0m"
+                done
+            fi
         done
     fi
-    echo -e "\n------------------------------------------"
+    echo -e "\n\e[1;34m===============================================================\e[0m"
     read -p "Presiona Enter para volver..."
 }
 
