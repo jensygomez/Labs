@@ -1,11 +1,23 @@
 #!/bin/bash
-# engine.sh - Orquestador CorpNet-v2 con menú interactivo
+# engine.sh - Orquestador CorpNet-v2
 
-# --- CONFIGURACIÓN ---
-BIN_DIR="./.bin"
+# --- DIRECTORIO BASE ---
+# Esto asegura que el script encuentre las libs aunque lo ejecutes desde fuera
+BASE_DIR=$(dirname "$(readlink -f "$0")")
+BIN_DIR="$BASE_DIR/.bin"
 YQ="$BIN_DIR/yq"
-YQ_VERSION="v4.35.2"
-YQ_URL="https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
+
+# --- IMPORTAR LIBRERÍAS ---
+# Usamos la ruta absoluta calculada arriba
+if [ -f "$BASE_DIR/lib/core.sh" ] && [ -f "$BASE_DIR/lib/network.sh" ]; then
+    source "$BASE_DIR/lib/core.sh"
+    source "$BASE_DIR/lib/network.sh"
+else
+    echo "❌ Error: No se encontraron las librerías en $BASE_DIR/lib/"
+    exit 1
+fi
+
+# ... resto del código (install_dependencies, etc) ...
 
 # --- AUTO-INSTALACIÓN DE DEPENDENCIAS ---
 install_dependencies() {
@@ -18,10 +30,7 @@ install_dependencies() {
     fi
 }
 
-# --- IMPORTAR LIBRERÍAS (Después de instalar dependencias) ---
-# Nota: Aquí sourcearemos tus libs que iremos creando
-source ./lib/core.sh
-source ./lib/network.sh
+
 
 # --- FUNCIONES DE ACCIÓN ---
 deploy_lab() {
