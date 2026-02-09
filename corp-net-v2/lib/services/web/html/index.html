@@ -1,15 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>CorpNet V2 - Portal Interno</title>
+    <meta charset="UTF-8">
+    <style>
+        body { background-color: #1a1a1a; color: #00ff00; font-family: monospace; padding: 20px; }
+        .header { border-bottom: 2px solid #00ff00; margin-bottom: 20px; }
+        .card { border: 1px solid #444; padding: 15px; margin-top: 10px; background: #252525; }
+        .info { color: #00bcff; }
+    </style>
 </head>
 <body>
-    <h1>🚀 Servidor Web de Producción</h1>
-    <hr>
-    <p>Este sitio es accesible solo para el departamento de <b>Recursos Humanos</b>.</p>
-    <ul>
-        <li>Estado del Firewall: <span style="color: green;">Activo</span></li>
-        <li>Protocolo: HTTP (Próximamente HTTPS)</li>
-    </ul>
+    <div class="header">
+        <h1>🚀 CORPNET-V2 :: CENTRAL COMMAND</h1>
+        <p>SISTEMA DE SEGURIDAD ZERO-TRUST ACTIVO</p>
+    </div>
+
+    <div class="card">
+        <h3>📊 ESTADO DEL NODO</h3>
+        <p><b>Identificador:</b> <span class="info">${NODE_NAME}</span></p>
+        <p><b>Protocolo:</b> <span class="info">HTTPS (TLS 1.3)</span></p>
+        <p><b>Despliegue:</b> <span class="info">${DEPLOY_DATE}</span></p>
+    </div>
+
+    <div class="card">
+        <h3>🛡️ SEGURIDAD</h3>
+        <p>Origen: <span style="color:white; background:green; padding:0 5px;">CONEXIÓN CIFRADA</span></p>
+    </div>
 </body>
 </html>
