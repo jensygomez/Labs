@@ -16,12 +16,55 @@
       debug:
         msg: "Configurando {{ ansible_distribution }} {{ ansible_distribution_version }} en {{ ansible_hostname }}"
     
+    # PRIMERO instalar TODO (paquetes, usuario, servicios)
     - include_tasks: tasks/01-packages.yml
     - include_tasks: tasks/02-ssh-user.yml
-    - include_tasks: tasks/03-network.yml
     - include_tasks: tasks/04-system.yml
     - include_tasks: tasks/05-prompt.yml
     
+    # LUEGO configurar red (pero NO activar todavía)
+    - name: "🔧 CONFIGURAR RED (preparar cambio a {{ static_ip }})"
+      include_tasks: tasks/03-network.yml
+    
+    # ⚠️ ⚠️ ⚠️ ADVERTENCIA: Esto puede desconectar ⚠️ ⚠️ ⚠️
+    - name: "⚠️  ADVERTENCIA: Aplicar nueva IP {{ static_ip }} (puede desconectar)"
+      debug:
+        msg: |
+          ⚠️  ⚠️  ⚠️  ADVERTENCIA CRÍTICA ⚠️  ⚠️  ⚠️
+          
+          Estás a punto de cambiar la IP a: {{ static_ip }}
+          IP actual de conexión SSH: {{ ansible_default_ipv4.address }}
+          
+          Si {{ static_ip }} != {{ ansible_default_ipv4.address }},
+          PROBABLEMENTE te desconectarás de esta sesión SSH.
+          
+          Recomendaciones:
+          1. Mantén otra terminal SSH lista para conectar a {{ static_ip }}
+          2. O usa la consola de VirtualBox/KVM
+          3. Presiona Ctrl+C ahora si no quieres continuar
+      when: ansible_default_ipv4.address != static_ip
+    
+    - name: "Aplicar nueva configuración de red (ASÍNCRONO)"
+      nmcli:
+        conn_name: "{{ ansible_default_ipv4.interface }}"
+        state: up
+      when: ansible_default_ipv4.address != static_ip
+      async: 45  # Da 45 segundos para reconexión
+      poll: 0    # No espera respuesta (continúa inmediatamente)
+      ignore_errors: yes  # Importante: si falla, seguimos
+    
+    - name: "Esperar 15 segundos para posible reconexión"
+      pause:
+        seconds: 15
+        prompt: |
+          Esperando 15 segundos tras cambio de IP...
+          
+          Si te desconectaste, intenta reconectar a:
+          ssh student@{{ static_ip }}
+          
+          Presiona Enter para continuar...
+      when: ansible_default_ipv4.address != static_ip
+      
     - name: Mostrar información de conexión
       debug:
         msg: |
