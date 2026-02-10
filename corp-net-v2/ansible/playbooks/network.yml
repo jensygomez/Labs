@@ -1,21 +1,80 @@
+# corp-net-v2/ansible/playbooks/network.yml
 - hosts: lab-vm
   become: true
+
+  vars:
+    nmcli_bin: /usr/bin/nmcli
+
   tasks:
 
+    # --------------------------------------------------
+    # DETECTAR INTERFAZ POR DEFECTO
+    # --------------------------------------------------
     - name: Detect default interface
-      command: ip route
-      register: iproute
+      command: ip -o route show default
+      register: default_route
       changed_when: false
 
-    - name: Extract interface
+    - name: Extract interface name
       set_fact:
-        iface: "{{ iproute.stdout | regex_search('default.* dev (\\S+)', '\\1') }}"
+        iface: "{{ default_route.stdout.split()[-1] }}"
 
-    - name: Prepare static IP (persistent)
+    - name: Fail if interface not detected
+      fail:
+        msg: "No se pudo detectar la interfaz de red por defecto"
+      when: iface is not defined or iface == ""
+
+    # --------------------------------------------------
+    # OBTENER CONEXIÓN DE NETWORKMANAGER
+    # --------------------------------------------------
+    - name: Get NetworkManager connection name
       command: >
-        nmcli connection modify {{ iface }}
+        {{ nmcli_bin }} -t -f NAME,DEVICE connection show --active
+      register: nm_connections
+      changed_when: false
+
+    - name: Extract NM connection for interface
+      set_fact:
+        nm_connection: >-
+          {{
+            nm_connections.stdout_lines
+            | select('search', ':' ~ iface ~ '$')
+            | first
+            | split(':')
+            | first
+          }}
+
+    - name: Fail if NM connection not found
+      fail:
+        msg: "No se encontró conexión NetworkManager para {{ iface }}"
+      when: nm_connection is not defined or nm_connection == ""
+
+    # --------------------------------------------------
+    # PREPARAR IP ESTÁTICA (NO ACTIVAR)
+    # --------------------------------------------------
+    - name: Prepare static IP configuration (persistent)
+      command: >
+        {{ nmcli_bin }} connection modify "{{ nm_connection }}"
         ipv4.method manual
         ipv4.addresses {{ static_ip }}/{{ netmask }}
         ipv4.gateway {{ gateway }}
         ipv4.dns "{{ dns_servers | join(',') }}"
         connection.autoconnect yes
+      register: nmcli_result
+      changed_when: "'successfully' in nmcli_result.stdout | lower"
+
+    # --------------------------------------------------
+    # RESUMEN
+    # --------------------------------------------------
+    - name: Show prepared network configuration
+      debug:
+        msg: |
+          📡 CONFIGURACIÓN DE RED PREPARADA
+          • Interfaz: {{ iface }}
+          • Conexión NM: {{ nm_connection }}
+          • Nueva IP: {{ static_ip }}/{{ netmask }}
+          • Gateway: {{ gateway }}
+          • DNS: {{ dns_servers }}
+
+          ⚠️ La IP NO se ha activado aún.
+          Se activará en el último paso controlado.

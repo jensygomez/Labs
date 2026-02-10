@@ -1,5 +1,7 @@
+# corp-net-v2/ansible/inventory.yml
 all:
   hosts:
     lab-vm:
       ansible_host: 192.168.122.100
       ansible_user: root
+      ansible_ssh_common_args: "-o StrictHostKeyChecking=no"

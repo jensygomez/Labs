@@ -1,21 +1,17 @@
----
 - hosts: lab-vm
   become: true
 
   vars:
     student_user: student
-    student_password: redhat
     student_ssh_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIByFDKwjMDeGJ5GRhXmZHa75h7dK9JcPHvWWtesSO3/x student@lab-3tier"
 
   tasks:
 
-    - name: Upgrade system
-      ansible.builtin.dnf:
-        name: "*"
-        state: latest
-
+    # --------------------------------------------------
+    # SISTEMA BASE
+    # --------------------------------------------------
     - name: Install base packages
-      ansible.builtin.dnf:
+      dnf:
         name:
           - iproute
           - nginx
@@ -25,92 +21,71 @@
           - nmap
           - htop
           - python3
-          - python3-passlib   # ← CLAVE para password_hash
+          - openssh-server
         state: present
 
+    # --------------------------------------------------
+    # USUARIO STUDENT
+    # --------------------------------------------------
     - name: Create student user
-      ansible.builtin.user:
+      user:
         name: "{{ student_user }}"
         groups: wheel
         shell: /bin/bash
-        password: "{{ student_password | password_hash('sha512') }}"
+        password: "{{ 'redhat' | password_hash('sha512') }}"
         create_home: yes
 
-    - name: Configure passwordless sudo for student
-      ansible.builtin.copy:
-        dest: "/etc/sudoers.d/{{ student_user }}"
-        content: "{{ student_user }} ALL=(ALL) NOPASSWD:ALL\n"
-        mode: "0440"
-        owner: root
-        group: root
-
-    - name: Create .ssh directory for student
-      ansible.builtin.file:
+    - name: Create .ssh directory
+      file:
         path: "/home/{{ student_user }}/.ssh"
         state: directory
         owner: "{{ student_user }}"
         group: "{{ student_user }}"
         mode: "0700"
 
-    - name: Install SSH authorized key for student
-      ansible.builtin.copy:
-        dest: "/home/{{ student_user }}/.ssh/authorized_keys"
-        content: "{{ student_ssh_key }}\n"
-        owner: "{{ student_user }}"
-        group: "{{ student_user }}"
-        mode: "0600"
+    - name: Install SSH public key for student
+      authorized_key:
+        user: "{{ student_user }}"
+        key: "{{ student_ssh_key }}"
 
-    - name: Enable IP forwarding
-      ansible.builtin.sysctl:
+    - name: Passwordless sudo for student
+      copy:
+        dest: /etc/sudoers.d/student
+        content: "student ALL=(ALL) NOPASSWD:ALL\n"
+        mode: "0440"
+
+    # --------------------------------------------------
+    # NETWORKING
+    # --------------------------------------------------
+    - name: Enable IP forwarding (persistente)
+      sysctl:
         name: net.ipv4.ip_forward
         value: "1"
-        sysctl_file: /etc/sysctl.d/99-lab.conf
         state: present
         reload: yes
 
-    - name: Configure SSH daemon
-      ansible.builtin.copy:
-        dest: /etc/ssh/sshd_config
-        owner: root
-        group: root
-        mode: "0600"
-        content: |
-          Port 22
-          Protocol 2
-          ListenAddress 0.0.0.0
-
-          # Host Keys
-          HostKey /etc/ssh/ssh_host_rsa_key
-          HostKey /etc/ssh/ssh_host_ecdsa_key
-          HostKey /etc/ssh/ssh_host_ed25519_key
-
-          # Authentication
-          PasswordAuthentication yes
-          PermitRootLogin yes
-          PubkeyAuthentication yes
-          AuthorizedKeysFile .ssh/authorized_keys
-          PermitEmptyPasswords no
-
-          # Security
-          LoginGraceTime 120
-          StrictModes no
-          MaxAuthTries 6
-          MaxSessions 20
-
-          # Features
-          UsePAM yes
-          X11Forwarding yes
-          PrintMotd yes
-          TCPKeepAlive yes
-          UseDNS no
-
-          # Subsystem
-          Subsystem sftp /usr/libexec/openssh/sftp-server
+    # --------------------------------------------------
+    # SSH HARDENING (SIN ROMPER ACCESO)
+    # --------------------------------------------------
+    - name: Ensure SSH settings
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^{{ item.key }}"
+        line: "{{ item.key }} {{ item.value }}"
+        create: yes
+        backup: yes
+      loop:
+        - { key: "Port", value: "22" }
+        - { key: "PermitRootLogin", value: "yes" }
+        - { key: "PasswordAuthentication", value: "yes" }
+        - { key: "PubkeyAuthentication", value: "yes" }
+        - { key: "AuthorizedKeysFile", value: ".ssh/authorized_keys" }
+        - { key: "UseDNS", value: "no" }
       notify: restart sshd
 
   handlers:
     - name: restart sshd
-      ansible.builtin.systemd:
+      systemd:
         name: sshd
         state: restarted
         enabled: true
