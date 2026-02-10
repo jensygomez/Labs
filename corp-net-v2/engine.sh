@@ -459,47 +459,87 @@ setup_base_vm() {
     
     read -p "Presiona Enter para volver al menú principal..."
 }
-
-# 7. --- MENÚ INTERACTIVO ---
-show_menu() {
-    clear
-    echo -e "${BLUE}==========================================${NC}"
-    echo -e "       ${GREEN}CORPNET-V2 - CONTROL PANEL${NC}         "
-    echo -e "${BLUE}==========================================${NC}"
-    echo "0) 🔧 Configurar VM Base (Ansible)"
-    echo "1) 🚀 Desplegar Infraestructura (RH + TI)"
-    echo "2) 🧹 Limpiar Laboratorio (Destroy)"
-    echo "3) 🔍 Status de la Red (Namespaces/IPs)"
-    echo "4) 🧪 Panel de Pruebas y Diagnóstico (YAML)"
-    echo "9) 🚪 Salir"
-    echo -e "${BLUE}------------------------------------------${NC}"
-    read -p "Selecciona una opción: " opt
-    
-    case $opt in
-        0) setup_base_vm ;;
-        1) deploy_lab ;;
-        2) destroy_lab ;;
-        3) show_status ;;
-        4) 
-            if [ -f "$BASE_DIR/lib/tester.sh" ]; then
-                source "$BASE_DIR/lib/tester.sh"
-                run_dynamic_tests
-            else
-                echo -e "${RED}❌ Error: No se encuentra el motor de pruebas${NC}"
-                sleep 2
-            fi
-            ;;
-        9) 
-            echo -e "${GREEN}¡Hasta pronto!${NC}"
-            exit 0
-            ;;
-        *) 
-            echo -e "${RED}❌ Opción inválida.${NC}"
-            sleep 1
-            ;;
-    esac
+# 6. --- DETECCIÓN DE CONTEXTO SIMPLIFICADA ---
+detect_context() {
+    # Retorna: "host" si estamos en el laptop, "vm" si estamos en la VM Rocky
+    if [ -f /etc/rocky-release ] || [ -f /etc/redhat-release ]; then
+        echo "vm"
+    else
+        echo "host"
+    fi
 }
 
+# 7. --- MENÚ INTELIGENTE SIMPLIFICADO ---
+show_menu() {
+    CONTEXT=$(detect_context)
+    
+    clear
+    echo "=========================================="
+    echo "       CORPNET-V2 - CONTROL PANEL         "
+    echo "=========================================="
+    
+    # Mostrar solo opción 0 si estamos en el host
+    if [ "$CONTEXT" = "host" ]; then
+        echo "0) 🔧 Configurar VM Base (Ansible desde Host)"
+        echo "   (Esta opción configura una VM Rocky remota)"
+        echo ""
+        echo "9) 🚪 Salir"
+        echo "------------------------------------------"
+        read -p "Selecciona una opción [0,9]: " opt
+        
+        case $opt in
+            0) setup_base_vm ;;
+            9) 
+                echo "¡Hasta pronto!"
+                exit 0
+                ;;
+            *) 
+                echo "❌ Opción inválida."
+                sleep 1
+                ;;
+        esac
+    else
+        # Estamos en la VM - mostrar todas las opciones del laboratorio
+        echo "1) 🚀 Desplegar Infraestructura (RH + TI)"
+        echo "2) 🧹 Limpiar Laboratorio (Destroy)"
+        echo "3) 🔍 Status de la Red (Namespaces/IPs)"
+        echo "4) 🧪 Panel de Pruebas y Diagnóstico (YAML)"
+        echo ""
+        echo "0) ⬅️  (Info: Para configurar VM, ejecuta desde tu laptop)"
+        echo "9) 🚪 Salir"
+        echo "------------------------------------------"
+        read -p "Selecciona una opción [1-4,9]: " opt
+        
+        case $opt in
+            1) deploy_lab ;;
+            2) destroy_lab ;;
+            3) show_status ;;
+            4) 
+                if [ -f "$BASE_DIR/lib/tester.sh" ]; then
+                    source "$BASE_DIR/lib/tester.sh"
+                    run_dynamic_tests
+                else
+                    echo "❌ Error: No se encuentra el motor de pruebas"
+                    sleep 2
+                fi
+                ;;
+            0) 
+                echo "ℹ️  Para configurar una nueva VM, ejecuta desde tu laptop:"
+                echo "   cd ~/Labs/corp-net-v2"
+                echo "   sudo ./engine.sh"
+                sleep 3
+                ;;
+            9) 
+                echo "¡Hasta pronto!"
+                exit 0
+                ;;
+            *) 
+                echo "❌ Opción inválida."
+                sleep 1
+                ;;
+        esac
+    fi
+}
 # 8. --- BUCLE PRINCIPAL ---
 while true; do
     show_menu
