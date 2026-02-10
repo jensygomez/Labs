@@ -1,43 +1,28 @@
+networks:
+  - name: br-mgmt
+    subnet: 10.0.1.0/24
+  - name: br-rh
+    subnet: 10.0.2.0/24  # Podemos segmentar más las IPs luego
+  - name: br-it
+    subnet: 10.0.3.0/24  # IT ahora tiene su propio segmento limpio
+
 nodes:
-  # --- INFRAESTRUCTURA CORE ---
   - name: CORE-GW
     role: router
-    subnets:
-      - name: MGMT
-        network: 10.0.1.0/24
-      - name: USERS
-        network: 10.0.2.0/24
+    # El router ahora tiene una "pata" en cada switch
+    interfaces: [br-mgmt, br-rh, br-it]
 
-  # --- SERVIDORES (ZONA MGMT) ---
   - name: SVC-WEB
     role: server
-    subnet: MGMT
+    bridge: br-mgmt
     ip: 10.0.1.10
-    services: [80, 443]
-    # Control de Acceso Granular
-    allow_inbound:
-      - from: USR-RH-1
-        port: 80        # RH-1 solo consulta via HTTP estándar
-      - from: USR-RH-2
-        port: 443       # RH-2 usa el canal seguro HTTPS
-      - from: USR-IT-ADMIN
-        port: 80        # El Admin de TI puede auditar ambos
-      - from: USR-IT-ADMIN
-        port: 443       # El Admin de TI tiene acceso total al Monitor
 
-  # --- CLIENTES: DEPARTAMENTO RRHH (ZONA USERS) ---
   - name: USR-RH-1
     role: client
-    subnet: USERS
+    bridge: br-rh
     ip: 10.0.2.10
 
-  - name: USR-RH-2
-    role: client
-    subnet: USERS
-    ip: 10.0.2.20
-
-  # --- CLIENTES: DEPARTAMENTO TI (ZONA USERS) ---
   - name: USR-IT-ADMIN
     role: client
-    subnet: USERS
-    ip: 10.0.2.100
+    bridge: br-it
+    ip: 10.0.3.100
