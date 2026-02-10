@@ -9,25 +9,19 @@
   dnf:
     name: epel-release
     state: present
-  register: epel_installed
 
-- name: Actualizar después de EPEL si se instaló
-  dnf:
-    name: "*"
-    state: latest
-    update_cache: yes
-  when: epel_installed.changed
-
-- name: Instalar paquetes base
+- name: Instalar paquetes base del laboratorio
   dnf:
     name: "{{ base_packages }}"
     state: present
+    update_cache: yes
 
-- name: Limpiar paquetes no usados
-  dnf:
-    autoremove: yes
-
-- name: Limpiar cache de dnf
-  shell: dnf clean all
-  args:
-    warn: no
+- name: Limpiar sistema
+  block:
+    - name: Eliminar paquetes no usados
+      dnf:
+        autoremove: yes
+    
+    - name: Limpiar cache de dnf
+      shell: "dnf clean all"
+  ignore_errors: yes
