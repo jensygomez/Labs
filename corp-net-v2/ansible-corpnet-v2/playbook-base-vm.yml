@@ -1,4 +1,5 @@
 ---
+# corp-net-v2/ansible-corpnet-v2/playbook-base-vm.yml
 - name: Configurar VM Rocky 9.7 para Laboratorio CorpNet-v2
   hosts: rocky-vm
   become: yes

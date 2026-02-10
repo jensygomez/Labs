@@ -1,5 +1,6 @@
 ---
 # Variables de configuración
+# corp-net-v2/ansible-corpnet-v2/vars/defaults.yml
 base_packages:
   # Redes y conectividad
   - iproute
