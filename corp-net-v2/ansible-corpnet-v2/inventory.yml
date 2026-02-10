@@ -1,0 +1,13 @@
+all:
+  hosts:
+    rocky-vm:
+      ansible_host: "{{ target_ip | default('192.168.122.100') }}"
+      ansible_user: root
+      ansible_ssh_pass: "{{ ssh_password | default('your_password') }}"
+  vars:
+    # Variables globales
+    student_ssh_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIByFDKwjMDeGJ5GRhXmZHa75h7dK9JcPHvWWtesSO3/x student@lab-3tier"
+    static_ip: "192.168.122.100"
+    netmask: "24"
+    gateway: "192.168.122.1"
+    dns_servers: ["8.8.8.8", "1.1.1.1"]
