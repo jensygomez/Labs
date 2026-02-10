@@ -31,6 +31,12 @@
 #                            │   - ...               │           │  - USR-IT-NOC         │
 #                            └───────────────────────┘           └───────────────────────┘
 
+# Colores para output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
 # 1. --- DIRECTORIO BASE Y VARIABLES ---
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -47,19 +53,19 @@ export YQ
 install_dependencies() {
     # A. Instalamos yq (Binario local para el script)
     if [ ! -f "$YQ" ]; then
-        echo "📥 Preparando dependencias locales (yq)..."
+        echo -e "${BLUE}📥 Preparando dependencias locales (yq)...${NC}"
         mkdir -p "$BIN_DIR"
         if curl -sL "$YQ_URL" -o "$YQ"; then
             chmod +x "$YQ"
-            echo "✅ yq listo."
+            echo -e "${GREEN}✅ yq listo.${NC}"
         else
-            echo "❌ Error descargando yq. Verifica internet."
+            echo -e "${RED}❌ Error descargando yq. Verifica internet.${NC}"
             exit 1
         fi
     fi
 
     # B. Instalamos paquetes del sistema
-    echo "📥 Verificando paquetes del sistema..."
+    echo -e "${BLUE}📥 Verificando paquetes del sistema...${NC}"
     
     # Lista completa de paquetes necesarios
     local required_packages=(
@@ -85,23 +91,23 @@ install_dependencies() {
     
     # Instalar solo los que faltan
     if [ ${#missing_packages[@]} -gt 0 ]; then
-        echo "📦 Instalando: ${missing_packages[*]}"
+        echo -e "${YELLOW}📦 Instalando: ${missing_packages[*]}${NC}"
         
         if dnf install -y "${missing_packages[@]}" &> /dev/null; then
-            echo "✅ Paquetes de sistema instalados."
+            echo -e "${GREEN}✅ Paquetes de sistema instalados.${NC}"
         else
-            echo "❌ Error instalando algunos paquetes. ¿Eres root?"
-            echo "   Paquetes faltantes: ${missing_packages[*]}"
+            echo -e "${RED}❌ Error instalando algunos paquetes. ¿Eres root?${NC}"
+            echo -e "${YELLOW}   Paquetes faltantes: ${missing_packages[*]}${NC}"
             exit 1
         fi
     else
-        echo "✅ Todos los paquetes ya están instalados."
+        echo -e "${GREEN}✅ Todos los paquetes ya están instalados.${NC}"
     fi
 }
 
 # 3. --- VERIFICACIÓN DE PRIVILEGIOS ---
 if [[ $EUID -ne 0 ]]; then
-   echo "❌ Error: Debes ejecutar como root (sudo)." 
+   echo -e "${RED}❌ Error: Debes ejecutar como root (sudo).${NC}" 
    exit 1
 fi
 
@@ -114,7 +120,7 @@ if [ -f "$BASE_DIR/lib/core.sh" ] && [ -f "$BASE_DIR/lib/network.sh" ]; then
     source "$BASE_DIR/lib/firewall.sh" 
     source "$BASE_DIR/lib/services/web/setup.sh"
 else
-    echo "❌ Error: No se encontraron las librerías en $BASE_DIR/lib/"
+    echo -e "${RED}❌ Error: No se encontraron las librerías en $BASE_DIR/lib/${NC}"
     exit 1
 fi
 
@@ -139,6 +145,7 @@ destroy_lab() {
     echo "🗑️  Sistema limpio."
     read -p "Presiona Enter para volver..."
 }
+
 show_status() {
     clear
     echo -e "\e[1;34m===============================================================\e[0m"
@@ -201,19 +208,119 @@ show_status() {
     echo -e "\n\e[1;34m===============================================================\e[0m"
     read -p "Presiona Enter para volver..."
 }
-# 6. --- MENÚ INTERACTIVO ---
-show_menu() {
+
+# 6. --- NUEVA FUNCIÓN: CONFIGURAR VM BASE CON ANSIBLE ---
+setup_base_vm() {
     clear
     echo "=========================================="
-    echo "       CORPNET-V2 - CONTROL PANEL         "
+    echo "   CONFIGURAR VM BASE (ANSIBLE)           "
     echo "=========================================="
+    
+    # Verificar si el directorio ansible existe
+    ANSIBLE_DIR="$BASE_DIR/ansible-corpnet-v2"
+    if [ ! -d "$ANSIBLE_DIR" ]; then
+        echo -e "${RED}❌ No se encuentra el directorio de Ansible${NC}"
+        echo -e "${YELLOW}   Esperado en: $ANSIBLE_DIR${NC}"
+        echo ""
+        echo -e "${BLUE}📁 Estructura esperada:${NC}"
+        echo "   corpnet-v2/"
+        echo "   ├── ansible-corpnet-v2/"
+        echo "   │   ├── setup-vm.sh"
+        echo "   │   ├── playbook-base-vm.yml"
+        echo "   │   └── ..."
+        echo "   └── engine.sh"
+        echo ""
+        read -p "Presiona Enter para continuar..."
+        return 1
+    fi
+    
+    # Verificar si Ansible está instalado en el host
+    if ! command -v ansible &> /dev/null; then
+        echo -e "${RED}❌ Ansible no está instalado en este sistema${NC}"
+        echo ""
+        echo -e "${YELLOW}Para instalar Ansible:${NC}"
+        echo "  Ubuntu/Debian: sudo apt install ansible sshpass"
+        echo "  Fedora/RHEL:   sudo dnf install ansible sshpass"
+        echo "  macOS:         brew install ansible"
+        echo ""
+        read -p "¿Deseas intentar instalar Ansible? (s/n): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Ss]$ ]]; then
+            if command -v apt &> /dev/null; then
+                sudo apt update && sudo apt install -y ansible sshpass
+            elif command -v dnf &> /dev/null; then
+                sudo dnf install -y ansible sshpass
+            elif command -v brew &> /dev/null; then
+                brew install ansible
+            else
+                echo -e "${YELLOW}⚠️ No se pudo detectar el gestor de paquetes${NC}"
+                echo "Instala Ansible manualmente y vuelve a intentar"
+            fi
+        else
+            return 1
+        fi
+    fi
+    
+    # Cambiar al directorio de Ansible
+    cd "$ANSIBLE_DIR" || return 1
+    
+    # Verificar si el script setup-vm.sh existe y es ejecutable
+    if [ ! -f "setup-vm.sh" ]; then
+        echo -e "${RED}❌ No se encuentra setup-vm.sh en $ANSIBLE_DIR${NC}"
+        read -p "Presiona Enter para continuar..."
+        return 1
+    fi
+    
+    if [ ! -x "setup-vm.sh" ]; then
+        chmod +x setup-vm.sh
+    fi
+    
+    echo -e "${GREEN}🔧 Preparándose para configurar una VM Rocky 9.7...${NC}"
+    echo ""
+    echo -e "${BLUE}📋 Requisitos de la VM:${NC}"
+    echo "   • Rocky Linux 9.7 instalado"
+    echo "   • Conexión a Internet"
+    echo "   • Usuario root con contraseña conocida"
+    echo "   • SSH habilitado"
+    echo ""
+    echo -e "${YELLOW}⚠️  IMPORTANTE: Este script se ejecuta desde TU HOST${NC}"
+    echo "   y configurará la VM de forma remota."
+    echo ""
+    
+    read -p "¿Continuar con la configuración? (s/n): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Ss]$ ]]; then
+        return 0
+    fi
+    
+    # Ejecutar el script de configuración
+    echo -e "${GREEN}🚀 Iniciando configuración...${NC}"
+    echo ""
+    
+    # Ejecutar el script - se puede pasar la IP como argumento
+    if [ -f "setup-vm.sh" ]; then
+        ./setup-vm.sh
+    else
+        echo -e "${RED}❌ Error: No se pudo ejecutar setup-vm.sh${NC}"
+    fi
+    
+    echo ""
+    read -p "Presiona Enter para volver al menú principal..."
+}
+
+# 7. --- MENÚ INTERACTIVO ---
+show_menu() {
+    clear
+    echo -e "${BLUE}==========================================${NC}"
+    echo -e "       ${GREEN}CORPNET-V2 - CONTROL PANEL${NC}         "
+    echo -e "${BLUE}==========================================${NC}"
     echo "0) 🔧 Configurar VM Base (Ansible)"
     echo "1) 🚀 Desplegar Infraestructura (RH + TI)"
     echo "2) 🧹 Limpiar Laboratorio (Destroy)"
     echo "3) 🔍 Status de la Red (Namespaces/IPs)"
     echo "4) 🧪 Panel de Pruebas y Diagnóstico (YAML)"
     echo "9) 🚪 Salir"
-    echo "------------------------------------------"
+    echo -e "${BLUE}------------------------------------------${NC}"
     read -p "Selecciona una opción: " opt
     
     case $opt in
@@ -226,35 +333,22 @@ show_menu() {
                 source "$BASE_DIR/lib/tester.sh"
                 run_dynamic_tests
             else
-                echo "❌ Error: No se encuentra el motor de pruebas"
+                echo -e "${RED}❌ Error: No se encuentra el motor de pruebas${NC}"
                 sleep 2
             fi
             ;;
-        9) exit 0 ;;
-        *) echo "❌ Opción inválida."; sleep 1 ;;
+        9) 
+            echo -e "${GREEN}¡Hasta pronto!${NC}"
+            exit 0
+            ;;
+        *) 
+            echo -e "${RED}❌ Opción inválida.${NC}"
+            sleep 1
+            ;;
     esac
 }
 
-setup_base_vm() {
-    echo "🔧 Configurando VM Base con Ansible..."
-    
-    # Solicitar IP de la VM
-    read -p "Ingresa la IP de la VM Rocky 9.7: " VM_IP
-    
-    # Cambiar al directorio de Ansible
-    cd "$BASE_DIR/ansible-corpnet-v2" || {
-        echo "❌ Directorio ansible-corpnet-v2 no encontrado"
-        sleep 2
-        return
-    }
-    
-    # Ejecutar script wrapper
-    ./setup-vm.sh "$VM_IP"
-    
-    echo "✅ Configuración completada. Presiona Enter para continuar..."
-    read
-}
-# 7. --- BUCLE PRINCIPAL ---
+# 8. --- BUCLE PRINCIPAL ---
 while true; do
     show_menu
 done
