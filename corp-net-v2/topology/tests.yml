@@ -1,10 +1,54 @@
 tests:
-  - name: "Portal Empleados (RRHH)"
+  # === TESTS DE CONECTIVIDAD BÁSICA ===
+  - name: "🔌 Ping Gateway desde RRHH-1"
     from: "USR-RH-1"
-    cmd: "lynx http://10.0.1.10"
-  - name: "Monitor de Seguridad (TI)"
+    cmd: "ping -c 3 10.0.2.1"
+  
+  - name: "🔌 Ping Gateway desde IT-ADMIN"
     from: "USR-IT-ADMIN"
-    cmd: "echo 'FORCE_SSL_PROMPT:YES' > /tmp/lynx.cfg && lynx -cfg=/tmp/lynx.cfg https://10.0.1.10"
-  - name: "Verificar Firewall (RH intentando entrar a IT)"
+    cmd: "ping -c 3 10.0.3.1"
+
+  # === TESTS DE ENRUTAMIENTO INTER-VLAN ===
+  - name: "🌐 RRHH-1 → SVC-WEB (Cross-VLAN)"
     from: "USR-RH-1"
-    cmd: "curl -m 3 -k https://10.0.1.10 || echo 'BLOQUEADO CORRECTAMENTE'"
+    cmd: "ping -c 3 10.0.1.10"
+  
+  - name: "🌐 IT-ADMIN → SVC-DNS (Cross-VLAN)"
+    from: "USR-IT-ADMIN"
+    cmd: "ping -c 3 10.0.1.53"
+
+  # === TESTS DE SERVICIOS (cuando nginx funcione) ===
+  - name: "🌐 HTTP: Portal RRHH (puerto 80)"
+    from: "USR-RH-1"
+    cmd: "curl -v -m 5 http://10.0.1.10 2>&1 | grep -E '(Connected|HTTP)'"
+  
+  - name: "🔒 HTTPS: Monitor IT (puerto 443)"
+    from: "USR-IT-ADMIN"
+    cmd: "curl -k -v -m 5 https://10.0.1.10 2>&1 | grep -E '(Connected|HTTP|SSL)'"
+
+  # === TESTS DE FIREWALL (microsegmentación) ===
+  - name: "🛡️ RRHH-1 bloqueado al puerto 443"
+    from: "USR-RH-1"
+    cmd: "timeout 3 curl -k https://10.0.1.10 || echo '✅ BLOQUEADO CORRECTAMENTE'"
+  
+  - name: "🛡️ RRHH-2 puede acceder puerto 443"
+    from: "USR-RH-2"
+    cmd: "curl -k -I -m 5 https://10.0.1.10 2>&1 | head -1"
+
+  - name: "🛡️ IT-ADMIN tiene acceso total"
+    from: "USR-IT-ADMIN"
+    cmd: "nc -zv -w 2 10.0.1.10 22 80 443 2>&1 | grep succeeded"
+
+  # === TESTS DE DNS (para futuro) ===
+  - name: "🔍 Consulta DNS a SVC-DNS"
+    from: "USR-RH-1"
+    cmd: "nslookup corp.local 10.0.1.53 || echo '⚠️ DNS no configurado aún'"
+
+  # === TESTS DE DIAGNÓSTICO ===
+  - name: "🔧 Ver rutas en RRHH-1"
+    from: "USR-RH-1"
+    cmd: "ip route show"
+  
+  - name: "🔧 Ver reglas iptables en SVC-WEB"
+    from: "SVC-WEB"
+    cmd: "iptables -L INPUT -n -v --line-numbers | head -15"

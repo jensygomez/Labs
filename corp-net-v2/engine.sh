@@ -58,19 +58,44 @@ install_dependencies() {
         fi
     fi
 
-    # B. Instalamos paquetes del sistema (Nginx para el server y Lynx para el test)
-    # Verificamos si nginx O lynx faltan
-    if ! command -v nginx &> /dev/null || ! command -v lynx &> /dev/null; then
-        echo "📥 Instalando paquetes del sistema (nginx, lynx)..."
-        # Usamos -y para que no pida confirmación
-        dnf install -y nginx lynx &> /dev/null
+    # B. Instalamos paquetes del sistema
+    echo "📥 Verificando paquetes del sistema..."
+    
+    # Lista completa de paquetes necesarios
+    local required_packages=(
+        "nginx"          # Servidor web para SVC-WEB
+        "lynx"           # Navegador de texto para tests
+        "curl"           # Tests HTTP/HTTPS
+        "nmap-ncat"      # Proporciona 'nc' (netcat) para tests de puertos
+        "bind-utils"     # Proporciona 'nslookup', 'dig' para tests DNS
+        "iputils"        # Proporciona 'ping' (usualmente ya instalado)
+        "iproute"        # Proporciona 'ip' command (usualmente ya instalado)
+        "iptables"       # Firewall (usualmente ya instalado)
+        "bridge-utils"   # Proporciona 'brctl' para gestión de bridges
+    )
+    
+    local missing_packages=()
+    
+    # Verificar qué paquetes faltan
+    for pkg in "${required_packages[@]}"; do
+        if ! rpm -q "$pkg" &> /dev/null; then
+            missing_packages+=("$pkg")
+        fi
+    done
+    
+    # Instalar solo los que faltan
+    if [ ${#missing_packages[@]} -gt 0 ]; then
+        echo "📦 Instalando: ${missing_packages[*]}"
         
-        if [ $? -eq 0 ]; then
+        if dnf install -y "${missing_packages[@]}" &> /dev/null; then
             echo "✅ Paquetes de sistema instalados."
         else
-            echo "❌ Error instalando paquetes. ¿Eres root?"
+            echo "❌ Error instalando algunos paquetes. ¿Eres root?"
+            echo "   Paquetes faltantes: ${missing_packages[*]}"
             exit 1
         fi
+    else
+        echo "✅ Todos los paquetes ya están instalados."
     fi
 }
 
