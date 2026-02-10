@@ -1,32 +1,48 @@
 ---
 # Variables de configuración
 base_packages:
+  # Redes y conectividad
   - iproute
   - iptables
   - iptables-nft
-  - nginx
-  - mariadb-server
-  - mariadb
+  - nftables
+  - bridge-utils
+  - net-tools
+  - iputils
+  - traceroute
+  - nmap
+  - tcpdump
   - dnsmasq
   - bind-utils
-  - net-tools
-  - curl
-  - wget
+  
+  # Servicios web
+  - nginx
+  - php-fpm
+  - php-mysqlnd
+  - mariadb-server
+  - mariadb
+  
+  # Herramientas de sistema
   - vim-enhanced
   - tree
-  - tcpdump
-  - nmap
+  - curl
+  - wget
+  - lynx
   - htop
   - cronie
   - openssh-server
   - openssh-clients
-  - lynx
-  - php-fpm
-  - php-mysqlnd
-  - traceroute
+  
+  # Desarrollo y scripting
   - python3
+  - python3-pip
+  - git
+  
+  # EPEL (si no está)
+  - epel-release
 
 student_user:
   name: student
   password: "redhat"
   sudo_nopasswd: true
+  ssh_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIByFDKwjMDeGJ5GRhXmZHa75h7dK9JcPHvWWtesSO3/x student@lab-3tier"

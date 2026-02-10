@@ -48,60 +48,42 @@ YQ_URL="https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux
 # Exportamos BASE_DIR para que las librerías lo vean
 export BASE_DIR
 export YQ
-
-# 2. --- AUTO-INSTALACIÓN DE DEPENDENCIAS ---
+# 2. --- VERIFICACIÓN DE YQ (ÚNICA DEPENDENCIA REALMENTE NECESARIA) ---
 install_dependencies() {
-    # A. Instalamos yq (Binario local para el script)
+    # Solo instalamos yq localmente para procesar YAML
+    # Los demás paquetes los instala ANSIBLE en la VM
+    
+    echo -e "${BLUE}📥 Verificando dependencias locales...${NC}"
+    
+    # A. Instalamos yq (Binario local para el script - necesario para tests YAML)
     if [ ! -f "$YQ" ]; then
-        echo -e "${BLUE}📥 Preparando dependencias locales (yq)...${NC}"
+        echo -e "${BLUE}📥 Descargando yq para procesamiento YAML...${NC}"
         mkdir -p "$BIN_DIR"
         if curl -sL "$YQ_URL" -o "$YQ"; then
             chmod +x "$YQ"
             echo -e "${GREEN}✅ yq listo.${NC}"
         else
             echo -e "${RED}❌ Error descargando yq. Verifica internet.${NC}"
-            exit 1
-        fi
-    fi
-
-    # B. Instalamos paquetes del sistema
-    echo -e "${BLUE}📥 Verificando paquetes del sistema...${NC}"
-    
-    # Lista completa de paquetes necesarios
-    local required_packages=(
-        "nginx"          # Servidor web para SVC-WEB
-        "lynx"           # Navegador de texto para tests
-        "curl"           # Tests HTTP/HTTPS
-        "nmap-ncat"      # Proporciona 'nc' (netcat) para tests de puertos
-        "bind-utils"     # Proporciona 'nslookup', 'dig' para tests DNS
-        "iputils"        # Proporciona 'ping' (usualmente ya instalado)
-        "iproute"        # Proporciona 'ip' command (usualmente ya instalado)
-        "iptables"       # Firewall (usualmente ya instalado)
-        "bridge-utils"   # Proporciona 'brctl' para gestión de bridges
-    )
-    
-    local missing_packages=()
-    
-    # Verificar qué paquetes faltan
-    for pkg in "${required_packages[@]}"; do
-        if ! rpm -q "$pkg" &> /dev/null; then
-            missing_packages+=("$pkg")
-        fi
-    done
-    
-    # Instalar solo los que faltan
-    if [ ${#missing_packages[@]} -gt 0 ]; then
-        echo -e "${YELLOW}📦 Instalando: ${missing_packages[*]}${NC}"
-        
-        if dnf install -y "${missing_packages[@]}" &> /dev/null; then
-            echo -e "${GREEN}✅ Paquetes de sistema instalados.${NC}"
-        else
-            echo -e "${RED}❌ Error instalando algunos paquetes. ¿Eres root?${NC}"
-            echo -e "${YELLOW}   Paquetes faltantes: ${missing_packages[*]}${NC}"
+            echo -e "${YELLOW}   yq es necesario para procesar archivos YAML de tests.${NC}"
             exit 1
         fi
     else
-        echo -e "${GREEN}✅ Todos los paquetes ya están instalados.${NC}"
+        echo -e "${GREEN}✅ yq ya está instalado.${NC}"
+    fi
+    
+    # B. Verificar que estamos en el contexto correcto
+    # Si se ejecuta desde laptop para opción Ansible, no necesitamos más
+    # Si se ejecuta desde VM para laboratorio, mostrar advertencia
+    if [[ "$0" == *"engine.sh"* ]] && [ "$1" != "--setup-vm" ]; then
+        # Verificar si estamos probablemente en una VM Rocky
+        if [ -f /etc/redhat-release ] || [ -f /etc/rocky-release ]; then
+            echo -e "${GREEN}✅ Ejecutando en VM Rocky - listo para laboratorio.${NC}"
+        else
+            echo -e "${YELLOW}⚠️  Ejecutando en sistema no-Rocky.${NC}"
+            echo -e "${YELLOW}   Este script está diseñado principalmente para Rocky Linux.${NC}"
+            echo -e "${YELLOW}   Para configurar una VM Rocky, usa la opción 0 del menú.${NC}"
+            sleep 2
+        fi
     fi
 }
 
@@ -208,7 +190,6 @@ show_status() {
     echo -e "\n\e[1;34m===============================================================\e[0m"
     read -p "Presiona Enter para volver..."
 }
-
 # 6. --- NUEVA FUNCIÓN: CONFIGURAR VM BASE CON ANSIBLE ---
 setup_base_vm() {
     clear
@@ -238,41 +219,155 @@ setup_base_vm() {
     if ! command -v ansible &> /dev/null; then
         echo -e "${RED}❌ Ansible no está instalado en este sistema${NC}"
         echo ""
-        echo -e "${YELLOW}Para instalar Ansible:${NC}"
-        echo "  Ubuntu/Debian: sudo apt install ansible sshpass"
-        echo "  Fedora/RHEL:   sudo dnf install ansible sshpass"
-        echo "  macOS:         brew install ansible"
+        
+        # Detectar distribución del host
+        detect_distro() {
+            if [ -f /etc/os-release ]; then
+                . /etc/os-release
+                echo "$ID"
+            elif command -v lsb_release &> /dev/null; then
+                lsb_release -si | tr '[:upper:]' '[:lower:]'
+            else
+                echo "unknown"
+            fi
+        }
+        
+        local HOST_DISTRO=$(detect_distro)
+        
+        echo -e "${YELLOW}Para instalar Ansible en $HOST_DISTRO:${NC}"
+        case $HOST_DISTRO in
+            ubuntu|debian|pop)
+                echo "  sudo apt update && sudo apt install -y ansible sshpass"
+                INSTALL_CMD="apt"
+                ;;
+            fedora|rhel|centos|rocky|almalinux)
+                echo "  sudo dnf install -y ansible sshpass"
+                INSTALL_CMD="dnf"
+                ;;
+            arch|cachyos|manjaro|endeavouros)
+                echo "  sudo pacman -Sy --noconfirm ansible sshpass"
+                INSTALL_CMD="pacman"
+                ;;
+            opensuse*)
+                echo "  sudo zypper install -y ansible sshpass"
+                INSTALL_CMD="zypper"
+                ;;
+            macos|darwin)
+                echo "  brew install ansible"
+                INSTALL_CMD="brew"
+                ;;
+            *)
+                echo "  Consulta: https://docs.ansible.com/ansible/latest/installation_guide/"
+                INSTALL_CMD="unknown"
+                ;;
+        esac
+        
         echo ""
         read -p "¿Deseas intentar instalar Ansible? (s/n): " -n 1 -r
         echo
         if [[ $REPLY =~ ^[Ss]$ ]]; then
-            if command -v apt &> /dev/null; then
-                sudo apt update && sudo apt install -y ansible sshpass
-            elif command -v dnf &> /dev/null; then
-                sudo dnf install -y ansible sshpass
-            elif command -v brew &> /dev/null; then
-                brew install ansible
+            case $INSTALL_CMD in
+                apt)
+                    sudo apt update && sudo apt install -y ansible sshpass python3-pip
+                    ;;
+                dnf)
+                    # Para RHEL/Rocky/CentOS necesitamos EPEL
+                    if [[ "$HOST_DISTRO" == "rhel" || "$HOST_DISTRO" == "centos" || "$HOST_DISTRO" == "rocky" ]]; then
+                        sudo dnf install -y epel-release
+                    fi
+                    sudo dnf install -y ansible sshpass python3-pip
+                    ;;
+                pacman)
+                    sudo pacman -Sy --noconfirm ansible sshpass python-pip
+                    ;;
+                zypper)
+                    sudo zypper refresh
+                    sudo zypper install -y ansible sshpass python3-pip
+                    ;;
+                brew)
+                    brew install ansible
+                    ;;
+                *)
+                    echo -e "${YELLOW}⚠️ No se pudo detectar el gestor de paquetes${NC}"
+                    echo "Instala Ansible manualmente y vuelve a intentar:"
+                    echo "  pip3 install ansible"
+                    read -p "¿Instalar con pip? (s/n): " -n 1 -r
+                    echo
+                    if [[ $REPLY =~ ^[Ss]$ ]]; then
+                        pip3 install --user ansible
+                        export PATH="$PATH:$HOME/.local/bin"
+                    fi
+                    ;;
+            esac
+            
+            # Verificar instalación
+            if command -v ansible &> /dev/null; then
+                echo -e "${GREEN}✅ Ansible instalado correctamente${NC}"
+                echo -e "${BLUE}Versión: $(ansible --version | head -1)${NC}"
             else
-                echo -e "${YELLOW}⚠️ No se pudo detectar el gestor de paquetes${NC}"
-                echo "Instala Ansible manualmente y vuelve a intentar"
+                echo -e "${RED}❌ Falló la instalación de Ansible${NC}"
+                return 1
             fi
         else
             return 1
         fi
     fi
     
-    # Cambiar al directorio de Ansible
-    cd "$ANSIBLE_DIR" || return 1
+    # Verificar si sshpass está instalado (necesario para conexión con password)
+    if ! command -v sshpass &> /dev/null; then
+        echo -e "${YELLOW}⚠️ sshpass no está instalado${NC}"
+        
+        # Detectar distribución para instalar sshpass
+        if [ -f /etc/os-release ]; then
+            . /etc/os-release
+            case $ID in
+                ubuntu|debian|pop)
+                    sudo apt install -y sshpass
+                    ;;
+                fedora|rhel|centos|rocky)
+                    sudo dnf install -y sshpass
+                    ;;
+                arch|cachyos|manjaro)
+                    sudo pacman -Sy --noconfirm sshpass
+                    ;;
+                opensuse*)
+                    sudo zypper install -y sshpass
+                    ;;
+                *)
+                    echo -e "${YELLOW}Instala sshpass manualmente para tu distribución${NC}"
+                    ;;
+            esac
+        fi
+    fi
     
-    # Verificar si el script setup-vm.sh existe y es ejecutable
+    # Cambiar al directorio de Ansible
+    cd "$ANSIBLE_DIR" || {
+        echo -e "${RED}❌ No se pudo acceder al directorio $ANSIBLE_DIR${NC}"
+        read -p "Presiona Enter para continuar..."
+        return 1
+    }
+    
+    # Verificar si el script setup-vm.sh existe
     if [ ! -f "setup-vm.sh" ]; then
         echo -e "${RED}❌ No se encuentra setup-vm.sh en $ANSIBLE_DIR${NC}"
+        echo -e "${YELLOW}Archivos disponibles:${NC}"
+        ls -la
         read -p "Presiona Enter para continuar..."
         return 1
     fi
     
+    # Hacer ejecutable si no lo es
     if [ ! -x "setup-vm.sh" ]; then
         chmod +x setup-vm.sh
+        echo -e "${GREEN}✅ Permisos de ejecución establecidos para setup-vm.sh${NC}"
+    fi
+    
+    # Verificar si el playbook existe
+    if [ ! -f "playbook-base-vm.yml" ]; then
+        echo -e "${RED}❌ No se encuentra playbook-base-vm.yml${NC}"
+        echo -e "${YELLOW}Asegúrate de que el playbook exista en el directorio${NC}"
+        read -p "Presiona Enter para continuar..."
+        return 1
     fi
     
     echo -e "${GREEN}🔧 Preparándose para configurar una VM Rocky 9.7...${NC}"
@@ -281,10 +376,15 @@ setup_base_vm() {
     echo "   • Rocky Linux 9.7 instalado"
     echo "   • Conexión a Internet"
     echo "   • Usuario root con contraseña conocida"
-    echo "   • SSH habilitado"
+    echo "   • SSH habilitado (puerto 22)"
     echo ""
     echo -e "${YELLOW}⚠️  IMPORTANTE: Este script se ejecuta desde TU HOST${NC}"
     echo "   y configurará la VM de forma remota."
+    echo ""
+    echo -e "${BLUE}📝 Información del host (desde donde ejecutas):${NC}"
+    echo "   Sistema: $(uname -s) $(uname -r)"
+    echo "   Distribución: $(grep PRETTY_NAME /etc/os-release 2>/dev/null | cut -d= -f2 | tr -d '\"' || echo 'Desconocida')"
+    echo "   Ansible: $(ansible --version | head -1)"
     echo ""
     
     read -p "¿Continuar con la configuración? (s/n): " -n 1 -r
@@ -295,16 +395,68 @@ setup_base_vm() {
     
     # Ejecutar el script de configuración
     echo -e "${GREEN}🚀 Iniciando configuración...${NC}"
+    echo -e "${YELLOW}Nota: Se te pedirá la IP y contraseña de la VM${NC}"
     echo ""
     
-    # Ejecutar el script - se puede pasar la IP como argumento
-    if [ -f "setup-vm.sh" ]; then
-        ./setup-vm.sh
-    else
-        echo -e "${RED}❌ Error: No se pudo ejecutar setup-vm.sh${NC}"
+    # Verificar si hay argumentos pasados desde línea de comandos
+    local VM_IP=""
+    local VM_PASS=""
+    
+    # Verificar si hay parámetros en la ejecución del engine
+    if [[ "$*" == *"-i"* ]] || [[ "$*" == *"--ip"* ]]; then
+        # Extraer IP de los argumentos
+        for i in "$@"; do
+            case $i in
+                -i=*|--ip=*)
+                    VM_IP="${i#*=}"
+                    ;;
+                -i|--ip)
+                    shift
+                    VM_IP="$1"
+                    ;;
+            esac
+        done
     fi
     
-    echo ""
+    # Ejecutar el script
+    if [ -n "$VM_IP" ]; then
+        echo -e "${BLUE}Usando IP proporcionada: $VM_IP${NC}"
+        read -sp "Ingresa la contraseña de root para $VM_IP: " VM_PASS
+        echo ""
+        ./setup-vm.sh -i "$VM_IP" -p "$VM_PASS"
+    else
+        # Ejecutar interactivamente
+        ./setup-vm.sh
+    fi
+    
+    # Verificar resultado
+    local EXIT_CODE=$?
+    if [ $EXIT_CODE -eq 0 ]; then
+        echo ""
+        echo -e "${GREEN}==========================================${NC}"
+        echo -e "${GREEN}✅ CONFIGURACIÓN COMPLETADA EXITOSAMENTE${NC}"
+        echo -e "${GREEN}==========================================${NC}"
+        echo ""
+        echo -e "${BLUE}🎯 Próximos pasos:${NC}"
+        echo "   1. Conéctate a la VM configurada"
+        echo "   2. Clona el repositorio corpnet-v2"
+        echo "   3. Ejecuta ./engine.sh en la VM"
+        echo ""
+    else
+        echo ""
+        echo -e "${RED}==========================================${NC}"
+        echo -e "${RED}❌ LA CONFIGURACIÓN FALLÓ (Código: $EXIT_CODE)${NC}"
+        echo -e "${RED}==========================================${NC}"
+        echo ""
+        echo -e "${YELLOW}Posibles soluciones:${NC}"
+        echo "   • Verifica que la VM esté encendida"
+        echo "   • Asegúrate de que SSH esté habilitado"
+        echo "   • Verifica usuario/contraseña de root"
+        echo "   • Prueba la conexión manualmente:"
+        echo "     ssh root@IP_DE_LA_VM"
+        echo ""
+    fi
+    
     read -p "Presiona Enter para volver al menú principal..."
 }
 
