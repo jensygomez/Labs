@@ -1,18 +1,30 @@
 ---
-- name: Configurar prompt dinámico en .bashrc
-  lineinfile:
-    path: "{{ item }}"
-    block: |
-      # --- Lógica de Prompt para Namespaces (Scalable) ---
+- name: Configurar prompt para root
+  copy:
+    dest: /root/.bashrc
+    content: |
+      # Prompt dinámico para namespaces
       get_ns_prompt() {
           local ns=$(ip netns identify $$ 2>/dev/null)
           if [ -n "$ns" ]; then
               echo "($ns) "
           fi
       }
-      
       export PS1='$(get_ns_prompt)\u@\h:\w\$ '
-    insertafter: EOF
-  loop:
-    - /root/.bashrc
-    - /home/{{ student_user.name }}/.bashrc
+    mode: '0644'
+
+- name: Configurar prompt para student
+  copy:
+    dest: /home/{{ student_user.name }}/.bashrc
+    content: |
+      # Prompt dinámico para namespaces
+      get_ns_prompt() {
+          local ns=$(ip netns identify $$ 2>/dev/null)
+          if [ -n "$ns" ]; then
+              echo "($ns) "
+          fi
+      }
+      export PS1='$(get_ns_prompt)\u@\h:\w\$ '
+    mode: '0644'
+    owner: "{{ student_user.name }}"
+    group: "{{ student_user.name }}"
