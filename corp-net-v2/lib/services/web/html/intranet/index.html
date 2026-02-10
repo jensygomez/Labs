@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intranet Corporativa - CorpNet</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        header {
+            background: rgba(0,0,0,0.3);
+            padding: 1.5rem 2rem;
+            border-bottom: 3px solid rgba(255,255,255,0.2);
+        }
+        header h1 { font-size: 1.8rem; }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s;
+        }
+        .card:hover { transform: translateY(-5px); }
+        .card h2 { font-size: 1.5rem; margin-bottom: 1rem; }
+        .card p { opacity: 0.9; line-height: 1.6; }
+        .icon { font-size: 3rem; margin-bottom: 1rem; }
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+            background: rgba(0,0,0,0.2);
+        }
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin: 0.2rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🏢 Intranet Corporativa</h1>
+        <p>Portal central de recursos empresariales</p>
+    </header>
+    
+    <div class="container">
+        <div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 10px; margin-bottom: 2rem;">
+            <h2 style="margin-bottom: 0.5rem;">📢 Anuncios Recientes</h2>
+            <p>• Nueva política de seguridad implementada</p>
+            <p>• Mantenimiento programado: Sábado 15:00-17:00</p>
+            <p>• Actualización del sistema de tickets disponible</p>
+        </div>
+        
+        <div class="grid">
+            <div class="card">
+                <div class="icon">👥</div>
+                <h2>Directorio</h2>
+                <p>Consulta información de contacto de todos los departamentos y empleados.</p>
+            </div>
+            
+            <div class="card">
+                <div class="icon">📚</div>
+                <h2>Biblioteca</h2>
+                <p>Acceso a documentación técnica, manuales y políticas corporativas.</p>
+            </div>
+            
+            <div class="card">
+                <div class="icon">🎫</div>
+                <h2>Tickets</h2>
+                <p>Sistema de soporte y gestión de incidencias para todos los empleados.</p>
+            </div>
+            
+            <div class="card">
+                <div class="icon">📊</div>
+                <h2>Reportes</h2>
+                <p>Dashboard con métricas y KPIs de los diferentes departamentos.</p>
+            </div>
+            
+            <div class="card">
+                <div class="icon">🗓️</div>
+                <h2>Calendario</h2>
+                <p>Eventos corporativos, reuniones y días festivos programados.</p>
+            </div>
+            
+            <div class="card">
+                <div class="icon">⚙️</div>
+                <h2>Herramientas</h2>
+                <p>Acceso rápido a aplicaciones y recursos tecnológicos internos.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <div>
+            <span class="badge">🖥️ Servidor: ${NODE_NAME}</span>
+            <span class="badge">🌐 Host: intranet.corp.local</span>
+            <span class="badge">⏱️ ${DEPLOY_DATE}</span>
+        </div>
+        <p style="margin-top: 1rem; opacity: 0.7;">CorpNet Enterprise Infrastructure v2.0</p>
+    </div>
+</body>
+</html>
