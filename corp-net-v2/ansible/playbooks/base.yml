@@ -1,0 +1,57 @@
+- hosts: lab-vm
+  become: true
+  tasks:
+
+    - name: Upgrade system
+      dnf:
+        name: "*"
+        state: latest
+
+    - name: Install base packages
+      dnf:
+        name:
+          - iproute
+          - nginx
+          - mariadb-server
+          - dnsmasq
+          - tcpdump
+          - nmap
+          - htop
+          - python3
+        state: present
+
+    - name: Create student user
+      user:
+        name: student
+        groups: wheel
+        shell: /bin/bash
+        password: "{{ 'redhat' | password_hash('sha512') }}"
+
+    - name: Passwordless sudo
+      copy:
+        dest: /etc/sudoers.d/student
+        content: "student ALL=(ALL) NOPASSWD:ALL\n"
+        mode: "0440"
+
+    - name: Enable IP forwarding
+      copy:
+        dest: /etc/sysctl.d/99-lab.conf
+        content: "net.ipv4.ip_forward=1\n"
+
+    - command: sysctl -p /etc/sysctl.d/99-lab.conf
+
+    - name: Configure SSH
+      copy:
+        dest: /etc/ssh/sshd_config
+        content: |
+          Port 22
+          PermitRootLogin yes
+          PasswordAuthentication yes
+      notify: restart sshd
+
+  handlers:
+    - name: restart sshd
+      systemd:
+        name: sshd
+        state: restarted
+        enabled: true

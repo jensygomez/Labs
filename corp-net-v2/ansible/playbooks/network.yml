@@ -1,0 +1,21 @@
+- hosts: lab-vm
+  become: true
+  tasks:
+
+    - name: Detect default interface
+      command: ip route
+      register: iproute
+      changed_when: false
+
+    - name: Extract interface
+      set_fact:
+        iface: "{{ iproute.stdout | regex_search('default.* dev (\\S+)', '\\1') }}"
+
+    - name: Prepare static IP (persistent)
+      command: >
+        nmcli connection modify {{ iface }}
+        ipv4.method manual
+        ipv4.addresses {{ static_ip }}/{{ netmask }}
+        ipv4.gateway {{ gateway }}
+        ipv4.dns "{{ dns_servers | join(',') }}"
+        connection.autoconnect yes
