@@ -41,7 +41,7 @@ nodes:
     role: server
     subnet: br-mgmt
     ip: 10.0.1.10
-    services: [80, 443]
+    services: [80, 443, 8080, 8081]
     allow_inbound:
       - { from: "10.0.2.10", port: 80 }   # Acceso desde RH-1
       - { from: "10.0.2.20", port: 443 }  # Acceso desde RH-2
