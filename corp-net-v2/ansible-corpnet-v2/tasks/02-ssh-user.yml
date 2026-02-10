@@ -1,5 +1,6 @@
 ---
 # corp-net-v2/ansible-corpnet-v2/tasks/02-ssh-user.yml
+
 - name: Crear usuario student
   user:
     name: "{{ student_user.name }}"
@@ -18,7 +19,6 @@
     line: "{{ student_user.name }} ALL=(ALL) NOPASSWD:ALL"
     create: yes
     mode: '0440'
-    validate: 'visudo -cf %s'
 
 - name: Crear directorio .ssh para student
   file:
@@ -43,9 +43,13 @@
     owner: root
     group: root
     mode: '0600'
-  notify: reiniciar sshd
 
-- name: Habilitar y arrancar servicio SSH
+- name: Reiniciar servicio SSH
+  service:
+    name: sshd
+    state: restarted
+
+- name: Habilitar servicio SSH
   service:
     name: sshd
     state: started
