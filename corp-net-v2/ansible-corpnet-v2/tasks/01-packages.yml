@@ -1,0 +1,29 @@
+---
+- name: Actualizar sistema
+  dnf:
+    name: "*"
+    state: latest
+    update_cache: yes
+
+- name: Instalar EPEL si no está presente
+  dnf:
+    name: epel-release
+    state: present
+  register: epel_installed
+
+- name: Actualizar después de EPEL si se instaló
+  dnf:
+    name: "*"
+    state: latest
+    update_cache: yes
+  when: epel_installed.changed
+
+- name: Instalar paquetes base
+  dnf:
+    name: "{{ base_packages }}"
+    state: present
+
+- name: Limpiar cache de dnf
+  dnf:
+    autoremove: yes
+    clean: all

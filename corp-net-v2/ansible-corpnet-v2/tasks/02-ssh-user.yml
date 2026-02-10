@@ -1,0 +1,48 @@
+---
+- name: Crear usuario student
+  user:
+    name: "{{ student_user.name }}"
+    password: "{{ student_user.password | password_hash('sha512') }}"
+    groups: wheel
+    shell: /bin/bash
+    create_home: yes
+    state: present
+
+- name: Configurar sudo sin password para student
+  lineinfile:
+    path: /etc/sudoers.d/student
+    line: "{{ student_user.name }} ALL=(ALL) NOPASSWD:ALL"
+    create: yes
+    mode: '0440'
+    validate: 'visudo -cf %s'
+
+- name: Crear directorio .ssh para student
+  file:
+    path: /home/{{ student_user.name }}/.ssh
+    state: directory
+    owner: "{{ student_user.name }}"
+    group: "{{ student_user.name }}"
+    mode: '0700'
+
+- name: Configurar authorized_keys para student
+  copy:
+    content: "{{ student_ssh_key }}"
+    dest: /home/{{ student_user.name }}/.ssh/authorized_keys
+    owner: "{{ student_user.name }}"
+    group: "{{ student_user.name }}"
+    mode: '0600'
+
+- name: Configurar servidor SSH
+  template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: '0600'
+  notify: reiniciar sshd
+
+- name: Habilitar y arrancar servicio SSH
+  service:
+    name: sshd
+    state: started
+    enabled: yes
