@@ -201,38 +201,58 @@ show_status() {
     echo -e "\n\e[1;34m===============================================================\e[0m"
     read -p "Presiona Enter para volver..."
 }
-
 # 6. --- MENÚ INTERACTIVO ---
 show_menu() {
     clear
     echo "=========================================="
     echo "       CORPNET-V2 - CONTROL PANEL         "
     echo "=========================================="
+    echo "0) 🔧 Configurar VM Base (Ansible)"
     echo "1) 🚀 Desplegar Infraestructura (RH + TI)"
     echo "2) 🧹 Limpiar Laboratorio (Destroy)"
     echo "3) 🔍 Status de la Red (Namespaces/IPs)"
     echo "4) 🧪 Panel de Pruebas y Diagnóstico (YAML)"
-    echo "0) 🚪 Salir"
+    echo "9) 🚪 Salir"
     echo "------------------------------------------"
     read -p "Selecciona una opción: " opt
     
     case $opt in
+        0) setup_base_vm ;;
         1) deploy_lab ;;
         2) destroy_lab ;;
         3) show_status ;;
         4) 
-            # Invocamos el motor dinámico que creamos en lib/tester.sh
             if [ -f "$BASE_DIR/lib/tester.sh" ]; then
                 source "$BASE_DIR/lib/tester.sh"
                 run_dynamic_tests
             else
-                echo "❌ Error: No se encuentra el motor de pruebas en lib/tester.sh"
+                echo "❌ Error: No se encuentra el motor de pruebas"
                 sleep 2
             fi
             ;;
-        0) exit 0 ;;
+        9) exit 0 ;;
         *) echo "❌ Opción inválida."; sleep 1 ;;
     esac
+}
+
+setup_base_vm() {
+    echo "🔧 Configurando VM Base con Ansible..."
+    
+    # Solicitar IP de la VM
+    read -p "Ingresa la IP de la VM Rocky 9.7: " VM_IP
+    
+    # Cambiar al directorio de Ansible
+    cd "$BASE_DIR/ansible-corpnet-v2" || {
+        echo "❌ Directorio ansible-corpnet-v2 no encontrado"
+        sleep 2
+        return
+    }
+    
+    # Ejecutar script wrapper
+    ./setup-vm.sh "$VM_IP"
+    
+    echo "✅ Configuración completada. Presiona Enter para continuar..."
+    read
 }
 # 7. --- BUCLE PRINCIPAL ---
 while true; do

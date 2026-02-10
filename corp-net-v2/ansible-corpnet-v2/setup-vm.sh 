@@ -1,0 +1,38 @@
+#!/bin/bash
+# Script para configurar VM Rocky 9.7 desde el host
+
+set -e
+
+echo "=========================================="
+echo "   CONFIGURADOR ANSIBLE PARA ROCKY 9.7    "
+echo "=========================================="
+
+# Solicitar IP de la VM
+read -p "Ingresa la IP de la VM Rocky 9.7: " VM_IP
+read -sp "Ingresa la contraseña de root de la VM: " VM_PASS
+echo ""
+
+# Crear archivo de inventario temporal
+cat > /tmp/inventory_tmp.yml << EOF
+all:
+  hosts:
+    rocky-vm:
+      ansible_host: "${VM_IP}"
+      ansible_user: root
+      ansible_ssh_pass: "${VM_PASS}"
+  vars:
+    student_ssh_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIByFDKwjMDeGJ5GRhXmZHa75h7dK9JcPHvWWtesSO3/x student@lab-3tier"
+    static_ip: "${VM_IP}"
+    netmask: "24"
+    gateway: "192.168.122.1"
+    dns_servers: ["8.8.8.8", "1.1.1.1"]
+EOF
+
+# Ejecutar Ansible
+echo "🚀 Ejecutando configuración en ${VM_IP}..."
+ansible-playbook -i /tmp/inventory_tmp.yml playbook-base-vm.yml
+
+echo ""
+echo "✅ Configuración completada!"
+echo "Puedes conectarte con: ssh student@${VM_IP}"
+echo "Contraseña: redhat"
