@@ -23,7 +23,11 @@
     name: "{{ base_packages }}"
     state: present
 
-- name: Limpiar cache de dnf
+- name: Limpiar paquetes no usados
   dnf:
     autoremove: yes
-    clean: all
+
+- name: Limpiar cache de dnf
+  shell: dnf clean all
+  args:
+    warn: no
