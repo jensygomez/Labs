@@ -1,0 +1,32 @@
+---
+- name: Obtener interfaz de red principal
+  shell: |
+    ip route | grep default | awk '{print $5}' | head -n1
+  register: default_interface
+  changed_when: false
+
+- name: Configurar IP estática con NetworkManager
+  nmcli:
+    conn_name: "{{ default_interface.stdout }}"
+    type: ethernet
+    state: present
+    ip4: "{{ static_ip }}/{{ netmask }}"
+    gw4: "{{ gateway }}"
+    dns4: "{{ dns_servers | join(',') }}"
+    method4: manual
+    autoconnect: yes
+  register: network_config
+
+- name: Activar conexión de red
+  nmcli:
+    conn_name: "{{ default_interface.stdout }}"
+    state: up
+  when: network_config.changed
+
+- name: Habilitar IP forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    state: present
+    reload: yes
+    sysctl_set: yes
