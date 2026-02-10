@@ -1,5 +1,7 @@
 #!/bin/bash
-# lib/network.sh - Maestro Electricista con Soporte para Bridges
+# corp-net-v2/lib/network.sh
+#Maestro Electricista con Soporte para Bridges
+
 [[ -z "$YQ" ]] && YQ="$BASE_DIR/.bin/yq"
 VETH_COUNTER_FILE="/tmp/veth_counter"
 
@@ -27,55 +29,63 @@ ensure_cable() {
     ip netns exec "$ns_b" ip link set "$tmp_veth_b" name "$if_b" up
 }
 
+#!/bin/bash
+# Maestro de Red Universal - Sin Hardcoding
+
 setup_network() {
-    echo "🔗 Iniciando cableado dinámico..."
+    echo "🌐 Detectando infraestructura de red..."
     setup_counter
     
-    # 1. Crear bridges EN EL ROUTER para cada subred
-    local subnets=$($YQ '.nodes[] | select(.role == "router") | .subnets[].name' "$BASE_DIR/topology/nodes.yml")
-    for sn in $subnets; do
-        local sn_net=$($YQ ".nodes[] | select(.role == \"router\") | .subnets[] | select(.name == \"$sn\") | .network" "$BASE_DIR/topology/nodes.yml")
-        local sn_gw=$(echo "$sn_net" | sed 's/0\/24/1/')
-        local br_name="br-${sn,,}"
-        
-        if ! ip netns exec CORE-GW ip link show "$br_name" &>/dev/null; then
-            ip netns exec CORE-GW ip link add "$br_name" type bridge
-            ip netns exec CORE-GW ip addr add "$sn_gw/24" dev "$br_name"
-            ip netns exec CORE-GW ip link set "$br_name" up
-            echo "🏢 Bridge $br_name ($sn_gw) creado en CORE-GW"
-        fi
-    done
+    # 1. Identificar al Router (o Routers)
+    local routers=$($YQ '.nodes[] | select(.role == "router") | .name' "$BASE_DIR/topology/nodes.yml")
     
-    # 2. Conectar cada nodo a su bridge
-    local nodes=$($YQ '.nodes[] | select(.role != "router") | .name' "$BASE_DIR/topology/nodes.yml")
-    for node in $nodes; do
-        local subnet=$($YQ ".nodes[] | select(.name == \"$node\") | .subnet" "$BASE_DIR/topology/nodes.yml")
-        local ip=$($YQ ".nodes[] | select(.name == \"$node\") | .ip" "$BASE_DIR/topology/nodes.yml")
-        local br_target="br-${subnet,,}"
-        local if_en_router="v-${node:0:12}"
-        local gw_ip=$(echo "$ip" | cut -d. -f1-3).1
+    for rtr in $routers; do
+        echo "🏗️  Configurando Router: $rtr"
         
-        echo "🔗 Conectando $node → $br_target..."
+        # 2. Crear Bridges dinámicos para ESTE router específico
+        local subnets=$($YQ ".nodes[] | select(.name == \"$rtr\") | .subnets[].name" "$BASE_DIR/topology/nodes.yml")
         
-        ensure_cable "$node" "eth0" "CORE-GW" "$if_en_router"
+        for sn in $subnets; do
+            local sn_net=$($YQ ".nodes[] | select(.name == \"$rtr\") | .subnets[] | select(.name == \"$sn\") | .network" "$BASE_DIR/topology/nodes.yml")
+            local sn_gw=$(echo "$sn_net" | sed 's/0\/24/1/')
+            local br_name="br-${sn,,}"
+            
+            if ! ip netns exec "$rtr" ip link show "$br_name" &>/dev/null; then
+                ip netns exec "$rtr" ip link add "$br_name" type bridge
+                ip netns exec "$rtr" ip addr add "$sn_gw/24" dev "$br_name"
+                ip netns exec "$rtr" ip link set "$br_name" up
+                echo "   └─ Switch [$br_name] -> IP Gateway: $sn_gw"
+            fi
+        done
         
-        # Conectar al bridge (solo si no es ya miembro)
-        if ! ip netns exec CORE-GW ip link show "$if_en_router" | grep -q "master $br_target"; then
-            ip netns exec CORE-GW ip link set "$if_en_router" master "$br_target"
-            ip netns exec CORE-GW ip link set "$if_en_router" up
-        fi
-        
-        # Configurar IP del nodo (con check de error para evitar el "File Exists")
-        if ! ip netns exec "$node" ip addr show eth0 | grep -q "$ip"; then
-            ip netns exec "$node" ip addr add "$ip/24" dev eth0
-        fi
+        # Habilitar forwarding en este router
+        ip netns exec "$rtr" sysctl -w net.ipv4.ip_forward=1 > /dev/null
+    done
 
-        # Configurar Ruta (con check de error)
-        if ! ip netns exec "$node" ip route show | grep -q "default via $gw_ip"; then
-            ip netns exec "$node" ip route add default via "$gw_ip"
-        fi
-    done
+    # 3. Conectar Nodos a sus respectivos Routers/Bridges
+    local clients=$($YQ '.nodes[] | select(.role != "router") | .name' "$BASE_DIR/topology/nodes.yml")
     
-    ip netns exec CORE-GW sysctl -w net.ipv4.ip_forward=1 > /dev/null
-    echo "✅ Red configurada con Bridges correctamente"
+    for node in $clients; do
+        local subnet_name=$($YQ ".nodes[] | select(.name == \"$node\") | .subnet" "$BASE_DIR/topology/nodes.yml")
+        local node_ip=$($YQ ".nodes[] | select(.name == \"$node\") | .ip" "$BASE_DIR/topology/nodes.yml")
+        
+        # IMPORTANTE: Buscamos qué router es el dueño de esa subnet
+        local rtr_owner=$($YQ ".nodes[] | select(.role == \"router\" and .subnets[].name == \"$subnet_name\") | .name" "$BASE_DIR/topology/nodes.yml")
+        
+        local br_target="br-${subnet_name,,}"
+        local if_rtr="v-${node:0:12}"
+        local gw_ip=$(echo "$node_ip" | cut -d. -f1-3).1
+
+        echo "🔗 Conectando $node ---> $rtr_owner [$br_target]"
+        
+        ensure_cable "$node" "eth0" "$rtr_owner" "$if_rtr"
+        
+        # Atar al bridge del router correspondiente
+        ip netns exec "$rtr_owner" ip link set "$if_rtr" master "$br_target" 2>/dev/null
+        ip netns exec "$rtr_owner" ip link set "$if_rtr" up
+        
+        # Configurar IP y Ruta Default
+        ip netns exec "$node" ip addr add "$node_ip/24" dev eth0 2>/dev/null
+        ip netns exec "$node" ip route add default via "$gw_ip" 2>/dev/null
+    done
 }
