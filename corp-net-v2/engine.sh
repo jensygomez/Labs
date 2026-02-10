@@ -114,11 +114,10 @@ destroy_lab() {
     echo "🗑️  Sistema limpio."
     read -p "Presiona Enter para volver..."
 }
-
 show_status() {
     clear
     echo -e "\e[1;34m===============================================================\e[0m"
-    echo -e "🔍 \e[1;37m        ESTADO GLOBAL DE RED Y SEGURIDAD (ZERO-TRUST)\e[0m"
+    echo -e "🔍 \e[1;37m        MAPA DINÁMICO DE INFRAESTRUCTURA (V2.0)\e[0m"
     echo -e "\e[1;34m===============================================================\e[0m"
 
     local namespaces=$(ip netns list | cut -d' ' -f1)
@@ -126,33 +125,49 @@ show_status() {
     if [ -z "$namespaces" ]; then
         echo -e "\n  \e[1;31m⚠️  No hay infraestructura desplegada.\e[0m"
     else
+        # --- SECCIÓN 1: MAPA DE SWITCHES (BRIDGES) ---
+        echo -e "\n\e[1;35m🌐 TOPOLOGÍA DE SWITCHES (BRIDGES):\e[0m"
+        local routers=$(ip netns exec "$namespaces" 2>/dev/null | xargs -n1 | grep -v "not found" | xargs ip netns list | cut -d' ' -f1) # Filtro rápido
+        
+        # Iteramos sobre los routers para ver sus puentes
+        for ns in $namespaces; do
+            local bridges=$(ip netns exec "$ns" ip link show type bridge | grep -v "lo" | awk -F': ' '{print $2}')
+            for br in $bridges; do
+                # Contamos cuántos cables (veth) hay pegados a este bridge
+                local interfaces=$(ip netns exec "$ns" brctl show "$br" | awk 'NR>1 {print $4}' | wc -l)
+                echo -e "   \e[1;36m[Switch: $br]\e[0m en \e[1;32m$ns\e[0m | Puertos activos: \e[1;37m$interfaces\e[0m"
+            done
+        done
+
+        # --- SECCIÓN 2: DETALLE DE NODOS ---
         for ns in $namespaces; do
             echo -e "\n\e[1;32m📦 Nodo: $ns\e[0m"
             
-            # 1. Información de Red
+            # 1. Información de Red e Identidad
             local ips=$(ip netns exec "$ns" ip -4 addr show scope global | awk '{print $2}' | xargs)
             local gw=$(ip netns exec "$ns" ip route show default | awk '{print $3}')
-            echo -e "   \e[1;37m🌐 Red:\e[0m  IP(s): [ ${ips:-N/A} ]  |  GW: [ ${gw:-None} ]"
+            # Detectamos a qué bridge está conectado el nodo (mirando eth0)
+            echo -e "   \e[1;37m🌐 Red:\e[0m  IP: [ ${ips:-N/A} ]  |  Gateway: [ ${gw:-None} ]"
 
-            # 2. Matriz de Seguridad (Microsegmentación)
-            echo -e "   \e[1;37m🛡️  Políticas Inbound (Firewall):\e[0m"
+            # 2. Matriz de Seguridad (Zero-Trust)
+            echo -e "   \e[1;37m🛡️  Seguridad (IPTables):\e[0m"
             
-            # Extraer reglas ACCEPT de iptables que tengan origen específico
-            local rules=$(ip netns exec "$ns" iptables -L INPUT -n -v | grep "ACCEPT" | grep -E "[0-9]+\.[0-9]+")
+            # Verificamos si tiene el forwarding activo (es un router)
+            local forwarding=$(ip netns exec "$ns" sysctl -n net.ipv4.ip_forward)
+            if [ "$forwarding" == "1" ]; then
+                echo -e "      \e[0;33m⚡ MODO ROUTER: Reenvío de tráfico habilitado\e[0m"
+            fi
+
+            # Extraer reglas ACCEPT de la cadena INPUT
+            local rules=$(ip netns exec "$ns" iptables -S INPUT | grep "\-A" | grep "ACCEPT")
             
             if [ -z "$rules" ]; then
-                # Si no hay reglas específicas, revisamos si es el Router o está todo cerrado
-                if [ "$ns" == "CORE-GW" ]; then
-                    echo -e "      \e[0;33m⚡ Router: Tránsito Permitido (Forwarding UP)\e[0m"
-                else
-                    echo -e "      \e[0;90m🔒 Locked: Solo tráfico de salida permitido\e[0m"
-                fi
+                echo -e "      \e[0;90m🔒 Locked: Sin acceso inbound permitido\e[0m"
             else
-                # Formatear las reglas encontradas
                 echo "$rules" | while read -r line; do
-                    local src=$(echo "$line" | awk '{print $8}')
-                    local proto=$(echo "$line" | awk '{print $4}')
-                    local port=$(echo "$line" | grep "dpt:" | sed 's/.*dpt://')
+                    local src=$(echo "$line" | grep -oP '(?<=-s )[0-9./]+' || echo "Anywhere")
+                    local port=$(echo "$line" | grep -oP '(?<=--dport )[0-9]+' || echo "Any")
+                    local proto=$(echo "$line" | grep -oP '(?<=-p )[a-z]+' || echo "all")
                     echo -e "      \e[0;36m-> Permite $proto/$port desde $src\e[0m"
                 done
             fi
