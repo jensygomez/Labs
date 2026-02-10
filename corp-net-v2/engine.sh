@@ -237,23 +237,23 @@ setup_base_vm() {
         echo -e "${YELLOW}Para instalar Ansible en $HOST_DISTRO:${NC}"
         case $HOST_DISTRO in
             ubuntu|debian|pop)
-                echo "  sudo apt update && sudo apt install -y ansible sshpass"
+                echo "  sudo apt update && sudo apt install -y ansible sshpass python3-passlib"
                 INSTALL_CMD="apt"
                 ;;
             fedora|rhel|centos|rocky|almalinux)
-                echo "  sudo dnf install -y ansible sshpass"
+                echo "  sudo dnf install -y ansible sshpass python3-passlib"
                 INSTALL_CMD="dnf"
                 ;;
             arch|cachyos|manjaro|endeavouros)
-                echo "  sudo pacman -Sy --noconfirm ansible sshpass"
+                echo "  sudo pacman -Sy --noconfirm ansible sshpass python-passlib"
                 INSTALL_CMD="pacman"
                 ;;
             opensuse*)
-                echo "  sudo zypper install -y ansible sshpass"
+                echo "  sudo zypper install -y ansible sshpass python3-passlib"
                 INSTALL_CMD="zypper"
                 ;;
             macos|darwin)
-                echo "  brew install ansible"
+                echo "  brew install ansible python3-passlib"
                 INSTALL_CMD="brew"
                 ;;
             *)

@@ -1,12 +1,16 @@
 ---
+# corp-net-v2/ansible-corpnet-v2/tasks/02-ssh-user.yml
 - name: Crear usuario student
   user:
     name: "{{ student_user.name }}"
-    password: "{{ student_user.password | password_hash('sha512') }}"
     groups: wheel
     shell: /bin/bash
     create_home: yes
     state: present
+
+- name: Establecer contraseña para student
+  shell: "echo '{{ student_user.name }}:{{ student_user.password }}' | chpasswd"
+  no_log: true
 
 - name: Configurar sudo sin password para student
   lineinfile:
