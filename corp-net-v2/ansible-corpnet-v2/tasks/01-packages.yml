@@ -1,27 +1,53 @@
 ---
-- name: Actualizar sistema
+# tasks/01-packages.yml - VERSIÓN UNIVERSAL ROBUSTA
+
+- name: "1. Actualizar repositorios y sistema base"
   dnf:
+    update_cache: yes
     name: "*"
     state: latest
-    update_cache: yes
 
-- name: Instalar EPEL si no está presente
+- name: "2. Instalar EPEL Repository"
   dnf:
     name: epel-release
     state: present
 
-- name: Instalar paquetes base del laboratorio
+- name: "3. Instalar paquetes CRÍTICOS primero"
+  dnf:
+    name:
+      - iproute
+      - iptables
+      - nginx
+      - mariadb-server
+      - openssh-server
+      - python3
+      - curl
+      - wget
+    state: present
+
+- name: "4. Instalar resto de paquetes del laboratorio"
   dnf:
     name: "{{ base_packages }}"
     state: present
-    update_cache: yes
 
-- name: Limpiar sistema
+- name: "5. Limpieza opcional del sistema"
   block:
-    - name: Eliminar paquetes no usados
+    # Método 1: Usando módulo dnf (si está disponible)
+    - name: Intentar autoremove con módulo dnf
       dnf:
         autoremove: yes
+      ignore_errors: yes
     
-    - name: Limpiar cache de dnf
-      shell: "dnf clean all"
-  ignore_errors: yes
+    # Método 2: Comando directo (fallback universal)
+    - name: Limpiar cache con comando directo
+      shell: |
+        dnf autoremove -y || true
+        dnf clean all || true
+      changed_when: false
+      args:
+        executable: /bin/bash
+      
+  always:
+    - name: Confirmar instalación exitosa
+      debug:
+        msg: "✅ Paquetes del laboratorio instalados correctamente"
