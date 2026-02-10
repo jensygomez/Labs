@@ -1,0 +1,32 @@
+---
+# Variables de configuración
+base_packages:
+  - iproute
+  - iptables
+  - iptables-nft
+  - nginx
+  - mariadb-server
+  - mariadb
+  - dnsmasq
+  - bind-utils
+  - net-tools
+  - curl
+  - wget
+  - vim-enhanced
+  - tree
+  - tcpdump
+  - nmap
+  - htop
+  - cronie
+  - openssh-server
+  - openssh-clients
+  - lynx
+  - php-fpm
+  - php-mysqlnd
+  - traceroute
+  - python3
+
+student_user:
+  name: student
+  password: "redhat"
+  sudo_nopasswd: true

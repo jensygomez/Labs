@@ -1,0 +1,36 @@
+---
+- name: Configurar VM Rocky 9.7 para Laboratorio CorpNet-v2
+  hosts: rocky-vm
+  become: yes
+  gather_facts: yes
+  
+  vars_files:
+    - vars/defaults.yml
+  
+  tasks:
+    - name: Verificar conexión
+      ping:
+    
+    - name: Obtener información del sistema
+      debug:
+        msg: "Configurando {{ ansible_distribution }} {{ ansible_distribution_version }} en {{ ansible_hostname }}"
+    
+    - include_tasks: tasks/01-packages.yml
+    - include_tasks: tasks/02-ssh-user.yml
+    - include_tasks: tasks/03-network.yml
+    - include_tasks: tasks/04-system.yml
+    - include_tasks: tasks/05-prompt.yml
+    
+    - name: Mostrar información de conexión
+      debug:
+        msg: |
+          ✅ Configuración completada!
+          
+          Para conectarse al sistema:
+          ssh student@{{ ansible_host }}
+          
+          Próximos pasos:
+          1. Clonar el repositorio de corpnet-v2
+          2. Ejecutar engine.sh
+          
+          IP estática configurada: {{ static_ip }}
