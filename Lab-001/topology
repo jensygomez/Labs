@@ -1,24 +1,99 @@
 # ==========================================================
-#        TOPOLOGÍA REDUCIDA (ESTRUCTURA DE BRIDGES)
+#        TOPOLOGÍA FINAL DEL LABORATORIO (Namespaces)
 # ==========================================================
 #
 #                    ┌─────────────────┐
 #                    │     CORE-GW     │
-#                    │ (Router / FW)   │
+#                    │  (IP: 10.0.0.1) │
+#                    │   [ Bridge br0 ]│
 #                    └────────┬────────┘
 #                             │
 #       ┌─────────────────────┼─────────────────────┐
 #       │                     │                     │
-# [ Bridge SRV ]        [ Bridge RH ]         [ Bridge SYS ]
+#  veth-srv-gw           veth-rh-gw            veth-sys-gw
 #       │                     │                     │
+#       │ (Cable Veth)        │ (Cable Veth)        │ (Cable Veth)
+#       │                     │                     │
+#  veth-srv              veth-rh               veth-sys
 # ┌─────┴─────┐         ┌─────┴─────┐         ┌─────┴─────┐
-# │  SVC-FILE │         │  USR-RH-1 │         │ SYS-ADMIN │
-# │ (Servidor)│         │ (Empleado)│         │ (Técnico) │
+# │  NS-SRV   │         │   NS-RH   │         │   NS-SYS  │
+# │ 10.0.0.10 │         │ 10.0.0.20 │         │ 10.0.0.30 │
+# │(SVC-FILE) │         │(USR-RH-1) │         │(SYS-ADMIN)│
 # └───────────┘         └───────────┘         └───────────┘
 #
 # ==========================================================
-# Detalle de Segmentación:
-# - Bridge SRV: 10.0.1.x (VLAN 10)
-# - Bridge RH : 10.0.2.x (VLAN 20)
-# - Bridge SYS: 10.0.3.x (VLAN 30)
+# Resumen de Red:
+# - Red local: 10.0.0.0/24
+# - Gateway (br0): 10.0.0.1
+# - Aislamiento: Mediante Network Namespaces (netns)
 # ==========================================================
+
+
+
+
+# 1. CREACIÓN DE LOS NAMESPACES (Aislamiento)
+# Creamos el Router/Gateway y los tres departamentos.
+ip netns add CORE-GW
+ip netns add NS-SRV
+ip netns add NS-RH
+ip netns add NS-SYS
+
+# 2. CREACIÓN DE CABLES VIRTUALES (Veth Pairs)
+# Cada comando crea un par de interfaces conectadas entre sí.
+ip link add veth-srv type veth peer name veth-srv-gw
+ip link add veth-rh type veth peer name veth-rh-gw
+ip link add veth-sys type veth peer name veth-sys-gw
+
+# 3. CONEXIÓN DE INTERFACES A NAMESPACES
+# Movemos los extremos "-gw" al CORE-GW y los otros a sus respectivos nodos.
+ip link set veth-srv-gw netns CORE-GW
+ip link set veth-rh-gw netns CORE-GW
+ip link set veth-sys-gw netns CORE-GW
+
+ip link set veth-srv netns NS-SRV
+ip link set veth-rh netns NS-RH
+ip link set veth-sys netns NS-SYS
+
+# 4. CONFIGURACIÓN DEL BRIDGE EN CORE-GW
+# Creamos el switch virtual (br0) y le conectamos las interfaces.
+ip netns exec CORE-GW ip link add br0 type bridge
+ip netns exec CORE-GW ip link set br0 up
+
+ip netns exec CORE-GW ip link set veth-srv-gw master br0
+ip netns exec CORE-GW ip link set veth-rh-gw master br0
+ip netns exec CORE-GW ip link set veth-sys-gw master br0
+
+# Levantamos las interfaces en el Gateway
+ip netns exec CORE-GW ip link set veth-srv-gw up
+ip netns exec CORE-GW ip link set veth-rh-gw up
+ip netns exec CORE-GW ip link set veth-sys-gw up
+
+# 5. ASIGNACIÓN DE DIRECCIONES IP Y ACTIVACIÓN
+# IP del Gateway (Puerta de enlace)
+ip netns exec CORE-GW ip addr add 10.0.0.1/24 dev br0
+
+# Configuración del Servidor (SVC-FILE) - 10.0.0.10
+ip netns exec NS-SRV ip link set lo up
+ip netns exec NS-SRV ip link set veth-srv up
+ip netns exec NS-SRV ip addr add 10.0.0.10/24 dev veth-srv
+
+# Configuración de Recursos Humanos (USR-RH-1) - 10.0.0.20
+ip netns exec NS-RH ip link set lo up
+ip netns exec NS-RH ip link set veth-rh up
+ip netns exec NS-RH ip addr add 10.0.0.20/24 dev veth-rh
+
+# Configuración de Sistemas (SYS-ADMIN) - 10.0.0.30
+ip netns exec NS-SYS ip link set lo up
+ip netns exec NS-SYS ip link set veth-sys up
+ip netns exec NS-SYS ip addr add 10.0.0.30/24 dev veth-sys
+
+# 6. PRUEBAS DE CONECTIVIDAD (PING)
+# Verificamos que el Administrador (SYS) llegue a todos.
+echo "Verificando conexión SYS -> SRV (10.0.0.10)..."
+ip netns exec NS-SYS ping -c4 10.0.0.10
+
+echo "Verificando conexión SYS -> RH (10.0.0.20)..."
+ip netns exec NS-SYS ping -c4 10.0.0.20
+
+echo "Verificando conexión propia SYS (10.0.0.30)..."
+ip netns exec NS-SYS ping -c4 10.0.0.30
