@@ -75,19 +75,19 @@ echo ""
 echo -e "${GREEN}╔═══════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║        SISTEMA DE LABORATORIOS LINUX         ║${NC}"
 echo -e "${GREEN}╚═══════════════════════════════════════════════╝${NC}"
-echo ""
+echo -e "\n"
 
-# Listar labs existentes
+# Listar labs existentes (COLORES CORREGIDOS)
 print_info "Laboratorios existentes en ${BLUE}$LABS_DIR${NC}:"
-echo ""
+echo -e "\n"
 if ls -1 "$LABS_DIR"/${LAB_PREFIX}*${LAB_SUFFIX} 2>/dev/null; then
-    echo ""
+    echo -e "\n"
     LAB_COUNT=$(ls -1 "$LABS_DIR"/${LAB_PREFIX}*${LAB_SUFFIX} 2>/dev/null | wc -l)
     print_info "Total: ${GREEN}$LAB_COUNT${NC} laboratorios"
 else
-    echo "  ${YELLOW}(ninguno aún)${NC}"
+    echo -e "  ${YELLOW}(ninguno aún)${NC}\n"
 fi
-echo ""
+echo -e "\n"
 
 # Obtener siguiente número
 NEXT_NUM=$(get_next_lab_number)
@@ -95,7 +95,7 @@ NEW_LAB_FILE="$LABS_DIR/${LAB_PREFIX}${NEXT_NUM}${LAB_SUFFIX}"
 
 print_info "Nuevo laboratorio: ${GREEN}${LAB_PREFIX}${NEXT_NUM}${LAB_SUFFIX}${NC}"
 print_info "Ruta completa: ${BLUE}$NEW_LAB_FILE${NC}"
-echo ""
+echo -e "\n"
 
 # Confirmar inicio de sesión
 read -p "¿Iniciar nueva sesión de laboratorio? [S/n]: " confirm
@@ -106,7 +106,7 @@ if [[ ! "$confirm" =~ ^[Ss]$ ]]; then
     exit 0
 fi
 
-echo ""
+echo -e "\n"
 
 # Crear header del archivo lab con información del sistema
 cat > "$NEW_LAB_FILE" << EOF
@@ -125,13 +125,13 @@ GitHub:        https://github.com/jensygomez/Labs
 EOF
 
 print_success "Archivo de laboratorio creado"
-echo ""
+echo -e "\n"
 print_info "Iniciando captura de sesión..."
 print_warning "TODO lo que escribas será guardado en: ${GREEN}$NEW_LAB_FILE${NC}"
 print_warning "Para finalizar la sesión escribe: ${GREEN}exit${NC} o presiona ${GREEN}Ctrl+D${NC}"
-echo ""
+echo -e "\n"
 print_info "El archivo se sincronizará automáticamente con GitHub cada 5 minutos"
-echo ""
+echo -e "\n"
 
 # Pequeña pausa para que el usuario lea
 sleep 3
@@ -159,11 +159,11 @@ echo ""
 echo -e "${GREEN}╔═══════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║         SESIÓN DE LABORATORIO FINALIZADA      ║${NC}"
 echo -e "${GREEN}╚═══════════════════════════════════════════════╝${NC}"
-echo ""
+echo -e "\n"
 
 print_success "Laboratorio guardado exitosamente"
 print_info "Archivo: ${GREEN}$NEW_LAB_FILE${NC}"
-echo ""
+echo -e "\n"
 
 # Mostrar estadísticas del lab (CORREGIDO)
 if [ -f "$NEW_LAB_FILE" ]; then
@@ -175,17 +175,17 @@ if [ -f "$NEW_LAB_FILE" ]; then
     echo "  • Líneas:   $lines"
     echo "  • Palabras: $words"
     echo "  • Tamaño:   $size"
-    echo ""
+    echo -e "\n"
 fi
 
 # Recordatorio sobre auto-sync
 print_info "El archivo será subido a GitHub en el próximo ciclo de sincronización (máx 5 min)"
 print_warning "Puedes forzar sincronización inmediata ejecutando: ${GREEN}~/scripts/Git_auto_sync.sh${NC}"
-echo ""
+echo -e "\n"
 
 # Agregar al git automáticamente (opcional)
 cd "$REPO_DIR" && git add "$NEW_LAB_FILE" 2>/dev/null
 print_success "Archivo agregado a Git staging (listo para commit/push)"
-echo ""
+echo -e "\n"
 
 exit 0
