@@ -70,7 +70,8 @@ fi
 
 # PASO 1: Pull con rebase (traer cambios remotos)
 log_message "INFO: git pull --rebase $REMOTE_NAME $BRANCH_NAME"
-if git pull --rebase "$REMOTE_NAME" "$BRANCH_NAME" 2>&1 | tee -a "$LOG_FILE"; then
+if OUTPUT=$(git pull --rebase "$REMOTE_NAME" "$BRANCH_NAME" 2>&1); then
+    echo "$OUTPUT" >> "$LOG_FILE"
     log_message "SUCCESS: Git pull con rebase completado"
     
     # Recuperar stash si existe
@@ -83,9 +84,11 @@ if git pull --rebase "$REMOTE_NAME" "$BRANCH_NAME" 2>&1 | tee -a "$LOG_FILE"; th
         fi
     fi
 else
+    echo "$OUTPUT" >> "$LOG_FILE"
     log_message "ERROR: Fallo al hacer git pull --rebase"
     exit 1
 fi
+
 
 # PASO 2: Verificar si hay cambios para commitear
 if [[ -n $(git status -s 2>/dev/null) ]]; then
