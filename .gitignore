@@ -1,0 +1,26 @@
+# Sysadmin Labs - Jensy Gomezz
+# Ubuntu 24.04 + RHCSA Labs
+
+# Logs
+labs/*.log
+**/git-sync.log
+*.log
+
+# Cloud-init / VMs
+*.iso
+*.qcow2
+**/tmp/
+**/cloudinit/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporales
+*~
+*.tmp
+*.bak
