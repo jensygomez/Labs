@@ -1,51 +1,0 @@
-================================================================================
-LABORATORIO: lab-0001
-================================================================================
-Fecha inicio:  2026-02-13 19:33:44
-Hostname:      ubuntu
-Usuario:       student
-Sistema:       Ubuntu 24.04.4 LTS
-Kernel:        6.8.0-100-generic
-Working Dir:   /home/student/Labs
-GitHub:        https://github.com/jensygomez/Labs
-================================================================================
-
-Script started on 2026-02-13 19:33:48+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="210" LINES="55"]
-[?2004h]0;student@ubuntu: ~/Labs[01;32mstudent@ubuntu[00m:[01;34m~/Labs[00m$ pwd
-[?2004l/home/student/Labs
-[?2004h]0;student@ubuntu: ~/Labs[01;32mstudent@ubuntu[00m:[01;34m~/Labs[00m$ estoy [K[K[K[K[K[Kestoy te[K[K[K[K[K[K[K[Kecho "estoy probando mi sincronizacion"
-[?2004lestoy probando mi sincronizacion
-[?2004h]0;student@ubuntu: ~/Labs[01;32mstudent@ubuntu[00m:[01;34m~/Labs[00m$ Echo "Voy a esperar los primeros 5 minutos"
-[?2004lbash: Echo: command not found
-[?2004h]0;student@ubuntu: ~/Labs[01;32mstudent@ubuntu[00m:[01;34m~/Labs[00m$ [7msystemctl --user list-timers | grep git[27m
-[A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Csystemctl --user list-timers | grep git
-[A
-[?2004l-                              - Fri 2026-02-13 19:30:36 UTC        - [01;31m[Kgit[m[K-sync.timer                 [01;31m[Kgit[m[K-sync.service
-[?2004h]0;student@ubuntu: ~/Labs[01;32mstudent@ubuntu[00m:[01;34m~/Labs[00m$ [7mtail -20 ~/scripts/git-sync.log[27m
-[A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Ctail -20 ~/scripts/git-sync.log
-[A
-[?2004l[2026-02-13 18:40:17] [ubuntu] ERROR: El directorio /home/student/tu-repo no existe
-[2026-02-13 18:42:50] [ubuntu] INFO: Iniciando sincronización completa (origin/main)...
-[2026-02-13 18:42:50] [ubuntu] INFO: git pull --rebase origin main
-From https://github.com/jensygomez/Labs
- * branch            main       -> FETCH_HEAD
-Already up to date.
-[2026-02-13 18:42:51] [ubuntu] SUCCESS: Git pull con rebase completado
-[2026-02-13 18:42:51] [ubuntu] INFO: ✅ No hay cambios locales para sincronizar
-[2026-02-13 18:42:51] [ubuntu] INFO: Ciclo de sincronización completado exitosamente
-[?2004h]0;student@ubuntu: ~/Labs[01;32mstudent@ubuntu[00m:[01;34m~/Labs[00m$ [7mjournalctl --user -u git-sync.service --since "10 minutes ago"[27m
-[A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cjournalctl --user -u git-sync.service --since "10 minutes ago"
-[A
-[?2004l[?1h=-- No entries --[m
-[K[?1l>[?2004h]0;student@ubuntu: ~/Labs[01;32mstudent@ubuntu[00m:[01;34m~/Labs[00m$ [?2004l
-exit
-
-Script done on 2026-02-13 19:47:39+00:00 [COMMAND_EXIT_CODE="0"]
-
-================================================================================
-SESIÓN FINALIZADA
-================================================================================
-Fecha fin:     2026-02-13 19:47:39
-Duración:      Sesión completada
-Repositorio:   ~/Labs/labs/
-================================================================================
