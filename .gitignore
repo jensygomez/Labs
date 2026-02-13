@@ -1,0 +1,26 @@
+# Sysadmin Labs - Ubuntu 24.04
+# Ignorar logs, ISOs, VMs y temporales
+
+# Logs
+labs/*.log
+*.log
+**/git-sync.log
+
+# Cloud-init y VMs
+*.iso
+*.qcow2
+**/tmp/
+**/cloudinit/tmp/
+
+# Editores/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS X
+.DS_Store
+
+# Temporales
+*.tmp
+*~
