@@ -7,7 +7,7 @@
 #
 
 # Variables de configuración
-REPO_DIR="$HOME/tu-repo"              # CAMBIA ESTO al path de tu repo clonado
+REPO_DIR="$HOME/Labs"              # CAMBIA ESTO al path de tu repo clonado
 LOG_FILE="$HOME/scripts/git-sync.log"
 MAX_LOG_LINES=500
 REMOTE_NAME="${REMOTE_NAME:-origin}"  # Soporte para remote personalizado
