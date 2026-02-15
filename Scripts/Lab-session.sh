@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # Script: Lab-session.sh
-# Modelo: tee + trap (Simple y Confiable) - VERSIÓN CORREGIDA
-# Descripción: Captura CADA comando y output en tiempo real
+# Modelo: script + post-procesamiento inteligente
+# Descripción: Captura TODO en tiempo real con prompts visibles
 # Compatible: Ubuntu Server 24.04
 # Uso: lab
 #
@@ -64,7 +64,7 @@ get_next_lab_number() {
 # ============================================================================
 echo -e "\n${GREEN}╔═══════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║        SISTEMA DE LABORATORIOS LINUX          ║${NC}"
-echo -e "${GREEN}║              Modelo: tee + trap               ║${NC}"
+echo -e "${GREEN}║          Captura en Tiempo Real               ║${NC}"
 echo -e "${GREEN}╚═══════════════════════════════════════════════╝${NC}\n"
 
 # Listar labs existentes
@@ -85,6 +85,7 @@ echo ""
 # ============================================================================
 NEXT_NUM=$(get_next_lab_number)
 NEW_LAB_FILE="$LABS_DIR/${LAB_PREFIX}${NEXT_NUM}${LAB_SUFFIX}"
+TEMP_RAW_FILE=$(mktemp)
 
 print_info "Nuevo laboratorio: ${GREEN}${LAB_PREFIX}${NEXT_NUM}${LAB_SUFFIX}${NC}"
 echo ""
@@ -119,62 +120,43 @@ print_success "Archivo creado: $NEW_LAB_FILE"
 echo ""
 print_info "Iniciando captura en tiempo real..."
 print_warning "Para finalizar escribe: ${GREEN}exit${NC}"
-print_warning "Cada comando se guarda INMEDIATAMENTE"
 echo ""
 
 sleep 1
 
 # ============================================================================
-# CREAR SCRIPT DE INICIALIZACIÓN PARA EL SUBSHELL
+# INICIAR CAPTURA CON SCRIPT
 # ============================================================================
-INIT_SCRIPT=$(mktemp)
-cat > "$INIT_SCRIPT" << 'INITEOF'
-# Variables exportadas desde el script padre
-export LAB_FILE="$1"
-export LAB_NUM="$2"
+# script con -f (flush) captura TODO en tiempo real
+# -q evita mensajes de inicio/fin
+# -c especifica el comando a ejecutar
+# IMPORTANTE: NO usamos TERM=dumb para que el prompt se vea correctamente
 
-# Función para capturar comandos
-log_command() {
-    local cmd="$1"
-    # Ignorar comandos internos y repetidos
-    if [[ ! "$cmd" =~ ^(log_command|PROMPT_COMMAND) ]]; then
-        echo "$(date '+%Y-%m-%d %H:%M:%S') $(whoami)@$(hostname):$(pwd | sed "s|$HOME|~|")\$ $cmd" >> "$LAB_FILE"
-    fi
-}
-
-# Activar captura de comandos
-trap 'log_command "$BASH_COMMAND"' DEBUG
-
-# Configurar prompt limpio y funcional
-export PS1='\u@\h:\w\$ '
-
-# Mensaje de bienvenida
 echo "╔════════════════════════════════════════════════════════════════╗"
-echo "║  SESIÓN DE LABORATORIO ACTIVA - lab-$LAB_NUM                   "
-echo "║  Captura: TIEMPO REAL | Escribe 'exit' para finalizar        ║"
+echo "║  SESIÓN DE LABORATORIO ACTIVA - lab-${NEXT_NUM}"
+echo "║  Trabajas NORMALMENTE - Todo se guarda automáticamente       ║"
 echo "╚════════════════════════════════════════════════════════════════╝"
 echo ""
 
-# Iniciar bash interactivo
-exec /bin/bash --norc --noprofile
-INITEOF
+# Ejecutar script con captura
+script -f -q -c "PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ ' bash" "$TEMP_RAW_FILE"
 
 # ============================================================================
-# INICIAR SESIÓN CON TEE
+# POST-PROCESAMIENTO: LIMPIAR CARACTERES ANSI
 # ============================================================================
+# Eliminar secuencias de escape ANSI pero mantener el contenido
+sed 's/\x1b\[[0-9;]*m//g' "$TEMP_RAW_FILE" | \
+sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | \
+sed 's/\r//g' | \
+grep -v '^Script started' | \
+grep -v '^Script done' >> "$NEW_LAB_FILE"
 
-# Ejecutar bash con el script de inicialización y capturar con tee
-bash "$INIT_SCRIPT" "$NEW_LAB_FILE" "$NEXT_NUM" 2>&1 | tee -a "$NEW_LAB_FILE" >/dev/null
-
-# Limpiar script temporal
-rm -f "$INIT_SCRIPT"
+# Limpiar archivo temporal
+rm -f "$TEMP_RAW_FILE"
 
 # ============================================================================
 # FINALIZAR SESIÓN
 # ============================================================================
-
-# Esperar a que tee termine de escribir
-sleep 1
 sync
 
 # Agregar footer
@@ -201,11 +183,11 @@ echo ""
 if [ -f "$NEW_LAB_FILE" ]; then
     lines=$(wc -l < "$NEW_LAB_FILE")
     size=$(du -h "$NEW_LAB_FILE" | cut -f1)
-    # Contar comandos con el formato correcto (timestamp + prompt + $)
-    commands=$(grep -c '[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}.*\$' "$NEW_LAB_FILE" 2>/dev/null || echo "0")
+    # Contar líneas que tienen el prompt (indica comandos ejecutados)
+    commands=$(grep -cE '^\w+@\w+:.*\$' "$NEW_LAB_FILE" 2>/dev/null || echo "0")
     
     echo -e "${BLUE}Resumen:${NC}"
-    echo "  • Archivo: ${GREEN}${LAB_PREFIX}${NEXT_NUM}${LAB_SUFFIX}${NC}"
+    echo -e "  • Archivo: ${GREEN}${LAB_PREFIX}${NEXT_NUM}${LAB_SUFFIX}${NC}"
     echo "  • Líneas guardadas: $lines"
     echo "  • Comandos ejecutados: $commands"
     echo "  • Tamaño: $size"
