@@ -10,3 +10,300 @@ Working Dir:   /home/student/Labs
 GitHub:        https://github.com/jensygomez/Labs
 ================================================================================
 
+student@ubuntu:~/Labs$ # ==========================================================
+#        TOPOLOGÍA INICIAL DEL LABORATORIO (Namespaces)
+# ==========================================================
+#
+#                    ┌─────────────────┐
+#                    │     CORE-GW     │
+#                    │  (IP: 10.0.0.1) │
+#                    │   [ Bridge br0 ]│
+#                    └────────┬────────┘
+#                             │
+#       ┌─────────────────────┼─────────────────────┐
+#       │                     │                     │
+#    v-srv-gw              v-rh-gw               v-sys-gw
+#       │                     │                     │
+#       │ (Cable Veth)        │ (Cable Veth)        │ (Cable Veth)
+#       │                     │                     │
+#     v-srv                 v-rh                  v-sys
+# ┌─────┴─────┐         ┌─────┴─────┐         ┌─────┴─────┐
+# │  NS-SRV   │         │   NS-RH   │         │   NS-SYS  │
+# │ 10.0.0.10 │         │ 10.0.0.20 │         │ 10.0.0.30 │
+# │           │         │           │         │           |
+# └───────────┘         └───────────┘         └───────────┘
+#
+# ==========================================================
+# Resumen de Red:
+# - Red local: 10.0.0.0/24
+# - Gateway (br0): 10.0.0.1
+# - Aislamiento: Mediante Network Namespaces (netns)
+# ==========================================================# ==========================================================
+#        TOPOLOGÍA INICIAL DEL LABORATORIO (Namespaces)
+# ==========================================================
+#
+#                    ┌─────────────────┐
+#                    │     CORE-GW     │
+#                    │  (IP: 10.0.0.1) │
+#                    │   [ Bridge br0 ]│
+#                    └────────┬────────┘
+#                             │
+#       ┌─────────────────────┼─────────────────────┐
+#       │                     │                     │
+#    v-srv-gw              v-rh-gw               v-sys-gw
+#       │                     │                     │
+#       │ (Cable Veth)        │ (Cable Veth)        │ (Cable Veth)
+#       │                     │                     │
+#     v-srv                 v-rh                  v-sys
+# ┌─────┴─────┐         ┌─────┴─────┐         ┌─────┴─────┐
+# │  NS-SRV   │         │   NS-RH   │         │   NS-SYS  │
+# │ 10.0.0.10 │         │ 10.0.0.20 │         │ 10.0.0.30 │
+# │           │         │           │         │           |
+# └───────────┘         └───────────┘         └───────────┘
+#
+# ==========================================================
+# Resumen de Red:
+# - Red local: 10.0.0.0/24
+# - Gateway (br0): 10.0.0.1
+# - Aislamiento: Mediante Network Namespaces (netns)
+# ==========================================================
+student@ubuntu:~/Labs$ 
+student@ubuntu:~/Labs$ 
+student@ubuntu:~/Labs$ # Creando los namexspaces
+student@ubuntu:~/Labs$ sduoudo ip netns add NS-SRV
+[sudo] password for student: 
+student@ubuntu:~/Labs$ sudo ip netns add NS-RH
+student@ubuntu:~/Labs$ sudo ip netns add NS-SYS
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # Crenndo ando el Bridge
+student@ubuntu:~/Labs$ sudo ip netns link add br0 typpee bridge
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # Levantando la Bridge en el host
+student@ubuntu:~/Labs$ sudo ip link set bro up0 up
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # EnceKLevanLevantando la Interface Loopback en cada Namespace
+student@ubuntu:~/Labs$ sudo ip netns exec NS-SRV ip link set lo up
+student@ubuntu:~/Labs$ sudo ip netns exec SNS-RH ip link set lo up
+student@ubuntu:~/Labs$ sudo ip netns exec NS-SYS ip link set lo up
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # Comprobando todos los namespaces
+student@ubuntu:~/Labs$ sudo ip netns list
+NS-SYS
+NS-RH
+NS-SRV
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # Verificando el Bridge BR0br0
+student@ubuntu:~/Labs$ sudo ip link show br0
+3: br0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN mode DEFAULT group default qlen 1000
+    link/ether e2:12:4d:e6:f5:13 brd ff:ff:ff:ff:ff:ff
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # PASO 2: CRENADO LOS CABLES[1@N
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ sudo pip link add v-srv type veth peer name v-srv-gw
+student@ubuntu:~/Labs$ sudo ip linjk add v-srvrh type verth peer name v-rh-gw
+student@ubuntu:~/Labs$ duso ip link add v-sys type verth peer name v-sys-gw
+bash: duso: command not found
+student@ubuntu:~/Labs$ duso ip link add v-sys type veth peer name v-sys-gw[1@d[1@s[1@u[1@d[1@o
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # PASO 2.1: Conectando uno de los Extremos a cada NameSpace correspondiente
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ sudo ip lintk set v-srv netns SRVNS-SRV
+student@ubuntu:~/Labs$ sudo ip link set v-rgh Nnetns NS-RH
+student@ubuntu:~/Labs$ sudo ip link set v-sys netns NS-SYS
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # PASO 2.2: Conectando el otro extremo al bridge
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ sudo ip link set v-srh-gw master br0[1@v
+student@ubuntu:~/Labs$ sudo ip link set v-rh-gw master br0
+student@ubuntu:~/Labs$ sudo ip link set v-sys-gw master br0
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # PASO 2.3: Levantando la interface del lado del Bridge
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ sudo ip link set v-sys--gw-gw-gwr-gwv-gw up
+student@ubuntu:~/Labs$ sudo ip link set v-rh-gw up
+student@ubuntu:~/Labs$ sudo ip link set v-sys-gw up
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # PASO 2.4: Verificando conexion de los cables
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ bsudo bridge link show br0
+4: v-srv-gw@if5: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 master br0 state disabled priority 32 cost 2 
+6: v-rh-gw@if7: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 master br0 state disabled priority 32 cost 2 
+8: v-sys-gw@if9: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 master br0 state disabled priority 32 cost 2 
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # PASO 3: Configguracion de IPs y Activacion de interfaces en cada Namespaces
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # PASO 3.21: Configunrrando NS -SRV
+student@ubuntu:~/Labs$ sudo ip netns exec NS-SRV ip addr add 10.100.0.10/24 dev v-srv
+student@ubuntu:~/Labs$ sudo  ip netns exec NS-SRV ip link v-srv up
+Command "v-srv" is unknown, try "ip link help".
+student@ubuntu:~/Labs$ sudo ip netns exec NS-SRV ip link v-srv up[1@s[1@e[1@t[1@ 
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # Paso 3.2 : Configurnado NS-RH
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ sudo ip netns exec NS-RH ip addr add 10.0.0.20/24 dev v-rh
+student@ubuntu:~/Labs$ sudo inp netns exec NS-RH ip link set v-rh up
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # Paso 3.3: Configurnado NS-SYS
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ sudo ip netns exec NS-SYS ip addr add 10.0.0.30/24 dev v-sys
+student@ubuntu:~/Labs$ sudo ip netns exec NS-SYS ip link set v-sys up
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # 
+student@ubuntu:~/Labs$ # PASO 3.4: Configurnado la IP del Gateway - el Bridge
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ 
+student@ubuntu:~/Labs$ sudo ip netns exec addr add 10.0.0.1/24 dev br0
+student@ubuntu:~/Labs$ student@ubuntu:~/Labs$ student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # VERIFIACANDO CON COMANDOS PINGs
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ sudo ip netns exec NS-SRV ping -c4 10.0.0.1
+PING 10.0.0.1 (10.0.0.1) 56(84) bytes of data.
+64 bytes from 10.0.0.1: icmp_seq=1 ttl=64 time=0.150 ms
+64 bytes from 10.0.0.1: icmp_seq=2 ttl=64 time=0.224 ms
+64 bytes from 10.0.0.1: icmp_seq=3 ttl=64 time=0.150 ms
+64 bytes from 10.0.0.1: icmp_seq=4 ttl=64 time=0.314 ms
+
+--- 10.0.0.1 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3071ms
+rtt min/avg/max/mdev = 0.150/0.209/0.314/0.067 ms
+student@ubuntu:~/Labs$ sudo ip netns exec NS-SRV ping -c4 10.0.0.10
+PING 10.0.0.10 (10.0.0.10) 56(84) bytes of data.
+64 bytes from 10.0.0.10: icmp_seq=1 ttl=64 time=0.035 ms
+64 bytes from 10.0.0.10: icmp_seq=2 ttl=64 time=0.096 ms
+64 bytes from 10.0.0.10: icmp_seq=3 ttl=64 time=0.124 ms
+64 bytes from 10.0.0.10: icmp_seq=4 ttl=64 time=0.101 ms
+
+--- 10.0.0.10 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3066ms
+rtt min/avg/max/mdev = 0.035/0.089/0.124/0.032 ms
+student@ubuntu:~/Labs$ sudo ip netns exec NS-SRV ping -c4 10.0.0.1020
+PING 10.0.0.20 (10.0.0.20) 56(84) bytes of data.
+64 bytes from 10.0.0.20: icmp_seq=1 ttl=64 time=0.120 ms
+64 bytes from 10.0.0.20: icmp_seq=2 ttl=64 time=0.307 ms
+64 bytes from 10.0.0.20: icmp_seq=3 ttl=64 time=0.165 ms
+64 bytes from 10.0.0.20: icmp_seq=4 ttl=64 time=0.156 ms
+
+--- 10.0.0.20 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3102ms
+rtt min/avg/max/mdev = 0.120/0.187/0.307/0.071 ms
+student@ubuntu:~/Labs$ sudo ip netns exec NS-SRV ping -c4 10.0.0.2030
+PING 10.0.0.30 (10.0.0.30) 56(84) bytes of data.
+64 bytes from 10.0.0.30: icmp_seq=1 ttl=64 time=0.122 ms
+64 bytes from 10.0.0.30: icmp_seq=2 ttl=64 time=0.165 ms
+64 bytes from 10.0.0.30: icmp_seq=3 ttl=64 time=0.179 ms
+64 bytes from 10.0.0.30: icmp_seq=4 ttl=64 time=0.178 ms
+
+--- 10.0.0.30 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3107ms
+rtt min/avg/max/mdev = 0.122/0.161/0.179/0.023 ms
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # PASO 4: CONFIGURANDO EL GATEWAY y SALIDA a INTERNET
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ Paso# PASO 4.1: Configurar ruta por defecto en cada nameespace
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ sudo ip netns exec NS-SRV ip route add default via 10.0.0.1
+student@ubuntu:~/Labs$ sudo ip netns exec NS-RH ip route add default via 10.0.0.1
+student@ubuntu:~/Labs$ sudo ip netns exec NS-SYS ip route add default via 10.0.0.1
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # PAS) 0o 4.2 : Habilitar el IP FOorwarding en el host
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ sudo sysctl -w net.ipv4.ip_forward=1
+net.ipv4.ip_forward = 1
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # PASO 4.3: Verificando las tableas en los namespaces
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ sudo ip netns exec NS-SRV ip route
+default via 10.0.0.1 dev v-srv 
+10.0.0.0/24 dev v-srv proto kernel scope link src 10.0.0.10 
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ sudo ip netns exec NS-RGH ip route
+default via 10.0.0.1 dev v-rh 
+10.0.0.0/24 dev v-rh proto kernel scope link src 10.0.0.20 
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ sudo ip netns exec NS-SYS ip route
+default via 10.0.0.1 dev v-sys 
+10.0.0.0/24 dev v-sys proto kernel scope link src 10.0.0.30 
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ # PASO 4.4: MASQUERADING NAT
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ sudo ip route | grep default
+default via 192.168.122.1 dev enp1s0 proto dhcp src 192.168.122.11 metric 100 
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ sudo iptables -t nat -A POSTROUTUNGING -s 10.0.0.0/24 -o enp1s0 -j MASQUERA DE
+sudo: iptables: command not found
+student@ubuntu:~/Labs$ sudo iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o enp1s0 -j MASQUERADE
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ PASO 4.5: TESTANTDO SALIDA A INTERNET
+bash: PASO: command not found
+student@ubuntu:~/Labs$ #
+student@ubuntu:~/Labs$ ip sudo ip nens exec NS-SRV ping -c4 8.8.8.8
+Object "nens" is unknown, try "ip help".
+student@ubuntu:~/Labs$ sudo ip nens exec NS-SRV ping -c4 8.8.8.8[1@n[1@e[1@t[1@n[1@s
+PING 8.8.8.8 (8.8.8.8) 56(84) bytes of data.
+64 bytes from 8.8.8.8: icmp_seq=1 ttl=117 time=9.04 ms
+64 bytes from 8.8.8.8: icmp_seq=2 ttl=117 time=10.0 ms
+64 bytes from 8.8.8.8: icmp_seq=3 ttl=117 time=10.2 ms
+64 bytes from 8.8.8.8: icmp_seq=4 ttl=117 time=9.63 ms
+
+--- 8.8.8.8 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3006ms
+rtt min/avg/max/mdev = 9.039/9.732/10.248/0.456 ms
+student@ubuntu:~/Labs$ sudo ip netns exec NS-SRV ping -c4 8.8.8.8[1@R[1@H
+PING 8.8.8.8 (8.8.8.8) 56(84) bytes of data.
+64 bytes from 8.8.8.8: icmp_seq=1 ttl=117 time=9.12 ms
+64 bytes from 8.8.8.8: icmp_seq=2 ttl=117 time=9.48 ms
+64 bytes from 8.8.8.8: icmp_seq=3 ttl=117 time=10.1 ms
+64 bytes from 8.8.8.8: icmp_seq=4 ttl=117 time=10.1 ms
+
+--- 8.8.8.8 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3006ms
+rtt min/avg/max/mdev = 9.115/9.703/10.116/0.425 ms
+student@ubuntu:~/Labs$ sudo ip netns exec NS-RH ping -c4 8.8.8.8[1@S[1@Y[1@S
+PING 8.8.8.8 (8.8.8.8) 56(84) bytes of data.
+64 bytes from 8.8.8.8: icmp_seq=1 ttl=117 time=8.92 ms
+64 bytes from 8.8.8.8: icmp_seq=2 ttl=117 time=9.80 ms
+64 bytes from 8.8.8.8: icmp_seq=3 ttl=117 time=9.60 ms
+64 bytes from 8.8.8.8: icmp_seq=4 ttl=117 time=9.49 ms
+
+--- 8.8.8.8 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3005ms
+rtt min/avg/max/mdev = 8.918/9.453/9.804/0.328 ms
+student@ubuntu:~/Labs$ exit
+exit
+
+
+================================================================================
+SESIÓN FINALIZADA
+================================================================================
+Fecha fin:     2026-02-15 19:04:38
+Duración:      Sesión completada
+Repositorio:   ~/Labs/labs/
+================================================================================
