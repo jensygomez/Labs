@@ -1,10 +1,10 @@
 #!/bin/bash
 #
 # Script: Lab-session.sh
-# Modelo: tee + trap (Simple y Confiable)
+# Modelo: tee + trap (Simple y Confiable) - VERSIÓN CORREGIDA
 # Descripción: Captura CADA comando y output en tiempo real
-# Ubicación: ~/Labs/Scripts/Lab-session.sh
-# Uso: ./Lab-session.sh o crear alias: alias lab='~/Labs/Scripts/Lab-session.sh'
+# Compatible: Ubuntu Server 24.04
+# Uso: lab
 #
 
 # ============================================================================
@@ -125,39 +125,49 @@ echo ""
 sleep 1
 
 # ============================================================================
-# INICIAR SESIÓN CON TEE + TRAP
+# CREAR SCRIPT DE INICIALIZACIÓN PARA EL SUBSHELL
+# ============================================================================
+INIT_SCRIPT=$(mktemp)
+cat > "$INIT_SCRIPT" << 'INITEOF'
+# Variables exportadas desde el script padre
+export LAB_FILE="$1"
+export LAB_NUM="$2"
+
+# Función para capturar comandos
+log_command() {
+    local cmd="$1"
+    # Ignorar comandos internos y repetidos
+    if [[ ! "$cmd" =~ ^(log_command|PROMPT_COMMAND) ]]; then
+        echo "$(date '+%Y-%m-%d %H:%M:%S') $(whoami)@$(hostname):$(pwd | sed "s|$HOME|~|")\$ $cmd" >> "$LAB_FILE"
+    fi
+}
+
+# Activar captura de comandos
+trap 'log_command "$BASH_COMMAND"' DEBUG
+
+# Configurar prompt limpio y funcional
+export PS1='\u@\h:\w\$ '
+
+# Mensaje de bienvenida
+echo "╔════════════════════════════════════════════════════════════════╗"
+echo "║  SESIÓN DE LABORATORIO ACTIVA - lab-$LAB_NUM                   "
+echo "║  Captura: TIEMPO REAL | Escribe 'exit' para finalizar        ║"
+echo "╚════════════════════════════════════════════════════════════════╝"
+echo ""
+
+# Iniciar bash interactivo
+exec /bin/bash --norc --noprofile
+INITEOF
+
+# ============================================================================
+# INICIAR SESIÓN CON TEE
 # ============================================================================
 
-# Crear un subshell con captura completa
-(
-    # Variables para el subshell
-    export LAB_FILE="$NEW_LAB_FILE"
-    export LAB_NUM="$NEXT_NUM"
-    
-    # Activar captura de comandos con trap
-    # Esto captura ANTES de ejecutar cada comando
-    trap 'echo "$(date "+%Y-%m-%d %H:%M:%S") $ $BASH_COMMAND" >> "$LAB_FILE"' DEBUG
-    
-    # Redirigir STDOUT y STDERR a tee
-    # Esto captura TODO el output
-    exec > >(tee -a "$LAB_FILE") 2>&1
-    
-    # Personalizar el prompt para que sea limpio
-    export PS1="\u@\h:\w\$ "
-    
-    # Mensaje de bienvenida en la sesión
-    echo "╔════════════════════════════════════════════════════════════════╗"
-    echo "║  SESIÓN DE LABORATORIO ACTIVA - lab-${LAB_NUM}                 "
-    echo "║  Captura: TIEMPO REAL | Escribe 'exit' para finalizar        ║"
-    echo "╚════════════════════════════════════════════════════════════════╝"
-    echo ""
-    
-    # Iniciar bash interactivo
-    /bin/bash --norc --noprofile
-    
-    # Al salir, desactivar trap
-    trap - DEBUG
-)
+# Ejecutar bash con el script de inicialización y capturar con tee
+bash "$INIT_SCRIPT" "$NEW_LAB_FILE" "$NEXT_NUM" 2>&1 | tee -a "$NEW_LAB_FILE" >/dev/null
+
+# Limpiar script temporal
+rm -f "$INIT_SCRIPT"
 
 # ============================================================================
 # FINALIZAR SESIÓN
@@ -191,7 +201,8 @@ echo ""
 if [ -f "$NEW_LAB_FILE" ]; then
     lines=$(wc -l < "$NEW_LAB_FILE")
     size=$(du -h "$NEW_LAB_FILE" | cut -f1)
-    commands=$(grep -c '^\[.*\] \$' "$NEW_LAB_FILE" 2>/dev/null || echo "0")
+    # Contar comandos con el formato correcto (timestamp + prompt + $)
+    commands=$(grep -c '[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}.*\$' "$NEW_LAB_FILE" 2>/dev/null || echo "0")
     
     echo -e "${BLUE}Resumen:${NC}"
     echo "  • Archivo: ${GREEN}${LAB_PREFIX}${NEXT_NUM}${LAB_SUFFIX}${NC}"
