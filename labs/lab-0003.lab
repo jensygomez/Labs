@@ -10,3 +10,26 @@ Working Dir:   /home/student/Labs
 GitHub:        https://github.com/jensygomez/Labs
 ================================================================================
 
+student@ubuntu:~/Labs$ echo "Voy a esperar ahora mas de 5 minutos"
+Voy a esperar ahora mas de 5 minutos
+student@ubuntu:~/Labs$ date
+Sun Feb 15 02:26:52 UTC 2026
+student@ubuntu:~/Labs$ echo "voy a esperar hatas sta las 02:32 UTC como minimo"
+voy a esperar hasta las 02:32 UTC como minimo
+student@ubuntu:~/Labs$ Echo# sigo probando
+student@ubuntu:~/Labs$ # ya casi son los 5 minutos
+student@ubuntu:~/Labs$ student@ubuntu:~/Labs$ student@ubuntu:~/Labs$ bueno ya llegamos a los 5 minutos
+bash: bueno: command not found
+student@ubuntu:~/Labs$ # voy a esperar un minuto mas
+student@ubuntu:~/Labs$ # voy a finalizar
+student@ubuntu:~/Labs$ exit
+exit
+
+
+================================================================================
+SESIÓN FINALIZADA
+================================================================================
+Fecha fin:     2026-02-15 02:33:09
+Duración:      Sesión completada
+Repositorio:   ~/Labs/labs/
+================================================================================
