@@ -1,0 +1,26 @@
+================================================================================
+LABORATORIO: lab-0002
+================================================================================
+Fecha inicio:  2026-02-15 01:53:47
+Hostname:      ubuntu
+Usuario:       student
+Sistema:       Ubuntu 24.04.4 LTS
+Kernel:        6.8.0-100-generic
+Working Dir:   /home/student/Labs
+GitHub:        https://github.com/jensygomez/Labs
+================================================================================
+
+Script started on 2026-02-15 01:53:49+00:00 [COMMAND="/bin/bash" TERM="dumb" TTY="/dev/pts/0" COLUMNS="195" LINES="57"]
+student@ubuntu:~/Labs$ date
+Sun Feb 15 01:53:50 UTC 2026
+student@ubuntu:~/Labs$ adg
+bash: adg: command not found
+student@ubuntu:~/Labs$ ag
+bash: ag: command not found
+student@ubuntu:~/Labs$ echo adfgasdgaddg
+adfgasdgaddg
+student@ubuntu:~/Labs$ echo
+
+student@ubuntu:~/Labs$ echo qetqgsdahsggjdf
+qetqgsdahsggjdf
+student@ubuntu:~/Labs$ 
