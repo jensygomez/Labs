@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # Script: Lab-session.sh
-# Modelo: script + post-procesamiento inteligente
-# Descripción: Captura TODO en tiempo real con prompts visibles
+# Modelo: script + post-procesamiento inteligente MEJORADO
+# Descripción: Captura TODO en tiempo real con prompts visibles y limpieza perfecta
 # Compatible: Ubuntu Server 24.04
 # Uso: lab
 #
@@ -127,11 +127,6 @@ sleep 1
 # ============================================================================
 # INICIAR CAPTURA CON SCRIPT
 # ============================================================================
-# script con -f (flush) captura TODO en tiempo real
-# -q evita mensajes de inicio/fin
-# -c especifica el comando a ejecutar
-# IMPORTANTE: NO usamos TERM=dumb para que el prompt se vea correctamente
-
 echo "╔════════════════════════════════════════════════════════════════╗"
 echo "║  SESIÓN DE LABORATORIO ACTIVA - lab-${NEXT_NUM}"
 echo "║  Trabajas NORMALMENTE - Todo se guarda automáticamente       ║"
@@ -139,15 +134,26 @@ echo "╚═══════════════════════�
 echo ""
 
 # Ejecutar script con captura
-script -f -q -c "PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ ' bash" "$TEMP_RAW_FILE"
+# Usamos un prompt simple sin colores para evitar secuencias ANSI
+script -f -q -c "PS1='\u@\h:\w\$ ' bash --norc --noprofile" "$TEMP_RAW_FILE"
 
 # ============================================================================
-# POST-PROCESAMIENTO: LIMPIAR CARACTERES ANSI
+# POST-PROCESAMIENTO: LIMPIEZA EXHAUSTIVA
 # ============================================================================
-# Eliminar secuencias de escape ANSI pero mantener el contenido
+# Pipeline de limpieza:
+# 1. Eliminar secuencias de escape ANSI de colores: \x1b[...m
+# 2. Eliminar secuencias de control de cursor: \x1b[...
+# 3. Eliminar bracketed paste mode: [?2004h y [?2004l
+# 4. Eliminar secuencias de título de ventana: ]0;...
+# 5. Eliminar retornos de carro \r
+# 6. Eliminar líneas de Script started/done
+
 sed 's/\x1b\[[0-9;]*m//g' "$TEMP_RAW_FILE" | \
 sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | \
-sed 's/\r//g' | \
+sed 's/\[?[0-9]*[hl]//g' | \
+sed 's/\][0-9];[^\x07]*\x07//g' | \
+sed 's/\][0-9];[^	]*	//g' | \
+sed 's/\r$//g' | \
 grep -v '^Script started' | \
 grep -v '^Script done' >> "$NEW_LAB_FILE"
 
