@@ -23,4 +23,19 @@ student@ubuntu:~/Labs$ echo
 
 student@ubuntu:~/Labs$ echo qetqgsdahsggjdf
 qetqgsdahsggjdf
+student@ubuntu:~/Labs$ ip netns list
+NS-SYS (id: 2)
+NS-RH (id: 1)
+NS-SRV (id: 0)
+student@ubuntu:~/Labs$ sudo ip netns add NS-JENSY
+[sudo] password for student: 
+Sorry, try again.
+[sudo] password for student: 
+student@ubuntu:~/Labs$ ip netns list
+NS-JENSY
+NS-SYS (id: 2)
+NS-RH (id: 1)
+NS-SRV (id: 0)
+student@ubuntu:~/Labs$ date
+Sun Feb 15 01:58:52 UTC 2026
 student@ubuntu:~/Labs$ 
