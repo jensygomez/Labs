@@ -147,6 +147,7 @@ script -f -q -c "PS1='\u@\h:\w\$ ' bash --norc --noprofile" "$TEMP_RAW_FILE"
 # 4. Eliminar secuencias de título de ventana: ]0;...
 # 5. Eliminar retornos de carro \r
 # 6. Eliminar líneas de Script started/done
+# 7. Reducir múltiples líneas vacías a una sola
 
 sed 's/\x1b\[[0-9;]*m//g' "$TEMP_RAW_FILE" | \
 sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | \
@@ -155,7 +156,8 @@ sed 's/\][0-9];[^\x07]*\x07//g' | \
 sed 's/\][0-9];[^	]*	//g' | \
 sed 's/\r$//g' | \
 grep -v '^Script started' | \
-grep -v '^Script done' >> "$NEW_LAB_FILE"
+grep -v '^Script done' | \
+cat -s >> "$NEW_LAB_FILE"
 
 # Limpiar archivo temporal
 rm -f "$TEMP_RAW_FILE"
@@ -190,7 +192,7 @@ if [ -f "$NEW_LAB_FILE" ]; then
     lines=$(wc -l < "$NEW_LAB_FILE")
     size=$(du -h "$NEW_LAB_FILE" | cut -f1)
     # Contar líneas que tienen el prompt (indica comandos ejecutados)
-    commands=$(grep -cE '^\w+@\w+:.*\$' "$NEW_LAB_FILE" 2>/dev/null || echo "0")
+    commands=$(grep -cE '^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+:.*\$ ' "$NEW_LAB_FILE" 2>/dev/null || echo "0")
     
     echo -e "${BLUE}Resumen:${NC}"
     echo -e "  • Archivo: ${GREEN}${LAB_PREFIX}${NEXT_NUM}${LAB_SUFFIX}${NC}"
