@@ -1,0 +1,49 @@
+================================================================================
+LABORATORIO: lab-0001
+================================================================================
+Fecha inicio:  2026-02-15 02:19:22
+Hostname:      ubuntu
+Usuario:       student
+Sistema:       Ubuntu 24.04.4 LTS
+Kernel:        6.8.0-100-generic
+Working Dir:   /home/student/Labs
+GitHub:        https://github.com/jensygomez/Labs
+================================================================================
+
+2026-02-15 02:19:23 student@ubuntu:~/Labs$ export PS1='\u@\h:\w\$ '
+2026-02-15 02:19:23 student@ubuntu:~/Labs$ echo "╔════════════════════════════════════════════════════════════════╗"
+╔════════════════════════════════════════════════════════════════╗
+2026-02-15 02:19:23 student@ubuntu:~/Labs$ echo "║  SESIÓN DE LABORATORIO ACTIVA - lab-$LAB_NUM                   "
+║  SESIÓN DE LABORATORIO ACTIVA - lab-0001                   
+2026-02-15 02:19:23 student@ubuntu:~/Labs$ echo "║  Captura: TIEMPO REAL | Escribe 'exit' para finalizar        ║"
+║  Captura: TIEMPO REAL | Escribe 'exit' para finalizar        ║
+2026-02-15 02:19:23 student@ubuntu:~/Labs$ echo "╚════════════════════════════════════════════════════════════════╝"
+╚════════════════════════════════════════════════════════════════╝
+2026-02-15 02:19:23 student@ubuntu:~/Labs$ echo ""
+
+2026-02-15 02:19:23 student@ubuntu:~/Labs$ exec /bin/bash --norc --noprofile
+
+saludos
+/home/student/Labs
+total 52
+drwxrwxr-x 2 student student 4096 Feb 13 13:00 Golden Base
+drwxrwxr-x 2 student student 4096 Feb 13 13:00 Lab-001
+-rwxrwxr-x 1 student student 4701 Feb 13 13:00 README.md
+drwxrwxr-x 2 student student 4096 Feb 15 02:19 Scripts
+drwxrwxr-x 2 student student 4096 Feb 13 13:00 Scripts Kernel Linux
+-rwxrwxr-x 1 student student 5205 Feb 13 13:00 Sem título.md
+drwxrwxr-x 6 student student 4096 Feb 13 13:00 corp-net-v2
+drwxrwxr-x 2 student student 4096 Feb 13 13:00 engine
+drwxrwxr-x 2 student student 4096 Feb 15 02:19 labs
+drwxrwxr-x 5 student student 4096 Feb 13 13:00 network-engine
+drwxrwxr-x 3 student student 4096 Feb 13 13:00 scenarios
+/home/student/Labs
+/home/student/Labs
+
+================================================================================
+SESIÓN FINALIZADA
+================================================================================
+Fecha fin:     2026-02-15 02:19:51
+Duración:      Sesión completada
+Repositorio:   ~/Labs/labs/
+================================================================================
