@@ -1,5 +1,5 @@
 # ==========================================================
-#        TOPOLOGÍA FINAL DEL LABORATORIO (Namespaces)
+#        TOPOLOGÍA INICIAL DEL LABORATORIO (Namespaces)
 # ==========================================================
 #
 #                    ┌─────────────────┐
@@ -10,15 +10,15 @@
 #                             │
 #       ┌─────────────────────┼─────────────────────┐
 #       │                     │                     │
-#  veth-srv-gw           veth-rh-gw            veth-sys-gw
+#    v-srv-gw              v-rh-gw               v-sys-gw
 #       │                     │                     │
 #       │ (Cable Veth)        │ (Cable Veth)        │ (Cable Veth)
 #       │                     │                     │
-#  veth-srv              veth-rh               veth-sys
+#     v-srv                 v-rh                  v-sys
 # ┌─────┴─────┐         ┌─────┴─────┐         ┌─────┴─────┐
 # │  NS-SRV   │         │   NS-RH   │         │   NS-SYS  │
 # │ 10.0.0.10 │         │ 10.0.0.20 │         │ 10.0.0.30 │
-# │(SVC-FILE) │         │(USR-RH-1) │         │(SYS-ADMIN)│
+# │           │         │           │         │           |
 # └───────────┘         └───────────┘         └───────────┘
 #
 # ==========================================================
