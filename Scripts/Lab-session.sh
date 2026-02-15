@@ -109,7 +109,11 @@ sleep 2
 # --- LA CLAVE DE LA LIMPIEZA ---
 # TERM=dumb desactiva colores y secuencias de escape ANSI durante la grabación
 # sed al final elimina posibles restos de caracteres de control (^M o retornos)
-TERM=dumb script -a -f -q -c "$SHELL" "$NEW_LAB_FILE"
+TERM=dumb script -a -f -q -c "/bin/bash" "$NEW_LAB_FILE" 2>&1
+
+# Y agrega después:
+sync  # Fuerza escritura
+sleep 1  # Da tiempo al sistema
 
 # Limpieza post-sesión de caracteres de control invisibles (opcional pero recomendado)
 sed -i 's/\r//g' "$NEW_LAB_FILE"
