@@ -1,0 +1,22 @@
+================================================================================
+LABORATORIO: lab-0001
+================================================================================
+Fecha inicio:  2026-02-15 01:07:52
+Hostname:      ubuntu
+Usuario:       student
+Sistema:       Ubuntu 24.04.4 LTS
+Kernel:        6.8.0-100-generic
+Working Dir:   /home/student
+GitHub:        https://github.com/jensygomez/Labs
+================================================================================
+
+Script started on 2026-02-15 01:07:54+00:00 [COMMAND="/bin/bash" TERM="dumb" TTY="/dev/pts/0" COLUMNS="195" LINES="57"]
+student@ubuntu:~$ # Vamos a crear el namespace para el servidor de Archivos
+student@ubuntu:~$ sudo ip netns add NS-SRV
+[sudo] password for student: 
+student@ubuntu:~$ #Crear        Crear el namespace para Recursos Humanos
+student@ubuntu:~$ sudo ip netns add NS-RH
+student@ubuntu:~$ # Creaar el namespace para Sistemas
+student@ubuntu:~$ ip netna s add NS-SYS
+mount --make-shared /run/netns failed: Operation not permitted
+student@ubuntu:~$ sudo ip netns add 
