@@ -10,3 +10,206 @@ Working Dir:   /home/student
 GitHub:        [https://github.com/jensygomez/Labs](https://github.com/jensygomez/Labs)
 ================================================================================
 
+student@ubuntu:~$ sudo ip  netns add CORE-GW
+[sudo] password for student: 
+student@ubuntu:~$ sudo ip netns list
+CORE-GW
+student@ubuntu:~$ sudo ip link add br0 type bridge
+student@ubuntu:~$ ip link setshow br0
+4: br0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/ether e2:12:4d:e6:f5:13 brd ff:ff:ff:ff:ff:ff
+student@ubuntu:~$ sudo linkip link set br0 up
+student@ubuntu:~$ ip link show bro0
+4: br0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN mode DEFAULT group default qlen 1000
+    link/ether e2:12:4d:e6:f5:13 brd ff:ff:ff:ff:ff:ff
+student@ubuntu:~$ sudo ip addr add 10.0.0.1/24 dev br0
+student@ubuntu:~$ sudo ip addr show br0
+4: br0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default qlen 1000
+    link/ether e2:12:4d:e6:f5:13 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.0.1/24 scope global br0
+       valid_lft forever preferred_lft forever
+student@ubuntu:~$ sudo ip link add veth-gw type vertth peer name verth-gw-br-gw-br-gw-br-gw-br
+student@ubuntu:~$ sudo ip link show | grep v-gw
+5: v-gw-br@v-gw: <BROADCAST,MULTICAST,M-DOWN> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+6: v-gw@v-gw-br: <BROADCAST,MULTICAST,M-DOWN> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+student@ubuntu:~$ sudo ip link set v-gw-br up
+student@ubuntu:~$ sudo ip link set v-gw netns CORE-GW
+student@ubuntu:~$ sudo ip link show | grep v-gw
+5: v-gw-br@if6: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state LOWERLAYERDOWN mode DEFAULT group default qlen 1000
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ sudo ip link show | grep v-gw
+5: v-gw-br@if6: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state LOWERLAYERDOWN mode DEFAULT group default qlen 1000
+student@ubuntu:~$ sudo ip netns exec CORE-GW ip link show
+1: lo: <LOOPBACK> mtu 65536 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+6: v-gw@if5: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/ether f2:a3:15:f6:29:f2 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ sudio o ip netns exec CORE-GW ip addr add 10.0.0.1/24 dev v-gw
+student@ubuntu:~$ sudo ip netns exec VORE-GW ip link sert v-gw up
+Cannot open network namespace "VORE-GW": No such file or directory
+student@ubuntu:~$ sudo ip netns exec VORE-GW ip link set v-gw up[1@C
+student@ubuntu:~$ sudo ip netns exec CORE-GW ip link set lo up
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ sudo ip netns exec CORE-GW ip addr show
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+6: v-gw@if5: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether f2:a3:15:f6:29:f2 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.0.0.1/24 scope global v-gw
+       valid_lft forever preferred_lft forever
+    inet6 fe80::f0a3:15ff:fef6:29f2/64 scope link 
+       valid_lft forever preferred_lft forever
+student@ubuntu:~$ sudi o ip addr show br0
+4: br0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default qlen 1000
+    link/ether e2:12:4d:e6:f5:13 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.0.1/24 scope global br0
+       valid_lft forever preferred_lft forever
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ sudo sysctl -w net.ipv4.10_forward=1
+sysctl: cannot stat /proc/sys/net/ipv4/10_forward: No such file or directory
+student@ubuntu:~$ sudo sysctl -w net.ipv4.10_forward=1_forward=1_forward=1i_forward=1p_forward=1
+net.ipv4.ip_forward = 1
+student@ubuntu:~$ sudo ip tablestables -A FORWARD -i br0 -o enp1s0 -j ACCEPT
+student@ubuntu:~$ sudo iptables - A FORWARD -i enps11s0 -o br0 -m state --state RELATED, ESESTABLISH ED -j ACCEPT
+Bad argument `-'
+Try `iptables -h' or 'iptables --help' for more information.
+student@ubuntu:~$ sudo iptables - A FORWARD -i enp1s0 -o br0 -m state --state RELATED,ESTABLISHED -j ACCEPTA FORWARD -i enp1s0 -o br0 -m state --state RELATED,ESTABLISHED
+
+student@ubuntu:~$ sudo ip netns exec CORE-GW ip route del default
+RTNETLINK answers: No such process
+student@ubuntu:~$ sudo ip netns exec CORE-GW ip route del default
+RTNETLINK answers: No such process
+student@ubuntu:~$ sudo ip netns exec CORE-GW ip route del defaultsudo ip netns exec CORE-GW ip route del default
+RTNETLINK answers: No such process
+student@ubuntu:~$ sudo ip netns exec CORE-GW ip route add default via 192.168.122.11sudo ip netns exec CORE-GW ip route add default via 192.168.122.11
+Error: Nexthop has invalid gateway.
+student@ubuntu:~$ sudo ip netns exec CORE-GW ip route add default via 10.0.0.1sudo ip netns exec CORE-GW ip route add default via 10.0.0.1
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ sudo ip netns exec CORE-GW ip route showsudo ip netns exec CORE-GW ip route show
+default via 10.0.0.1 dev v-gw 
+10.0.0.0/24 dev v-gw proto kernel scope link src 10.0.0.1 
+student@ubuntu:~$ sudo ip netns exec CORE-GW ping -c 2 10.0.0.1sudo ip netns exec CORE-GW ping -c 2 10.0.0.1
+PING 10.0.0.1 (10.0.0.1) 56(84) bytes of data.
+64 bytes from 10.0.0.1: icmp_seq=1 ttl=64 time=0.054 ms
+64 bytes from 10.0.0.1: icmp_seq=2 ttl=64 time=0.128 ms
+--- 10.0.0.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1040ms
+rtt min/avg/max/mdev = 0.054/0.091/0.128/0.037 ms
+student@ubuntu:~$ sudo ip netns exec CORE-GW ping -c 2 8.8.8.8sudo ip netns exec CORE-GW ping -c 2 8.8.8.8
+PING 8.8.8.8 (8.8.8.8) 56(84) bytes of data.
+From 10.0.0.1 icmp_seq=1 Destination Host Unreachable
+From 10.0.0.1 icmp_seq=2 Destination Host Unreachable
+--- 8.8.8.8 ping statistics ---
+2 packets transmitted, 0 received, +2 errors, 100% packet loss, time 1053ms
+pipe 2
+student@ubuntu:~$ sudo iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o enp1s0 -j MASQUERADEsudo iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o enp1s0 -j MASQUERADE
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ sudo ip netns exec CORE-GW ping -c 2 8.8.8.8
+sudo ip netns exec CORE-GW ping -c 2 8.8.8.8
+
+PING 8.8.8.8 (8.8.8.8) 56(84) bytes of data.
+From 10.0.0.1 icmp_seq=1 Destination Host Unreachable
+From 10.0.0.1 icmp_seq=2 Destination Host Unreachable
+--- 8.8.8.8 ping statistics ---
+2 packets transmitted, 0 received, +2 errors, 100% packet loss, time 1057ms
+pipe 2
+student@ubuntu:~$ sudo ip netns exec CORE-GW ping -c 2 google.comsudo ip netns exec CORE-GW ping -c 2 google.com
+ping: google.com: Name or service not known
+student@ubuntu:~$ ping -c 2 8.8.8.8ping -c 2 8.8.8.8
+PING 8.8.8.8 (8.8.8.8) 56(84) bytes of data.
+64 bytes from 8.8.8.8: icmp_seq=1 ttl=118 time=10.1 ms
+64 bytes from 8.8.8.8: icmp_seq=2 ttl=118 time=9.68 ms
+--- 8.8.8.8 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1002ms
+rtt min/avg/max/mdev = 9.676/9.911/10.146/0.235 ms
+student@ubuntu:~$ ip route showip route show
+default via 192.168.122.1 dev enp1s0 proto dhcp src 192.168.122.11 metric 100 
+10.0.0.0/24 dev br0 proto kernel scope link src 10.0.0.1 linkdown 
+192.168.122.0/24 dev enp1s0 proto kernel scope link src 192.168.122.11 metric 100 
+192.168.122.1 dev enp1s0 proto dhcp scope link src 192.168.122.11 metric 100 
+192.168.123.0/24 dev virbr0 proto kernel scope link src 192.168.123.1 linkdown 
+student@ubuntu:~$ sudo iptables -t nat -L POSTROUTING -n -vsudo iptables -t nat -L POSTROUTING -n -v
+Chain POSTROUTING (policy ACCEPT 25 packets, 2013 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+   25  2013 LIBVIRT_PRT  0    --  *      *       0.0.0.0/0            0.0.0.0/0           
+    0     0 MASQUERADE  0    --  *      enp1s0  10.0.0.0/24          0.0.0.0/0           
+student@ubuntu:~$ sudo ip link set v-gw-br upsudo ip link set v-gw-br up
+student@ubuntu:~$ sudo ip netns exec CORE-GW ping -c 2 8.8.8.8sudo ip netns exec CORE-GW ping -c 2 8.8.8.8
+PING 8.8.8.8 (8.8.8.8) 56(84) bytes of data.
+From 10.0.0.1 icmp_seq=1 Destination Host Unreachable
+From 10.0.0.1 icmp_seq=2 Destination Host Unreachable
+--- 8.8.8.8 ping statistics ---
+2 packets transmitted, 0 received, +2 errors, 100% packet loss, time 1013ms
+pipe 2
+student@ubuntu:~$ ip link show v-gw-brip link show v-gw-br
+5: v-gw-br@if6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether fa:2c:50:e9:68:36 brd ff:ff:ff:ff:ff:ff link-netns CORE-GW
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ 
+student@ubuntu:~$ ip link show br0ip link show br0
+4: br0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN mode DEFAULT group default qlen 1000
+    link/ether e2:12:4d:e6:f5:13 brd ff:ff:ff:ff:ff:ff
+student@ubuntu:~$ bridge link showbridge link show
+student@ubuntu:~$ ping -c 2 10.0.0.1ping -c 2 10.0.0.1
+PING 10.0.0.1 (10.0.0.1) 56(84) bytes of data.
+64 bytes from 10.0.0.1: icmp_seq=1 ttl=64 time=0.080 ms
+64 bytes from 10.0.0.1: icmp_seq=2 ttl=64 time=0.078 ms
+--- 10.0.0.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1054ms
+rtt min/avg/max/mdev = 0.078/0.079/0.080/0.001 ms
+student@ubuntu:~$ sudo iptables -L FORWARD -n -vsudo iptables -L FORWARD -n -v
+Chain FORWARD (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 LIBVIRT_FWX  0    --  *      *       0.0.0.0/0            0.0.0.0/0           
+    0     0 LIBVIRT_FWI  0    --  *      *       0.0.0.0/0            0.0.0.0/0           
+    0     0 LIBVIRT_FWO  0    --  *      *       0.0.0.0/0            0.0.0.0/0           
+    0     0 ACCEPT     0    --  br0    enp1s0  0.0.0.0/0            0.0.0.0/0           
+    0     0 ACCEPT     0    --  enp1s0 br0     0.0.0.0/0            0.0.0.0/0            state RELATED,ESTABLISHED
+student@ubuntu:~$ sudo ip link set v-gw-br master br0sudo ip link set v-gw-br master br0
+student@ubuntu:~$ sudo ip netns exec CORE-GW ping -c 2 8.8.8.8sudo ip netns exec CORE-GW ping -c 2 8.8.8.8
+PING 8.8.8.8 (8.8.8.8) 56(84) bytes of data.
+From 10.0.0.1 icmp_seq=1 Destination Host Unreachable
+From 10.0.0.1 icmp_seq=2 Destination Host Unreachable
+--- 8.8.8.8 ping statistics ---
+2 packets transmitted, 0 received, +2 errors, 100% packet loss, time 1035ms
+pipe 2
+student@ubuntu:~$ bridge link showbridge link show
+5: v-gw-br@if6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br0 state forwarding priority 32 cost 2 
+student@ubuntu:~$ ip link show br0ip link show br0
+4: br0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether e2:12:4d:e6:f5:13 brd ff:ff:ff:ff:ff:ff
+student@ubuntu:~$ exit
+exit
+
+================================================================================
+SESIÓN FINALIZADA
+================================================================================
+Fecha fin:     2026-02-16 19:22:03
+Duración:      Sesión completada
+Archivos:      lab-0003.lab + .sh
+================================================================================
