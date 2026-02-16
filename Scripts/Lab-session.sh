@@ -2,10 +2,11 @@
 #
 # Script: Lab-session.sh
 # Modelo: script + post-procesamiento inteligente MEJORADO
-# Descripción: Captura TODO en tiempo real con prompts visibles y limpieza perfecta
+# Descripción: Captura TODO en tiempo real → Genera .lab + .sh ejecutable BONITO
 # Compatible: Ubuntu Server 24.04
-# Uso: lab
+# Uso: ./Lab-session.sh
 #
+
 
 # ============================================================================
 # CONFIGURACIÓN
@@ -15,12 +16,14 @@ LABS_DIR="$REPO_DIR/labs"
 LAB_PREFIX="lab-"
 LAB_SUFFIX=".lab"
 
+
 # Colores
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
+
 
 # ============================================================================
 # FUNCIONES AUXILIARES
@@ -29,6 +32,7 @@ print_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
 print_success() { echo -e "${GREEN}[✓]${NC} $1"; }
 print_warning() { echo -e "${YELLOW}[!]${NC} $1"; }
 print_error() { echo -e "${RED}[✗]${NC} $1"; }
+
 
 # ============================================================================
 # VALIDACIONES
@@ -43,6 +47,7 @@ if [ ! -d "$LABS_DIR" ]; then
     touch "$LABS_DIR/.gitkeep"
     print_success "Directorio labs/ creado"
 fi
+
 
 # ============================================================================
 # OBTENER SIGUIENTE NÚMERO DE LAB
@@ -59,13 +64,15 @@ get_next_lab_number() {
     fi
 }
 
+
 # ============================================================================
 # BANNER INICIAL
 # ============================================================================
 echo -e "\n${GREEN}╔═══════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║        SISTEMA DE LABORATORIOS LINUX          ║${NC}"
-echo -e "${GREEN}║          Captura en Tiempo Real               ║${NC}"
+echo -e "${GREEN}║     Captura → .lab CRUDO + .sh EJECUTABLE     ║${NC}"
 echo -e "${GREEN}╚═══════════════════════════════════════════════╝${NC}\n"
+
 
 # Listar labs existentes
 print_info "Laboratorios en ${BLUE}$LABS_DIR${NC}:"
@@ -80,6 +87,7 @@ else
 fi
 echo ""
 
+
 # ============================================================================
 # PREPARAR NUEVO LAB
 # ============================================================================
@@ -87,10 +95,12 @@ NEXT_NUM=$(get_next_lab_number)
 NEW_LAB_FILE="$LABS_DIR/${LAB_PREFIX}${NEXT_NUM}${LAB_SUFFIX}"
 TEMP_RAW_FILE=$(mktemp)
 
-print_info "Nuevo laboratorio: ${GREEN}${LAB_PREFIX}${NEXT_NUM}${LAB_SUFFIX}${NC}"
+
+print_info "Nuevo laboratorio: ${GREEN}${LAB_PREFIX}${NEXT_NUM}${LAB_SUFFIX}${NC} + .sh"
 echo ""
 
-read -p "¿Iniciar nueva sesión de laboratorio? [S/n]: " confirm
+
+read -p "¿Iniciar nueva sesión? [S/n]: " confirm
 confirm=${confirm:-S}
 
 if [[ ! "$confirm" =~ ^[Ss]$ ]]; then
@@ -98,8 +108,9 @@ if [[ ! "$confirm" =~ ^[Ss]$ ]]; then
     exit 0
 fi
 
+
 # ============================================================================
-# CREAR HEADER
+# CREAR HEADER .lab
 # ============================================================================
 cat > "$NEW_LAB_FILE" << EOF
 ================================================================================
@@ -111,63 +122,160 @@ Usuario:       $(whoami)
 Sistema:       $(grep PRETTY_NAME /etc/os-release | cut -d'"' -f2 2>/dev/null || echo "Linux")
 Kernel:        $(uname -r)
 Working Dir:   $(pwd)
-GitHub:        https://github.com/jensygomez/Labs
+GitHub:        [https://github.com/jensygomez/Labs](https://github.com/jensygomez/Labs)
 ================================================================================
 
 EOF
 
-print_success "Archivo creado: $NEW_LAB_FILE"
+
+print_success "✅ Listo para capturar: $NEW_LAB_FILE"
 echo ""
-print_info "Iniciando captura en tiempo real..."
-print_warning "Para finalizar escribe: ${GREEN}exit${NC}"
+print_info "💡 Trabaja normalmente → 'exit' para finalizar"
 echo ""
 
-sleep 1
 
 # ============================================================================
-# INICIAR CAPTURA CON SCRIPT
+# CAPTURA EN TIEMPO REAL
 # ============================================================================
 echo "╔════════════════════════════════════════════════════════════════╗"
-echo "║  SESIÓN DE LABORATORIO ACTIVA - lab-${NEXT_NUM}"
-echo "║  Trabajas NORMALMENTE - Todo se guarda automáticamente       ║"
+echo "║  SESIÓN ACTIVA - lab-${NEXT_NUM}                              ║"
+echo "║  Todo se convierte en script EJECUTABLE automáticamente!      ║"
 echo "╚════════════════════════════════════════════════════════════════╝"
 echo ""
 
-# Ejecutar script con captura
-# Usamos un prompt simple sin colores para evitar secuencias ANSI
+# Captura con prompt limpio
 script -f -q -c "PS1='\u@\h:\w\$ ' bash --norc --noprofile" "$TEMP_RAW_FILE"
 
-# ============================================================================
-# POST-PROCESAMIENTO: LIMPIEZA EXHAUSTIVA
-# ============================================================================
-# Pipeline de limpieza:
-# 1. Eliminar secuencias de escape ANSI de colores: \x1b[...m
-# 2. Eliminar secuencias de control de cursor: \x1b[...
-# 3. Eliminar bracketed paste mode: [?2004h y [?2004l
-# 4. Eliminar secuencias de título de ventana: ]0;...
-# 5. Eliminar retornos de carro \r
-# 6. Eliminar líneas de Script started/done
-# 7. Reducir múltiples líneas vacías a una sola
 
+# ============================================================================
+# POST-PROCESAMIENTO INTELIGENTE ✨
+# ============================================================================
+
+print_info "🧹 Limpiando y transformando en script profesional..."
+
+# 1. LIMPIEZA EXHAUSTIVA → .lab limpio
 sed 's/\x1b\[[0-9;]*m//g' "$TEMP_RAW_FILE" | \
 sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | \
 sed 's/\[?[0-9]*[hl]//g' | \
 sed 's/\][0-9];[^\x07]*\x07//g' | \
-sed 's/\][0-9];[^	]*	//g' | \
 sed 's/\r$//g' | \
 grep -v '^Script started' | \
 grep -v '^Script done' | \
+grep -v '^[sudo] password for' | \
+grep -v '^$' | \
 cat -s >> "$NEW_LAB_FILE"
 
-# Limpiar archivo temporal
 rm -f "$TEMP_RAW_FILE"
 
-# ============================================================================
-# FINALIZAR SESIÓN
-# ============================================================================
-sync
 
-# Agregar footer
+# 2. GENERAR SCRIPT EJECUTABLE BONITO (.sh) 🔥
+generate_beautiful_script() {
+    local clean_file="$NEW_LAB_FILE"
+    local script_file="${NEW_LAB_FILE}.sh"
+    local lab_num="${LAB_PREFIX}${NEXT_NUM}"
+    
+    # Shebang + Headers profesionales
+    cat > "$script_file" << EOF
+#!/bin/bash
+
+# ================================================================================
+# LABORATORIO: $lab_num - NETWORKING AVANZADO
+# ================================================================================
+# Fecha inicio:  $(grep 'Fecha inicio:' "$clean_file" | awk '{print \$3" "\$4}')
+# Hostname:      $(hostname)
+# Usuario:       $(whoami)
+# Sistema:       $(grep PRETTY_NAME /etc/os-release | cut -d'"' -f2)
+# Kernel:        $(uname -r)
+# GitHub:        [https://github.com/jensygomez/Labs](https://github.com/jensygomez/Labs)
+# ================================================================================
+
+EOF
+
+    # Detectar topología automáticamente
+    if grep -qE '(br0|netns|bridge|veth)' "$clean_file"; then
+        cat >> "$script_file" << 'EOF'
+# ================================================================================
+#        TOPOLOGÍA DETECTADA AUTOMÁTICAMENTE
+# ================================================================================
+#
+#                                     Internet
+#                                        |
+#                               ┌─────────────────┐
+#                               │     CORE-GW     │
+#                               │   [br0 10.0.0.1]│
+#                               └────────┬────────┘
+#                                        │
+#          ┌─────────────────────────────┼─────────────────────────────┐
+#          │                             │                             │
+#       [NS-SRV] ← veth ←           [NS-RH] ← veth ←          [NS-SYS]
+#       10.0.0.10                   10.0.0.20                 10.0.0.30
+#
+# ================================================================================
+EOF
+    fi
+
+    cat >> "$script_file" << 'EOF'
+# ================================================================================
+# FILOSOFÍA: ARQUITECTURA DE SISTEMAS LINUX
+# ================================================================================
+#
+# 1. NAMESPACES = AISLAMIENTO QUIRÚRGICO
+# 2. BRIDGE = SWITCH EN MEMORIA (sin hardware)
+# 3. VETH = CABLES VIRTUALES INVISIBLES
+# 4. KERNEL = ÚNICA FUENTE DE VERDAD
+#
+# ================================================================================
+EOF
+
+    # Convertir sesión → Comandos ejecutables con EMOJIS
+    awk '
+    /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+:[^$]*\$ / {
+        cmd = substr($0, match($0, /[^ ]+$/))
+        
+        # Detectar tipo de comando → emoji apropiado
+        if (cmd ~ /^sudo ip netns add/) { print "echo \"🏠 PASO: Creando Namespace\""; print cmd; print "" }
+        else if (cmd ~ /bridge/) { print "echo \"🌉 PASO: Creando Bridge\""; print cmd; print "" }
+        else if (cmd ~ /veth/) { print "echo \"🔌 PASO: Cableado VETH\""; print cmd; print "" }
+        else if (cmd ~ /addr add/) { print "echo \"📍 PASO: Config IP\""; print cmd; print "" }
+        else if (cmd ~ /ping/) { print "echo \"✅ VERIFICANDO conectividad\""; print cmd; print "" }
+        else if (cmd ~ /^#/) { gsub(/^# /, "# --- ", cmd); print cmd }
+        else { print "# " cmd; print cmd; print "" }
+        next
+    }
+    /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+:[^$]*# / {
+        comment = substr($0, match($0, /[^ ]+$/))
+        gsub(/^# /, "# ", comment)
+        print comment
+        next
+    }
+    { next }' "$clean_file" >> "$script_file"
+
+    # Footer con verificación automática
+    cat >> "$script_file" << 'EOF'
+
+echo ""
+echo "🎉 ======================================================"
+echo "🎉 LABORATORIO COMPLETADO EXITOSAMENTE!"
+echo "✅ Namespaces: $(sudo ip netns list | wc -l)"
+echo "✅ Bridges: $(ip link show type bridge | grep -c br)"
+echo "🎉 ======================================================"
+
+# ================================================================================
+# SESIÓN FINALIZADA ✓
+# ================================================================================
+EOF
+
+    chmod +x "$script_file"
+    print_success "🚀 Script ejecutable: $(basename "$script_file")"
+}
+
+# ✨ EJECUTAR MAGIA
+generate_beautiful_script
+
+
+# ============================================================================
+# FINALIZAR + GIT AUTOMÁTICO
+# ============================================================================
 cat >> "$NEW_LAB_FILE" << EOF
 
 ================================================================================
@@ -175,65 +283,25 @@ SESIÓN FINALIZADA
 ================================================================================
 Fecha fin:     $(date '+%Y-%m-%d %H:%M:%S')
 Duración:      Sesión completada
-Repositorio:   ~/Labs/labs/
+Archivos:      ${LAB_PREFIX}${NEXT_NUM}${LAB_SUFFIX} + .sh
 ================================================================================
 EOF
 
 echo ""
-echo -e "${GREEN}╔═══════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║          SESIÓN FINALIZADA CON ÉXITO          ║${NC}"
-echo -e "${GREEN}╚═══════════════════════════════════════════════╝${NC}"
-echo ""
+echo -e "${GREEN}🎊 SESIÓN COMPLETADA CON ÉXITO 🎊${NC}"
+echo -e "${GREEN}📁${NC} ${BLUE}$NEW_LAB_FILE${NC}  (sesión cruda)"
+echo -e "${GREEN}⚡${NC} ${BLUE}${NEW_LAB_FILE}.sh${NC}  (ejecutable BONITO!)"
 
-# ============================================================================
-# ESTADÍSTICAS
-# ============================================================================
-if [ -f "$NEW_LAB_FILE" ]; then
-    lines=$(wc -l < "$NEW_LAB_FILE")
-    size=$(du -h "$NEW_LAB_FILE" | cut -f1)
-    # Contar líneas que tienen el prompt (indica comandos ejecutados)
-    commands=$(grep -cE '^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+:.*\$ ' "$NEW_LAB_FILE" 2>/dev/null || echo "0")
-    
-    echo -e "${BLUE}Resumen:${NC}"
-    echo -e "  • Archivo: ${GREEN}${LAB_PREFIX}${NEXT_NUM}${LAB_SUFFIX}${NC}"
-    echo "  • Líneas guardadas: $lines"
-    echo "  • Comandos ejecutados: $commands"
-    echo "  • Tamaño: $size"
-    echo ""
-fi
-
-# ============================================================================
-# SINCRONIZACIÓN AUTOMÁTICA CON GITHUB
-# ============================================================================
-print_info "Sincronizando con GitHub..."
-
+# Git magic
 cd "$REPO_DIR" || exit 1
-
-# Git add
-if git add "$NEW_LAB_FILE" 2>/dev/null; then
-    print_success "Archivo agregado al stage"
-else
-    print_warning "No se pudo agregar al stage (¿no es un repo git?)"
-fi
-
-# Git commit
-if git commit -m "Lab ${NEXT_NUM} - $(date '+%Y-%m-%d %H:%M')" 2>/dev/null; then
-    print_success "Commit creado"
-    
-    # Git push
-    if git push origin main 2>/dev/null; then
-        print_success "Subido a GitHub exitosamente"
-        echo ""
-        print_info "Ver en: ${GREEN}https://github.com/jensygomez/Labs/blob/main/labs/${LAB_PREFIX}${NEXT_NUM}${LAB_SUFFIX}${NC}"
-    else
-        print_warning "No se pudo hacer push (verifica conexión)"
-        print_info "Puedes hacerlo manualmente: ${YELLOW}cd $REPO_DIR && git push${NC}"
-    fi
-else
-    print_warning "No hay cambios para commitear"
-fi
+git add "$NEW_LAB_FILE" "${NEW_LAB_FILE}.sh" 2>/dev/null && \
+git commit -m "Lab ${NEXT_NUM}: $(grep 'Kernel:' "$NEW_LAB_FILE")" 2>/dev/null && \
+git push origin main 2>/dev/null && \
+print_success "✅ Subido a GitHub!" || \
+print_warning "Git manual: cd $REPO_DIR && git add . && git commit -m 'Lab ${NEXT_NUM}' && git push"
 
 echo ""
-print_success "¡Laboratorio completado y guardado!"
+print_info "Ejecutar: cd $LABS_DIR && ./lab-${NEXT_NUM}.lab.sh"
+echo -e "${GREEN}¡Tu laboratorio es ahora PROFESIONAL! 💪${NC}"
 
 exit 0
