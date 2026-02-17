@@ -128,6 +128,8 @@ ip netns exec CORE-GW ip addr add 172.16.255.2/30 dev v-gw-wan 2>/dev/null || tr
 ip netns exec CORE-GW ip route add default via 172.16.255.1 2>/dev/null || true
 
 echo "==[ 3. KERNEL & FIREWALL (HOST) ]=="
+update-alternatives --set iptables /usr/sbin/iptables-legacy
+update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
 sysctl -w net.ipv4.ip_forward=1
 iptables -F FORWARD
 iptables -t nat -F POSTROUTING
