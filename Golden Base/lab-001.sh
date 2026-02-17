@@ -56,15 +56,53 @@ FILOSOFÍA
 • Kernel     = Única fuente de verdad
 
 ===================================================================================
-SIGUIENTE PASO
+SIGUIENTE PASO — LAB 02: DEPARTAMENTO RH (ACCESS LAYER)
 ===================================================================================
-→ Crear el departamento RH (ns-rh)
-→ Implementar bridge interno (switch de acceso L2)
-→ Conectar ns-rh al CORE-GW
-→ Crear PCs del departamento (pc-rh1 ... pc-rhN)
-→ Asignar IPs del segmento 10.0.0.0/24
-→ Gateway: 10.0.0.1
-→ Verificar conectividad interna y salida a Internet
+
+Objetivo:
+→ Implementar el departamento RH como dominio L2 independiente
+→ Simular un switch de acceso con múltiples PCs
+
+Componentes a crear:
+
+1) Namespace del departamento
+   - ns-rh  (Departamento Recursos Humanos)
+
+2) Enlace CORE ↔ RH (uplink)
+   - v-gw-rh   (en CORE-GW)
+   - v-rh-gw   (en ns-rh)
+
+3) Direccionamiento del enlace
+   - CORE-GW (v-gw-rh): 10.0.0.1/24   [ya existente]
+   - ns-rh   (v-rh-gw): sin IP (L2 uplink)
+
+4) Bridge interno del departamento (switch de acceso)
+   - br-rh  (dentro de ns-rh)
+
+5) PCs del departamento (endpoints)
+   - pc-rh1 : 10.0.0.21/24
+   - pc-rh2 : 10.0.0.22/24
+   - pc-rh3 : 10.0.0.23/24
+   - Gateway: 10.0.0.1
+
+6) Cables virtuales por PC
+   - pc-rh1 ↔ ns-rh
+     • v-pc1-rh
+     • v-rh-pc1
+
+   - pc-rh2 ↔ ns-rh
+     • v-pc2-rh
+     • v-rh-pc2
+
+   - pc-rh3 ↔ ns-rh
+     • v-pc3-rh
+     • v-rh-pc3
+
+7) Validaciones
+   - Ping entre PCs del departamento
+   - Ping al CORE-GW (10.0.0.1)
+   - Ping a Internet (8.8.8.8)
+
 
 
 EOF
