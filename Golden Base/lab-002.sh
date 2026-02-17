@@ -110,42 +110,6 @@ FILOSOFÍA DEL LAB
 ===================================================================================
 EOF
 }
-WAN_IF=$(ip route get 8.8.8.8 | awk '{print $5; exit}')
-echo "→ Interfaz WAN detectada: $WAN_IF"
-
-echo "==[ 1. CORE-GW: INFRAESTRUCTURA BASE ]=="
-ip netns add CORE-GW 2>/dev/null || true
-ip netns exec CORE-GW ip link set lo up
-ip netns exec CORE-GW ip link add br0 type bridge 2>/dev/null || true
-ip netns exec CORE-GW ip link set br0 up
-ip netns exec CORE-GW ip addr add 10.0.0.1/24 dev br0 2>/dev/null || true
-
-echo "==[ 2. ENLACE WAN (CORE ↔ HOST) ]=="
-ip link add v-gw-wan type veth peer name v-wan-gw 2>/dev/null || true
-ip link set v-gw-wan netns CORE-GW 2>/dev/null || true
-ip link set v-wan-gw up
-ip netns exec CORE-GW ip link set v-gw-wan up
-ip addr add 172.16.255.1/30 dev v-wan-gw 2>/dev/null || true
-ip netns exec CORE-GW ip addr add 172.16.255.2/30 dev v-gw-wan 2>/dev/null || true
-ip netns exec CORE-GW ip route add default via 172.16.255.1 2>/dev/null || true
-
-echo "==[ 3. KERNEL & FIREWALL (HOST) ]=="
-update-alternatives --set iptables /usr/sbin/iptables-legacy
-update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
-sysctl -w net.ipv4.ip_forward=1
-iptables -F FORWARD
-iptables -t nat -F POSTROUTING
-# NAT para red WAN y red LAN
-iptables -t nat -A POSTROUTING -s 172.16.255.0/30 -o $WAN_IF -j MASQUERADE
-iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o $WAN_IF -j MASQUERADE
-# Forwarding permisivo para el laboratorio
-iptables -A FORWARD -j ACCEPT
-iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
-# RUTA DE RETORNO CLAVE
-ip route add 10.0.0.0/24 via 172.16.255.2 2>/dev/null || true
-
-echo "==[ 4. FORWARDING INTERNO (CORE-GW) ]=="
-ip netns exec CORE-GW sysctl -w net.ipv4.ip_forward=1
 
 echo "==[ 5. CREACIÓN DEPARTAMENTO RH (NS-RH) ]=="
 ip netns add NS-RH 2>/dev/null || true

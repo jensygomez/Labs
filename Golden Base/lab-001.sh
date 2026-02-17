@@ -170,77 +170,40 @@ EOF
 
 set -e
 
-echo "==[ 1. CREACIÓN DEL NAMESPACE CORE-GW ]=="
-ip netns add CORE-GW || true
+WAN_IF=$(ip route get 8.8.8.8 | awk '{print $5; exit}')
+echo "→ Interfaz WAN detectada: $WAN_IF"
 
-# Activar loopback
+echo "==[ 1. CORE-GW: INFRAESTRUCTURA BASE ]=="
+ip netns add CORE-GW 2>/dev/null || true
 ip netns exec CORE-GW ip link set lo up
-
-# (Opcional) Hostname interno
-ip netns exec CORE-GW hostname CORE-GW
-
-
-echo "==[ 2. CREACIÓN DEL BRIDGE INTERNO (br0) ]=="
-ip netns exec CORE-GW ip link add br0 type bridge || true
+ip netns exec CORE-GW ip link add br0 type bridge 2>/dev/null || true
 ip netns exec CORE-GW ip link set br0 up
+ip netns exec CORE-GW ip addr add 10.0.0.1/24 dev br0 2>/dev/null || true
 
-# IP del Gateway
-ip netns exec CORE-GW ip addr add 10.0.0.1/24 dev br0 || true
-
-
-echo "==[ 3. CREACIÓN DEL ENLACE WAN (GW ↔ HOST) ]=="
-# v-gw-wan  -> dentro de CORE-GW
-# v-wan-gw  -> permanece en el host
-
-ip link add v-gw-wan type veth peer name v-wan-gw || true
-ip link set v-gw-wan netns CORE-GW
-
-# Levantar interfaces
+echo "==[ 2. ENLACE WAN (CORE ↔ HOST) ]=="
+ip link add v-gw-wan type veth peer name v-wan-gw 2>/dev/null || true
+ip link set v-gw-wan netns CORE-GW 2>/dev/null || true
 ip link set v-wan-gw up
 ip netns exec CORE-GW ip link set v-gw-wan up
+ip addr add 172.16.255.1/30 dev v-wan-gw 2>/dev/null || true
+ip netns exec CORE-GW ip addr add 172.16.255.2/30 dev v-gw-wan 2>/dev/null || true
+ip netns exec CORE-GW ip route add default via 172.16.255.1 2>/dev/null || true
 
-
-echo "==[ 4. DIRECCIONAMIENTO WAN (172.16.255.0/30) ]=="
-# Host
-ip addr add 172.16.255.1/30 dev v-wan-gw || true
-
-# CORE-GW
-ip netns exec CORE-GW ip addr add 172.16.255.2/30 dev v-gw-wan || true
-
-
-echo "==[ 5. RUTA POR DEFECTO EN CORE-GW ]=="
-ip netns exec CORE-GW ip route add default via 172.16.255.1 || true
-
-
-echo "==[ 6. HABILITAR FORWARDING EN EL HOST ]=="
+echo "==[ 3. KERNEL & FIREWALL (HOST) ]=="
+update-alternatives --set iptables /usr/sbin/iptables-legacy
+update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
 sysctl -w net.ipv4.ip_forward=1
+iptables -F FORWARD
+iptables -t nat -F POSTROUTING
+# NAT para red WAN y red LAN
+iptables -t nat -A POSTROUTING -s 172.16.255.0/30 -o $WAN_IF -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o $WAN_IF -j MASQUERADE
+# Forwarding permisivo para el laboratorio
+iptables -A FORWARD -j ACCEPT
+iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+# RUTA DE RETORNO CLAVE
+ip route add 10.0.0.0/24 via 172.16.255.2 2>/dev/null || true
 
-
-echo "==[ 7. CONFIGURACIÓN NAT EN EL HOST ]=="
-# Limpio reglas previas (LAB)
-iptables -F FORWARD || true
-iptables -t nat -F POSTROUTING || true
-
-# NAT hacia Internet
-iptables -t nat -A POSTROUTING -s 172.16.255.0/30 -o enp1s0 -j MASQUERADE
-
-# Permitir forward
-iptables -A FORWARD -i v-wan-gw -o enp1s0 -j ACCEPT
-iptables -A FORWARD -i enp1s0 -o v-wan-gw -m state --state ESTABLISHED,RELATED -j ACCEPT
-
-
-echo "==[ 8. VERIFICACIÓN BÁSICA ]=="
-echo "→ Interfaces en CORE-GW:"
-ip netns exec CORE-GW ip -br a
-
-echo
-echo "→ Ruta en CORE-GW:"
-ip netns exec CORE-GW ip route
-
-echo
-echo "→ Prueba de conectividad (ping 8.8.8.8):"
-ip netns exec CORE-GW ping -c 2 8.8.8.8
-
-echo
-echo "CORE-GW operativo. Paso 1 finalizado."
+echo "==[ 4. FORWARDING INTERNO (CORE-GW) ]=="
+ip netns exec CORE-GW sysctl -w net.ipv4.ip_forward=1
 print_topology
