@@ -67,31 +67,15 @@ limpiar_entorno() {
     echo ""
 }
 
-# ── Submenú de laboratorios ──────────────────────────────────────────────────────
-menu_laboratorios() {
+# ── Ejecutar todos los labs ──────────────────────────────────────────────────────
+ejecutar_laboratorios() {
     local TOTAL=$(contar_labs)
     if [ "$TOTAL" -eq 0 ]; then
         echo -e "${RED}No se encontraron labs en $LAB_DIR${NC}"
         return
     fi
-
-    echo ""
-    echo -e "${CYAN}  ¿Hasta qué laboratorio deseas ejecutar?${NC}"
-    echo ""
-    for i in $(seq 1 $TOTAL); do
-        echo -e "  $i) lab-$(printf '%03d' $i).sh"
-    done
-    echo -e "  0) Volver"
-    echo ""
-    read -p "  Selección: " SEL
-
-    if [[ "$SEL" =~ ^[0-9]+$ ]] && [ "$SEL" -ge 1 ] && [ "$SEL" -le "$TOTAL" ]; then
-        ejecutar_hasta "$SEL"
-    elif [ "$SEL" = "0" ]; then
-        return
-    else
-        echo -e "${RED}Opción inválida.${NC}"
-    fi
+    echo -e "${CYAN}  Ejecutando todos los labs (001 → $(printf '%03d' $TOTAL))...${NC}"
+    ejecutar_hasta "$TOTAL"
 }
 
 # ── Menú principal ───────────────────────────────────────────────────────────────
@@ -112,7 +96,7 @@ while true; do
     read -p "  Selección: " OPT
 
     case $OPT in
-        1) menu_laboratorios ;;
+        1) ejecutar_laboratorios ;;
         2) limpiar_entorno ;;
         0) echo "Saliendo..."; exit 0 ;;
         *) echo -e "${RED}Opción inválida.${NC}" ;;
