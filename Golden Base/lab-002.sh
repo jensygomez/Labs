@@ -110,6 +110,8 @@ FILOSOFÍA DEL LAB
 ===================================================================================
 EOF
 }
+WAN_IF=$(ip route get 8.8.8.8 | awk '{print $5; exit}')
+echo "→ Interfaz WAN detectada: $WAN_IF"
 
 echo "==[ 1. CORE-GW: INFRAESTRUCTURA BASE ]=="
 ip netns add CORE-GW 2>/dev/null || true
