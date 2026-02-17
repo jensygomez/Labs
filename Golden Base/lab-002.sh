@@ -111,91 +111,80 @@ FILOSOFÍA DEL LAB
 EOF
 }
 
-#
-# Este script construye:
-# - Namespace CORE-GW
-# - Bridge interno br0 (10.0.0.1/24)
-# - Enlace WAN hacia el host
-# - NAT funcional hacia Internet
-#
-# IMPORTANTE:
-# - Ejecutar como root
-# - Interfaz de salida del host: enp1s0
-# ==============================================================================
-
-set -e
-
-echo "==[ 1. CREACIÓN DEL NAMESPACE CORE-GW ]=="
-ip netns add CORE-GW || true
-
-# Activar loopback
+echo "==[ 1. CORE-GW: INFRAESTRUCTURA BASE ]=="
+ip netns add CORE-GW 2>/dev/null || true
 ip netns exec CORE-GW ip link set lo up
-
-# (Opcional) Hostname interno
-ip netns exec CORE-GW hostname CORE-GW
-
-
-echo "==[ 2. CREACIÓN DEL BRIDGE INTERNO (br0) ]=="
-ip netns exec CORE-GW ip link add br0 type bridge || true
+ip netns exec CORE-GW ip link add br0 type bridge 2>/dev/null || true
 ip netns exec CORE-GW ip link set br0 up
+ip netns exec CORE-GW ip addr add 10.0.0.1/24 dev br0 2>/dev/null || true
 
-# IP del Gateway
-ip netns exec CORE-GW ip addr add 10.0.0.1/24 dev br0 || true
-
-
-echo "==[ 3. CREACIÓN DEL ENLACE WAN (GW ↔ HOST) ]=="
-# v-gw-wan  -> dentro de CORE-GW
-# v-wan-gw  -> permanece en el host
-
-ip link add v-gw-wan type veth peer name v-wan-gw || true
-ip link set v-gw-wan netns CORE-GW
-
-# Levantar interfaces
+echo "==[ 2. ENLACE WAN (CORE ↔ HOST) ]=="
+ip link add v-gw-wan type veth peer name v-wan-gw 2>/dev/null || true
+ip link set v-gw-wan netns CORE-GW 2>/dev/null || true
 ip link set v-wan-gw up
 ip netns exec CORE-GW ip link set v-gw-wan up
+ip addr add 172.16.255.1/30 dev v-wan-gw 2>/dev/null || true
+ip netns exec CORE-GW ip addr add 172.16.255.2/30 dev v-gw-wan 2>/dev/null || true
+ip netns exec CORE-GW ip route add default via 172.16.255.1 2>/dev/null || true
 
-
-echo "==[ 4. DIRECCIONAMIENTO WAN (172.16.255.0/30) ]=="
-# Host
-ip addr add 172.16.255.1/30 dev v-wan-gw || true
-
-# CORE-GW
-ip netns exec CORE-GW ip addr add 172.16.255.2/30 dev v-gw-wan || true
-
-
-echo "==[ 5. RUTA POR DEFECTO EN CORE-GW ]=="
-ip netns exec CORE-GW ip route add default via 172.16.255.1 || true
-
-
-echo "==[ 6. HABILITAR FORWARDING EN EL HOST ]=="
+echo "==[ 3. KERNEL & FIREWALL (HOST) ]=="
 sysctl -w net.ipv4.ip_forward=1
+iptables -F FORWARD
+iptables -t nat -F POSTROUTING
+# NAT para red WAN y red LAN
+iptables -t nat -A POSTROUTING -s 172.16.255.0/30 -o $WAN_IF -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o $WAN_IF -j MASQUERADE
+# Forwarding permisivo para el laboratorio
+iptables -A FORWARD -j ACCEPT
+iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+# RUTA DE RETORNO CLAVE
+ip route add 10.0.0.0/24 via 172.16.255.2 2>/dev/null || true
 
+echo "==[ 4. FORWARDING INTERNO (CORE-GW) ]=="
+ip netns exec CORE-GW sysctl -w net.ipv4.ip_forward=1
 
-echo "==[ 7. CONFIGURACIÓN NAT EN EL HOST ]=="
-# Limpio reglas previas (LAB)
-iptables -F FORWARD || true
-iptables -t nat -F POSTROUTING || true
+echo "==[ 5. CREACIÓN DEPARTAMENTO RH (NS-RH) ]=="
+ip netns add NS-RH 2>/dev/null || true
+ip netns exec NS-RH ip link set lo up
+ip netns exec NS-RH ip link add br-rh type bridge 2>/dev/null || true
+ip netns exec NS-RH ip link set br-rh up
 
-# NAT hacia Internet
-iptables -t nat -A POSTROUTING -s 172.16.255.0/30 -o enp1s0 -j MASQUERADE
+# Uplink: CORE-GW ↔ NS-RH
+ip link add v-gw-rh type veth peer name v-rh-gw 2>/dev/null || true
+ip link set v-gw-rh netns CORE-GW
+ip link set v-rh-gw netns NS-RH
+ip netns exec CORE-GW ip link set v-gw-rh master br0
+ip netns exec CORE-GW ip link set v-gw-rh up
+ip netns exec NS-RH ip link set v-rh-gw master br-rh
+ip netns exec NS-RH ip link set v-rh-gw up
 
-# Permitir forward
-iptables -A FORWARD -i v-wan-gw -o enp1s0 -j ACCEPT
-iptables -A FORWARD -i enp1s0 -o v-wan-gw -m state --state ESTABLISHED,RELATED -j ACCEPT
+echo "==[ 6. DESPLIEGUE DE PC_1, PC_2, PC_3 EN RH ]=="
+for i in 1 2 3; do
+    NAME="PC_$i-RH"
+    IP="10.0.0.2$i"
+    V_PC="v-pc$i-rh"
+    V_RH="v-rh-pc$i"
+    
+    ip netns add $NAME 2>/dev/null || true
+    ip link add $V_PC type veth peer name $V_RH 2>/dev/null || true
+    ip link set $V_PC netns $NAME
+    ip link set $V_RH netns NS-RH
+    
+    ip netns exec NS-RH ip link set $V_RH master br-rh
+    ip netns exec NS-RH ip link set $V_RH up
+    
+    ip netns exec $NAME ip addr add $IP/24 dev $V_PC
+    ip netns exec $NAME ip link set $V_PC up
+    ip netns exec $NAME ip link set lo up
+    ip netns exec $NAME ip route add default via 10.0.0.1
+    echo "   ✔ $NAME configurada ($IP)"
+done
 
+echo -e "\n==[ 7. VERIFICACIÓN FINAL ]=="
+echo -n "→ PC_1-RH a Internet (8.8.8.8): "
+if ip netns exec PC_1-RH ping -c 1 -W 1 8.8.8.8 >/dev/null; then echo "OK"; else echo "FAIL"; fi
 
-echo "==[ 8. VERIFICACIÓN BÁSICA ]=="
-echo "→ Interfaces en CORE-GW:"
-ip netns exec CORE-GW ip -br a
+echo -n "→ PC_3-RH a PC_1-RH: "
+if ip netns exec PC_3-RH ping -c 1 -W 1 10.0.0.21 >/dev/null; then echo "OK"; else echo "FAIL"; fi
 
-echo
-echo "→ Ruta en CORE-GW:"
-ip netns exec CORE-GW ip route
-
-echo
-echo "→ Prueba de conectividad (ping 8.8.8.8):"
-ip netns exec CORE-GW ping -c 2 8.8.8.8
-
-echo
-echo "CORE-GW operativo. Paso 1 finalizado."
 print_topology
