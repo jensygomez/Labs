@@ -1,6 +1,0 @@
-- hosts: lab-vm
-  become: true
-  tasks:
-    - name: Reboot to apply network
-      reboot:
-        reboot_timeout: 300
