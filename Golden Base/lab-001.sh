@@ -54,6 +54,54 @@ FILOSOFÍA
 • Bridge     = Switch L2 en memoria
 • Veth       = Cable virtual
 • Kernel     = Única fuente de verdad
+===================================================================================
+ESTADO ACTUAL — LAB 01 COMPLETADO
+===================================================================================
+
+Componentes creados:
+
+✔ Namespace:
+  - CORE-GW
+
+✔ Bridge interno (LAN):
+  - br0 (dentro de CORE-GW)
+  - IP: 10.0.0.1/24
+  - Función: Gateway interno para todos los departamentos
+
+✔ Enlace WAN (CORE-GW ↔ HOST):
+  - v-gw-wan  (en CORE-GW)
+    • IP: 172.16.255.2/30
+  - v-wan-gw  (en HOST)
+    • IP: 172.16.255.1/30
+
+✔ Routing:
+  - Ruta por defecto en CORE-GW:
+    • default via 172.16.255.1 dev v-gw-wan
+
+✔ Kernel & Forwarding (HOST):
+  - net.ipv4.ip_forward = 1
+
+✔ NAT (HOST):
+  - POSTROUTING MASQUERADE:
+    • Origen: 172.16.255.0/30
+    • Salida: interfaz física del host (ej: enp1s0)
+
+✔ Conectividad:
+  - CORE-GW → HOST: OK
+  - CORE-GW → Internet (8.8.8.8): OK
+
+Estado operativo:
+
+→ CORE-GW funciona como:
+  • Router L3
+  • Gateway por defecto (10.0.0.1)
+  • Dispositivo NAT hacia Internet
+  • Punto central de interconexión
+
+→ Infraestructura pendiente:
+  • No existen aún departamentos (ns-rh, ns-srv, ns-sys, ns-infra)
+  • No existen bridges de acceso
+  • No existen PCs ni endpoints
 
 ===================================================================================
 SIGUIENTE PASO — LAB 02: DEPARTAMENTO RH (ACCESS LAYER)
