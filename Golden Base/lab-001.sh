@@ -23,7 +23,7 @@ TOPOLOGÍA DISTRIBUIDA – LAB DE ARQUITECTURA LINUX
           ┌─────────────────────┬─────────────────────┬─────────────────────┐
           │                     │                     │                     │
  ┌────────┴────────┐   ┌────────┴────────┐   ┌────────┴────────┐   ┌────────┴────────┐
- │    ns-srv       │   │      ns-rh      │   │      ns-sys     │   │    ns-infra     │
+ │    ns-srv       │   │      NS-RH      │   │      ns-sys     │   │    ns-infra     │
  │  (Servicios)    │   │  (Department)   |   |                 |   |                 |
  |                 |   |    Bridge L2    |   |                 |   |                 |
  |                 |   |   Acces Swicth  │   │     (Admin)     │   │     (Infra)     │
