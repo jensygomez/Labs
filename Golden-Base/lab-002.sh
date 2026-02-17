@@ -155,4 +155,3 @@ if ip netns exec PC_1-RH ping -c 1 -W 1 8.8.8.8 >/dev/null; then echo "OK"; else
 echo -n "→ PC_3-RH a PC_1-RH: "
 if ip netns exec PC_3-RH ping -c 1 -W 1 10.0.0.21 >/dev/null; then echo "OK"; else echo "FAIL"; fi
 
-print_topology

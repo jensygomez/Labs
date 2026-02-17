@@ -218,4 +218,3 @@ ip route add 10.0.0.0/24 via 172.16.255.2 2>/dev/null || true
 
 echo "==[ 4. FORWARDING INTERNO (CORE-GW) ]=="
 ip netns exec CORE-GW sysctl -w net.ipv4.ip_forward=1
-print_topology

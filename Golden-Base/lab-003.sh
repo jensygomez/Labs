@@ -157,4 +157,3 @@ if ip netns exec PC_1-SYS ping -c1 -W1 10.0.0.21 >/dev/null; then echo "OK"; els
 echo -n "→ PC_1-SYS → Internet (8.8.8.8): "
 if ip netns exec PC_1-SYS ping -c1 -W1 8.8.8.8 >/dev/null; then echo "OK"; else echo "FAIL"; fi
 
-print_topology
