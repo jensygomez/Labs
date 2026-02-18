@@ -29,31 +29,21 @@ ejecutar_hasta() {
             echo -e "${CYAN}  Ejecutando: lab-$(printf '%03d' $i).sh${NC}"
             echo -e "${CYAN}══════════════════════════════════════════${NC}"
             
-            # Ejecutamos en un proceso hijo para mantener el aislamiento
+            # EJECUCIÓN: Esto corre la red del lab
             bash "$LAB"
             
             if [ $? -ne 0 ]; then
                 echo -e "${RED}✗ Error en lab-$(printf '%03d' $i).sh — abortando.${NC}"
                 exit 1
             fi
-            echo -e "${GREEN}✔ lab-$(printf '%03d' $i).sh completado${NC}"
-            echo ""
-        else
-            echo -e "${RED}✗ $LAB no encontrado — abortando.${NC}"
-            exit 1
+            echo -e "${GREEN}✔ completado${NC}\n"
         fi
     done
 
-    # --- LA CORRECCIÓN AQUÍ ---
-    # Identificamos el último lab
+    # INFO: Cargamos el último para mostrar su topología
     ULTIMO_LAB=$(printf "$LAB_DIR/lab-%03d.sh" $TARGET)
-    
-    # Hacemos source para cargar la función print_topology en el engine
-    if [ -f "$ULTIMO_LAB" ]; then
-        source "$ULTIMO_LAB"
-        # Ahora que el engine conoce la función, la ejecutamos
-        print_topology
-    fi
+    source "$ULTIMO_LAB" # Gracias al 'if' del lab, esto NO repetirá la red
+    print_topology
 }
 
 limpiar_entorno() {

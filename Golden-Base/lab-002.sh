@@ -110,48 +110,49 @@ FILOSOFÍA DEL LAB
 ===================================================================================
 EOF
 }
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+   echo "==[ EJECUTANDO LÓGICA DE RED ]=="
+   echo "==[ 5. CREACIÓN DEPARTAMENTO RH (NS-RH) ]=="
+   ip netns add NS-RH 2>/dev/null || true
+   ip netns exec NS-RH ip link set lo up
+   ip netns exec NS-RH ip link add br-rh type bridge 2>/dev/null || true
+   ip netns exec NS-RH ip link set br-rh up
 
-echo "==[ 5. CREACIÓN DEPARTAMENTO RH (NS-RH) ]=="
-ip netns add NS-RH 2>/dev/null || true
-ip netns exec NS-RH ip link set lo up
-ip netns exec NS-RH ip link add br-rh type bridge 2>/dev/null || true
-ip netns exec NS-RH ip link set br-rh up
+   # Uplink: CORE-GW ↔ NS-RH
+   ip link add v-gw-rh type veth peer name v-rh-gw 2>/dev/null || true
+   ip link set v-gw-rh netns CORE-GW
+   ip link set v-rh-gw netns NS-RH
+   ip netns exec CORE-GW ip link set v-gw-rh master br0
+   ip netns exec CORE-GW ip link set v-gw-rh up
+   ip netns exec NS-RH ip link set v-rh-gw master br-rh
+   ip netns exec NS-RH ip link set v-rh-gw up
 
-# Uplink: CORE-GW ↔ NS-RH
-ip link add v-gw-rh type veth peer name v-rh-gw 2>/dev/null || true
-ip link set v-gw-rh netns CORE-GW
-ip link set v-rh-gw netns NS-RH
-ip netns exec CORE-GW ip link set v-gw-rh master br0
-ip netns exec CORE-GW ip link set v-gw-rh up
-ip netns exec NS-RH ip link set v-rh-gw master br-rh
-ip netns exec NS-RH ip link set v-rh-gw up
+   echo "==[ 6. DESPLIEGUE DE PC_1, PC_2, PC_3 EN RH ]=="
+   for i in 1 2 3; do
+      NAME="PC_$i-RH"
+      IP="10.0.0.2$i"
+      V_PC="v-pc$i-rh"
+      V_RH="v-rh-pc$i"
+      
+      ip netns add $NAME 2>/dev/null || true
+      ip link add $V_PC type veth peer name $V_RH 2>/dev/null || true
+      ip link set $V_PC netns $NAME
+      ip link set $V_RH netns NS-RH
+      
+      ip netns exec NS-RH ip link set $V_RH master br-rh
+      ip netns exec NS-RH ip link set $V_RH up
+      
+      ip netns exec $NAME ip addr add $IP/24 dev $V_PC
+      ip netns exec $NAME ip link set $V_PC up
+      ip netns exec $NAME ip link set lo up
+      ip netns exec $NAME ip route add default via 10.0.0.1
+      echo "   ✔ $NAME configurada ($IP)"
+   done
 
-echo "==[ 6. DESPLIEGUE DE PC_1, PC_2, PC_3 EN RH ]=="
-for i in 1 2 3; do
-    NAME="PC_$i-RH"
-    IP="10.0.0.2$i"
-    V_PC="v-pc$i-rh"
-    V_RH="v-rh-pc$i"
-    
-    ip netns add $NAME 2>/dev/null || true
-    ip link add $V_PC type veth peer name $V_RH 2>/dev/null || true
-    ip link set $V_PC netns $NAME
-    ip link set $V_RH netns NS-RH
-    
-    ip netns exec NS-RH ip link set $V_RH master br-rh
-    ip netns exec NS-RH ip link set $V_RH up
-    
-    ip netns exec $NAME ip addr add $IP/24 dev $V_PC
-    ip netns exec $NAME ip link set $V_PC up
-    ip netns exec $NAME ip link set lo up
-    ip netns exec $NAME ip route add default via 10.0.0.1
-    echo "   ✔ $NAME configurada ($IP)"
-done
+   echo -e "\n==[ 7. VERIFICACIÓN FINAL ]=="
+   echo -n "→ PC_1-RH a Internet (8.8.8.8): "
+   if ip netns exec PC_1-RH ping -c 1 -W 1 8.8.8.8 >/dev/null; then echo "OK"; else echo "FAIL"; fi
 
-echo -e "\n==[ 7. VERIFICACIÓN FINAL ]=="
-echo -n "→ PC_1-RH a Internet (8.8.8.8): "
-if ip netns exec PC_1-RH ping -c 1 -W 1 8.8.8.8 >/dev/null; then echo "OK"; else echo "FAIL"; fi
-
-echo -n "→ PC_3-RH a PC_1-RH: "
-if ip netns exec PC_3-RH ping -c 1 -W 1 10.0.0.21 >/dev/null; then echo "OK"; else echo "FAIL"; fi
-
+   echo -n "→ PC_3-RH a PC_1-RH: "
+   if ip netns exec PC_3-RH ping -c 1 -W 1 10.0.0.21 >/dev/null; then echo "OK"; else echo "FAIL"; fi
+fi
