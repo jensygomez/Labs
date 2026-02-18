@@ -199,7 +199,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 10.0.0.1        core-gw
 EOF
   # 3. Comando de identidad (Hostname en memoria)
-  ip netns exec CORE-GW hostname CORE-GW
+  ip netns exec CORE-GW hostname core-gw
   # --------------------------------
   
   ip netns exec CORE-GW ip link set lo up
