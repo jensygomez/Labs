@@ -145,7 +145,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     ip netns exec NS-SYS ip link set v-sys-gw master br-sys
     ip netns exec NS-SYS ip link set v-sys-gw up
 
-    # --- PASO 11: DESPLIEGUE PC_1-SYS (BASTIÓN) CON IDENTIDAD ---
+# --- PASO 11: DESPLIEGUE PC_1-SYS (BASTIÓN) CON IDENTIDAD ---
     echo "==[ 11. DESPLIEGUE PC_1-SYS (BASTIÓN) ]=="
     NAME="PC_1-SYS"
     HOSTNAME_SYS="pc-1-sys"
@@ -154,20 +154,23 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     # 1. Crear namespace de la PC
     ip netns add $NAME 2>/dev/null || true
 
-    # 2. PASOS DE IDENTIDAD (Identidad Total)
+    # 2. PASOS DE IDENTIDAD (Blindaje de identidad)
     mkdir -p /etc/netns/$NAME
     cat <<EOF > /etc/netns/$NAME/hosts
 127.0.0.1       localhost $HOSTNAME_SYS
-$IP_SYS             $HOSTNAME_SYS
-# Puertas de enlace y Servidores
+$IP_SYS         $HOSTNAME_SYS
 10.0.0.1        core-gw
 10.0.0.11       srv-ldap.lab.local srv-ldap
-# Vecinos (Departamento RH)
 10.0.0.21       pc-1-rh
 10.0.0.22       pc-2-rh
 10.0.0.23       pc-3-rh
 EOF
-    ip netns exec $NAME hostname $HOSTNAME_SYS
+
+    # CAMBIO CLAVE: Usamos unshare para que el cambio de nombre sea PRIVADO para este NS
+    ip netns exec $NAME unshare -u hostname $HOSTNAME_SYS
+    
+    # TRUCO EXTRA: Forzar el montaje del archivo hosts si /etc/netns no lo hace solo
+    ip netns exec $NAME mount --bind /etc/netns/$NAME/hosts /etc/hosts 2>/dev/null || true
 
     # 3. Conectividad (Cableado virtual)
     ip link del v-pc1-sys 2>/dev/null || true
