@@ -137,7 +137,8 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 
     # --- PASO 20: CREACIÓN DE UNIDADES ORGANIZATIVAS ---
     echo "==[ 20. CREACIÓN OUs: People y Groups ]=="
-    cat > /etc/netns/SRV-LDAP/structure.ldif << 'EOF'
+    # Los .ldif van en /tmp del host — /etc/netns/SRV-LDAP/ solo debe tener archivos que el kernel monta dentro del namespace
+    cat > /tmp/structure.ldif << 'EOF'
 dn: ou=People,dc=lab,dc=local
 objectClass: organizationalUnit
 ou: People
@@ -146,11 +147,11 @@ dn: ou=Groups,dc=lab,dc=local
 objectClass: organizationalUnit
 ou: Groups
 EOF
-    ip netns exec SRV-LDAP ldapadd -x -H ldapi:/// -D "cn=admin,dc=lab,dc=local" -w ldap -f /etc/netns/SRV-LDAP/structure.ldif
+    ip netns exec SRV-LDAP ldapadd -x -H ldapi:/// -D "cn=admin,dc=lab,dc=local" -w ldap -f /tmp/structure.ldif
 
     # --- PASO 21: USUARIO DE PRUEBA jdoe ---
     echo "==[ 21. CREACIÓN USUARIO jdoe EN ou=People ]=="
-    cat > /etc/netns/SRV-LDAP/user.ldif << 'EOF'
+    cat > /tmp/user.ldif << 'EOF'
 dn: uid=jdoe,ou=People,dc=lab,dc=local
 objectClass: inetOrgPerson
 objectClass: posixAccount
@@ -166,7 +167,7 @@ userPassword: password123
 loginShell: /bin/bash
 homeDirectory: /home/jdoe
 EOF
-    ip netns exec SRV-LDAP ldapadd -x -H ldapi:/// -D "cn=admin,dc=lab,dc=local" -w ldap -f /etc/netns/SRV-LDAP/user.ldif
+    ip netns exec SRV-LDAP ldapadd -x -H ldapi:/// -D "cn=admin,dc=lab,dc=local" -w ldap -f /tmp/user.ldif
 
     # --- PASO 22: EXPONER SLAPD EN IP 10.0.0.11 ---
     echo "==[ 22. BINDING SLAPD EN 10.0.0.11:389 ]=="
