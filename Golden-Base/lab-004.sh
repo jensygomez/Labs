@@ -69,11 +69,36 @@ ESTADO ACTUAL: LAB 04 COMPLETADO
 ✓ NS-RH (Recursos Humanos): Bridge br-rh activo con 3 PCs (10.0.0.21-23).
 ✓ NS-SYS (Administración): Bridge br-sys con PC_1-SYS (10.0.0.31) como Bastión.
 ✓ NS-SRV (Servicios): * Namespace de departamento y Bridge br-srv creados.
-
-Servidor SRV-LDAP (10.0.0.11) desplegado y conectado.
+✓ Servidor SRV-LDAP (10.0.0.11) desplegado y conectado.
 ✓ Conectividad: Verificada desde SRV hacia Gateway, Internet y otros departamentos (RH).
 
+===================================================================================
+SIGUIENTE PASO — LAB 05: SERVICIOS DE IDENTIDAD (OPENLDAP)
+===================================================================================
 
+Objetivo:
+→ Transformar el namespace SRV-LDAP de un nodo de red vacío a un Servidor de Directorio Operativo.
+→ Configurar la base de datos de identidades para el dominio lab.local.
+→ Permitir que otros departamentos (como el PC_1-SYS) puedan realizar consultas de usuarios.
+
+Componentes a configurar (Lógica Interna):
+
+1) Instalación del Stack:
+    • slapd (el demonio de OpenLDAP).
+    • ldap-utils (herramientas de gestión).
+
+2) Configuración del Directorio:
+    • Base DN: dc=lab,dc=local.
+    • Creación de Unidades Organizativas (OU): ou=People y ou=Groups.
+    • Creación de un usuario de prueba para validar la autenticación.
+
+3) Seguridad y Acceso:
+    • Configurar el listener para que acepte conexiones en la IP 10.0.0.11.
+    • Ajustar el Firewall interno del namespace si fuera necesario.
+
+4) Verificaciones de "Vida":
+    • Desde SRV-LDAP: ldapsearch -x -b "dc=lab,dc=local" (Consulta local).
+    • Desde PC_1-SYS: ldapsearch -h 10.0.0.11 -x -b "dc=lab,dc=local" (Consulta remota).
 
 
 
