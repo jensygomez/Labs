@@ -46,29 +46,37 @@ ejecutar_hasta() {
     print_topology
 }
 
-# ── Limpiar entorno ──────────────────────────────────────────────────────────────
 limpiar_entorno() {
     echo ""
-    echo -e "${YELLOW}Limpiando namespaces...${NC}"
+    echo -e "${YELLOW}Limpiando interfaces críticas del Host...${NC}"
+    # Borramos explícitamente los extremos que viven en el Host
+    # Al borrar un extremo, el otro (en el namespace) muere automáticamente
+    interfaces=(v-wan-gw v-rh-gw v-sys-gw v-srv-gw)
+    for iface in "${interfaces[@]}"; do
+        if ip link show "$iface" &>/dev/null; then
+            ip link del "$iface"
+            echo -e "  ${RED}✗ Eliminada interface host: $iface${NC}"
+        fi
+    done
+
+    echo -e "${YELLOW}Eliminando Namespaces...${NC}"
+    # Borrar todos los namespaces elimina sus bridges e interfaces internas
     for ns in $(ip netns list | awk '{print $1}'); do
         ip netns del "$ns" 2>/dev/null
-        echo -e "  ${RED}✗ Eliminado: $ns${NC}"
+        echo -e "  ${RED}✗ Namespace eliminado: $ns${NC}"
     done
 
-    echo -e "${YELLOW}Limpiando interfaces veth del host...${NC}"
-    for iface in $(ip link show | grep -oP '(?<=\d: )[^@:]+(?=@)'); do
-        ip link del "$iface" 2>/dev/null
-        echo -e "  ${RED}✗ Eliminada: $iface${NC}"
-    done
-
-    echo -e "${YELLOW}Limpiando rutas y reglas iptables...${NC}"
+    echo -e "${YELLOW}Limpiando reglas de red...${NC}"
     iptables -F FORWARD 2>/dev/null
     iptables -t nat -F POSTROUTING 2>/dev/null
-    ip route del 10.0.0.0/24 2>/dev/null
-    ip addr del 172.16.255.1/30 dev v-wan-gw 2>/dev/null
+    
+    # Borrar la ruta al laboratorio si existe
+    ip route del 10.0.0.0/24 via 172.16.255.2 2>/dev/null
+    
+    # Limpiar cualquier resto de IP en interfaces virtuales del host
+    ip addr flush dev v-wan-gw 2>/dev/null
 
-    echo -e "${GREEN}✔ Entorno limpio.${NC}"
-    echo ""
+    echo -e "${GREEN}✔ Entorno 100% limpio.${NC}"
 }
 
 # ── Ejecutar todos los labs ──────────────────────────────────────────────────────
