@@ -28,7 +28,10 @@ ejecutar_hasta() {
             echo -e "${CYAN}══════════════════════════════════════════${NC}"
             echo -e "${CYAN}  Ejecutando: lab-$(printf '%03d' $i).sh${NC}"
             echo -e "${CYAN}══════════════════════════════════════════${NC}"
+            
+            # Ejecutamos en un proceso hijo para mantener el aislamiento
             bash "$LAB"
+            
             if [ $? -ne 0 ]; then
                 echo -e "${RED}✗ Error en lab-$(printf '%03d' $i).sh — abortando.${NC}"
                 exit 1
@@ -40,9 +43,17 @@ ejecutar_hasta() {
             exit 1
         fi
     done
-    # 3. Al final de todo el bucle, como ya hicimos source del último,
-    # simplemente llamamos a su función de topología.
-    print_topology
+
+    # --- LA CORRECCIÓN AQUÍ ---
+    # Identificamos el último lab
+    ULTIMO_LAB=$(printf "$LAB_DIR/lab-%03d.sh" $TARGET)
+    
+    # Hacemos source para cargar la función print_topology en el engine
+    if [ -f "$ULTIMO_LAB" ]; then
+        source "$ULTIMO_LAB"
+        # Ahora que el engine conoce la función, la ejecutamos
+        print_topology
+    fi
 }
 
 limpiar_entorno() {
