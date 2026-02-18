@@ -40,9 +40,8 @@ ejecutar_hasta() {
             exit 1
         fi
     done
-    # Imprimir topología del último lab ejecutado
-    local ULTIMO=$(printf "$LAB_DIR/lab-%03d.sh" $TARGET)
-    source "$ULTIMO"
+    # 3. Al final de todo el bucle, como ya hicimos source del último,
+    # simplemente llamamos a su función de topología.
     print_topology
 }
 
