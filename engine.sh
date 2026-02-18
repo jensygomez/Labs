@@ -40,6 +40,10 @@ ejecutar_hasta() {
             exit 1
         fi
     done
+    # Imprimir topología del último lab ejecutado
+    local ULTIMO=$(printf "$LAB_DIR/lab-%03d.sh" $TARGET)
+    source "$ULTIMO"
+    print_topology
 }
 
 # ── Limpiar entorno ──────────────────────────────────────────────────────────────
