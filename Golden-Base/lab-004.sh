@@ -54,11 +54,32 @@ TOPOLOGÍA DISTRIBUIDA – LAB DE ARQUITECTURA LINUX
                           │10.0.0.23 │
                           └──────────┘
 
+===================================================================================
+RESUMEN RÁPIDO
+===================================================================================
+- CORE-GW: Router/NAT (10.0.0.1) con salida a Internet.
+- Cada departamento: Namespace + bridge propio (aislamiento L2 quirúrgico).
+- Endpoints: Todos apuntan al Gateway 10.0.0.1.
+- Identidad: Resolución local vía /etc/hosts en cada namespace.
+
+===================================================================================
+ESTADO ACTUAL: LAB 04 COMPLETADO
+===================================================================================
+✓ CORE-GW: Funcionando con NAT y ruteo inter-departamental.
+✓ NS-RH (Recursos Humanos): Bridge br-rh activo con 3 PCs (10.0.0.21-23).
+✓ NS-SYS (Administración): Bridge br-sys con PC_1-SYS (10.0.0.31) como Bastión.
+✓ NS-SRV (Servicios): * Namespace de departamento y Bridge br-srv creados.
+
+Servidor SRV-LDAP (10.0.0.11) desplegado y conectado.
+✓ Conectividad: Verificada desde SRV hacia Gateway, Internet y otros departamentos (RH).
 
 
 
 
 
+
+EOF
+}
 # --- 2. FUNCIÓN DE EJECUCIÓN (Toda la lógica de red: Departamento SRV) ---
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
