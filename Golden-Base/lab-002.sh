@@ -129,7 +129,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
    ip netns exec NS-RH ip link set v-rh-gw master br-rh
    ip netns exec NS-RH ip link set v-rh-gw up
 
-   # --- PASO 6: DESPLIEGUE DE LAS PCs CON IDENTIDAD ---
+# --- PASO 6: DESPLIEGUE DE LAS PCs CON IDENTIDAD BLINDADA ---
    echo "==[ 6. DESPLIEGUE DE PC_1, PC_2, PC_3 EN RH ]=="
    for i in 1 2 3; do
       NAME="PC_$i-RH"
@@ -141,7 +141,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
       # 1. Crear el namespace de la PC
       ip netns add $NAME 2>/dev/null || true
 
-      # 2. PASOS DE IDENTIDAD (Identidad Total)
+      # 2. PASOS DE IDENTIDAD (Blindaje Total)
       mkdir -p /etc/netns/$NAME
       cat <<EOF > /etc/netns/$NAME/hosts
 127.0.0.1       localhost $HOSTNAME_PC
@@ -149,7 +149,12 @@ $IP             $HOSTNAME_PC
 10.0.0.1        core-gw
 10.0.0.11       srv-ldap.lab.local srv-ldap
 EOF
-      ip netns exec $NAME hostname $HOSTNAME_PC
+
+      # CAMBIO CLAVE 1: Asignación de hostname privada (UTS isolation)
+      ip netns exec $NAME unshare -u hostname $HOSTNAME_PC
+      
+      # CAMBIO CLAVE 2: Forzado de montaje de hosts (Garantiza resolución de nombres)
+      ip netns exec $NAME mount --bind /etc/netns/$NAME/hosts /etc/hosts 2>/dev/null || true
 
       # 3. Conectividad (Cableado virtual)
       ip link add $V_PC type veth peer name $V_RH 2>/dev/null || true
@@ -165,7 +170,7 @@ EOF
       ip netns exec $NAME ip link set lo up
       ip netns exec $NAME ip route add default via 10.0.0.1
       
-      echo "   ✔ $NAME configurada ($IP) con hostname: $HOSTNAME_PC"
+      echo "   ✔ $NAME configurada ($IP) con hostname estanco: $HOSTNAME_PC"
    done
 
    echo -e "\n==[ 7. VERIFICACIÓN FINAL ]=="
