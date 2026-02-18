@@ -188,7 +188,20 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   echo "→ Interfaz WAN detectada: $WAN_IF"
 
   echo "==[ 1. CORE-GW: INFRAESTRUCTURA BASE ]=="
+  # A. Crear el namespace
   ip netns add CORE-GW 2>/dev/null || true
+    # --- PASOS DE IDENTIDAD NUEVOS ---
+  # 1. Directorio de configuración persistente
+  mkdir -p /etc/netns/CORE-GW
+    # 2. Archivo de resolución interno (Hosts)
+  cat <<EOF > /etc/netns/CORE-GW/hosts
+127.0.0.1       localhost
+10.0.0.1        core-gw
+EOF
+  # 3. Comando de identidad (Hostname en memoria)
+  ip netns exec CORE-GW hostname CORE-GW
+  # --------------------------------
+  
   ip netns exec CORE-GW ip link set lo up
   ip netns exec CORE-GW ip link add br0 type bridge 2>/dev/null || true
   ip netns exec CORE-GW ip link set br0 up
