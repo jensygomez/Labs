@@ -190,7 +190,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   echo "==[ 1. CORE-GW: INFRAESTRUCTURA BASE ]=="
   # A. Crear el namespace
   ip netns add CORE-GW 2>/dev/null || true
-    # --- PASOS DE IDENTIDAD NUEVOS ---
+  # --- PASOS DE IDENTIDAD ---
   # 1. Directorio de configuración persistente
   mkdir -p /etc/netns/CORE-GW
     # 2. Archivo de resolución interno (Hosts)
