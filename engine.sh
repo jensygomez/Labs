@@ -44,6 +44,8 @@ ejecutar_hasta() {
     ULTIMO_LAB=$(printf "$LAB_DIR/lab-%03d.sh" $TARGET)
     source "$ULTIMO_LAB" # Gracias al 'if' del lab, esto NO repetirá la red
     print_topology
+    echo " entra a cada namespace creado usando el siguietne ejemplo"
+    echo "ip netns exec CORE-GW unshare -u bash"
 }
 
 limpiar_entorno() {

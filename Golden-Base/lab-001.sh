@@ -162,9 +162,6 @@ Componentes a crear:
    - Ping entre PCs del departamento
    - Ping al CORE-GW (10.0.0.1)
    - Ping a Internet (8.8.8.8)
-
-
-
 EOF
 }
 
