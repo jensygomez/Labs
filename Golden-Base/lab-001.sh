@@ -68,90 +68,42 @@ FILOSOFÍA
 • ip netns exec           = Manipulación de red como en namespaces clásicos
 • Kernel del host         = Única fuente de verdad (forwarding, NAT, iptables)
 
-===================================================================================
-ESTADO ACTUAL — LAB 01 COMPLETADO (Docker versión)
-===================================================================================
+echo ""
+echo -e "╔══════════════════════════════════════════╗"
+echo -e "║         LAB 001 — RESUMEN FINAL          ║"
+echo -e "╚══════════════════════════════════════════╝"
+echo ""
+echo -e "  ${VERDE}✔ Contenedor${NC}   CORE-GW (ubuntu:24.04)"
+echo -e "  ${VERDE}✔ LAN Bridge${NC}   br0 → 10.0.0.1/24"
+echo -e "  ${VERDE}✔ WAN Link${NC}     172.16.255.2 ↔ 172.16.255.1"
+echo -e "  ${VERDE}✔ NAT${NC}          10.0.0.0/24 + 172.16.255.0/30 → $WAN_IF"
+echo -e "  ${VERDE}✔ Forwarding${NC}   HOST + CORE-GW habilitados"
+echo ""
+echo -e "  Pendiente:"
+echo -e "  ${GRIS}  ░ Contenedores de departamentos${NC}"
+echo -e "  ${GRIS}  ░ Bridges br-inf br-srv br-rh br-sys${NC}"
+echo -e "  ${GRIS}  ░ Servicios DNS DHCP LDAP FS${NC}"
+echo ""
 
-Componentes creados:
-
-✔ Contenedor:
-  - CORE-GW (ubuntu:24.04 + privileged)
-
-✔ Bridge interno (LAN):
-  - br0 (dentro de CORE-GW)
-  - IP: 10.0.0.1/24
-  - Función: Gateway interno para todos los departamentos
-
-✔ Enlace WAN (CORE-GW ↔ HOST):
-  - v-gw-wan  (en CORE-GW)
-    • IP: 172.16.255.2/30
-  - v-wan-gw  (en HOST)
-    • IP: 172.16.255.1/30
-
-✔ Routing:
-  - Ruta por defecto en CORE-GW:
-    • default via 172.16.255.1 dev v-gw-wan
-
-✔ Kernel & Forwarding (HOST):
-  - net.ipv4.ip_forward = 1
-
-✔ NAT (HOST):
-  - POSTROUTING MASQUERADE:
-    • Origen: 172.16.255.0/30 → salida por $WAN_IF
-    • Origen: 10.0.0.0/24     → salida por $WAN_IF
-
-✔ Conectividad verificada:
-  - CORE-GW → HOST (172.16.255.1): OK
-  - CORE-GW → Internet (8.8.8.8 y google.com): OK
-
-Estado operativo:
-
-→ CORE-GW funciona como:
-  • Router L3 virtual
-  • Gateway por defecto (10.0.0.1/24)
-  • Punto de NAT y forwarding hacia Internet
-  • Centro de interconexión L2/L3 para los próximos contenedores
-
-→ Infraestructura pendiente:
-  • Contenedores de departamentos (NS-INFRA, NS-SRV, NS-RH, NS-SYS)
-  • Bridges de acceso por departamento (br-inf, br-srv, br-rh, br-sys)
-  • Endpoints y servicios (DNS, DHCP, LDAP, FS, PCs)
-
-===================================================================================
-SIGUIENTE PASO — LAB 02: DEPARTAMENTO RH (ACCESS LAYER)
-===================================================================================
-
-Objetivo:
-→ Implementar el departamento RH como dominio L2 independiente
-→ Simular un switch de acceso con múltiples PCs conectados al bridge central
-
-Componentes a crear en lab-002.sh:
-
-1) Contenedor del departamento
-   - NS-RH (contenedor Docker para Recursos Humanos)
-
-2) Enlace uplink CORE-GW ↔ NS-RH
-   - v-gw-rh   (en CORE-GW, bridge br0)
-   - v-rh-gw   (en NS-RH, sin IP – modo L2)
-
-3) Bridge interno del departamento (switch de acceso)
-   - br-rh  (dentro de NS-RH)
-
-4) PCs del departamento (contenedores o interfaces)
-   - PC_1-RH : 10.0.0.21/24
-   - PC_2-RH : 10.0.0.22/24
-   - PC_3-RH : 10.0.0.23/24
-   - Gateway por defecto: 10.0.0.1 (CORE-GW)
-
-5) Cables virtuales (veth pairs) por cada PC
-   - v-pc1-rh ↔ v-rh-pc1
-   - v-pc2-rh ↔ v-rh-pc2
-   - v-pc3-rh ↔ v-rh-pc3
-
-6) Validaciones esperadas
-   - Ping entre PCs del departamento (L2 dentro de br-rh)
-   - Ping desde PCs al CORE-GW (10.0.0.1)
-   - Ping desde PCs a Internet (8.8.8.8)
+echo ""
+echo -e "╔══════════════════════════════════════════╗"
+echo -e "║       PRÓXIMO — LAB 002: DEPT. RH        ║"
+echo -e "╚══════════════════════════════════════════╝"
+echo ""
+echo -e "  Objetivo: Implementar RH como dominio L2 independiente"
+echo ""
+echo -e "  Por crear:"
+echo -e "  ${GRIS}  ░ Contenedor   NS-RH${NC}"
+echo -e "  ${GRIS}  ░ Uplink       v-gw-rh (br0) ↔ v-rh-gw (NS-RH)${NC}"
+echo -e "  ${GRIS}  ░ Bridge       br-rh (switch de acceso)${NC}"
+echo -e "  ${GRIS}  ░ PCs          PC1→10.0.0.21  PC2→10.0.0.22  PC3→10.0.0.23${NC}"
+echo -e "  ${GRIS}  ░ Veth pairs   v-pc1-rh↔v-rh-pc1  v-pc2-rh↔v-rh-pc2  v-pc3-rh↔v-rh-pc3${NC}"
+echo ""
+echo -e "  Validaciones esperadas:"
+echo -e "  ${GRIS}  ░ Ping entre PCs del departamento (L2)${NC}"
+echo -e "  ${GRIS}  ░ Ping PCs → CORE-GW (10.0.0.1)${NC}"
+echo -e "  ${GRIS}  ░ Ping PCs → Internet (8.8.8.8)${NC}"
+echo ""
 
 EOF
 }
