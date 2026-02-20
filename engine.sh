@@ -50,34 +50,48 @@ ejecutar_hasta() {
 
 limpiar_entorno() {
     echo ""
-    echo -e "${YELLOW}Limpiando interfaces críticas del Host...${NC}"
-    # Borramos explícitamente los extremos que viven en el Host
-    # Al borrar un extremo, el otro (en el namespace) muere automáticamente
-    interfaces=(v-wan-gw v-rh-gw v-sys-gw v-srv-gw)
-    for iface in "${interfaces[@]}"; do
-        if ip link show "$iface" &>/dev/null; then
-            ip link del "$iface"
-            echo -e "  ${RED}✗ Eliminada interface host: $iface${NC}"
-        fi
+
+    echo -e "${YELLOW}Limpiando contenedores Docker del laboratorio...${NC}"
+    containers=$(docker ps -aq 2>/dev/null)
+    if [ -n "$containers" ]; then
+        for container in $containers; do
+            name=$(docker inspect -f '{{.Name}}' "$container" | tr -d '/')
+            docker stop "$container" &>/dev/null
+            docker rm "$container" &>/dev/null
+            echo -e "  ${RED}✗ Contenedor eliminado: $name${NC}"
+        done
+    else
+        echo -e "  ${YELLOW}No hay contenedores activos.${NC}"
+    fi
+
+    echo -e "${YELLOW}Limpiando symlinks de netns...${NC}"
+    for ns_link in /var/run/netns/*; do
+        [ -L "$ns_link" ] || continue
+        name=$(basename "$ns_link")
+        rm -f "$ns_link"
+        echo -e "  ${RED}✗ Symlink netns eliminado: $name${NC}"
     done
 
-    echo -e "${YELLOW}Eliminando Namespaces...${NC}"
-    # Borrar todos los namespaces elimina sus bridges e interfaces internas
-    for ns in $(ip netns list | awk '{print $1}'); do
-        ip netns del "$ns" 2>/dev/null
-        echo -e "  ${RED}✗ Namespace eliminado: $ns${NC}"
+    echo -e "${YELLOW}Limpiando interfaces veth del Host...${NC}"
+    for iface in $(ip link show type veth 2>/dev/null | awk -F': ' '{print $2}' | awk '{print $1}'); do
+        ip link del "$iface" 2>/dev/null
+        echo -e "  ${RED}✗ Eliminada interface veth: $iface${NC}"
     done
 
     echo -e "${YELLOW}Limpiando reglas de red...${NC}"
     iptables -F FORWARD 2>/dev/null
     iptables -t nat -F POSTROUTING 2>/dev/null
-    
-    # Borrar la ruta al laboratorio si existe
-    ip route del 10.0.0.0/24 via 172.16.255.2 2>/dev/null
-    
-    # Limpiar cualquier resto de IP en interfaces virtuales del host
-    ip addr flush dev v-wan-gw 2>/dev/null
+    echo -e "  ${RED}✗ Reglas iptables limpiadas${NC}"
 
+    echo -e "${YELLOW}Limpiando rutas del laboratorio (metric 1000)...${NC}"
+    while IFS= read -r route; do
+        [ -z "$route" ] && continue
+        dest=$(echo "$route" | awk '{print $1}')
+        ip route del "$dest" metric 1000 2>/dev/null
+        echo -e "  ${RED}✗ Ruta eliminada: $dest${NC}"
+    done < <(ip route show metric 1000 2>/dev/null)
+
+    echo ""
     echo -e "${GREEN}✔ Entorno 100% limpio.${NC}"
 }
 

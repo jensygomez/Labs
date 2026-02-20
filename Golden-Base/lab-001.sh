@@ -235,6 +235,8 @@ EOF' || true
   ip link set v-wan-gw up || true
   ip netns exec CORE-GW ip link set v-gw-wan up || true
   ip addr add 172.16.255.1/30 dev v-wan-gw 2>/dev/null || true
+  # Forzar la ruta con metric 1000 explícitamente
+  ip route add 172.16.255.0/30 dev v-wan-gw metric 1000 2>/dev/null || true
   ip netns exec CORE-GW ip addr add 172.16.255.2/30 dev v-gw-wan 2>/dev/null || true
   # Ruta default (borramos la de Docker si existe y agregamos la nuestra)
   ip netns exec CORE-GW ip route del default 2>/dev/null || true
@@ -253,7 +255,7 @@ EOF' || true
   iptables -A FORWARD -j ACCEPT || true
   iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT || true
   # RUTA DE RETORNO CLAVE
-  ip route add 10.0.0.0/24 via 172.16.255.2 2>/dev/null || true
+  ip route add 10.0.0.0/24 via 172.16.255.2 metric 1000 2>/dev/null || true
 
   echo "==[ 4. FORWARDING INTERNO (CORE-GW) ]=="
   ip netns exec CORE-GW sysctl -w net.ipv4.ip_forward=1 || true
