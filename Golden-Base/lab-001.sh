@@ -217,13 +217,46 @@ EOF' || true
   docker exec CORE-GW hostname core-gw || true
 
   # Instalar paquetes básicos dentro del contenedor (para que sea usable)
-  echo "→ Instalando herramientas en CORE-GW (esto puede tardar un momento)..."
+echo "→ Actualizando repositorios en CORE-GW..."
   docker exec CORE-GW apt update -qq 2>/dev/null || true
-  docker exec CORE-GW apt install -y -qq \
-    iproute2 iputils-ping net-tools vim procps \
-    nano traceroute tcpdump curl wget \
-    dnsutils iperf3 nmap netcat-openbsd 2>/dev/null || true
-  echo "→ Herramientas instaladas."
+
+  paquetes=(
+    iproute2 iputils-ping net-tools vim procps nano
+    traceroute tcpdump curl wget
+    dnsutils iperf3 nmap netcat-openbsd
+  )
+  total=${#paquetes[@]}
+
+  # Colores
+  VERDE='\033[0;32m'
+  GRIS='\033[0;37m'
+  BOLD='\033[1m'
+  NC='\033[0m'
+
+  echo ""
+  for i in "${!paquetes[@]}"; do
+      pkg="${paquetes[$i]}"
+
+      # Instalar paquete
+      docker exec CORE-GW apt install -y -qq "$pkg" 2>/dev/null || true
+
+      # Calcular porcentaje y bloques
+      porcentaje=$(( (i + 1) * 100 / total ))
+      bloques_llenos=$(( (i + 1) * 10 / total ))
+      bloques_vacios=$(( 10 - bloques_llenos ))
+
+      # Construir barra
+      barra_llena=$(printf '█%.0s' $(seq 1 $bloques_llenos) 2>/dev/null)
+      barra_vacia=$(printf '░%.0s' $(seq 1 $bloques_vacios) 2>/dev/null)
+
+      # Imprimir línea con color
+      echo -ne "\r  ${VERDE}${BOLD}[${barra_llena}${GRIS}${barra_vacia}${VERDE}]${NC} ${BOLD}${porcentaje}%${NC} → instalado: ${pkg}          "
+  done
+
+  echo -e "\n"
+  echo -e "  ${VERDE}${BOLD}✔ Todos los paquetes instalados correctamente (${total} paquetes).${NC}"
+  echo ""
+
 
   # Configurar loopback, bridge y IP
   ip netns exec CORE-GW ip link set lo up || true
