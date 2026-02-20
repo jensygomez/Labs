@@ -218,7 +218,10 @@ EOF' || true
 
   # Instalar paquetes básicos dentro del contenedor (para que sea usable)
   docker exec CORE-GW apt update 2>/dev/null || true
-  docker exec CORE-GW apt install -y iproute2 iputils-ping net-tools vim procps 2>/dev/null || true
+  docker exec CORE-GW apt install -y \
+    iproute2 iputils-ping net-tools vim procps \
+    nano traceroute tcpdump curl wget \
+    dnsutils iperf3 nmap netcat-openbsd
 
   # Configurar loopback, bridge y IP
   ip netns exec CORE-GW ip link set lo up || true
@@ -254,6 +257,40 @@ EOF' || true
 
   echo "==[ 4. FORWARDING INTERNO (CORE-GW) ]=="
   ip netns exec CORE-GW sysctl -w net.ipv4.ip_forward=1 || true
+
+  echo "==[ 5. TEST DE CONECTIVIDAD ]=="
+
+  # Host → CORE-GW (WAN link)
+  if ping -c 2 -W 2 172.16.255.2 &>/dev/null; then
+    echo "✓ Host → CORE-GW (172.16.255.2) OK"
+  else
+    echo "✗ Host → CORE-GW (172.16.255.2) FALLO"
+  fi
+
+  # CORE-GW → Host (WAN link inverso)
+  if ip netns exec CORE-GW ping -c 2 -W 2 172.16.255.1 &>/dev/null; then
+    echo "✓ CORE-GW → Host (172.16.255.1) OK"
+  else
+    echo "✗ CORE-GW → Host (172.16.255.1) FALLO"
+  fi
+
+  # CORE-GW → Internet (salida NAT)
+  if ip netns exec CORE-GW ping -c 2 -W 3 8.8.8.8 &>/dev/null; then
+    echo "✓ CORE-GW → Internet (8.8.8.8) OK"
+  else
+    echo "✗ CORE-GW → Internet (8.8.8.8) FALLO"
+  fi
+
+  # Bridge LAN existe y tiene IP
+  if ip netns exec CORE-GW ip addr show br0 | grep -q "10.0.0.1"; then
+    echo "✓ Bridge LAN (br0 - 10.0.0.1/24) OK"
+  else
+    echo "✗ Bridge LAN (br0) FALLO"
+  fi
+
+  echo "==[ FIN DE TESTS ]=="
+
+
 
 fi
 
