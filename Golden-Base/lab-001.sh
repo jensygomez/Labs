@@ -3,15 +3,33 @@
 # LABORATORIO LINUX PARA CERTIFICACIÓN LFCS/LFCE
 # Topología: Infraestructura completa con contenedores Docker
 # Versión: 2.0 - Dockerizada y automatizada
+# Laboratorio: 001 - Core Gateway y red base
+# ===================================================================================
+
+# ── Configuración inicial ─────────────────────────────────────────────────────
+set -e  # Salir si hay error crítico
+set -o pipefail
+
+# ── Verificar ejecución como root ─────────────────────────────────────────────
+if [ "$EUID" -ne 0 ]; then 
+    echo "Este script debe ejecutarse como root"
+    exit 1
+fi
+
+# ── Colores globales ──────────────────────────────────────────────────────────
+VERDE='\033[0;32m'
+GRIS='\033[0;37m'
+ROJO='\033[0;31m'
+AMARILLO='\033[1;33m'
+AZUL='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+# ===================================================================================
+# FUNCIÓN: print_topology - Muestra la topología del laboratorio
 # ===================================================================================
 print_topology() {
-  VERDE='\033[0;32m'
-  GRIS='\033[0;37m'
-  ROJO='\033[0;31m'
-  AMARILLO='\033[1;33m'
-  BOLD='\033[1m'
-  NC='\033[0m'
-  
   cat <<'EOF'
 ===================================================================================
 TOPOLOGÍA DISTRIBUIDA – LAB DE ARQUITECTURA LINUX (DOCKERIZADO)
@@ -76,7 +94,7 @@ FILOSOFÍA
 • Kernel del host         = Única fuente de verdad (forwarding, NAT, iptables)
 EOF
 
-  # AHORA USAMOS echo -e PARA LOS COLORES
+  # Usar variables globales de color
   echo -e ""
   echo -e "╔══════════════════════════════════════════╗"
   echo -e "║         LAB 001 — RESUMEN FINAL          ║"
@@ -85,7 +103,7 @@ EOF
   echo -e "  ${VERDE}✔ Contenedor${NC}   CORE-GW (ubuntu:24.04)"
   echo -e "  ${VERDE}✔ LAN Bridge${NC}   br0 → 10.0.0.1/24"
   echo -e "  ${VERDE}✔ WAN Link${NC}     172.16.255.2 ↔ 172.16.255.1"
-  echo -e "  ${VERDE}✔ NAT${NC}          10.0.0.0/24 + 172.16.255.0/30 → \$WAN_IF"
+  echo -e "  ${VERDE}✔ NAT${NC}          10.0.0.0/24 + 172.16.255.0/30 → ${WAN_IF:-INTERNET}"
   echo -e "  ${VERDE}✔ Forwarding${NC}   HOST + CORE-GW habilitados"
   echo -e ""
   echo -e "  Pendiente:"
@@ -115,18 +133,9 @@ EOF
   echo -e ""
 }
 
-
-set -e
-
-VERDE='\033[0;32m'
-GRIS='\033[0;37m'
-ROJO='\033[0;31m'
-AMARILLO='\033[1;33m'
-BOLD='\033[1m'
-NC='\033[0m'
-
-
-# En engine.sh — función global reutilizable
+# ===================================================================================
+# FUNCIÓN: instalar_con_barra - Barra de progreso para instalaciones
+# ===================================================================================
 instalar_con_barra() {
     # Uso:
     # instalar_con_barra "Título opcional" cmd1 cmd2 cmd3 ...
@@ -144,7 +153,6 @@ instalar_con_barra() {
         local tarea="${tareas[$i]}"
 
         # Extraer etiqueta: si el comando tiene formato "etiqueta::comando", separar
-        # Si no tiene "::", usar el comando completo como etiqueta resumida
         if [[ "$tarea" == *"::"* ]]; then
             local etiqueta="${tarea%%::*}"
             local cmd="${tarea##*::}"
@@ -172,16 +180,71 @@ instalar_con_barra() {
     echo ""
 }
 
+# ===================================================================================
+# FUNCIÓN: cleanup_on_error - Limpieza en caso de error
+# ===================================================================================
+cleanup_on_error() {
+    echo -e "\n${ROJO}╔══════════════════════════════════════════╗${NC}"
+    echo -e "${ROJO}║         ERROR EN LA EJECUCIÓN           ║${NC}"
+    echo -e "${ROJO}╚══════════════════════════════════════════╝${NC}"
+    echo -e "${AMARILLO}Limpiando recursos creados...${NC}"
+    
+    # Eliminar contenedor si existe
+    docker rm -f CORE-GW 2>/dev/null || true
+    
+    # Eliminar symlink de netns
+    rm -f /var/run/netns/CORE-GW 2>/dev/null || true
+    
+    # Eliminar interfaces veth
+    ip link del v-gw-wan 2>/dev/null || true
+    ip link del v-wan-gw 2>/dev/null || true
+    
+    echo -e "${VERDE}✔ Limpieza completada${NC}"
+    exit 1
+}
 
+# ===================================================================================
+# FUNCIÓN: mostrar_ayuda_acceso - Muestra cómo acceder a los namespaces
+# ===================================================================================
+mostrar_ayuda_acceso() {
+    echo ""
+    echo -e "${CYAN}╔══════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}║      ACCESO A LOS NAMESPACES            ║${NC}"
+    echo -e "${CYAN}╚══════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "  ${BOLD}Para acceder al CORE-GW:${NC}"
+    echo -e "  ${GRIS}  ip netns exec CORE-GW bash${NC}"
+    echo -e "  ${GRIS}  ip netns exec CORE-GW ip addr show${NC}"
+    echo -e "  ${GRIS}  ip netns exec CORE-GW ping 8.8.8.8${NC}"
+    echo ""
+    echo -e "  ${BOLD}Para ver todos los namespaces:${NC}"
+    echo -e "  ${GRIS}  ip netns list${NC}"
+    echo ""
+}
 
-
+# ===================================================================================
+# EJECUCIÓN PRINCIPAL
+# ===================================================================================
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  echo "==[ EJECUTANDO LÓGICA DE RED CON DOCKER ]=="
+  
+  # Trampa para errores
+  trap cleanup_on_error ERR
+  
+  echo -e "${CYAN}╔══════════════════════════════════════════╗${NC}"
+  echo -e "${CYAN}║    LAB 001 - CORE-GW Y RED BASE         ║${NC}"
+  echo -e "${CYAN}╚══════════════════════════════════════════╝${NC}"
+  echo ""
 
   # 0. Detectar interfaz WAN
-  WAN_IF=$(ip route get 8.8.8.8 | awk '{print $5; exit}')
-  echo "→ Interfaz WAN detectada: $WAN_IF"
+  WAN_IF=$(ip route get 8.8.8.8 2>/dev/null | awk '{print $5; exit}')
+  if [ -z "$WAN_IF" ]; then
+      echo -e "${AMARILLO}⚠ No se pudo detectar interfaz WAN, usando eth0 como fallback${NC}"
+      WAN_IF="eth0"
+  fi
+  echo -e "→ Interfaz WAN detectada: ${BOLD}$WAN_IF${NC}"
+  echo ""
 
+  # 1. Instalación de Docker
   instalar_con_barra "Instalando Docker" \
     "apt update::apt update -qq" \
     "dependencias::apt install -y -qq ca-certificates curl gnupg lsb-release" \
@@ -192,125 +255,193 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     "docker-ce::apt install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin" \
     "servicio Docker::systemctl start docker && systemctl enable docker"
 
+  # 2. Iniciar Docker y verificar
+  systemctl start docker 2>/dev/null || true
+  echo -e "${VERDE}✓ Docker service verificando${NC}"
 
-  # 0.2 Iniciar Docker si no está corriendo
-  systemctl start docker || true
-
-  # 0.3 Descargar imagen ubuntu:24.04 si no existe
+  # 3. Descargar imagen ubuntu:24.04 si no existe
   if ! docker image inspect ubuntu:24.04 &> /dev/null; then
-    echo "Descargando imagen ubuntu:24.04..."
-    docker pull ubuntu:24.04
+    echo -e "→ Descargando imagen ${BOLD}ubuntu:24.04${NC}..."
+    docker pull ubuntu:24.04 > /dev/null
+    echo -e "${VERDE}✓ Imagen descargada${NC}"
   else
-    echo "→ Imagen ubuntu:24.04 ya existe."
+    echo -e "→ Imagen ${BOLD}ubuntu:24.04${NC} ya existe."
   fi
 
-  echo "==[ 1. CORE-GW: INFRAESTRUCTURA BASE CON DOCKER ]=="
+  echo ""
+  echo -e "${CYAN}==[ 1. CORE-GW: INFRAESTRUCTURA BASE CON DOCKER ]==${NC}"
 
-  # A. Crear y correr el contenedor (equivalente a 'ip netns add CORE-GW')
-  docker run -d --name CORE-GW --hostname core-gw --privileged --network none ubuntu:24.04 sleep infinity 2>/dev/null || true
+  # 4. Crear y correr el contenedor
+  docker rm -f CORE-GW 2>/dev/null || true
+  docker run -d --name CORE-GW --hostname core-gw --privileged --network none ubuntu:24.04 sleep infinity > /dev/null
+  echo -e "${VERDE}✓ Contenedor CORE-GW creado${NC}"
 
-  # B. Obtener PID y enlazar netns
+  # 5. Obtener PID y enlazar netns
   CORE_PID=$(docker inspect -f '{{.State.Pid}}' CORE-GW)
-  echo "→ PID del contenedor CORE-GW: $CORE_PID"
+  echo -e "→ PID del contenedor CORE-GW: ${BOLD}$CORE_PID${NC}"
   mkdir -p /var/run/netns
   ln -sf /proc/$CORE_PID/ns/net /var/run/netns/CORE-GW 2>/dev/null || true
+  echo -e "${VERDE}✓ Namespace enlazado en /var/run/netns/CORE-GW${NC}"
 
-  # --- PASOS DE IDENTIDAD (adaptados) ---
-  # Editamos /etc/hosts dentro del contenedor
+  # 6. Configurar /etc/hosts
   docker exec CORE-GW bash -c 'cat <<EOF > /etc/hosts
 127.0.0.1       localhost
 10.0.0.1        core-gw
 EOF' || true
-  # Hostname ya está seteado por --hostname, pero confirmamos
   docker exec CORE-GW hostname core-gw || true
+  echo -e "${VERDE}✓ Configuración de identidad completada${NC}"
 
-# ========================================================
-# ========================================================
+  # 7. Instalar paquetes básicos en CORE-GW
   instalar_con_barra "Preparando CORE-GW" \
     "apt update::docker exec CORE-GW apt update -qq" \
     "iproute2::docker exec CORE-GW apt install -y -qq iproute2" \
+    "ping::docker exec CORE-GW apt install -y -qq iputils-ping" \
     "vim::docker exec CORE-GW apt install -y -qq vim" \
-    "tcpdump::docker exec CORE-GW apt install -y -qq tcpdump"
+    "tcpdump::docker exec CORE-GW apt install -y -qq tcpdump" \
+    "dnsutils::docker exec CORE-GW apt install -y -qq dnsutils" \
+    "curl::docker exec CORE-GW apt install -y -qq curl"
 
-
-# ========================================================
-# ========================================================
-
-
-
-
-
-
-  # Configurar loopback, bridge y IP
-  ip netns exec CORE-GW ip link set lo up || true
+  # 8. Configurar red interna del contenedor
+  echo -e "${CYAN}==[ 2. CONFIGURACIÓN DE RED INTERNA ]==${NC}"
+  
+  ip netns exec CORE-GW ip link set lo up
   ip netns exec CORE-GW ip link add br0 type bridge 2>/dev/null || true
-  ip netns exec CORE-GW ip link set br0 up || true
+  ip netns exec CORE-GW ip link set br0 up
   ip netns exec CORE-GW ip addr add 10.0.0.1/24 dev br0 2>/dev/null || true
+  echo -e "${VERDE}✓ Bridge br0 creado con IP 10.0.0.1/24${NC}"
 
-  echo "==[ 2. ENLACE WAN (CORE ↔ HOST) ]=="
-  ip link add v-gw-wan type veth peer name v-wan-gw 2>/dev/null || true
-  ip link set v-gw-wan netns CORE-GW 2>/dev/null || true
-  ip link set v-wan-gw up || true
-  ip netns exec CORE-GW ip link set v-gw-wan up || true
+  echo -e "${CYAN}==[ 3. ENLACE WAN (CORE ↔ HOST) ]==${NC}"
+  
+  # Limpiar interfaces existentes
+  ip link del v-gw-wan 2>/dev/null || true
+  ip link del v-wan-gw 2>/dev/null || true
+  
+  # Crear veth pair
+  ip link add v-gw-wan type veth peer name v-wan-gw
+  ip link set v-gw-wan netns CORE-GW
+  ip link set v-wan-gw up
+  ip netns exec CORE-GW ip link set v-gw-wan up
+  
+  # Asignar IPs
   ip addr add 172.16.255.1/30 dev v-wan-gw 2>/dev/null || true
-  # Forzar la ruta con metric 1000 explícitamente
-  ip route add 172.16.255.0/30 dev v-wan-gw metric 1000 2>/dev/null || true
   ip netns exec CORE-GW ip addr add 172.16.255.2/30 dev v-gw-wan 2>/dev/null || true
-  # Ruta default (borramos la de Docker si existe y agregamos la nuestra)
+  
+  # Configurar rutas
+  ip route add 172.16.255.0/30 dev v-wan-gw metric 1000 2>/dev/null || true
   ip netns exec CORE-GW ip route del default 2>/dev/null || true
-  ip netns exec CORE-GW ip route add default via 172.16.255.1 2>/dev/null || true
+  ip netns exec CORE-GW ip route add default via 172.16.255.1
+  
+  echo -e "${VERDE}✓ Enlace WAN configurado: 172.16.255.1 (host) ↔ 172.16.255.2 (CORE)${NC}"
 
-  echo "==[ 3. KERNEL & FIREWALL (HOST) ]=="
-  update-alternatives --set iptables /usr/sbin/iptables-legacy || true
-  update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy || true
-  sysctl -w net.ipv4.ip_forward=1 || true
-  iptables -F FORWARD || true
-  iptables -t nat -F POSTROUTING || true
-  # NAT para red WAN y red LAN
-  iptables -t nat -A POSTROUTING -s 172.16.255.0/30 -o $WAN_IF -j MASQUERADE || true
-  iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o $WAN_IF -j MASQUERADE || true
-  # Forwarding permisivo para el laboratorio
-  iptables -A FORWARD -j ACCEPT || true
-  iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT || true
-  # RUTA DE RETORNO CLAVE
+  echo -e "${CYAN}==[ 4. CONFIGURACIÓN KERNEL & FIREWALL ]==${NC}"
+  
+  # Configurar iptables legacy si es necesario
+  if command -v update-alternatives &> /dev/null; then
+    update-alternatives --set iptables /usr/sbin/iptables-legacy 2>/dev/null || true
+    update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy 2>/dev/null || true
+  fi
+  
+  # Habilitar forwarding
+  sysctl -w net.ipv4.ip_forward=1 > /dev/null
+  ip netns exec CORE-GW sysctl -w net.ipv4.ip_forward=1 > /dev/null
+  
+  # Limpiar reglas existentes del laboratorio
+  iptables -D FORWARD -s 172.16.255.0/30 -j ACCEPT 2>/dev/null || true
+  iptables -D FORWARD -d 172.16.255.0/30 -j ACCEPT 2>/dev/null || true
+  iptables -t nat -D POSTROUTING -s 172.16.255.0/30 -o $WAN_IF -j MASQUERADE 2>/dev/null || true
+  iptables -t nat -D POSTROUTING -s 10.0.0.0/24 -o $WAN_IF -j MASQUERADE 2>/dev/null || true
+  
+  # Configurar NAT
+  iptables -t nat -A POSTROUTING -s 172.16.255.0/30 -o $WAN_IF -j MASQUERADE
+  iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o $WAN_IF -j MASQUERADE
+  
+  # Forwarding permisivo
+  iptables -A FORWARD -s 172.16.255.0/30 -j ACCEPT
+  iptables -A FORWARD -d 172.16.255.0/30 -j ACCEPT
+  iptables -A FORWARD -s 10.0.0.0/24 -j ACCEPT
+  iptables -A FORWARD -d 10.0.0.0/24 -j ACCEPT
+  iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+  
+  # Ruta de retorno
   ip route add 10.0.0.0/24 via 172.16.255.2 metric 1000 2>/dev/null || true
+  
+  echo -e "${VERDE}✓ Firewall y rutas configurados${NC}"
 
-  echo "==[ 4. FORWARDING INTERNO (CORE-GW) ]=="
-  ip netns exec CORE-GW sysctl -w net.ipv4.ip_forward=1 || true
+  echo -e "${CYAN}==[ 5. TEST DE CONECTIVIDAD ]==${NC}"
+  echo ""
 
-  echo "==[ 5. TEST DE CONECTIVIDAD ]=="
+  # Tests de conectividad
+  TEST_EXITOS=0
+  TEST_FALLOS=0
 
-  # Host → CORE-GW (WAN link)
+  # Host → CORE-GW
   if ping -c 2 -W 2 172.16.255.2 &>/dev/null; then
-    echo "✓ Host → CORE-GW (172.16.255.2) OK"
+    echo -e "  ${VERDE}✓${NC} Host → CORE-GW (172.16.255.2) ${VERDE}OK${NC}"
+    ((TEST_EXITOS++))
   else
-    echo "✗ Host → CORE-GW (172.16.255.2) FALLO"
+    echo -e "  ${ROJO}✗${NC} Host → CORE-GW (172.16.255.2) ${ROJO}FALLO${NC}"
+    ((TEST_FALLOS++))
   fi
 
-  # CORE-GW → Host (WAN link inverso)
+  # CORE-GW → Host
   if ip netns exec CORE-GW ping -c 2 -W 2 172.16.255.1 &>/dev/null; then
-    echo "✓ CORE-GW → Host (172.16.255.1) OK"
+    echo -e "  ${VERDE}✓${NC} CORE-GW → Host (172.16.255.1) ${VERDE}OK${NC}"
+    ((TEST_EXITOS++))
   else
-    echo "✗ CORE-GW → Host (172.16.255.1) FALLO"
+    echo -e "  ${ROJO}✗${NC} CORE-GW → Host (172.16.255.1) ${ROJO}FALLO${NC}"
+    ((TEST_FALLOS++))
   fi
 
-  # CORE-GW → Internet (salida NAT)
+  # CORE-GW → Internet
   if ip netns exec CORE-GW ping -c 2 -W 3 8.8.8.8 &>/dev/null; then
-    echo "✓ CORE-GW → Internet (8.8.8.8) OK"
+    echo -e "  ${VERDE}✓${NC} CORE-GW → Internet (8.8.8.8) ${VERDE}OK${NC}"
+    ((TEST_EXITOS++))
   else
-    echo "✗ CORE-GW → Internet (8.8.8.8) FALLO"
+    echo -e "  ${ROJO}✗${NC} CORE-GW → Internet (8.8.8.8) ${ROJO}FALLO${NC}"
+    ((TEST_FALLOS++))
   fi
 
-  # Bridge LAN existe y tiene IP
+  # Bridge LAN
   if ip netns exec CORE-GW ip addr show br0 | grep -q "10.0.0.1"; then
-    echo "✓ Bridge LAN (br0 - 10.0.0.1/24) OK"
+    echo -e "  ${VERDE}✓${NC} Bridge LAN (br0 - 10.0.0.1/24) ${VERDE}OK${NC}"
+    ((TEST_EXITOS++))
   else
-    echo "✗ Bridge LAN (br0) FALLO"
+    echo -e "  ${ROJO}✗${NC} Bridge LAN (br0) ${ROJO}FALLO${NC}"
+    ((TEST_FALLOS++))
   fi
 
-  echo "==[ FIN DE TESTS ]=="
+  # DNS resolution desde CORE-GW
+  if ip netns exec CORE-GW nslookup google.com 8.8.8.8 &>/dev/null; then
+    echo -e "  ${VERDE}✓${NC} DNS resolution (8.8.8.8) ${VERDE}OK${NC}"
+    ((TEST_EXITOS++))
+  else
+    echo -e "  ${AMARILLO}⚠${NC} DNS resolution (8.8.8.8) ${AMARILLO}FALLO (opcional)${NC}"
+  fi
 
+  echo ""
+  echo -e "  ${BOLD}Resumen:${NC} ${VERDE}$TEST_EXITOS exitosos${NC}, ${ROJO}$TEST_FALLOS fallos${NC}"
+  echo ""
 
+  if [ $TEST_FALLOS -eq 0 ]; then
+    echo -e "${VERDE}╔══════════════════════════════════════════╗${NC}"
+    echo -e "${VERDE}║    LAB 001 COMPLETADO EXITOSAMENTE     ║${NC}"
+    echo -e "${VERDE}╚══════════════════════════════════════════╝${NC}"
+  else
+    echo -e "${AMARILLO}╔══════════════════════════════════════════╗${NC}"
+    echo -e "${AMARILLO}║    LAB 001 COMPLETADO CON ADVERTENCIAS ║${NC}"
+    echo -e "${AMARILLO}╚══════════════════════════════════════════╝${NC}"
+  fi
 
+  # Mostrar topología
+  print_topology
+  
+  # Mostrar ayuda de acceso
+  mostrar_ayuda_acceso
+
+  # Desactivar trampa de error (ya terminó)
+  trap - ERR
+  
+  echo -e "${GRIS}───────────────────────────────────────────────────────${NC}"
+  echo -e "${GRIS}Para continuar, ejecuta: engine.sh y selecciona opción 1${NC}"
+  echo ""
 fi
-
