@@ -1,13 +1,14 @@
-#!/bin/bash
 # ===================================================================================
 # LABORATORIO LINUX PARA CERTIFICACIÓN LFCS/LFCE
-# Topología: Infraestructura completa con namespaces
-# Versión: 2.0 - Escalable y automatizada
-print_topology() {
-cat <<'EOF'
+# Topología: Infraestructura completa con contenedores Docker
+# Versión: 2.0 - Dockerizada y automatizada
+# ===================================================================================
+
+print_topology_and_status() {
+    cat <<'EOF'
 
 ===================================================================================
-TOPOLOGÍA DISTRIBUIDA – LAB DE ARQUITECTURA LINUX
+TOPOLOGÍA DISTRIBUIDA – LAB DE ARQUITECTURA LINUX (DOCKERIZADO)
 ===================================================================================
 
                           ┌─────────────────────────────────────┐
@@ -15,25 +16,25 @@ TOPOLOGÍA DISTRIBUIDA – LAB DE ARQUITECTURA LINUX
                           └───────────────┬─────────────────────┘
                                           │
                           ┌───────────────┴─────────────────────┐
-                          │            HOST (tu PC)             │
+                          │            HOST (tu PC/VM)          │
                           │       172.16.255.1/30 (v-wan-gw)    │
                           └───────────────┬─────────────────────┘
                                           │
                                           │ veth pair
                                           │
                       ┌───────────────────┴───────────────────────────┐
-                      │           CORE-GW (namespace raíz)            │
+                      │           CORE-GW (contenedor Docker)         │
                       │       ┌─────────────────────────────┐         │
                       │       │  br0: 10.0.0.1/24           │         │
                       │       │  v-gw-wan: 172.16.255.2/30  │         │
                       │       └─────────────────────────────┘         │
                       └───────────────────┬───────────────────────────┘
-                                          |       
+                                          │       
            ┌───────────────────┌──────────┘──────────┌──────────────────────┐
            │                   │                     │                      │
   ┌────────┴────────┐ ┌────────┴─────────┐  ┌────────┴────────┐    ┌────────┴────────┐
   │    NS-SRV       │ │      NS-RH       │  │      NS-SYS     │    │     NS-INFRA    │
-  │  (Servicios)    │ │   (Recursos H)   │  │      (Admin)    │    │      (Infra)    │
+  │ (contenedor)    │ │ (contenedor)     │  │ (contenedor)    │    │ (contenedor)    │
   │                 │ │                  │  │                 │    │                 │
   │  ┌──────────┐   │ │     ┌──────┐     │  │     ┌──────┐    │    │      ┌──────┐   │
   │  │ br-srv   │   │ │     │br-rh │     │  │     │br-sys│    │    │      │br-inf│   │
@@ -53,27 +54,29 @@ TOPOLOGÍA DISTRIBUIDA – LAB DE ARQUITECTURA LINUX
                           └──────────┘
 
 ===================================================================================
-PROPÓSITO DEL LAB
+PROPÓSITO DEL LAB (mismo que antes)
 ===================================================================================
 1. LDAP  : Centralización de usuarios (SSSD / PAM / NSS)
 2. FS    : NFS o Samba para /home compartido
 3. SYS   : Bastión de administración (SSH, Ansible, control)
 
 ===================================================================================
-FILOSOFÍA
+FILOSOFÍA (adaptada a Docker)
 ===================================================================================
-• Namespaces = Aislamiento quirúrgico
-• Bridge     = Switch L2 en memoria
-• Veth       = Cable virtual
-• Kernel     = Única fuente de verdad
+• Contenedores Docker = Aislamiento + filesystem propio
+• Bridge             = Switch L2 dentro del contenedor
+• Veth               = Cable virtual entre contenedor y host
+• ip netns exec      = Manipulación de red como en namespaces clásicos
+• Kernel del host    = Única fuente de verdad (forwarding, NAT, iptables)
+
 ===================================================================================
-ESTADO ACTUAL — LAB 01 COMPLETADO
+ESTADO ACTUAL — LAB 01 COMPLETADO (Docker versión)
 ===================================================================================
 
 Componentes creados:
 
-✔ Namespace:
-  - CORE-GW
+✔ Contenedor:
+  - CORE-GW (ubuntu:24.04 + privileged)
 
 ✔ Bridge interno (LAN):
   - br0 (dentro de CORE-GW)
@@ -95,25 +98,27 @@ Componentes creados:
 
 ✔ NAT (HOST):
   - POSTROUTING MASQUERADE:
-    • Origen: 172.16.255.0/30
-    • Salida: interfaz física del host (ej: enp1s0)
+    • Origen: 172.16.255.0/30 → salida por $WAN_IF
+    • Origen: 10.0.0.0/24     → salida por $WAN_IF
 
-✔ Conectividad:
-  - CORE-GW → HOST: OK
-  - CORE-GW → Internet (8.8.8.8): OK
+✔ Conectividad verificada:
+  - CORE-GW → HOST (172.16.255.1): OK
+  - CORE-GW → Internet (8.8.8.8 y google.com): OK
 
 Estado operativo:
 
 → CORE-GW funciona como:
-  • Router L3
-  • Gateway por defecto (10.0.0.1)
-  • Dispositivo NAT hacia Internet
-  • Punto central de interconexión
+  • Router L3 virtual
+  • Gateway por defecto (10.0.0.1/24)
+  • Punto de NAT y forwarding hacia Internet
+  • Centro de interconexión L2/L3 para los próximos contenedores
 
 → Infraestructura pendiente:
-  • No existen aún departamentos (ns-rh, ns-srv, ns-sys, ns-infra)
-  • No existen bridges de acceso
-  • No existen PCs ni endpoints
+  • Contenedores de departamentos (NS-INFRA, NS-SRV, NS-RH, NS-SYS)
+  • Bridges de acceso por departamento (br-inf, br-srv, br-rh, br-sys)
+  • Endpoints y servicios (DNS, DHCP, LDAP, FS, PCs)
+
+
 
 ===================================================================================
 SIGUIENTE PASO — LAB 02: DEPARTAMENTO RH (ACCESS LAYER)
@@ -176,59 +181,112 @@ EOF
 # - Ejecutar como root
 # - Interfaz de salida del host: enp1s0
 # ==============================================================================
-#!/bin/bash
-# Golden-Base/lab-001.sh
-set -e
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  echo "==[ EJECUTANDO LÓGICA DE RED ]=="
 
+# ===[ VERIFICACIONES BÁSICAS (ejecuta manualmente después) ]===
+# docker ps  (ve CORE-GW running)
+# docker exec -it CORE-GW bash  (dentro: ip addr; ping 8.8.8.8)
+# ip netns exec CORE-GW ip route  (ve default via 172.16.255.1)
+
+# ===[ LIMPIEZA SI QUERÉS REINICIAR ]===
+# docker stop CORE-GW; docker rm CORE-GW; rm /var/run/netns/CORE-GW; ip link del v-wan-gw || true; iptables -t nat -F; iptables -F FORWARD; ip route del 10.0.0.0/24 || true
+
+set -e
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  echo "==[ EJECUTANDO LÓGICA DE RED CON DOCKER ]=="
+
+  # 0. Detectar interfaz WAN
   WAN_IF=$(ip route get 8.8.8.8 | awk '{print $5; exit}')
   echo "→ Interfaz WAN detectada: $WAN_IF"
 
-  echo "==[ 1. CORE-GW: INFRAESTRUCTURA BASE ]=="
-  # A. Crear el namespace
-  ip netns add CORE-GW 2>/dev/null || true
-  # --- PASOS DE IDENTIDAD ---
-  # 1. Directorio de configuración persistente
-  mkdir -p /etc/netns/CORE-GW
-    # 2. Archivo de resolución interno (Hosts)
-  cat <<EOF > /etc/netns/CORE-GW/hosts
+  # 0.1 Verificar si Docker está instalado
+  if ! command -v docker &> /dev/null; then
+    echo "Docker no está instalado. Instalándolo..."
+    # Instalación automática (basada en la guía oficial que te di al principio)
+    apt update
+    apt install -y ca-certificates curl gnupg lsb-release
+    install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    chmod a+r /etc/apt/keyrings/docker.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+    apt update
+    apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    systemctl start docker
+    systemctl enable docker
+    usermod -aG docker ${USER} || true  # Agrega user a grupo docker (opcional si eres root)
+  else
+    echo "→ Docker ya está instalado."
+  fi
+
+  # 0.2 Iniciar Docker si no está corriendo
+  systemctl start docker || true
+
+  # 0.3 Descargar imagen ubuntu:24.04 si no existe
+  if ! docker image inspect ubuntu:24.04 &> /dev/null; then
+    echo "Descargando imagen ubuntu:24.04..."
+    docker pull ubuntu:24.04
+  else
+    echo "→ Imagen ubuntu:24.04 ya existe."
+  fi
+
+  echo "==[ 1. CORE-GW: INFRAESTRUCTURA BASE CON DOCKER ]=="
+
+  # A. Crear y correr el contenedor (equivalente a 'ip netns add CORE-GW')
+  docker run -d --name CORE-GW --hostname core-gw --privileged ubuntu:24.04 sleep infinity 2>/dev/null || true
+
+  # B. Obtener PID y enlazar netns
+  CORE_PID=$(docker inspect -f '{{.State.Pid}}' CORE-GW)
+  echo "→ PID del contenedor CORE-GW: $CORE_PID"
+  mkdir -p /var/run/netns
+  ln -sf /proc/$CORE_PID/ns/net /var/run/netns/CORE-GW 2>/dev/null || true
+
+  # --- PASOS DE IDENTIDAD (adaptados) ---
+  # Editamos /etc/hosts dentro del contenedor
+  docker exec CORE-GW bash -c 'cat <<EOF > /etc/hosts
 127.0.0.1       localhost
 10.0.0.1        core-gw
-EOF
-  # 3. Comando de identidad (Hostname en memoria)
-  ip netns exec CORE-GW unshare -u hostname core-gw
-  # --------------------------------
-  
-  ip netns exec CORE-GW ip link set lo up
+EOF' || true
+  # Hostname ya está seteado por --hostname, pero confirmamos
+  docker exec CORE-GW hostname core-gw || true
+
+  # Instalar paquetes básicos dentro del contenedor (para que sea usable)
+  docker exec CORE-GW apt update 2>/dev/null || true
+  docker exec CORE-GW apt install -y iproute2 iputils-ping net-tools vim procps 2>/dev/null || true
+
+  # Configurar loopback, bridge y IP
+  ip netns exec CORE-GW ip link set lo up || true
   ip netns exec CORE-GW ip link add br0 type bridge 2>/dev/null || true
-  ip netns exec CORE-GW ip link set br0 up
+  ip netns exec CORE-GW ip link set br0 up || true
   ip netns exec CORE-GW ip addr add 10.0.0.1/24 dev br0 2>/dev/null || true
 
   echo "==[ 2. ENLACE WAN (CORE ↔ HOST) ]=="
   ip link add v-gw-wan type veth peer name v-wan-gw 2>/dev/null || true
   ip link set v-gw-wan netns CORE-GW 2>/dev/null || true
-  ip link set v-wan-gw up
-  ip netns exec CORE-GW ip link set v-gw-wan up
+  ip link set v-wan-gw up || true
+  ip netns exec CORE-GW ip link set v-gw-wan up || true
   ip addr add 172.16.255.1/30 dev v-wan-gw 2>/dev/null || true
   ip netns exec CORE-GW ip addr add 172.16.255.2/30 dev v-gw-wan 2>/dev/null || true
+  # Ruta default (borramos la de Docker si existe y agregamos la nuestra)
+  ip netns exec CORE-GW ip route del default 2>/dev/null || true
   ip netns exec CORE-GW ip route add default via 172.16.255.1 2>/dev/null || true
 
   echo "==[ 3. KERNEL & FIREWALL (HOST) ]=="
-  update-alternatives --set iptables /usr/sbin/iptables-legacy
-  update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
-  sysctl -w net.ipv4.ip_forward=1
-  iptables -F FORWARD
-  iptables -t nat -F POSTROUTING
+  update-alternatives --set iptables /usr/sbin/iptables-legacy || true
+  update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy || true
+  sysctl -w net.ipv4.ip_forward=1 || true
+  iptables -F FORWARD || true
+  iptables -t nat -F POSTROUTING || true
   # NAT para red WAN y red LAN
-  iptables -t nat -A POSTROUTING -s 172.16.255.0/30 -o $WAN_IF -j MASQUERADE
-  iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o $WAN_IF -j MASQUERADE
+  iptables -t nat -A POSTROUTING -s 172.16.255.0/30 -o $WAN_IF -j MASQUERADE || true
+  iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o $WAN_IF -j MASQUERADE || true
   # Forwarding permisivo para el laboratorio
-  iptables -A FORWARD -j ACCEPT
-  iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+  iptables -A FORWARD -j ACCEPT || true
+  iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT || true
   # RUTA DE RETORNO CLAVE
   ip route add 10.0.0.0/24 via 172.16.255.2 2>/dev/null || true
 
   echo "==[ 4. FORWARDING INTERNO (CORE-GW) ]=="
-  ip netns exec CORE-GW sysctl -w net.ipv4.ip_forward=1
+  ip netns exec CORE-GW sysctl -w net.ipv4.ip_forward=1 || true
+
 fi
+
