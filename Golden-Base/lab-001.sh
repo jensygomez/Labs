@@ -176,7 +176,8 @@ EOF
 # - Ejecutar como root
 # - Interfaz de salida del host: enp1s0
 # ==============================================================================
-
+#!/bin/bash
+# Golden-Base/lab-001.sh
 set -e
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   echo "==[ EJECUTANDO LÓGICA DE RED ]=="
