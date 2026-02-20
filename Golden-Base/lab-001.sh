@@ -166,24 +166,25 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   WAN_IF=$(ip route get 8.8.8.8 | awk '{print $5; exit}')
   echo "→ Interfaz WAN detectada: $WAN_IF"
 
-  # 0.1 Verificar si Docker está instalado
   if ! command -v docker &> /dev/null; then
-    echo "Docker no está instalado. Instalándolo..."
-    apt update
-    apt install -y ca-certificates curl gnupg lsb-release
+    echo "→ Docker no está instalado. Instalándolo..."
+    apt update -qq 2>/dev/null
+    apt install -y -qq ca-certificates curl gnupg lsb-release 2>/dev/null
     install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg 2>/dev/null
     chmod a+r /etc/apt/keyrings/docker.gpg
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-    apt update
-    apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    echo "→ Instalando Docker Engine..."
+    apt update -qq 2>/dev/null
+    apt install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin 2>/dev/null
+    echo "→ Iniciando servicio Docker..."
     systemctl start docker
-    systemctl enable docker
-    usermod -aG docker ${USER} || true  # Agrega user a grupo docker (opcional si eres root)
+    systemctl enable docker 2>/dev/null
+    usermod -aG docker ${USER} 2>/dev/null || true
+    echo "→ Docker instalado correctamente."
   else
     echo "→ Docker ya está instalado."
   fi
-
   # 0.2 Iniciar Docker si no está corriendo
   systemctl start docker || true
 
