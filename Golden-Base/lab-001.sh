@@ -1,11 +1,11 @@
+#!/bin/bash
 # ===================================================================================
 # LABORATORIO LINUX PARA CERTIFICACIÓN LFCS/LFCE
 # Topología: Infraestructura completa con contenedores Docker
 # Versión: 2.0 - Dockerizada y automatizada
 # ===================================================================================
-print_topology_and_status() {
-    cat <<'EOF'
-
+print_topology() {
+cat <<'EOF'
 ===================================================================================
 TOPOLOGÍA DISTRIBUIDA – LAB DE ARQUITECTURA LINUX (DOCKERIZADO)
 ===================================================================================
@@ -60,7 +60,7 @@ PROPÓSITO DEL LAB
 3. SYS   : Bastión de administración (SSH, Ansible, control)
 
 ===================================================================================
-FILOSOFÍA (adaptada a Docker)
+FILOSOFÍA
 ===================================================================================
 • Contenedores Docker     = Aislamiento + filesystem propio
 • Bridge                  = Switch L2 dentro del contenedor

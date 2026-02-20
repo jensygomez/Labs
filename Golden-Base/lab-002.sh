@@ -1,13 +1,13 @@
 #!/bin/bash
 # ===================================================================================
 # LABORATORIO LINUX PARA CERTIFICACIÓN LFCS/LFCE
-# Topología: Infraestructura completa con namespaces
-# Versión: 2.0 - Escalable y automatizada
+# Topología: Infraestructura completa con contenedores Docker
+# Versión: 2.0 - Dockerizada y automatizada
+# ===================================================================================
 print_topology() {
 cat <<'EOF'
-
 ===================================================================================
-TOPOLOGÍA DISTRIBUIDA – LAB DE ARQUITECTURA LINUX
+TOPOLOGÍA DISTRIBUIDA – LAB DE ARQUITECTURA LINUX (DOCKERIZADO)
 ===================================================================================
 
                           ┌─────────────────────────────────────┐
@@ -15,25 +15,25 @@ TOPOLOGÍA DISTRIBUIDA – LAB DE ARQUITECTURA LINUX
                           └───────────────┬─────────────────────┘
                                           │
                           ┌───────────────┴─────────────────────┐
-                          │            HOST (tu PC)             │
+                          │            HOST (tu PC/VM)           │
                           │       172.16.255.1/30 (v-wan-gw)    │
                           └───────────────┬─────────────────────┘
                                           │
                                           │ veth pair
                                           │
                       ┌───────────────────┴───────────────────────────┐
-                      │           CORE-GW (namespace raíz)            │
+                      │           CORE-GW (contenedor Docker)         │
                       │       ┌─────────────────────────────┐         │
                       │       │  br0: 10.0.0.1/24           │         │
                       │       │  v-gw-wan: 172.16.255.2/30  │         │
                       │       └─────────────────────────────┘         │
                       └───────────────────┬───────────────────────────┘
-                                          |       
+                                          │       
            ┌───────────────────┌──────────┘──────────┌──────────────────────┐
            │                   │                     │                      │
   ┌────────┴────────┐ ┌────────┴─────────┐  ┌────────┴────────┐    ┌────────┴────────┐
   │    NS-SRV       │ │      NS-RH       │  │      NS-SYS     │    │     NS-INFRA    │
-  │  (Servicios)    │ │   (Recursos H)   │  │      (Admin)    │    │      (Infra)    │
+  │ (contenedor)    │ │ (contenedor)     │  │ (contenedor)    │    │ (contenedor)    │
   │                 │ │                  │  │                 │    │                 │
   │  ┌──────────┐   │ │     ┌──────┐     │  │     ┌──────┐    │    │      ┌──────┐   │
   │  │ br-srv   │   │ │     │br-rh │     │  │     │br-sys│    │    │      │br-inf│   │
@@ -53,11 +53,20 @@ TOPOLOGÍA DISTRIBUIDA – LAB DE ARQUITECTURA LINUX
                           └──────────┘
 
 ===================================================================================
-RESUMEN RÁPIDO
+PROPÓSITO DEL LAB
 ===================================================================================
-• CORE-GW: Router/NAT (10.0.0.1) con salida a Internet
-• Cada departamento: namespace + bridge propio (aislamiento L2)
-• Todos los endpoints: gateway = 10.0.0.1
+1. LDAP  : Centralización de usuarios (SSSD / PAM / NSS)
+2. FS    : NFS o Samba para /home compartido
+3. SYS   : Bastión de administración (SSH, Ansible, control)
+
+===================================================================================
+FILOSOFÍA
+===================================================================================
+• Contenedores Docker     = Aislamiento + filesystem propio
+• Bridge                  = Switch L2 dentro del contenedor
+• Veth                    = Cable virtual entre contenedor y host
+• ip netns exec           = Manipulación de red como en namespaces clásicos
+• Kernel del host         = Única fuente de verdad (forwarding, NAT, iptables)
 
 ===================================================================================
 ESTADO ACTUAL: LAB 02 COMPLETADO
