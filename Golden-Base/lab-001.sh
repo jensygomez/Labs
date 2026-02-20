@@ -159,6 +159,61 @@ EOF
 
 set -e
 
+
+# En engine.sh — función global reutilizable
+instalar_con_barra() {
+    # Uso:
+    # instalar_con_barra "Título opcional" cmd1 cmd2 cmd3 ...
+    # Cada cmd es un string con el comando completo a ejecutar
+
+    local titulo="$1"
+    shift
+    local tareas=("$@")
+    local total=${#tareas[@]}
+
+    local VERDE='\033[0;32m'
+    local GRIS='\033[0;37m'
+    local BOLD='\033[1m'
+    local NC='\033[0m'
+
+    [[ -n "$titulo" ]] && echo -e "→ ${titulo}"
+    echo ""
+
+    for i in "${!tareas[@]}"; do
+        local tarea="${tareas[$i]}"
+
+        # Extraer etiqueta: si el comando tiene formato "etiqueta::comando", separar
+        # Si no tiene "::", usar el comando completo como etiqueta resumida
+        if [[ "$tarea" == *"::"* ]]; then
+            local etiqueta="${tarea%%::*}"
+            local cmd="${tarea##*::}"
+        else
+            local etiqueta="$tarea"
+            local cmd="$tarea"
+        fi
+
+        # Ejecutar el comando
+        eval "$cmd" > /dev/null 2>&1 || true
+
+        # Calcular barra
+        local porcentaje=$(( (i + 1) * 100 / total ))
+        local bloques_llenos=$(( (i + 1) * 20 / total ))
+        local bloques_vacios=$(( 20 - bloques_llenos ))
+        local barra_llena="" barra_vacia=""
+        for ((b=0; b<bloques_llenos; b++)); do barra_llena+="██"; done
+        for ((b=0; b<bloques_vacios; b++)); do barra_vacia+="░░"; done
+
+        echo -ne "\r  ${VERDE}${BOLD}[${barra_llena}${GRIS}${barra_vacia}${VERDE}]${NC} ${BOLD}${porcentaje}%${NC} → ${etiqueta}          "
+    done
+
+    echo -e "\n"
+    echo -e "  ${VERDE}${BOLD}✔ ${titulo} completado — ${total} pasos ejecutados.${NC}"
+    echo ""
+}
+
+
+
+
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   echo "==[ EJECUTANDO LÓGICA DE RED CON DOCKER ]=="
 
@@ -166,25 +221,17 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   WAN_IF=$(ip route get 8.8.8.8 | awk '{print $5; exit}')
   echo "→ Interfaz WAN detectada: $WAN_IF"
 
-  if ! command -v docker &> /dev/null; then
-    echo "→ Docker no está instalado. Instalándolo..."
-    apt update -qq 2>/dev/null
-    apt install -y -qq ca-certificates curl gnupg lsb-release 2>/dev/null
-    install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg 2>/dev/null
-    chmod a+r /etc/apt/keyrings/docker.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-    echo "→ Instalando Docker Engine..."
-    apt update -qq 2>/dev/null
-    apt install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin 2>/dev/null
-    echo "→ Iniciando servicio Docker..."
-    systemctl start docker
-    systemctl enable docker 2>/dev/null
-    usermod -aG docker ${USER} 2>/dev/null || true
-    echo "→ Docker instalado correctamente."
-  else
-    echo "→ Docker ya está instalado."
-  fi
+  instalar_con_barra "Instalando Docker" \
+    "apt update::apt update -qq" \
+    "dependencias::apt install -y -qq ca-certificates curl gnupg lsb-release" \
+    "keyrings::install -m 0755 -d /etc/apt/keyrings" \
+    "GPG key::curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg" \
+    "repositorio Docker::echo 'deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable' | tee /etc/apt/sources.list.d/docker.list > /dev/null" \
+    "repo update::apt update -qq" \
+    "docker-ce::apt install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin" \
+    "servicio Docker::systemctl start docker && systemctl enable docker"
+
+
   # 0.2 Iniciar Docker si no está corriendo
   systemctl start docker || true
 
@@ -218,47 +265,11 @@ EOF' || true
 
 # ========================================================
 # ========================================================
-VERDE='\033[0;32m'
-  GRIS='\033[0;37m'
-  BOLD='\033[1m'
-  NC='\033[0m'
-
-  pasos=(
-    "apt-update"
-    iproute2 iputils-ping net-tools vim procps nano
-    traceroute tcpdump curl wget
-    dnsutils iperf3 nmap netcat-openbsd
-  )
-  total=${#pasos[@]}
-
-  echo ""
-  for i in "${!pasos[@]}"; do
-      paso="${pasos[$i]}"
-
-      # Ejecutar según sea update o paquete
-      if [[ "$paso" == "apt-update" ]]; then
-          docker exec CORE-GW apt update -qq > /dev/null 2>&1 || true
-          etiqueta="repositorios actualizados"
-      else
-          docker exec CORE-GW apt install -y -qq "$paso" > /dev/null 2>&1 || true
-          etiqueta="instalado: ${paso}"
-      fi
-
-      # Calcular y dibujar barra
-      porcentaje=$(( (i + 1) * 100 / total ))
-      bloques_llenos=$(( (i + 1) * 30 / total ))
-      bloques_vacios=$(( 30 - bloques_llenos ))
-      barra_llena="" barra_vacia=""
-      for ((b=0; b<bloques_llenos; b++)); do barra_llena+="█"; done
-      for ((b=0; b<bloques_vacios; b++)); do barra_vacia+="░"; done
-
-      echo -ne "\r  ${VERDE}${BOLD}[${barra_llena}${GRIS}${barra_vacia}${VERDE}]${NC} ${BOLD}${porcentaje}%${NC} → ${etiqueta}          "
-  done
-
-  echo -e "\n"
-  echo -e "  ${VERDE}${BOLD}✔ Entorno listo — $(( total - 1 )) paquetes instalados.${NC}"
-  echo ""
-
+  instalar_con_barra "Preparando CORE-GW" \
+    "apt update::docker exec CORE-GW apt update -qq" \
+    "iproute2::docker exec CORE-GW apt install -y -qq iproute2" \
+    "vim::docker exec CORE-GW apt install -y -qq vim" \
+    "tcpdump::docker exec CORE-GW apt install -y -qq tcpdump"
 
 
 # ========================================================
