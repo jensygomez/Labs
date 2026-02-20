@@ -216,46 +216,57 @@ EOF' || true
   # Hostname ya está seteado por --hostname, pero confirmamos
   docker exec CORE-GW hostname core-gw || true
 
-  # Instalar paquetes básicos dentro del contenedor (para que sea usable)
-echo "→ Actualizando repositorios en CORE-GW..."
-  docker exec CORE-GW apt update -qq 2>/dev/null || true
-
-  paquetes=(
-    iproute2 iputils-ping net-tools vim procps nano
-    traceroute tcpdump curl wget
-    dnsutils iperf3 nmap netcat-openbsd
-  )
-  total=${#paquetes[@]}
-
-  # Colores
-  VERDE='\033[0;32m'
+========================================================
+========================================================
+VERDE='\033[0;32m'
   GRIS='\033[0;37m'
   BOLD='\033[1m'
   NC='\033[0m'
 
+  pasos=(
+    "apt-update"
+    iproute2 iputils-ping net-tools vim procps nano
+    traceroute tcpdump curl wget
+    dnsutils iperf3 nmap netcat-openbsd
+  )
+  total=${#pasos[@]}
+
   echo ""
-  for i in "${!paquetes[@]}"; do
-      pkg="${paquetes[$i]}"
+  for i in "${!pasos[@]}"; do
+      paso="${pasos[$i]}"
 
-      # Instalar paquete
-      docker exec CORE-GW apt install -y -qq "$pkg" 2>/dev/null || true
+      # Ejecutar según sea update o paquete
+      if [[ "$paso" == "apt-update" ]]; then
+          docker exec CORE-GW apt update -qq > /dev/null 2>&1 || true
+          etiqueta="repositorios actualizados"
+      else
+          docker exec CORE-GW apt install -y -qq "$paso" > /dev/null 2>&1 || true
+          etiqueta="instalado: ${paso}"
+      fi
 
-      # Calcular porcentaje y bloques
+      # Calcular y dibujar barra
       porcentaje=$(( (i + 1) * 100 / total ))
       bloques_llenos=$(( (i + 1) * 10 / total ))
       bloques_vacios=$(( 10 - bloques_llenos ))
+      barra_llena="" barra_vacia=""
+      for ((b=0; b<bloques_llenos; b++)); do barra_llena+="█"; done
+      for ((b=0; b<bloques_vacios; b++)); do barra_vacia+="░"; done
 
-      # Construir barra
-      barra_llena=$(printf '█%.0s' $(seq 1 $bloques_llenos) 2>/dev/null)
-      barra_vacia=$(printf '░%.0s' $(seq 1 $bloques_vacios) 2>/dev/null)
-
-      # Imprimir línea con color
-      echo -ne "\r  ${VERDE}${BOLD}[${barra_llena}${GRIS}${barra_vacia}${VERDE}]${NC} ${BOLD}${porcentaje}%${NC} → instalado: ${pkg}          "
+      echo -ne "\r  ${VERDE}${BOLD}[${barra_llena}${GRIS}${barra_vacia}${VERDE}]${NC} ${BOLD}${porcentaje}%${NC} → ${etiqueta}          "
   done
 
   echo -e "\n"
-  echo -e "  ${VERDE}${BOLD}✔ Todos los paquetes instalados correctamente (${total} paquetes).${NC}"
+  echo -e "  ${VERDE}${BOLD}✔ Entorno listo — $(( total - 1 )) paquetes instalados.${NC}"
   echo ""
+
+
+
+========================================================
+========================================================
+
+
+
+
 
 
   # Configurar loopback, bridge y IP
