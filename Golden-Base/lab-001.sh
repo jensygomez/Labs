@@ -11,7 +11,8 @@ print_topology() {
   AMARILLO='\033[1;33m'
   BOLD='\033[1m'
   NC='\033[0m'
-cat <<EOF
+  
+  cat <<'EOF'
 ===================================================================================
 TOPOLOGÍA DISTRIBUIDA – LAB DE ARQUITECTURA LINUX (DOCKERIZADO)
 ===================================================================================
@@ -73,45 +74,45 @@ FILOSOFÍA
 • Veth                    = Cable virtual entre contenedor y host
 • ip netns exec           = Manipulación de red como en namespaces clásicos
 • Kernel del host         = Única fuente de verdad (forwarding, NAT, iptables)
-
-echo ""
-echo -e "╔══════════════════════════════════════════╗"
-echo -e "║         LAB 001 — RESUMEN FINAL          ║"
-echo -e "╚══════════════════════════════════════════╝"
-echo ""
-echo -e "  ${VERDE}✔ Contenedor${NC}   CORE-GW (ubuntu:24.04)"
-echo -e "  ${VERDE}✔ LAN Bridge${NC}   br0 → 10.0.0.1/24"
-echo -e "  ${VERDE}✔ WAN Link${NC}     172.16.255.2 ↔ 172.16.255.1"
-echo -e "  ${VERDE}✔ NAT${NC}          10.0.0.0/24 + 172.16.255.0/30 → $WAN_IF"
-echo -e "  ${VERDE}✔ Forwarding${NC}   HOST + CORE-GW habilitados"
-echo ""
-echo -e "  Pendiente:"
-echo -e "  ${GRIS}  ░ Contenedores de departamentos${NC}"
-echo -e "  ${GRIS}  ░ Bridges br-inf br-srv br-rh br-sys${NC}"
-echo -e "  ${GRIS}  ░ Servicios DNS DHCP LDAP FS${NC}"
-echo ""
-
-echo ""
-echo -e "╔══════════════════════════════════════════╗"
-echo -e "║       PRÓXIMO — LAB 002: DEPT. RH        ║"
-echo -e "╚══════════════════════════════════════════╝"
-echo ""
-echo -e "  Objetivo: Implementar RH como dominio L2 independiente"
-echo ""
-echo -e "  Por crear:"
-echo -e "  ${GRIS}  ░ Contenedor   NS-RH${NC}"
-echo -e "  ${GRIS}  ░ Uplink       v-gw-rh (br0) ↔ v-rh-gw (NS-RH)${NC}"
-echo -e "  ${GRIS}  ░ Bridge       br-rh (switch de acceso)${NC}"
-echo -e "  ${GRIS}  ░ PCs          PC1→10.0.0.21  PC2→10.0.0.22  PC3→10.0.0.23${NC}"
-echo -e "  ${GRIS}  ░ Veth pairs   v-pc1-rh↔v-rh-pc1  v-pc2-rh↔v-rh-pc2  v-pc3-rh↔v-rh-pc3${NC}"
-echo ""
-echo -e "  Validaciones esperadas:"
-echo -e "  ${GRIS}  ░ Ping entre PCs del departamento (L2)${NC}"
-echo -e "  ${GRIS}  ░ Ping PCs → CORE-GW (10.0.0.1)${NC}"
-echo -e "  ${GRIS}  ░ Ping PCs → Internet (8.8.8.8)${NC}"
-echo ""
-
 EOF
+
+  # AHORA USAMOS echo -e PARA LOS COLORES
+  echo -e ""
+  echo -e "╔══════════════════════════════════════════╗"
+  echo -e "║         LAB 001 — RESUMEN FINAL          ║"
+  echo -e "╚══════════════════════════════════════════╝"
+  echo -e ""
+  echo -e "  ${VERDE}✔ Contenedor${NC}   CORE-GW (ubuntu:24.04)"
+  echo -e "  ${VERDE}✔ LAN Bridge${NC}   br0 → 10.0.0.1/24"
+  echo -e "  ${VERDE}✔ WAN Link${NC}     172.16.255.2 ↔ 172.16.255.1"
+  echo -e "  ${VERDE}✔ NAT${NC}          10.0.0.0/24 + 172.16.255.0/30 → \$WAN_IF"
+  echo -e "  ${VERDE}✔ Forwarding${NC}   HOST + CORE-GW habilitados"
+  echo -e ""
+  echo -e "  Pendiente:"
+  echo -e "  ${GRIS}  ░ Contenedores de departamentos${NC}"
+  echo -e "  ${GRIS}  ░ Bridges br-inf br-srv br-rh br-sys${NC}"
+  echo -e "  ${GRIS}  ░ Servicios DNS DHCP LDAP FS${NC}"
+  echo -e ""
+
+  echo -e ""
+  echo -e "╔══════════════════════════════════════════╗"
+  echo -e "║       PRÓXIMO — LAB 002: DEPT. RH        ║"
+  echo -e "╚══════════════════════════════════════════╝"
+  echo -e ""
+  echo -e "  Objetivo: Implementar RH como dominio L2 independiente"
+  echo -e ""
+  echo -e "  Por crear:"
+  echo -e "  ${GRIS}  ░ Contenedor   NS-RH${NC}"
+  echo -e "  ${GRIS}  ░ Uplink       v-gw-rh (br0) ↔ v-rh-gw (NS-RH)${NC}"
+  echo -e "  ${GRIS}  ░ Bridge       br-rh (switch de acceso)${NC}"
+  echo -e "  ${GRIS}  ░ PCs          PC1→10.0.0.21  PC2→10.0.0.22  PC3→10.0.0.23${NC}"
+  echo -e "  ${GRIS}  ░ Veth pairs   v-pc1-rh↔v-rh-pc1  v-pc2-rh↔v-rh-pc2  v-pc3-rh↔v-rh-pc3${NC}"
+  echo -e ""
+  echo -e "  Validaciones esperadas:"
+  echo -e "  ${GRIS}  ░ Ping entre PCs del departamento (L2)${NC}"
+  echo -e "  ${GRIS}  ░ Ping PCs → CORE-GW (10.0.0.1)${NC}"
+  echo -e "  ${GRIS}  ░ Ping PCs → Internet (8.8.8.8)${NC}"
+  echo -e ""
 }
 
 
