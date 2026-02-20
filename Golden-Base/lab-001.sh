@@ -3,7 +3,6 @@
 # Topología: Infraestructura completa con contenedores Docker
 # Versión: 2.0 - Dockerizada y automatizada
 # ===================================================================================
-
 print_topology_and_status() {
     cat <<'EOF'
 
@@ -16,7 +15,7 @@ TOPOLOGÍA DISTRIBUIDA – LAB DE ARQUITECTURA LINUX (DOCKERIZADO)
                           └───────────────┬─────────────────────┘
                                           │
                           ┌───────────────┴─────────────────────┐
-                          │            HOST (tu PC/VM)          │
+                          │            HOST (tu PC/VM)           │
                           │       172.16.255.1/30 (v-wan-gw)    │
                           └───────────────┬─────────────────────┘
                                           │
@@ -54,7 +53,7 @@ TOPOLOGÍA DISTRIBUIDA – LAB DE ARQUITECTURA LINUX (DOCKERIZADO)
                           └──────────┘
 
 ===================================================================================
-PROPÓSITO DEL LAB (mismo que antes)
+PROPÓSITO DEL LAB
 ===================================================================================
 1. LDAP  : Centralización de usuarios (SSSD / PAM / NSS)
 2. FS    : NFS o Samba para /home compartido
@@ -63,11 +62,11 @@ PROPÓSITO DEL LAB (mismo que antes)
 ===================================================================================
 FILOSOFÍA (adaptada a Docker)
 ===================================================================================
-• Contenedores Docker = Aislamiento + filesystem propio
-• Bridge             = Switch L2 dentro del contenedor
-• Veth               = Cable virtual entre contenedor y host
-• ip netns exec      = Manipulación de red como en namespaces clásicos
-• Kernel del host    = Única fuente de verdad (forwarding, NAT, iptables)
+• Contenedores Docker     = Aislamiento + filesystem propio
+• Bridge                  = Switch L2 dentro del contenedor
+• Veth                    = Cable virtual entre contenedor y host
+• ip netns exec           = Manipulación de red como en namespaces clásicos
+• Kernel del host         = Única fuente de verdad (forwarding, NAT, iptables)
 
 ===================================================================================
 ESTADO ACTUAL — LAB 01 COMPLETADO (Docker versión)
@@ -118,77 +117,45 @@ Estado operativo:
   • Bridges de acceso por departamento (br-inf, br-srv, br-rh, br-sys)
   • Endpoints y servicios (DNS, DHCP, LDAP, FS, PCs)
 
-
-
 ===================================================================================
 SIGUIENTE PASO — LAB 02: DEPARTAMENTO RH (ACCESS LAYER)
 ===================================================================================
 
 Objetivo:
 → Implementar el departamento RH como dominio L2 independiente
-→ Simular un switch de acceso con múltiples PCs
+→ Simular un switch de acceso con múltiples PCs conectados al bridge central
 
-Componentes a crear:
+Componentes a crear en lab-002.sh:
 
-1) Namespace del departamento
-   - ns-rh  (Departamento Recursos Humanos)
+1) Contenedor del departamento
+   - NS-RH (contenedor Docker para Recursos Humanos)
 
-2) Enlace CORE ↔ RH (uplink)
-   - v-gw-rh   (en CORE-GW)
-   - v-rh-gw   (en ns-rh)
+2) Enlace uplink CORE-GW ↔ NS-RH
+   - v-gw-rh   (en CORE-GW, bridge br0)
+   - v-rh-gw   (en NS-RH, sin IP – modo L2)
 
-3) Direccionamiento del enlace
-   - CORE-GW (v-gw-rh): 10.0.0.1/24   [ya existente]
-   - ns-rh   (v-rh-gw): sin IP (L2 uplink)
+3) Bridge interno del departamento (switch de acceso)
+   - br-rh  (dentro de NS-RH)
 
-4) Bridge interno del departamento (switch de acceso)
-   - br-rh  (dentro de ns-rh)
-
-5) PCs del departamento (endpoints)
+4) PCs del departamento (contenedores o interfaces)
    - PC_1-RH : 10.0.0.21/24
    - PC_2-RH : 10.0.0.22/24
    - PC_3-RH : 10.0.0.23/24
-   - Gateway: 10.0.0.1
+   - Gateway por defecto: 10.0.0.1 (CORE-GW)
 
-6) Cables virtuales por PC
-   - pc-rh1 ↔ ns-rh
-     • v-pc1-rh
-     • v-rh-pc1
+5) Cables virtuales (veth pairs) por cada PC
+   - v-pc1-rh ↔ v-rh-pc1
+   - v-pc2-rh ↔ v-rh-pc2
+   - v-pc3-rh ↔ v-rh-pc3
 
-   - pc-rh2 ↔ ns-rh
-     • v-pc2-rh
-     • v-rh-pc2
+6) Validaciones esperadas
+   - Ping entre PCs del departamento (L2 dentro de br-rh)
+   - Ping desde PCs al CORE-GW (10.0.0.1)
+   - Ping desde PCs a Internet (8.8.8.8)
 
-   - pc-rh3 ↔ ns-rh
-     • v-pc3-rh
-     • v-rh-pc3
-
-7) Validaciones
-   - Ping entre PCs del departamento
-   - Ping al CORE-GW (10.0.0.1)
-   - Ping a Internet (8.8.8.8)
 EOF
 }
 
-#
-# Este script construye:
-# - Namespace CORE-GW
-# - Bridge interno br0 (10.0.0.1/24)
-# - Enlace WAN hacia el host
-# - NAT funcional hacia Internet
-#
-# IMPORTANTE:
-# - Ejecutar como root
-# - Interfaz de salida del host: enp1s0
-# ==============================================================================
-
-# ===[ VERIFICACIONES BÁSICAS (ejecuta manualmente después) ]===
-# docker ps  (ve CORE-GW running)
-# docker exec -it CORE-GW bash  (dentro: ip addr; ping 8.8.8.8)
-# ip netns exec CORE-GW ip route  (ve default via 172.16.255.1)
-
-# ===[ LIMPIEZA SI QUERÉS REINICIAR ]===
-# docker stop CORE-GW; docker rm CORE-GW; rm /var/run/netns/CORE-GW; ip link del v-wan-gw || true; iptables -t nat -F; iptables -F FORWARD; ip route del 10.0.0.0/24 || true
 
 set -e
 
