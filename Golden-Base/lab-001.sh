@@ -169,7 +169,6 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   # 0.1 Verificar si Docker está instalado
   if ! command -v docker &> /dev/null; then
     echo "Docker no está instalado. Instalándolo..."
-    # Instalación automática (basada en la guía oficial que te di al principio)
     apt update
     apt install -y ca-certificates curl gnupg lsb-release
     install -m 0755 -d /etc/apt/keyrings
@@ -199,7 +198,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   echo "==[ 1. CORE-GW: INFRAESTRUCTURA BASE CON DOCKER ]=="
 
   # A. Crear y correr el contenedor (equivalente a 'ip netns add CORE-GW')
-  docker run -d --name CORE-GW --hostname core-gw --privileged ubuntu:24.04 sleep infinity 2>/dev/null || true
+  docker run -d --name CORE-GW --hostname core-gw --privileged --network none ubuntu:24.04 sleep infinity 2>/dev/null || true
 
   # B. Obtener PID y enlazar netns
   CORE_PID=$(docker inspect -f '{{.State.Pid}}' CORE-GW)
@@ -217,11 +216,13 @@ EOF' || true
   docker exec CORE-GW hostname core-gw || true
 
   # Instalar paquetes básicos dentro del contenedor (para que sea usable)
-  docker exec CORE-GW apt update 2>/dev/null || true
-  docker exec CORE-GW apt install -y \
+  echo "→ Instalando herramientas en CORE-GW (esto puede tardar un momento)..."
+  docker exec CORE-GW apt update -qq 2>/dev/null || true
+  docker exec CORE-GW apt install -y -qq \
     iproute2 iputils-ping net-tools vim procps \
     nano traceroute tcpdump curl wget \
-    dnsutils iperf3 nmap netcat-openbsd
+    dnsutils iperf3 nmap netcat-openbsd 2>/dev/null || true
+  echo "→ Herramientas instaladas."
 
   # Configurar loopback, bridge y IP
   ip netns exec CORE-GW ip link set lo up || true
