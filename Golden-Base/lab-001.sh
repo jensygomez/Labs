@@ -111,6 +111,13 @@ EOF
 
 set -e
 
+VERDE='\033[0;32m'
+GRIS='\033[0;37m'
+ROJO='\033[0;31m'
+AMARILLO='\033[1;33m'
+BOLD='\033[1m'
+NC='\033[0m'
+
 
 # En engine.sh — función global reutilizable
 instalar_con_barra() {
@@ -122,11 +129,6 @@ instalar_con_barra() {
     shift
     local tareas=("$@")
     local total=${#tareas[@]}
-
-    local VERDE='\033[0;32m'
-    local GRIS='\033[0;37m'
-    local BOLD='\033[1m'
-    local NC='\033[0m'
 
     [[ -n "$titulo" ]] && echo -e "→ ${titulo}"
     echo ""
