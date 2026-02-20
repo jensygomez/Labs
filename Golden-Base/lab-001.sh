@@ -1,7 +1,9 @@
 #!/bin/bash
 # ===================================================================================
 # LABORATORIO LINUX PARA CERTIFICACIÓN LFCS/LFCE
-# Versión: 2.2 - Instalación robusta de paquetes
+# Topología: Infraestructura completa con contenedores Docker
+# Versión: 2.2 - Completa y corregida
+# Laboratorio: 001 - Core Gateway y red base
 # ===================================================================================
 
 # ── Configuración inicial ─────────────────────────────────────────────────────
@@ -26,14 +28,113 @@ NC='\033[0m'
 WAN_IF=""
 
 # ===================================================================================
-# FUNCIÓN: print_topology (sin cambios, omitida por brevedad)
+# FUNCIÓN: print_topology - Muestra la topología del laboratorio
 # ===================================================================================
 print_topology() {
-  # ... (misma que antes) ...
+  cat <<'EOF'
+===================================================================================
+TOPOLOGÍA DISTRIBUIDA – LAB DE ARQUITECTURA LINUX (DOCKERIZADO)
+===================================================================================
+
+                          ┌─────────────────────────────────────┐
+                          │         INTERNET (8.8.8.8)          │
+                          └───────────────┬─────────────────────┘
+                                          │
+                          ┌───────────────┴─────────────────────┐
+                          │            HOST (tu PC/VM)           │
+                          │       172.16.255.1/30 (v-wan-gw)    │
+                          └───────────────┬─────────────────────┘
+                                          │
+                                          │ veth pair
+                                          │
+                      ┌───────────────────┴───────────────────────────┐
+                      │           CORE-GW (contenedor Docker)         │
+                      │       ┌─────────────────────────────┐         │
+                      │       │  br0: 10.0.0.1/24           │         │
+                      │       │  v-gw-wan: 172.16.255.2/30  │         │
+                      │       └─────────────────────────────┘         │
+                      └───────────────────┬───────────────────────────┘
+                                          │       
+           ┌───────────────────┌──────────┘──────────┌──────────────────────┐
+           │                   │                     │                      │
+  ┌────────┴────────┐ ┌────────┴─────────┐  ┌────────┴────────┐    ┌────────┴────────┐
+  │    NS-SRV       │ │      NS-RH       │  │      NS-SYS     │    │     NS-INFRA    │
+  │ (contenedor)    │ │ (contenedor)     │  │ (contenedor)    │    │ (contenedor)    │
+  │                 │ │                  │  │                 │    │                 │
+  │  ┌──────────┐   │ │     ┌──────┐     │  │     ┌──────┐    │    │      ┌──────┐   │
+  │  │ br-srv   │   │ │     │br-rh │     │  │     │br-sys│    │    │      │br-inf│   │
+  │  │(switch L2│   │ │     │(L2)  │     │  │     │(L2)  │    │    │      │(L2)  │   │
+  │  └────┬─────┘   │ │     └──┬───┘     │  │     └──┬───┘    │    │      └──┬───┘   │
+  └───────┼─────────┘ └────────┼─────────┘  └────────┼────────┘    └─────────┼───────┘
+          │                    │                     │                       │
+     ┌────┴─────┐         ┌────┴─────┐          ┌────┴─────┐            ┌────┴─────┐
+     │SRV-LDAP  │         │PC_1-RH   │          │ PC_1-SYS │            │SRV-DNS   │
+     │10.0.0.11 │         │10.0.0.21 │          │10.0.0.31 │            │10.0.0.2  │
+     ├──────────┤         ├──────────┤          └──────────┘            ├──────────┤
+     │SRV-FS    │         │PC_2-RH   │                                  │SRV-DHCP  │
+     │10.0.0.12 │         │10.0.0.22 │                                  │10.0.0.3  │
+     └──────────┘         ├──────────┤                                  └──────────┘
+                          │PC_3-RH   │
+                          │10.0.0.23 │
+                          └──────────┘
+
+===================================================================================
+PROPÓSITO DEL LAB
+===================================================================================
+1. LDAP  : Centralización de usuarios (SSSD / PAM / NSS)
+2. FS    : NFS o Samba para /home compartido
+3. SYS   : Bastión de administración (SSH, Ansible, control)
+
+===================================================================================
+FILOSOFÍA
+===================================================================================
+• Contenedores Docker     = Aislamiento + filesystem propio
+• Bridge                  = Switch L2 dentro del contenedor
+• Veth                    = Cable virtual entre contenedor y host
+• ip netns exec           = Manipulación de red como en namespaces clásicos
+• Kernel del host         = Única fuente de verdad (forwarding, NAT, iptables)
+EOF
+
+  echo -e ""
+  echo -e "╔══════════════════════════════════════════╗"
+  echo -e "║         LAB 001 — RESUMEN FINAL          ║"
+  echo -e "╚══════════════════════════════════════════╝"
+  echo -e ""
+  echo -e "  ${VERDE}✔ Contenedor${NC}   CORE-GW (ubuntu:24.04)"
+  echo -e "  ${VERDE}✔ LAN Bridge${NC}   br0 → 10.0.0.1/24"
+  echo -e "  ${VERDE}✔ WAN Link${NC}     172.16.255.2 ↔ 172.16.255.1"
+  echo -e "  ${VERDE}✔ NAT${NC}          10.0.0.0/24 + 172.16.255.0/30 → ${WAN_IF:-INTERNET}"
+  echo -e "  ${VERDE}✔ Forwarding${NC}   HOST + CORE-GW habilitados"
+  echo -e ""
+  echo -e "  Pendiente:"
+  echo -e "  ${GRIS}  ░ Contenedores de departamentos${NC}"
+  echo -e "  ${GRIS}  ░ Bridges br-inf br-srv br-rh br-sys${NC}"
+  echo -e "  ${GRIS}  ░ Servicios DNS DHCP LDAP FS${NC}"
+  echo -e ""
+
+  echo -e ""
+  echo -e "╔══════════════════════════════════════════╗"
+  echo -e "║       PRÓXIMO — LAB 002: DEPT. RH        ║"
+  echo -e "╚══════════════════════════════════════════╝"
+  echo -e ""
+  echo -e "  Objetivo: Implementar RH como dominio L2 independiente"
+  echo -e ""
+  echo -e "  Por crear:"
+  echo -e "  ${GRIS}  ░ Contenedor   NS-RH${NC}"
+  echo -e "  ${GRIS}  ░ Uplink       v-gw-rh (br0) ↔ v-rh-gw (NS-RH)${NC}"
+  echo -e "  ${GRIS}  ░ Bridge       br-rh (switch de acceso)${NC}"
+  echo -e "  ${GRIS}  ░ PCs          PC1→10.0.0.21  PC2→10.0.0.22  PC3→10.0.0.23${NC}"
+  echo -e "  ${GRIS}  ░ Veth pairs   v-pc1-rh↔v-rh-pc1  v-pc2-rh↔v-rh-pc2  v-pc3-rh↔v-rh-pc3${NC}"
+  echo -e ""
+  echo -e "  Validaciones esperadas:"
+  echo -e "  ${GRIS}  ░ Ping entre PCs del departamento (L2)${NC}"
+  echo -e "  ${GRIS}  ░ Ping PCs → CORE-GW (10.0.0.1)${NC}"
+  echo -e "  ${GRIS}  ░ Ping PCs → Internet (8.8.8.8)${NC}"
+  echo -e ""
 }
 
 # ===================================================================================
-# FUNCIÓN: instalar_en_contenedor - Versión mejorada para instalación de paquetes
+# FUNCIÓN: instalar_en_contenedor - Instalación de paquetes en contenedor
 # ===================================================================================
 instalar_en_contenedor() {
     local contenedor="$1"
@@ -42,13 +143,13 @@ instalar_en_contenedor() {
     
     echo -e "→ Instalando paquetes en ${BOLD}$contenedor${NC}: ${paquetes[*]}"
     
-    # Actualizar repositorios primero (con verificación)
+    # Actualizar repositorios primero
     if ! docker exec "$contenedor" apt update -qq; then
         echo -e "  ${ROJO}✗ Error al actualizar repositorios${NC}"
         return 1
     fi
     
-    # Instalar paquetes uno por uno para mejor diagnóstico
+    # Instalar paquetes uno por uno
     local exitoso=0
     local fallido=0
     
@@ -68,7 +169,7 @@ instalar_en_contenedor() {
 }
 
 # ===================================================================================
-# FUNCIÓN: instalar_con_barra - Versión mejorada para comandos del host
+# FUNCIÓN: instalar_con_barra - Barra de progreso para el host
 # ===================================================================================
 instalar_con_barra() {
     local titulo="$1"
@@ -113,7 +214,7 @@ instalar_con_barra() {
 }
 
 # ===================================================================================
-# FUNCIÓN: cleanup (sin cambios)
+# FUNCIÓN: cleanup - Limpieza de recursos
 # ===================================================================================
 cleanup() {
     echo -e "\n${AMARILLO}Limpiando recursos creados...${NC}"
@@ -127,7 +228,7 @@ cleanup() {
 }
 
 # ===================================================================================
-# FUNCIÓN: test_conectividad (sin cambios)
+# FUNCIÓN: test_conectividad - Pruebas de conectividad
 # ===================================================================================
 test_conectividad() {
     local test_name="$1"
@@ -145,7 +246,7 @@ test_conectividad() {
 }
 
 # ===================================================================================
-# FUNCIÓN: verificar_internet_desde_contenedor - Diagnóstico detallado
+# FUNCIÓN: verificar_conectividad_detallada - Diagnóstico detallado
 # ===================================================================================
 verificar_conectividad_detallada() {
     echo -e "\n${CYAN}--- DIAGNÓSTICO DETALLADO ---${NC}"
@@ -257,18 +358,9 @@ EOF' 2>/dev/null
   docker exec CORE-GW hostname core-gw 2>/dev/null
   echo -e "${VERDE}✓ Configuración de identidad completada${NC}"
 
-  # --- INSTALACIÓN DE PAQUETES EN CORE-GW (CORREGIDA) ---
+  # --- INSTALACIÓN DE PAQUETES EN CORE-GW ---
   echo -e "${CYAN}==[ INSTALANDO PAQUETES EN CORE-GW ]==${NC}"
-  
-  # Primero, asegurar que apt funciona
-  echo -e "→ Verificando conectividad a repositorios..."
-  if docker exec CORE-GW ping -c 2 -W 3 8.8.8.8 &>/dev/null; then
-    echo -e "  ${VERDE}✓ El contenedor tiene acceso a Internet${NC}"
-  else
-    echo -e "  ${AMARILLO}⚠ El contenedor NO tiene acceso a Internet todavía${NC}"
-    echo -e "  Continuamos igual, pero las instalaciones pueden fallar..."
-  fi
-  
+
   # Actualizar repositorios (con reintentos)
   echo -e "→ Actualizando repositorios en CORE-GW..."
   for i in {1..3}; do
@@ -278,26 +370,44 @@ EOF' 2>/dev/null
     else
       if [ $i -eq 3 ]; then
         echo -e "  ${ROJO}✗ No se pudieron actualizar los repositorios${NC}"
-        echo -e "  Continuando con la instalación de todas formas..."
       else
         echo -e "  ${AMARILLO}⚠ Reintento $i/3...${NC}"
         sleep 2
       fi
     fi
   done
-  
-  # Instalar paquetes usando la función mejorada
-  instalar_en_contenedor "CORE-GW" \
-    "iproute2" \
-    "iputils-ping" \
-    "vim" \
-    "tcpdump" \
-    "dnsutils" \
-    "curl" \
-    "net-tools" \
-    "iptables"
 
-  # --- CONFIGURACIÓN DE RED (sin cambios) ---
+  # Instalar paquetes uno por uno
+  echo -e "→ Instalando paquetes básicos..."
+
+  PAQUETES=(
+    "iproute2"
+    "iputils-ping" 
+    "vim"
+    "tcpdump"
+    "dnsutils"
+    "curl"
+    "net-tools"
+    "iptables"
+  )
+
+  EXITOSOS=0
+  FALLIDOS=0
+
+  for pkg in "${PAQUETES[@]}"; do
+    echo -ne "  Instalando ${pkg}... "
+    if docker exec CORE-GW apt install -y -qq "$pkg" &>/dev/null; then
+      echo -e "${VERDE}✓ OK${NC}"
+      ((EXITOSOS++))
+    else
+      echo -e "${ROJO}✗ FALLO${NC}"
+      ((FALLIDOS++))
+    fi
+  done
+
+  echo -e "  ${VERDE}✓ $EXITOSOS instalados${NC}, ${ROJO}✗ $FALLIDOS fallidos${NC}"
+
+  # --- CONFIGURACIÓN DE RED ---
   echo -e "${CYAN}==[ 2. CONFIGURACIÓN DE RED INTERNA ]==${NC}"
   
   ip netns exec CORE-GW ip link set lo up
@@ -364,7 +474,6 @@ EOF' 2>/dev/null
     ((TEST_EXITOS++))
   else
     ((TEST_FALLOS++))
-    # Diagnóstico automático
     verificar_conectividad_detallada
   fi
   
