@@ -246,8 +246,8 @@ VERDE='\033[0;32m'
 
       # Calcular y dibujar barra
       porcentaje=$(( (i + 1) * 100 / total ))
-      bloques_llenos=$(( (i + 1) * 10 / total ))
-      bloques_vacios=$(( 10 - bloques_llenos ))
+      bloques_llenos=$(( (i + 1) * 30 / total ))
+      bloques_vacios=$(( 30 - bloques_llenos ))
       barra_llena="" barra_vacia=""
       for ((b=0; b<bloques_llenos; b++)); do barra_llena+="█"; done
       for ((b=0; b<bloques_vacios; b++)); do barra_vacia+="░"; done
