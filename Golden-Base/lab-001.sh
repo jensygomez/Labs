@@ -5,6 +5,12 @@
 # Versión: 2.0 - Dockerizada y automatizada
 # ===================================================================================
 print_topology() {
+  VERDE='\033[0;32m'
+  GRIS='\033[0;37m'
+  ROJO='\033[0;31m'
+  AMARILLO='\033[1;33m'
+  BOLD='\033[1m'
+  NC='\033[0m'
 cat <<'EOF'
 ===================================================================================
 TOPOLOGÍA DISTRIBUIDA – LAB DE ARQUITECTURA LINUX (DOCKERIZADO)
