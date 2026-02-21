@@ -210,22 +210,15 @@ fi
 # ===================================================================================
 print_topology() {
 # ── Colores ───────────────────────────────────────────────────────────────────
+  local VERDE='\033[0;32m'
+  local GRIS='\033[0;37m'
+  local ROJO='\033[0;31m'
+  local AMARILLO='\033[1;33m'
+  local AZUL='\033[0;34m'
+  local CYAN='\033[0;36m'
+  local NC='\033[0m'
 
-VERDE='\033[0;32m'
-GRIS='\033[0;37m'
-ROJO='\033[0;31m'
-AMARILLO='\033[1;33m'
-AZUL='\033[0;34m'
-CYAN='\033[0;36m'
-MAGENTA='\033[0;35m'
-BOLD='\033[1m'
-NC='\033[0m'
-
-# Aliases para compatibilidad con otros nombres
-GREEN="$VERDE"
-RED="$ROJO"
-YELLOW="$AMARILLO"
-BLUE="$AZUL"
+  # Dibujo de la Topología
   cat <<EOF
 
 ===================================================================================
@@ -289,7 +282,7 @@ FILOSOFÍA
 • Veth                    = Cable virtual entre contenedor y host
 • ip netns exec           = Manipulación de red como en namespaces clásicos
 • Kernel del host         = Única fuente de verdad (forwarding, NAT, iptables)
-
+EOF
 
   echo -e ""
   echo -e "╔══════════════════════════════════════════╗"
@@ -327,6 +320,5 @@ FILOSOFÍA
   echo -e "  ${GRIS}  ░ Ping PCs → CORE-GW (10.0.0.1)${NC}"
   echo -e "  ${GRIS}  ░ Ping PCs → Internet (8.8.8.8)${NC}"
   echo -e ""
-EOF
 }
 
