@@ -8,6 +8,22 @@
 
 set -Eeuo pipefail
 
+# ── Colores ───────────────────────────────────────────────────────────────────
+VERDE='\033[0;32m'
+GRIS='\033[0;37m'
+ROJO='\033[0;31m'
+AMARILLO='\033[1;33m'
+AZUL='\033[0;34m'
+CYAN='\033[0;36m'
+MAGENTA='\033[0;35m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+# Aliases para compatibilidad con otros nombres
+GREEN="$VERDE"
+RED="$ROJO"
+YELLOW="$AMARILLO"
+BLUE="$AZUL"
 ########################################
 # VARIABLES GLOBALES
 ########################################
@@ -193,7 +209,25 @@ fi
 # FUNCIÓN: print_topology - Muestra la topología del laboratorio
 # ===================================================================================
 print_topology() {
+
   cat <<'EOF'
+# ── Colores ───────────────────────────────────────────────────────────────────
+
+VERDE='\033[0;32m'
+GRIS='\033[0;37m'
+ROJO='\033[0;31m'
+AMARILLO='\033[1;33m'
+AZUL='\033[0;34m'
+CYAN='\033[0;36m'
+MAGENTA='\033[0;35m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+# Aliases para compatibilidad con otros nombres
+GREEN="$VERDE"
+RED="$ROJO"
+YELLOW="$AMARILLO"
+BLUE="$AZUL"
 ===================================================================================
 TOPOLOGÍA DISTRIBUIDA – LAB DE ARQUITECTURA LINUX (DOCKERIZADO)
 ===================================================================================
