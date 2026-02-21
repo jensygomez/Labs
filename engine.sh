@@ -51,24 +51,23 @@ ejecutar_hasta() {
     # Verificar que existen labs antes de ejecutar
     verificar_labs || return 1
     
-    for i in $(seq 1 $TARGET); do
-        LAB=$(printf "$LAB_DIR/lab-%03d.sh" $i)
+    for i in $(seq 1 "$TARGET"); do
+        LAB=$(printf "%s/lab-%03d.sh" "$LAB_DIR" "$i")
+
         if [ -f "$LAB" ]; then
             echo -e "${CYAN}══════════════════════════════════════════${NC}"
-            echo -e "${CYAN}  Ejecutando: lab-$(printf '%03d' $i).sh${NC}"
+            echo -e "${CYAN}  Ejecutando: lab-$(printf '%03d' "$i").sh${NC}"
             echo -e "${CYAN}══════════════════════════════════════════${NC}"
-            
-            # Dar permisos de ejecución
+
             chmod +x "$LAB"
-            
-            # EJECUCIÓN: Esto corre la red del lab
-            bash "$LAB"
-            
-            if [ $? -ne 0 ]; then
-                echo -e "${RED}✗ Error en lab-$(printf '%03d' $i).sh — abortando.${NC}"
+
+            # Ejecutar lab en modo silencioso
+            if ! bash "$LAB" >/dev/null 2>&1; then
+                echo -e "${RED}✗ Error en lab-$(printf '%03d' "$i").sh — abortando.${NC}"
                 return 1
             fi
-            echo -e "${GREEN}✔ lab-$(printf '%03d' $i).sh completado${NC}\n"
+
+            echo -e "${GREEN}✔ lab-$(printf '%03d' "$i").sh completado${NC}\n"
         else
             echo -e "${YELLOW}⚠ No existe: $LAB${NC}"
         fi
