@@ -289,7 +289,7 @@ EOF
   echo -e "║         LAB 001 — RESUMEN FINAL          ║"
   echo -e "╚══════════════════════════════════════════╝"
   echo -e ""
-  echo -e "  ${VERDE}✔ Imagen Base${NC}   $IMG_NET (ubuntu:24.04 + net-tools)${NC}"
+  echo -e "  ${VERDE}✔ Docker Base${NC}  $IMG_NET (lista para RH/INFRA/SERV/SYS)${NC}"
   echo -e "  ${VERDE}✔ Contenedor${NC}   CORE-GW (ubuntu:24.04)"
   echo -e "  ${VERDE}✔ LAN Bridge${NC}   br0 → 10.0.0.1/24"
   echo -e "  ${VERDE}✔ WAN Link${NC}     172.16.255.2 ↔ 172.16.255.1"
