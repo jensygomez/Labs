@@ -255,7 +255,7 @@ FILOSOFÍA
 • Veth                    = Cable virtual entre contenedor y host
 • ip netns exec           = Manipulación de red como en namespaces clásicos
 • Kernel del host         = Única fuente de verdad (forwarding, NAT, iptables)
-EOF
+
 
   echo -e ""
   echo -e "╔══════════════════════════════════════════╗"
@@ -293,5 +293,6 @@ EOF
   echo -e "  ${GRIS}  ░ Ping PCs → CORE-GW (10.0.0.1)${NC}"
   echo -e "  ${GRIS}  ░ Ping PCs → Internet (8.8.8.8)${NC}"
   echo -e ""
+EOF
 }
 
