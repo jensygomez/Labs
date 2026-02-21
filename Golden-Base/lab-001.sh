@@ -209,8 +209,6 @@ fi
 # FUNCIÓN: print_topology - Muestra la topología del laboratorio
 # ===================================================================================
 print_topology() {
-
-  cat <<EOF
 # ── Colores ───────────────────────────────────────────────────────────────────
 
 VERDE='\033[0;32m'
@@ -228,6 +226,8 @@ GREEN="$VERDE"
 RED="$ROJO"
 YELLOW="$AMARILLO"
 BLUE="$AZUL"
+  cat <<EOF
+
 ===================================================================================
 TOPOLOGÍA DISTRIBUIDA – LAB DE ARQUITECTURA LINUX (DOCKERIZADO)
 ===================================================================================
