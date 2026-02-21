@@ -80,10 +80,9 @@ ejecutar_hasta() {
         print_topology 2>/dev/null || echo -e "${YELLOW}⚠ No hay función print_topology() en el último lab${NC}"
     fi
     
-    echo -e "\n${CYAN}➤ Para acceder a los namespaces:${NC}"
-    echo -e "  ${GRIS}ip netns list${NC}"
-    echo -e "  ${GRIS}ip netns exec CORE-GW bash${NC}"
-    echo -e "  ${GRIS}ip netns exec NS-RH bash${NC}"
+    echo -e "\n${CYAN}➤ Para acceder a los Containers:${NC}"
+    echo -e "  ${GRIS}docker ps -a${NC}"
+    echo -e "  ${GRIS}docker exec -it NOMBRE-DEL-DOCKER bash${NC}"
     echo ""
 }
 
