@@ -6,63 +6,187 @@
 # Laboratorio: 001 - Core Gateway y red base
 # ===================================================================================
 
-# ── Configuración inicial ─────────────────────────────────────────────────────
-
 set -Eeuo pipefail
-# ── Verificar ejecución como root ─────────────────────────────────────────────
-if [ "$EUID" -ne 0 ]; then 
-    echo "Este script debe ejecutarse como root"
-    exit 1
-fi
 
-# ── Colores globales ──────────────────────────────────────────────────────────
-VERDE='\033[0;32m'
-GRIS='\033[0;37m'
-ROJO='\033[0;31m'
-AMARILLO='\033[1;33m'
-AZUL='\033[0;34m'
-CYAN='\033[0;36m'
-BOLD='\033[1m'
-NC='\033[0m'
+########################################
+# VARIABLES GLOBALES
+########################################
+IMG_BASE="ubuntu:24.04"
+IMG_NET="ubuntu-net:24.04"
 
-WAN_IF=""
+TMP_BUILDER="img-builder-net"
+CORE_GW="CORE-GW"
 
-CORE_GW_NAME="CORE-GW"
-CORE_GW_IMAGE="ubuntu-net:24.04"
+HOST_IP="172.16.255.1/30"
+GW_IP="172.16.255.2/30"
+GW_NET="172.16.255.0/30"
 
-# WAN
-GW_WAN_HOST_IP="172.16.255.1/30"
-GW_WAN_GW_IP="172.16.255.2/30"
-GW_WAN_NET="172.16.255.0/30"
-
-# LAN
-LAN_BR="br0"
 LAN_IP="10.0.0.1/24"
 
-log() { echo -e "🔹 $*"; }
-ok()  { echo -e "✅ $*"; }
-err() { echo -e "❌ $*" >&2; }
+VETH_GW="v-gw-wan"
+VETH_HOST="v-host-gw"
+
+########################################
+# UTILIDADES
+########################################
+log() { echo -e "\n🔹 $*"; }
+ok()  { echo "✅ $*"; }
+err() { echo "❌ $*" >&2; exit 1; }
+
+image_exists() {
+  docker images --format '{{.Repository}}:{{.Tag}}' | grep -qx "$1"
+}
 
 container_exists() {
   docker ps -a --format '{{.Names}}' | grep -qx "$1"
 }
 
-container_running() {
-  docker ps --format '{{.Names}}' | grep -qx "$1"
+container_pid() {
+  docker inspect -f '{{.State.Pid}}' "$1"
 }
 
-veth_exists() {
-  ip link show "$1" &>/dev/null
+########################################
+# FASE 0 — IMAGEN BASE CON RED
+########################################
+build_image_net() {
+  log "FASE 0 — Verificando imagen base $IMG_NET"
+
+  if image_exists "$IMG_NET"; then
+    ok "Imagen $IMG_NET ya existe"
+    return
+  fi
+
+  log "Creando contenedor temporal de build"
+  docker run -dit \
+    --name "$TMP_BUILDER" \
+    --hostname img-builder \
+    --privileged \
+    "$IMG_BASE"
+
+  log "Instalando herramientas de red"
+  docker exec "$TMP_BUILDER" bash -c "
+    apt update &&
+    apt install -y \
+      iproute2 \
+      iputils-ping \
+      iptables \
+      net-tools \
+      tcpdump \
+      curl &&
+    apt clean
+  "
+
+  log "Creando imagen $IMG_NET"
+  docker commit "$TMP_BUILDER" "$IMG_NET"
+
+  log "Eliminando contenedor temporal"
+  docker rm -f "$TMP_BUILDER"
+
+  ok "Imagen base creada correctamente"
 }
 
-iptables_rule_exists() {
-  iptables "$@" -C &>/dev/null
+########################################
+# FASE 1 — CORE-GW
+########################################
+create_core_gw() {
+  log "FASE 1 — Creando contenedor CORE-GW"
+
+  if container_exists "$CORE_GW"; then
+    ok "CORE-GW ya existe"
+    return
+  fi
+
+  docker run -dit \
+    --name "$CORE_GW" \
+    --hostname core-gw \
+    --privileged \
+    --network none \
+    "$IMG_NET"
+
+  ok "CORE-GW creado"
 }
 
-get_pid() {
-  docker inspect -f '{{.State.Pid}}' "$CORE_GW_NAME"
+########################################
+# FASE 2 — VETH HOST ↔ CORE-GW
+########################################
+setup_veth() {
+  log "FASE 2 — Configurando veth WAN"
+
+  if ip link show "$VETH_HOST" &>/dev/null; then
+    ok "veth ya existe"
+    return
+  fi
+
+  ip link add "$VETH_GW" type veth peer name "$VETH_HOST"
+
+  ip link set "$VETH_GW" netns "$(container_pid "$CORE_GW")"
+
+  ip addr add "$HOST_IP" dev "$VETH_HOST"
+  ip link set "$VETH_HOST" up
+
+  docker exec "$CORE_GW" ip addr add "$GW_IP" dev "$VETH_GW"
+  docker exec "$CORE_GW" ip link set "$VETH_GW" up
+
+  ok "veth configurado"
 }
 
+########################################
+# FASE 3 — ROUTING + NAT
+########################################
+setup_routing_nat() {
+  log "FASE 3 — Routing y NAT"
+
+  docker exec "$CORE_GW" ip route | grep -q default || \
+    docker exec "$CORE_GW" ip route add default via 172.16.255.1
+
+  sysctl -w net.ipv4.ip_forward=1 >/dev/null
+  docker exec "$CORE_GW" sysctl -w net.ipv4.ip_forward=1 >/dev/null
+
+  iptables -t nat -C POSTROUTING -s "$GW_NET" -j MASQUERADE 2>/dev/null || \
+    iptables -t nat -A POSTROUTING -s "$GW_NET" -j MASQUERADE
+
+  iptables -C FORWARD -s "$GW_NET" -j ACCEPT 2>/dev/null || \
+    iptables -A FORWARD -s "$GW_NET" -j ACCEPT
+
+  iptables -C FORWARD -d "$GW_NET" -m state --state RELATED,ESTABLISHED -j ACCEPT 2>/dev/null || \
+    iptables -A FORWARD -d "$GW_NET" -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+  ok "Routing y NAT activos"
+}
+
+########################################
+# FASE 4 — BRIDGE LAN
+########################################
+setup_bridge() {
+  log "FASE 4 — Bridge LAN br0"
+
+  docker exec "$CORE_GW" ip link show br0 &>/dev/null && {
+    ok "br0 ya existe"
+    return
+  }
+
+  docker exec "$CORE_GW" ip link add br0 type bridge
+  docker exec "$CORE_GW" ip addr add "$LAN_IP" dev br0
+  docker exec "$CORE_GW" ip link set br0 up
+
+  ok "Bridge br0 creado"
+}
+
+########################################
+# MAIN
+########################################
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  echo "==[ LAB 001 — CORE-GW | ARQUITECTURA LINUX ]=="
+
+  build_image_net
+  create_core_gw
+  setup_veth
+  setup_routing_nat
+  setup_bridge
+
+  echo
+  ok "LAB 001 COMPLETADO"
+fi
 
 
 # ===================================================================================
@@ -171,112 +295,3 @@ EOF
   echo -e ""
 }
 
-
-
-
-# =========================================================
-# MAIN
-# =========================================================
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  echo "==[ EJECUTANDO LÓGICA: CORE-GW NETWORK ENGINE ]=="
-
-  # -------------------------------------------------------
-  # 1️⃣ Contenedor CORE-GW
-  # -------------------------------------------------------
-  if ! container_exists "$CORE_GW_NAME"; then
-    log "Creando contenedor CORE-GW"
-    docker run -dit \
-      --name "$CORE_GW_NAME" \
-      --hostname core-gw \
-      --privileged \
-      --network none \
-      "$CORE_GW_IMAGE"
-    ok "CORE-GW creado"
-  else
-    ok "CORE-GW ya existe"
-  fi
-
-  if ! container_running "$CORE_GW_NAME"; then
-    log "Iniciando CORE-GW"
-    docker start "$CORE_GW_NAME"
-  fi
-
-  CORE_PID="$(get_pid)"
-
-  # -------------------------------------------------------
-  # 2️⃣ VETH WAN
-  # -------------------------------------------------------
-  if ! veth_exists v-gw-wan; then
-    log "Creando veth WAN"
-    ip link add v-gw-wan type veth peer name v-host-gw
-    ip link set v-gw-wan netns "$CORE_PID"
-    ok "veth creado"
-  else
-    ok "veth WAN ya existe"
-  fi
-
-  ip addr show v-host-gw | grep -q "$GW_WAN_HOST_IP" || {
-    ip addr add "$GW_WAN_HOST_IP" dev v-host-gw
-  }
-  ip link set v-host-gw up
-
-  docker exec "$CORE_GW_NAME" ip addr show v-gw-wan | grep -q "$GW_WAN_GW_IP" || {
-    docker exec "$CORE_GW_NAME" ip addr add "$GW_WAN_GW_IP" dev v-gw-wan
-  }
-  docker exec "$CORE_GW_NAME" ip link set v-gw-wan up
-
-  # -------------------------------------------------------
-  # 3️⃣ Routing CORE-GW
-  # -------------------------------------------------------
-  docker exec "$CORE_GW_NAME" ip route | grep -q default || {
-    log "Configurando default route"
-    docker exec "$CORE_GW_NAME" ip route add default via 172.16.255.1
-  }
-
-  # -------------------------------------------------------
-  # 4️⃣ Bridge LAN
-  # -------------------------------------------------------
-  docker exec "$CORE_GW_NAME" ip link show "$LAN_BR" &>/dev/null || {
-    log "Creando bridge LAN"
-    docker exec "$CORE_GW_NAME" ip link add "$LAN_BR" type bridge
-  }
-
-  docker exec "$CORE_GW_NAME" ip addr show "$LAN_BR" | grep -q "$LAN_IP" || {
-    docker exec "$CORE_GW_NAME" ip addr add "$LAN_IP" dev "$LAN_BR"
-  }
-
-  docker exec "$CORE_GW_NAME" ip link set "$LAN_BR" up
-
-  # -------------------------------------------------------
-  # 5️⃣ Forwarding
-  # -------------------------------------------------------
-  sysctl -q net.ipv4.ip_forward | grep -q '= 1' || sysctl -w net.ipv4.ip_forward=1
-  docker exec "$CORE_GW_NAME" sysctl -q net.ipv4.ip_forward | grep -q '= 1' \
-    || docker exec "$CORE_GW_NAME" sysctl -w net.ipv4.ip_forward=1
-
-  # -------------------------------------------------------
-  # 6️⃣ NAT y FORWARD (HOST)
-  # -------------------------------------------------------
-  iptables_rule_exists -t nat POSTROUTING -s "$GW_WAN_NET" ! -o docker0 -j MASQUERADE || {
-    log "Agregando NAT"
-    iptables -t nat -A POSTROUTING -s "$GW_WAN_NET" ! -o docker0 -j MASQUERADE
-  }
-
-  iptables_rule_exists FORWARD -s "$GW_WAN_NET" -j ACCEPT || {
-    iptables -A FORWARD -s "$GW_WAN_NET" -j ACCEPT
-  }
-
-  iptables_rule_exists FORWARD -d "$GW_WAN_NET" -m state --state RELATED,ESTABLISHED -j ACCEPT || {
-    iptables -A FORWARD -d "$GW_WAN_NET" -m state --state RELATED,ESTABLISHED -j ACCEPT
-  }
-
-  # -------------------------------------------------------
-  # 7️⃣ Validación
-  # -------------------------------------------------------
-  log "Validando conectividad WAN"
-  docker exec "$CORE_GW_NAME" ping -c1 8.8.8.8 &>/dev/null \
-    && ok "CORE-GW tiene salida a Internet" \
-    || err "Fallo de conectividad"
-
-  ok "CORE-GW provisionado correctamente"
-fi
