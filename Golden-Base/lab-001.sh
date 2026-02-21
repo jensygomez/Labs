@@ -137,7 +137,7 @@ setup_routing_nat() {
   log "FASE 3 — Routing y NAT"
 
   docker exec "$CORE_GW" ip route | grep -q default || \
-    docker exec "$CORE_GW" ip route add default via 172.16.255.1
+    docker exec "$CORE_GW" ip route replace default via 172.16.255.1
 
   sysctl -w net.ipv4.ip_forward=1 >/dev/null
   docker exec "$CORE_GW" sysctl -w net.ipv4.ip_forward=1 >/dev/null
