@@ -49,7 +49,7 @@ VETH_RH_PC3="v-rh-pc3"     # extremo en NS-RH
 ########################################
 # UTILIDADES
 ########################################
-log() { echo -e "\n🔹 $*"; }
+log() { :; }  # silenciado — output consolidado en print_topology
 ok()  { echo -e "${VERDE}✔ $*${NC}"; }
 err() { echo -e "${ROJO}❌ $*${NC}" >&2; exit 1; }
 
@@ -217,11 +217,9 @@ setup_pcs() {
 }
 
 ########################################
-# FASE 6 — VALIDACIÓN
+# VALIDACIÓN (llamada desde print_topology)
 ########################################
 validate() {
-  log "FASE 6 — Validación"
-
   local PASS=0
   local FAIL=0
 
@@ -244,7 +242,6 @@ validate() {
   check "PC1 → PC3 (L2)" "docker exec $PC1 ping -c1 -W2 10.0.0.23"
   check "PC1 → Internet" "docker exec $PC1 ping -c1 -W3 8.8.8.8"
 
-  echo
   echo -e "  Resultado: ${VERDE}$PASS OK${NC} / ${ROJO}$FAIL FAIL${NC}"
 }
 
@@ -270,6 +267,9 @@ print_topology() {
   echo -e "  ${VERDE}✔ L2${NC}           PC1↔PC2↔PC3 (mismo bridge)"
   echo -e "  ${VERDE}✔ L3${NC}           PCs → CORE-GW → Internet"
   echo -e ""
+  echo -e "  Validación:"
+  validate
+  echo -e ""
   echo -e "╔══════════════════════════════════════════╗"
   echo -e "║       PRÓXIMO — LAB 003: LDAP            ║"
   echo -e "╚══════════════════════════════════════════╝"
@@ -292,7 +292,6 @@ print_topology() {
   echo -e ""
 }
 
-
 ########################################
 # MAIN
 ########################################
@@ -307,9 +306,6 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   setup_uplink
   setup_nat
   setup_pcs
-  validate
-
-  print_topology
 
   echo
   ok "LAB 002 COMPLETADO"
