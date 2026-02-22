@@ -88,7 +88,6 @@ ejecutar_hasta() {
     echo -e "  ${GRIS}docker exec -it NOMBRE-DEL-DOCKER bash${NC}"
     echo ""
 }
-
 limpiar_entorno() {
     echo ""
     echo -e "${CYAN}══════════════════════════════════════════${NC}"
@@ -96,7 +95,8 @@ limpiar_entorno() {
     echo -e "${CYAN}══════════════════════════════════════════${NC}"
     echo ""
 
-    echo -e "${YELLOW}Limpiando contenedores Docker del laboratorio...${NC}"
+    # 1. Contenedores Docker
+    echo -e "${YELLOW}Limpiando contenedores Docker...${NC}"
     containers=$(docker ps -aq 2>/dev/null)
     if [ -n "$containers" ]; then
         for container in $containers; do
@@ -109,6 +109,7 @@ limpiar_entorno() {
         echo -e "  ${GREEN}✓ No hay contenedores activos.${NC}"
     fi
 
+    # 2. Symlinks de netns (legacy, por si acaso)
     echo -e "${YELLOW}Limpiando symlinks de netns...${NC}"
     if [ -d /var/run/netns ]; then
         for ns_link in /var/run/netns/*; do
@@ -117,30 +118,51 @@ limpiar_entorno() {
             rm -f "$ns_link"
             echo -e "  ${RED}✗ Symlink netns eliminado: $name${NC}"
         done
+    else
+        echo -e "  ${GREEN}✓ No hay symlinks de netns.${NC}"
     fi
 
-    echo -e "${YELLOW}Limpiando interfaces veth del Host...${NC}"
-    for iface in $(ip link show type veth 2>/dev/null | awk -F': ' '{print $2}' | cut -d'@' -f1); do
-        ip link del "$iface" 2>/dev/null && echo -e "  ${RED}✗ Eliminada interface veth: $iface${NC}"
-    done
+    # 3. Interfaces veth que quedaron en el host
+    # (las que estaban dentro de contenedores desaparecen solas al eliminar el contenedor)
+    echo -e "${YELLOW}Limpiando interfaces veth del host...${NC}"
+    VETHS=$(ip link show type veth 2>/dev/null | awk -F': ' '{print $2}' | cut -d'@' -f1)
+    if [ -n "$VETHS" ]; then
+        for iface in $VETHS; do
+            ip link del "$iface" 2>/dev/null && \
+                echo -e "  ${RED}✗ Eliminada interfaz veth: $iface${NC}"
+        done
+    else
+        echo -e "  ${GREEN}✓ No hay interfaces veth.${NC}"
+    fi
 
-    echo -e "${YELLOW}Limpiando reglas de red...${NC}"
+    # 4. Reglas iptables
+    echo -e "${YELLOW}Limpiando reglas iptables...${NC}"
     iptables -F FORWARD 2>/dev/null
     iptables -t nat -F POSTROUTING 2>/dev/null
-    echo -e "  ${GREEN}✓ Reglas iptables limpiadas${NC}"
+    echo -e "  ${GREEN}✓ Cadenas FORWARD y POSTROUTING limpiadas.${NC}"
 
-    echo -e "${YELLOW}Limpiando rutas del laboratorio (metric 1000)...${NC}"
-    while IFS= read -r route; do
-        [ -z "$route" ] && continue
-        dest=$(echo "$route" | awk '{print $1}')
-        ip route del "$dest" metric 1000 2>/dev/null && echo -e "  ${RED}✗ Ruta eliminada: $dest${NC}"
-    done < <(ip route show metric 1000 2>/dev/null)
+    # 5. Rutas del laboratorio
+    # Los labs crean rutas sin metric explícita — buscamos las rutas de las
+    # redes del lab que no sean de interfaces activas del sistema
+    echo -e "${YELLOW}Limpiando rutas del laboratorio...${NC}"
+    LAB_NETS="172.16.255.0/30 10.0.0.0/24"
+    for net in $LAB_NETS; do
+        if ip route show "$net" 2>/dev/null | grep -q "$net"; then
+            ip route del "$net" 2>/dev/null && \
+                echo -e "  ${RED}✗ Ruta eliminada: $net${NC}"
+        fi
+    done
+    echo -e "  ${GREEN}✓ Rutas limpiadas.${NC}"
+
+    # 6. Restaurar ip_forward al valor por defecto
+    echo -e "${YELLOW}Restaurando ip_forward...${NC}"
+    sysctl -w net.ipv4.ip_forward=0 >/dev/null 2>&1
+    echo -e "  ${GREEN}✓ ip_forward restaurado a 0.${NC}"
 
     echo ""
     echo -e "${GREEN}✔ Entorno 100% limpio.${NC}"
     echo ""
 }
-
 # ── Ejecutar todos los labs ───────────────────────────────────────────────────
 ejecutar_laboratorios() {
     local TOTAL=$(contar_labs)
