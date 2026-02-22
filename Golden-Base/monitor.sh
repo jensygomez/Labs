@@ -123,10 +123,10 @@ dibujar_topologia() {
     local SV_DHCP; SV_DHCP=$(c "SRV-DHCP" "DHCP .3 ")  # 8
     local PC1_SYS; PC1_SYS=$(c "PC1-SYS"  "PC1 .31 ")  # 8
 
-    echo -e "        ${CYAN}┌───────────────────────────────────────────────────────┐${NC}              "
-    echo -e "        ${CYAN}│                      INTERNET                         │${NC}              "
-    echo -e "        ${CYAN}│                      (8.8.8.8)                        │${NC}              "
-    echo -e "        ${CYAN}└──────────────────────────┬────────────────────────────┘${NC}              "
+    echo -e "             ${CYAN}┌───────────────────────────────────────────────────────┐${NC}              "
+    echo -e "             ${CYAN}│                      INTERNET                         │${NC}              "
+    echo -e "             ${CYAN}│                      (8.8.8.8)                        │${NC}              "
+    echo -e "             ${CYAN}└──────────────────────────┬────────────────────────────┘${NC}              "
     echo -e "                                          │                                                 "  
     echo -e "                     ┌────────────────────┴─────────────────────┐                           "
     echo -e "                     │             HOST (tu PC/VM)              │                           "
