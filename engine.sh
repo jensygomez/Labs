@@ -63,7 +63,7 @@ ejecutar_hasta() {
             chmod +x "$LAB"
 
             # Ejecutar lab en modo silencioso
-            if ! bash "$LAB" >/dev/null 2>&1; then
+            if ! bash "$LAB"; then
                 echo -e "${RED}✗ Error en lab-$(printf '%03d' "$i").sh — abortando.${NC}"
                 return 1
             fi
