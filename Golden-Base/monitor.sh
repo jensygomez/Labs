@@ -106,19 +106,19 @@ c() {
 }
 
 dibujar_topologia() {
-    local CORE;  CORE=$(c  "CORE-GW"  "CORE-GW ")
-    local NSRH;  NSRH=$(c  "NS-RH"    "NS-RH   ")
-    local NSSRV; NSSRV=$(c "NS-SRV"   "NS-SRV  ")
-    local NSINF; NSINF=$(c "NS-INFRA" "NS-INFRA")
-    local NSSYS; NSSYS=$(c "NS-SYS"   "NS-SYS  ")
-    local PC1;   PC1=$(c   "PC1-RH"   "PC1 .21 ")
-    local PC2;   PC2=$(c   "PC2-RH"   "PC2 .22 ")
-    local PC3;   PC3=$(c   "PC3-RH"   "PC3 .23 ")
-    local LDAP;  LDAP=$(c  "SRV-LDAP" "LDAP .11")
-    local FS;    FS=$(c    "SRV-FS"   "FS   .12")
-    local DNS;   DNS=$(c   "SRV-DNS"  "DNS  .2 ")
-    local DHCP;  DHCP=$(c  "SRV-DHCP" "DHCP .3 ")
-    local SYS1;  SYS1=$(c  "PC1-SYS"  "PC1 .31 ")
+    local CORE;  CORE=$(c  "CORE-GW"  "CORE-GW   .")
+    local NSRH;  NSRH=$(c  "NS-RH"    "NS-RH     .")
+    local NSSRV; NSSRV=$(c "NS-SRV"   "NS-SRV    .")
+    local NSINF; NSINF=$(c "NS-INFRA" "NS-INFRA  .")
+    local NSSYS; NSSYS=$(c "NS-SYS"   "NS-SYS    .")
+    local PC1;   PC1=$(c   "PC1-RH"   "PC1 .21   .")
+    local PC2;   PC2=$(c   "PC2-RH"   "PC2 .22   .")
+    local PC3;   PC3=$(c   "PC3-RH"   "PC3 .23   .")
+    local LDAP;  LDAP=$(c  "SRV-LDAP" "LDAP .11  .")
+    local FS;    FS=$(c    "SRV-FS"   "FS   .12  .")
+    local DNS;   DNS=$(c   "SRV-DNS"  "DNS  .2   .")
+    local DHCP;  DHCP=$(c  "SRV-DHCP" "DHCP .3   .")
+    local SYS1;  SYS1=$(c  "PC1-SYS"  "PC1 .31   .")
 
     echo -e "                       ${CYAN}INTERNET (8.8.8.8)${NC}"
     echo -e "                               │"
@@ -172,13 +172,13 @@ dibujar_topologia() {
     echo -e " └───────┼─────────┘ └────────┼─────────┘  └────────┼────────┘    └─────────┼───────┘      "
     echo -e "         │                    │                     │                       │              "
     echo -e "    ┌────┴─────┐         ┌────┴─────┐          ┌────┴─────┐            ┌────┴─────┐        "
-    echo -e "    │ $LDAP    │         │$PC1   │          │ $SYS1 │            │ $DNS   │        "
+    echo -e "    │ $LDAP    │         │$PC1      │          │ $SYS1    │            │ $DNS     │        "
     echo -e "    │10.0.0.11 │         │10.0.0.21 │          │10.0.0.31 │            │10.0.0.2  │        "
     echo -e "    ├──────────┤         ├──────────┤          └──────────┘            ├──────────┤        "
-    echo -e "    │$FS       │         │$PC2   │                                  │ $DHCP  │        "
+    echo -e "    │ $FS      │         │$PC2      │                                  │ $DHCP    │        "
     echo -e "    │10.0.0.12 │         │10.0.0.22 │                                  │10.0.0.3  │        "
     echo -e "    └──────────┘         ├──────────┤                                  └──────────┘        "
-    echo -e "                         │$PC3   │                                                      "
+    echo -e "                         │$PC3      │                                                      "
     echo -e "                         │10.0.0.23 │                                                      "
     echo -e "                         └──────────┘                                                      "
 
