@@ -109,39 +109,19 @@ dibujar_topologia() {
     # Todos los labels tienen exactamente 8 caracteres visibles
     # Así puedes dibujar el ASCII sabiendo que $VAR = 8 chars siempre
     # Variable = 7 chars, Label = 8 chars visibles en terminal
-    local CORE__GW; CORE_GW=$(c "CORE-GW"   "CORE-GW ")  # 8
-    local NS__RH__; NS__RH__=$(c "NS-RH"    "NS-RH   ")  # 8
-    local NS__SRV_; NS__SRV_=$(c "NS-SRV"   "NS-SRV  ")  # 8
-    local NS__INF_; NS__INF_=$(c "NS-INFRA" "NS-INFRA")  # 8
-    local NS__SYS_; NS__SYS_=$(c "NS-SYS"   "NS-SYS  ")  # 8
-    local PC1__RH_; PC1__RH_=$(c "PC1-RH"   "PC1   21")  # 8
-    local PC2__RH_; PC2__RH_=$(c "PC2-RH"   "PC2   22")  # 8
-    local PC3__RH_; PC3__RH_=$(c "PC3-RH"   "PC3   23")  # 8
-    local SV__LDAP; SV__LDAP=$(c "SRV-LDAP" "LDAP__11")  # 8
-    local SV___FS_; SV___FS_=$(c "SRV-FS"   "FS    12")  # 8
-    local SV__DNS_; SV__DNS_=$(c "SRV-DNS"  "DNS    2")  # 8
-    local SV__DHCP; SV__DHCP=$(c "SRV-DHCP" "DHCP   3")  # 8
-    local PC1__SYS; PC1__SYS=$(c "PC1-SYS"  "PC1   31")  # 8
-
-    echo -e "                       ${CYAN}INTERNET (8.8.8.8)${NC}"
-    echo -e "                               │"
-    echo -e "                              ${GRIS}HOST 172.16.255.1${NC}"
-    echo -e "                               │"
-    echo -e "         ┌─────────────────────┴────────────────┐"
-    echo -e "              │              $CORE     ${GRIS}10.0.0.1/24${NC}"
-    echo -e "         └────────┬────────────┬───────┬───────┘"
-    echo -e "                  │          │       │        │"
-    echo -e "            ┌─────┴──┐  ┌───┴───┐  ┌┴──────┐  ┌────────┐"
-    echo -e "            │ $NSSRV │  │$NSRH│  │$NSSYS│  │$NSINF│"
-    echo -e "            │ br-srv │  │ br-rh │  │br-sys │  │ br-inf │"
-    echo -e "            └──┬──┬──┘  └─┬─┬─┬─┘  └───┬───┘  └──┬──┬─┘"
-    echo -e "               │  │       │ │ │        │         │  │"
-    echo -e "             $LDAP $FS  $PC1 $PC2 $PC3   $SYS1    $DNS $DHCP"
-
-
-
-
-
+    local CORE_GW; CORE_GW=$(c "CORE-GW"  "CORE-GW ")  # 8
+    local NS__RH_; NS__RH_=$(c "NS-RH"    "NS-RH   ")  # 8
+    local NS_SRV_; NS_SRV_=$(c "NS-SRV"   "NS-SRV  ")  # 8
+    local NS_INF_; NS_INF_=$(c "NS-INFRA" "NS-INFRA")  # 8
+    local NS_SYS_; NS_SYS_=$(c "NS-SYS"   "NS-SYS  ")  # 8
+    local PC1_RH_; PC1_RH_=$(c "PC1-RH"   "PC1 .21 ")  # 8
+    local PC2_RH_; PC2_RH_=$(c "PC2-RH"   "PC2 .22 ")  # 8
+    local PC3_RH_; PC3_RH_=$(c "PC3-RH"   "PC3 .23 ")  # 8
+    local SV_LDAP; SV_LDAP=$(c "SRV-LDAP" "LDAP .11")  # 8
+    local SV__FS_; SV__FS_=$(c "SRV-FS"   "FS   .12")  # 8
+    local SV_DNS_; SV_DNS_=$(c "SRV-DNS"  "DNS  .2 ")  # 8
+    local SV_DHCP; SV_DHCP=$(c "SRV-DHCP" "DHCP .3 ")  # 8
+    local PC1_SYS; PC1_SYS=$(c "PC1-SYS"  "PC1 .31 ")  # 8
 
     echo -e "                  ┌───────────────────────────────────────────────┐                        "
     echo -e "                  │       ${CYAN}INTERNET (8.8.8.8)${NC}          │                        "
@@ -165,7 +145,7 @@ dibujar_topologia() {
     echo -e "          ┌───────────────────┌──────────┘──────────┌──────────────────────┐               "
     echo -e "          │                   │                     │                      │               "
     echo -e " ┌────────┴────────┐ ┌────────┴─────────┐  ┌────────┴────────┐    ┌────────┴────────┐      "
-    echo -e " │    $NS__SRV_    │ │    $NNS__RH__    │  │    $NS__SYS_    │    │    $NS__INF_    │      "
+    echo -e " │    $NS_SRV_     │ │    $NS__RH_      │  │    $NS_SYS_     │    │    $NS_INF_     │      "
     echo -e " │ (contenedor)    │ │   (contenedor)   │  │   (contenedor)  │    │   (contenedor)  │      "
     echo -e " │                 │ │                  │  │                 │    │                 │      "
     echo -e " │  ┌──────────┐   │ │     ┌──────┐     │  │     ┌──────┐    │    │      ┌──────┐   │      "
@@ -175,7 +155,7 @@ dibujar_topologia() {
     echo -e " └───────┼─────────┘ └────────┼─────────┘  └────────┼────────┘    └─────────┼───────┘      "
     echo -e "         │                    │                     │                       │              "
     echo -e "  ┌──────┴──────┐         ┌────┴─────┐          ┌────┴─────┐            ┌────┴─────┐        "
-    echo -e "  │$SV__LDAP    │         │$PC1__RH_ │          │ $PC1__SYS│            │ $DNS     │        "
+    echo -e "  │$SV_LDAP     │         │$PC1_RH_  │          │ $PC1_SYS │            │ $V_DNS_  │        "
     echo -e "  │10.0.0.11    │         │10.0.0.21 │          │10.0.0.31 │            │10.0.0.2  │        "
     echo -e "  ├─────────────┤         ├──────────┤          └──────────┘            ├──────────┤        "
     echo -e "  │ $SV___FS_   │         │$PC2__RH_ │                                  │ $DHCP    │        "
