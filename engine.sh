@@ -44,7 +44,6 @@ verificar_labs() {
 }
 
 # ── Ejecutar labs en cadena ───────────────────────────────────────────────────
-# ── Ejecutar labs en cadena ───────────────────────────────────────────────────
 ejecutar_hasta() {
     local TARGET=$1
     echo ""
@@ -63,7 +62,7 @@ ejecutar_hasta() {
             chmod +x "$LAB"
 
             # Ejecutar lab en modo silencioso
-            if ! bash "$LAB"; then
+            if ! bash "$LAB" > /dev/null; then
                 echo -e "${RED}✗ Error en lab-$(printf '%03d' "$i").sh — abortando.${NC}"
                 return 1
             fi
@@ -162,18 +161,70 @@ mostrar_estado() {
     echo -e "${CYAN}══════════════════════════════════════════${NC}"
     echo -e "${CYAN}  ESTADO DEL LABORATORIO${NC}"
     echo -e "${CYAN}══════════════════════════════════════════${NC}"
-    
-    # Contenedores Docker activos
-    echo -e "\n${YELLOW}Contenedores Docker:${NC}"
-    docker ps --format "table {{.Names}}\t{{.Status}}\t{{.IPAddress}}" 2>/dev/null || echo "  No hay contenedores"
-    
-    # Namespaces de red
-    echo -e "\n${YELLOW}Namespaces de red:${NC}"
-    ip netns list 2>/dev/null || echo "  No hay namespaces"
-    
+
+    # Helper: devuelve el nombre coloreado según estado del contenedor
+    nodo() {
+        local NAME="$1"
+        local LABEL="$2"
+        if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$NAME"; then
+            echo -e "${VERDE}${LABEL}${NC}"
+        else
+            echo -e "${ROJO}${LABEL}${NC}"
+        fi
+    }
+
+    # Precomputar etiquetas coloreadas
+    local S_CORE  ; S_CORE=$(nodo  "CORE-GW"  "CORE-GW ✔")
+    local S_NSRH  ; S_NSRH=$(nodo  "NS-RH"    "NS-RH   ✔")
+    local S_NSSRV ; S_NSSRV=$(nodo "NS-SRV"   "NS-SRV  ✔")
+    local S_NSSYS ; S_NSSYS=$(nodo "NS-SYS"   "NS-SYS  ✔")
+    local S_NSINF ; S_NSINF=$(nodo "NS-INFRA"  "NS-INFRA✔")
+    local S_PC1   ; S_PC1=$(nodo   "PC1-RH"   "PC1-RH  ✔")
+    local S_PC2   ; S_PC2=$(nodo   "PC2-RH"   "PC2-RH  ✔")
+    local S_PC3   ; S_PC3=$(nodo   "PC3-RH"   "PC3-RH  ✔")
+    local S_LDAP  ; S_LDAP=$(nodo  "SRV-LDAP" "SRV-LDAP✔")
+    local S_FS    ; S_FS=$(nodo    "SRV-FS"   "SRV-FS  ✔")
+    local S_DNS   ; S_DNS=$(nodo   "SRV-DNS"  "SRV-DNS ✔")
+    local S_DHCP  ; S_DHCP=$(nodo  "SRV-DHCP" "SRV-DHCP✔")
+    local S_SYS1  ; S_SYS1=$(nodo  "PC1-SYS"  "PC1-SYS ✔")
+
+    echo ""
+    cat <<EOF
+                        INTERNET (8.8.8.8)
+                                │
+                       HOST (172.16.255.1)
+                                │
+            ┌───────────────────┴────────────────────┐
+            |     $(printf '%-20s' "$S_CORE")        │
+            │          br0: 10.0.0.1/24              │
+            └───────────────────┬────────────────────┘
+                                │
+        ┌───────────────┬───────┴───────┬───────────────┐
+        │               │               │               │
+  ┌─────┴──────┐  ┌─────┴──────┐  ┌─────┴──────┐  ┌─────┴──────┐
+  │ $S_NSSRV   │  │ $S_NSRH    │  │ $S_NSSYS   │  │ $S_NSINF   │
+  │  br-srv    │  │  br-rh     │  │  br-sys    │  │  br-inf    │
+  └─────┬──────┘  └──┬──┬──┬───┘  └─────┬──────┘  └──┬─────┬───┘
+        │            │  │  │            │            │     │
+   ┌────┴────┐  ┌────┘  │  └────┐  ┌────┴────┐  ┌────┴──┐ ┌┴───────┐
+   │$S_LDAP  │  │$S_PC1 │ $S_PC3│  │$S_SYS1  │  │$S_DNS │ │$S_DHCP │
+   │.11      │  │.21    │  .23  │  │.31      │  │.2     │ │.3      │
+   ├─────────┤  ├───────┘       │  └─────────┘  └───────┘ └────────┘
+   │$S_FS    │  │  $S_PC2       │
+   │.12      │  │  .22          │
+   └─────────┘  └───────────────┘
+EOF
+
+    echo ""
+    echo -e "  ${VERDE}✔ = activo${NC}   ${ROJO}nombre = detenido/no existe${NC}"
+    echo ""
+
+    # Tabla resumen
+    echo -e "${CYAN}  Contenedores activos:${NC}"
+    docker ps --format "    {{.Names}}\t{{.Status}}" 2>/dev/null | \
+        awk '{printf "  %-20s %s\n", $1, $2}' || echo "  Ninguno"
     echo ""
 }
-
 # ── Menú principal ────────────────────────────────────────────────────────────
 while true; do
     clear
