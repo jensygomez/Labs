@@ -129,7 +129,7 @@ mostrar_stats() {
     local STATS
     STATS=$(docker stats --no-stream --format "{{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}" 2>/dev/null)
     if [ -n "$STATS" ]; then
-        echo -e "  ${CYAN}$(printf '%-14s' CONTENEDOR')  $(printf '%-8s' 'CPU')  MEM${NC}"
+        echo -e "  ${CYAN}$(printf '%-14s' 'CONTENEDOR')  $(printf '%-8s' 'CPU')  MEM${NC}"
         echo -e "  ${GRIS}─────────────────────────────────────────${NC}"
         while IFS=$'\t' read -r name cpu mem; do
             printf "  %-14s  %-8s  %s\n" "$name" "$cpu" "$mem"
