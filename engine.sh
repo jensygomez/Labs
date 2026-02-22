@@ -177,7 +177,8 @@ ejecutar_laboratorios() {
     echo -e "${CYAN}══════════════════════════════════════════${NC}"
     ejecutar_hasta "$TOTAL"
 }
-# ── Abrir monitor en terminal nueva ──────────────────────────────────────────
+
+# ── Abrir monitor en pantalla completa ───────────────────────────────────────
 abrir_monitor() {
     local MONITOR=""
     if [ -f "$SCRIPT_DIR/monitor.sh" ]; then
@@ -191,28 +192,9 @@ abrir_monitor() {
     fi
 
     chmod +x "$MONITOR"
-
-    # Sin entorno gráfico — usar tmux para abrir panel lateral
-    if command -v tmux &>/dev/null; then
-        if [ -n "${TMUX:-}" ]; then
-            # Ya estamos dentro de tmux — abrir panel vertical a la derecha
-            tmux split-window -h "bash $MONITOR"
-            echo -e "${GREEN}✔ Monitor abierto en panel derecho (tmux).${NC}"
-        else
-            # No estamos en tmux — crear sesión nueva con dos paneles
-            tmux new-session -d -s labmonitor -x 220 -y 50
-            tmux send-keys -t labmonitor "bash $(realpath "${BASH_SOURCE[0]%/*}/../engine.sh" 2>/dev/null || echo ~/Labs/engine.sh)" Enter
-            tmux split-window -h -t labmonitor "bash $MONITOR"
-            tmux attach -t labmonitor
-        fi
-    else
-        echo -e "${YELLOW}⚠ tmux no está instalado.${NC}"
-        echo -e "${YELLOW}  Instálalo con:${NC}"
-        echo -e "  ${GRIS}sudo apt install tmux${NC}"
-        echo -e ""
-        echo -e "${YELLOW}  O ejecuta manualmente en otra terminal:${NC}"
-        echo -e "  ${GRIS}bash $MONITOR${NC}"
-    fi
+    clear
+    bash "$MONITOR"
+    # Al salir con Ctrl+C vuelve al menú del engine
 }
 # ── Menú principal ────────────────────────────────────────────────────────────
 while true; do
