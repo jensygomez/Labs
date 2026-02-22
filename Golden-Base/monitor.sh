@@ -1,24 +1,19 @@
 #!/usr/bin/env bash
 # ===================================================================================
 # LAB MONITOR — Golden Base
-# Uso: bash monitor.sh
-# Abre en una terminal separada mientras trabajas en el lab
+# ===================================================================================
+# CÓMO PERSONALIZAR:
+#   - Agregar nodos:  añade línea a NODOS  →  "NOMBRE:IP"  (IP vacía = switch L2)
+#   - Agregar tests:  añade línea a TESTS  →  "ORIGEN:DESTINO:IP"
+#   - Cambiar intervalo: modifica INTERVALO
+#   - El código debajo de "NO MODIFICAR" no necesita tocarse nunca
 # ===================================================================================
 
-# ── Colores ───────────────────────────────────────────────────────────────────
-VERDE='\033[0;32m'
-ROJO='\033[0;31m'
-AMARILLO='\033[1;33m'
-CYAN='\033[0;36m'
-GRIS='\033[0;37m'
-BOLD='\033[1m'
-NC='\033[0m'
+# ── Intervalo de chequeo (segundos) ──────────────────────────────────────────
+INTERVALO=5
 
-INTERVALO=3  # segundos entre refresco
-
-# ── Nodos del lab con sus IPs ─────────────────────────────────────────────────
-# Formato: "NOMBRE_CONTENEDOR:IP_PARA_PING"
-# IP vacía = solo verifica si el contenedor existe
+# ── Nodos de la topología ─────────────────────────────────────────────────────
+# Formato: "NOMBRE_CONTENEDOR:IP"   (IP vacía = switch L2, no se hace ping)
 NODOS=(
     "CORE-GW:10.0.0.1"
     "NS-RH:"
@@ -35,142 +30,237 @@ NODOS=(
     "PC1-SYS:10.0.0.31"
 )
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# ── Tests de conectividad ─────────────────────────────────────────────────────
+# Formato: "CONTENEDOR_ORIGEN:LABEL_DESTINO:IP_DESTINO"
+# El ping sale desde dentro del CONTENEDOR_ORIGEN hacia IP_DESTINO
+# Agrega, quita o modifica líneas libremente
+TESTS=(
+    "CORE-GW:PC1-RH:10.0.0.21"
+    "CORE-GW:PC2-RH:10.0.0.22"
+    "CORE-GW:PC3-RH:10.0.0.23"
+    "PC1-RH:CORE-GW:10.0.0.1"
+    "PC1-RH:PC2-RH:10.0.0.22"
+    "PC1-RH:PC3-RH:10.0.0.23"
+    "PC1-RH:Internet:8.8.8.8"
+)
+
+# ===================================================================================
+# NO MODIFICAR — lógica del monitor
+# ===================================================================================
+
+VERDE='\033[0;32m'
+ROJO='\033[0;31m'
+CYAN='\033[0;36m'
+GRIS='\033[0;37m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+ESTADO_ANTERIOR=""
+
 contenedor_activo() {
     docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$1"
 }
 
 ping_ok() {
-    # Ping desde el host hacia la IP — timeout 1s, 1 paquete
-    ping -c1 -W1 "$1" &>/dev/null
-}
-
-estado_nodo() {
-    local NAME="$1"
+    local ORIGEN="$1"
     local IP="$2"
-
-    local DOCKER_OK=false
-    local PING_OK=false
-    local PING_STR="  n/a  "
-
-    contenedor_activo "$NAME" && DOCKER_OK=true
-
-    if [ -n "$IP" ] && $DOCKER_OK; then
-        if ping_ok "$IP"; then
-            PING_OK=true
-            PING_STR="${VERDE} ping ✔${NC}"
-        else
-            PING_STR="${ROJO} ping ✘${NC}"
-        fi
-    fi
-
-    # Icono y color del nombre
-    if $DOCKER_OK; then
-        local ICONO="${VERDE}●${NC}"
-        local NOMBRE="${VERDE}$(printf '%-12s' "$NAME")${NC}"
-    else
-        local ICONO="${ROJO}○${NC}"
-        local NOMBRE="${GRIS}$(printf '%-12s' "$NAME")${NC}"
-    fi
-
-    # IP formateada
-    local IP_STR
-    if [ -n "$IP" ]; then
-        IP_STR=$(printf '%-14s' "$IP")
-    else
-        IP_STR=$(printf '%-14s' "(switch L2)")
-    fi
-
-    echo -e "  $ICONO  $NOMBRE  ${GRIS}$IP_STR${NC}  $PING_STR"
+    docker exec "$ORIGEN" ping -c1 -W1 "$IP" &>/dev/null
 }
 
-# ── Topología visual compacta ─────────────────────────────────────────────────
-dibujar_topologia() {
-    # Colores por estado
-    c() {
-        # c NOMBRE LABEL
-        if contenedor_activo "$1"; then
-            echo -e "${VERDE}$2${NC}"
-        else
-            echo -e "${ROJO}$2${NC}"
-        fi
-    }
+capturar_estado() {
+    local STATE=""
 
-    local CORE; CORE=$(c "CORE-GW"  "CORE-GW")
-    local NSRH; NSRH=$(c "NS-RH"   "NS-RH  ")
-    local NSSRV; NSSRV=$(c "NS-SRV" "NS-SRV ")
-    local NSINF; NSINF=$(c "NS-INFRA" "NS-INFRA")
-    local NSSYS; NSSYS=$(c "NS-SYS" "NS-SYS ")
-    local PC1; PC1=$(c "PC1-RH"   ".21")
-    local PC2; PC2=$(c "PC2-RH"   ".22")
-    local PC3; PC3=$(c "PC3-RH"   ".23")
-    local LDAP; LDAP=$(c "SRV-LDAP" ".11")
-    local FS;   FS=$(c "SRV-FS"   ".12")
-    local DNS;  DNS=$(c "SRV-DNS"  ".2 ")
-    local DHCP; DHCP=$(c "SRV-DHCP" ".3 ")
-    local SYS1; SYS1=$(c "PC1-SYS" ".31")
-
-    echo -e "                    ${CYAN}INTERNET${NC}"
-    echo -e "                        │"
-    echo -e "                   HOST (172.16.255.1)"
-    echo -e "                        │"
-    echo -e "               ┌────────┴────────┐"
-    echo -e "               │    $CORE    │  br0:10.0.0.1"
-    echo -e "               └──┬──────┬──┬──┬─┘"
-    echo -e "            ┌─────┘  ┌───┘  │  └──────┐"
-    echo -e "         $NSSRV   $NSRH  $NSSYS   $NSINF"
-    echo -e "          │        │  │  │    │      │    │"
-    echo -e "        $LDAP   $PC1 $PC2 $PC3  $SYS1  $DNS $DHCP"
-    echo -e "        $FS"
-}
-
-# ── Stats de contenedores activos ─────────────────────────────────────────────
-mostrar_stats() {
-    local STATS
-    STATS=$(docker stats --no-stream --format "{{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}" 2>/dev/null)
-    if [ -n "$STATS" ]; then
-        echo -e "  ${CYAN}$(printf '%-14s' 'CONTENEDOR')  $(printf '%-8s' 'CPU')  MEM${NC}"
-        echo -e "  ${GRIS}─────────────────────────────────────────${NC}"
-        while IFS=$'\t' read -r name cpu mem; do
-            printf "  %-14s  %-8s  %s\n" "$name" "$cpu" "$mem"
-        done <<< "$STATS"
-    else
-        echo -e "  ${GRIS}Sin contenedores activos.${NC}"
-    fi
-}
-
-# ── Loop principal ────────────────────────────────────────────────────────────
-while true; do
-    clear
-
-    # Header
-    echo -e "${CYAN}╔══════════════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║         LAB MONITOR — Golden Base                   ║${NC}"
-    echo -e "${CYAN}║         $(date '+%Y-%m-%d %H:%M:%S')   refresco: ${INTERVALO}s          ║${NC}"
-    echo -e "${CYAN}╚══════════════════════════════════════════════════════╝${NC}"
-
-    # Topología
-    echo -e "\n${BOLD}  TOPOLOGÍA${NC}"
-    echo -e "  ${GRIS}─────────────────────────────────────────${NC}"
-    dibujar_topologia
-
-    # Estado por nodo
-    echo -e "\n${BOLD}  NODOS${NC}"
-    echo -e "  ${GRIS}─────────────────────────────────────────────────────${NC}"
-    echo -e "  ${CYAN}$(printf '%-16s' 'CONTENEDOR')  $(printf '%-14s' 'IP')  CONECTIVIDAD${NC}"
-    echo -e "  ${GRIS}─────────────────────────────────────────────────────${NC}"
+    # Estado de cada nodo
     for nodo in "${NODOS[@]}"; do
-        NAME="${nodo%%:*}"
-        IP="${nodo##*:}"
-        estado_nodo "$NAME" "$IP"
+        local NAME="${nodo%%:*}"
+        contenedor_activo "$NAME" && STATE+="$NAME:up " || STATE+="$NAME:down "
     done
 
-    # Stats CPU/MEM
-    echo -e "\n${BOLD}  RECURSOS${NC}"
-    echo -e "  ${GRIS}─────────────────────────────────────────${NC}"
-    mostrar_stats
+    # Resultado de cada test
+    for test in "${TESTS[@]}"; do
+        local ORIGEN="${test%%:*}"
+        local REST="${test#*:}"
+        local LABEL="${REST%%:*}"
+        local IP="${REST##*:}"
+        if contenedor_activo "$ORIGEN"; then
+            ping_ok "$ORIGEN" "$IP" \
+                && STATE+="$ORIGEN>$LABEL:ok " \
+                || STATE+="$ORIGEN>$LABEL:fail "
+        else
+            STATE+="$ORIGEN>$LABEL:skip "
+        fi
+    done
 
-    echo -e "\n  ${GRIS}Ctrl+C para salir${NC}"
+    echo "$STATE"
+}
 
+# Colorea label según si el contenedor está activo
+c() {
+    local NAME="$1"
+    local LABEL="$2"
+    if contenedor_activo "$NAME"; then
+        printf "${VERDE}%s${NC}" "$LABEL"
+    else
+        printf "${ROJO}%s${NC}" "$LABEL"
+    fi
+}
+
+dibujar_topologia() {
+    local CORE;  CORE=$(c  "CORE-GW"  "CORE-GW ")
+    local NSRH;  NSRH=$(c  "NS-RH"    "NS-RH   ")
+    local NSSRV; NSSRV=$(c "NS-SRV"   "NS-SRV  ")
+    local NSINF; NSINF=$(c "NS-INFRA" "NS-INFRA")
+    local NSSYS; NSSYS=$(c "NS-SYS"   "NS-SYS  ")
+    local PC1;   PC1=$(c   "PC1-RH"   "PC1 .21 ")
+    local PC2;   PC2=$(c   "PC2-RH"   "PC2 .22 ")
+    local PC3;   PC3=$(c   "PC3-RH"   "PC3 .23 ")
+    local LDAP;  LDAP=$(c  "SRV-LDAP" "LDAP .11")
+    local FS;    FS=$(c    "SRV-FS"   "FS   .12")
+    local DNS;   DNS=$(c   "SRV-DNS"  "DNS  .2 ")
+    local DHCP;  DHCP=$(c  "SRV-DHCP" "DHCP .3 ")
+    local SYS1;  SYS1=$(c  "PC1-SYS"  "PC1 .31 ")
+
+    echo -e "                       ${CYAN}INTERNET (8.8.8.8)${NC}"
+    echo -e "                               │"
+    echo -e "                              ${GRIS}HOST 172.16.255.1${NC}"
+    echo -e "                               │"
+    echo -e "         ┌─────────────────────┴────────────────┐"
+    echo -e "              │              $CORE     ${GRIS}10.0.0.1/24${NC}"
+    echo -e "         └────────┬────────────┬───────┬───────┘"
+    echo -e "                  │          │       │        │"
+    echo -e "            ┌─────┴──┐  ┌───┴───┐  ┌┴──────┐  ┌────────┐"
+    echo -e "            │ $NSSRV │  │$NSRH│  │$NSSYS│  │$NSINF│"
+    echo -e "            │ br-srv │  │ br-rh │  │br-sys │  │ br-inf │"
+    echo -e "            └──┬──┬──┘  └─┬─┬─┬─┘  └───┬───┘  └──┬──┬─┘"
+    echo -e "               │  │       │ │ │        │         │  │"
+    echo -e "             $LDAP $FS  $PC1 $PC2 $PC3   $SYS1    $DNS $DHCP"
+
+
+
+
+
+
+    echo -e "                         ┌─────────────────────────────────────┐                           "
+    echo -e "                         │         INTERNET (8.8.8.8)          │                           "
+    echo -e "                         └───────────────┬─────────────────────┘                           "
+    echo -e "                                         │                                                 "  
+    echo -e "                         ┌───────────────┴─────────────────────┐                           "
+    echo -e "                         │            HOST (tu PC/VM)          │                           "
+    echo -e "                         │       172.16.255.1/30 (v-wan-gw)    │                           "
+    echo -e "                         └───────────────┬─────────────────────┘                           "
+    echo -e "                                         │                                                 "
+    echo -e "                                         │ veth pair                                       "
+    echo -e "                                         │                                                 "
+    echo -e "                     ┌───────────────────┴───────────────────────────┐                     "
+    echo -e "                     │           CORE-GW (contenedor Docker)         │                     "
+    echo -e "                     │       ┌─────────────────────────────┐         │                     "
+    echo -e "                     │       │  br0: 10.0.0.1/24           │         │                     "
+    echo -e "                     │       │  v-gw-wan: 172.16.255.2/30  │         │                     "
+    echo -e "                     │       └─────────────────────────────┘         │                     "
+    echo -e "                     └───────────────────┬───────────────────────────┘                     "
+    echo -e "                                         │                                                 "
+    echo -e "          ┌───────────────────┌──────────┘──────────┌──────────────────────┐               "
+    echo -e "          │                   │                     │                      │               "
+    echo -e " ┌────────┴────────┐ ┌────────┴─────────┐  ┌────────┴────────┐    ┌────────┴────────┐      "
+    echo -e " │    NS-SRV       │ │      NS-RH       │  │      NS-SYS     │    │     NS-INFRA    │      "
+    echo -e " │ (contenedor)    │ │ (contenedor)     │  │ (contenedor)    │    │ (contenedor)    │      "
+    echo -e " │                 │ │                  │  │                 │    │                 │      "
+    echo -e " │  ┌──────────┐   │ │     ┌──────┐     │  │     ┌──────┐    │    │      ┌──────┐   │      "
+    echo -e " │  │ br-srv   │   │ │     │br-rh │     │  │     │br-sys│    │    │      │br-inf│   │      "
+    echo -e " │  │(switch L2│   │ │     │(L2)  │     │  │     │(L2)  │    │    │      │(L2)  │   │      "
+    echo -e " │  └────┬─────┘   │ │     └──┬───┘     │  │     └──┬───┘    │    │      └──┬───┘   │      "
+    echo -e " └───────┼─────────┘ └────────┼─────────┘  └────────┼────────┘    └─────────┼───────┘      "
+    echo -e "         │                    │                     │                       │              "
+    echo -e "    ┌────┴─────┐         ┌────┴─────┐          ┌────┴─────┐            ┌────┴─────┐        "
+    echo -e "    │SRV-LDAP  │         │PC_1-RH   │          │ PC_1-SYS │            │SRV-DNS   │        "
+    echo -e "    │10.0.0.11 │         │10.0.0.21 │          │10.0.0.31 │            │10.0.0.2  │        "
+    echo -e "    ├──────────┤         ├──────────┤          └──────────┘            ├──────────┤        "
+    echo -e "    │SRV-FS    │         │PC_2-RH   │                                  │SRV-DHCP  │        "
+    echo -e "    │10.0.0.12 │         │10.0.0.22 │                                  │10.0.0.3  │        "
+    echo -e "    └──────────┘         ├──────────┤                                  └──────────┘        "
+    echo -e "                         │PC_3-RH   │                                                      "
+    echo -e "                         │10.0.0.23 │                                                      "
+    echo -e "                         └──────────┘                                                      "
+
+
+}
+
+dibujar_nodos() {
+    echo -e "  ${CYAN}$(printf '%-14s' 'CONTENEDOR')  $(printf '%-15s' 'IP')  ESTADO${NC}"
+    echo -e "  ${GRIS}──────────────────────────────────────────────────${NC}"
+    for nodo in "${NODOS[@]}"; do
+        local NAME="${nodo%%:*}"
+        local IP="${nodo##*:}"
+        if contenedor_activo "$NAME"; then
+            local ICONO="${VERDE}●${NC}"
+            local NOMBRE="${VERDE}$(printf '%-14s' "$NAME")${NC}"
+            local IP_STR="${GRIS}$(printf '%-15s' "${IP:--}")${NC}"
+            local ESTADO="${IP:+${GRIS}activo${NC}}"
+            [ -z "$IP" ] && ESTADO="${GRIS}switch L2${NC}"
+        else
+            local ICONO="${ROJO}○${NC}"
+            local NOMBRE="${GRIS}$(printf '%-14s' "$NAME")${NC}"
+            local IP_STR="${GRIS}$(printf '%-15s' '-')${NC}"
+            local ESTADO="${GRIS}inactivo${NC}"
+        fi
+        echo -e "  $ICONO  $NOMBRE  $IP_STR  $ESTADO"
+    done
+}
+
+dibujar_tests() {
+    echo -e "  ${CYAN}$(printf '%-20s' 'ORIGEN → DESTINO')  RESULTADO${NC}"
+    echo -e "  ${GRIS}──────────────────────────────────────────────────${NC}"
+    for test in "${TESTS[@]}"; do
+        local ORIGEN="${test%%:*}"
+        local REST="${test#*:}"
+        local LABEL="${REST%%:*}"
+        local IP="${REST##*:}"
+        local RUTA="$(printf '%-20s' "$ORIGEN → $LABEL")"
+        if ! contenedor_activo "$ORIGEN"; then
+            echo -e "  ${GRIS}$RUTA  contenedor inactivo${NC}"
+        elif ping_ok "$ORIGEN" "$IP"; then
+            echo -e "  ${VERDE}$RUTA  ping ✔  ($IP)${NC}"
+        else
+            echo -e "  ${ROJO}$RUTA  ping ✘  ($IP)${NC}"
+        fi
+    done
+}
+
+dibujar() {
+    local TIMESTAMP
+    TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+
+    clear
+    echo -e "${CYAN}╔══════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}║         LAB MONITOR — Golden Base                ║${NC}"
+    echo -e "${CYAN}║         $TIMESTAMP                      ║${NC}"
+    echo -e "${CYAN}╚══════════════════════════════════════════════════╝${NC}"
+
+    echo -e "\n${BOLD}  TOPOLOGÍA${NC}"
+    echo -e "  ${GRIS}──────────────────────────────────────────────────${NC}"
+    dibujar_topologia
+    echo -e "  ${VERDE}● activo${NC}   ${ROJO}● inactivo${NC}"
+
+    echo -e "\n${BOLD}  NODOS${NC}"
+    dibujar_nodos
+
+    echo -e "\n${BOLD}  TESTS DE CONECTIVIDAD${NC}"
+    echo -e "  ${GRIS}──────────────────────────────────────────────────${NC}"
+    dibujar_tests
+
+    echo -e "\n  ${GRIS}Actualizado: $TIMESTAMP — refresca solo si hay cambios — Ctrl+C para salir${NC}"
+}
+
+# ── Arranque ──────────────────────────────────────────────────────────────────
+ESTADO_ACTUAL=$(capturar_estado)
+dibujar
+ESTADO_ANTERIOR="$ESTADO_ACTUAL"
+
+while true; do
     sleep "$INTERVALO"
+    ESTADO_ACTUAL=$(capturar_estado)
+    if [ "$ESTADO_ACTUAL" != "$ESTADO_ANTERIOR" ]; then
+        dibujar
+        ESTADO_ANTERIOR="$ESTADO_ACTUAL"
+    fi
 done
