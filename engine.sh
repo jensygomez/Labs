@@ -44,6 +44,7 @@ verificar_labs() {
 }
 
 # ── Ejecutar labs en cadena ───────────────────────────────────────────────────
+# ── Ejecutar labs en cadena ───────────────────────────────────────────────────
 ejecutar_hasta() {
     local TARGET=$1
     echo ""
@@ -73,11 +74,14 @@ ejecutar_hasta() {
         fi
     done
 
-    # INFO: Cargamos el último para mostrar su topología
+    # ✅ SOLUCIÓN: Ejecutar print_topology en un subshell para no contaminar el entorno
     ULTIMO_LAB=$(printf "$LAB_DIR/lab-%03d.sh" $TARGET)
     if [ -f "$ULTIMO_LAB" ]; then
-        source "$ULTIMO_LAB" 2>/dev/null || true
-        print_topology 2>/dev/null || echo -e "${YELLOW}⚠ No hay función print_topology() en el último lab${NC}"
+        # Ejecutar en un subshell para no afectar el entorno actual
+        (
+            source "$ULTIMO_LAB" 2>/dev/null
+            type print_topology &>/dev/null && print_topology
+        ) || echo -e "${YELLOW}⚠ No hay función print_topology() en el último lab${NC}"
     fi
     
     echo -e "\n${CYAN}➤ Para acceder a los Containers:${NC}"
