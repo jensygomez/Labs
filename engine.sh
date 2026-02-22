@@ -177,10 +177,8 @@ ejecutar_laboratorios() {
     echo -e "${CYAN}══════════════════════════════════════════${NC}"
     ejecutar_hasta "$TOTAL"
 }
-
 # ── Abrir monitor en terminal nueva ──────────────────────────────────────────
 abrir_monitor() {
-    # Buscar monitor.sh junto al engine o dentro del LAB_DIR
     local MONITOR=""
     if [ -f "$SCRIPT_DIR/monitor.sh" ]; then
         MONITOR="$SCRIPT_DIR/monitor.sh"
@@ -188,34 +186,34 @@ abrir_monitor() {
         MONITOR="$LAB_DIR/monitor.sh"
     else
         echo -e "${RED}✗ No se encontró monitor.sh${NC}"
-        echo -e "${YELLOW}  Buscado en:${NC}"
-        echo -e "  ${GRIS}  $SCRIPT_DIR/monitor.sh${NC}"
-        echo -e "  ${GRIS}  $LAB_DIR/monitor.sh${NC}"
+        echo -e "  ${GRIS}Buscado en: $SCRIPT_DIR y $LAB_DIR${NC}"
         return 1
     fi
 
     chmod +x "$MONITOR"
 
-    # Intentar abrir en terminal nueva — probamos las más comunes
-    if command -v gnome-terminal &>/dev/null; then
-        gnome-terminal -- bash "$MONITOR" &
-    elif command -v xterm &>/dev/null; then
-        xterm -title "LAB MONITOR" -e bash "$MONITOR" &
-    elif command -v konsole &>/dev/null; then
-        konsole -e bash "$MONITOR" &
-    elif command -v tilix &>/dev/null; then
-        tilix -e bash "$MONITOR" &
+    # Sin entorno gráfico — usar tmux para abrir panel lateral
+    if command -v tmux &>/dev/null; then
+        if [ -n "${TMUX:-}" ]; then
+            # Ya estamos dentro de tmux — abrir panel vertical a la derecha
+            tmux split-window -h "bash $MONITOR"
+            echo -e "${GREEN}✔ Monitor abierto en panel derecho (tmux).${NC}"
+        else
+            # No estamos en tmux — crear sesión nueva con dos paneles
+            tmux new-session -d -s labmonitor -x 220 -y 50
+            tmux send-keys -t labmonitor "bash $(realpath "${BASH_SOURCE[0]%/*}/../engine.sh" 2>/dev/null || echo ~/Labs/engine.sh)" Enter
+            tmux split-window -h -t labmonitor "bash $MONITOR"
+            tmux attach -t labmonitor
+        fi
     else
-        echo -e "${YELLOW}⚠ No se detectó emulador de terminal gráfico.${NC}"
-        echo -e "${YELLOW}  Ejecuta manualmente en otra terminal:${NC}"
+        echo -e "${YELLOW}⚠ tmux no está instalado.${NC}"
+        echo -e "${YELLOW}  Instálalo con:${NC}"
+        echo -e "  ${GRIS}sudo apt install tmux${NC}"
+        echo -e ""
+        echo -e "${YELLOW}  O ejecuta manualmente en otra terminal:${NC}"
         echo -e "  ${GRIS}bash $MONITOR${NC}"
-        return 0
     fi
-
-    echo -e "${GREEN}✔ Monitor abierto en nueva terminal.${NC}"
-    echo -e "  ${GRIS}$MONITOR${NC}"
 }
-
 # ── Menú principal ────────────────────────────────────────────────────────────
 while true; do
     clear
