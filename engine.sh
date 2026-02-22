@@ -178,75 +178,38 @@ ejecutar_laboratorios() {
     ejecutar_hasta "$TOTAL"
 }
 
-# ── Mostrar estado actual ─────────────────────────────────────────────────────
-mostrar_estado() {
-    echo -e "${CYAN}══════════════════════════════════════════${NC}"
-    echo -e "${CYAN}  ESTADO DEL LABORATORIO${NC}"
-    echo -e "${CYAN}══════════════════════════════════════════${NC}"
+# ── Abrir monitor en terminal nueva ──────────────────────────────────────────
+abrir_monitor() {
+    local MONITOR="$SCRIPT_DIR/monitor.sh"
 
-    # Helper: devuelve el nombre coloreado según estado del contenedor
-    nodo() {
-        local NAME="$1"
-        local LABEL="$2"
-        if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$NAME"; then
-            echo -e "${VERDE}${LABEL}${NC}"
-        else
-            echo -e "${ROJO}${LABEL}${NC}"
-        fi
-    }
+    if [ ! -f "$MONITOR" ]; then
+        echo -e "${RED}✗ No se encontró monitor.sh en: $SCRIPT_DIR${NC}"
+        echo -e "${YELLOW}  Asegúrate de copiar monitor.sh junto al engine.${NC}"
+        return 1
+    fi
 
-    # Precomputar etiquetas coloreadas
-    local S_CORE  ; S_CORE=$(nodo  "CORE-GW"  "CORE-GW ✔")
-    local S_NSRH  ; S_NSRH=$(nodo  "NS-RH"    "NS-RH   ✔")
-    local S_NSSRV ; S_NSSRV=$(nodo "NS-SRV"   "NS-SRV  ✔")
-    local S_NSSYS ; S_NSSYS=$(nodo "NS-SYS"   "NS-SYS  ✔")
-    local S_NSINF ; S_NSINF=$(nodo "NS-INFRA"  "NS-INFRA✔")
-    local S_PC1   ; S_PC1=$(nodo   "PC1-RH"   "PC1-RH  ✔")
-    local S_PC2   ; S_PC2=$(nodo   "PC2-RH"   "PC2-RH  ✔")
-    local S_PC3   ; S_PC3=$(nodo   "PC3-RH"   "PC3-RH  ✔")
-    local S_LDAP  ; S_LDAP=$(nodo  "SRV-LDAP" "SRV-LDAP✔")
-    local S_FS    ; S_FS=$(nodo    "SRV-FS"   "SRV-FS  ✔")
-    local S_DNS   ; S_DNS=$(nodo   "SRV-DNS"  "SRV-DNS ✔")
-    local S_DHCP  ; S_DHCP=$(nodo  "SRV-DHCP" "SRV-DHCP✔")
-    local S_SYS1  ; S_SYS1=$(nodo  "PC1-SYS"  "PC1-SYS ✔")
+    chmod +x "$MONITOR"
 
-    echo ""
-    cat <<EOF
-                        INTERNET (8.8.8.8)
-                                │
-                       HOST (172.16.255.1)
-                                │
-            ┌───────────────────┴────────────────────┐
-            |     $(printf '%-20s' "$S_CORE")        │
-            │          br0: 10.0.0.1/24              │
-            └───────────────────┬────────────────────┘
-                                │
-        ┌───────────────┬───────┴───────┬───────────────┐
-        │               │               │               │
-  ┌─────┴──────┐  ┌─────┴──────┐  ┌─────┴──────┐  ┌─────┴──────┐
-  │ $S_NSSRV   │  │ $S_NSRH    │  │ $S_NSSYS   │  │ $S_NSINF   │
-  │  br-srv    │  │  br-rh     │  │  br-sys    │  │  br-inf    │
-  └─────┬──────┘  └──┬──┬──┬───┘  └─────┬──────┘  └──┬─────┬───┘
-        │            │  │  │            │            │     │
-   ┌────┴────┐  ┌────┘  │  └────┐  ┌────┴────┐  ┌────┴──┐ ┌┴───────┐
-   │$S_LDAP  │  │$S_PC1 │ $S_PC3│  │$S_SYS1  │  │$S_DNS │ │$S_DHCP │
-   │.11      │  │.21    │  .23  │  │.31      │  │.2     │ │.3      │
-   ├─────────┤  ├───────┘       │  └─────────┘  └───────┘ └────────┘
-   │$S_FS    │  │  $S_PC2       │
-   │.12      │  │  .22          │
-   └─────────┘  └───────────────┘
-EOF
+    # Intentar abrir en terminal nueva — probamos las más comunes
+    if command -v gnome-terminal &>/dev/null; then
+        gnome-terminal -- bash "$MONITOR" &
+    elif command -v xterm &>/dev/null; then
+        xterm -title "LAB MONITOR" -e bash "$MONITOR" &
+    elif command -v konsole &>/dev/null; then
+        konsole -e bash "$MONITOR" &
+    elif command -v tilix &>/dev/null; then
+        tilix -e bash "$MONITOR" &
+    else
+        echo -e "${YELLOW}⚠ No se detectó emulador de terminal gráfico.${NC}"
+        echo -e "${YELLOW}  Ejecuta manualmente en otra terminal:${NC}"
+        echo -e "  ${GRIS}bash $MONITOR${NC}"
+        return 0
+    fi
 
-    echo ""
-    echo -e "  ${VERDE}✔ = activo${NC}   ${ROJO}nombre = detenido/no existe${NC}"
-    echo ""
-
-    # Tabla resumen
-    echo -e "${CYAN}  Contenedores activos:${NC}"
-    docker ps --format "    {{.Names}}\t{{.Status}}" 2>/dev/null | \
-        awk '{printf "  %-20s %s\n", $1, $2}' || echo "  Ninguno"
-    echo ""
+    echo -e "${GREEN}✔ Monitor abierto en nueva terminal.${NC}"
 }
+
+
 # ── Menú principal ────────────────────────────────────────────────────────────
 while true; do
     clear
@@ -261,7 +224,7 @@ while true; do
     echo ""
     echo "  1) Ejecutar todos los laboratorios"
     echo "  2) Limpiar entorno"
-    echo "  3) Ver estado actual"
+    echo "  3) Abrir monitor (nueva terminal)"
     echo "  0) Salir"
     echo ""
     read -p "  Selección: " OPT
@@ -269,11 +232,11 @@ while true; do
     case $OPT in
         1) ejecutar_laboratorios ;;
         2) limpiar_entorno ;;
-        3) mostrar_estado ;;
+        3) abrir_monitor ;;
         0) echo -e "${GREEN}Saliendo...${NC}"; exit 0 ;;
         *) echo -e "${RED}Opción inválida.${NC}" ;;
     esac
 
     echo ""
-    read -p "  Presiona Enter para continuar..." 
+    read -p "  Presiona Enter para continuar..."
 done
