@@ -180,11 +180,17 @@ ejecutar_laboratorios() {
 
 # ── Abrir monitor en terminal nueva ──────────────────────────────────────────
 abrir_monitor() {
-    local MONITOR="$SCRIPT_DIR/monitor.sh"
-
-    if [ ! -f "$MONITOR" ]; then
-        echo -e "${RED}✗ No se encontró monitor.sh en: $SCRIPT_DIR${NC}"
-        echo -e "${YELLOW}  Asegúrate de copiar monitor.sh junto al engine.${NC}"
+    # Buscar monitor.sh junto al engine o dentro del LAB_DIR
+    local MONITOR=""
+    if [ -f "$SCRIPT_DIR/monitor.sh" ]; then
+        MONITOR="$SCRIPT_DIR/monitor.sh"
+    elif [ -f "$LAB_DIR/monitor.sh" ]; then
+        MONITOR="$LAB_DIR/monitor.sh"
+    else
+        echo -e "${RED}✗ No se encontró monitor.sh${NC}"
+        echo -e "${YELLOW}  Buscado en:${NC}"
+        echo -e "  ${GRIS}  $SCRIPT_DIR/monitor.sh${NC}"
+        echo -e "  ${GRIS}  $LAB_DIR/monitor.sh${NC}"
         return 1
     fi
 
@@ -207,8 +213,8 @@ abrir_monitor() {
     fi
 
     echo -e "${GREEN}✔ Monitor abierto en nueva terminal.${NC}"
+    echo -e "  ${GRIS}$MONITOR${NC}"
 }
-
 
 # ── Menú principal ────────────────────────────────────────────────────────────
 while true; do
