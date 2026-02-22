@@ -230,10 +230,10 @@ validate() {
     local CMD="$2"
     if eval "$CMD" &>/dev/null; then
       echo -e "  ${VERDE}✔${NC} $DESC"
-      ((PASS++))
+      PASS=$((PASS + 1))
     else
       echo -e "  ${ROJO}✘${NC} $DESC"
-      ((FAIL++))
+      FAIL=$((FAIL + 1))
     fi
   }
 
