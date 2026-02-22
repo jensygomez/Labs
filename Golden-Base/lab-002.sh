@@ -252,24 +252,40 @@ validate() {
 # PRINT TOPOLOGY (requerida por el engine)
 ########################################
 print_topology() {
-cat << 'EOF'
+  local VERDE='\033[0;32m'
+  local GRIS='\033[0;37m'
+  local NC='\033[0m'
 
-===================================================================================
-TOPOLOGÍA — LAB 002: DEPARTAMENTO RH
-===================================================================================
-
-                          CORE-GW (10.0.0.1)
-                               │ br0
-                               │
-                            NS-RH
-                            │ br-rh
-                 ┌───────────┼───────────┐
-                 │           │           │
-            PC1-RH       PC2-RH       PC3-RH
-           10.0.0.21    10.0.0.22    10.0.0.23
-
-===================================================================================
-EOF
+  echo -e ""
+  echo -e "╔══════════════════════════════════════════╗"
+  echo -e "║         LAB 002 — RESUMEN FINAL          ║"
+  echo -e "╚══════════════════════════════════════════╝"
+  echo -e ""
+  echo -e "  ${VERDE}✔ Switch L2${NC}    NS-RH (br-rh)"
+  echo -e "  ${VERDE}✔ Uplink${NC}       v-gw-rh (br0) ↔ v-rh-gw (NS-RH)"
+  echo -e "  ${VERDE}✔ PC1-RH${NC}       10.0.0.21/24"
+  echo -e "  ${VERDE}✔ PC2-RH${NC}       10.0.0.22/24"
+  echo -e "  ${VERDE}✔ PC3-RH${NC}       10.0.0.23/24"
+  echo -e "  ${VERDE}✔ NAT${NC}          10.0.0.0/24 → INTERNET (via CORE-GW)"
+  echo -e "  ${VERDE}✔ L2${NC}           PC1↔PC2↔PC3 (mismo bridge)"
+  echo -e "  ${VERDE}✔ L3${NC}           PCs → CORE-GW → Internet"
+  echo -e ""
+  echo -e "╔══════════════════════════════════════════╗"
+  echo -e "║       PRÓXIMO — LAB 003: DEPT. INFRA     ║"
+  echo -e "╚══════════════════════════════════════════╝"
+  echo -e ""
+  echo -e "  Objetivo: Servicios de infraestructura base"
+  echo -e ""
+  echo -e "  Por crear:"
+  echo -e "  ${GRIS}  ░ Contenedor   NS-INFRA${NC}"
+  echo -e "  ${GRIS}  ░ Bridge       br-inf${NC}"
+  echo -e "  ${GRIS}  ░ SRV-DNS      10.0.0.2  (BIND9)${NC}"
+  echo -e "  ${GRIS}  ░ SRV-DHCP     10.0.0.3  (ISC DHCP)${NC}"
+  echo -e ""
+  echo -e "  Validaciones esperadas:"
+  echo -e "  ${GRIS}  ░ Resolución DNS interna${NC}"
+  echo -e "  ${GRIS}  ░ DHCP asignando IPs a las PCs${NC}"
+  echo -e ""
 }
 
 ########################################
