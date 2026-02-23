@@ -1,4 +1,4 @@
-# /Labs/Golden-Base/Dockerfile.ldap
+# Dockerfile.ldap
 # 1. Usamos tu imagen base ya construida (asegúrate de haberla creado como 'golden-base')
 FROM golden-base
 
