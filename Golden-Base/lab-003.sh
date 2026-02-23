@@ -330,7 +330,6 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   echo "==[ LAB 003 — SERVIDOR LDAP | ARQUITECTURA LINUX ]=="
 
   container_exists "$CORE_GW" || err "CORE-GW no existe. Ejecuta lab-001.sh primero."
-  container_exists "$NS_SRV"  || err "NS-SRV no existe. Ejecuta los pasos previos primero."
 
   build_image_ldap
   create_ns_srv
