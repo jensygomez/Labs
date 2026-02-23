@@ -134,9 +134,9 @@ dibujar_topologia() {
     local SV_DNS_; SV_DNS_=$(c "SRV-DNS"  "DNS  .2 ")  # 8
     local SV_DHCP; SV_DHCP=$(c "SRV-DHCP" "DHCP .3 ")  # 8
     local PC1_SYS; PC1_SYS=$(c "PC1-SYS"  "PC1   31")  # 8
-    local PC__LDP; PC--LDP=$(p "PC1-RH" "10.0.0.11" "LDAP  11")
-    local PC__GW_; PC--GW_=$(p "PC1-RH" "10.0.0.1" "PC1 --> GW")
-    local PC__WAN; PC--WAN=$(p "PC1-RH" "8.8.8.8" "PC1  --> IN")
+    local PC__LDP; PC__LDP=$(p "PC1-RH" "10.0.0.11" "LDAP  11")
+    local PC__GW_; PC__GW_=$(p "PC1-RH" "10.0.0.1" "PC1 --> GW")
+    local PC__WAN; PC__WAN=$(p "PC1-RH" "8.8.8.8" "PC1  --> IN")
 
 
     echo -e "               ${CYAN}┌───────────────────────────────────────────────────────┐${NC}              "
