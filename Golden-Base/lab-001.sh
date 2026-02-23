@@ -39,26 +39,37 @@ container_exists() { docker ps -a --format '{{.Names}}' | grep -qx "$1"; }
 container_pid() { docker inspect -f '{{.State.Pid}}' "$1"; }
 
 ########################################
-# FASE 0 — CONSTRUCCIÓN CON DOCKERFILE
+# FASE 0 — CONSTRUCCIÓN INTELIGENTE
 ########################################
 build_image_net() {
   log "FASE 0 — Verificando imagen $IMG_NET"
 
   if image_exists "$IMG_NET"; then
-    ok "Imagen $IMG_NET ya existe. Saltando build."
+    ok "Imagen $IMG_NET ya existe."
     return
   fi
 
-  # 1. Cambiamos la validación para que busque un nivel arriba (../)
-  if [ ! -f ../Dockerfile ]; then
-    err "No se encuentra el archivo 'Dockerfile' en ../ (Directorio raíz)"
+  # 1. Detectamos la ubicación real del script
+  local SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  
+  # 2. Buscamos el Dockerfile en el directorio del script o uno arriba
+  local DOCKERFILE_PATH=""
+  if [ -f "$SCRIPT_DIR/Dockerfile" ]; then
+      DOCKERFILE_PATH="$SCRIPT_DIR/Dockerfile"
+  elif [ -f "$SCRIPT_DIR/../Dockerfile" ]; then
+      DOCKERFILE_PATH="$SCRIPT_DIR/../Dockerfile"
   fi
 
-  log "Construyendo imagen $IMG_NET desde ../Dockerfile..."
+  # 3. Validamos si lo encontramos
+  if [ -z "$DOCKERFILE_PATH" ]; then
+    err "No se encontró el Dockerfile ni en $SCRIPT_DIR ni en el nivel superior."
+  fi
+
+  log "Dockerfile encontrado en: $DOCKERFILE_PATH"
   
-  # 2. Le indicamos a docker build que use el archivo de la carpeta superior
-  # pero que use el contexto actual
-  docker build -t "$IMG_NET" -f ../Dockerfile ..
+  # 4. Construimos usando el directorio del Dockerfile como contexto
+  local CONTEXT_DIR="$(dirname "$DOCKERFILE_PATH")"
+  docker build -t "$IMG_NET" -f "$DOCKERFILE_PATH" "$CONTEXT_DIR"
   
   ok "Imagen base creada correctamente"
 }
