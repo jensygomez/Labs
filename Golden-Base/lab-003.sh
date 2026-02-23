@@ -287,34 +287,7 @@ EOF"
   ok "Usuarios juan y maria creados"
 }
 
-########################################
-# VALIDACIÓN
-########################################
-validate() {
-  local PASS=0
-  local FAIL=0
 
-  check() {
-    local DESC="$1"
-    local CMD="$2"
-    if eval "$CMD" &>/dev/null; then
-      echo -e "  ${VERDE}✔${NC} $DESC"
-      PASS=$((PASS + 1))
-    else
-      echo -e "  ${ROJO}✘${NC} $DESC"
-      FAIL=$((FAIL + 1))
-    fi
-  }
-
-  check "SRV-LDAP → CORE-GW"  "docker exec $SRV_LDAP ping -c1 -W2 $GW_IP"
-  check "SRV-LDAP → Internet" "docker exec $SRV_LDAP ping -c1 -W3 8.8.8.8"
-  check "SRV-LDAP → PC1-RH"   "docker exec $SRV_LDAP ping -c1 -W2 10.0.0.21"
-  check "slapd corriendo"     "docker exec $SRV_LDAP service slapd status"
-  check "Usuario juan existe" "docker exec $SRV_LDAP slapcat | grep -q uid=juan"
-  check "Usuario maria existe" "docker exec $SRV_LDAP slapcat | grep -q uid=maria"
-
-  echo -e "  Resultado: ${VERDE}$PASS OK${NC} / ${ROJO}$FAIL FAIL${NC}"
-}
 
 ########################################
 # PRINT TOPOLOGY
@@ -336,8 +309,6 @@ print_topology() {
   echo -e "  ${VERDE}✔ Admin${NC}        cn=admin,dc=laboratorio,dc=local"
   echo -e "  ${VERDE}✔ Usuarios${NC}     juan, maria"
   echo -e ""
-  echo -e "  Validación:"
-  validate
   echo -e ""
   echo -e "╔══════════════════════════════════════════╗"
   echo -e "║     PRÓXIMO — LAB 004: CLIENTE LDAP      ║"
