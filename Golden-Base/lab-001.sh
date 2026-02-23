@@ -49,12 +49,17 @@ build_image_net() {
     return
   fi
 
-  if [ ! -f Dockerfile ]; then
-    err "No se encuentra el archivo 'Dockerfile' en el directorio actual."
+  # 1. Cambiamos la validación para que busque un nivel arriba (../)
+  if [ ! -f ../Dockerfile ]; then
+    err "No se encuentra el archivo 'Dockerfile' en ../ (Directorio raíz)"
   fi
 
-  log "Construyendo imagen $IMG_NET desde Dockerfile..."
-  docker build -t "$IMG_NET" .
+  log "Construyendo imagen $IMG_NET desde ../Dockerfile..."
+  
+  # 2. Le indicamos a docker build que use el archivo de la carpeta superior
+  # pero que use el contexto actual
+  docker build -t "$IMG_NET" -f ../Dockerfile ..
+  
   ok "Imagen base creada correctamente"
 }
 
