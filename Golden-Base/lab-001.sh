@@ -117,13 +117,25 @@ setup_veth() {
 
 setup_routing_nat() {
   log "FASE 3 — Routing y NAT"
+  
+  # 1. El GW necesita saber que su salida a Internet es por el veth hacia el Host
   docker exec "$CORE_GW" ip route replace default via 172.16.255.1
+
+  # 2. Habilitar Forwarding en el Host y DENTRO del CORE-GW
   sysctl -w net.ipv4.ip_forward=1 >/dev/null
   docker exec "$CORE_GW" sysctl -w net.ipv4.ip_forward=1 >/dev/null
 
-  iptables -t nat -A POSTROUTING -s "$GW_NET" -j MASQUERADE 2>/dev/null || true
-  iptables -A FORWARD -s "$GW_NET" -j ACCEPT 2>/dev/null || true
-  ok "Routing configurado"
+  # 3. Regla de NAT en el HOST (Para que el Host enmascare lo que viene del GW)
+  # Usamos -I (Insert) para asegurar que la regla vaya al principio
+  iptables -t nat -I POSTROUTING -s "$GW_NET" -j MASQUERADE
+  iptables -I FORWARD -s "$GW_NET" -j ACCEPT
+  iptables -I FORWARD -d "$GW_NET" -j ACCEPT
+
+  # 4. REGLA CRÍTICA: El CORE-GW también debe hacer NAT para la red de los PCs (10.0.0.0/24)
+  # Sin esto, los PCs llegan al GW pero el GW no sabe cómo "disfrazarlos" para salir al Host
+  docker exec "$CORE_GW" iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o "$VETH_GW" -j MASQUERADE
+  
+  ok "Routing y NAT configurado en Host y CORE-GW"
 }
 
 setup_bridge() {
