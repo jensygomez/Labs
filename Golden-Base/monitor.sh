@@ -134,9 +134,9 @@ dibujar_topologia() {
     local SV_DNS_; SV_DNS_=$(c "SRV-DNS"  "DNS  .2 ")  # 8
     local SV_DHCP; SV_DHCP=$(c "SRV-DHCP" "DHCP .3 ")  # 8
     local PC1_SYS; PC1_SYS=$(c "PC1-SYS"  "PC1   31")  # 8
-    local PC--LDP; PC--LDP=$(p "PC1-RH" "10.0.0.11" "LDAP  11")
-    local PC--GW_; PC--GW_=$(p "PC1-RH" "10.0.0.1" "PC1 --> GW")
-    local PC--WAN; PC--WAN=$(p "PC1-RH" "8.8.8.8" "PC1  --> IN")
+    local PC__LDP; PC--LDP=$(p "PC1-RH" "10.0.0.11" "LDAP  11")
+    local PC__GW_; PC--GW_=$(p "PC1-RH" "10.0.0.1" "PC1 --> GW")
+    local PC__WAN; PC--WAN=$(p "PC1-RH" "8.8.8.8" "PC1  --> IN")
 
 
     echo -e "               ${CYAN}┌───────────────────────────────────────────────────────┐${NC}              "
@@ -174,6 +174,10 @@ dibujar_topologia() {
     echo -e "  ┌──────┴──────┐      ┌──────┴──────┐      ┌──────┴──────┐       ┌──────┴──────┐        "
     echo -e "  │  $SV_LDAP   │      │  $PC1_RH_   │      │  $PC1_SYS   │       │  $SV_DNS_   │        "
     echo -e "  │  10.0.0.11  │      │  10.0.0.21  │      │  10.0.0.31  │       │  10.0.0.2   │        "
+    echo -e "  |             |      | $PC__GW_    |      |             |       |             |"
+    echo -e "  |             |      | $PC__WAN    |      |             |       |             | "
+    echo -e "  |             |      | $PC__LDP    |      |             |       |             | "
+    echo -e "  |             |      |             |      |             |       |             | "
     echo -e "  ├─────────────┤      ├─────────────┤      └─────────────┘       ├─────────────┤        "
     echo -e "  │  $SV__FS_   │      │  $PC2_RH_   │                            │  $SV_DHCP   │        "
     echo -e "  │  10.0.0.12  │      │  10.0.0.22  │                            │  10.0.0.3   │        "
