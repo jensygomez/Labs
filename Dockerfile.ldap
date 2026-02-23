@@ -1,6 +1,6 @@
 # Labs/Dockerfile.ldap
 # 1. Usamos tu imagen base ya construida (asegúrate de haberla creado como 'golden-base')
-FROM gubuntu-net:24.04
+FROM ubuntu-net:24.04
 
 # 2. Configuración para evitar interacción en la instalación
 ENV DEBIAN_FRONTEND=noninteractive
