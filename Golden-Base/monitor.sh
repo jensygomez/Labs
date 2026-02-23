@@ -1,19 +1,12 @@
 #!/usr/bin/env bash
 # ===================================================================================
-# LAB MONITOR — Golden Base
-# ===================================================================================
-# CÓMO PERSONALIZAR:
-#   - Agregar nodos:  añade línea a NODOS  →  "NOMBRE:IP"  (IP vacía = switch L2)
-#   - Agregar tests:  añade línea a TESTS  →  "ORIGEN:DESTINO:IP"
-#   - Cambiar intervalo: modifica INTERVALO
-#   - El código debajo de "NO MODIFICAR" no necesita tocarse nunca
+# LAB MONITOR — Golden Base (Versión Minimalista Integrada)
 # ===================================================================================
 
 # ── Intervalo de chequeo (segundos) ──────────────────────────────────────────
 INTERVALO=5
 
 # ── Nodos de la topología ─────────────────────────────────────────────────────
-# Formato: "NOMBRE_CONTENEDOR:IP"   (IP vacía = switch L2, no se hace ping)
 NODOS=(
     "CORE-GW:10.0.0.1"
     "NS-RH:"
@@ -31,9 +24,6 @@ NODOS=(
 )
 
 # ── Tests de conectividad ─────────────────────────────────────────────────────
-# Formato: "CONTENEDOR_ORIGEN:LABEL_DESTINO:IP_DESTINO"
-# El ping sale desde dentro del CONTENEDOR_ORIGEN hacia IP_DESTINO
-# Agrega, quita o modifica líneas libremente
 TESTS=(
     "CORE-GW:PC1-RH:10.0.0.21"
     "CORE-GW:PC2-RH:10.0.0.22"
@@ -42,7 +32,7 @@ TESTS=(
     "PC1-RH:PC2-RH:10.0.0.22"
     "PC1-RH:PC3-RH:10.0.0.23"
     "PC1-RH:Internet:8.8.8.8"
-    "PC1-RH:SRV-LDAP:10.0.0.11"     # Teste de ping entre PC1-RH -->  SRV-LDAP
+    "PC1-RH:SRV-LDAP:10.0.0.11"
 )
 
 # ===================================================================================
@@ -70,32 +60,24 @@ ping_ok() {
 
 capturar_estado() {
     local STATE=""
-
-    # Estado de cada nodo
     for nodo in "${NODOS[@]}"; do
         local NAME="${nodo%%:*}"
         contenedor_activo "$NAME" && STATE+="$NAME:up " || STATE+="$NAME:down "
     done
-
-    # Resultado de cada test
     for test in "${TESTS[@]}"; do
         local ORIGEN="${test%%:*}"
         local REST="${test#*:}"
         local LABEL="${REST%%:*}"
         local IP="${REST##*:}"
         if contenedor_activo "$ORIGEN"; then
-            ping_ok "$ORIGEN" "$IP" \
-                && STATE+="$ORIGEN>$LABEL:ok " \
-                || STATE+="$ORIGEN>$LABEL:fail "
+            ping_ok "$ORIGEN" "$IP" && STATE+="$ORIGEN>$LABEL:ok " || STATE+="$ORIGEN>$LABEL:fail "
         else
             STATE+="$ORIGEN>$LABEL:skip "
         fi
     done
-
     echo "$STATE"
 }
 
-# Colorea label según si el contenedor está activo
 c() {
     local NAME="$1"
     local LABEL="$2"
@@ -105,12 +87,12 @@ c() {
         printf "${ROJO}%s${NC}" "$LABEL"
     fi
 }
-# Colorea según si el PING es exitoso
+
 p() {
     local ORIGEN="$1"
     local DESTINO_IP="$2"
     local LABEL="$3"
-    if ping_ok "$ORIGEN" "$DESTINO_IP"; then
+    if contenedor_activo "$ORIGEN" && ping_ok "$ORIGEN" "$DESTINO_IP"; then
         printf "${VERDE}%s${NC}" "$LABEL"
     else
         printf "${ROJO}%s${NC}" "$LABEL"
@@ -118,141 +100,83 @@ p() {
 }
 
 dibujar_topologia() {
-    # Todos los labels tienen exactamente 8 caracteres visibles
-    # Así puedes dibujar el ASCII sabiendo que $VAR = 8 chars siempre
-    # Variable = 7 chars, Label = 8 chars visibles en terminal
-    local CORE_GW; CORE_GW=$(c "CORE-GW"  "CORE-GW ")  # 8
-    local NS__RH_; NS__RH_=$(c "NS-RH"    "NS-RH   ")  # 8
-    local NS_SRV_; NS_SRV_=$(c "NS-SRV"   "NS-SRV  ")  # 8
-    local NS_INF_; NS_INF_=$(c "NS-INFRA" "NS-INFRA")  # 8
-    local NS_SYS_; NS_SYS_=$(c "NS-SYS"   "NS-SYS  ")  # 8
-    local PC1_RH_; PC1_RH_=$(c "PC1-RH"   "PC1 .21 ")  # 8
-    local PC2_RH_; PC2_RH_=$(c "PC2-RH"   "PC2 .22 ")  # 8
-    local PC3_RH_; PC3_RH_=$(c "PC3-RH"   "PC3 .23 ")  # 8
-    local SV_LDAP; SV_LDAP=$(c "SRV-LDAP" "LDAP .11")  # 8
-    local SV__FS_; SV__FS_=$(c "SRV-FS"   "FS   .12")  # 8
-    local SV_DNS_; SV_DNS_=$(c "SRV-DNS"  "DNS  .2 ")  # 8
-    local SV_DHCP; SV_DHCP=$(c "SRV-DHCP" "DHCP .3 ")  # 8
-    local PC1_SYS; PC1_SYS=$(c "PC1-SYS"  "PC1   31")  # 8
-    local PC__LDP; PC__LDP=$(p "PC1-RH" "10.0.0.11" "LDAP  11")
-    local PC__GW_; PC__GW_=$(p "PC1-RH" "10.0.0.1" "PC1 --> GW")
-    local PC__WAN; PC__WAN=$(p "PC1-RH" "8.8.8.8" "PC1  --> IN")
+    local CORE_GW; CORE_GW=$(c "CORE-GW"  "CORE-GW ")
+    local NS__RH_; NS__RH_=$(c "NS-RH"    "NS-RH   ")
+    local NS_SRV_; NS_SRV_=$(c "NS-SRV"   "NS-SRV  ")
+    local NS_INF_; NS_INF_=$(c "NS-INFRA" "NS-INFRA")
+    local NS_SYS_; NS_SYS_=$(c "NS-SYS"   "NS-SYS  ")
+    local PC1_RH_; PC1_RH_=$(c "PC1-RH"   "PC1 .21 ")
+    local PC2_RH_; PC2_RH_=$(c "PC2-RH"   "PC2 .22 ")
+    local PC3_RH_; PC3_RH_=$(c "PC3-RH"   "PC3 .23 ")
+    local SV_LDAP; SV_LDAP=$(c "SRV-LDAP" "LDAP .11")
+    local SV__FS_; SV__FS_=$(c "SRV-FS"   "FS   .12")
+    local SV_DNS_; SV_DNS_=$(c "SRV-DNS"  "DNS  .2 ")
+    local SV_DHCP; SV_DHCP=$(c "SRV-DHCP" "DHCP .3 ")
+    local PC1_SYS; PC1_SYS=$(c "PC1-SYS"  "PC1   31")
 
+    # Variables de Test (Guiones bajos para evitar errores de Bash)
+    local PC_LDP; PC_LDP=$(p "PC1-RH" "10.0.0.11" "LDAP  11")
+    local PC_GW_; PC_GW_=$(p "PC1-RH" "10.0.0.1"  "GW-OK   ")
+    local PC_WAN; PC_WAN=$(p "PC1-RH" "8.8.8.8"   "INTERNET")
 
-    echo -e "               ${CYAN}┌───────────────────────────────────────────────────────┐${NC}              "
-    echo -e "               ${CYAN}│                      INTERNET                         │${NC}              "
-    echo -e "               ${CYAN}│                      (8.8.8.8)                        │${NC}              "
-    echo -e "               ${CYAN}└──────────────────────────┬────────────────────────────┘${NC}              "
-    echo -e "                                          │                                                 "  
-    echo -e "                     ┌────────────────────┴─────────────────────┐                           "
-    echo -e "                     │             HOST (tu PC/VM)              │                           "
-    echo -e "                     │       172.16.255.1/30 (v-wan-gw)         │                           "
-    echo -e "                     └────────────────────┬─────────────────────┘                           "
-    echo -e "                                          │                                                 "
-    echo -e "                                          │ veth pair                                       "
-    echo -e "                                          │                                                 "
-    echo -e "               ┌──────────────────────────┴────────────────────────────┐                     "
-    echo -e "               │                        $CORE_GW                       │                     "
-    echo -e "               │            ┌─────────────────────────────┐            │                     "
-    echo -e "               │            │  br0:      0.0.0.1/24       │            │                     "
-    echo -e "               │            │  v-gw-wan: 172.16.255.2/30  │            │                     "
-    echo -e "               │            └─────────────────────────────┘            │                     "
-    echo -e "               └──────────────────────────┬────────────────────────────┘                     "
-    echo -e "                                          │                                                 "
-    echo -e "          ┌────────────────────┌──────────┘─────────┌────────────────────┐               "
-    echo -e "          │                    │                    │                    │               "
-    echo -e " ┌────────┴────────┐  ┌────────┴────────┐  ┌────────┴────────┐  ┌────────┴────────┐      "
-    echo -e " │     $NS_SRV_    │  │     $NS__RH_    │  │     $NS_SYS_    │  │    $NS_INF_     │      "
-    echo -e " │  (contenedor)   │  │   (contenedor)  │  │   (contenedor)  │  │  (contenedor)   │      "
-    echo -e " │                 │  │                 │  │                 │  │                 │      "
-    echo -e " │  ┌──────────┐   │  │  ┌──────────┐   │  │  ┌──────────┐   │  │  ┌──────────┐   │      "
-    echo -e " │  │ br-srv   │   │  │  │  br-rh   │   │  │  │  br-sys  │   │  │  |  br-inf  │   │      "
-    echo -e " │  │(switch L2│   │  │  │  (L2)    │   │  │  │   (L2)   │   │  │  |   (L2)   │   │      "
-    echo -e " │  └────┬─────┘   │  │  └────┬─────┘   │  │  └────┬─────┘   │  |  └─────┬────┘   │      "
-    echo -e " └───────┼─────────┘  └───────┼─────────┘  └───────┼─────────┘  └────────┼────────┘      "
-    echo -e "         │                    │                    │                     │              "
-    echo -e "  ┌──────┴──────┐      ┌──────┴──────┐      ┌──────┴──────┐       ┌──────┴──────┐        "
-    echo -e "  │  $SV_LDAP   │      │  $PC1_RH_   │      │  $PC1_SYS   │       │  $SV_DNS_   │        "
-    echo -e "  │  10.0.0.11  │      │  10.0.0.21  │      │  10.0.0.31  │       │  10.0.0.2   │        "
-    echo -e "  |             |      | $PC__GW_    |      |             |       |             |"
-    echo -e "  |             |      | $PC__WAN    |      |             |       |             | "
-    echo -e "  |             |      | $PC__LDP    |      |             |       |             | "
-    echo -e "  |             |      |             |      |             |       |             | "
-    echo -e "  ├─────────────┤      ├─────────────┤      └─────────────┘       ├─────────────┤        "
-    echo -e "  │  $SV__FS_   │      │  $PC2_RH_   │                            │  $SV_DHCP   │        "
-    echo -e "  │  10.0.0.12  │      │  10.0.0.22  │                            │  10.0.0.3   │        "
-    echo -e "  └─────────────┘      ├─────────────┤                            └─────────────┘        "
-    echo -e "                       │  $PC3_RH_   │                                                      "
-    echo -e "                       │  10.0.0.23  │                                                      "
-    echo -e "                       └─────────────┘                                                      "
-
-
-}
-
-dibujar_nodos() {
-    echo -e "  ${CYAN}$(printf '%-14s' 'CONTENEDOR')  $(printf '%-15s' 'IP')  ESTADO${NC}"
-    echo -e "  ${GRIS}──────────────────────────────────────────────────${NC}"
-    for nodo in "${NODOS[@]}"; do
-        local NAME="${nodo%%:*}"
-        local IP="${nodo##*:}"
-        if contenedor_activo "$NAME"; then
-            local ICONO="${VERDE}●${NC}"
-            local NOMBRE="${VERDE}$(printf '%-14s' "$NAME")${NC}"
-            local IP_STR="${GRIS}$(printf '%-15s' "${IP:--}")${NC}"
-            local ESTADO="${IP:+${GRIS}activo${NC}}"
-            [ -z "$IP" ] && ESTADO="${GRIS}switch L2${NC}"
-        else
-            local ICONO="${ROJO}○${NC}"
-            local NOMBRE="${GRIS}$(printf '%-14s' "$NAME")${NC}"
-            local IP_STR="${GRIS}$(printf '%-15s' '-')${NC}"
-            local ESTADO="${GRIS}inactivo${NC}"
-        fi
-        echo -e "  $ICONO  $NOMBRE  $IP_STR  $ESTADO"
-    done
-}
-
-dibujar_tests() {
-    echo -e "  ${CYAN}$(printf '%-20s' 'ORIGEN → DESTINO')  RESULTADO${NC}"
-    echo -e "  ${GRIS}──────────────────────────────────────────────────${NC}"
-    for test in "${TESTS[@]}"; do
-        local ORIGEN="${test%%:*}"
-        local REST="${test#*:}"
-        local LABEL="${REST%%:*}"
-        local IP="${REST##*:}"
-        local RUTA="$(printf '%-20s' "$ORIGEN → $LABEL")"
-        if ! contenedor_activo "$ORIGEN"; then
-            echo -e "  ${GRIS}$RUTA  contenedor inactivo${NC}"
-        elif ping_ok "$ORIGEN" "$IP"; then
-            echo -e "  ${VERDE}$RUTA  ping ✔  ($IP)${NC}"
-        else
-            echo -e "  ${ROJO}$RUTA  ping ✘  ($IP)${NC}"
-        fi
-    done
+    echo -e "               ${CYAN}┌───────────────────────────────────────────────────────┐${NC}"
+    echo -e "               ${CYAN}│                      INTERNET                         │${NC}"
+    echo -e "               ${CYAN}│                      (8.8.8.8)                        │${NC}"
+    echo -e "               ${CYAN}└──────────────────────────┬────────────────────────────┘${NC}"
+    echo -e "                                          │"  
+    echo -e "                     ┌────────────────────┴─────────────────────┐"
+    echo -e "                     │             HOST (tu PC/VM)              │"
+    echo -e "                     │       172.16.255.1/30 (v-wan-gw)         │"
+    echo -e "                     └────────────────────┬─────────────────────┘"
+    echo -e "                                          │"
+    echo -e "                                          │ veth pair"
+    echo -e "                                          │"
+    echo -e "               ┌──────────────────────────┴────────────────────────────┐"
+    echo -e "               │                        $CORE_GW                       │"
+    echo -e "               │            ┌─────────────────────────────┐            │"
+    echo -e "               │            │  br0:      0.0.0.1/24       │            │"
+    echo -e "               │            │  v-gw-wan: 172.16.255.2/30  │            │"
+    echo -e "               │            └─────────────────────────────┘            │"
+    echo -e "               └──────────────────────────┬────────────────────────────┘"
+    echo -e "                                          │"
+    echo -e "          ┌────────────────────┌──────────┘─────────┌────────────────────┐"
+    echo -e "          │                    │                    │                    │"
+    echo -e " ┌────────┴────────┐  ┌────────┴────────┐  ┌────────┴────────┐  ┌────────┴────────┐"
+    echo -e " │     $NS_SRV_    │  │     $NS__RH_    │  │     $NS_SYS_    │  │    $NS_INF_     │"
+    echo -e " │  (contenedor)   │  │   (contenedor)  │  │   (contenedor)  │  │  (contenedor)   │"
+    echo -e " │                 │  │                 │  │                 │  │                 │"
+    echo -e " │  ┌──────────┐   │  │  ┌──────────┐   │  │  ┌──────────┐   │  │  ┌──────────┐   │"
+    echo -e " │  │ br-srv   │   │  │  │  br-rh   │   │  │  │  br-sys  │   │  │  |  br-inf  │   │"
+    echo -e " │  │(switch L2│   │  │  │  (L2)    │   │  │  │   (L2)   │   │  │  |   (L2)   │   │"
+    echo -e " │  └────┬─────┘   │  │  └────┬─────┘   │  │  └────┬─────┘   │  |  └─────┬────┘   │"
+    echo -e " └───────┼─────────┘  └───────┼─────────┘  └───────┼─────────┘  └────────┼────────┘"
+    echo -e "         │                    │                    │                     │"
+    echo -e "  ┌──────┴──────┐      ┌──────┴──────┐      ┌──────┴──────┐       ┌──────┴──────┐"
+    echo -e "  │  $SV_LDAP   │      │  $PC1_RH_   │      │  $PC1_SYS   │       │  $SV_DNS_   │"
+    echo -e "  │  10.0.0.11  │      │  10.0.0.21  │      │  10.0.0.31  │       │  10.0.0.2   │"
+    echo -e "  |             |      | $PC_GW_    |      |             |       |             |"
+    echo -e "  |             |      | $PC_WAN    |      |             |       |             | "
+    echo -e "  |             |      | $PC_LDP    |      |             |       |             | "
+    echo -e "  ├─────────────┤      ├─────────────┤      └─────────────┘       ├─────────────┤"
+    echo -e "  │  $SV__FS_   │      │  $PC2_RH_   │                            │  $SV_DHCP   │"
+    echo -e "  │  10.0.0.12  │      │  10.0.0.22  │                            │  10.0.0.3   │"
+    echo -e "  └─────────────┘      ├─────────────┤                            └─────────────┘"
+    echo -e "                       │  $PC3_RH_   │"
+    echo -e "                       │  10.0.0.23  │"
+    echo -e "                       └─────────────┘"
 }
 
 dibujar() {
-    local TIMESTAMP
-    TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
-
+    local TIMESTAMP=$(date '+%H:%M:%S')
     clear
     echo -e "${CYAN}╔══════════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║         LAB MONITOR — Golden Base                ║${NC}"
-    echo -e "${CYAN}║         $TIMESTAMP                      ║${NC}"
+    echo -e "${CYAN}║         LAB MONITOR — DASHBOARD INTEGRADO        ║${NC}"
     echo -e "${CYAN}╚══════════════════════════════════════════════════╝${NC}"
-
-    echo -e "\n${BOLD}  TOPOLOGÍA${NC}"
+    echo -e "\n${BOLD}  TOPOLOGÍA EN TIEMPO REAL${NC}"
     echo -e "  ${GRIS}──────────────────────────────────────────────────${NC}"
     dibujar_topologia
-    echo -e "  ${VERDE}● activo${NC}   ${ROJO}● inactivo${NC}"
-
-    echo -e "\n${BOLD}  NODOS${NC}"
-    dibujar_nodos
-
-    echo -e "\n${BOLD}  TESTS DE CONECTIVIDAD${NC}"
-    echo -e "  ${GRIS}──────────────────────────────────────────────────${NC}"
-    dibujar_tests
-
-    echo -e "\n  ${GRIS}Actualizado: $TIMESTAMP — refresca solo si hay cambios — Ctrl+C para salir${NC}"
+    echo -e "\n  ${VERDE}● activo${NC}  ${ROJO}● inactivo/fail${NC}  |  Actualizado: $TIMESTAMP"
+    echo -e "  ${GRIS}Refresco automático solo en cambios de estado. Ctrl+C para salir.${NC}"
 }
 
 # ── Arranque ──────────────────────────────────────────────────────────────────
