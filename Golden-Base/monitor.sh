@@ -42,6 +42,7 @@ TESTS=(
     "PC1-RH:PC2-RH:10.0.0.22"
     "PC1-RH:PC3-RH:10.0.0.23"
     "PC1-RH:Internet:8.8.8.8"
+    "PC1-RH:SRV-LDAP:10.0.0.11"     # Teste de ping entre PC1-RH -->  SRV-LDAP
 )
 
 # ===================================================================================
@@ -104,6 +105,17 @@ c() {
         printf "${ROJO}%s${NC}" "$LABEL"
     fi
 }
+# Colorea según si el PING es exitoso
+p() {
+    local ORIGEN="$1"
+    local DESTINO_IP="$2"
+    local LABEL="$3"
+    if ping_ok "$ORIGEN" "$DESTINO_IP"; then
+        printf "${VERDE}%s${NC}" "$LABEL"
+    else
+        printf "${ROJO}%s${NC}" "$LABEL"
+    fi
+}
 
 dibujar_topologia() {
     # Todos los labels tienen exactamente 8 caracteres visibles
@@ -121,7 +133,9 @@ dibujar_topologia() {
     local SV__FS_; SV__FS_=$(c "SRV-FS"   "FS   .12")  # 8
     local SV_DNS_; SV_DNS_=$(c "SRV-DNS"  "DNS  .2 ")  # 8
     local SV_DHCP; SV_DHCP=$(c "SRV-DHCP" "DHCP .3 ")  # 8
-    local PC1_SYS; PC1_SYS=$(c "PC1-SYS"  "PC1 .31 ")  # 8
+    local PC1_SYS; PC1_SYS=$(c "PC1-SYS"  "PC1   31")  # 8
+    local PC--LDP; PC--LDP=$(p "PC1-RH" "10.0.0.11" "LDAP  11")
+
 
     echo -e "               ${CYAN}┌───────────────────────────────────────────────────────┐${NC}              "
     echo -e "               ${CYAN}│                      INTERNET                         │${NC}              "
