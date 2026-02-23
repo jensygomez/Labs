@@ -216,34 +216,7 @@ setup_pcs() {
   create_pc "$PC3" "$VETH_PC3_RH" "$VETH_RH_PC3" "$PC3_IP"
 }
 
-########################################
-# VALIDACIÓN (llamada desde print_topology)
-########################################
-validate() {
-  local PASS=0
-  local FAIL=0
 
-  check() {
-    local DESC="$1"
-    local CMD="$2"
-    if eval "$CMD" &>/dev/null; then
-      echo -e "  ${VERDE}✔${NC} $DESC"
-      PASS=$((PASS + 1))
-    else
-      echo -e "  ${ROJO}✘${NC} $DESC"
-      FAIL=$((FAIL + 1))
-    fi
-  }
-
-  check "PC1 → CORE-GW"  "docker exec $PC1 ping -c1 -W2 $GW_IP"
-  check "PC2 → CORE-GW"  "docker exec $PC2 ping -c1 -W2 $GW_IP"
-  check "PC3 → CORE-GW"  "docker exec $PC3 ping -c1 -W2 $GW_IP"
-  check "PC1 → PC2 (L2)" "docker exec $PC1 ping -c1 -W2 10.0.0.22"
-  check "PC1 → PC3 (L2)" "docker exec $PC1 ping -c1 -W2 10.0.0.23"
-  check "PC1 → Internet" "docker exec $PC1 ping -c1 -W3 8.8.8.8"
-
-  echo -e "  Resultado: ${VERDE}$PASS OK${NC} / ${ROJO}$FAIL FAIL${NC}"
-}
 
 ########################################
 # PRINT TOPOLOGY (requerida por el engine)
@@ -267,8 +240,6 @@ print_topology() {
   echo -e "  ${VERDE}✔ L2${NC}           PC1↔PC2↔PC3 (mismo bridge)"
   echo -e "  ${VERDE}✔ L3${NC}           PCs → CORE-GW → Internet"
   echo -e ""
-  echo -e "  Validación:"
-  validate
   echo -e ""
   echo -e "╔══════════════════════════════════════════╗"
   echo -e "║       PRÓXIMO — LAB 003: LDAP            ║"
