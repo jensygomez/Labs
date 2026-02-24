@@ -61,9 +61,11 @@ ejecutar_hasta() {
 
             chmod +x "$LAB"
 
-            # Ejecutar lab en modo silencioso
-            if ! bash "$LAB" > /dev/null; then
+            # =====================================================
+            if ! bash "$LAB" > /tmp/lab_last_run.log 2>&1; then
                 echo -e "${RED}✗ Error en lab-$(printf '%03d' "$i").sh — abortando.${NC}"
+                echo -e "${YELLOW}Últimas 5 líneas del error:${NC}"
+                tail -n 5 /tmp/lab_last_run.log
                 return 1
             fi
 
