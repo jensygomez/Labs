@@ -127,7 +127,7 @@ setup_users() {
   while true; do
     # 1. Intentamos contactar al servidor
     # El '|| true' es vital para que set -e no mate el subshell de docker
-    docker exec "$SRV_LDAP" ldapsearch -x -H ldap://localhost -b "$LDAP_DOMAIN" >/dev/null 2>&1
+    docker exec "$SRV_LDAP" ldapsearch -x -H ldap://localhost -b "dc=laboratorio,dc=local" >/dev/null 2>&1
     STATUS=$?
 
     if [ $STATUS -eq 0 ]; then
