@@ -2,8 +2,7 @@
 # ===================================================================================
 # LABORATORIO LINUX PARA CERTIFICACIÓN LFCS/LFCE
 # Topología: Infraestructura completa con contenedores Docker
-# Versión: 1
-# Laboratorio: 003 - Servidor LDAP (NS-SRV + SRV-LDAP)
+# Versión: 2.0 (Optimizado con Imagen Osixia LDAP)
 # ===================================================================================
 
 set -Eeuo pipefail
@@ -18,144 +17,79 @@ NC='\033[0m'
 # VARIABLES GLOBALES
 ########################################
 IMG_NET="ubuntu-net:24.04"
-IMG_LDAP="ubuntu-ldap:24.04"
+# Cambiamos a la imagen especializada
+IMG_LDAP_OFFICIAL="osixia/openldap:1.5.0"
 
 # Contenedores
 CORE_GW="CORE-GW"
 NS_SRV="NS-SRV"
 SRV_LDAP="SRV-LDAP"
 
-# IPs
-GW_IP="10.0.0.1"
-LDAP_IP="10.0.0.11/24"
+# Parámetros LDAP
 LDAP_DOMAIN="laboratorio.local"
 LDAP_ORG="Laboratorio"
 LDAP_ADMIN_PASS="admin123"
+LDAP_IP="10.0.0.11/24"
+GW_IP="10.0.0.1"
 
-# Interfaces — uplink CORE-GW ↔ NS-SRV
+# Interfaces
 VETH_GW_SRV="v-gw-srv"
 VETH_SRV_GW="v-srv-gw"
-
-# Interfaces — NS-SRV ↔ SRV-LDAP
 VETH_LDAP_SRV="v-ldap-srv"
 VETH_SRV_LDAP="v-srv-ldap"
 
 ########################################
 # UTILIDADES
 ########################################
-log() { :; }
 ok()  { echo -e "${VERDE}✔ $*${NC}"; }
 err() { echo -e "${ROJO}❌ $*${NC}" >&2; exit 1; }
 
-container_exists() {
-  docker ps -a --format '{{.Names}}' | grep -qx "$1"
-}
-
-container_pid() {
-  docker inspect -f '{{.State.Pid}}' "$1"
-}
-
-veth_exists_in_container() {
-  docker exec "$1" ip link show "$2" &>/dev/null
-}
-
-image_exists() {
-  docker images --format '{{.Repository}}:{{.Tag}}' | grep -qx "$1"
-}
+container_exists() { docker ps -a --format '{{.Names}}' | grep -qx "$1"; }
+container_pid()    { docker inspect -f '{{.State.Pid}}' "$1"; }
+veth_exists_in_container() { docker exec "$1" ip link show "$2" &>/dev/null; }
 
 ########################################
-# FASE 0 — IMAGEN LDAP
-########################################
-build_image_ldap() {
-  if image_exists "$IMG_LDAP"; then
-    ok "Imagen $IMG_LDAP ya existe"
-    return
-  fi
-
-  local SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  local DOCKERFILE_PATH=""
-
-  if [ -f "$SCRIPT_DIR/Dockerfile.ldap" ]; then
-    DOCKERFILE_PATH="$SCRIPT_DIR/Dockerfile.ldap"
-  elif [ -f "$SCRIPT_DIR/../Dockerfile.ldap" ]; then
-    DOCKERFILE_PATH="$SCRIPT_DIR/../Dockerfile.ldap"
-  fi
-
-  [ -z "$DOCKERFILE_PATH" ] && err "No se encontró Dockerfile.ldap"
-
-  local CONTEXT_DIR="$(dirname "$DOCKERFILE_PATH")"
-  docker build -t "$IMG_LDAP" -f "$DOCKERFILE_PATH" "$CONTEXT_DIR"
-  ok "Imagen $IMG_LDAP creada"
-}
-
-########################################
-# FASE 1 — CONTENEDOR NS-SRV (switch L2)
+# FASE 1 — CONTENEDOR NS-SRV (Switch L2)
 ########################################
 create_ns_srv() {
   if container_exists "$NS_SRV"; then
     ok "NS-SRV ya existe"
     return
   fi
-
-  docker run -d \
-    --name "$NS_SRV" \
-    --hostname ns-srv \
-    --cap-add NET_ADMIN \
-    --cap-add SYS_ADMIN \
-    --privileged \
-    "$IMG_NET" \
-    sleep infinity
-
+  docker run -d --name "$NS_SRV" --hostname ns-srv --cap-add NET_ADMIN --cap-add SYS_ADMIN --privileged "$IMG_NET" sleep infinity
   ok "NS-SRV creado"
 }
 
-########################################
-# FASE 2 — BRIDGE br-srv dentro de NS-SRV
-########################################
 setup_bridge_srv() {
   if veth_exists_in_container "$NS_SRV" br-srv; then
     ok "br-srv ya existe"
     return
   fi
-
   docker exec "$NS_SRV" ip link add br-srv type bridge
   docker exec "$NS_SRV" ip link set br-srv up
   ok "br-srv creado y UP"
 }
 
 ########################################
-# FASE 3 — UPLINK CORE-GW ↔ NS-SRV
+# FASE 2 — UPLINK CORE-GW ↔ NS-SRV
 ########################################
 setup_uplink() {
-  # Chequeo TOLERANTE a pipefail (set +e temporal)
   if docker exec "$CORE_GW" ip link show "$VETH_GW_SRV" &>/dev/null 2>&1; then
     ok "Uplink ya configurado"
     return
   fi
-
-  # Crear veth pair
-  ip link add "$VETH_GW_SRV" type veth peer name "$VETH_SRV_GW" || {
-    err "Fallo creando veth pair $VETH_GW_SRV"
-  }
-
-  # Mover a namespaces
+  ip link add "$VETH_GW_SRV" type veth peer name "$VETH_SRV_GW"
   ip link set "$VETH_GW_SRV" netns "$(container_pid "$CORE_GW")"
   ip link set "$VETH_SRV_GW" netns "$(container_pid "$NS_SRV")"
-
-  # CORE-GW: master br0 + UP
   docker exec "$CORE_GW" ip link set "$VETH_GW_SRV" master br0
   docker exec "$CORE_GW" ip link set "$VETH_GW_SRV" up
-
-  # NS-SRV: master br-srv + UP  
   docker exec "$NS_SRV" ip link set "$VETH_SRV_GW" master br-srv
   docker exec "$NS_SRV" ip link set "$VETH_SRV_GW" up
-
   ok "Uplink CORE-GW ↔ NS-SRV configurado"
 }
 
-
 ########################################
-# FASE 4 — CONTENEDOR SRV-LDAP
+# FASE 3 — CONTENEDOR SRV-LDAP (OSIXIA)
 ########################################
 create_srv_ldap() {
   if container_exists "$SRV_LDAP"; then
@@ -163,20 +97,22 @@ create_srv_ldap() {
     return
   fi
 
+  # La magia ocurre aquí: pasamos la config por variables de entorno
   docker run -d \
     --name "$SRV_LDAP" \
     --hostname srv-ldap \
+    --env LDAP_ORGANISATION="$LDAP_ORG" \
+    --env LDAP_DOMAIN="$LDAP_DOMAIN" \
+    --env LDAP_ADMIN_PASSWORD="$LDAP_ADMIN_PASS" \
     --cap-add NET_ADMIN \
-    --cap-add SYS_ADMIN \
     --privileged \
-    "$IMG_LDAP" \
-    sleep infinity
+    "$IMG_LDAP_OFFICIAL"
 
-  ok "SRV-LDAP creado"
+  ok "SRV-LDAP (Osixia) creado y auto-configurado"
 }
 
 ########################################
-# FASE 5 — CONECTAR SRV-LDAP a NS-SRV
+# FASE 4 — RED SRV-LDAP
 ########################################
 setup_ldap_network() {
   if veth_exists_in_container "$SRV_LDAP" "$VETH_LDAP_SRV"; then
@@ -185,7 +121,6 @@ setup_ldap_network() {
   fi
 
   ip link add "$VETH_SRV_LDAP" type veth peer name "$VETH_LDAP_SRV"
-
   ip link set "$VETH_SRV_LDAP" netns "$(container_pid "$NS_SRV")"
   ip link set "$VETH_LDAP_SRV" netns "$(container_pid "$SRV_LDAP")"
 
@@ -196,158 +131,74 @@ setup_ldap_network() {
   docker exec "$SRV_LDAP" ip addr add "$LDAP_IP" dev "$VETH_LDAP_SRV"
   docker exec "$SRV_LDAP" ip route replace default via "$GW_IP"
 
-  ok "SRV-LDAP conectado — $LDAP_IP"
+  ok "SRV-LDAP conectado a la red — $LDAP_IP"
 }
 
-echo "[DEBUG] SRV_LDAP = '$SRV_LDAP'"
-if [ -z "$SRV_LDAP" ]; then
-    echo "[ERROR] SRV_LDAP no está definida"
-    exit 1
-fi
-
-
-
 ########################################
-# FASE 6 — CONFIGURAR OPENLDAP
-########################################
-setup_ldap() {
-  local CT="SRV-LDAP"
-  local DOMAIN="laboratorio.local"
-  local ORG="Laboratorio"
-  local ADMIN_PW="admin123"
-
-  
-  echo "🧠 Configurando LDAP en ${CT}..."
-
-  docker exec -i "$CT" bash <<EOF
-    export DEBIAN_FRONTEND=noninteractive
-    apt-get update
-    apt-get install -y apt-utils slapd ldap-utils
-    
-    # Aquí puedes poner tus comandos de configuración...
-EOF
-
-  ok "LDAP instalado sin avisos de debconf"
-
-  # 1. Pre-configurar debconf para que la instalación NO sea aleatoria
-  docker exec "$CT" bash -c "
-    echo 'slapd slapd/domainName string ${DOMAIN}' | debconf-set-selections &&
-    echo 'slapd slapd/organizationName string ${ORG}' | debconf-set-selections &&
-    echo 'slapd slapd/root_password password ${ADMIN_PW}' | debconf-set-selections &&
-    echo 'slapd slapd/root_password_again password ${ADMIN_PW}' | debconf-set-selections &&
-    apt-get update && apt-get install -y slapd ldap-utils
-  "
-
-  # 2. Reconfigurar el paquete para aplicar los valores de debconf
-  docker exec "$CT" DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
-    dpkg-reconfigure slapd
-
-  ok "LDAP reconfigurado con dominio ${DOMAIN}"
-}
-
-
-########################################
-# FASE 7 — CREAR USUARIOS LDAP
+# FASE 5 — CREAR ESTRUCTURA Y USUARIOS
 ########################################
 setup_users() {
-  # Verificar si los usuarios ya existen
-  if docker exec "$SRV_LDAP" slapcat 2>/dev/null | grep -q "uid=juan"; then
-    ok "Usuarios LDAP ya existen"
+  # Esperar a que slapd esté listo (Osixia tarda unos segundos en iniciar)
+  echo "⏳ Esperando a que LDAP responda..."
+  until docker exec "$SRV_LDAP" ldapsearch -x -H ldap://localhost -b "dc=laboratorio,dc=local" >/dev/null 2>&1; do
+    sleep 2
+  done
+
+  # Verificar si ya existen los usuarios
+  if docker exec "$SRV_LDAP" ldapsearch -x -D "cn=admin,dc=laboratorio,dc=local" -w "$LDAP_ADMIN_PASS" "uid=juan" | grep -q "uid: juan"; then
+    ok "Estructura LDAP ya existe"
     return
   fi
 
-  local HASH
-  HASH=$(docker exec "$SRV_LDAP" slappasswd -s "$LDAP_ADMIN_PASS")
+  # Crear OU y Usuarios en un solo paso
+  docker exec -i "$SRV_LDAP" ldapadd -x -D "cn=admin,dc=laboratorio,dc=local" -w "$LDAP_ADMIN_PASS" <<EOF
+dn: ou=People,dc=laboratorio,dc=local
+objectClass: organizationalUnit
+ou: People
 
-  docker exec "$SRV_LDAP" bash -c "ldapadd -x -D 'cn=admin,dc=laboratorio,dc=local' -w '$LDAP_ADMIN_PASS' <<EOF
 dn: uid=juan,ou=People,dc=laboratorio,dc=local
 objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: shadowAccount
 uid: juan
-cn: Juan Perez
 sn: Perez
+cn: Juan Perez
 uidNumber: 1001
 gidNumber: 1001
 homeDirectory: /home/juan
 loginShell: /bin/bash
-userPassword: $HASH
+userPassword: password123
 
 dn: uid=maria,ou=People,dc=laboratorio,dc=local
 objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: shadowAccount
 uid: maria
-cn: Maria Garcia
 sn: Garcia
+cn: Maria Garcia
 uidNumber: 1002
 gidNumber: 1002
 homeDirectory: /home/maria
 loginShell: /bin/bash
-userPassword: $HASH
-EOF"
+userPassword: password123
+EOF
 
-  ok "Usuarios juan y maria creados"
-}
-
-
-
-########################################
-# PRINT TOPOLOGY
-########################################
-print_topology() {
-  local VERDE='\033[0;32m'
-  local GRIS='\033[0;37m'
-  local NC='\033[0m'
-
-  echo -e ""
-  echo -e "╔══════════════════════════════════════════╗"
-  echo -e "║         LAB 003 — RESUMEN FINAL          ║"
-  echo -e "╚══════════════════════════════════════════╝"
-  echo -e ""
-  echo -e "  ${VERDE}✔ Switch L2${NC}    NS-SRV (br-srv)"
-  echo -e "  ${VERDE}✔ Uplink${NC}       v-gw-srv (br0) ↔ v-srv-gw (NS-SRV)"
-  echo -e "  ${VERDE}✔ SRV-LDAP${NC}     10.0.0.11/24"
-  echo -e "  ${VERDE}✔ Dominio${NC}      $LDAP_DOMAIN"
-  echo -e "  ${VERDE}✔ Admin${NC}        cn=admin,dc=laboratorio,dc=local"
-  echo -e "  ${VERDE}✔ Usuarios${NC}     juan, maria"
-  echo -e ""
-  echo -e ""
-  echo -e "╔══════════════════════════════════════════╗"
-  echo -e "║     PRÓXIMO — LAB 004: CLIENTE LDAP      ║"
-  echo -e "╚══════════════════════════════════════════╝"
-  echo -e ""
-  echo -e "  Objetivo: Autenticación centralizada en PCs de RH"
-  echo -e ""
-  echo -e "  Por configurar:"
-  echo -e "  ${GRIS}  ░ Instalar sssd + pam en PC1-RH, PC2-RH, PC3-RH${NC}"
-  echo -e "  ${GRIS}  ░ Apuntar PCs a SRV-LDAP (10.0.0.11)${NC}"
-  echo -e "  ${GRIS}  ░ Login con usuario juan desde cualquier PC${NC}"
-  echo -e ""
+  ok "Unidad People y usuarios (juan, maria) creados"
 }
 
 ########################################
 # MAIN
 ########################################
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  echo "==[ LAB 003 — SERVIDOR LDAP | ARQUITECTURA LINUX ]=="
+echo "==[ LAB 003 — SERVIDOR LDAP (VERSIÓN OPTIMIZADA) ]=="
 
-  container_exists "$CORE_GW" || err "CORE-GW no existe. Ejecuta lab-001.sh primero."
+container_exists "$CORE_GW" || err "CORE-GW no existe. Ejecuta lab-001.sh primero."
 
-  build_image_ldap
-  create_ns_srv
-  setup_bridge_srv
-  setup_uplink
-  create_srv_ldap
-  setup_ldap_network
+create_ns_srv
+setup_bridge_srv
+setup_uplink
+create_srv_ldap
+setup_ldap_network
+setup_users
 
-  docker exec SRV-LDAP ping -c1 8.8.8.8 >/dev/null 2>&1 || \
-  err "SRV-LDAP no tiene salida a Internet"
-
-  setup_ldap
-  setup_users
-
-  echo
-  print_topology
-  sleep 5
-fi
+echo -e "\n${VERDE}¡LAB 003 COMPLETADO CON ÉXITO!${NC}"
+print_topology 2>/dev/null || ok "Topología lista."
