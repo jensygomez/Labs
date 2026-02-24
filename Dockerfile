@@ -1,4 +1,4 @@
-# Dockerfile
+# ~/Labs/Dockerfile
 # 1. Definimos la imagen base (Tu IMG_BASE)
 FROM ubuntu:24.04
 
