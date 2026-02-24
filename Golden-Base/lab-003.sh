@@ -216,7 +216,18 @@ setup_ldap() {
   local ORG="Laboratorio"
   local ADMIN_PW="admin123"
 
+  
   echo "🧠 Configurando LDAP en ${CT}..."
+
+  docker exec -i "$CT" bash <<EOF
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get install -y apt-utils slapd ldap-utils
+    
+    # Aquí puedes poner tus comandos de configuración...
+EOF
+
+  ok "LDAP instalado sin avisos de debconf"
 
   # 1. Pre-configurar debconf para que la instalación NO sea aleatoria
   docker exec "$CT" bash -c "
