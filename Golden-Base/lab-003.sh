@@ -208,136 +208,72 @@ fi
 # FASE 6 — CONFIGURAR OPENLDAP
 ########################################
 setup_ldap() {
-  
-  echo "[DEBUG][$(date +%H:%M:%S)] ===== INICIANDO SETUP LDAP ====="
-  echo "[DEBUG][$(date +%H:%M:%S)] Variable SRV_LDAP = '$SRV_LDAP'"
-  
-  # Verificar que el contenedor existe - MÉTODO CORREGIDO
-  echo "[DEBUG][$(date +%H:%M:%S)] Verificando contenedor $SRV_LDAP..."
-  
-  # Método 1: Usar docker ps con formato y grep exacto
-  if ! docker ps --format '{{.Names}}' | grep -Fx "$SRV_LDAP" > /dev/null; then
-    echo "[ERROR][$(date +%H:%M:%S)] Contenedor $SRV_LDAP no está corriendo"
-    echo "[DEBUG][$(date +%H:%M:%S)] Contenedores activos:"
-    docker ps --format "table {{.Names}}\t{{.Status}}"
+
+  echo "[INFO] Iniciando setup OpenLDAP en SRV-LDAP"
+
+  # Verificar contenedor en ejecución
+  if ! docker inspect -f '{{.State.Running}}' SRV-LDAP 2>/dev/null | grep -q true; then
+    echo "[ERROR] Contenedor SRV-LDAP no está en ejecución"
     return 1
   fi
-  
-  # O mejor aún, método 2: Usar docker inspect que es más confiable
-  if ! docker inspect -f '{{.State.Running}}' "$SRV_LDAP" 2>/dev/null | grep -q "true"; then
-    echo "[ERROR][$(date +%H:%M:%S)] Contenedor $SRV_LDAP no está corriendo"
-    docker ps --format "table {{.Names}}\t{{.Status}}"
-    return 1
-  fi
-  
-  echo "[OK][$(date +%H:%M:%S)] Contenedor $SRV_LDAP está corriendo"
-  echo "[DEBUG][$(date +%H:%M:%S)] ===== INICIANDO SETUP LDAP ====="
-  echo "[DEBUG][$(date +%H:%M:%S)] Variable SRV_LDAP = '$SRV_LDAP'"
-  
-  # Verificar que el contenedor existe
-  echo "[DEBUG][$(date +%H:%M:%S)] Verificando contenedor $SRV_LDAP..."
-  if ! docker ps | grep -q "$SRV_LDAP"; then
-    echo "[ERROR][$(date +%H:%M:%S)] Contenedor $SRV_LDAP no está corriendo"
-    echo "[DEBUG][$(date +%H:%M:%S)] Contenedores activos:"
-    docker ps --format "table {{.Names}}\t{{.Status}}"
-    return 1
-  fi
-  echo "[OK][$(date +%H:%M:%S)] Contenedor encontrado"
-  
-  # PASO 1: apt update
-  echo "[DEBUG][$(date +%H:%M:%S)] PASO 1: Ejecutando apt update..."
-  docker exec "$SRV_LDAP" apt update -qq
-  local APT_UPDATE_STATUS=$?
-  echo "[DEBUG][$(date +%H:%M:%S)] apt update completado (exit code: $APT_UPDATE_STATUS)"
-  
-  # PASO 2: instalar slapd y ldap-utils
-  echo "[DEBUG][$(date +%H:%M:%S)] PASO 2: Instalando slapd y ldap-utils..."
-  docker exec "$SRV_LDAP" apt install -y slapd ldap-utils
-  local INSTALL_STATUS=$?
-  if [ $INSTALL_STATUS -ne 0 ]; then
-    echo "[ERROR][$(date +%H:%M:%S)] Falló instalación de paquetes LDAP"
-    return 1
-  fi
-  echo "[OK][$(date +%H:%M:%S)] Paquetes instalados correctamente"
-  
-  # PASO 3: debconf-set-selections
-  echo "[DEBUG][$(date +%H:%M:%S)] PASO 3: Configurando debconf..."
-  docker exec "$SRV_LDAP" bash -c '
-    echo "[DEBUG][$(date +%H:%M:%S)] Configuración debconf desde dentro del contenedor"
-    debconf-set-selections <<EOF
+
+  # Actualizar repositorios (no aborta si hay warning)
+  docker exec SRV-LDAP apt-get update -qq || true
+
+  # Instalar paquetes LDAP (idempotente)
+  docker exec SRV-LDAP dpkg -s slapd ldap-utils >/dev/null 2>&1 || \
+    docker exec SRV-LDAP apt-get install -y slapd ldap-utils
+
+  # Preconfigurar slapd
+  docker exec SRV-LDAP bash -c <<'EOF'
+debconf-set-selections <<EOC
 slapd slapd/domain string laboratorio.local
 slapd shared/organization string Laboratorio
 slapd slapd/password1 password admin123
 slapd slapd/password2 password admin123
 slapd slapd/purge_database boolean true
+EOC
 EOF
-  '
-  local DEBCONF_STATUS=$?
-  echo "[DEBUG][$(date +%H:%M:%S)] debconf completado (exit code: $DEBCONF_STATUS)"
-  
-  # PASO 4: dpkg-reconfigure
-  echo "[DEBUG][$(date +%H:%M:%S)] PASO 4: Reconfigurando slapd..."
-  docker exec "$SRV_LDAP" DEBIAN_FRONTEND=noninteractive dpkg-reconfigure slapd
-  local RECONF_STATUS=$?
-  echo "[DEBUG][$(date +%H:%M:%S)] dpkg-reconfigure completado (exit code: $RECONF_STATUS)"
-  
-  # PASO 5: Esperar a que slapd inicie
-  echo "[DEBUG][$(date +%H:%M:%S)] PASO 5: Esperando 5 segundos para que slapd inicie..."
-  sleep 5
-  
-  # PASO 6: Verificar proceso slapd
-  echo "[DEBUG][$(date +%H:%M:%S)] PASO 6: Verificando proceso slapd..."
-  docker exec "$SRV_LDAP" ps aux | grep slapd || {
-    echo "[WARN][$(date +%H:%M:%S)] slapd no está corriendo, intentando iniciar..."
-    docker exec "$SRV_LDAP" service slapd start
+
+  # Reconfigurar slapd
+  docker exec SRV-LDAP env DEBIAN_FRONTEND=noninteractive dpkg-reconfigure slapd
+
+  # Asegurar slapd corriendo
+  if ! docker exec SRV-LDAP pgrep slapd >/dev/null; then
+    docker exec SRV-LDAP service slapd start
     sleep 3
-  }
-  
-  # PASO 7: Probar conectividad LDAP
-  echo "[DEBUG][$(date +%H:%M:%S)] PASO 7: Probando conectividad LDAP..."
-  local RETRY=0
-  local MAX_RETRY=10
-  until docker exec "$SRV_LDAP" ldapsearch -x -H ldap://localhost -b "" -s base 2>/dev/null; do
-    RETRY=$((RETRY + 1))
-    if [ $RETRY -eq $MAX_RETRY ]; then
-      echo "[ERROR][$(date +%H:%M:%S)] LDAP no responde después de $MAX_RETRY intentos"
-      echo "[DEBUG][$(date +%H:%M:%S)] Logs de slapd:"
-      docker exec "$SRV_LDAP" tail -20 /var/log/syslog 2>/dev/null || echo "No se pueden leer logs"
-      return 1
+  fi
+
+  # Esperar LDAP disponible
+  for i in {1..10}; do
+    if docker exec SRV-LDAP ldapsearch -x -H ldap://localhost -b "" -s base >/dev/null 2>&1; then
+      break
     fi
-    echo "[DEBUG][$(date +%H:%M:%S)] Esperando respuesta LDAP (intento $RETRY/$MAX_RETRY)..."
     sleep 2
   done
-  echo "[OK][$(date +%H:%M:%S)] LDAP responde correctamente"
-  
-  # PASO 8: Crear OU usuarios
-  echo "[DEBUG][$(date +%H:%M:%S)] PASO 8: Creando OU usuarios..."
-  echo "[DEBUG][$(date +%H:%M:%S)] Comando: ldapadd -D cn=admin,dc=laboratorio,dc=local"
-  
-  local LDAP_OUTPUT=$(docker exec "$SRV_LDAP" ldapadd -x \
-    -D "cn=admin,dc=laboratorio,dc=local" \
-    -w admin123 \
-    -H ldap://localhost \
-    <<'EOF' 2>&1
+
+  # Crear OU usuarios (idempotente)
+  if docker exec SRV-LDAP ldapsearch -x \
+      -D "cn=admin,dc=laboratorio,dc=local" \
+      -w admin123 \
+      -b "ou=usuarios,dc=laboratorio,dc=local" \
+      -H ldap://localhost >/dev/null 2>&1; then
+
+    echo "[OK] OU usuarios ya existe"
+
+  else
+
+    docker exec SRV-LDAP ldapadd -x \
+      -D "cn=admin,dc=laboratorio,dc=local" \
+      -w admin123 \
+      -H ldap://localhost <<'EOF'
 dn: ou=usuarios,dc=laboratorio,dc=local
 objectClass: organizationalUnit
 ou: usuarios
 EOF
-  )
-  local LDAPADD_STATUS=$?
-  echo "[DEBUG][$(date +%H:%M:%S)] ldapadd exit code: $LDAPADD_STATUS"
-  echo "[DEBUG][$(date +%H:%M:%S)] ldapadd output: $LDAPADD_OUTPUT"
-  
-  # PASO 9: Verificar creación
-  echo "[DEBUG][$(date +%H:%M:%S)] PASO 9: Verificando creación de OU..."
-  docker exec "$SRV_LDAP" ldapsearch -x \
-    -D "cn=admin,dc=laboratorio,dc=local" \
-    -w admin123 \
-    -b "ou=usuarios,dc=laboratorio,dc=local" \
-    -H ldap://localhost
-  
-  echo "[OK][$(date +%H:%M:%S)] OpenLDAP configurado — $LDAP_DOMAIN"
-  echo "[DEBUG][$(date +%H:%M:%S)] ===== SETUP LDAP COMPLETADO ====="
+  fi
+
+  echo "[OK] OpenLDAP configurado correctamente"
 }
 
 ########################################
@@ -434,6 +370,10 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   setup_uplink
   create_srv_ldap
   setup_ldap_network
+  
+  docker exec SRV-LDAP ping -c1 8.8.8.8 >/dev/null 2>&1 || \
+  err "SRV-LDAP no tiene salida a Internet"
+
   setup_ldap
   setup_users
 

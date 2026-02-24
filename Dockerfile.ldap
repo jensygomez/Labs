@@ -1,22 +1,12 @@
-# Labs/Dockerfile.ldap
-# 1. Usamos tu imagen base ya construida (asegúrate de haberla creado como 'golden-base')
 FROM ubuntu-net:24.04
 
-# 2. Configuración para evitar interacción en la instalación
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 3. Instalación de LDAP y utilidades de cliente
-RUN apt update && \
-    apt install -y \
-      slapd \
-      ldap-utils && \
-    apt clean && \
-    rm -rf /var/lib/apt/lists/*
+# NO instalar LDAP aquí
+# Solo herramientas básicas si quieres
+RUN apt update && apt install -y iproute2 net-tools procps && \
+    apt clean && rm -rf /var/lib/apt/lists/*
 
-# 4. Exponer los puertos estándar:
-# 389 (LDAP) y 636 (LDAPS)
 EXPOSE 389 636
 
-# 5. Comando para arrancar el servicio en primer plano 
-# (Importante para que el contenedor no se apague inmediatamente)
-CMD ["/usr/sbin/slapd", "-h", "ldap:/// ldapi:/// -g openldap -u openldap -d 256"]
+CMD ["sleep", "infinity"]
