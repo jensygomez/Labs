@@ -213,6 +213,7 @@ while true; do
     echo "  1) Ejecutar todos los laboratorios"
     echo "  2) Limpiar entorno"
     echo "  3) Abrir monitor (nueva terminal)"
+    echo "  4) Preparar VM (bootstrap) - instalar imágenes"
     echo "  0) Salir"
     echo ""
     read -p "  Selección: " OPT
@@ -221,6 +222,7 @@ while true; do
         1) ejecutar_laboratorios ;;
         2) limpiar_entorno ;;
         3) abrir_monitor ;;
+        4) bash "$LAB_DIR/bootstrap.sh" ;;
         0) echo -e "${GREEN}Saliendo...${NC}"; exit 0 ;;
         *) echo -e "${RED}Opción inválida.${NC}" ;;
     esac
