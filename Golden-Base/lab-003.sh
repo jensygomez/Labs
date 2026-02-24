@@ -205,13 +205,14 @@ setup_ldap_network() {
 setup_ldap() {
   echo "[DEBUG] setup_ldap() iniciado"
   
-  # Apt TOLERANTE
+  # Instalación
   docker exec "$SRV_LDAP" apt update -qq || true
-  docker exec "$SRV_LDAP" apt install -y slapd ldap-utils || true
+  docker exec "$SRV_LDAP" apt install -y slapd ldap-utils || {
+    echo "[ERROR] Falló instalación de slapd"
+    return 1
+  }
   
-  echo "[DEBUG] slapd instalado, debconf..."
-
-  # HEREDOC FIX: sin espacios antes/após EOF
+  # Configuración debconf
   docker exec "$SRV_LDAP" bash -c '
     debconf-set-selections <<EOF
 slapd slapd/domain string laboratorio.local
@@ -222,21 +223,69 @@ slapd slapd/purge_database boolean true
 EOF
   '
 
-  echo "[DEBUG] debconf OK, reconfigurando..."
+  echo "[DEBUG] Reconfigurando slapd..."
   docker exec "$SRV_LDAP" DEBIAN_FRONTEND=noninteractive dpkg-reconfigure slapd
   
-  sleep 3
-  echo "[DEBUG] creando OU usuarios..."
+  # Verificar que slapd está corriendo
+  echo "[DEBUG] Verificando servicio slapd..."
+  sleep 5
+  docker exec "$SRV_LDAP" systemctl is-active slapd || docker exec "$SRV_LDAP" service slapd status || {
+    echo "[WARN] slapd no está activo, intentando iniciar..."
+    docker exec "$SRV_LDAP" service slapd start
+    sleep 3
+  }
   
-  docker exec "$SRV_LDAP" ldapadd -x -D "cn=admin,dc=laboratorio,dc=local" -w admin123 <<'EOF' || true
+  # Esperar a que el servicio esté listo
+  echo "[DEBUG] Esperando que LDAP esté listo..."
+  local max_retries=10
+  local retry=0
+  until docker exec "$SRV_LDAP" ldapsearch -x -H ldap://localhost -b "" -s base 2>/dev/null; do
+    retry=$((retry + 1))
+    if [ $retry -eq $max_retries ]; then
+      echo "[ERROR] LDAP no responde después de $max_retries intentos"
+      docker exec "$SRV_LDAP" tail -30 /var/log/syslog 2>/dev/null || true
+      return 1
+    fi
+    echo "[DEBUG] Esperando a LDAP (intento $retry/$max_retries)..."
+    sleep 2
+  done
+  
+  echo "[DEBUG] Creando OU usuarios..."
+  # Intentar crear OU con reintentos
+  retry=0
+  until docker exec "$SRV_LDAP" ldapadd -x \
+    -D "cn=admin,dc=laboratorio,dc=local" \
+    -w admin123 \
+    -H ldap://localhost \
+    <<'EOF' 2>/dev/null
 dn: ou=usuarios,dc=laboratorio,dc=local
 objectClass: organizationalUnit
 ou: usuarios
 EOF
+  do
+    retry=$((retry + 1))
+    if [ $retry -eq 5 ]; then
+      echo "[ERROR] No se pudo crear OU usuarios"
+      # Verificar autenticación
+      docker exec "$SRV_LDAP" ldapwhoami -x -D "cn=admin,dc=laboratorio,dc=local" -w admin123 || {
+        echo "[ERROR] Falló autenticación del admin"
+      }
+      return 1
+    fi
+    echo "[DEBUG] Reintentando crear OU (intento $retry)..."
+    sleep 2
+  done
 
-  ok "OpenLDAP configurado — $LDAP_DOMAIN"
+  # Verificar que se creó correctamente
+  docker exec "$SRV_LDAP" ldapsearch -x \
+    -D "cn=admin,dc=laboratorio,dc=local" \
+    -w admin123 \
+    -b "ou=usuarios,dc=laboratorio,dc=local" || {
+    echo "[WARN] No se pudo verificar la OU creada"
+  }
+
+  ok "OpenLDAP configurado — laboratorio.local"
 }
-
 
 
 ########################################
