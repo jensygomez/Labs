@@ -203,51 +203,33 @@ setup_ldap_network() {
 # FASE 6 — CONFIGURAR OPENLDAP
 ########################################
 setup_ldap() {
-  # Verificar si ya está configurado
-  if docker exec "$SRV_LDAP" slapcat 2>/dev/null | grep -q "dc=laboratorio"; then
+  if docker exec "$SRV_LDAP" slapcat 2>/dev/null | grep -q "ou=usuarios"; then
     ok "OpenLDAP ya configurado"
     return
   fi
 
-  # 1. Arrancar slapd
-  docker exec "$SRV_LDAP" service slapd start
-
-  # 2. Configurar via debconf (CREA suffix primero)
+  # 1. Configurar via debconf (✅ YA FUNCIONA)
   docker exec "$SRV_LDAP" bash -c "debconf-set-selections <<EOF
 slapd slapd/domain string laboratorio.local
 slapd shared/organization string $LDAP_ORG
 slapd slapd/password1 password $LDAP_ADMIN_PASS
 slapd slapd/password2 password $LDAP_ADMIN_PASS
 slapd slapd/purge_database boolean true
-slapd slapd/move_old_database boolean true
 EOF"
+  docker exec "$SRV_LDAP" DEBIAN_FRONTEND=noninteractive dpkg-reconfigure slapd
 
-  docker exec "$SRV_LDAP" bash -c "DEBIAN_FRONTEND=noninteractive dpkg-reconfigure slapd"
+  # 2. ESPERAR inicialización + restart
+  sleep 5
+  docker exec "$SRV_LDAP" service slapd restart || true
 
-  # 3. ESPERAR que slapd inicialice DB (crítico!)
-  sleep 4
-  docker exec "$SRV_LDAP" service slapd restart
-
-  # 4. AHORA modificar config (suffix YA existe)
-  local HASH=$(docker exec "$SRV_LDAP" slappasswd -s "$LDAP_ADMIN_PASS")
-  docker exec "$SRV_LDAP" bash -c "ldapmodify -Y EXTERNAL -H ldapi:/// <<EOF
-dn: olcDatabase={1}mdb,cn=config
-changetype: modify
-replace: olcRootDN
-olcRootDN: cn=admin,dc=laboratorio,dc=local
--
-replace: olcRootPW
-olcRootPW: $HASH
-EOF"
-
-  # 5. Crear OU usuarios
+  # 3. Crear OU con credenciales DEFAULT (funciona)
   docker exec "$SRV_LDAP" ldapadd -x -D "cn=admin,dc=laboratorio,dc=local" -w "$LDAP_ADMIN_PASS" <<EOF
 dn: ou=usuarios,dc=laboratorio,dc=local
 objectClass: organizationalUnit
 ou: usuarios
 EOF
 
-  ok "OpenLDAP configurado — $LDAP_DOMAIN"
+  ok "OpenLDAP + OU configurado — $LDAP_DOMAIN"
 }
 
 
