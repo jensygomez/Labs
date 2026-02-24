@@ -202,10 +202,6 @@ setup_ldap_network() {
 ########################################
 # FASE 6 — CONFIGURAR OPENLDAP
 ########################################
-
-########################################
-# FASE 6 — CONFIGURAR OPENLDAP
-########################################
 setup_ldap() {
   # Chequeo TOLERANTE: solo verifica slapd corriendo
   if docker exec "$SRV_LDAP" pgrep slapd >/dev/null 2>&1 && \
