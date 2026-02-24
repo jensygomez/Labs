@@ -205,29 +205,34 @@ setup_ldap_network() {
 setup_ldap() {
   echo "[DEBUG] setup_ldap() iniciado"
   
-  # TOLERAR apt warnings (CRÍTICO)
+  # Apt TOLERANTE
   docker exec "$SRV_LDAP" apt update -qq || true
   docker exec "$SRV_LDAP" apt install -y slapd ldap-utils || true
   
   echo "[DEBUG] slapd instalado, debconf..."
-  
-  # resto igual...
-  docker exec "$SRV_LDAP" bash -c "debconf-set-selections <<EOF
-slapd slapd/domain string laboratorio.local
-slapd shared/organization string $LDAP_ORG
-slapd slapd/password1 password $LDAP_ADMIN_PASS
-slapd slapd/password2 password $LDAP_ADMIN_PASS
-slapd slapd/purge_database boolean true
-EOF"
 
+  # HEREDOC FIX: sin espacios antes/após EOF
+  docker exec "$SRV_LDAP" bash -c '
+    debconf-set-selections <<EOF
+slapd slapd/domain string laboratorio.local
+slapd shared/organization string Laboratorio
+slapd slapd/password1 password admin123
+slapd slapd/password2 password admin123
+slapd slapd/purge_database boolean true
+EOF
+  '
+
+  echo "[DEBUG] debconf OK, reconfigurando..."
   docker exec "$SRV_LDAP" DEBIAN_FRONTEND=noninteractive dpkg-reconfigure slapd
-  sleep 3
   
-  docker exec "$SRV_LDAP" ldapadd -x -D "cn=admin,dc=laboratorio,dc=local" -w "$LDAP_ADMIN_PASS" <<EOF
+  sleep 3
+  echo "[DEBUG] creando OU usuarios..."
+  
+  docker exec "$SRV_LDAP" ldapadd -x -D "cn=admin,dc=laboratorio,dc=local" -w admin123 <<'EOF' || true
 dn: ou=usuarios,dc=laboratorio,dc=local
 objectClass: organizationalUnit
 ou: usuarios
-EOF || true
+EOF
 
   ok "OpenLDAP configurado — $LDAP_DOMAIN"
 }
