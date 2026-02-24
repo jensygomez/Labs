@@ -2,23 +2,22 @@
 # ===================================================================================
 # LABORATORIO LINUX PARA CERTIFICACIÓN LFCS/LFCE
 # Topología: Infraestructura completa con contenedores Docker
-# Versión: 1
+# Versión: 2 - Optimizada (usa imágenes preconstruidas)
 # Laboratorio: 002 - Departamento RH (switch L2 + 3 PCs)
 # ===================================================================================
 
 set -Eeuo pipefail
 
 # ── Colores ───────────────────────────────────────────────────────────────────
-VERDE='\033[0;32m'
-ROJO='\033[0;31m'
-AMARILLO='\033[1;33m'
-NC='\033[0m'
+VERDE='\033[0;32m'; GRIS='\033[0;37m'; ROJO='\033[0;31m'; AMARILLO='\033[1;33m'
+AZUL='\033[0;34m'; CYAN='\033[0;36m'; MAGENTA='\033[0;35m'; BOLD='\033[1m'; NC='\033[0m'
+OK="✅"; ERR="❌"; INFO="🔹"
 
 ########################################
 # VARIABLES GLOBALES
 ########################################
 IMG_NET="ubuntu-net:24.04"
-IMG_PC="ubuntu-pc:24.04"
+IMG_PC="ubuntu-pc:24.04"      # ← Imagen preconstruida con sssd y todo
 
 # Contenedores
 CORE_GW="CORE-GW"
@@ -33,68 +32,45 @@ PC1_IP="10.0.0.21/24"
 PC2_IP="10.0.0.22/24"
 PC3_IP="10.0.0.23/24"
 
-# Interfaces — uplink CORE-GW ↔ NS-RH
-VETH_GW_RH="v-gw-rh"       # extremo en CORE-GW (enchufado a br0)
-VETH_RH_GW="v-rh-gw"       # extremo en NS-RH   (enchufado a br-rh)
-
-# Interfaces — NS-RH ↔ PCs
-VETH_PC1_RH="v-pc1-rh"     # extremo en PC1-RH
-VETH_RH_PC1="v-rh-pc1"     # extremo en NS-RH
-
-VETH_PC2_RH="v-pc2-rh"     # extremo en PC2-RH
-VETH_RH_PC2="v-rh-pc2"     # extremo en NS-RH
-
-VETH_PC3_RH="v-pc3-rh"     # extremo en PC3-RH
-VETH_RH_PC3="v-rh-pc3"     # extremo en NS-RH
+# Interfaces
+VETH_GW_RH="v-gw-rh"
+VETH_RH_GW="v-rh-gw"
+VETH_PC1_RH="v-pc1-rh"
+VETH_RH_PC1="v-rh-pc1"
+VETH_PC2_RH="v-pc2-rh"
+VETH_RH_PC2="v-rh-pc2"
+VETH_PC3_RH="v-pc3-rh"
+VETH_RH_PC3="v-rh-pc3"
 
 ########################################
 # UTILIDADES
 ########################################
-log() { :; }
-ok()  { echo -e "${VERDE}✔ $*${NC}"; }
-err() { echo -e "${ROJO}❌ $*${NC}" >&2; exit 1; }
+log() { echo -e "\n$INFO $*"; }
+ok()  { echo "$OK $*"; }
+err() { echo "$ERR $*" >&2; exit 1; }
 
-image_exists() {
-  docker images --format '{{.Repository}}:{{.Tag}}' | grep -qx "$1"
-}
-
-container_exists() {
-  docker ps -a --format '{{.Names}}' | grep -qx "$1"
-}
-
-container_pid() {
-  docker inspect -f '{{.State.Pid}}' "$1"
-}
-
-veth_exists_in_container() {
-  docker exec "$1" ip link show "$2" &>/dev/null
-}
-
+image_exists() { docker images --format '{{.Repository}}:{{.Tag}}' | grep -qx "$1"; }
+container_exists() { docker ps -a --format '{{.Names}}' | grep -qx "$1"; }
+container_pid() { docker inspect -f '{{.State.Pid}}' "$1"; }
+veth_exists_in_container() { docker exec "$1" ip link show "$2" &>/dev/null; }
 
 ########################################
-# FASE 0 — IMAGEN LDAP
+# FASE 0 — VERIFICACIÓN DE IMÁGENES (YA NO CONSTRUYE)
 ########################################
-build_image_pc() {
-  if image_exists "$IMG_PC"; then
-    ok "Imagen $IMG_PC ya existe"
-    return
+check_images() {
+  log "FASE 0 — Verificando imágenes necesarias"
+
+  if ! image_exists "$IMG_NET"; then
+    err "Imagen $IMG_NET no encontrada. Ejecuta 'bootstrap.sh' primero (opción 4 del menú)"
   fi
+  ok "Imagen $IMG_NET disponible"
 
-  local SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  local DOCKERFILE_PATH=""
-
-  if [ -f "$SCRIPT_DIR/Dockerfile.pc" ]; then
-    DOCKERFILE_PATH="$SCRIPT_DIR/Dockerfile.pc"
-  elif [ -f "$SCRIPT_DIR/../Dockerfile.pc" ]; then
-    DOCKERFILE_PATH="$SCRIPT_DIR/../Dockerfile.pc"
+  if ! image_exists "$IMG_PC"; then
+    err "Imagen $IMG_PC no encontrada. Ejecuta 'bootstrap.sh' primero (opción 4 del menú)"
   fi
-
-  [ -z "$DOCKERFILE_PATH" ] && err "No se encontró Dockerfile.pc"
-
-  local CONTEXT_DIR="$(dirname "$DOCKERFILE_PATH")"
-  docker build -t "$IMG_PC" -f "$DOCKERFILE_PATH" "$CONTEXT_DIR"
-  ok "Imagen $IMG_PC creada"
+  ok "Imagen $IMG_PC disponible"
 }
+
 ########################################
 # FASE 1 — CONTENEDOR NS-RH (switch L2)
 ########################################
@@ -141,24 +117,17 @@ setup_bridge_rh() {
 setup_uplink() {
   log "FASE 3 — Uplink CORE-GW ↔ NS-RH"
 
-  # Si el veth ya está dentro de CORE-GW, asumimos que esta fase ya se hizo
   if veth_exists_in_container "$CORE_GW" "$VETH_GW_RH"; then
     ok "Uplink ya configurado"
     return
   fi
 
-  # Crear el par de veth en el host
   ip link add "$VETH_GW_RH" type veth peer name "$VETH_RH_GW"
-
-  # Mover cada extremo a su contenedor
   ip link set "$VETH_GW_RH" netns "$(container_pid "$CORE_GW")"
   ip link set "$VETH_RH_GW" netns "$(container_pid "$NS_RH")"
 
-  # Enchufar v-gw-rh al bridge br0 del CORE-GW
   docker exec "$CORE_GW" ip link set "$VETH_GW_RH" master br0
   docker exec "$CORE_GW" ip link set "$VETH_GW_RH" up
-
-  # Enchufar v-rh-gw al bridge br-rh del NS-RH
   docker exec "$NS_RH" ip link set "$VETH_RH_GW" master br-rh
   docker exec "$NS_RH" ip link set "$VETH_RH_GW" up
 
@@ -171,7 +140,6 @@ setup_uplink() {
 setup_nat() {
   log "FASE 4 — NAT en CORE-GW"
 
-  # Verificar si la regla ya existe
   docker exec "$CORE_GW" iptables -t nat -C POSTROUTING \
     -s 10.0.0.0/24 -o v-gw-wan -j MASQUERADE 2>/dev/null && {
     ok "Regla NAT ya existe"
@@ -187,18 +155,14 @@ setup_nat() {
 ########################################
 # FASE 5 — PCs del departamento RH
 ########################################
-
-# Función genérica para crear una PC y conectarla al bridge br-rh
-# Uso: create_pc NOMBRE VETH_PC VETH_RH IP
 create_pc() {
   local NAME="$1"
-  local VETH_PC="$2"     # extremo que va a la PC
-  local VETH_RH="$3"     # extremo que va a NS-RH
+  local VETH_PC="$2"
+  local VETH_RH="$3"
   local IP="$4"
 
   log "Creando $NAME ($IP)"
 
-  # Crear contenedor si no existe
   if ! container_exists "$NAME"; then
     docker run -d \
       --name "$NAME" \
@@ -212,22 +176,14 @@ create_pc() {
     ok "$NAME ya existe"
   fi
 
-  # Crear veth y conectar solo si no existe ya en la PC
   if ! veth_exists_in_container "$NAME" "$VETH_PC"; then
-
     ip link add "$VETH_PC" type veth peer name "$VETH_RH"
-
     ip link set "$VETH_PC" netns "$(container_pid "$NAME")"
     ip link set "$VETH_RH" netns "$(container_pid "$NS_RH")"
 
-    # Conectar extremo NS-RH al bridge
     docker exec "$NS_RH" ip link set "$VETH_RH" master br-rh
     docker exec "$NS_RH" ip link set "$VETH_RH" up
-
-    # Levantar extremo de la PC
     docker exec "$NAME" ip link set "$VETH_PC" up
-
-    # Asignar IP y ruta default
     docker exec "$NAME" ip addr add "$IP" dev "$VETH_PC"
     docker exec "$NAME" ip route replace default via "$GW_IP"
 
@@ -244,6 +200,7 @@ setup_pcs() {
   create_pc "$PC2" "$VETH_PC2_RH" "$VETH_RH_PC2" "$PC2_IP"
   create_pc "$PC3" "$VETH_PC3_RH" "$VETH_RH_PC3" "$PC3_IP"
 }
+
 
 
 
@@ -296,11 +253,14 @@ print_topology() {
 # MAIN
 ########################################
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  echo "==[ LAB 002 — DEPARTAMENTO RH | ARQUITECTURA LINUX ]=="
+  echo -e "${AZUL}${BOLD}==[ LAB 002 — DEPARTAMENTO RH | ARQUITECTURA LINUX ]==${NC}"
 
   # Verificar que el lab-001 está corriendo
   container_exists "$CORE_GW" || err "CORE-GW no existe. Ejecuta lab-001.sh primero."
-  build_image_pc
+  
+  # SOLO VERIFICAR - NO CONSTRUIR
+  check_images
+  
   create_ns_rh
   setup_bridge_rh
   setup_uplink
