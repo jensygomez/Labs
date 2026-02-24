@@ -225,14 +225,12 @@ setup_ldap() {
     docker exec SRV-LDAP apt-get install -y slapd ldap-utils
 
   # Preconfigurar slapd
-  docker exec SRV-LDAP bash -c <<'EOF'
-debconf-set-selections <<EOC
+  docker exec -i SRV-LDAP debconf-set-selections <<EOF
 slapd slapd/domain string laboratorio.local
 slapd shared/organization string Laboratorio
 slapd slapd/password1 password admin123
 slapd slapd/password2 password admin123
 slapd slapd/purge_database boolean true
-EOC
 EOF
 
   # Reconfigurar slapd
@@ -370,7 +368,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   setup_uplink
   create_srv_ldap
   setup_ldap_network
-  
+
   docker exec SRV-LDAP ping -c1 8.8.8.8 >/dev/null 2>&1 || \
   err "SRV-LDAP no tiene salida a Internet"
 
