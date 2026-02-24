@@ -209,16 +209,12 @@ setup_ldap() {
     return
   fi
 
-  # Arrancar slapd
+  # 1. Arrancar slapd
   docker exec "$SRV_LDAP" service slapd start
 
-  # Generar hash de contraseña
-  local HASH
-  HASH=$(docker exec "$SRV_LDAP" slappasswd -s "$LDAP_ADMIN_PASS")
-
-  # Configurar dominio via debconf
+  # 2. Configurar via debconf (CREA suffix primero)
   docker exec "$SRV_LDAP" bash -c "debconf-set-selections <<EOF
-slapd slapd/domain string $LDAP_DOMAIN
+slapd slapd/domain string laboratorio.local
 slapd shared/organization string $LDAP_ORG
 slapd slapd/password1 password $LDAP_ADMIN_PASS
 slapd slapd/password2 password $LDAP_ADMIN_PASS
@@ -228,7 +224,12 @@ EOF"
 
   docker exec "$SRV_LDAP" bash -c "DEBIAN_FRONTEND=noninteractive dpkg-reconfigure slapd"
 
-  # Corregir olcRootDN y olcRootPW
+  # 3. ESPERAR que slapd inicialice DB (crítico!)
+  sleep 3
+  docker exec "$SRV_LDAP" service slapd restart
+
+  # 4. AHORA modificar config (suffix YA existe)
+  local HASH=$(docker exec "$SRV_LDAP" slappasswd -s "$LDAP_ADMIN_PASS")
   docker exec "$SRV_LDAP" bash -c "ldapmodify -Y EXTERNAL -H ldapi:/// <<EOF
 dn: olcDatabase={1}mdb,cn=config
 changetype: modify
@@ -239,14 +240,12 @@ replace: olcRootPW
 olcRootPW: $HASH
 EOF"
 
-  docker exec "$SRV_LDAP" service slapd restart
-
-  # Crear unidad organizativa
-  docker exec "$SRV_LDAP" bash -c "ldapadd -x -D 'cn=admin,dc=laboratorio,dc=local' -w '$LDAP_ADMIN_PASS' <<EOF
+  # 5. Crear OU usuarios
+  docker exec "$SRV_LDAP" ldapadd -x -D "cn=admin,dc=laboratorio,dc=local" -w "$LDAP_ADMIN_PASS" <<EOF
 dn: ou=usuarios,dc=laboratorio,dc=local
 objectClass: organizationalUnit
 ou: usuarios
-EOF"
+EOF
 
   ok "OpenLDAP configurado — $LDAP_DOMAIN"
 }
