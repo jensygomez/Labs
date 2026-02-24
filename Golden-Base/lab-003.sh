@@ -351,4 +351,5 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 
   echo
   print_topology
+  sleep 5
 fi

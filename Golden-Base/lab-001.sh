@@ -162,6 +162,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   setup_bridge
 
   echo -e "\n${VERDE}${BOLD}LAB 001 COMPLETADO CON ÉXITO${NC}"
+  sleep 5
 fi
 
 
