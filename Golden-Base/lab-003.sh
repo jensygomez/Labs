@@ -117,26 +117,38 @@ setup_ldap_network() {
 ########################################
 # FASE 6 — POBLAR DATOS
 ########################################
+
 setup_users() {
   echo "⏳ Esperando disponibilidad de LDAP..."
   
-  # Bucle de espera robusto
   local count=0
-  while ! docker exec "$SRV_LDAP" ldapsearch -x -H ldap://localhost -b "dc=laboratorio,dc=local" >/dev/null 2>&1; do
-    echo -n "."
+  # Desactivamos set -e solo para este bucle de espera
+  set +e 
+  while true; do
+    # 1. Intentamos contactar al servidor
+    # El '|| true' es vital para que set -e no mate el subshell de docker
+    docker exec "$SRV_LDAP" ldapsearch -x -H ldap://localhost -b "$LDAP_DOMAIN" >/dev/null 2>&1
+    STATUS=$?
+
+    if [ $STATUS -eq 0 ]; then
+      echo -e "\n${VERDE}✔ LDAP está Online!${NC}"
+      break
+    fi
+
+    # 2. Informamos al log para que el Engine vea actividad
+    echo "Intento $((count+1)): Servidor aún iniciando..." 
     sleep 3
     ((count++))
-    [ $count -gt 20 ] && err "LDAP no respondió en 60 segundos."
+
+    if [ $count -gt 25 ]; then
+      echo "❌ ERROR: LDAP no arrancó a tiempo."
+      exit 1
+    fi
   done
-  echo -e "\n"
+  set -e # Re-activamos la seguridad
+  echo -e "\n${VERDE}✔ Servicio LDAP detectado!${NC}" > /dev/tty
 
-  # Verificar si 'juan' ya existe para evitar errores de duplicado
-  if docker exec "$SRV_LDAP" ldapsearch -x -b "dc=laboratorio,dc=local" "uid=juan" | grep -q "uid: juan"; then
-    ok "Usuarios ya presentes en el directorio"
-    return
-  fi
-
-  # Crear OU People y Usuarios
+  # Insertar usuarios (LDIF)
   docker exec -i "$SRV_LDAP" ldapadd -x -D "cn=admin,dc=laboratorio,dc=local" -w "$LDAP_ADMIN_PASS" <<EOF
 dn: ou=People,dc=laboratorio,dc=local
 objectClass: organizationalUnit
@@ -154,23 +166,10 @@ gidNumber: 1001
 homeDirectory: /home/juan
 loginShell: /bin/bash
 userPassword: password123
-
-dn: uid=maria,ou=People,dc=laboratorio,dc=local
-objectClass: inetOrgPerson
-objectClass: posixAccount
-objectClass: shadowAccount
-uid: maria
-sn: Garcia
-cn: Maria Garcia
-uidNumber: 1002
-gidNumber: 1002
-homeDirectory: /home/maria
-loginShell: /bin/bash
-userPassword: password123
 EOF
-
-  ok "Estructura de usuarios LDAP creada"
 }
+
+
 
 ########################################
 # MAIN
