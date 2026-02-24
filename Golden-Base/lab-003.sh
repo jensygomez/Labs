@@ -64,7 +64,10 @@ setup_uplink() {
 # FASE 4 — SERVIDOR LDAP
 ########################################
 create_srv_ldap() {
-  if container_exists "SRV-LDAP"; then ok "SRV-LDAP ya existe"; return; fi
+  if container_exists "SRV-LDAP"; then 
+    ok "SRV-LDAP ya existe"
+    return
+  fi
 
   docker run -d \
     --name "SRV-LDAP" \
@@ -72,10 +75,23 @@ create_srv_ldap() {
     --cap-add NET_ADMIN \
     --privileged \
     "ubuntu-ldap:24.04"
+    
   ok "SRV-LDAP container creado"
-
-  # slapd no arranca solo en containers — lo lanzamos manualmente
-  docker exec "SRV-LDAP" slapd -u openldap -g openldap
+  
+  # Verificar que el usuario openldap existe
+  docker exec "SRV-LDAP" id openldap || echo "Usuario openldap no encontrado"
+  
+  # Verificar directorios necesarios
+  docker exec "SRV-LDAP" ls -la /var/lib/ldap/
+  docker exec "SRV-LDAP" ls -la /etc/ldap/slapd.d/
+  
+  # Iniciar slapd con opciones explícitas
+  docker exec "SRV-LDAP" slapd -u openldap -g openldap -h "ldap:/// ldapi:///" -F /etc/ldap/slapd.d/
+  
+  # Verificar que está corriendo
+  sleep 2
+  docker exec "SRV-LDAP" ps aux | grep slapd
+  
   ok "slapd iniciado"
 }
 
@@ -106,9 +122,22 @@ setup_users() {
 
   local count=0
   set +e
+  
+  # Primero verificar que el proceso está vivo
+  docker exec "SRV-LDAP" pgrep slapd
+  if [ $? -ne 0 ]; then
+    err "slapd no está corriendo"
+  fi
+  
+  # Verificar que el puerto está escuchando
+  docker exec "SRV-LDAP" netstat -tlnp | grep 389
+  
   while true; do
-    docker exec "SRV-LDAP" ldapsearch -x -H ldap://localhost \
-      -b "dc=laboratorio,dc=local" >/dev/null 2>&1
+    echo "Intento $((count+1)): Verificando LDAP..."
+    
+    # Hacer una búsqueda básica
+    docker exec "SRV-LDAP" ldapsearch -x -H ldap://localhost:389 \
+      -b "dc=laboratorio,dc=local" 2>&1
     STATUS=$?
 
     if [ $STATUS -eq 0 ]; then
@@ -116,11 +145,14 @@ setup_users() {
       break
     fi
 
-    echo "Intento $((count+1)): Servidor aún iniciando..."
     sleep 3
     ((count++))
 
     if [ $count -gt 25 ]; then
+      # Mostrar logs de slapd para diagnóstico
+      docker exec "SRV-LDAP" tail -20 /var/log/syslog 2>/dev/null || \
+      docker exec "SRV-LDAP" journalctl -u slapd 2>/dev/null || \
+      echo "No se encontraron logs"
       err "LDAP no arrancó a tiempo."
     fi
   done
