@@ -199,21 +199,40 @@ setup_ldap_network() {
   ok "SRV-LDAP conectado — $LDAP_IP"
 }
 
+echo "[DEBUG] SRV_LDAP = '$SRV_LDAP'"
+if [ -z "$SRV_LDAP" ]; then
+    echo "[ERROR] SRV_LDAP no está definida"
+    exit 1
+fi
 ########################################
 # FASE 6 — CONFIGURAR OPENLDAP
 ########################################
 setup_ldap() {
   echo "[DEBUG] setup_ldap() iniciado"
   
-  # Instalación
-  docker exec "$SRV_LDAP" apt update -qq || true
-  docker exec "$SRV_LDAP" apt install -y slapd ldap-utils || {
+  # Obtener el container ID por nombre (más robusto)
+  local CONTAINER_ID=$(docker ps -qf "name=$SRV_LDAP")
+  
+  if [ -z "$CONTAINER_ID" ]; then
+    echo "[ERROR] Contenedor $SRV_LDAP no encontrado"
+    echo "[DEBUG] Contenedores disponibles:"
+    docker ps --format "table {{.Names}}\t{{.ID}}\t{{.Status}}"
+    return 1
+  fi
+  
+  echo "[DEBUG] Configurando LDAP en contenedor: $SRV_LDAP (ID: $CONTAINER_ID)"
+  
+  # Usar el ID para todos los comandos docker
+  docker exec "$CONTAINER_ID" apt update -qq || true
+  docker exec "$CONTAINER_ID" apt install -y slapd ldap-utils || {
     echo "[ERROR] Falló instalación de slapd"
     return 1
   }
   
-  # Configuración debconf
-  docker exec "$SRV_LDAP" bash -c '
+  echo "[DEBUG] slapd instalado, debconf..."
+
+  # HEREDOC FIX: sin espacios antes/após EOF
+  docker exec "$CONTAINER_ID" bash -c '
     debconf-set-selections <<EOF
 slapd slapd/domain string laboratorio.local
 slapd shared/organization string Laboratorio
@@ -223,70 +242,50 @@ slapd slapd/purge_database boolean true
 EOF
   '
 
-  echo "[DEBUG] Reconfigurando slapd..."
-  docker exec "$SRV_LDAP" DEBIAN_FRONTEND=noninteractive dpkg-reconfigure slapd
+  echo "[DEBUG] debconf OK, reconfigurando..."
+  docker exec "$CONTAINER_ID" DEBIAN_FRONTEND=noninteractive dpkg-reconfigure slapd
   
-  # Verificar que slapd está corriendo
-  echo "[DEBUG] Verificando servicio slapd..."
+  # Verificar que el servicio está corriendo
+  echo "[DEBUG] Verificando slapd..."
   sleep 5
-  docker exec "$SRV_LDAP" systemctl is-active slapd || docker exec "$SRV_LDAP" service slapd status || {
-    echo "[WARN] slapd no está activo, intentando iniciar..."
-    docker exec "$SRV_LDAP" service slapd start
-    sleep 3
-  }
   
-  # Esperar a que el servicio esté listo
-  echo "[DEBUG] Esperando que LDAP esté listo..."
+  # Esperar a que LDAP esté listo
   local max_retries=10
   local retry=0
-  until docker exec "$SRV_LDAP" ldapsearch -x -H ldap://localhost -b "" -s base 2>/dev/null; do
+  until docker exec "$CONTAINER_ID" ldapsearch -x -H ldap://localhost -b "" -s base 2>/dev/null; do
     retry=$((retry + 1))
     if [ $retry -eq $max_retries ]; then
       echo "[ERROR] LDAP no responde después de $max_retries intentos"
-      docker exec "$SRV_LDAP" tail -30 /var/log/syslog 2>/dev/null || true
+      docker exec "$CONTAINER_ID" tail -30 /var/log/syslog 2>/dev/null || true
       return 1
     fi
     echo "[DEBUG] Esperando a LDAP (intento $retry/$max_retries)..."
     sleep 2
   done
   
-  echo "[DEBUG] Creando OU usuarios..."
-  # Intentar crear OU con reintentos
-  retry=0
-  until docker exec "$SRV_LDAP" ldapadd -x \
+  echo "[DEBUG] creando OU usuarios..."
+  
+  docker exec "$CONTAINER_ID" ldapadd -x \
     -D "cn=admin,dc=laboratorio,dc=local" \
     -w admin123 \
     -H ldap://localhost \
-    <<'EOF' 2>/dev/null
+    <<'EOF' || echo "[DEBUG] OU ya existe o error controlado"
 dn: ou=usuarios,dc=laboratorio,dc=local
 objectClass: organizationalUnit
 ou: usuarios
 EOF
-  do
-    retry=$((retry + 1))
-    if [ $retry -eq 5 ]; then
-      echo "[ERROR] No se pudo crear OU usuarios"
-      # Verificar autenticación
-      docker exec "$SRV_LDAP" ldapwhoami -x -D "cn=admin,dc=laboratorio,dc=local" -w admin123 || {
-        echo "[ERROR] Falló autenticación del admin"
-      }
-      return 1
-    fi
-    echo "[DEBUG] Reintentando crear OU (intento $retry)..."
-    sleep 2
-  done
 
-  # Verificar que se creó correctamente
-  docker exec "$SRV_LDAP" ldapsearch -x \
+  # Verificar que se creó
+  docker exec "$CONTAINER_ID" ldapsearch -x \
     -D "cn=admin,dc=laboratorio,dc=local" \
     -w admin123 \
-    -b "ou=usuarios,dc=laboratorio,dc=local" || {
-    echo "[WARN] No se pudo verificar la OU creada"
-  }
+    -b "ou=usuarios,dc=laboratorio,dc=local" \
+    -H ldap://localhost | grep -q "ou=usuarios" && {
+      echo "[OK] OU usuarios creada correctamente"
+    }
 
-  ok "OpenLDAP configurado — laboratorio.local"
+  ok "OpenLDAP configurado — $LDAP_DOMAIN"
 }
-
 
 ########################################
 # FASE 7 — CREAR USUARIOS LDAP
