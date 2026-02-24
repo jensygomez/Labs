@@ -71,8 +71,6 @@ ejecutar_hasta() {
         else
             echo -e "${YELLOW}⚠ No existe: $LAB${NC}"
         fi
-        sleep 5
-
     done
 
     # ✅ SOLUCIÓN: Ejecutar print_topology en un subshell para no contaminar el entorno

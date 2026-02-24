@@ -18,6 +18,7 @@ NC='\033[0m'
 # VARIABLES GLOBALES
 ########################################
 IMG_NET="ubuntu-net:24.04"
+IMG_PC="ubuntu-pc:24.04"
 
 # Contenedores
 CORE_GW="CORE-GW"
@@ -66,6 +67,32 @@ veth_exists_in_container() {
   docker exec "$1" ip link show "$2" &>/dev/null
 }
 
+
+########################################
+# FASE 0 — IMAGEN LDAP
+########################################
+# FASE 0 — renombrar función y corregir variables
+build_image_pc() {
+  if image_exists "$IMG_PC"; then
+    ok "Imagen $IMG_PC ya existe"
+    return
+  fi
+
+  local SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  local DOCKERFILE_PATH=""
+
+  if [ -f "$SCRIPT_DIR/Dockerfile.pc" ]; then
+    DOCKERFILE_PATH="$SCRIPT_DIR/Dockerfile.pc"
+  elif [ -f "$SCRIPT_DIR/../Dockerfile.pc" ]; then
+    DOCKERFILE_PATH="$SCRIPT_DIR/../Dockerfile.pc"
+  fi
+
+  [ -z "$DOCKERFILE_PATH" ] && err "No se encontró Dockerfile.pc"
+
+  local CONTEXT_DIR="$(dirname "$DOCKERFILE_PATH")"
+  docker build -t "$IMG_PC" -f "$DOCKERFILE_PATH" "$CONTEXT_DIR"
+  ok "Imagen $IMG_PC creada"
+}
 ########################################
 # FASE 1 — CONTENEDOR NS-RH (switch L2)
 ########################################
@@ -176,7 +203,7 @@ create_pc() {
       --hostname "$(echo "$NAME" | tr '[:upper:]' '[:lower:]')" \
       --cap-add NET_ADMIN \
       --privileged \
-      "$IMG_NET" \
+      "$IMG_PC" \
       sleep infinity
     ok "$NAME creado"
   else
@@ -271,7 +298,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 
   # Verificar que el lab-001 está corriendo
   container_exists "$CORE_GW" || err "CORE-GW no existe. Ejecuta lab-001.sh primero."
-
+  build_image_pc
   create_ns_rh
   setup_bridge_rh
   setup_uplink
@@ -280,4 +307,5 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 
   echo
   ok "LAB 002 COMPLETADO"
+  sleep 5
 fi
