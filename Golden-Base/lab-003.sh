@@ -208,72 +208,52 @@ fi
 # FASE 6 — CONFIGURAR OPENLDAP
 ########################################
 setup_ldap() {
+  local CT="SRV-LDAP"
+  local BASE_DN="dc=laboratorio,dc=local"
+  local ADMIN_DN="cn=admin,${BASE_DN}"
 
-  echo "[INFO] Iniciando setup OpenLDAP en SRV-LDAP"
+  echo "🧠 Configurando LDAP en ${CT}"
 
-  # Verificar contenedor en ejecución
-  if ! docker inspect -f '{{.State.Running}}' SRV-LDAP 2>/dev/null | grep -q true; then
-    echo "[ERROR] Contenedor SRV-LDAP no está en ejecución"
-    return 1
-  fi
+  # 1. Instalar LDAP solo si no existe slapd
+  docker exec "$CT" bash -c '
+    command -v slapd >/dev/null || (
+      apt update &&
+      apt install -y slapd ldap-utils
+    )
+  '
 
-  # Actualizar repositorios (no aborta si hay warning)
-  docker exec SRV-LDAP apt-get update -qq || true
+  # 2. Asegurar que slapd esté corriendo
+  docker exec "$CT" bash -c '
+    pgrep slapd >/dev/null || slapd -h "ldap:/// ldapi:///" -g openldap -u openldap
+  '
 
-  # Instalar paquetes LDAP (idempotente)
-  docker exec SRV-LDAP dpkg -s slapd ldap-utils >/dev/null 2>&1 || \
-    docker exec SRV-LDAP apt-get install -y slapd ldap-utils
+  # 3. Esperar socket LDAP
+  sleep 2
 
-  # Preconfigurar slapd
-  docker exec -i SRV-LDAP debconf-set-selections <<EOF
-slapd slapd/domain string laboratorio.local
-slapd shared/organization string Laboratorio
-slapd slapd/password1 password admin123
-slapd slapd/password2 password admin123
-slapd slapd/purge_database boolean true
+  # 4. Crear Base DN si no existe
+  docker exec "$CT" bash -c "
+    ldapsearch -x -LLL -b ${BASE_DN} >/dev/null 2>&1 || cat <<'EOF' | ldapadd -x -D ${ADMIN_DN} -W
+dn: ${BASE_DN}
+objectClass: top
+objectClass: dcObject
+objectClass: organization
+o: Laboratorio
+dc: laboratorio
 EOF
+  "
 
-  # Reconfigurar slapd
-  docker exec SRV-LDAP env DEBIAN_FRONTEND=noninteractive dpkg-reconfigure slapd
-
-  # Asegurar slapd corriendo
-  if ! docker exec SRV-LDAP pgrep slapd >/dev/null; then
-    docker exec SRV-LDAP service slapd start
-    sleep 3
-  fi
-
-  # Esperar LDAP disponible
-  for i in {1..10}; do
-    if docker exec SRV-LDAP ldapsearch -x -H ldap://localhost -b "" -s base >/dev/null 2>&1; then
-      break
-    fi
-    sleep 2
-  done
-
-  # Crear OU usuarios (idempotente)
-  if docker exec SRV-LDAP ldapsearch -x \
-      -D "cn=admin,dc=laboratorio,dc=local" \
-      -w admin123 \
-      -b "ou=usuarios,dc=laboratorio,dc=local" \
-      -H ldap://localhost >/dev/null 2>&1; then
-
-    echo "[OK] OU usuarios ya existe"
-
-  else
-
-    docker exec SRV-LDAP ldapadd -x \
-      -D "cn=admin,dc=laboratorio,dc=local" \
-      -w admin123 \
-      -H ldap://localhost <<'EOF'
-dn: ou=usuarios,dc=laboratorio,dc=local
+  # 5. Crear OU People si no existe
+  docker exec "$CT" bash -c "
+    ldapsearch -x -LLL -b ${BASE_DN} '(ou=People)' >/dev/null 2>&1 || cat <<'EOF' | ldapadd -x -D ${ADMIN_DN} -W
+dn: ou=People,${BASE_DN}
+objectClass: top
 objectClass: organizationalUnit
-ou: usuarios
+ou: People
 EOF
-  fi
+  "
 
-  echo "[OK] OpenLDAP configurado correctamente"
+  echo "✅ LDAP base y OU People listas"
 }
-
 ########################################
 # FASE 7 — CREAR USUARIOS LDAP
 ########################################
