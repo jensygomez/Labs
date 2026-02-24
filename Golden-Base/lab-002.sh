@@ -50,9 +50,13 @@ VETH_RH_PC3="v-rh-pc3"     # extremo en NS-RH
 ########################################
 # UTILIDADES
 ########################################
-log() { :; }  # silenciado — output consolidado en print_topology
+log() { :; }
 ok()  { echo -e "${VERDE}✔ $*${NC}"; }
 err() { echo -e "${ROJO}❌ $*${NC}" >&2; exit 1; }
+
+image_exists() {
+  docker images --format '{{.Repository}}:{{.Tag}}' | grep -qx "$1"
+}
 
 container_exists() {
   docker ps -a --format '{{.Names}}' | grep -qx "$1"
@@ -63,7 +67,6 @@ container_pid() {
 }
 
 veth_exists_in_container() {
-  # $1 = nombre del contenedor, $2 = nombre de la interfaz
   docker exec "$1" ip link show "$2" &>/dev/null
 }
 
@@ -71,7 +74,6 @@ veth_exists_in_container() {
 ########################################
 # FASE 0 — IMAGEN LDAP
 ########################################
-# FASE 0 — renombrar función y corregir variables
 build_image_pc() {
   if image_exists "$IMG_PC"; then
     ok "Imagen $IMG_PC ya existe"
