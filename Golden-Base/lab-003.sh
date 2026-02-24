@@ -127,24 +127,32 @@ setup_bridge_srv() {
 # FASE 3 — UPLINK CORE-GW ↔ NS-SRV
 ########################################
 setup_uplink() {
-  if veth_exists_in_container "$CORE_GW" "$VETH_GW_SRV"; then
+  # Chequeo TOLERANTE a pipefail (set +e temporal)
+  if docker exec "$CORE_GW" ip link show "$VETH_GW_SRV" &>/dev/null 2>&1; then
     ok "Uplink ya configurado"
     return
   fi
 
-  ip link add "$VETH_GW_SRV" type veth peer name "$VETH_SRV_GW"
+  # Crear veth pair
+  ip link add "$VETH_GW_SRV" type veth peer name "$VETH_SRV_GW" || {
+    err "Fallo creando veth pair $VETH_GW_SRV"
+  }
 
+  # Mover a namespaces
   ip link set "$VETH_GW_SRV" netns "$(container_pid "$CORE_GW")"
   ip link set "$VETH_SRV_GW" netns "$(container_pid "$NS_SRV")"
 
+  # CORE-GW: master br0 + UP
   docker exec "$CORE_GW" ip link set "$VETH_GW_SRV" master br0
   docker exec "$CORE_GW" ip link set "$VETH_GW_SRV" up
 
+  # NS-SRV: master br-srv + UP  
   docker exec "$NS_SRV" ip link set "$VETH_SRV_GW" master br-srv
   docker exec "$NS_SRV" ip link set "$VETH_SRV_GW" up
 
   ok "Uplink CORE-GW ↔ NS-SRV configurado"
 }
+
 
 ########################################
 # FASE 4 — CONTENEDOR SRV-LDAP
