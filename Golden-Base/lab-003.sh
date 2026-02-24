@@ -2,6 +2,7 @@
 # ===================================================================================
 # LABORATORIO LINUX PARA CERTIFICACIÓN LFCS/LFCE
 # Laboratorio: 003 - Servidor LDAP
+# Requiere imagen: ubuntu-ldap:24.04 (construida desde Dockerfile.ldap)
 # ===================================================================================
 
 set -Eeuo pipefail
@@ -58,23 +59,12 @@ create_srv_ldap() {
     --hostname srv-ldap \
     --cap-add NET_ADMIN \
     --privileged \
-    "ubuntu:24.04" \
-    sleep infinity
+    "ubuntu-ldap:24.04"
   ok "SRV-LDAP container creado"
 
-  docker exec "SRV-LDAP" bash -c '
-    export DEBIAN_FRONTEND=noninteractive
-    echo "slapd slapd/root_password password admin123"       | debconf-set-selections
-    echo "slapd slapd/root_password_again password admin123" | debconf-set-selections
-    echo "slapd slapd/domain string laboratorio.local"       | debconf-set-selections
-    echo "slapd shared/organization string Laboratorio"      | debconf-set-selections
-    apt-get update -qq
-    apt-get install -y slapd ldap-utils iproute2
-  '
-  ok "slapd instalado"
-
+  # slapd no arranca solo en containers — lo lanzamos manualmente
   docker exec "SRV-LDAP" slapd -u openldap -g openldap
-  ok "SRV-LDAP iniciado"
+  ok "slapd iniciado"
 }
 
 ########################################
