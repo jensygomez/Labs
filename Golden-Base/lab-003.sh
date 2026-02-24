@@ -19,6 +19,18 @@ container_pid()            { docker inspect -f '{{.State.Pid}}' "$1"; }
 veth_exists_in_container() { docker exec "$1" ip link show "$2" &>/dev/null; }
 
 ########################################
+# FASE 0 — CONSTRUIR IMAGEN LDAP
+########################################
+build_image_ldap() {
+  if docker images --format '{{.Repository}}:{{.Tag}}' | grep -qx "ubuntu-ldap:24.04"; then
+    ok "Imagen ubuntu-ldap:24.04 ya existe"
+    return
+  fi
+  docker build -f "$HOME/Labs/Dockerfile.ldap" -t ubuntu-ldap:24.04 "$HOME/Labs/"
+  ok "Imagen ubuntu-ldap:24.04 construida"
+}
+
+########################################
 # FASES DE INFRAESTRUCTURA
 ########################################
 create_ns_srv() {
@@ -142,7 +154,7 @@ EOF
 # MAIN
 ########################################
 echo "==[ LABORATORIO 003 — SERVIDOR LDAP ]=="
-
+build_image_ldap     
 create_ns_srv
 setup_bridge_srv
 setup_uplink
