@@ -204,6 +204,9 @@ if [ -z "$SRV_LDAP" ]; then
     echo "[ERROR] SRV_LDAP no está definida"
     exit 1
 fi
+
+
+
 ########################################
 # FASE 6 — CONFIGURAR OPENLDAP
 ########################################
@@ -211,28 +214,29 @@ setup_ldap() {
   local CT="SRV-LDAP"
   local BASE_DN="dc=laboratorio,dc=local"
   local ADMIN_DN="cn=admin,${BASE_DN}"
+  local ADMIN_PW_HASH='{SSHA}l0A25WqDXgXRzNZxhUodjIYJfJJpoPoJ'
+  local ADMIN_PW_CLEAR='admin123'
 
   echo "🧠 Configurando LDAP en ${CT}"
 
-  # 1. Instalar LDAP solo si no existe slapd
+  # 1. Instalar LDAP si no existe
   docker exec "$CT" bash -c '
     command -v slapd >/dev/null || (
-      apt update &&
-      apt install -y slapd ldap-utils
+      apt-get update &&
+      apt-get install -y slapd ldap-utils
     )
   '
 
-  # 2. Asegurar que slapd esté corriendo
+  # 2. Asegurar slapd activo
   docker exec "$CT" bash -c '
     pgrep slapd >/dev/null || slapd -h "ldap:/// ldapi:///" -g openldap -u openldap
   '
 
-  # 3. Esperar socket LDAP
   sleep 2
 
-  # 4. Crear Base DN si no existe
+  # 3. Crear Base DN si no existe (usando admin por defecto cn=admin,dc=nodomain)
   docker exec "$CT" bash -c "
-    ldapsearch -x -LLL -b ${BASE_DN} >/dev/null 2>&1 || cat <<'EOF' | ldapadd -x -D ${ADMIN_DN} -W
+    ldapsearch -x -LLL -b ${BASE_DN} >/dev/null 2>&1 || cat <<'EOF' | ldapadd -x -D cn=admin,dc=nodomain -w admin123
 dn: ${BASE_DN}
 objectClass: top
 objectClass: dcObject
@@ -242,9 +246,22 @@ dc: laboratorio
 EOF
   "
 
-  # 5. Crear OU People si no existe
+  # 4. Alinear RootDN y RootPW con el dominio correcto
   docker exec "$CT" bash -c "
-    ldapsearch -x -LLL -b ${BASE_DN} '(ou=People)' >/dev/null 2>&1 || cat <<'EOF' | ldapadd -x -D ${ADMIN_DN} -W
+    cat <<'EOF' | ldapmodify -Y EXTERNAL -H ldapi:///
+dn: olcDatabase={1}mdb,cn=config
+changetype: modify
+replace: olcRootDN
+olcRootDN: ${ADMIN_DN}
+-
+replace: olcRootPW
+olcRootPW: ${ADMIN_PW_HASH}
+EOF
+  "
+
+  # 5. Crear OU People si no existe (ya con el admin correcto)
+  docker exec "$CT" bash -c "
+    ldapsearch -x -LLL -b ${BASE_DN} '(ou=People)' >/dev/null 2>&1 || cat <<'EOF' | ldapadd -x -D ${ADMIN_DN} -w ${ADMIN_PW_CLEAR}
 dn: ou=People,${BASE_DN}
 objectClass: top
 objectClass: organizationalUnit
@@ -252,8 +269,11 @@ ou: People
 EOF
   "
 
-  echo "✅ LDAP base y OU People listas"
+  echo "✅ LDAP inicializado correctamente (Base DN + RootDN + OU)"
 }
+
+
+
 ########################################
 # FASE 7 — CREAR USUARIOS LDAP
 ########################################
