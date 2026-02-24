@@ -2,7 +2,7 @@
 # ===================================================================================
 # LABORATORIO LINUX PARA CERTIFICACIÓN LFCS/LFCE
 # Topología: Infraestructura completa con contenedores Docker
-# Versión: 1 - 
+# Versión: 2 - Optimizada (usa imágenes preconstruidas)
 # Laboratorio: 001 - Core Gateway y red base
 # ===================================================================================
 
@@ -39,39 +39,16 @@ container_exists() { docker ps -a --format '{{.Names}}' | grep -qx "$1"; }
 container_pid() { docker inspect -f '{{.State.Pid}}' "$1"; }
 
 ########################################
-# FASE 0 — CONSTRUCCIÓN INTELIGENTE
+# FASE 0 — VERIFICACIÓN DE IMAGEN (YA NO CONSTRUYE)
 ########################################
-build_image_net() {
+check_image_net() {
   log "FASE 0 — Verificando imagen $IMG_NET"
 
   if image_exists "$IMG_NET"; then
-    ok "Imagen $IMG_NET ya existe."
-    return
+    ok "Imagen $IMG_NET disponible."
+  else
+    err "Imagen $IMG_NET no encontrada. Ejecuta 'bootstrap.sh' primero (opción 4 del menú)"
   fi
-
-  # 1. Detectamos la ubicación real del script
-  local SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  
-  # 2. Buscamos el Dockerfile en el directorio del script o uno arriba
-  local DOCKERFILE_PATH=""
-  if [ -f "$SCRIPT_DIR/Dockerfile" ]; then
-      DOCKERFILE_PATH="$SCRIPT_DIR/Dockerfile"
-  elif [ -f "$SCRIPT_DIR/../Dockerfile" ]; then
-      DOCKERFILE_PATH="$SCRIPT_DIR/../Dockerfile"
-  fi
-
-  # 3. Validamos si lo encontramos
-  if [ -z "$DOCKERFILE_PATH" ]; then
-    err "No se encontró el Dockerfile ni en $SCRIPT_DIR ni en el nivel superior."
-  fi
-
-  log "Dockerfile encontrado en: $DOCKERFILE_PATH"
-  
-  # 4. Construimos usando el directorio del Dockerfile como contexto
-  local CONTEXT_DIR="$(dirname "$DOCKERFILE_PATH")"
-  docker build -t "$IMG_NET" -f "$DOCKERFILE_PATH" "$CONTEXT_DIR"
-  
-  ok "Imagen base creada correctamente"
 }
 
 ########################################
@@ -85,7 +62,6 @@ create_core_gw() {
     return
   fi
 
-  # Usamos la variable CORE_GW para ambos parámetros
   docker run -dit \
     --name "$CORE_GW" \
     --hostname "$CORE_GW" \
@@ -99,7 +75,6 @@ create_core_gw() {
 ########################################
 # FASE 2 — REDES (VETH, ROUTING, BRIDGE)
 ########################################
-# (Mantenemos tu lógica de red original que ya funciona muy bien)
 setup_veth() {
   log "FASE 2 — Configurando veth WAN"
   if ip link show "$VETH_HOST" &>/dev/null; then
@@ -118,21 +93,14 @@ setup_veth() {
 setup_routing_nat() {
   log "FASE 3 — Routing y NAT"
   
-  # 1. El GW necesita saber que su salida a Internet es por el veth hacia el Host
   docker exec "$CORE_GW" ip route replace default via 172.16.255.1
-
-  # 2. Habilitar Forwarding en el Host y DENTRO del CORE-GW
   sysctl -w net.ipv4.ip_forward=1 >/dev/null
   docker exec "$CORE_GW" sysctl -w net.ipv4.ip_forward=1 >/dev/null
 
-  # 3. Regla de NAT en el HOST (Para que el Host enmascare lo que viene del GW)
-  # Usamos -I (Insert) para asegurar que la regla vaya al principio
   iptables -t nat -I POSTROUTING -s "$GW_NET" -j MASQUERADE
   iptables -I FORWARD -s "$GW_NET" -j ACCEPT
   iptables -I FORWARD -d "$GW_NET" -j ACCEPT
 
-  # 4. REGLA CRÍTICA: El CORE-GW también debe hacer NAT para la red de los PCs (10.0.0.0/24)
-  # Sin esto, los PCs llegan al GW pero el GW no sabe cómo "disfrazarlos" para salir al Host
   docker exec "$CORE_GW" iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o "$VETH_GW" -j MASQUERADE
   
   ok "Routing y NAT configurado en Host y CORE-GW"
@@ -155,7 +123,8 @@ setup_bridge() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   echo -e "${AZUL}${BOLD}==[ LAB 001 — CORE-GW | INFRAESTRUCTURA ]==${NC}"
   
-  build_image_net
+  # SOLO VERIFICA - NO CONSTRUYE
+  check_image_net
   create_core_gw
   setup_veth
   setup_routing_nat
@@ -165,6 +134,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   sleep 5
 fi
 
+# ... (print_topology se mantiene igual)
 
 # ===================================================================================
 # FUNCIÓN: print_topology - Muestra la topología del laboratorio
