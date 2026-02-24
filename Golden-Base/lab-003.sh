@@ -208,6 +208,29 @@ fi
 # FASE 6 — CONFIGURAR OPENLDAP
 ########################################
 setup_ldap() {
+  
+  echo "[DEBUG][$(date +%H:%M:%S)] ===== INICIANDO SETUP LDAP ====="
+  echo "[DEBUG][$(date +%H:%M:%S)] Variable SRV_LDAP = '$SRV_LDAP'"
+  
+  # Verificar que el contenedor existe - MÉTODO CORREGIDO
+  echo "[DEBUG][$(date +%H:%M:%S)] Verificando contenedor $SRV_LDAP..."
+  
+  # Método 1: Usar docker ps con formato y grep exacto
+  if ! docker ps --format '{{.Names}}' | grep -Fx "$SRV_LDAP" > /dev/null; then
+    echo "[ERROR][$(date +%H:%M:%S)] Contenedor $SRV_LDAP no está corriendo"
+    echo "[DEBUG][$(date +%H:%M:%S)] Contenedores activos:"
+    docker ps --format "table {{.Names}}\t{{.Status}}"
+    return 1
+  fi
+  
+  # O mejor aún, método 2: Usar docker inspect que es más confiable
+  if ! docker inspect -f '{{.State.Running}}' "$SRV_LDAP" 2>/dev/null | grep -q "true"; then
+    echo "[ERROR][$(date +%H:%M:%S)] Contenedor $SRV_LDAP no está corriendo"
+    docker ps --format "table {{.Names}}\t{{.Status}}"
+    return 1
+  fi
+  
+  echo "[OK][$(date +%H:%M:%S)] Contenedor $SRV_LDAP está corriendo"
   echo "[DEBUG][$(date +%H:%M:%S)] ===== INICIANDO SETUP LDAP ====="
   echo "[DEBUG][$(date +%H:%M:%S)] Variable SRV_LDAP = '$SRV_LDAP'"
   
