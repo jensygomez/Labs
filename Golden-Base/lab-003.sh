@@ -2,7 +2,7 @@
 # ===================================================================================
 # LABORATORIO LINUX PARA CERTIFICACIÓN LFCS/LFCE
 # Laboratorio: 003 - Servidor LDAP
-# Requiere imagen: ubuntu-ldap:24.04 (construida desde Dockerfile.ldap)
+# Versión: 2 - Optimizada (usa imágenes preconstruidas)
 # ===================================================================================
 
 set -Eeuo pipefail
@@ -17,17 +17,17 @@ err() { echo -e "${ROJO}❌ $*${NC}" >&2; exit 1; }
 container_exists()         { docker ps -a --format '{{.Names}}' | grep -qx "$1"; }
 container_pid()            { docker inspect -f '{{.State.Pid}}' "$1"; }
 veth_exists_in_container() { docker exec "$1" ip link show "$2" &>/dev/null; }
+image_exists()             { docker images --format '{{.Repository}}:{{.Tag}}' | grep -qx "$1"; }
 
 ########################################
-# FASE 0 — CONSTRUIR IMAGEN LDAP
+# FASE 0 — VERIFICAR IMAGEN LDAP (YA NO CONSTRUYE)
 ########################################
-build_image_ldap() {
-  if docker images --format '{{.Repository}}:{{.Tag}}' | grep -qx "ubuntu-ldap:24.04"; then
-    ok "Imagen ubuntu-ldap:24.04 ya existe"
-    return
+check_image_ldap() {
+  if image_exists "ubuntu-ldap:24.04"; then
+    ok "Imagen ubuntu-ldap:24.04 disponible"
+  else
+    err "Imagen ubuntu-ldap:24.04 no encontrada. Ejecuta 'bootstrap.sh' primero (opción 4 del menú)"
   fi
-  docker build -f "$HOME/Labs/Dockerfile.ldap" -t ubuntu-ldap:24.04 "$HOME/Labs/"
-  ok "Imagen ubuntu-ldap:24.04 construida"
 }
 
 ########################################
@@ -122,22 +122,9 @@ setup_users() {
 
   local count=0
   set +e
-  
-  # Primero verificar que el proceso está vivo
-  docker exec "SRV-LDAP" pgrep slapd
-  if [ $? -ne 0 ]; then
-    err "slapd no está corriendo"
-  fi
-  
-  # Verificar que el puerto está escuchando
-  docker exec "SRV-LDAP" netstat -tlnp | grep 389
-  
   while true; do
-    echo "Intento $((count+1)): Verificando LDAP..."
-    
-    # Hacer una búsqueda básica
-    docker exec "SRV-LDAP" ldapsearch -x -H ldap://localhost:389 \
-      -b "dc=laboratorio,dc=local" 2>&1
+    docker exec "SRV-LDAP" ldapsearch -x -H ldap://localhost \
+      -b "dc=laboratorio,dc=local" >/dev/null 2>&1
     STATUS=$?
 
     if [ $STATUS -eq 0 ]; then
@@ -145,14 +132,11 @@ setup_users() {
       break
     fi
 
+    echo "Intento $((count+1)): Servidor aún iniciando..."
     sleep 3
     ((count++))
 
     if [ $count -gt 25 ]; then
-      # Mostrar logs de slapd para diagnóstico
-      docker exec "SRV-LDAP" tail -20 /var/log/syslog 2>/dev/null || \
-      docker exec "SRV-LDAP" journalctl -u slapd 2>/dev/null || \
-      echo "No se encontraron logs"
       err "LDAP no arrancó a tiempo."
     fi
   done
@@ -186,7 +170,13 @@ EOF
 # MAIN
 ########################################
 echo "==[ LABORATORIO 003 — SERVIDOR LDAP ]=="
-build_image_ldap     
+
+# Verificar que CORE-GW existe (lab-001)
+container_exists "CORE-GW" || err "CORE-GW no existe. Ejecuta lab-001.sh primero."
+
+# SOLO VERIFICAR - NO CONSTRUIR
+check_image_ldap
+
 create_ns_srv
 setup_bridge_srv
 setup_uplink
