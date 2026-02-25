@@ -11,13 +11,24 @@ set -Eeuo pipefail
 VERDE='\033[0;32m'
 AMARILLO='\033[0;33m'
 ROJO='\033[0;31m'
+AZUL='\033[0;34m'
 NC='\033[0m'
 
 ok()    { echo -e "${VERDE}✔ $*${NC}"; }
 warn()  { echo -e "${AMARILLO}⚠ $*${NC}"; }
 err()   { echo -e "${ROJO}❌ $*${NC}" >&2; exit 1; }
+info()  { echo -e "${AZUL}ℹ $*${NC}"; }
 
-# Verificar si se ejecuta como root (no recomendado, mejor con sudo)
+# Función para verificar si podemos usar Docker
+check_docker_access() {
+    if docker ps >/dev/null 2>&1; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Verificar si se ejecuta como root
 if [[ $EUID -eq 0 ]]; then
     err "No ejecutes este script como root. Ejecútalo con un usuario normal y usa sudo cuando sea necesario"
 fi
@@ -31,55 +42,114 @@ ok "=== PASO 0: Instalando Docker desde el repositorio oficial ==="
 warn "Actualizando lista de paquetes..."
 sudo apt update
 
-# Instalar dependencias
-warn "Instalando dependencias necesarias..."
-sudo apt install -y \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    software-properties-common \
-    gnupg \
-    lsb-release
-
-# Añadir clave GPG oficial de Docker
-warn "Añadiendo clave GPG de Docker..."
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-
-# Añadir repositorio estable
-warn "Configurando repositorio de Docker..."
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-# Instalar Docker Engine
-warn "Instalando Docker Engine..."
-sudo apt update
-sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-
-# Verificar que Docker está instalado
+# Instalar Docker si no existe
 if ! command -v docker >/dev/null 2>&1; then
-    err "Fallo la instalación de Docker"
+    # Instalar dependencias
+    warn "Instalando dependencias necesarias..."
+    sudo apt install -y \
+        apt-transport-https \
+        ca-certificates \
+        curl \
+        software-properties-common \
+        gnupg \
+        lsb-release
+
+    # Añadir clave GPG oficial de Docker
+    warn "Añadiendo clave GPG de Docker..."
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+    # Añadir repositorio estable
+    warn "Configurando repositorio de Docker..."
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    # Instalar Docker Engine
+    warn "Instalando Docker Engine..."
+    sudo apt update
+    sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+    # Iniciar y habilitar servicio
+    warn "Configurando servicio Docker..."
+    sudo systemctl enable docker
+    sudo systemctl start docker
+
+    # Verificar que el servicio está corriendo
+    if ! sudo systemctl is-active --quiet docker; then
+        err "El servicio Docker no está corriendo"
+    fi
+
+    # Añadir usuario al grupo docker
+    warn "Añadiendo usuario $USER al grupo docker..."
+    sudo usermod -aG docker $USER
+
+    ok "Docker instalado correctamente: $(docker --version 2>/dev/null || echo 'versión desconocida')"
+    
+    # Verificar si podemos acceder a Docker AHORA MISMO
+    if check_docker_access; then
+        ok "Acceso a Docker disponible en esta sesión"
+    else
+        warn "Necesitas actualizar los permisos de grupo para usar Docker"
+        info "¿Quieres continuar de alguna de estas formas?"
+        echo ""
+        echo "  1) newgrp docker  - Inicia una subshell con el nuevo grupo (recomendado ahora)"
+        echo "  2) sudo docker    - Usar sudo para los comandos Docker (temporal)"
+        echo "  3) Salir y volver a entrar - Para sesión SSH o login completo"
+        echo ""
+        read -p "Elige opción [1-3] (por defecto 1): " choice
+        
+        case ${choice:-1} in
+            1)
+                warn "Iniciando subshell con 'newgrp docker'..."
+                warn "El script se re-ejecutará automáticamente en la nueva shell"
+                exec newgrp docker <<EOF
+cd "$PWD"
+exec "$0" "$@"
+EOF
+                ;;
+            2)
+                warn "Usaremos 'sudo docker' para los comandos que siguen"
+                # Definir alias para docker con sudo
+                docker() {
+                    sudo docker "\$@"
+                }
+                ;;
+            3)
+                err "Por favor, cierra sesión y vuelve a entrar, luego ejecuta el script nuevamente"
+                ;;
+        esac
+    fi
+else
+    # Docker ya está instalado, verificar acceso
+    if ! check_docker_access; then
+        warn "Docker está instalado pero no tienes permisos"
+        if groups | grep -q docker; then
+            warn "Estás en el grupo docker pero necesitas reiniciar la sesión"
+            info "Ejecuta: newgrp docker  (para continuar ahora)"
+            exit 1
+        else
+            warn "No estás en el grupo docker. Añadiendo..."
+            sudo usermod -aG docker $USER
+            warn "Por favor, ejecuta 'newgrp docker' y vuelve a ejecutar el script"
+            exit 1
+        fi
+    fi
 fi
 
-# Iniciar y habilitar servicio
-warn "Configurando servicio Docker..."
-sudo systemctl enable docker
-sudo systemctl start docker
+# ============================================================================
+# A partir de aquí, ya deberíamos tener acceso a Docker
+# ============================================================================
 
-# Verificar que el servicio está corriendo
-if ! sudo systemctl is-active --quiet docker; then
-    err "El servicio Docker no está corriendo"
+# Verificación final de Docker
+if ! check_docker_access; then
+    err "No se puede acceder a Docker. Ejecuta 'newgrp docker' y vuelve a intentar"
 fi
 
-# Añadir usuario al grupo docker
-warn "Añadiendo usuario $USER al grupo docker..."
-sudo usermod -aG docker $USER
+ok "Acceso a Docker verificado correctamente"
 
-ok "Docker instalado correctamente: $(docker --version)"
-
-# Advertencia sobre el grupo docker
-warn "IMPORTANTE: Para usar Docker sin sudo, CIERRA SESIÓN y VUELVE A ENTRAR"
-warn "O ejecuta: newgrp docker (solo para la sesión actual)"
+# Crear directorio de trabajo
+mkdir -p ~/Labs
+cd ~/Labs
 
 # ============================================================================
 # Continuar con el resto del script original
