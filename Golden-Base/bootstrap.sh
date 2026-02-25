@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# ~/Labs/Golden-Base/bootstrap.sh
 # ============================================================================
 # BOOTSTRAP - Prepara una VM limpia con todas las imágenes Docker necesarias
 # para los laboratorios LFCS/LFCE
@@ -47,12 +48,25 @@ ok "=== PASO 4: Crear Dockerfile para ubuntu-ldap ==="
 cat > Dockerfile.ldap << 'EOF'
 FROM ubuntu-net:24.04
 ENV DEBIAN_FRONTEND=noninteractive
+
+# Instalar slapd sin debconf (noninteractive genera config mínima válida)
 RUN apt update && \
-    echo "slapd slapd/root_password password admin123" | debconf-set-selections && \
-    echo "slapd slapd/root_password_again password admin123" | debconf-set-selections && \
-    echo "slapd slapd/domain string laboratorio.local" | debconf-set-selections && \
-    echo "slapd shared/organization string Laboratorio" | debconf-set-selections && \
-    apt install -y slapd ldap-utils iproute2 net-tools procps
+    apt install -y slapd ldap-utils iproute2 net-tools procps && \
+    apt clean && rm -rf /var/lib/apt/lists/*
+
+# Fijar contraseña admin123 en tiempo de BUILD via socket unix
+# Así la imagen ya sale con la contraseña correcta, sin depender de debconf
+RUN slapd -u openldap -g openldap -h "ldapi:///" -F /etc/ldap/slapd.d/ && \
+    sleep 2 && \
+    HASH=$(slappasswd -s admin123) && \
+    ldapmodify -Y EXTERNAL -H ldapi:/// <<MOD
+dn: olcDatabase={1}mdb,cn=config
+changetype: modify
+replace: olcRootPW
+olcRootPW: $HASH
+MOD
+RUN pkill slapd || true && sleep 1
+
 EXPOSE 389 636
 CMD ["sleep", "infinity"]
 EOF
@@ -89,7 +103,7 @@ git clone https://github.com/tu-repo/Labs.git ~/Labs/Golden-Base 2>/dev/null || 
 ok "=== PASO 9: Verificar imágenes ==="
 docker images | head -10
 
-ok "✅¡TODO LISTO! VM preparada para los laboratorios"
+ok "✅ ¡TODO LISTO! VM preparada para los laboratorios"
 echo ""
 echo "Para ejecutar los laboratorios:"
 echo "  cd ~/Labs/Golden-Base"
