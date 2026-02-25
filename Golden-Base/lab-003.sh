@@ -144,7 +144,8 @@ setup_users() {
 
   docker exec -i "SRV-LDAP" ldapadd -x \
     -D "cn=admin,dc=laboratorio,dc=local" \
-    -w "admin123" <<'EOF'
+    -w "admin123" \
+    -H ldap://localhost <<'EOF'
 dn: ou=People,dc=laboratorio,dc=local
 objectClass: organizationalUnit
 ou: People
