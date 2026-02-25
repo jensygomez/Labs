@@ -123,12 +123,18 @@ setup_users() {
   local count=0
   set +e
   while true; do
+    # Prueba primero con anonymous bind
     docker exec "SRV-LDAP" ldapsearch -x -H ldap://localhost \
       -b "dc=laboratorio,dc=local" >/dev/null 2>&1
     STATUS=$?
 
     if [ $STATUS -eq 0 ]; then
       echo -e "\n${VERDE}✔ LDAP está Online!${NC}"
+      
+      # 👇 ESPERA ADICIONAL para que slapd termine de cargar la configuración
+      echo "⏳ Esperando 5 segundos para que slapd estabilice..."
+      sleep 5
+      
       break
     fi
 
@@ -142,10 +148,12 @@ setup_users() {
   done
   set -e
 
+  # Ahora intenta agregar usuarios
   docker exec -i "SRV-LDAP" ldapadd -x \
     -D "cn=admin,dc=laboratorio,dc=local" \
     -w "admin123" \
     -H ldap://localhost <<'EOF'
+
 dn: ou=People,dc=laboratorio,dc=local
 objectClass: organizationalUnit
 ou: People
