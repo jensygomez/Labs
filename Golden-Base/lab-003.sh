@@ -122,19 +122,15 @@ setup_users() {
 
   local count=0
   set +e
+  
+  # Primero esperar a que el servicio responda a búsquedas anónimas
   while true; do
-    # Prueba primero con anonymous bind
     docker exec "SRV-LDAP" ldapsearch -x -H ldap://localhost \
       -b "dc=laboratorio,dc=local" >/dev/null 2>&1
     STATUS=$?
 
     if [ $STATUS -eq 0 ]; then
-      echo -e "\n${VERDE}✔ LDAP está Online!${NC}"
-      
-      # 👇 ESPERA ADICIONAL para que slapd termine de cargar la configuración
-      echo "⏳ Esperando 5 segundos para que slapd estabilice..."
-      sleep 5
-      
+      echo -e "\n${VERDE}✔ LDAP está respondiendo a búsquedas anónimas${NC}"
       break
     fi
 
@@ -146,14 +142,28 @@ setup_users() {
       err "LDAP no arrancó a tiempo."
     fi
   done
-  set -e
 
-  # Ahora intenta agregar usuarios
+  # Pequeña pausa para que slapd termine de cargar completamente
+  echo "⏳ Esperando 3 segundos para estabilizar..."
+  sleep 3
+
+  # Verificar que podemos autenticar como admin
+  echo "🔍 Verificando autenticación del admin..."
+  if docker exec "SRV-LDAP" ldapwhoami -x \
+    -D "cn=admin,dc=laboratorio,dc=local" \
+    -w "admin123" \
+    -H ldap://localhost >/dev/null 2>&1; then
+    ok "Autenticación de admin exitosa"
+  else
+    err "No se pudo autenticar como admin. Verifica la contraseña"
+  fi
+
+  # Agregar los usuarios
+  echo "📝 Agregando usuarios LDAP..."
   docker exec -i "SRV-LDAP" ldapadd -x \
     -D "cn=admin,dc=laboratorio,dc=local" \
     -w "admin123" \
     -H ldap://localhost <<'EOF'
-
 dn: ou=People,dc=laboratorio,dc=local
 objectClass: organizationalUnit
 ou: People
@@ -172,6 +182,20 @@ loginShell: /bin/bash
 userPassword: password123
 EOF
 
+  # Verificar que los usuarios se agregaron correctamente
+  echo "🔍 Verificando usuario creado..."
+  if docker exec "SRV-LDAP" ldapsearch -x \
+    -H ldap://localhost \
+    -b "dc=laboratorio,dc=local" \
+    -D "cn=admin,dc=laboratorio,dc=local" \
+    -w "admin123" \
+    "uid=juan" >/dev/null 2>&1; then
+    ok "Usuario juan creado correctamente"
+  else
+    err "Fallo al verificar el usuario juan"
+  fi
+
+  set -e
   ok "Usuarios creados en LDAP"
 }
 
