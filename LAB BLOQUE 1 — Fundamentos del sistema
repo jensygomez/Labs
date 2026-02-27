@@ -4,6 +4,31 @@
 # Preparación para LFCS + RHCSA
 # Rocky Linux 9 — Ejecutar como root
 # =============================================================================
+#
+# ¿QUÉ HACE ESTE SCRIPT?
+#
+# Este script prepara un entorno de laboratorio completo en Rocky Linux 9
+# para practicar los temas del Bloque 1 del temario LFCS y RHCSA. No instala
+# ninguna aplicación de producción ni modifica configuraciones críticas del
+# sistema. Todo lo que crea está aislado en directorios de práctica como
+# /lab, /var/log/lab, /tmp y /opt/app.
+#
+# El script crea usuarios y grupos ficticios (juan, maria, carlos, deploy,
+# auditor, appd) con la contraseña Lab2024!, genera archivos de log con
+# contenido realista, y configura deliberadamente permisos incorrectos,
+# links rotos, ACLs mal configuradas y otros problemas que el alumno debe
+# diagnosticar y corregir. Cada escenario está diseñado para simular una
+# situación real que puede aparecer en el examen o en el trabajo diario
+# como administrador de sistemas Linux.
+#
+# Al finalizar, genera el archivo /root/LAB_BLOQUE1_EJERCICIOS.txt con la
+# guía completa de ejercicios ordenados por nivel: Básico, Intermedio,
+# Avanzado y Troubleshooting. Se recomienda leer esa guía antes de empezar
+# a practicar y ejecutar cada ejercicio sin mirar la solución primero.
+#
+# REQUISITOS: Rocky Linux 9, acceso a internet, ejecutar como root.
+# TIEMPO ESTIMADO DE PRÁCTICA: 4 a 6 horas para completar todos los niveles.
+# =============================================================================
 
 set -e
 
