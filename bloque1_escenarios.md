@@ -31,6 +31,10 @@
 | Troubleshooting | "El servicio httpd no puede leer /var/www/html/index.html aunque el archivo existe. Diagnostica y corrige sin cambiar el propietario del archivo" |
 
 ---
+Escenario de Examen:
+Contexto: 
+Tarea: 
+Requerimientos técnicos:
 
 ## Permisos especiales ★
 
