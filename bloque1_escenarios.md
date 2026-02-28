@@ -3,6 +3,15 @@
 > ★ = aparece en LFCS y RHCSA
 
 ---
+Exam Scenario:
+Context: (The background story)
+Task: (What you need to achieve)
+Technical Requirements:
+
+Requirement 1 (e.g., "Set permissions to 750")
+
+Requirement 2 (e.g., "Must be persistent across reboots")
+
 
 ## Navegación filesystem ★
 
@@ -31,10 +40,7 @@
 | Troubleshooting | "El servicio httpd no puede leer /var/www/html/index.html aunque el archivo existe. Diagnostica y corrige sin cambiar el propietario del archivo" |
 
 ---
-Escenario de Examen:
-Contexto: 
-Tarea: 
-Requerimientos técnicos:
+
 
 ## Permisos especiales ★
 
