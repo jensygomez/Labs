@@ -260,6 +260,7 @@ passwd -l usuario_bloqueado 2>/dev/null || true
 
 ok "Escenarios de usuarios configurados"
 
+
 # =============================================================================
 # BLOQUE 2.2 — GRUPOS (Básico, Intermedio, Avanzado, Troubleshooting)
 # =============================================================================
@@ -278,7 +279,17 @@ groupadd proyecto_alfa 2>/dev/null || true
 groupadd proyecto_beta 2>/dev/null || true
 groupadd proyecto_gamma 2>/dev/null || true
 
-# Asignar usuarios a grupos secundarios
+# VERIFICACIÓN IMPORTANTE: Asegurar que los usuarios existen ANTES de asignar grupos
+# Si no existen, los creamos nuevamente
+for user in ana carlos lucia pedro sofia david; do
+    if ! id "$user" &>/dev/null; then
+        useradd -m "$user"
+        echo "${user}:Lab2024!" | chpasswd
+        ok "Usuario $user recreado para grupos"
+    fi
+done
+
+# Asignar usuarios a grupos secundarios (AHORA SÍ existen)
 usermod -aG proyecto_alfa ana
 usermod -aG proyecto_alfa carlos
 usermod -aG proyecto_beta lucia
@@ -305,10 +316,12 @@ groupadd gerentes 2>/dev/null || true
 groupadd analistas 2>/dev/null || true
 groupadd pasantes 2>/dev/null || true
 
-# Crear usuarios para esta jerarquía
+# Crear usuarios para esta jerarquía (con verificación)
 for user in director1 director2 gerente1 gerente2 analista1 analista2 pasante1 pasante2; do
-    useradd -m "$user" 2>/dev/null || true
-    echo "${user}:Lab2024!" | chpasswd 2>/dev/null || true
+    if ! id "$user" &>/dev/null; then
+        useradd -m "$user"
+        echo "${user}:Lab2024!" | chpasswd
+    fi
 done
 
 # Asignar grupos jerárquicos
@@ -332,6 +345,13 @@ chmod 750 /datos/compartidos
 chmod 640 /datos/compartidos/informe.txt
 # ana está en proyecto_alfa como secundario, no primario. ¿Podrá acceder?
 
+# VERIFICAR QUE ana EXISTE
+if ! id "ana" &>/dev/null; then
+    useradd -m ana
+    echo "ana:Lab2024!" | chpasswd
+    usermod -aG proyecto_alfa ana
+fi
+
 # Caso 2: Grupo no existe en el sistema pero aparece en permisos
 mkdir -p /datos/legacy
 echo "Datos de sistema legacy" > /datos/legacy/datos_antiguos.txt
@@ -340,6 +360,8 @@ chown root:legacy_temp /datos/legacy /datos/legacy/datos_antiguos.txt
 groupdel legacy_temp 2>/dev/null || true  # El grupo ya no existe
 
 ok "Escenarios de grupos configurados"
+
+
 
 # =============================================================================
 # BLOQUE 2.3 — CONTRASEÑAS (Básico, Intermedio, Avanzado, Troubleshooting)
