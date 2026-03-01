@@ -280,7 +280,6 @@ groupadd proyecto_beta 2>/dev/null || true
 groupadd proyecto_gamma 2>/dev/null || true
 
 # VERIFICACIÓN IMPORTANTE: Asegurar que los usuarios existen ANTES de asignar grupos
-# Si no existen, los creamos nuevamente
 for user in ana carlos lucia pedro sofia david; do
     if ! id "$user" &>/dev/null; then
         useradd -m "$user"
@@ -289,7 +288,7 @@ for user in ana carlos lucia pedro sofia david; do
     fi
 done
 
-# Asignar usuarios a grupos secundarios (AHORA SÍ existen)
+# ✅ CORREGIDO: Usuarios individuales (ya estaba bien)
 usermod -aG proyecto_alfa ana
 usermod -aG proyecto_alfa carlos
 usermod -aG proyecto_beta lucia
@@ -321,20 +320,42 @@ for user in director1 director2 gerente1 gerente2 analista1 analista2 pasante1 p
     if ! id "$user" &>/dev/null; then
         useradd -m "$user"
         echo "${user}:Lab2024!" | chpasswd
+        ok "Usuario jerárquico $user creado"
     fi
 done
 
-# Asignar grupos jerárquicos
-usermod -aG directores director1 director2
-usermod -aG gerentes gerente1 gerente2
-usermod -aG analistas analista1 analista2
-usermod -aG pasantes pasante1 pasante2
+# ✅ CORREGIDO: Bucles para múltiples usuarios
+for user in director1 director2; do
+    usermod -aG directores "$user"
+done
+ok "Directores agregados a grupo directores"
+
+for user in gerente1 gerente2; do
+    usermod -aG gerentes "$user"
+done
+ok "Gerentes agregados a grupo gerentes"
+
+for user in analista1 analista2; do
+    usermod -aG analistas "$user"
+done
+ok "Analistas agregados a grupo analistas"
+
+for user in pasante1 pasante2; do
+    usermod -aG pasantes "$user"
+done
+ok "Pasantes agregados a grupo pasantes"
 
 # Los gerentes también pertenecen a analistas (herencia funcional)
-usermod -aG analistas gerente1 gerente2
+for user in gerente1 gerente2; do
+    usermod -aG analistas "$user"
+done
+ok "Gerentes agregados a analistas (herencia)"
 
 # Los directores pertenecen a todos los grupos
-usermod -aG gerentes,analistas,pasantes director1 director2
+for user in director1 director2; do
+    usermod -aG gerentes,analistas,pasantes "$user"
+done
+ok "Directores agregados a todos los grupos"
 
 # --- TROUBLESHOOTING: Permisos denegados por grupo incorrecto ---
 # Caso 1: Usuario en grupo secundario pero no primario para acceso
@@ -343,9 +364,9 @@ echo "Datos confidenciales del proyecto" > /datos/compartidos/informe.txt
 chown root:proyecto_alfa /datos/compartidos /datos/compartidos/informe.txt
 chmod 750 /datos/compartidos
 chmod 640 /datos/compartidos/informe.txt
-# ana está en proyecto_alfa como secundario, no primario. ¿Podrá acceder?
+info "Escenario: ana en proyecto_alfa (secundario) - ¿podrá acceder a /datos/compartidos?"
 
-# VERIFICAR QUE ana EXISTE
+# VERIFICAR QUE ana EXISTE (redundante pero mantenemos)
 if ! id "ana" &>/dev/null; then
     useradd -m ana
     echo "ana:Lab2024!" | chpasswd
@@ -358,8 +379,10 @@ echo "Datos de sistema legacy" > /datos/legacy/datos_antiguos.txt
 groupadd legacy_temp 2>/dev/null || true
 chown root:legacy_temp /datos/legacy /datos/legacy/datos_antiguos.txt
 groupdel legacy_temp 2>/dev/null || true  # El grupo ya no existe
+info "Escenario: /datos/legacy con grupo legacy_temp inexistente"
 
 ok "Escenarios de grupos configurados"
+
 
 
 
