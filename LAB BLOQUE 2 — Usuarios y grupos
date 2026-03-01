@@ -1,0 +1,847 @@
+#!/bin/bash
+# =============================================================================
+# LAB BLOQUE 2 — Usuarios y grupos
+# Preparación para LFCS + RHCSA
+# Rocky Linux 9 — Ejecutar como root
+# =============================================================================
+#
+# ¿QUÉ HACE ESTE SCRIPT?
+#
+# Este script prepara un entorno de laboratorio completo en Rocky Linux 9
+# para practicar los temas del Bloque 2 del temario LFCS y RHCSA: Usuarios y
+# grupos. Crea escenarios realistas con problemas de configuración que el
+# alumno debe diagnosticar y corregir.
+#
+# El script crea usuarios y grupos adicionales, configura skeletons personalizados,
+# establece políticas de contraseñas, crea archivos de configuración de sudo
+# intencionalmente rotos, y genera situaciones donde los usuarios no pueden
+# hacer login, tienen shells inválidos, o pertenecen a grupos incorrectos.
+#
+# Cada escenario está diseñado para simular una situación real que puede
+# aparecer en el examen o en el trabajo diario como administrador de sistemas.
+#
+# Al finalizar, genera el archivo /root/LAB_BLOQUE2_EJERCICIOS.txt con la
+# guía completa de ejercicios ordenados por nivel.
+#
+# REQUISITOS: Rocky Linux 9, acceso a internet, ejecutar como root.
+# TIEMPO ESTIMADO DE PRÁCTICA: 3 a 5 horas para completar todos los niveles.
+# =============================================================================
+
+set -e
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+banner() {
+    echo -e "\n${BLUE}============================================================${NC}"
+    echo -e "${BLUE}  $1${NC}"
+    echo -e "${BLUE}============================================================${NC}\n"
+}
+
+ok() { echo -e "${GREEN}[OK]${NC} $1"; }
+info() { echo -e "${CYAN}[INFO]${NC} $1"; }
+warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
+
+# =============================================================================
+# VERIFICACIONES PREVIAS
+# =============================================================================
+banner "Verificando entorno"
+
+if [[ $EUID -ne 0 ]]; then
+    echo -e "${RED}[ERROR] Este script debe ejecutarse como root${NC}"
+    exit 1
+fi
+
+if ! grep -q "Rocky Linux" /etc/os-release; then
+    warn "Este script fue diseñado para Rocky Linux 9. Continuar bajo tu propio riesgo."
+fi
+
+ok "Ejecutando como root en Rocky Linux"
+
+# =============================================================================
+# INSTALACIÓN DE PAQUETES NECESARIOS
+# =============================================================================
+banner "Instalando paquetes necesarios"
+
+dnf install -y acl vim tree openssh-server cracklib-dicts \
+    policycoreutils-python-utils 2>/dev/null
+
+ok "Paquetes instalados"
+
+# =============================================================================
+# RESPALDO DE ARCHIVOS ORIGINALES
+# =============================================================================
+banner "Resguardando archivos originales"
+
+BACKUP_DIR="/root/lab_backups_bloque2_$(date +%Y%m%d_%H%M%S)"
+mkdir -p "$BACKUP_DIR"
+
+for file in /etc/passwd /etc/shadow /etc/group /etc/gshadow \
+            /etc/login.defs /etc/default/useradd /etc/sudoers \
+            /etc/security/pwquality.conf /etc/pam.d/password-auth \
+            /etc/pam.d/system-auth; do
+    if [ -f "$file" ]; then
+        cp "$file" "$BACKUP_DIR/"
+        info "Resguardado: $file → $BACKUP_DIR/"
+    fi
+done
+
+ok "Archivos de sistema resguardados en $BACKUP_DIR"
+
+# =============================================================================
+# LIMPIEZA DE USUARIOS PREVIOS DEL LABORATORIO (OPCIONAL)
+# =============================================================================
+banner "Preparando entorno de laboratorio"
+
+# Eliminar usuarios del bloque 1 si existen (para empezar limpio)
+for user in juan maria carlos deploy auditor appd; do
+    if id "$user" &>/dev/null; then
+        userdel -r "$user" 2>/dev/null || warn "No se pudo eliminar $user completamente"
+    fi
+done
+
+# Eliminar grupos del bloque 1
+for grp in developers auditores contabilidad ti; do
+    if getent group "$grp" &>/dev/null; then
+        groupdel "$grp" 2>/dev/null || warn "No se pudo eliminar grupo $grp"
+    fi
+done
+
+ok "Entorno limpio para nuevo laboratorio"
+
+# =============================================================================
+# CREACIÓN DE USUARIOS Y GRUPOS BASE
+# =============================================================================
+banner "Creando usuarios y grupos del laboratorio BLOQUE 2"
+
+# Grupos de negocio/funcionales
+for grp in ventas marketing rrhh sistemas desarrolladores operaciones; do
+    if ! getent group "$grp" &>/dev/null; then
+        groupadd "$grp"
+        ok "Grupo $grp creado"
+    fi
+done
+
+# Grupos para sudo y administración
+for grp in admins_sistema admins_web auditoria_sudo; do
+    if ! getent group "$grp" &>/dev/null; then
+        groupadd -r "$grp" 2>/dev/null || groupadd "$grp"
+        ok "Grupo administrativo $grp creado"
+    fi
+done
+
+# =============================================================================
+# USUARIOS BÁSICOS (todos con contraseña Lab2024!)
+# =============================================================================
+# Usuarios regulares
+for user in ana carlos lucia pedro sofia david laura miguel elena raul; do
+    if ! id "$user" &>/dev/null; then
+        useradd -m "$user"
+        echo "${user}:Lab2024!" | chpasswd
+        ok "Usuario $user creado"
+    fi
+done
+
+# Usuarios administrativos
+for user in admin1 admin2 auditor_jefe; do
+    if ! id "$user" &>/dev/null; then
+        useradd -m "$user"
+        echo "${user}:Lab2024!" | chpasswd
+        ok "Usuario administrativo $user creado"
+    fi
+done
+
+# =============================================================================
+# ASIGNACIÓN DE GRUPOS SECUNDARIOS
+# =============================================================================
+banner "Configurando membresías de grupos"
+
+usermod -aG ventas ana
+usermod -aG ventas carlos
+usermod -aG marketing lucia
+usermod -aG marketing pedro
+usermod -aG rrhh sofia
+usermod -aG rrhh david
+usermod -aG sistemas laura
+usermod -aG sistemas miguel
+usermod -aG desarrolladores elena
+usermod -aG desarrolladores raul
+
+# Administradores con múltiples grupos
+usermod -aG sistemas,desarrolladores,admins_sistema admin1
+usermod -aG sistemas,operaciones,admins_sistema admin2
+usermod -aG auditoria_sudo,admins_web auditor_jefe
+
+ok "Membresías de grupos configuradas"
+
+# =============================================================================
+# BLOQUE 2.1 — USUARIOS (Básico, Intermedio, Avanzado, Troubleshooting)
+# =============================================================================
+banner "Bloque 2.1 — Configuración de usuarios"
+
+# --- BÁSICO: useradd, usermod, userdel ---
+# Crear estructura de directorios para prácticas
+mkdir -p /home/usuarios_practica
+touch /home/usuarios_practica/README.txt
+
+# --- INTERMEDIO: Skeleton directory personalizado ---
+mkdir -p /etc/skel_lab
+cat > /etc/skel_lab/README << 'EOF'
+========================================
+BIENVENIDO AL SISTEMA LABORATORIO LFCS
+========================================
+
+Este es tu directorio personal.
+
+Recuerda:
+- Los backups automáticos se realizan a las 02:00
+- Para reportar problemas: sistemas@lab.local
+- Documentación en /usr/share/doc/
+
+Recursos del sistema:
+- CPU: $(nproc) núcleos
+- RAM: $(free -h | grep Mem | awk '{print $2}')
+- Disco: $(df -h / | tail -1 | awk '{print $2}')
+
+¡Buena práctica!
+EOF
+
+cat > /etc/skel_lab/.bashrc_custom << 'EOF'
+# Custom bashrc for lab users
+alias ll='ls -la'
+alias la='ls -A'
+alias l='ls -CF'
+alias h='history'
+alias c='clear'
+export EDITOR=vim
+echo "Bienvenido al laboratorio LFCS/RHCSA - Bloque 2"
+EOF
+
+# Configurar skeleton personalizado para nuevos usuarios
+useradd -m -k /etc/skel_lab -s /bin/bash practica1 2>/dev/null || \
+    useradd -m -k /etc/skel_lab -s /bin/bash practica1
+echo "practica1:Lab2024!" | chpasswd 2>/dev/null || true
+
+# --- AVANZADO: Usuarios del sistema para servicios ---
+# Crear usuarios de sistema (no login)
+useradd -r -s /sbin/nologin -d /var/lib/app_service app_service 2>/dev/null || true
+useradd -r -s /sbin/nologin -d /var/run/daemon_srv daemon_srv 2>/dev/null || true
+useradd -r -s /sbin/nologin -d /opt/custom_app custom_app 2>/dev/null || true
+
+# Crear directorios para estos usuarios
+mkdir -p /var/lib/app_service/data
+mkdir -p /var/run/daemon_srv
+mkdir -p /opt/custom_app/config
+chown app_service:app_service /var/lib/app_service /var/lib/app_service/data
+chown daemon_srv:daemon_srv /var/run/daemon_srv
+chown custom_app:custom_app /opt/custom_app /opt/custom_app/config
+
+# --- TROUBLESHOOTING: Usuario no puede login, shell inválido ---
+# Caso 1: Usuario con shell inexistente
+useradd -m -s /bin/ksh usuario_shell_invalido 2>/dev/null || true
+# Nota: /bin/ksh no está instalado por defecto
+
+# Caso 2: Usuario con shell deshabilitado pero debería poder hacer login
+useradd -m -s /sbin/nologin usuario_operaciones 2>/dev/null || true
+echo "usuario_operaciones:Lab2024!" | chpasswd 2>/dev/null || true
+
+# Caso 3: Usuario con directorio home inexistente (borrado accidentalmente)
+useradd -m usuario_sin_home 2>/dev/null || true
+echo "usuario_sin_home:Lab2024!" | chpasswd 2>/dev/null || true
+rm -rf /home/usuario_sin_home 2>/dev/null || true
+
+# Caso 4: Usuario bloqueado en shadow (con ! en la contraseña)
+useradd -m usuario_bloqueado 2>/dev/null || true
+passwd -l usuario_bloqueado 2>/dev/null || true
+
+ok "Escenarios de usuarios configurados"
+
+# =============================================================================
+# BLOQUE 2.2 — GRUPOS (Básico, Intermedio, Avanzado, Troubleshooting)
+# =============================================================================
+banner "Bloque 2.2 — Configuración de grupos"
+
+# --- BÁSICO: groupadd, groupmod ya hecho arriba ---
+
+# --- INTERMEDIO: Grupos secundarios y newgrp ---
+# Crear directorios para prácticas de grupos
+mkdir -p /proyectos/proyecto_alfa
+mkdir -p /proyectos/proyecto_beta
+mkdir -p /proyectos/proyecto_gamma
+
+# Configurar grupos para cada proyecto
+groupadd proyecto_alfa 2>/dev/null || true
+groupadd proyecto_beta 2>/dev/null || true
+groupadd proyecto_gamma 2>/dev/null || true
+
+# Asignar usuarios a grupos secundarios
+usermod -aG proyecto_alfa ana
+usermod -aG proyecto_alfa carlos
+usermod -aG proyecto_beta lucia
+usermod -aG proyecto_beta pedro
+usermod -aG proyecto_gamma sofia
+usermod -aG proyecto_gamma david
+
+# Crear archivos con grupo propietario específico
+touch /proyectos/proyecto_alfa/plan_alfa.txt
+touch /proyectos/proyecto_beta/plan_beta.txt
+touch /proyectos/proyecto_gamma/plan_gamma.txt
+
+chown root:proyecto_alfa /proyectos/proyecto_alfa /proyectos/proyecto_alfa/plan_alfa.txt
+chown root:proyecto_beta /proyectos/proyecto_beta /proyectos/proyecto_beta/plan_beta.txt
+chown root:proyecto_gamma /proyectos/proyecto_gamma /proyectos/proyecto_gamma/plan_gamma.txt
+
+chmod 770 /proyectos/proyecto_alfa /proyectos/proyecto_beta /proyectos/proyecto_gamma
+chmod 660 /proyectos/proyecto_alfa/*.txt /proyectos/proyecto_beta/*.txt /proyectos/proyecto_gamma/*.txt
+
+# --- AVANZADO: Estrategia de grupos para equipos ---
+# Crear estructura jerárquica de grupos
+groupadd directores 2>/dev/null || true
+groupadd gerentes 2>/dev/null || true
+groupadd analistas 2>/dev/null || true
+groupadd pasantes 2>/dev/null || true
+
+# Crear usuarios para esta jerarquía
+for user in director1 director2 gerente1 gerente2 analista1 analista2 pasante1 pasante2; do
+    useradd -m "$user" 2>/dev/null || true
+    echo "${user}:Lab2024!" | chpasswd 2>/dev/null || true
+done
+
+# Asignar grupos jerárquicos
+usermod -aG directores director1 director2
+usermod -aG gerentes gerente1 gerente2
+usermod -aG analistas analista1 analista2
+usermod -aG pasantes pasante1 pasante2
+
+# Los gerentes también pertenecen a analistas (herencia funcional)
+usermod -aG analistas gerente1 gerente2
+
+# Los directores pertenecen a todos los grupos
+usermod -aG gerentes,analistas,pasantes director1 director2
+
+# --- TROUBLESHOOTING: Permisos denegados por grupo incorrecto ---
+# Caso 1: Usuario en grupo secundario pero no primario para acceso
+mkdir -p /datos/compartidos
+echo "Datos confidenciales del proyecto" > /datos/compartidos/informe.txt
+chown root:proyecto_alfa /datos/compartidos /datos/compartidos/informe.txt
+chmod 750 /datos/compartidos
+chmod 640 /datos/compartidos/informe.txt
+# ana está en proyecto_alfa como secundario, no primario. ¿Podrá acceder?
+
+# Caso 2: Grupo no existe en el sistema pero aparece en permisos
+mkdir -p /datos/legacy
+echo "Datos de sistema legacy" > /datos/legacy/datos_antiguos.txt
+groupadd legacy_temp 2>/dev/null || true
+chown root:legacy_temp /datos/legacy /datos/legacy/datos_antiguos.txt
+groupdel legacy_temp 2>/dev/null || true  # El grupo ya no existe
+
+ok "Escenarios de grupos configurados"
+
+# =============================================================================
+# BLOQUE 2.3 — CONTRASEÑAS (Básico, Intermedio, Avanzado, Troubleshooting)
+# =============================================================================
+banner "Bloque 2.3 — Configuración de contraseñas"
+
+# --- BÁSICO: passwd ya configurado arriba ---
+
+# --- INTERMEDIO: chage, políticas de expiración ---
+# Configurar fechas de expiración para usuarios
+# Usuario que debe cambiar contraseña en primer login
+chage -d 0 usuario_sin_home 2>/dev/null || true  # Expira hoy, forzar cambio
+
+# Usuario con expiración en 30 días
+chage -M 30 -W 5 -I 2 ana 2>/dev/null || true
+
+# Usuario con cuenta que expira en fecha específica (2026-12-31)
+chage -E 2026-12-31 carlos 2>/dev/null || true
+
+# Usuario con inactividad post-expiración
+chage -I 10 lucia 2>/dev/null || true
+
+# --- AVANZADO: PAM básico, pwquality.conf ---
+# Configurar pwquality para práctica (respaldo original ya hecho)
+cp /etc/security/pwquality.conf /etc/security/pwquality.conf.original 2>/dev/null || true
+
+cat > /etc/security/pwquality.conf << 'EOF'
+# Configuración para práctica - BLOQUE 2
+# Los alumnos deberán modificar según ejercicios
+
+minlen = 8
+dcredit = -1
+ucredit = -1
+lcredit = -1
+ocredit = -1
+minclass = 3
+maxrepeat = 2
+gecoscheck = 1
+EOF
+
+# --- TROUBLESHOOTING: Cuenta bloqueada, expirada ---
+# Caso 1: Cuenta expirada
+useradd usuario_expirado 2>/dev/null || true
+echo "usuario_expirado:Lab2024!" | chpasswd 2>/dev/null || true
+chage -E 2023-01-01 usuario_expirado 2>/dev/null || true  # Fecha pasada
+
+# Caso 2: Cuenta con contraseña expirada
+useradd usuario_pass_expirado 2>/dev/null || true
+echo "usuario_pass_expirado:Lab2024!" | chpasswd 2>/dev/null || true
+chage -d 2023-01-01 usuario_pass_expirado 2>/dev/null || true  # Último cambio hace años
+
+# Caso 3: Usuario con cuenta bloqueada por intentos fallidos (simulado)
+useradd usuario_bloqueado_fallos 2>/dev/null || true
+echo "usuario_bloqueado_fallos:Lab2024!" | chpasswd 2>/dev/null || true
+# Simular bloqueo añadiendo ! en shadow (ya hecho arriba con usuario_bloqueado)
+
+# Caso 4: Usuario con contraseña vacía (riesgo de seguridad)
+useradd usuario_sin_pass 2>/dev/null || true
+passwd -d usuario_sin_pass 2>/dev/null || true
+
+ok "Escenarios de contraseñas configurados"
+
+# =============================================================================
+# BLOQUE 2.4 — SUDOERS (Básico, Intermedio, Avanzado, Troubleshooting)
+# =============================================================================
+banner "Bloque 2.4 — Configuración de sudo"
+
+# --- BÁSICO: Agregar usuario a wheel ---
+usermod -aG wheel ana
+usermod -aG wheel carlos
+
+# --- INTERMEDIO: /etc/sudoers.d/, comandos específicos ---
+# Crear directorio sudoers.d si no existe
+mkdir -p /etc/sudoers.d
+
+# Configuración para desarrolladores (pueden gestionar servicios web)
+cat > /etc/sudoers.d/developers << 'EOF'
+# Desarrolladores pueden gestionar servicios web
+%desarrolladores ALL=(root) /usr/bin/systemctl start httpd, /usr/bin/systemctl stop httpd, /usr/bin/systemctl restart httpd, /usr/bin/systemctl status httpd
+EOF
+
+# Configuración para operaciones (pueden gestionar logs y backups)
+cat > /etc/sudoers.d/operaciones << 'EOF'
+# Operaciones puede gestionar logs y backups
+%operaciones ALL=(root) /usr/bin/journalctl, /usr/bin/systemctl, /usr/bin/tar -czf /backup/*, /usr/bin/rsync
+EOF
+
+# --- AVANZADO: NOPASSWD, restricciones por host, alias ---
+# Configuración para administradores con NOPASSWD
+cat > /etc/sudoers.d/admins_nopasswd << 'EOF'
+# Administradores con NOPASSWD para tareas específicas
+%admins_sistema ALL=(ALL) NOPASSWD: /usr/bin/dnf update, /usr/bin/systemctl restart network, /usr/bin/systemctl restart NetworkManager
+%admins_web ALL=(root) NOPASSWD: /usr/bin/systemctl restart httpd, /usr/bin/systemctl reload httpd
+EOF
+
+# Configuración con alias de comandos y restricciones por host
+cat > /etc/sudoers.d/advanced_practice << 'EOF'
+# Práctica avanzada: alias y restricciones
+Cmnd_Alias SERVICES = /usr/bin/systemctl start *, /usr/bin/systemctl stop *, /usr/bin/systemctl restart *, /usr/bin/systemctl status *
+Cmnd_Alias PACKAGE = /usr/bin/dnf install *, /usr/bin/dnf remove *, /usr/bin/dnf update *
+Cmnd_Alias LOGS = /usr/bin/journalctl *, /usr/bin/tail /var/log/*, /usr/bin/grep * /var/log/*
+
+# auditores_jefe puede ejecutar comandos de logs sin contraseña
+auditor_jefe ALL=(root) NOPASSWD: LOGS
+
+# admin1 puede ejecutar servicios pero solo en servidores específicos (simulado)
+admin1 server01.lab.local = SERVICES
+admin1 server01.lab.local = PACKAGE
+EOF
+
+# --- TROUBLESHOOTING: sudo: command not found, visudo roto ---
+# Caso 1: Archivo sudoers con sintaxis incorrecta (roto)
+cat > /etc/sudoers.d/broken_syntax << 'EOF'
+# Este archivo tiene sintaxis incorrecta a propósito
+# Faltan los dos puntos después de ALL
+%database_team ALL (root) /usr/bin/mysql
+# Línea con formato inválido
+lucia ALL=(ALL) AL=(ALL) ALL
+# Línea duplicada con error
+%database_team ALL=(root) /usr/bin/mysqldump
+EOF
+
+# Caso 2: Usuario en sudoers pero grupo no existe (referencia a grupo inexistente)
+cat > /etc/sudoers.d/missing_group << 'EOF'
+# Este grupo no existe en el sistema
+%grupo_inexistente ALL=(ALL) /usr/bin/less /var/log/*
+EOF
+
+# Caso 3: Archivo sudoers.d con permisos incorrectos (644 en lugar de 440)
+touch /etc/sudoers.d/wrong_permissions
+cat > /etc/sudoers.d/wrong_permissions << 'EOF'
+# Este archivo tiene permisos incorrectos (644)
+# Los archivos en sudoers.d deben ser 440
+%database_team ALL=(root) /usr/bin/systemctl status postgresql
+EOF
+chmod 644 /etc/sudoers.d/wrong_permissions
+
+# Caso 4: Usuario intenta ejecutar comando que no está en sudoers
+# El usuario 'pedro' no tiene reglas de sudo configuradas específicamente
+# (pero podría estar en wheel por defecto)
+
+ok "Escenarios de sudo configurados"
+
+# =============================================================================
+# ARCHIVOS DE PRÁCTICA ADICIONALES
+# =============================================================================
+banner "Creando archivos de práctica complementarios"
+
+# Directorio para prácticas de identidad
+mkdir -p /opt/identity_practice
+
+# Archivo con información de usuarios para practicar comandos
+cat > /opt/identity_practice/usuarios.txt << 'EOF'
+LISTA DE USUARIOS DEL SISTEMA (INFORMATIVA)
+
+Usuarios regulares:
+ana - Ventas
+carlos - Ventas
+lucia - Marketing
+pedro - Marketing
+sofia - RRHH
+david - RRHH
+laura - Sistemas
+miguel - Sistemas
+elena - Desarrolladores
+raul - Desarrolladores
+
+Usuarios administrativos:
+admin1 - Administrador sistemas
+admin2 - Administrador sistemas
+auditor_jefe - Auditoría
+
+Usuarios de práctica:
+practica1 - Usuario con skeleton personalizado
+usuario_shell_invalido - Problema: shell no existe
+usuario_operaciones - Problema: shell nologin pero necesita acceso
+usuario_sin_home - Problema: home directorio no existe
+usuario_bloqueado - Problema: cuenta bloqueada
+usuario_expirado - Problema: cuenta expirada
+usuario_pass_expirado - Problema: contraseña expirada
+usuario_bloqueado_fallos - Problema: cuenta bloqueada (simulado)
+usuario_sin_pass - Problema: sin contraseña
+
+Usuarios jerárquicos:
+director1, director2 - Directores
+gerente1, gerente2 - Gerentes
+analista1, analista2 - Analistas
+pasante1, pasante2 - Pasantes
+
+CONTRASEÑA POR DEFECTO: Lab2024! (excepto donde se indique lo contrario)
+EOF
+
+# Script para verificar configuración de usuarios
+cat > /usr/local/bin/verificar_usuarios.sh << 'EOF'
+#!/bin/bash
+# Script para verificar estado de usuarios del laboratorio
+echo "=== REPORTE DE USUARIOS DEL LABORATORIO ==="
+echo ""
+
+echo "Usuarios regulares (UID >= 1000):"
+awk -F: '$3>=1000 && $3<60000 {print $1 " (UID:" $3 ", shell:" $7 ")"}' /etc/passwd | sort
+echo ""
+
+echo "Usuarios del sistema (UID < 1000):"
+awk -F: '$3<1000 {print $1 " (UID:" $3 ", shell:" $7 ")"}' /etc/passwd | sort
+echo ""
+
+echo "Grupos del sistema:"
+cut -d: -f1 /etc/group | sort
+echo ""
+
+echo "Usuarios con contraseña expirada:"
+passwd -S -a 2>/dev/null | grep -E " (P|NP)" | awk '{print $1}' || echo "Ninguno"
+echo ""
+
+echo "=== FIN DEL REPORTE ==="
+EOF
+chmod +x /usr/local/bin/verificar_usuarios.sh
+
+ok "Archivos complementarios creados"
+
+# =============================================================================
+# GUÍA DE EJERCICIOS
+# =============================================================================
+banner "Generando guía de ejercicios"
+
+cat > /root/LAB_BLOQUE2_EJERCICIOS.txt << 'GUIA'
+================================================================
+ GUÍA DE EJERCICIOS — BLOQUE 2
+ USUARIOS Y GRUPOS — LFCS + RHCSA
+ Rocky Linux 9
+================================================================
+
+Antes de comenzar:
+- Todos los usuarios tienen contraseña Lab2024! (excepto donde se indique)
+- Los archivos de sistema han sido respaldados en /root/lab_backups_bloque2_*
+- Puedes usar 'verificar_usuarios.sh' para ver el estado actual
+
+================================================================
+NAVEGACIÓN RÁPIDA POR NIVELES:
+
+BÁSICO (Ej. 1-6)      → Comandos fundamentales
+INTERMEDIO (Ej. 7-12)  → Configuraciones más complejas
+AVANZADO (Ej. 13-18)   → Escenarios empresariales
+TROUBLESHOOTING (19-25)→ Diagnóstico y resolución de problemas
+================================================================
+
+
+--- USUARIOS (BÁSICO) ---
+
+Ejercicio 1: Creación básica
+  Crea un usuario 'tmp_user' con directorio home. Verifica que se creó.
+  Elimínalo después. ¿Qué pasa con su directorio home si no usas -r?
+
+Ejercicio 2: Modificación de usuarios
+  Cambia el shell del usuario 'ana' de /bin/bash a /bin/sh.
+  ¿Cómo verificas el cambio?
+
+Ejercicio 3: Información de usuario
+  Muestra la información completa del usuario 'carlos' (UID, grupos, home, shell).
+  Usa al menos 3 comandos diferentes.
+
+Ejercicio 4: Directorio home
+  Crea un directorio home para 'usuario_sin_home' (actualmente no tiene).
+  Asegúrate de que los archivos de skeleton se copien correctamente.
+
+Ejercicio 5: Usuarios del sistema
+  Lista todos los usuarios del sistema (UID < 1000).
+  ¿Cuántos son usuarios "reales" (shell /sbin/nologin o /bin/false)?
+
+Ejercicio 6: Archivos de configuración
+  Examina /etc/passwd, /etc/shadow, /etc/group.
+  Explica el significado de cada campo en /etc/shadow.
+
+
+--- GRUPOS (BÁSICO) ---
+
+Ejercicio 7: Creación de grupos
+  Crea un grupo 'practica_grupo'. Agrega al usuario 'lucia' a este grupo.
+  Verifica la membresía.
+
+Ejercicio 8: Grupo primario vs secundario
+  ¿Cuál es el grupo primario de 'pedro'? ¿Cómo lo cambias?
+  Cambia su grupo primario a 'practica_grupo' temporalmente y luego revierte.
+
+Ejercicio 9: newgrp
+  Como usuario 'ana', ejecuta 'newgrp proyecto_alfa'.
+  ¿Qué cambia? Crea un archivo y verifica su grupo propietario.
+
+Ejercicio 10: Modificación de grupos
+  Cambia el nombre del grupo 'ventas' a 'ventas_departamento'.
+  ¿Qué precauciones debes tomar?
+
+Ejercicio 11: GID
+  Crea un grupo con GID específico 1500 llamado 'grupo_estatico'.
+  Verifica que se creó correctamente.
+
+Ejercicio 12: Archivos de grupo
+  Examina /etc/group y /etc/gshadow. ¿Cuál es la diferencia?
+
+
+--- CONTRASEÑAS (INTERMEDIO) ---
+
+Ejercicio 13: chage - Políticas de expiración
+  Configura al usuario 'david' para que:
+  - Cambie contraseña cada 45 días
+  - Reciba aviso 7 días antes
+  - La cuenta expire en 2027-01-01
+  Verifica la configuración.
+
+Ejercicio 14: Contraseña en primer login
+  Fuerza al usuario 'elena' a cambiar su contraseña en el próximo login.
+  Prueba haciendo login como elena (debería pedir cambio).
+
+Ejercicio 15: Bloqueo de cuentas
+  Bloquea la cuenta del usuario 'miguel'. Verifica que no puede hacer login.
+  Desbloquéala después.
+
+Ejercicio 16: pwquality
+  Modifica /etc/security/pwquality.conf para requerir:
+  - Mínimo 10 caracteres
+  - Al menos 2 clases de caracteres
+  - Máximo 2 caracteres repetidos
+  Prueba cambiando la contraseña de un usuario.
+
+Ejercicio 17: Auditoría de contraseñas
+  Usa 'passwd -S' para listar el estado de todas las contraseñas.
+  Identifica usuarios con contraseñas expiradas o bloqueadas.
+
+Ejercicio 18: Envejecimiento de contraseñas
+  Explica la diferencia entre:
+  - Cuenta expirada (chage -E)
+  - Contraseña expirada (chage -d)
+  - Cuenta bloqueada (passwd -l)
+
+
+--- SUDO (AVANZADO) ---
+
+Ejercicio 19: Configuración básica sudo
+  Agrega al usuario 'lucia' al grupo wheel.
+  Verifica que puede ejecutar comandos como root.
+
+Ejercicio 20: Comandos específicos en sudoers
+  Configura sudo para que el usuario 'raul' pueda:
+  - Reiniciar el servicio sshd SIN contraseña
+  - Ver logs con journalctl
+  - Pero NO pueda ejecutar otros comandos como root
+
+Ejercicio 21: Alias en sudoers
+  Crea un alias de comandos llamados 'BACKUP_CMDS' que incluya tar, rsync, dd.
+  Permite que el grupo 'operaciones' ejecute estos comandos.
+
+Ejercicio 22: Restricciones por host
+  Configura sudo para que 'admin1' SOLO pueda ejecutar comandos
+  cuando el hostname sea 'server01.lab.local' (simulado).
+  Prueba cambiando temporalmente el hostname.
+
+Ejercicio 23: NOPASSWD selectivo
+  Configura al usuario 'auditor_jefe' para que:
+  - Pueda ejecutar 'journalctl' y 'tail' sin contraseña
+  - Cualquier otro comando sudo requiera contraseña
+
+Ejercicio 24: Visudo y sintaxis
+  Crea un archivo en /etc/sudoers.d/ con reglas para el grupo 'desarrolladores'.
+  Asegúrate de usar visudo -c para verificar la sintaxis.
+
+Ejercicio 25: Depuración de sudo
+  Como usuario 'ana', ejecuta un comando con sudo y falla.
+  Usa 'sudo -l' para ver qué comandos puede ejecutar.
+  Usa journalctl para ver los logs de sudo y entender por qué falla.
+
+
+--- TROUBLESHOOTING (TODOS LOS TEMAS) ---
+
+Escenario 1: Usuario no puede hacer login
+  El usuario 'usuario_shell_invalido' no puede hacer login.
+  Diagnostica por qué y soluciónalo (shell debe ser /bin/bash).
+
+Escenario 2: Login sin home
+  'usuario_sin_home' puede hacer login pero tiene problemas.
+  ¿Qué mensaje muestra al hacer login? Crea su home manualmente.
+
+Escenario 3: Cuenta bloqueada misteriosamente
+  'usuario_bloqueado' tiene la cuenta bloqueada.
+  ¿Por qué? Desbloquéala sin resetear la contraseña.
+
+Escenario 4: Contraseña correcta pero no aceptada
+  'usuario_expirado' tiene la contraseña correcta pero no puede hacer login.
+  ¿Cuál es el problema? Soluciónalo.
+
+Escenario 5: Permisos denegados en directorio compartido
+  'ana' pertenece al grupo 'proyecto_alfa' pero no puede escribir en /proyectos/proyecto_alfa.
+  Investiga por qué y corrígelo (pista: grupo primario vs secundario).
+
+Escenario 6: Grupo desaparecido
+  En /datos/legacy hay archivos con un grupo que ya no existe.
+  Identifica estos archivos y asígnales el grupo 'sistemas'.
+
+Escenario 7: Sudoers con sintaxis incorrecta
+  Hay un archivo en /etc/sudoers.d/ con sintaxis incorrecta.
+  Encuéntralo usando visudo -c y corrígelo.
+
+Escenario 8: Permisos incorrectos en sudoers.d
+  El archivo /etc/sudoers.d/wrong_permissions tiene permisos incorrectos.
+  ¿Cuál es el permiso correcto? Corrígelo.
+
+Escenario 9: Sudo: command not found
+  Intenta ejecutar 'sudo systemctl status httpd' como usuario 'pedro'.
+  Falla con "command not found" aunque systemctl existe. ¿Por qué?
+
+Escenario 10: Política de contraseñas no aplica
+  Cambia la contraseña de un usuario a "1234".
+  A pesar de la política en pwquality.conf, te deja. ¿Por qué?
+  (Pista: ¿root está sujeto a políticas de contraseñas?)
+
+Escenario 11: Usuario puede ejecutar más comandos de los debidos
+  'admin1' puede ejecutar más comandos con sudo de los que debería.
+  Revisa todas las configuraciones de sudo y limita sus privilegios
+  SOLO a gestión de servicios.
+
+Escenario 12: Acceso denegado por grupo incorrecto
+  'carlos' necesita acceso de escritura a /proyectos/proyecto_beta.
+  Actualmente está en 'ventas' y no tiene acceso. Soluciona agregándolo
+  al grupo correcto SIN sacarlo de 'ventas'.
+
+
+================================================================
+EJERCICIOS AVANZADOS (INTEGRACIÓN)
+
+Ejercicio 26: Script de creación masiva
+  Crea un script que lea un archivo CSV (usuarios.csv) con formato:
+  nombre,grupo_primario,grupos_secundarios,shell
+  y cree todos los usuarios automáticamente.
+
+Ejercicio 27: Auditoría de seguridad
+  Escribe un script que recorra /home y verifique:
+  - Dueños de archivos (deben coincidir con el usuario)
+  - Permisos peligrosos (777, archivos con SUID en home)
+  - Archivos huérfanos (usuario no existe)
+  Genera un reporte.
+
+Ejercicio 28: Migración de usuarios
+  Simula la migración de usuarios a un nuevo sistema:
+  Extrae la configuración de 5 usuarios (uid, grupos, contraseñas)
+  y genera comandos para recrearlos en otro sistema.
+
+Ejercicio 29: LDAP simulado
+  Crea usuarios que se autentiquen contra un archivo (nsswitch.conf con files)
+  y configura un directorio /home/ldap_users para ellos.
+
+Ejercicio 30: Integración con scripts del Bloque 1
+  Usa los comandos de gestión de usuarios para crear un sistema
+  de backup que:
+  - Cree un usuario 'backup_operator'
+  - Le asigne permisos para leer /etc, /var/log, /home
+  - Configure sudo para que pueda ejecutar tar en estos directorios
+  - Todo mediante un único script
+
+================================================================
+CONTRASEÑA DE TODOS LOS USUARIOS DEL LAB: Lab2024!
+================================================================
+
+NOTA: Si necesitas revertir configuraciones, los backups están en:
+$BACKUP_DIR
+================================================================
+GUIA
+
+# Reemplazar la variable en el archivo
+sed -i "s|\$BACKUP_DIR|$BACKUP_DIR|g" /root/LAB_BLOQUE2_EJERCICIOS.txt
+
+# =============================================================================
+# FINALIZACIÓN
+# =============================================================================
+banner "LABORATORIO BLOQUE 2 CONFIGURADO EXITOSAMENTE"
+
+echo ""
+echo -e "${GREEN}================================================================${NC}"
+echo -e "${GREEN}  LABORATORIO BLOQUE 2 CONFIGURADO EXITOSAMENTE${NC}"
+echo -e "${GREEN}================================================================${NC}"
+echo ""
+echo -e "  Guía de ejercicios guardada en: ${CYAN}/root/LAB_BLOQUE2_EJERCICIOS.txt${NC}"
+echo ""
+echo -e "  Usuarios creados (contraseña: ${YELLOW}Lab2024!${NC}):"
+echo -e "    ana, carlos, lucia, pedro, sofia, david, laura, miguel,"
+echo -e "    elena, raul, admin1, admin2, auditor_jefe"
+echo -e "    + usuarios de práctica y troubleshooting"
+echo ""
+echo -e "  Grupos creados:"
+echo -e "    ventas, marketing, rrhh, sistemas, desarrolladores, operaciones"
+echo -e "    admins_sistema, admins_web, auditoria_sudo"
+echo -e "    proyecto_alfa, proyecto_beta, proyecto_gamma"
+echo ""
+echo -e "  Archivos de sistema originales respaldados en:"
+echo -e "    ${CYAN}$BACKUP_DIR${NC}"
+echo ""
+echo -e "  Script de verificación: ${CYAN}/usr/local/bin/verificar_usuarios.sh${NC}"
+echo ""
+echo -e "  Para ver los ejercicios:"
+echo -e "    ${CYAN}cat /root/LAB_BLOQUE2_EJERCICIOS.txt${NC}"
+echo ""
+echo -e "${GREEN}================================================================${NC}"
+echo ""
+echo -e "${YELLOW}IMPORTANTE:${NC} Si algo sale mal, los backups están en $BACKUP_DIR"
+echo -e "Para restaurar, por ejemplo: cp $BACKUP_DIR/sudoers /etc/sudoers"
+echo ""
