@@ -4,21 +4,6 @@
 
 ---
 
-## Calendario general
-
-| Semanas | Bloque |
-|---------|--------|
-| 1 - 2   | Bloque 1 + 2 — Fundamentos y Usuarios |
-| 3 - 4   | Bloque 3 — Almacenamiento (sandbox01) |
-| 5 - 6   | Bloque 4 + 5 — Systemd y Networking |
-| 7 - 8   | Bloque 6 — Servicios de red (server01) |
-| 9       | Bloque 7 + 8 — Seguridad y Contenedores |
-| 10      | Bloque 9 — Scripting Bash |
-| 11 - 12 | Bloque 10 — Troubleshooting puro |
-
-> ★ = tema que aparece en **ambos** exámenes (LFCS y RHCSA)
-
----
 
 ## Bloque 1 — Fundamentos del sistema
 
@@ -161,8 +146,7 @@ PC del hijo (KVM + Virt-Manager)
 │   └── client02  (contenedor Podman con systemd)
 └── sandbox01 — 1 vCPU, 1.5GB RAM, disco 15GB + 2 discos vacíos (10GB c/u)
 
-VM Oracle Cloud (Ubuntu + GNOME)
-└── Práctica remota, servicios expuestos a internet, SSH hardening real
+
 
 Tu laptop
 └── Terminal SSH hacia todo lo anterior
