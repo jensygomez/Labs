@@ -15,7 +15,7 @@
 #
 # El script crea usuarios y grupos ficticios (juan, maria, carlos, deploy,
 # auditor, appd) con la contraseña Lab2024!, genera archivos de log con
-# contenido realista, y configura deliberadamente permisos incorrectos,
+# contenido realista, y configura delibaeradamente permisos incorrectos,
 # links rotos, ACLs mal configuradas y otros problemas que el alumno debe
 # diagnosticar y corregir. Cada escenario está diseñado para simular una
 # situación real que puede aparecer en el examen o en el trabajo diario
