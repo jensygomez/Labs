@@ -31,8 +31,7 @@
 # =============================================================================
 
 
-
-set -e
+set -Eeuo pipefail
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -46,217 +45,163 @@ banner() {
     echo -e "${BLUE}  $1${NC}"
     echo -e "${BLUE}============================================================${NC}\n"
 }
-
-ok() { echo -e "${GREEN}[OK]${NC} $1"; }
+ok()   { echo -e "${GREEN}[OK]${NC} $1"; }
 info() { echo -e "${CYAN}[INFO]${NC} $1"; }
 warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 
 # =============================================================================
-# VERIFICACIONES PREVIAS Y BACKUP
+# VERIFICACIONES
 # =============================================================================
-banner "Verificando entorno y creando backups"
+banner "Verificando entorno"
 
-if [[ $EUID -ne 0 ]]; then
-    echo -e "${RED}[ERROR] Este script debe ejecutarse como root${NC}"
-    exit 1
-fi
-
-if ! grep -q "Rocky Linux" /etc/os-release; then
-    warn "Este script fue diseñado para Rocky Linux 9. Continuar bajo tu propio riesgo."
-fi
-
-# Crear directorio de backups
-BACKUP_DIR="/root/lab_backups_bloque1_$(date +%Y%m%d_%H%M%S)"
-mkdir -p "$BACKUP_DIR"
-
-# Backup de archivos importantes que podrían modificarse
-for file in /etc/passwd /etc/shadow /etc/group /etc/sudoers /etc/fstab; do
-    if [ -f "$file" ]; then
-        cp "$file" "$BACKUP_DIR/" 2>/dev/null || true
-        info "Resguardado: $file → $BACKUP_DIR/"
-    fi
-done
-
-ok "Ejecutando como root en Rocky Linux"
-ok "Backups guardados en $BACKUP_DIR"
+[[ $EUID -eq 0 ]] || { echo -e "${RED}Debe ejecutarse como root${NC}"; exit 1; }
 
 # =============================================================================
-# INSTALACIÓN DE PAQUETES NECESARIOS
+# PAQUETES
 # =============================================================================
 banner "Instalando paquetes necesarios"
-
 dnf install -y acl vim tar gzip bzip2 xz tree httpd \
     policycoreutils-python-utils curl wget git vsftpd \
-    setroubleshoot setools-console 2>/dev/null
-
+    setroubleshoot setools-console jq >/dev/null
 ok "Paquetes instalados"
 
 # =============================================================================
-# CREACIÓN DE USUARIOS Y GRUPOS (LIMPIEZA PREVIA)
+# USUARIOS Y GRUPOS
 # =============================================================================
-banner "Preparando usuarios y grupos del laboratorio"
+banner "Usuarios y grupos"
 
-# Eliminar usuarios del bloque anterior si existen (para empezar limpio)
-for user in juan maria carlos deploy auditor appd tempuser_lab; do
-    if id "$user" &>/dev/null; then
-        userdel -r "$user" 2>/dev/null || warn "No se pudo eliminar $user completamente"
-    fi
+USERS=(juan maria carlos deploy auditor appd)
+GROUPS=(developers auditores contabilidad ti rrhh sistemas operaciones desarrolladores)
+
+for g in "${GROUPS[@]}"; do
+    getent group "$g" >/dev/null || groupadd "$g"
 done
 
-# Eliminar grupos del bloque anterior
-for grp in developers auditores contabilidad ti; do
-    if getent group "$grp" &>/dev/null; then
-        groupdel "$grp" 2>/dev/null || warn "No se pudo eliminar grupo $grp"
-    fi
+for u in "${USERS[@]}"; do
+    id "$u" &>/dev/null || useradd -m "$u"
+    echo "$u:Lab2024!" | chpasswd
 done
 
-# Crear usuarios nuevos
-for user in juan maria carlos deploy auditor appd; do
-    useradd -m "$user"
-    echo "${user}:Lab2024!" | chpasswd
-    ok "Usuario $user creado"
-done
-
-# Crear grupos
-for grp in developers auditores contabilidad ti; do
-    groupadd "$grp"
-    ok "Grupo $grp creado"
-done
-
-# Configurar membresías
-usermod -aG developers juan
-usermod -aG developers deploy
+usermod -aG developers juan deploy
 usermod -aG auditores auditor
 usermod -aG contabilidad maria
 usermod -aG ti carlos
 
-ok "Membresías de grupos configuradas"
+ok "Usuarios y grupos listos"
 
 # =============================================================================
-# CREACIÓN DE ESTRUCTURA DE DIRECTORIOS
+# DIRECTORIOS BASE
 # =============================================================================
-banner "Creando estructura de directorios para prácticas"
+banner "Estructura de directorios"
 
 mkdir -p /lab/bloque1/{filesystem,permisos,permisos_especiales,acls,links,compresion,paquetes,vim}
-mkdir -p /var/log/lab/{httpd,app,database}
+mkdir -p /var/log/lab
 mkdir -p /opt/app/{config,bin,logs,data}
 mkdir -p /data/{produccion,backups,compartido}
 mkdir -p /proyectos/{dev,docs,releases}
 mkdir -p /srv/{compartido,web,ftp}
 mkdir -p /tmp/lab_practicas
 
-ok "Estructura de directorios creada"
+ok "Directorios creados"
 
 # =============================================================================
-# BLOQUE 1.1 — NAVEGACIÓN FILESYSTEM (VERSIÓN MEJORADA)
+# BLOQUE 1.1 — FILESYSTEM
 # =============================================================================
 banner "Bloque 1.1 — Navegación Filesystem"
 
-# Archivos .conf con diferentes fechas
 for i in $(seq 1 20); do
-    cat > /etc/lab_service_${i}.conf << EOF
-# Configuración del servicio lab_service_${i}
+cat > /etc/lab_service_${i}.conf <<EOF
 SERVICE_NAME=lab_service_${i}
-PORT=$((8000 + i))
-LOG_LEVEL=$([ $((i % 3)) -eq 0 ] && echo "debug" || echo "info")
-MAX_CONNECTIONS=$((100 * i))
-TIMEOUT=$((30 + i))
+PORT=$((8000+i))
+LOG_LEVEL=$([ $((i%3)) -eq 0 ] && echo debug || echo info)
+MAX_CONNECTIONS=$((100*i))
+TIMEOUT=$((30+i))
 EOF
-    # Fechas aleatorias para algunos archivos (entre 1 y 30 días atrás)
-    if [ $((i % 4)) -eq 0 ]; then
-        touch -d "$((RANDOM % 30 + 1)) days ago" /etc/lab_service_${i}.conf
-    fi
+    (( i % 4 == 0 )) && touch -d "$((RANDOM%30+1)) days ago" /etc/lab_service_${i}.conf
 done
 
-# Logs con diferentes tamaños y formatos
-info "Generando logs de práctica con diferentes tamaños..."
+info "Generando logs"
 
-# Log de autenticación (formato estándar)
 for i in $(seq 1 10000); do
-    USER="user_$((RANDOM % 50))"
-    IP="192.168.1.$((RANDOM % 254))"
-    PORT=$((RANDOM % 60000 + 1024))
-    echo "$(date '+%b %d %H:%M:%S') server01 sshd[$$]: Accepted password for $USER from $IP port $PORT ssh2" >> /var/log/lab/auth_practice.log
+    echo "$(date '+%b %d %H:%M:%S') server01 sshd[$((RANDOM%5000+100))]: Accepted password for user_$((RANDOM%50)) from 192.168.1.$((RANDOM%254)) port $((RANDOM%60000+1024)) ssh2" \
+    >> /var/log/lab/auth_practice.log
 done
 
-# Log de aplicación (formato JSON para práctica avanzada) - CORREGIDO
 for i in $(seq 1 5000); do
-    echo "{\"timestamp\":\"$(date -Iseconds)\",\"level\":\"$([ $((RANDOM % 10)) -eq 0 ] && echo "ERROR" || echo "INFO")\",\"service\":\"api-gateway\",\"request_id\":\"$(cat /proc/sys/kernel/random/uuid 2>/dev/null || echo $RANDOM$RANDOM)\",\"method\":\"$([ $((RANDOM % 2)) -eq 0 ] && echo "GET" || echo "POST")\",\"path\":\"/api/v$((RANDOM % 3))/resource/$((RANDOM % 1000))\",\"status\":$([ $((RANDOM % 10)) -eq 0 ] && echo "500" || echo "200\"),\"response_time_ms\":$((RANDOM % 1000))}" >> /var/log/lab/app_json.log
+echo "{\"timestamp\":\"$(date -Iseconds)\",\
+\"level\":\"$([ $((RANDOM%10)) -eq 0 ] && echo ERROR || echo INFO)\",\
+\"service\":\"api-gateway\",\
+\"request_id\":\"$(uuidgen)\",\
+\"method\":\"$([ $((RANDOM%2)) -eq 0 ] && echo GET || echo POST)\",\
+\"path\":\"/api/v$((RANDOM%3))/resource/$((RANDOM%1000))\",\
+\"status\":$([ $((RANDOM%10)) -eq 0 ] && echo 500 || echo 200),\
+\"response_time_ms\":$((RANDOM%1000))}" >> /var/log/lab/app_json.log
 done
 
-# Log grande (>50MB para ejercicios avanzados)
 for i in $(seq 1 100000); do
-    echo "$(date '+%Y-%m-%d %H:%M:%S') [worker-$((RANDOM % 50))] Procesando lote $i - registro $RANDOM para generar volumen" >> /var/log/lab/app_large.log
+    echo "$(date '+%F %T') [worker-$((RANDOM%50))] Procesando lote $i" >> /var/log/lab/app_large.log
 done
 
-# Archivos con inodos específicos para práctica
-echo "Archivo 1 para práctica de inodos" > /var/log/lab/inode_practice_1.txt
-echo "Archivo 2 para práctica de inodos" > /var/log/lab/inode_practice_2.txt
-echo "Archivo 3 para práctica de inodos" > /var/log/lab/inode_practice_3.txt
+echo "inode practice 1" > /var/log/lab/inode_practice_1.txt
+echo "inode practice 2" > /var/log/lab/inode_practice_2.txt
+echo "inode practice 3" > /var/log/lab/inode_practice_3.txt
 
-# Archivo huérfano (propietario eliminado)
 useradd -u 9999 tempuser_orphan 2>/dev/null || true
-echo "Este archivo pertenece a un usuario que ya no existe en el sistema" > /var/log/lab/orphan_file.txt
-chown 9999:9999 /var/log/lab/orphan_file.txt 2>/dev/null || true
+echo "archivo huérfano" > /var/log/lab/orphan_file.txt
+chown 9999:9999 /var/log/lab/orphan_file.txt || true
 userdel tempuser_orphan 2>/dev/null || true
 
-# Archivo con permisos especiales para find (oculto)
-echo "Archivo oculto para práctica de find" > /var/log/lab/.hidden_practice.txt
+echo "archivo oculto" > /var/log/lab/.hidden_practice.txt
 
-ok "Escenarios de navegación filesystem mejorados listos"
+ok "Bloque 1.1 listo"
 
 # =============================================================================
-# BLOQUE 1.2 — PERMISOS ESTÁNDAR (VERSIÓN MEJORADA)
+# BLOQUE 1.2 — PERMISOS
 # =============================================================================
 banner "Bloque 1.2 — Permisos estándar"
 
-# --- BÁSICO: Archivos con permisos incorrectos ---
-# Archivo con permisos 777 que debería ser 644
-echo "Confidencial: Estrategia de ventas Q1 2025" > /tmp/estrategia_ventas.txt
+echo "Confidencial" > /tmp/estrategia_ventas.txt
 chmod 777 /tmp/estrategia_ventas.txt
 
-# Archivo con permisos 644 que debería ser 755 (ejecutable)
 echo '#!/bin/bash' > /opt/app/backup_script.sh
-echo 'echo "Realizando backup..."' >> /opt/app/backup_script.sh
+echo 'echo backup' >> /opt/app/backup_script.sh
 chmod 644 /opt/app/backup_script.sh
 
-# Archivo con propietario incorrecto
-echo "Configuración de la aplicación" > /opt/app/app.conf
-chown root:root /opt/app/app.conf  # Debería ser deploy:developers
+echo "Config app" > /opt/app/app.conf
+chown root:root /opt/app/app.conf
 
-# --- INTERMEDIO: Configuraciones umask y permisos por defecto ---
 mkdir -p /home/juan/workspace
 touch /home/juan/workspace/{proyecto.py,README.md,config.ini}
 chown -R juan:juan /home/juan/workspace
 
-# Directorio con permisos 777 que debería ser 750
 mkdir -p /data/compartido
-echo "Datos compartidos del equipo" > /data/compartido/team_data.txt
+echo "Datos" > /data/compartido/team_data.txt
 chmod 777 /data/compartido
 chmod 666 /data/compartido/team_data.txt
 
-# --- AVANZADO: Permisos para servicios específicos ---
 mkdir -p /opt/app/config
-echo "DB_PASSWORD=supersecret123" > /opt/app/config/db.conf
-echo "API_KEY=abc123def456" >> /opt/app/config/db.conf
+echo "DB_PASSWORD=secret" > /opt/app/config/db.conf
 chown root:appd /opt/app/config /opt/app/config/db.conf
-chmod 750 /opt/app/config          # Solo root y grupo appd pueden entrar
-chmod 640 /opt/app/config/db.conf  # appd (grupo) puede leer, otros no
+chmod 750 /opt/app/config
+chmod 640 /opt/app/config/db.conf
 
-# --- TROUBLESHOOTING: Servicios que fallan por permisos ---
-# httpd no puede leer su archivo
 mkdir -p /var/www/html/lab
-echo "<h1>Laboratorio LFCS/RHCSA</h1><p>Página de práctica con problemas de permisos</p>" > /var/www/html/lab/index.html
-chmod 600 /var/www/html/lab/index.html  # Demasiado restrictivo
-chown root:root /var/www/html/lab/index.html
+echo "<h1>LAB</h1>" > /var/www/html/lab/index.html
+chmod 600 /var/www/html/lab/index.html
 
-# Aplicación no puede escribir logs
 mkdir -p /opt/app/logs
 touch /opt/app/logs/application.log
-chmod 444 /opt/app/logs/application.log  # Solo lectura, la app necesita escribir
+chmod 444 /opt/app/logs/application.log
 chown appd:developers /opt/app/logs/application.log
 
-ok "Escenarios de permisos estándar mejorados listos"
+ok "Bloque 1.2 listo"
+
+# =============================================================================
+# VALIDACIÓN FINAL
+# =============================================================================
+banner "Validaciones finales"
+jq . /var/log/lab/app_json.log >/dev/null && ok "JSON válido"
+ok "LAB BLOQUE 1 COMPLETADO"
 
 # =============================================================================
 # BLOQUE 1.3 — PERMISOS ESPECIALES (VERSIÓN MEJORADA)
