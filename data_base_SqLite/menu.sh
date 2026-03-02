@@ -173,4 +173,32 @@ menu_principal() {
 }
 
 # ── Inicio ───────────────────────────────────────────────────
+
+# 1. Limpieza inicial de pantalla
+mostrar_header
+
+# 2. Gestión de Base de Datos (Opcional al arrancar)
+echo -e "  ${YELLOW}🛠️  GESTIÓN DEL SISTEMA${NC}"
+echo -e "  $SEP"
+echo -e "  ${BOLD}A)${NC} Entrar directamente a estudiar"
+echo -e "  ${BOLD}B)${NC} Gestionar DB (Cargar YAML / Resetear progreso)"
+echo ""
+read -n 1 -s -p "  Selecciona una opción: " inicio_opc
+
+case $inicio_opc in
+    b|B)
+        echo -e "\n\n  ${CYAN}Iniciando gestor de base de datos...${NC}"
+        # Llamamos al script de Python que creamos antes
+        python3 cargar_ejercicios.py
+        echo -e "\n  ${GREEN}Presiona cualquier tecla para continuar al menú...${NC}"
+        read -n 1 -s
+        ;;
+    *)
+        # Si presiona 'A' o cualquier otra tecla, entra directo
+        echo -e "\n\n  ${BLUE}Cargando bloques de estudio...${NC}"
+        sleep 0.5
+        ;;
+esac
+
+# 3. Lanzar menú principal
 menu_principal
