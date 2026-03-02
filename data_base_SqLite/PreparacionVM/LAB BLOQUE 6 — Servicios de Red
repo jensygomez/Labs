@@ -1,0 +1,65 @@
+#!/bin/bash
+# =============================================================================
+# LAB BLOQUE 6 — SERVICIOS DE RED (PREPARACIÓN)
+# Rocky Linux 9 — Ejecutar como root
+# =============================================================================
+
+set -e
+
+echo "📦 Instalando paquetes necesarios (Apache, NFS, Samba, BIND, Chrony)..."
+dnf install -y httpd nfs-utils samba samba-client bind bind-utils chrony vsftpd targetcli > /dev/null
+
+echo "🛠️  Inyectando configuraciones con 'errores de examen'..."
+
+# 1. APACHE (HTTPD) - Error de permisos y puerto
+# -----------------------------------------------------------------------------
+mkdir -p /var/www/html/secret
+echo "Bienvenido al Lab" > /var/www/html/index.html
+echo "Contenido Privado" > /var/www/html/secret/index.html
+chown -R root:root /var/www/html/secret
+chmod 700 /var/www/html/secret # Esto causará un Error 403 Forbidden
+
+# 2. NFS - Error de exportación
+# -----------------------------------------------------------------------------
+mkdir -p /mnt/nfs_share
+echo "/mnt/nfs_share 127.0.0.1(ro,no_root_squash)" > /etc/exports
+# Error común: El alumno deberá cambiar la IP para que otros la vean o usar '*'
+
+# 3. SAMBA - Usuario sin password de Samba
+# -----------------------------------------------------------------------------
+useradd -s /sbin/nologin smbuser || true
+mkdir -p /srv/samba/public
+chmod 777 /srv/samba/public
+cat >> /etc/samba/smb.conf <<EOF
+[publico]
+   path = /srv/samba/public
+   browseable = yes
+   writable = yes
+   guest ok = yes
+EOF
+# El servicio iniciará pero el acceso fallará si no se gestionan los usuarios
+
+# 4. DNS (BIND) - Solo escucha en localhost
+# -----------------------------------------------------------------------------
+# Por defecto BIND solo escucha en 127.0.0.1. El alumno debe abrirlo a la red.
+sed -i 's/listen-on port 53 { 127.0.0.1; };/listen-on port 53 { 127.0.0.1; };/' /etc/named.conf
+
+# 5. CHRONY (NTP) - Servidor falso
+# -----------------------------------------------------------------------------
+echo "server 1.2.3.4 iburst" >> /etc/chrony.conf # IP inexistente para forzar error de sincronización
+
+# 6. VSFTPD - Root jail error
+# -----------------------------------------------------------------------------
+sed -i 's/anonymous_enable=NO/anonymous_enable=YES/' /etc/vsftpd/vsftpd.conf
+
+# -----------------------------------------------------------------------------
+echo "🚀 Iniciando servicios..."
+for svc in httpd nfs-server smb named chronyd vsftpd; do
+    systemctl enable $svc --now
+    echo "   ✅ $svc iniciado"
+done
+
+echo "⚠️  IMPORTANTE: El Firewall podría estar bloqueando estos servicios."
+echo "   Ese será parte de tu primer ejercicio de Troubleshooting."
+echo "====================================================================="
+echo "LAB BLOQUE 6 LISTO — ¡A practicar!"
