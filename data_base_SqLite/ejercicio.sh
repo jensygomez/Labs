@@ -42,8 +42,10 @@ mostrar_ejercicio() {
     
     # Calcular estrellas de dificultad
     local estrellas=""
+    # Limpiar la variable dificultad (quitar caracteres no numéricos)
+    dificultad=$(echo "$dificultad" | tr -cd '0-9')
     for ((i=1; i<=5; i++)); do
-        if [ $i -le $dificultad ]; then
+        if [ "$i" -le "$dificultad" ] 2>/dev/null; then
             estrellas="${estrellas}★"
         else
             estrellas="${estrellas}☆"
