@@ -1,0 +1,300 @@
+bloque,tema,nivel,orden,enunciado,dificultad
+1,"Fundamentos del sistema","Basico",1,"Exam Scenario:
+Context: Acabas de asumir como administrador de un servidor Rocky Linux 9. El administrador anterior dejó el sistema con algunos problemas de organización.
+Task: Encuentra todos los archivos de configuración (.conf) en /etc que hayan sido modificados en los últimos 7 días.
+Technical Requirements:
+- Usar el comando find con las opciones adecuadas
+- Mostrar la lista completa de archivos con su fecha de modificación
+- Identificar cuál es el archivo más reciente",2
+1,"Fundamentos del sistema","Basico",2,"Exam Scenario:
+Context: Un compañero del equipo de desarrollo te pide ayuda porque no puede ejecutar un script.
+Task: El archivo /opt/app/backup_script.sh tiene permisos incorrectos. Debe ser ejecutable por el propietario y el grupo, pero solo legible por otros.
+Technical Requirements:
+- Cambiar los permisos a 755 (rwxr-xr-x)
+- Verificar que el propietario sea root
+- Probar que el script se ejecuta correctamente",1
+1,"Fundamentos del sistema","Basico",3,"Exam Scenario:
+Context: El departamento de finanzas necesita compartir archivos temporalmente, pero están preocupados por la seguridad.
+Task: El directorio /var/tmp/compartido_publico permite que usuarios eliminen archivos de otros. Debes evitar esto.
+Technical Requirements:
+- Aplicar el sticky bit al directorio
+- Verificar que los usuarios puedan crear archivos pero no borrar los de otros
+- Probar con los usuarios juan, maria y carlos",3
+1,"Fundamentos del sistema","Basico",4,"Exam Scenario:
+Context: El equipo de auditoría necesita acceso a los reportes financieros, pero no debe modificarlos.
+Task: El archivo /data/reportes/financiero.txt debe ser legible por el grupo auditores.
+Technical Requirements:
+- Usar ACLs para dar permiso de lectura al grupo auditores
+- Mantener los permisos existentes para el propietario (maria) y grupo (contabilidad)
+- Verificar que auditor pueda leer pero no escribir",2
+1,"Fundamentos del sistema","Basico",5,"Exam Scenario:
+Context: La aplicación no encuentra su archivo de configuración.
+Task: El link simbólico /opt/app.conf.current está roto. Debe apuntar a /etc/app/config/app.conf.
+Technical Requirements:
+- Corregir el link simbólico existente
+- Verificar que apunta al destino correcto con ls -l
+- Probar que se puede leer el archivo a través del link",1
+1,"Fundamentos del sistema","Basico",6,"Exam Scenario:
+Context: Necesitas enviar por email todos los logs de la aplicación, pero el archivo es demasiado grande.
+Task: Comprime /var/log/lab/app_large.log usando gzip con la máxima compresión.
+Technical Requirements:
+- Crear /tmp/app_large.log.gz con la máxima compresión
+- Comparar el tamaño original vs comprimido
+- Verificar que el archivo comprimido es legible con zcat",2
+1,"Fundamentos del sistema","Basico",7,"Exam Scenario:
+Context: El equipo de seguridad sospecha que algún binario del sistema ha sido modificado.
+Task: Verifica la integridad del paquete httpd usando rpm.
+Technical Requirements:
+- Usar rpm -V para verificar el paquete httpd
+- Identificar qué archivos han sido modificados
+- Documentar los cambios encontrados",3
+1,"Fundamentos del sistema","Basico",8,"Exam Scenario:
+Context: Necesitas editar un archivo de configuración en /etc, pero es muy largo y difícil de navegar.
+Task: Abre /tmp/vim_practice_long.txt en vim y practica navegación eficiente.
+Technical Requirements:
+- Ir directamente a la línea 50 sin usar las flechas
+- Buscar la palabra 'aleatorio' y saltar a la siguiente ocurrencia
+- Copiar las líneas 100-105 y pegarlas al final del archivo",1
+1,"Fundamentos del sistema","Basico",9,"Exam Scenario:
+Context: Hay un archivo en /var/log/lab que no tiene propietario válido (usuario eliminado).
+Task: Encuentra el archivo huérfano y asígnale propietario correcto.
+Technical Requirements:
+- Encontrar archivos con UID/GID que no existen en el sistema
+- Identificar /var/log/lab/orphan_file.txt
+- Cambiar propietario a root:root",2
+1,"Fundamentos del sistema","Basico",10,"Exam Scenario:
+Context: El directorio /data/compartido tiene permisos demasiado abiertos (777) y es inseguro.
+Task: Ajusta los permisos para que solo el propietario y el grupo puedan acceder.
+Technical Requirements:
+- Cambiar permisos del directorio a 750 (rwxr-x---)
+- Asegurar que los archivos dentro mantengan permisos 640
+- Verificar que otros usuarios no puedan listar el contenido",2
+1,"Fundamentos del sistema","Intermedio",1,"Exam Scenario:
+Context: Los desarrolladores necesitan trabajar en /proyectos/colaboracion pero los archivos nuevos no heredan el grupo correcto.
+Task: Configura el directorio para que todos los archivos creados pertenezcan automáticamente al grupo developers.
+Technical Requirements:
+- Aplicar el bit SGID al directorio
+- Crear un archivo de prueba para verificar la herencia
+- Asegurar que los permisos sean 2770",3
+1,"Fundamentos del sistema","Intermedio",2,"Exam Scenario:
+Context: El usuario auditor necesita acceso de solo lectura a /data/empresa/finanzas, pero actualmente no puede entrar.
+Task: Analiza los permisos actuales y configura acceso adecuado.
+Technical Requirements:
+- El directorio debe ser ejecutable para que auditor pueda entrar (permiso +x en directorio)
+- auditor debe poder leer los archivos pero no modificarlos
+- Usar ACLs para dar acceso específico a auditor sin cambiar propietario",3
+1,"Fundamentos del sistema","Intermedio",3,"Exam Scenario:
+Context: Hay un link simbólico que apunta a otro link, creando una cadena. Necesitas entender la estructura.
+Task: Analiza la cadena de links en /opt/app.conf.link3 y determina el archivo final.
+Technical Requirements:
+- Usar ls -l y readlink para seguir la cadena
+- Documentar la ruta completa: link1 → link2 → link3 → archivo real
+- Crear un link directo que apunte al archivo final",2
+1,"Fundamentos del sistema","Intermedio",4,"Exam Scenario:
+Context: Debes hacer backup de /lab/compresion/documentos, pero solo de archivos mayores a 5MB.
+Task: Crea un archivo tar.gz que contenga solo los archivos >5M.
+Technical Requirements:
+- Usar find para identificar archivos >5M
+- Usar tar con --files-from o tubería con xargs
+- Verificar el tamaño y contenido del backup",3
+1,"Fundamentos del sistema","Intermedio",5,"Exam Scenario:
+Context: Necesitas instalar un grupo de paquetes relacionados con desarrollo, pero no recuerdas el nombre exacto del grupo.
+Task: Encuentra e instala el grupo 'Development Tools' usando dnf.
+Technical Requirements:
+- Listar grupos disponibles y encontrar 'Development Tools'
+- Instalar el grupo sin confirmación
+- Verificar que los paquetes del grupo están instalados",2
+1,"Fundamentos del sistema","Intermedio",6,"Exam Scenario:
+Context: El archivo /tmp/vim_practice_replace.txt tiene muchas ocurrencias de 'oldserver01' que deben cambiarse.
+Task: Usa vim para reemplazar todas las ocurrencias de 'oldserver01' por 'newserver01' solo en líneas que no sean comentarios.
+Technical Requirements:
+- Abrir el archivo en vim
+- Usar :g/^[^#]/s/oldserver01/newserver01/g
+- Verificar que los comentarios (#) no se modificaron",3
+1,"Fundamentos del sistema","Intermedio",7,"Exam Scenario:
+Context: El directorio /proyectos/compartido tiene ACLs por defecto configuradas, pero no funcionan como esperas.
+Task: Analiza y corrige las ACLs por defecto para que los nuevos archivos hereden permisos de lectura para el grupo auditores.
+Technical Requirements:
+- Ver las ACLs actuales con getfacl
+- Configurar ACL por defecto: d:g:auditores:rx
+- Crear archivo de prueba y verificar herencia",2
+1,"Fundamentos del sistema","Intermedio",8,"Exam Scenario:
+Context: El script /opt/application/bin/start.sh falla porque no encuentra un archivo de configuración.
+Task: El problema es un link roto. Encuéntralo y soluciónalo.
+Technical Requirements:
+- Identificar qué link está roto en la cadena
+- Corregir el link para que apunte al archivo real (/opt/application/config/settings.conf.real)
+- Probar que el script ahora funciona",2
+1,"Fundamentos del sistema","Intermedio",9,"Exam Scenario:
+Context: Necesitas comparar la eficiencia de diferentes algoritmos de compresión.
+Task: Comprime /lab/compresion/repetitivo.log con gzip, bzip2 y xz, y compara tamaños y tiempos.
+Technical Requirements:
+- Crear tres archivos comprimidos con diferentes algoritmos
+- Usar time para medir tiempo de compresión
+- Documentar tamaños finales y tiempos",3
+1,"Fundamentos del sistema","Intermedio",10,"Exam Scenario:
+Context: Un usuario reporta que puede leer archivos en /datos/privado que no debería.
+Task: Investiga por qué carlos (que pertenece a ti) puede leer secreto.txt cuando debería estar restringido.
+Technical Requirements:
+- Analizar permisos y ACLs del archivo
+- Identificar que la mask está limitando los permisos efectivos
+- Corregir la mask para que los permisos de carlos sean efectivos",4
+1,"Fundamentos del sistema","Avanzado",1,"Exam Scenario:
+Context: Necesitas implementar un sistema de colaboración donde múltiples usuarios puedan trabajar en /proyectos/colaboracion con diferentes niveles de acceso.
+Task: Configura el directorio con permisos especiales y ACLs para:
+- juan (developers): lectura/escritura/ejecución
+- maria (contabilidad): solo lectura
+- auditor (auditores): solo lectura, pero no puede listar contenido
+Technical Requirements:
+- Usar SGID para herencia de grupo
+- Configurar ACLs específicas por usuario
+- Probar cada nivel de acceso",4
+1,"Fundamentos del sistema","Avanzado",2,"Exam Scenario:
+Context: Como parte de una auditoría de seguridad, debes identificar todos los binarios con SUID/SGID en el sistema y justificar si son necesarios.
+Task: Encuentra todos los archivos con SUID/SGID en /usr/local/bin (los creados para el laboratorio) y determina cuáles son riesgos de seguridad.
+Technical Requirements:
+- Usar find con -perm para localizar SUID/SGID
+- Analizar cada binario (cat_viewer, less_viewer, find_lab, vim_lab, cp_lab)
+- Eliminar el SUID de los que no deberían tenerlo",4
+1,"Fundamentos del sistema","Avanzado",3,"Exam Scenario:
+Context: El departamento de IT necesita una estructura compleja de directorios con diferentes niveles de acceso para múltiples equipos.
+Task: Configura /data/empresa con la siguiente estructura:
+- /data/empresa/finanzas: rw para contabilidad, rx para auditores
+- /data/empresa/rrhh: rw para rrhh, nadie más puede entrar
+- /data/empresa/it: rw para desarrolladores, r para operaciones, rx para auditores
+Technical Requirements:
+- Usar ACLs para implementar todos los accesos
+- Asegurar que los nuevos archivos hereden las ACLs apropiadas
+- Documentar la configuración final con getfacl",5
+1,"Fundamentos del sistema","Avanzado",4,"Exam Scenario:
+Context: Un backup crítico (/tmp/backup_corrupto.tar.gz) está corrupto y necesitas recuperar los archivos que sean posibles.
+Task: Intenta recuperar el contenido del backup corrupto.
+Technical Requirements:
+- Intentar extraer con tar (fallará)
+- Usar dd para extraer partes del archivo
+- Recuperar al menos /etc/hostname del backup",5
+1,"Fundamentos del sistema","Avanzado",5,"Exam Scenario:
+Context: Necesitas crear un repositorio local de paquetes para servidores sin acceso a internet.
+Task: Crea un repositorio local en /var/www/html/repo-local usando los paquetes descargados de una máquina con internet.
+Technical Requirements:
+- Instalar createrepo (o dnf install createrepo)
+- Crear la estructura de directorios
+- Inicializar el repositorio con createrepo",3
+1,"Fundamentos del sistema","Avanzado",6,"Exam Scenario:
+Context: Debes editar simultáneamente tres archivos de configuración relacionados (vim_practice_file1.txt, file2.txt, file3.txt) para cambiar las IPs.
+Task: Abre los tres archivos en una misma sesión de vim y cambia las IPs según:
+- prod-server-01: 10.0.0.10 → 10.0.0.11
+- staging-server-01: 10.0.0.20 → 10.0.0.21
+- dev-server-01: 10.0.0.30 → 10.0.0.31
+Technical Requirements:
+- Usar vim con múltiples ventanas (:split, :vsplit)
+- Navegar entre archivos (:wnext, :wprev)
+- Guardar todos los cambios a la vez (:wall)",3
+1,"Fundamentos del sistema","Avanzado",7,"Exam Scenario:
+Context: Un servicio no puede escribir en su archivo de log /opt/app/logs/application.log a pesar de que el usuario appd es el propietario.
+Task: Investiga por qué appd no puede escribir y soluciona el problema.
+Technical Requirements:
+- Verificar permisos del archivo (444 - solo lectura)
+- Verificar permisos del directorio padre
+- Cambiar permisos para permitir escritura (664)
+- Probar que appd puede escribir",2
+1,"Fundamentos del sistema","Avanzado",8,"Exam Scenario:
+Context: Necesitas crear un hard link a un archivo importante como mecanismo de backup, pero descubres que no puedes.
+Task: Intenta crear un hard link de /tmp/otro_fs/archivo_origen.txt a /tmp/hardlink_crossfs.txt y explica por qué falla.
+Technical Requirements:
+- Demostrar que los hard links no funcionan entre filesystems
+- Crear un soft link como alternativa
+- Documentar las diferencias entre hard y soft links",2
+1,"Fundamentos del sistema","Avanzado",9,"Exam Scenario:
+Context: Debes automatizar la rotación de logs comprimiendo los archivos con más de 30 días.
+Task: Encuentra y comprime todos los archivos .conf en /etc que tengan más de 30 días.
+Technical Requirements:
+- Usar find con -mtime +30
+- Comprimir cada archivo con gzip manteniendo el original? (decisión)
+- Verificar que los archivos comprimidos tienen fecha correcta",3
+1,"Fundamentos del sistema","Avanzado",10,"Exam Scenario:
+Context: Un administrador novato configuró mal las ACLs en /opt/restricted/app y ahora deploy no puede acceder al archivo config.conf aunque tiene permisos ACL.
+Task: Diagnostica y soluciona el problema de acceso.
+Technical Requirements:
+- Verificar que deploy tiene permiso ACL en el archivo
+- Identificar que el directorio padre /opt/restricted/app no tiene permiso de ejecución
+- Corregir permisos del directorio padre",4
+1,"Fundamentos del sistema","Troubleshooting",1,"Exam Scenario:
+Context: El servicio httpd no inicia. Investiga la causa y soluciónalo.
+Symptoms:
+- systemctl start httpd falla
+- El mensaje de error no es claro
+- Revisando logs, parece un problema de permisos
+Task: Diagnostica por qué httpd no puede servir la página en /var/www/html/lab/index.html.
+Technical Requirements:
+- Verificar permisos del archivo (600 - demasiado restrictivo)
+- Verificar contexto SELinux (si está en enforcing)
+- Corregir permisos y contexto para que httpd pueda leer",4
+1,"Fundamentos del sistema","Troubleshooting",2,"Exam Scenario:
+Context: Usuarios reportan que pueden eliminar archivos de otros en /var/tmp/compartido_publico, lo que ha causado pérdida de trabajo.
+Task: Implementa una solución que permita compartir archivos pero evite que usuarios borren los de otros.
+Technical Requirements:
+- Diagnosticar que falta sticky bit
+- Aplicar sticky bit (chmod +t)
+- Verificar que ahora no pueden borrar archivos ajenos
+- Documentar la diferencia con/without sticky",2
+1,"Fundamentos del sistema","Troubleshooting",3,"Exam Scenario:
+Context: El comando /usr/local/bin/cp_lab se comporta de manera extraña y parece un riesgo de seguridad.
+Task: Investiga por qué cp_lab es peligroso y toma medidas.
+Technical Requirements:
+- Descubrir que tiene SUID (propietario root)
+- Un usuario normal puede copiar archivos protegidos usando este binario
+- Eliminar el SUID y documentar el riesgo",3
+1,"Fundamentos del sistema","Troubleshooting",4,"Exam Scenario:
+Context: Un desarrollador (carlos) afirma que debería poder leer /datos/privado/secreto.txt porque está en el grupo ti, pero no puede.
+Task: Investiga la causa raíz y soluciona el acceso.
+Technical Requirements:
+- Verificar membresía de grupos (carlos está en ti)
+- Verificar permisos del archivo (640 root:ti)
+- Descubrir que la ACL mask está limitando a solo lectura
+- Ajustar la mask para permitir los permisos efectivos",4
+1,"Fundamentos del sistema","Troubleshooting",5,"Exam Scenario:
+Context: El script de inicio de la aplicación (/opt/application/bin/start.sh) falla con error 'file not found'.
+Task: El problema es un link roto en la cadena de configuración. Encuentra y corrige todos los links rotos.
+Technical Requirements:
+- Usar find -xtype l para encontrar links rotos
+- Identificar que /opt/application/config/settings.conf es un link roto
+- Corregir el link y probar el script",2
+1,"Fundamentos del sistema","Troubleshooting",6,"Exam Scenario:
+Context: Un backup crítico está corrupto y necesitas recuperar información.
+Task: El archivo /tmp/backup_corrupto.tar.gz tiene datos importantes. Intenta recuperar lo máximo posible.
+Technical Requirements:
+- Usar tar con --ignore-failed-read
+- Usar dd para extraer partes recuperables
+- Si falla, intentar recuperar con herramientas de forense básicas (strings, grep)",5
+1,"Fundamentos del sistema","Troubleshooting",7,"Exam Scenario:
+Context: La verificación de integridad del paquete httpd muestra archivos modificados, pero nadie recuerda haberlos cambiado.
+Task: Analiza los cambios y determina si son legítimos o un posible incidente de seguridad.
+Technical Requirements:
+- Usar rpm -V httpd para verificar
+- Examinar los archivos modificados
+- Comparar con backups o reinstalar si es necesario",3
+1,"Fundamentos del sistema","Troubleshooting",8,"Exam Scenario:
+Context: Al intentar editar /tmp/vim_practice_critical.txt, te das cuenta de que es un archivo de sistema simulado y no puedes permitirte errores.
+Task: Edita el archivo añadiendo una nueva entrada para /dev/sdc1 sin romper la sintaxis.
+Technical Requirements:
+- Abrir el archivo en vim con precaución
+- Añadir: '/dev/sdc1 /mnt/data xfs defaults 0 0'
+- Verificar que la sintaxis es correcta
+- Salir sin guardar si no estás seguro (simular)",2
+1,"Fundamentos del sistema","Troubleshooting",9,"Exam Scenario:
+Context: Un usuario no puede acceder a /data/reportes/financiero.txt a pesar de tener permisos ACL.
+Task: Investiga por qué el acceso falla y soluciónalo.
+Technical Requirements:
+- Verificar ACLs del archivo
+- Verificar permisos de los directorios padre (/data, /data/reportes)
+- Descubrir que falta permiso de ejecución en algún directorio padre
+- Corregir y documentar",3
+1,"Fundamentos del sistema","Troubleshooting",10,"Exam Scenario:
+Context: El directorio /tmp/no_sticky_needed tiene sticky bit pero no debería tenerlo, causando confusión.
+Task: Analiza si el sticky bit es necesario y remuévelo si no lo es.
+Technical Requirements:
+- Entender para qué sirve el sticky bit
+- Evaluar si este directorio lo necesita
+- Remover el sticky bit si es innecesario
+- Documentar por qué se tomó la decisión",2
