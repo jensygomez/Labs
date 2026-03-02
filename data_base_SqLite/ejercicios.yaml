@@ -2426,3 +2426,147 @@
 # BLOQUE 5 NETWORKING
 # ======================================================================
 
+# ─── BLOQUE 6: SERVICIOS DE RED - BÁSICO ───
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Basico"
+  orden: 1
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to verify which network services were installed by the setup script.
+    Task: Check the status of Apache, NFS, and Samba.
+    Technical Requirements:
+    - Use 'systemctl is-active' for httpd, nfs-server, and smb.
+    - Confirm they are all in 'active' state.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Basico"
+  orden: 2
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to verify if the web server is delivering content locally.
+    Task: Use a command-line tool to fetch the main page.
+    Technical Requirements:
+    - Use 'curl' or 'wget' against http://localhost.
+    - Confirm you see the "Bienvenido al Lab" message.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Basico"
+  orden: 3
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to check the availability of NFS shares on the local server.
+    Task: List the exported directories.
+    Technical Requirements:
+    - Use the 'showmount' command with the '-e' flag.
+    - Identify the path being exported (e.g., /mnt/nfs_share).
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Basico"
+  orden: 4
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to verify the Samba shares without mounting them.
+    Task: List shares available on the local machine.
+    Technical Requirements:
+    - Use 'smbclient -L localhost -N' (the -N flag is for no password).
+    - Identify the share named 'publico'.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Basico"
+  orden: 5
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to ensure the DNS server (BIND) is responding to queries.
+    Task: Query the local DNS server for a common domain.
+    Technical Requirements:
+    - Use 'dig' or 'host' specifying @localhost.
+    - Query for 'google.com' and check if you get an ANSWER section.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Basico"
+  orden: 6
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: Time synchronization is critical for logs and security.
+    Task: Check the status of the NTP (Chrony) synchronization.
+    Technical Requirements:
+    - Use 'chronyc sources -v'.
+    - Identify if any server has a '*' next to it (indicating active sync).
+    - Note the IP 1.2.3.4 (it should show an error or no sync).
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Basico"
+  orden: 7
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to verify if the FTP server allows anonymous access.
+    Task: Connect to the FTP server as an anonymous user.
+    Technical Requirements:
+    - Use 'ftp localhost' or 'lftp localhost'.
+    - Log in with username 'anonymous' and any password.
+    - Run 'ls' and then 'quit'.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Basico"
+  orden: 8
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to find where the services store their logs for future troubleshooting.
+    Task: Identify the log files for Apache and Samba.
+    Technical Requirements:
+    - Locate the directory /var/log/httpd/ and /var/log/samba/.
+    - List the files in those directories.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Basico"
+  orden: 9
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to confirm which ports are occupied by the newly started services.
+    Task: Map services to their ports.
+    Technical Requirements:
+    - Use 'ss -tunlp'.
+    - Match port 80 to httpd, port 53 to named, and ports 139/445 to smbd.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Basico"
+  orden: 10
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to check if the firewall is already prepared for these services.
+    Task: List the currently allowed services in the default zone.
+    Technical Requirements:
+    - Use 'firewall-cmd --list-services'.
+    - Identify which of the services (http, nfs, samba, dns, ftp) are NOT yet allowed.
+
+
+
+
+
+
+
+
+# ======================================================================
+# BLOQUE 7 
+# ======================================================================
