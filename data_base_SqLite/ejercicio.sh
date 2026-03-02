@@ -42,10 +42,10 @@ mostrar_ejercicio() {
     
     # Calcular estrellas de dificultad
     local estrellas=""
-    # Limpiar la variable dificultad (quitar caracteres no numéricos)
-    dificultad=$(echo "$dificultad" | tr -cd '0-9')
+    # Asegurar que dificultad es solo números
+    dificultad_=$(echo "$dificultad_" | tr -cd '0-9')
     for ((i=1; i<=5; i++)); do
-        if [ "$i" -le "$dificultad" ] 2>/dev/null; then
+        if [ "$i" -le "$dificultad_" ] 2>/dev/null; then
             estrellas="${estrellas}★"
         else
             estrellas="${estrellas}☆"
@@ -176,7 +176,8 @@ EOF
         fi
         
         # Parsear el resultado (formato: id|bloque|tema|nivel|orden|enunciado|dificultad|completado|ultima_vez|notas)
-        IFS='|' read -r id bloque_ tema_ nivel_ orden_ enunciado_ dificultad_ completado_ ultima_vez_ notas_ <<< "$ejercicio"
+        IFS='🐧' read -r id bloque_ tema_ nivel_ orden_ enunciado_ dificultad_ completado_ ultima_vez_ notas_ <<< "$ejercicio"
+
         
         # Calcular pendientes en este nivel
         local pendientes=$(sqlite3 "$DB" "SELECT COUNT(*) FROM ejercicios WHERE bloque=$bloque AND nivel='$nivel' AND completado=0;")
