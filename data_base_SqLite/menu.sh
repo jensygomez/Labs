@@ -65,14 +65,36 @@ menu_nivel() {
         echo -e "  ${BOLD}  Elige el nivel de dificultad:${NC}"
         echo ""
 
+        # Obtener contadores de la base de datos
+        local contadores=$(obtener_contadores "$bloque")
+        
+        # Procesar los contadores (formato: nivel|total|completados)
+        declare -A totales
+        declare -A completados
+        
+        while IFS='|' read -r nivel total comp; do
+            if [ -n "$nivel" ]; then
+                totales["$nivel"]=$total
+                completados["$nivel"]=$comp
+            fi
+        done <<< "$contadores"
+
+        # Mostrar cada nivel con sus contadores reales
         for i in 0 1 2 3; do
             local nivel="${NIVELES[$i]}"
             local icono="${ICONOS[$i]}"
-            # placeholder — aquí leeremos la DB en el próximo paso
-            local disponibles=0
+            
+            local total=${totales["$nivel"]:-0}
+            local comp=${completados["$nivel"]:-0}
+            local pendientes=$((total - comp))
 
-            printf "  ${BOLD}%d)${NC}  %s  %-16s  %s ejercicios disponibles\n" \
-                "$(( i + 1 ))" "$icono" "$nivel" "$disponibles"
+            if [ $total -eq 0 ]; then
+                printf "  ${BOLD}%d)${NC}  %s  %-16s  ${YELLOW}❌ sin ejercicios${NC}\n" \
+                    "$(( i + 1 ))" "$icono" "$nivel"
+            else
+                printf "  ${BOLD}%d)${NC}  %s  %-16s  %d/%d completados (${pendientes} pendientes)\n" \
+                    "$(( i + 1 ))" "$icono" "$nivel" "$comp" "$total"
+            fi
         done
 
         echo ""
@@ -91,8 +113,17 @@ menu_nivel() {
             0) return ;;
             1|2|3|4)
                 local idx=$(( opcion - 1 ))
+                local nivel_elegido="${NIVELES[$idx]}"
+                local total=${totales["$nivel_elegido"]:-0}
+                
+                if [ $total -eq 0 ]; then
+                    echo -e "\n  ${YELLOW}⚠️  No hay ejercicios para este nivel${NC}"
+                    sleep 1
+                    continue
+                fi
+                
                 echo ""
-                echo -e "  ${YELLOW}✅ Seleccionaste: ${NIVELES[$idx]} — Bloque $bloque${NC}"
+                echo -e "  ${YELLOW}✅ Seleccionaste: $nivel_elegido — Bloque $bloque${NC}"
                 echo -e "  ${BLUE}   [Aquí se mostrará el ejercicio — próximo paso]${NC}"
                 echo ""
                 read -rp "  Presiona ENTER para volver..." _
@@ -100,6 +131,10 @@ menu_nivel() {
         esac
     done
 }
+
+
+
+
 
 # ── Menú principal ───────────────────────────────────────────
 menu_principal() {
