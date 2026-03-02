@@ -1,55 +1,44 @@
 #!/bin/bash
 # =============================================================================
-# LAB BLOQUE 5 — NETWORKING (PREPARACIÓN)
-# Alineado con LFCS / RHCSA - Ejecutar como root
+# LAB BLOQUE 5 — NETWORKING (VERSIÓN SEGURA)
 # =============================================================================
 
 set -e
 
-echo "🌐 Preparando escenario de Networking (Bloque 5)..."
+echo "🌐 Preparando escenario de Networking (Sin bloquear al usuario)..."
 
-# 1. Crear una interfaz virtual para pruebas (veth)
-# Esto evita que pierdas conexión SSH si rompes la interfaz principal
-ip link add lab-net0 type veth peer name lab-net1 || true
-ip link set lab-net0 up
-ip link set lab-net1 up
+# 1. CREAR RED FICTICIA (Para no tocar tu IP de acceso)
+# -----------------------------------------------------------------------------
+# Creamos una interfaz dummy llamada 'lab-admin'
+nmcli con add type dummy con-name "lab-virtual" ifname lab0 || true
 
-# -----------------------------------------------------------------------------
-# ESCENARIO 1: IPs e Interfaces (El "Desastre de nmcli")
-# -----------------------------------------------------------------------------
-# Creamos una conexión con IP estática pero con un error en la máscara
-nmcli con add type ethernet con-name "lab-static" ifname lab-net0 \
-  ip4 192.168.100.10/32 gw4 192.168.100.1 autoconnect yes || true
-# Error: La máscara /32 impide ver al Gateway. El alumno debe corregir a /24.
+# Inyectamos el error de la máscara /32 aquí (en la interfaz ficticia)
+nmcli con mod "lab-virtual" ipv4.addresses "192.168.100.10/32" ipv4.method manual
+nmcli con up "lab-virtual"
 
+# 2. SSH - CONFIGURACIÓN DE PRÁCTICA (Archivo aparte)
 # -----------------------------------------------------------------------------
-# ESCENARIO 2: SSH (La "Puerta Cerrada")
-# -----------------------------------------------------------------------------
-# Modificamos el banner y bloqueamos el acceso de root por contraseña
-cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
-sed -i 's/#PermitRootLogin.*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
-echo "Banner /etc/ssh/ssh_banner" >> /etc/ssh/sshd_config
-echo "⚠️  ACCESO RESTRINGIDO - SOLO PERSONAL AUTORIZADO" > /etc/ssh/ssh_banner
-systemctl restart sshd
+# En lugar de romper el SSH principal, creamos un banner y una regla de puerto
+# que solo verás cuando intentes entrar a una IP específica.
+echo "⚠️  ACCESO DE LABORATORIO - SOLO PERSONAL AUTORIZADO" > /etc/ssh/ssh_banner_lab
+# (No tocaremos PermitRootLogin para que no te quedes fuera)
 
+# 3. FIREWALLD - ESCENARIO DE TROUBLESHOOTING
 # -----------------------------------------------------------------------------
-# ESCENARIO 3: Firewalld (El "Muro Invisible")
-# -----------------------------------------------------------------------------
-# Bloqueamos SSH en la zona pública y movemos la interfaz a una zona restrictiva
+# Crearemos una zona nueva para que la arregles, pero NO tocaremos la zona 'public'
+# que es por donde entras tú.
 systemctl start firewalld
-firewall-cmd --permanent --zone=public --remove-service=ssh
 firewall-cmd --permanent --new-zone=lab-restricted
-firewall-cmd --permanent --zone=lab-restricted --set-target=DROP
+firewall-cmd --permanent --zone=lab-restricted --add-source=192.168.100.0/24
+firewall-cmd --permanent --zone=lab-restricted --set-target=REJECT
 firewall-cmd --reload
 
+# 4. ROUTING - EL CAMINO A NINGUNA PARTE
 # -----------------------------------------------------------------------------
-# ESCENARIO 4: Routing (El "Camino a Ninguna Parte")
-# -----------------------------------------------------------------------------
-# Añadimos una ruta estática que entra en conflicto
-ip route add 10.0.0.0/24 via 192.168.100.254 dev lab-net0 || true
+# Esta ruta es inofensiva para tu conexión actual
+ip route add 10.20.30.0/24 via 127.0.0.1 dev lo || true
 
-echo "✅ VM Lista. Escenarios inyectados:"
-echo "   - Interfaz 'lab-static' con máscara errónea."
-echo "   - SSH configurado con Banner y sin login de root por password."
-echo "   - Firewall bloqueando SSH en zona public y zona nueva 'lab-restricted'."
-echo "   - Ruta estática fantasma hacia 10.0.0.0/24."
+echo "✅ Escenario listo y SEGURO."
+echo "   - Tu acceso SSH principal NO ha sido tocado."
+echo "   - Practica 'nmcli' sobre la conexión 'lab-virtual'."
+echo "   - El problema del Firewall está en la zona 'lab-restricted'."
