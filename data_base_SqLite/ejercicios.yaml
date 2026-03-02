@@ -853,7 +853,149 @@
     - Document which users from your lab script currently have sudo access via this group.
 
 
+# ─── BLOQUE 2: USUARIOS Y GRUPOS - AVANZADO ───
 
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Avanzado"
+  orden: 1
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Security policy requires strict password complexity.
+    Task: Configure the 'pwquality' module to enforce new rules.
+    Technical Requirements:
+    - Edit /etc/security/pwquality.conf.
+    - Minimum length: 12 characters.
+    - Must contain at least: 1 uppercase, 1 lowercase, 1 digit, and 1 special character.
+    - Set 'minclass = 4'.
+    - Verify by trying to change a user's password to '123' (it should fail).
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Avanzado"
+  orden: 2
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You are deploying a new internal microservice.
+    Task: Create a system user named 'srv_accounting'.
+    Technical Requirements:
+    - The user must be a system account (UID < 1000).
+    - It must NOT have a valid login shell (/sbin/nologin).
+    - It must NOT have a home directory.
+    - It must belong to a system group with the same name.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Avanzado"
+  orden: 3
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The security team needs to audit sudo usage.
+    Task: Configure a custom sudo alias for the 'auditoria_sudo' group.
+    Technical Requirements:
+    - Create /etc/sudoers.d/audit_policy.
+    - Define a Cmnd_Alias called 'NET_TOOLS' that includes: /usr/bin/ip, /usr/bin/nmcli, /usr/bin/tcpdump.
+    - Allow the group '%auditoria_sudo' to execute these commands without a password.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Avanzado"
+  orden: 4
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A user reports they cannot run sudo commands despite being in the 'wheel' group.
+    Task: Investigate the sudoers configuration.
+    Technical Requirements:
+    - Use 'visudo -c' to check for syntax errors in /etc/sudoers and /etc/sudoers.d/*.
+    - Fix any syntax errors found in the files you injected earlier (like 'broken_syntax').
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Avanzado"
+  orden: 5
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You need to migrate several users to a new group structure.
+    Task: Create a script or a single command to change the primary group of 5 users.
+    Technical Requirements:
+    - Change 'ana', 'carlos', 'lucia', 'pedro', and 'sofia' to have 'admins_web' as their primary group.
+    - Ensure their secondary groups remain untouched.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Avanzado"
+  orden: 6
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: A server is being decommissioned and you need a security report.
+    Task: Find all files in the entire system owned by the deleted user 'pasante1'.
+    Technical Requirements:
+    - Use 'find' with the '-nouser' flag.
+    - Save the list of files to /root/orphaned_files.txt.
+    - Change the ownership of these files to 'root'.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Avanzado"
+  orden: 7
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You need to manage group memberships without using 'usermod'.
+    Task: Use 'gpasswd' to manage the 'sistemas' group.
+    Technical Requirements:
+    - Add user 'elena' to the 'sistemas' group using 'gpasswd'.
+    - Set 'admin1' as the administrator of the group 'sistemas'.
+    - Verify with 'getent group sistemas'.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Avanzado"
+  orden: 8
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You need to verify the integrity of the user database.
+    Task: Check for inconsistencies in /etc/passwd and /etc/shadow.
+    Technical Requirements:
+    - Use the 'pwck' command.
+    - Identify and report any users with missing home directories or invalid shells.
+    - Do not delete any users unless prompted.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Avanzado"
+  orden: 9
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Global settings for new users need to be modified.
+    Task: Change the default behavior for 'useradd'.
+    Technical Requirements:
+    - Edit /etc/default/useradd.
+    - Change the default shell to '/bin/sh' for all future users.
+    - Change the default home directory base to '/home/new_users/'.
+    - Create a test user to verify the new defaults.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Avanzado"
+  orden: 10
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You need to implement a complex sudo restriction based on arguments.
+    Task: Allow 'admin2' to only restart one specific service.
+    Technical Requirements:
+    - Create /etc/sudoers.d/admin2_restrict.
+    - Allow 'admin2' to run 'systemctl restart httpd' but DENY 'systemctl restart sshd' or any other service.
+    - Test the restriction as user 'admin2'.
 
 
 
