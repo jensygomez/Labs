@@ -1708,6 +1708,148 @@
     - Increase it to allow at least 20 concurrent tasks.
     - Restart the service and verify all 10 'sleep' children are successfully created.
 
+  
+# ─── BLOQUE 4: SYSTEMD Y PROCESOS - TROUBLESHOOTING ───
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Troubleshooting"
+  orden: 1
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The service 'lab-crash-loop.service' is in a constant restart cycle.
+    Task: Diagnose the cause of the failure and stabilize the service.
+    Technical Requirements:
+    - Check the logs to see why it fails (ExecStart=/bin/false)[cite: 42].
+    - Identify the 'StartLimitInterval' and 'StartLimitBurst' settings[cite: 42].
+    - Modify the service to run a successful command (like /bin/true) and reset the failed status.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Troubleshooting"
+  orden: 2
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: Two services, 'lab-depend-c.service' and 'lab-depend-d.service', refuse to start.
+    Task: Resolve a circular dependency.
+    Technical Requirements:
+    - Use 'systemctl list-dependencies' to map the relationship[cite: 52].
+    - Identify that C requires D and D requires C[cite: 17].
+    - Break the loop by removing the 'Requires=' or 'After=' directive from one of them so they can start.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Troubleshooting"
+  orden: 3
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: The 'lab-missing-service.timer' is active but its associated unit is failing.
+    Task: Fix a timer pointing to a non-existent unit.
+    Technical Requirements:
+    - Identify the 'Unit=' line in the timer file[cite: 19].
+    - Correct it to point to an existing service (like 'lab-backup.service').
+    - Reload and verify with 'systemctl list-timers'[cite: 51].
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Troubleshooting"
+  orden: 4
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The system fails to isolate 'lab-broken.target'.
+    Task: Debug a broken target.
+    Technical Requirements:
+    - Try to isolate the target: 'systemctl isolate lab-broken.target'[cite: 19].
+    - Identify which required services are missing or failing (Hint: lab-depend-z.service does not exist)[cite: 19].
+    - Remove the missing dependencies from the target file and retry the isolation.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Troubleshooting"
+  orden: 5
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A user reports that 'lab-wants-but-needs.service' fails even though its dependency 'lab-depend-b' is running.
+    Task: Fix a weak dependency ('Wants') that should be a strong one ('Requires').
+    Technical Requirements:
+    - Delete the flag file '/tmp/depend-b-flag' and stop 'lab-depend-b'[cite: 43].
+    - Try to start 'lab-wants-but-needs.service' and observe it fails[cite: 43].
+    - Change 'Wants=' to 'Requires=' in the unit file to ensure proper ordering.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Troubleshooting"
+  orden: 6
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: The service 'lab-signal-bad.service' (Type=forking) hangs during shutdown.
+    Task: Fix incorrect process tracking.
+    Technical Requirements:
+    - Identify that the service lacks a 'PIDFile' but is set to 'Type=forking'[cite: 15, 35].
+    - Either add a PIDFile or change the Type to 'simple' so systemd can track the process properly[cite: 35].
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Troubleshooting"
+  orden: 7
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: A developer ran 'orphan-maker.sh' and now there's a process running without a parent.
+    Task: Locate and manage orphan processes.
+    Technical Requirements:
+    - Run the script /usr/local/lib/lab-services/orphan-maker.sh[cite: 24].
+    - Find the child process that now has PPID 1[cite: 24].
+    - Kill the process and explain why it was re-parented to systemd.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Troubleshooting"
+  orden: 8
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: 'lab-contradiction.service' never starts, regardless of manual attempts.
+    Task: Resolve conflicting unit conditions.
+    Technical Requirements:
+    - Inspect the 'ConditionPathExists=' lines[cite: 43].
+    - Identify the contradiction (requiring a file to exist and NOT exist at the same time)[cite: 43].
+    - Fix the conditions so the service can execute.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Troubleshooting"
+  orden: 9
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The user 'ana' cannot run 'lab-user-failing.service' in her session.
+    Task: Troubleshoot user-level service permissions.
+    Technical Requirements:
+    - Check the logs for ana's user service: 'journalctl --user -u lab-user-failing'[cite: 41].
+    - Identify the permission error (trying to access /root)[cite: 41].
+    - Modify the service to list a directory she actually has access to (like /tmp).
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Troubleshooting"
+  orden: 10
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The system is slow, and you suspect a process is trapped in an I/O or CPU loop.
+    Task: Use advanced monitoring to find the culprit.
+    Technical Requirements:
+    - Use 'iotop' or 'htop' to find 'cpu-hog.sh' or 'log-generator.sh'[cite: 11, 21].
+    - Use 'strace -p <PID>' (if installed) to see the system calls in real-time.
+    - Terminate the process and clean up any leftover logs in /var/log/lab-services/.
+
 # ======================================================================
 # BLOQUE 5
 # ======================================================================
