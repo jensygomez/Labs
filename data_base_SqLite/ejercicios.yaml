@@ -1,54 +1,377 @@
+# ─── BASIC LEVEL ───
+
 - bloque: 1
-  tema: "Fundamentos del sistema"
+  tema: "System Fundamentals"
   nivel: "Basico"
   orden: 1
   dificultad: 2
   enunciado: |
     Exam Scenario:
-    Context: Acabas de asumir como administrador de un servidor Rocky Linux 9.
-    Task: Encuentra todos los archivos .conf en /etc modificados en los últimos 7 días.
+    Context: You have just taken over as the administrator of a Rocky Linux 9 server. The previous admin left the system with some organization issues.
+    Task: Find all configuration files (.conf) in /etc that have been modified in the last 7 days.
     Technical Requirements:
-    - Usar find con las opciones adecuadas
-    - Mostrar lista con fechas
+    - Use the find command with the appropriate options.
+    - Display the full list of files with their modification dates.
+    - Identify which file is the most recent.
 
 - bloque: 1
-  tema: "Fundamentos del sistema"
+  tema: "System Fundamentals"
+  nivel: "Basico"
+  orden: 2
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: A colleague from the development team asks for help because they cannot execute a script.
+    Task: The file /opt/app/backup_script.sh has incorrect permissions. It must be executable by the owner and the group, but only readable by others.
+    Technical Requirements:
+    - Change the permissions to 755 (rwxr-xr-x).
+    - Verify that the owner is root.
+    - Test that the script executes correctly.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Basico"
+  orden: 3
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The finance department needs to share files temporarily but is concerned about security.
+    Task: The directory /var/tmp/public_shared allows users to delete files belonging to others. You must prevent this.
+    Technical Requirements:
+    - Apply the Sticky Bit to the directory.
+    - Verify that users can create files but cannot delete those owned by others.
+    - Test with users juan, maria, and carlos.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Basico"
+  orden: 4
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: The audit team needs access to financial reports but must not modify them.
+    Task: The file /data/reports/financial.txt must be readable by the 'auditors' group.
+    Technical Requirements:
+    - Use ACLs to grant read permission to the 'auditors' group.
+    - Maintain existing permissions for the owner (maria) and group (accounting).
+    - Verify that 'auditor' can read but not write.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Basico"
+  orden: 5
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: The application cannot find its configuration file.
+    Task: The symbolic link /opt/app.conf.current is broken. It should point to /etc/app/config/app.conf.
+    Technical Requirements:
+    - Fix the existing symbolic link.
+    - Verify that it points to the correct destination using ls -l.
+    - Test that the file can be read through the link.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Basico"
+  orden: 6
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to email all application logs, but the file is too large.
+    Task: Compress /var/log/lab/app_large.log using gzip with maximum compression.
+    Technical Requirements:
+    - Create /tmp/app_large.log.gz with maximum compression.
+    - Compare original size vs. compressed size.
+    - Verify that the compressed file is readable with zcat.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Basico"
+  orden: 7
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The security team suspects that a system binary has been modified.
+    Task: Verify the integrity of the httpd package using rpm.
+    Technical Requirements:
+    - Use 'rpm -V' to verify the httpd package.
+    - Identify which files have been modified.
+    - Document the changes found.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Basico"
+  orden: 8
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to edit a configuration file in /etc, but it is very long and hard to navigate.
+    Task: Open /tmp/vim_practice_long.txt in vim and practice efficient navigation.
+    Technical Requirements:
+    - Go directly to line 50 without using arrow keys.
+    - Search for the word 'random' and jump to the next occurrence.
+    - Copy lines 100-105 and paste them at the end of the file.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Basico"
+  orden: 9
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: There is a file in /var/log/lab that has no valid owner (deleted user).
+    Task: Find the orphan file and assign the correct owner.
+    Technical Requirements:
+    - Find files with UID/GID that do not exist in the system.
+    - Identify /var/log/lab/orphan_file.txt.
+    - Change owner to root:root.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Basico"
+  orden: 10
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: The directory /data/shared has permissions that are too open (777) and is insecure.
+    Task: Adjust the permissions so that only the owner and the group can access it.
+    Technical Requirements:
+    - Change directory permissions to 750 (rwxr-x---).
+    - Ensure that files inside maintain 640 permissions.
+    - Verify that other users cannot list the content.
+
+# ─── INTERMEDIATE LEVEL ───
+
+- bloque: 1
+  tema: "System Fundamentals"
   nivel: "Intermedio"
   orden: 1
   dificultad: 3
   enunciado: |
     Exam Scenario:
-    Context: Los desarrolladores necesitan trabajar en /proyectos/colaboracion.
-    Task: Configura el directorio para que los archivos nuevos hereden el grupo developers.
+    Context: Developers need to work in /projects/collaboration, but new files do not inherit the correct group.
+    Task: Configure the directory so that all created files automatically belong to the 'developers' group.
     Technical Requirements:
-    - Aplicar bit SGID
-    - Permisos 2770
-    - Verificar con archivo de prueba
+    - Apply the SGID bit to the directory.
+    - Create a test file to verify inheritance.
+    - Ensure permissions are set to 2770.
 
 - bloque: 1
-  tema: "Fundamentos del sistema"
+  tema: "System Fundamentals"
+  nivel: "Intermedio"
+  orden: 2
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: User 'auditor' needs read-only access to /data/company/finance, but currently cannot enter.
+    Task: Analyze current permissions and configure appropriate access.
+    Technical Requirements:
+    - The directory must be executable so 'auditor' can enter (+x permission on directory).
+    - 'auditor' must be able to read files but not modify them.
+    - Use ACLs to give specific access to 'auditor' without changing ownership.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Intermedio"
+  orden: 3
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: There is a symbolic link pointing to another link, creating a chain. You need to understand the structure.
+    Task: Analyze the link chain in /opt/app.conf.link3 and determine the final file.
+    Technical Requirements:
+    - Use ls -l and readlink to follow the chain.
+    - Document the full path: link1 -> link2 -> link3 -> real file.
+    - Create a direct link pointing to the final file.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Intermedio"
+  orden: 4
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You must backup /lab/compression/documents, but only files larger than 5MB.
+    Task: Create a tar.gz file containing only files >5M.
+    Technical Requirements:
+    - Use find to identify files >5M.
+    - Use tar with --files-from or a pipe with xargs.
+    - Verify the size and content of the backup.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Intermedio"
+  orden: 5
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to install a group of related development packages but don't remember the exact group name.
+    Task: Find and install the 'Development Tools' group using dnf.
+    Technical Requirements:
+    - List available groups and find 'Development Tools'.
+    - Install the group without confirmation.
+    - Verify that the packages in the group are installed.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Intermedio"
+  orden: 6
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The file /tmp/vim_practice_replace.txt has many occurrences of 'oldserver01' that must be changed.
+    Task: Use vim to replace all occurrences of 'oldserver01' with 'newserver01' only in lines that are NOT comments.
+    Technical Requirements:
+    - Open the file in vim.
+    - Use :g/^[^#]/s/oldserver01/newserver01/g.
+    - Verify that comments (#) were not modified.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Intermedio"
+  orden: 7
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: The directory /projects/shared has default ACLs configured, but they don't work as expected.
+    Task: Analyze and fix the default ACLs so new files inherit read permissions for the 'auditors' group.
+    Technical Requirements:
+    - View current ACLs with getfacl.
+    - Configure default ACL: d:g:auditors:rx.
+    - Create a test file and verify inheritance.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Intermedio"
+  orden: 8
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: The script /opt/application/bin/start.sh fails because it cannot find a configuration file.
+    Task: The problem is a broken link. Find it and fix it.
+    Technical Requirements:
+    - Identify which link is broken in the chain.
+    - Fix the link to point to the real file (/opt/application/config/settings.conf.real).
+    - Test that the script now works.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Intermedio"
+  orden: 9
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You need to compare the efficiency of different compression algorithms.
+    Task: Compress /lab/compression/repetitive.log with gzip, bzip2, and xz, and compare sizes and times.
+    Technical Requirements:
+    - Create three compressed files with different algorithms.
+    - Use 'time' to measure compression time.
+    - Document final sizes and times.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Intermedio"
+  orden: 10
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A user reports they can read files in /data/private that they shouldn't.
+    Task: Investigate why 'carlos' (who belongs to 'it') can read secret.txt when it should be restricted.
+    Technical Requirements:
+    - Analyze file permissions and ACLs.
+    - Identify that the mask is limiting effective permissions.
+    - Correct the mask so carlos's permissions are effective.
+
+# ─── ADVANCED LEVEL ───
+
+- bloque: 1
+  tema: "System Fundamentals"
   nivel: "Avanzado"
   orden: 1
   dificultad: 4
   enunciado: |
     Exam Scenario:
-    Context: Auditoría de seguridad en /usr/local/bin.
-    Task: Identifica binarios con SUID injustificado.
+    Context: You need to implement a collaboration system where multiple users can work in /projects/collaboration with different access levels.
+    Task: Configure the directory with special permissions and ACLs for:
+    - juan (developers): read/write/execute.
+    - maria (accounting): read-only.
+    - auditor (auditors): read-only, but cannot list content.
     Technical Requirements:
-    - Encontrar todos los SUID en /usr/local/bin
-    - Analizar cada uno
-    - Eliminar SUID de cp_lab
+    - Use SGID for group inheritance.
+    - Configure specific ACLs per user.
+    - Test each access level.
 
 - bloque: 1
-  tema: "Fundamentos del sistema"
-  nivel: "Troubleshooting"
-  orden: 1
+  tema: "System Fundamentals"
+  nivel: "Avanzado"
+  orden: 2
   dificultad: 4
   enunciado: |
     Exam Scenario:
-    Context: httpd no inicia.
-    Task: Diagnostica por qué no puede servir /var/www/html/lab/index.html.
+    Context: As part of a security audit, you must identify all binaries with SUID/SGID in the system and justify if they are necessary.
+    Task: Find all files with SUID/SGID in /usr/local/bin (those created for the lab) and determine which are security risks.
     Technical Requirements:
-    - Verificar permisos (600)
-    - Verificar contexto SELinux
-    - Corregir
+    - Use find with -perm to locate SUID/SGID.
+    - Analyze each binary (cat_viewer, less_viewer, find_lab, vim_lab, cp_lab).
+    - Remove SUID from those that should not have it.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Avanzado"
+  orden: 3
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The IT department needs a complex directory structure with different access levels for multiple teams.
+    Task: Configure /data/company with the following structure:
+    - /data/company/finance: rw for accounting, rx for auditors.
+    - /data/company/hr: rw for hr, no one else can enter.
+    - /data/company/it: rw for developers, r for operations, rx for auditors.
+    Technical Requirements:
+    - Use ACLs to implement all access levels.
+    - Ensure new files inherit appropriate ACLs.
+    - Document the final configuration with getfacl.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Avanzado"
+  orden: 4
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: A critical backup (/tmp/corrupt_backup.tar.gz) is corrupt, and you need to recover as many files as possible.
+    Task: Attempt to recover the contents of the corrupt backup.
+    Technical Requirements:
+    - Attempt to extract with tar (it will fail).
+    - Use 'dd' to extract parts of the file.
+    - Recover at least /etc/hostname from the backup.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Avanzado"
+  orden: 5
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You need to create a local package repository for servers without internet access.
+    Task: Create a local repository in /var/www/html/repo-local using packages downloaded from a machine with internet.
+    Technical Requirements:
+    - Install createrepo (dnf install createrepo).
+    - Create the directory structure.
+    - Initialize the repository with createrepo.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Avanzado"
+  orden: 6
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You must simultaneously edit three related configuration files (vim_practice_file1.txt, file2.txt, file3.txt) to change IPs.
+    Task: Open all three files in the same vim session and change the IPs according to:
+    - prod-server-01: 10.0.0.10 -> 10.0.0.11
+    - staging-server-01: 10.0.0.20 -> 10.0.0.21
+    Technical Requirements:
+    - Use vim -p or buffers to open files.
+    - Perform the search and replace efficiently.
+    - Save all changes.
