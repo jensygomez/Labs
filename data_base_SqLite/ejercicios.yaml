@@ -1,0 +1,54 @@
+- bloque: 1
+  tema: "Fundamentos del sistema"
+  nivel: "Basico"
+  orden: 1
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: Acabas de asumir como administrador de un servidor Rocky Linux 9.
+    Task: Encuentra todos los archivos .conf en /etc modificados en los últimos 7 días.
+    Technical Requirements:
+    - Usar find con las opciones adecuadas
+    - Mostrar lista con fechas
+
+- bloque: 1
+  tema: "Fundamentos del sistema"
+  nivel: "Intermedio"
+  orden: 1
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: Los desarrolladores necesitan trabajar en /proyectos/colaboracion.
+    Task: Configura el directorio para que los archivos nuevos hereden el grupo developers.
+    Technical Requirements:
+    - Aplicar bit SGID
+    - Permisos 2770
+    - Verificar con archivo de prueba
+
+- bloque: 1
+  tema: "Fundamentos del sistema"
+  nivel: "Avanzado"
+  orden: 1
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Auditoría de seguridad en /usr/local/bin.
+    Task: Identifica binarios con SUID injustificado.
+    Technical Requirements:
+    - Encontrar todos los SUID en /usr/local/bin
+    - Analizar cada uno
+    - Eliminar SUID de cp_lab
+
+- bloque: 1
+  tema: "Fundamentos del sistema"
+  nivel: "Troubleshooting"
+  orden: 1
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: httpd no inicia.
+    Task: Diagnostica por qué no puede servir /var/www/html/lab/index.html.
+    Technical Requirements:
+    - Verificar permisos (600)
+    - Verificar contexto SELinux
+    - Corregir
