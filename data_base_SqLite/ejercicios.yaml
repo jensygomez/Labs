@@ -1569,6 +1569,144 @@
     - Use 'journalctl -b -1' to see the logs from the previous boot.
 
 
+# ─── BLOQUE 4: SYSTEMD Y PROCESOS - AVANZADO ───
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Avanzado"
+  orden: 1
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The service 'lab-memory-limit.service' is crashing because its memory limits are too restrictive for its workload.
+    Task: Adjust the Cgroup memory limits.
+    Technical Requirements:
+    - Inspect the current 'MemoryMax' and 'MemoryHigh' in the unit file[cite: 36, 37].
+    - Increase 'MemoryMax' to 100M and 'MemoryHigh' to 80M.
+    - Reload the daemon, restart the service, and verify it no longer crashes immediately.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Avanzado"
+  orden: 2
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: 'lab-cpu-limit.service' is performing very slowly due to a strict CPU quota[cite: 38].
+    Task: Modify the CPU resource allocation.
+    Technical Requirements:
+    - Identify the current 'CPUQuota' percentage.
+    - Use 'systemctl set-property' to change the CPUQuota to 50% dynamically.
+    - Verify the change is reflected in the service's control group properties.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Avanzado"
+  orden: 3
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You need to switch the system to a minimal maintenance state using a custom target.
+    Task: Isolate the 'lab-custom.target'[cite: 19].
+    Technical Requirements:
+    - Ensure 'lab-custom.target' is allowed to be isolated ('AllowIsolate=yes').
+    - Switch the system to this target.
+    - Verify that only the services associated with this target (like 'lab-target-a.service') are running[cite: 19, 20].
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Avanzado"
+  orden: 4
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: The user 'ana' needs to run a personal background service that doesn't require root.
+    Task: Manage a systemd user unit for 'ana'[cite: 40, 41].
+    Technical Requirements:
+    - Log in as 'ana' (or use 'machinectl shell ana@').
+    - Enable and start 'lab-user-service.service' using the '--user' flag.
+    - Verify the service is running under ana's user slice.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Avanzado"
+  orden: 5
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: A service 'lab-forking-no-pidfile.service' is marked as active but systemd cannot track its main process correctly[cite: 15].
+    Task: Fix a 'Type=forking' service.
+    Technical Requirements:
+    - Identify the missing 'PIDFile' directive in the [Service] section.
+    - Modify the service to use a proper PID file or change its Type to 'simple' if appropriate for the command used.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Avanzado"
+  orden: 6
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: The 'lab-log-generator.service' is flooding the journal, making it hard to find other events[cite: 29].
+    Task: Redirect the service output.
+    Technical Requirements:
+    - Modify the service to send its 'StandardOutput' and 'StandardError' to '/var/log/lab-services/generator.log' instead of the journal.
+    - Reload systemd and verify the journal is no longer receiving new entries from this unit.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Avanzado"
+  orden: 7
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You suspect a process is leaking child processes that become zombies[cite: 23].
+    Task: Locate and handle zombie processes.
+    Technical Requirements:
+    - Use 'ps' to find processes in 'Z' (zombie) state.
+    - Identify the parent process (PPID) of the zombie.
+    - Explain why killing the zombie directly doesn't work and what must be done with the parent.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Avanzado"
+  orden: 8
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A developer needs a service to trigger only when data arrives on a specific network port.
+    Task: Troubleshoot 'Socket Activation'[cite: 43].
+    Technical Requirements:
+    - Inspect 'lab-bad-socket.socket' and its associated service.
+    - Start the socket unit.
+    - Use 'nc' or 'telnet' to connect to port 9999 and verify the service triggers automatically.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Avanzado"
+  orden: 9
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You need to audit the boot performance of the server.
+    Task: Analyze the boot sequence timing.
+    Technical Requirements:
+    - Use 'systemd-analyze'.
+    - Find the 'critical-chain' to identify which service is slowing down the boot process the most.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Avanzado"
+  orden: 10
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: 'lab-tasks-limit.service' fails when trying to spawn multiple child processes[cite: 39].
+    Task: Adjust the task limit (pids controller).
+    Technical Requirements:
+    - Identify the 'TasksMax' value in the unit file.
+    - Increase it to allow at least 20 concurrent tasks.
+    - Restart the service and verify all 10 'sleep' children are successfully created.
 
 # ======================================================================
 # BLOQUE 5
