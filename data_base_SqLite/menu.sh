@@ -16,6 +16,12 @@ NC='\033[0m'
 
 SEP="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
+# Cargar funciones de base de datos
+source ./db.sh
+
+# Inicializar base de datos si no existe
+inicializar_db
+
 # ── Bloques de estudio ───────────────────────────────────────
 BLOQUES=(
     ""
