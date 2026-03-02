@@ -44,18 +44,19 @@ obtener_siguiente_ejercicio() {
     local bloque=$1
     local nivel=$2
     
-    # Usamos 🐧 como separador porque es poco probable que aparezca en el texto
-    sqlite3 "$DB" <<EOF
+    # -list: modo lista
+    # -separator '|': usamos el pipe estándar
+    sqlite3 -list -separator '|' "$DB" <<EOF
 SELECT 
-    id || '🐧' ||
-    bloque || '🐧' ||
-    tema || '🐧' ||
-    nivel || '🐧' ||
-    orden || '🐧' ||
-    enunciado || '🐧' ||
-    dificultad || '🐧' ||
-    completado || '🐧' ||
-    IFNULL(ultima_vez, '') || '🐧' ||
+    id, 
+    bloque, 
+    tema, 
+    nivel, 
+    orden, 
+    enunciado, 
+    dificultad, 
+    completado, 
+    IFNULL(ultima_vez, ''), 
     IFNULL(notas, '')
 FROM ejercicios 
 WHERE bloque = $bloque 
