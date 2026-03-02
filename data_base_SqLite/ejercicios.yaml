@@ -1982,7 +1982,7 @@
     - Use 'systemctl status firewalld' to check the service.
     - Use 'firewall-cmd --get-default-zone' to identify the active zone.
 
-- bloque: 10
+- bloque: 5
   tema: "Networking"
   nivel: "Basico"
   orden: 10
@@ -1996,7 +1996,7 @@
     - Identify if 'ssh' or 'http' are currently allowed.
 
 
-    
+
 
 
 
