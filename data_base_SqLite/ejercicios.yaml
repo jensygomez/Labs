@@ -2279,7 +2279,147 @@
     - Modify /etc/ssh/ssh_config to allow 'AllowAgentForwarding'.
     - Explain the security implications of using Agent Forwarding on a compromised host.
 
+# ─── BLOQUE 5: NETWORKING - TROUBLESHOOTING ───
 
+- bloque: 5
+  tema: "Networking"
+  nivel: "Troubleshooting"
+  orden: 1
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A interface 'lab-static' está ativa, mas não consegue comunicar com outros hosts na mesma rede.
+    Task: Diagnosticar e corrigir o erro de endereçamento.
+    Technical Requirements:
+    - Identificar que a máscara /32 está incorreta para uma rede local.
+    - Alterar a máscara para /24 sem remover a IP.
+    - Testar a conectividade com um ping ao gateway (se existir) ou verificar a rota local.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Troubleshooting"
+  orden: 2
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: O administrador de segurança bloqueou o acesso SSH e tu perdeste a capacidade de gerir o servidor remotamente.
+    Task: Recuperar o acesso SSH através do Firewall.
+    Technical Requirements:
+    - Identificar que o serviço 'ssh' foi removido da zona 'public'.
+    - Verificar se a interface está presa na zona 'lab-restricted'.
+    - Mover a interface de volta para 'public' ou permitir o tráfego SSH na zona atual.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Troubleshooting"
+  orden: 3
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: O login de root via SSH por password está a falhar, mesmo com a password correta.
+    Task: Corrigir a política de acesso SSH.
+    Technical Requirements:
+    - Inspecionar /etc/ssh/sshd_config.
+    - Localizar a diretiva 'PermitRootLogin prohibit-password'.
+    - Alterar para 'yes' (apenas para este laboratório) e reiniciar o serviço.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Troubleshooting"
+  orden: 4
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: O sistema tenta enviar tráfego para a rede 10.0.0.0/24 através de um gateway inexistente.
+    Task: Remover rotas estáticas inválidas.
+    Technical Requirements:
+    - Identificar a rota "fantasma" na tabela de encaminhamento.
+    - Remover a rota manualmente com 'ip route del'.
+    - Garantir que a rota não volta a aparecer (remover da configuração do NetworkManager se necessário).
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Troubleshooting"
+  orden: 5
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: O comando 'ping google.com' falha, mas 'ping 8.8.8.8' funciona perfeitamente.
+    Task: Resolver o problema de resolução de nomes (DNS).
+    Technical Requirements:
+    - Verificar o ficheiro /etc/resolv.conf.
+    - Identificar se faltam nameservers ou se o NetworkManager não os está a gerar.
+    - Corrigir a configuração na ligação 'lab-static'.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Troubleshooting"
+  orden: 6
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: Uma "Rich Rule" no Firewalld está a impedir que um administrador específico aceda ao servidor.
+    Task: Localizar e remover regras restritivas.
+    Technical Requirements:
+    - Listar todas as rich rules da zona 'public'.
+    - Encontrar a regra que faz 'reject' ao IP 192.168.100.50.
+    - Remover a regra de forma permanente.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Troubleshooting"
+  orden: 7
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A interface 'lab-net1' não sobe automaticamente após o boot.
+    Task: Corrigir a ativação automática da ligação.
+    Technical Requirements:
+    - Verificar o parâmetro 'connection.autoconnect' via nmcli.
+    - Alterar para 'yes'.
+    - Reiniciar o sistema (ou o serviço NM) para validar.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Troubleshooting"
+  orden: 8
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: O serviço web (porta 80) está ativo no servidor, mas o cliente recebe "Connection Refused".
+    Task: Diagnosticar o bloqueio entre o serviço e a rede.
+    Technical Requirements:
+    - Verificar se o serviço está em 'listening' com 'ss -tunlp'.
+    - Verificar se o Firewall tem a porta aberta.
+    - Confirmar se o serviço está a ouvir em 0.0.0.0 ou apenas em 127.0.0.1.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Troubleshooting"
+  orden: 9
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: O ficheiro /etc/hosts foi "sabotado" e o nome 'localhost' aponta para um IP errado.
+    Task: Restaurar a resolução local básica.
+    Technical Requirements:
+    - Editar /etc/hosts.
+    - Corrigir a entrada de loopback (127.0.0.1 localhost).
+    - Validar com 'ping -c 1 localhost'.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Troubleshooting"
+  orden: 10
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: O tráfego de saída do servidor está extremamente lento ou os pacotes são descartados intermitentemente.
+    Task: Analisar a MTU da interface.
+    Technical Requirements:
+    - Verificar a MTU das interfaces com 'ip link show'.
+    - Identificar se existe uma discrepância (ex: MTU 576 em vez de 1500).
+    - Ajustar para o valor padrão e testar a performance.
 
 
 # ======================================================================
