@@ -1,21 +1,26 @@
 #!/bin/bash
-# ejercicio.sh - Versión Corregida y Simplificada
+# ejercicio.sh - Versión compatible con Base64
 
 source ./db.sh
 
 # Colores y Formato
-BOLD='\033[1m'; BLUE='\033[0;34m'; CYAN='\033[0;36m'; GREEN='\033[0;32m'; NC='\033[0m'
+BOLD='\033[1m'; BLUE='\033[0;34m'; CYAN='\033[0;36m'; 
+GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
 SEP="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 mostrar_ejercicio() {
-    # Recibimos las variables limpias
     local id=$1
     local bloque=$2
     local tema=$3
     local nivel=$4
     local orden=$5
-    local enunciado=$6
+    local enunciado_b64=$6  # Viene en Base64 desde la DB
     local dificultad=$7
+    local notas=$9
+
+    # DECODIFICACIÓN: Aquí está el truco
+    # Decodificamos el Base64 para recuperar los saltos de línea originales
+    local enunciado_real=$(echo "$enunciado_b64" | base64 -d)
 
     clear
     echo -e "${BOLD}${BLUE}╔══════════════════════════════════════════════════════════════╗"
@@ -29,11 +34,18 @@ mostrar_ejercicio() {
     echo -e "  ${BOLD}${CYAN}═════════════════════ ENUNCIADO ═════════════════════${NC}"
     echo ""
     
-    # Imprimir el enunciado. Si viene de SQLite con saltos de línea (\n), los respetará.
-    echo -e "  $enunciado"
+    # Imprimimos el enunciado decodificado
+    # Usamos -e para que respete cualquier formato especial
+    echo -e "$enunciado_real" | while IFS= read -r linea; do
+        echo -e "  $linea"
+    done
     
     echo ""
     echo -e "  ${BOLD}${CYAN}════════════════════════════════════════════════════${NC}"
+
+    if [ -n "$notas" ] && [ "$notas" != "NULL" ]; then
+        echo -e "\n  ${BOLD}📝 TUS NOTAS:${NC} ${YELLOW}$notas${NC}"
+    fi
 }
 
 ejecutar_ejercicio() {
@@ -41,27 +53,25 @@ ejecutar_ejercicio() {
     local nivel=$2
     
     while true; do
-        # OBTENCIÓN DE DATOS (Asegúrate que obtener_siguiente_ejercicio use "|" como separador)
+        # Asegúrate de que db.sh devuelva los campos separados por |
         local ejercicio=$(obtener_siguiente_ejercicio "$bloque" "$nivel")
         
         if [ -z "$ejercicio" ]; then
-            echo "No hay más ejercicios."; return 0
+            echo -e "\n  ${GREEN}✅ ¡Nivel completado!${NC}"; return 0
         fi
         
-        # PARSEO: Cambiamos el pingüino por |
-        IFS='|' read -r id b t n o enu dif comp ult not <<< "$ejercicio"
+        # Parseo con pipe |
+        IFS='|' read -r id b t n o enu_b64 dif comp ult not <<< "$ejercicio"
         
-        # Mostramos solo lo relevante
-        mostrar_ejercicio "$id" "$b" "$t" "$n" "$o" "$enu" "$dif"
+        mostrar_ejercicio "$id" "$b" "$t" "$n" "$o" "$enu_b64" "$dif" "$comp" "$not"
         
-        # Menú rápido
-        echo -e "\n  1) ✅ Completado  |  2) 📝 Nota  |  0) 🔙 Salir"
+        echo -e "\n  ${GREEN}1) ✅ Completado${NC}  |  ${YELLOW}2) 📝 Nota${NC}  |  ${BLUE}0) 🔙 Salir${NC}"
         read -rp "  Tu acción: " accion
         
         case $accion in
-            1|c) completar_ejercicio "$id"; break ;;
-            2|n) agregar_nota_interactivo "$id" ;;
-            0|s) return 0 ;;
+            1|c|C) completar_ejercicio "$id"; break ;;
+            2|n|N) agregar_nota_interactivo "$id" ;; # Asumo que esta función está en db.sh o ejercicio.sh
+            0|s|S) return 0 ;;
         esac
     done
 }
