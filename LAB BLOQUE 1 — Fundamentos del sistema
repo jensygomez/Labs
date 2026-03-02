@@ -30,6 +30,8 @@
 # TIEMPO ESTIMADO DE PRÁCTICA: 4 a 6 horas para completar todos los niveles.
 # =============================================================================
 
+
+
 set -e
 
 RED='\033[0;31m'
@@ -50,9 +52,9 @@ info() { echo -e "${CYAN}[INFO]${NC} $1"; }
 warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 
 # =============================================================================
-# VERIFICACIONES PREVIAS
+# VERIFICACIONES PREVIAS Y BACKUP
 # =============================================================================
-banner "Verificando entorno"
+banner "Verificando entorno y creando backups"
 
 if [[ $EUID -ne 0 ]]; then
     echo -e "${RED}[ERROR] Este script debe ejecutarse como root${NC}"
@@ -63,7 +65,20 @@ if ! grep -q "Rocky Linux" /etc/os-release; then
     warn "Este script fue diseñado para Rocky Linux 9. Continuar bajo tu propio riesgo."
 fi
 
+# Crear directorio de backups
+BACKUP_DIR="/root/lab_backups_bloque1_$(date +%Y%m%d_%H%M%S)"
+mkdir -p "$BACKUP_DIR"
+
+# Backup de archivos importantes que podrían modificarse
+for file in /etc/passwd /etc/shadow /etc/group /etc/sudoers /etc/fstab; do
+    if [ -f "$file" ]; then
+        cp "$file" "$BACKUP_DIR/" 2>/dev/null || true
+        info "Resguardado: $file → $BACKUP_DIR/"
+    fi
+done
+
 ok "Ejecutando como root en Rocky Linux"
+ok "Backups guardados en $BACKUP_DIR"
 
 # =============================================================================
 # INSTALACIÓN DE PAQUETES NECESARIOS
@@ -71,32 +86,44 @@ ok "Ejecutando como root en Rocky Linux"
 banner "Instalando paquetes necesarios"
 
 dnf install -y acl vim tar gzip bzip2 xz tree httpd \
-    policycoreutils-python-utils curl wget git 2>/dev/null
+    policycoreutils-python-utils curl wget git vsftpd \
+    setroubleshoot setools-console 2>/dev/null
 
 ok "Paquetes instalados"
 
 # =============================================================================
-# CREACIÓN DE USUARIOS Y GRUPOS
+# CREACIÓN DE USUARIOS Y GRUPOS (LIMPIEZA PREVIA)
 # =============================================================================
-banner "Creando usuarios y grupos del laboratorio"
+banner "Preparando usuarios y grupos del laboratorio"
 
-for user in juan maria carlos deploy auditor appd; do
-    if ! id "$user" &>/dev/null; then
-        useradd -m "$user"
-        echo "${user}:Lab2024!" | chpasswd
-        ok "Usuario $user creado"
-    else
-        info "Usuario $user ya existe"
+# Eliminar usuarios del bloque anterior si existen (para empezar limpio)
+for user in juan maria carlos deploy auditor appd tempuser_lab; do
+    if id "$user" &>/dev/null; then
+        userdel -r "$user" 2>/dev/null || warn "No se pudo eliminar $user completamente"
     fi
 done
 
+# Eliminar grupos del bloque anterior
 for grp in developers auditores contabilidad ti; do
-    if ! getent group "$grp" &>/dev/null; then
-        groupadd "$grp"
-        ok "Grupo $grp creado"
+    if getent group "$grp" &>/dev/null; then
+        groupdel "$grp" 2>/dev/null || warn "No se pudo eliminar grupo $grp"
     fi
 done
 
+# Crear usuarios nuevos
+for user in juan maria carlos deploy auditor appd; do
+    useradd -m "$user"
+    echo "${user}:Lab2024!" | chpasswd
+    ok "Usuario $user creado"
+done
+
+# Crear grupos
+for grp in developers auditores contabilidad ti; do
+    groupadd "$grp"
+    ok "Grupo $grp creado"
+done
+
+# Configurar membresías
 usermod -aG developers juan
 usermod -aG developers deploy
 usermod -aG auditores auditor
@@ -106,465 +133,1366 @@ usermod -aG ti carlos
 ok "Membresías de grupos configuradas"
 
 # =============================================================================
-# BLOQUE 1.1 — NAVEGACIÓN FILESYSTEM
+# CREACIÓN DE ESTRUCTURA DE DIRECTORIOS
+# =============================================================================
+banner "Creando estructura de directorios para prácticas"
+
+mkdir -p /lab/bloque1/{filesystem,permisos,permisos_especiales,acls,links,compresion,paquetes,vim}
+mkdir -p /var/log/lab/{httpd,app,database}
+mkdir -p /opt/app/{config,bin,logs,data}
+mkdir -p /data/{produccion,backups,compartido}
+mkdir -p /proyectos/{dev,docs,releases}
+mkdir -p /srv/{compartido,web,ftp}
+mkdir -p /tmp/lab_practicas
+
+ok "Estructura de directorios creada"
+
+# =============================================================================
+# BLOQUE 1.1 — NAVEGACIÓN FILESYSTEM (VERSIÓN MEJORADA)
 # =============================================================================
 banner "Bloque 1.1 — Navegación Filesystem"
 
-# Estructura de directorios
-mkdir -p /lab/bloque1/{filesystem,permisos,permisos_especiales,acls,links,compresion,paquetes}
-mkdir -p /var/log/lab
-mkdir -p /opt/app
-mkdir -p /data
-mkdir -p /proyectos/dev
-mkdir -p /srv/compartido
-
-# Archivos .conf de distintas fechas para practicar find
-for i in $(seq 1 10); do
+# Archivos .conf con diferentes fechas
+for i in $(seq 1 20); do
     cat > /etc/lab_service_${i}.conf << EOF
 # Configuración del servicio lab_service_${i}
-# Generado para práctica LFCS/RHCSA
 SERVICE_NAME=lab_service_${i}
 PORT=$((8000 + i))
-LOG_LEVEL=info
-MAX_CONNECTIONS=100
-TIMEOUT=30
+LOG_LEVEL=$([ $((i % 3)) -eq 0 ] && echo "debug" || echo "info")
+MAX_CONNECTIONS=$((100 * i))
+TIMEOUT=$((30 + i))
 EOF
+    # Fechas aleatorias para algunos archivos (entre 1 y 30 días atrás)
+    if [ $((i % 4)) -eq 0 ]; then
+        touch -d "$((RANDOM % 30 + 1)) days ago" /etc/lab_service_${i}.conf
+    fi
 done
 
-# Archivo .conf modificado hace más de 7 días (para ejercicio find -mtime)
-touch -d "10 days ago" /etc/lab_service_old.conf
+# Logs con diferentes tamaños y formatos
+info "Generando logs de práctica con diferentes tamaños..."
 
-# Logs con contenido real y tamaños variados
-info "Generando logs de práctica..."
+# Log de autenticación (formato estándar)
+for i in $(seq 1 10000); do
+    USER="user_$((RANDOM % 50))"
+    IP="192.168.1.$((RANDOM % 254))"
+    PORT=$((RANDOM % 60000 + 1024))
+    echo "$(date '+%b %d %H:%M:%S') server01 sshd[$$]: Accepted password for $USER from $IP port $PORT ssh2" >> /var/log/lab/auth_practice.log
+done
 
-# Log pequeño (~2MB)
+# Log de aplicación (formato JSON para práctica avanzada)
 for i in $(seq 1 5000); do
-    echo "$(date '+%b %d %H:%M:%S') server01 sshd[$$]: Accepted publickey for root from 192.168.1.$((RANDOM % 254 + 1)) port $((RANDOM % 60000 + 1024)) ssh2" >> /var/log/lab/auth_practice.log
+    echo "{\"timestamp\":\"$(date -Iseconds)\",\"level\":\"$([ $((RANDOM % 10)) -eq 0 ] && echo "ERROR" || echo "INFO")\",\"service\":\"api-gateway\",\"request_id\":\"$(cat /proc/sys/kernel/random/uuid 2>/dev/null || echo $RANDOM$RANDOM)\",\"method\":\"$([ $((RANDOM % 2)) -eq 0 ] && echo "GET" || echo "POST")\",\"path\":\"/api/v$((RANDOM % 3))/resource/$((RANDOM % 1000))\",\"status\":$([ $((RANDOM % 10)) -eq 0 ] && echo "500" || echo "200\"),\"response_time_ms\":$((RANDOM % 1000))}" >> /var/log/lab/app_json.log
 done
 
-# Log mediano (~12MB) — mayor de 10MB para el ejercicio
-for i in $(seq 1 60000); do
-    echo "$(date '+%Y-%m-%dT%H:%M:%S') INFO  [worker-$((RANDOM % 20))] RequestID=$(cat /proc/sys/kernel/random/uuid 2>/dev/null || echo $RANDOM$RANDOM) method=GET path=/api/v1/resource/$((RANDOM % 1000)) status=$((RANDOM % 2 == 0 ? 200 : 404)) latency=$((RANDOM % 500))ms user=user_$((RANDOM % 100))" >> /var/log/lab/app_large.log
+# Log grande (>50MB para ejercicios avanzados)
+for i in $(seq 1 100000); do
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [worker-$((RANDOM % 50))] Procesando lote $i - registro $RANDOM para generar volumen" >> /var/log/lab/app_large.log
 done
 
-# Log de sistema simulado
-for i in $(seq 1 3000); do
-    SERVICES=("kernel" "systemd" "NetworkManager" "sshd" "crond" "auditd")
-    SVC=${SERVICES[$((RANDOM % 6))]}
-    echo "$(date '+%b %d %H:%M:%S') server01 ${SVC}[$$]: Sample log entry number ${i} for practice" >> /var/log/lab/syslog_practice.log
-done
+# Archivos con inodos específicos para práctica
+echo "Archivo 1 para práctica de inodos" > /var/log/lab/inode_practice_1.txt
+echo "Archivo 2 para práctica de inodos" > /var/log/lab/inode_practice_2.txt
+echo "Archivo 3 para práctica de inodos" > /var/log/lab/inode_practice_3.txt
 
-ok "Logs generados en /var/log/lab/"
-
-# Archivo con inode para practicar stat
-echo "Archivo para practicar stat e inode" > /var/log/lab/stat_practice.txt
-
-# Archivo huérfano (propietario eliminado) — para troubleshooting
-useradd -u 9999 tempuser_lab 2>/dev/null || true
-echo "Archivo de usuario temporal" > /var/log/lab/orphan_file.txt
+# Archivo huérfano (propietario eliminado)
+useradd -u 9999 tempuser_orphan 2>/dev/null || true
+echo "Este archivo pertenece a un usuario que ya no existe en el sistema" > /var/log/lab/orphan_file.txt
 chown 9999:9999 /var/log/lab/orphan_file.txt 2>/dev/null || true
-userdel tempuser_lab 2>/dev/null || true
+userdel tempuser_orphan 2>/dev/null || true
 
-ok "Escenarios de navegación filesystem listos"
+# Archivo con permisos especiales para find (oculto)
+echo "Archivo oculto para práctica de find" > /var/log/lab/.hidden_practice.txt
+
+ok "Escenarios de navegación filesystem mejorados listos"
 
 # =============================================================================
-# BLOQUE 1.2 — PERMISOS ESTÁNDAR
+# BLOQUE 1.2 — PERMISOS ESTÁNDAR (VERSIÓN MEJORADA)
 # =============================================================================
 banner "Bloque 1.2 — Permisos estándar"
 
-# Archivos básicos para chmod/chown
-touch /tmp/reporte.txt
-touch /opt/app/config.txt
-touch /opt/app/run.sh
-echo "Contenido del reporte de ventas Q4 2024" > /tmp/reporte.txt
-echo "#!/bin/bash\necho 'App iniciada'" > /opt/app/run.sh
+# --- BÁSICO: Archivos con permisos incorrectos ---
+# Archivo con permisos 777 que debería ser 644
+echo "Confidencial: Estrategia de ventas Q1 2025" > /tmp/estrategia_ventas.txt
+chmod 777 /tmp/estrategia_ventas.txt
 
-# Permisos incorrectos a propósito — el alumno debe corregirlos
-chmod 777 /tmp/reporte.txt          # Debería ser 644
-chmod 777 /opt/app/config.txt       # Debería ser 640
-chmod 644 /opt/app/run.sh           # Debería ser 755
-chown root:root /opt/app/config.txt # Debería ser deploy:developers
+# Archivo con permisos 644 que debería ser 755 (ejecutable)
+echo '#!/bin/bash' > /opt/app/backup_script.sh
+echo 'echo "Realizando backup..."' >> /opt/app/backup_script.sh
+chmod 644 /opt/app/backup_script.sh
 
-# Directorio /data con permisos a configurar
-mkdir -p /data/produccion
-echo "datos sensibles de producción" > /data/produccion/db_backup.sql
-echo "reporte financiero 2024" > /data/produccion/finance_report.csv
-chmod 777 /data/produccion            # Incorrecto — el alumno debe configurar 750
+# Archivo con propietario incorrecto
+echo "Configuración de la aplicación" > /opt/app/app.conf
+chown root:root /opt/app/app.conf  # Debería ser deploy:developers
 
-# Directorio para ejercicio de umask
+# --- INTERMEDIO: Configuraciones umask y permisos por defecto ---
 mkdir -p /home/juan/workspace
-touch /home/juan/workspace/proyecto.py
-touch /home/juan/workspace/README.md
+touch /home/juan/workspace/{proyecto.py,README.md,config.ini}
 chown -R juan:juan /home/juan/workspace
 
-# TROUBLESHOOTING: httpd no puede leer su archivo
-mkdir -p /var/www/html
-echo "<h1>Servidor Web Lab</h1><p>Rocky Linux 9 - Práctica LFCS/RHCSA</p>" > /var/www/html/index.html
-chmod 640 /var/www/html/index.html   # httpd no puede leer (falta permiso de others)
-chown root:root /var/www/html/index.html
+# Directorio con permisos 777 que debería ser 750
+mkdir -p /data/compartido
+echo "Datos compartidos del equipo" > /data/compartido/team_data.txt
+chmod 777 /data/compartido
+chmod 666 /data/compartido/team_data.txt
 
-ok "Escenarios de permisos estándar listos"
+# --- AVANZADO: Permisos para servicios específicos ---
+mkdir -p /opt/app/config
+echo "DB_PASSWORD=supersecret123" > /opt/app/config/db.conf
+echo "API_KEY=abc123def456" >> /opt/app/config/db.conf
+chown root:appd /opt/app/config /opt/app/config/db.conf
+chmod 750 /opt/app/config          # Solo root y grupo appd pueden entrar
+chmod 640 /opt/app/config/db.conf  # appd (grupo) puede leer, otros no
 
-# =============================================================================
-# BLOQUE 1.3 — PERMISOS ESPECIALES (SUID/SGID/STICKY)
-# =============================================================================
-banner "Bloque 1.3 — Permisos especiales"
+# --- TROUBLESHOOTING: Servicios que fallan por permisos ---
+# httpd no puede leer su archivo
+mkdir -p /var/www/html/lab
+echo "<h1>Laboratorio LFCS/RHCSA</h1><p>Página de práctica con problemas de permisos</p>" > /var/www/html/lab/index.html
+chmod 600 /var/www/html/lab/index.html  # Demasiado restrictivo
+chown root:root /var/www/html/lab/index.html
 
-# Directorio compartido SIN sticky bit (problema a corregir)
-mkdir -p /var/tmp/compartido_lab
-chmod 777 /var/tmp/compartido_lab    # Sin sticky — cualquiera puede borrar archivos de otros
+# Aplicación no puede escribir logs
+mkdir -p /opt/app/logs
+touch /opt/app/logs/application.log
+chmod 444 /opt/app/logs/application.log  # Solo lectura, la app necesita escribir
+chown appd:developers /opt/app/logs/application.log
 
-# Crear archivos de distintos usuarios en el directorio compartido
-su - juan -c "echo 'Archivo privado de Juan' > /var/tmp/compartido_lab/juan_file.txt" 2>/dev/null || \
-    echo "Archivo de juan" > /var/tmp/compartido_lab/juan_file.txt && chown juan /var/tmp/compartido_lab/juan_file.txt
-
-su - maria -c "echo 'Archivo privado de Maria' > /var/tmp/compartido_lab/maria_file.txt" 2>/dev/null || \
-    echo "Archivo de maria" > /var/tmp/compartido_lab/maria_file.txt && chown maria /var/tmp/compartido_lab/maria_file.txt
-
-# Directorio para SGID (herencia de grupo)
-mkdir -p /proyectos/dev
-chown root:developers /proyectos/dev
-chmod 770 /proyectos/dev              # Sin SGID — archivos nuevos no heredan grupo
-
-# Binario con SUID falso para auditoria (no peligroso)
-cp /usr/bin/cat /usr/local/bin/cat_lab
-chmod u+s /usr/local/bin/cat_lab     # SUID innecesario — el alumno debe encontrarlo y quitarlo
-
-# Otro binario SUID para la auditoría
-cp /usr/bin/ls /usr/local/bin/ls_lab
-chmod u+s /usr/local/bin/ls_lab
-
-ok "Escenarios de permisos especiales listos"
+ok "Escenarios de permisos estándar mejorados listos"
 
 # =============================================================================
-# BLOQUE 1.4 — ACLs
+# BLOQUE 1.3 — PERMISOS ESPECIALES (VERSIÓN MEJORADA)
+# =============================================================================
+banner "Bloque 1.3 — Permisos especiales (SUID/SGID/Sticky)"
+
+# --- BÁSICO: Sticky bit faltante ---
+mkdir -p /var/tmp/compartido_publico
+chmod 777 /var/tmp/compartido_publico  # Sin sticky bit - problema de seguridad
+
+# Crear archivos de diferentes usuarios
+su - juan -c "echo 'Archivo de Juan' > /var/tmp/compartido_publico/juan_doc.txt" 2>/dev/null || \
+    (echo "Archivo de juan" > /var/tmp/compartido_publico/juan_doc.txt && chown juan /var/tmp/compartido_publico/juan_doc.txt)
+
+su - maria -c "echo 'Archivo de Maria' > /var/tmp/compartido_publico/maria_doc.txt" 2>/dev/null || \
+    (echo "Archivo de maria" > /var/tmp/compartido_publico/maria_doc.txt && chown maria /var/tmp/compartido_publico/maria_doc.txt)
+
+su - carlos -c "echo 'Archivo de Carlos' > /var/tmp/compartido_publico/carlos_doc.txt" 2>/dev/null || \
+    (echo "Archivo de carlos" > /var/tmp/compartido_publico/carlos_doc.txt && chown carlos /var/tmp/compartido_publico/carlos_doc.txt)
+
+# --- INTERMEDIO: SGID para herencia de grupo ---
+mkdir -p /proyectos/colaboracion
+chown root:developers /proyectos/colaboracion
+chmod 770 /proyectos/colaboracion  # Sin SGID - los archivos no heredan el grupo
+
+# Crear estructura para probar SGID
+mkdir -p /proyectos/colaboracion/{documentos,scripts,datos}
+touch /proyectos/colaboracion/documentos/README.md
+touch /proyectos/colaboracion/scripts/deploy.sh
+touch /proyectos/colaboracion/datos/clientes.csv
+
+# --- AVANZADO: Binarios con SUID innecesario ---
+# Crear binarios "peligrosos" para auditoría
+cp /usr/bin/cat /usr/local/bin/cat_viewer
+chmod u+s /usr/local/bin/cat_viewer
+
+cp /usr/bin/less /usr/local/bin/less_viewer
+chmod u+s /usr/local/bin/less_viewer
+
+cp /usr/bin/find /usr/local/bin/find_lab
+chmod u+s /usr/local/bin/find_lab
+
+cp /usr/bin/vim /usr/local/bin/vim_lab
+chmod u+s /usr/local/bin/vim_lab
+
+# --- TROUBLESHOOTING: Permisos especiales causando problemas ---
+# SUID en binario que no debería tenerlo (riesgo de seguridad)
+cp /usr/bin/cp /usr/local/bin/cp_lab
+chmod u+s /usr/local/bin/cp_lab
+
+# Sticky bit en directorio donde no debería estar
+mkdir -p /tmp/no_sticky_needed
+chmod 1777 /tmp/no_sticky_needed  # No debería tener sticky bit
+
+ok "Escenarios de permisos especiales mejorados listos"
+
+# =============================================================================
+# BLOQUE 1.4 — ACLs (VERSIÓN MEJORADA)
 # =============================================================================
 banner "Bloque 1.4 — ACLs"
 
-# Asegurarse que el filesystem soporta ACLs
-mkdir -p /opt/reporte
-echo "Reporte de ventas enero 2024: $45,230 USD" > /opt/reporte.csv
-echo "Reporte de ventas febrero 2024: $52,100 USD" >> /opt/reporte.csv
-echo "Reporte de ventas marzo 2024: $48,750 USD" >> /opt/reporte.csv
-chown root:contabilidad /opt/reporte.csv
-chmod 640 /opt/reporte.csv
+# --- BÁSICO: Archivos con ACLs para práctica ---
+mkdir -p /data/reportes
+echo "Reporte financiero 2024 - Confidencial" > /data/reportes/financiero.txt
+echo "Reporte de ventas 2024 - Departamental" > /data/reportes/ventas.txt
+echo "Reporte RRHH 2024 - Restringido" > /data/reportes/rrhh.txt
 
-# Directorio para ACLs por defecto
-mkdir -p /proyectos/docs
-chown root:developers /proyectos/docs
-chmod 770 /proyectos/docs
-echo "Documento de arquitectura v1.0" > /proyectos/docs/arquitectura.md
-echo "Manual de despliegue" > /proyectos/docs/deploy_guide.md
+chown root:contabilidad /data/reportes
+chmod 770 /data/reportes
+chown maria:contabilidad /data/reportes/financiero.txt
+chown carlos:ti /data/reportes/ventas.txt
+chown root:rrhh /data/reportes/rrhh.txt
 
-# /data/contabilidad con estructura para ACLs complejas
-mkdir -p /data/contabilidad
-echo "Balance general 2024" > /data/contabilidad/balance.xlsx
-echo "Nómina diciembre 2024" > /data/contabilidad/nomina_dic.csv
-echo "Presupuesto 2025" > /data/contabilidad/presupuesto_2025.xlsx
-chown root:contabilidad /data/contabilidad
-chmod 770 /data/contabilidad
-chown maria:contabilidad /data/contabilidad/balance.xlsx
-chown maria:contabilidad /data/contabilidad/nomina_dic.csv
-chown maria:contabilidad /data/contabilidad/presupuesto_2025.xlsx
+# --- INTERMEDIO: ACLs por defecto en directorios ---
+mkdir -p /proyectos/compartido
+chown root:developers /proyectos/compartido
+chmod 770 /proyectos/compartido
 
-# TROUBLESHOOTING ACL: carlos tiene rwx en ACL pero no puede acceder
-# El directorio padre no tiene permiso de execute para others
+# Configurar ACL por defecto (pero con problemas para troubleshooting)
+setfacl -m d:u:auditor:r /proyectos/compartido 2>/dev/null || true
+setfacl -m d:g:auditores:rx /proyectos/compartido 2>/dev/null || true
+
+# --- AVANZADO: ACLs complejas para escenarios empresariales ---
+mkdir -p /data/empresa/{finanzas,rrhh,it,ventas}
+
+# Finanzas: solo contabilidad rw, auditorías r
+chown root:contabilidad /data/empresa/finanzas
+chmod 770 /data/empresa/finanzas
+setfacl -m g:auditores:rx /data/empresa/finanzas 2>/dev/null || true
+
+# RRHH: solo rrhh rw, nadie más (ni siquiera root en runtime)
+chown root:rrhh /data/empresa/rrhh
+chmod 770 /data/empresa/rrhh
+
+# IT: desarrolladores rw, operaciones r, auditorías r
+chown root:sistemas /data/empresa/it
+chmod 770 /data/empresa/it
+setfacl -m g:desarrolladores:rwx /data/empresa/it 2>/dev/null || true
+setfacl -m g:operaciones:rx /data/empresa/it 2>/dev/null || true
+setfacl -m g:auditores:r /data/empresa/it 2>/dev/null || true
+
+# --- TROUBLESHOOTING: Problemas con ACLs ---
+# Caso 1: Usuario con ACL pero mask lo restringe
 mkdir -p /datos/privado
-echo "Datos confidenciales" > /datos/privado/secreto.txt
-chown root:ti /datos
-chmod 750 /datos                      # carlos está en ti pero /datos no tiene x para others
-chown root:ti /datos/privado
-chmod 770 /datos/privado
-setfacl -m u:carlos:rwx /datos/privado/secreto.txt 2>/dev/null || true
-# El problema: carlos no puede llegar a /datos/privado porque /datos tiene chmod 750
-# y carlos no es root ni está en ti... espera, está en ti. Ajustemos el troubleshooting:
-# El problema real: la ACL mask está restringiendo los permisos efectivos
-setfacl -m m::r /datos/privado/secreto.txt 2>/dev/null || true   # mask solo lectura, bloquea escritura aunque ACL diga rwx
+echo "Información altamente confidencial" > /datos/privado/secreto.txt
+chown root:ti /datos/privado /datos/privado/secreto.txt
+chmod 750 /datos/privado
+chmod 640 /datos/privado/secreto.txt
 
-ok "Escenarios de ACLs listos"
+# Dar permisos a carlos (está en ti) pero con mask restrictiva
+setfacl -m u:carlos:rwx /datos/privado/secreto.txt 2>/dev/null || true
+setfacl -m m::r /datos/privado/secreto.txt 2>/dev/null || true  # Esto limita los permisos efectivos
+
+# Caso 2: Directorio padre sin permiso de ejecución
+mkdir -p /opt/restricted/app
+echo "Configuración de aplicación" > /opt/restricted/app/config.conf
+chmod 750 /opt/restricted       # Grupo puede entrar
+chmod 700 /opt/restricted/app    # Nadie más que root puede entrar a app
+setfacl -m u:deploy:rwx /opt/restricted/app/config.conf 2>/dev/null || true  # No podrá llegar
+
+ok "Escenarios de ACLs mejorados listos"
 
 # =============================================================================
-# BLOQUE 1.5 — LINKS
+# BLOQUE 1.5 — LINKS (VERSIÓN MEJORADA)
 # =============================================================================
 banner "Bloque 1.5 — Links"
 
-# Archivo origen para links
-mkdir -p /etc/httpd/conf
-echo "# Apache HTTP Server configuration
-ServerRoot /etc/httpd
-Listen 80
-ServerName lab.example.com
-DocumentRoot /var/www/html
-ErrorLog /var/log/httpd/error_log
-CustomLog /var/log/httpd/access_log combined" > /etc/httpd/conf/httpd.conf
+# --- BÁSICO: Links simbólicos válidos e inválidos ---
+# Archivo origen
+mkdir -p /etc/app/config
+echo "# Configuración principal" > /etc/app/config/app.conf
+echo "MODE=production" >> /etc/app/config/app.conf
+echo "PORT=8080" >> /etc/app/config/app.conf
 
-# Links rotos para encontrar
-ln -sf /etc/nonexistent_file.conf /etc/broken_link1.conf 2>/dev/null || true
-ln -sf /var/log/nonexistent.log /var/log/broken_link.log 2>/dev/null || true
-ln -sf /opt/missing_app/config /opt/broken_config 2>/dev/null || true
+# Links válidos
+ln -sf /etc/app/config/app.conf /opt/app.conf.current 2>/dev/null || true
+ln -sf /etc/app/config /opt/app_config_dir 2>/dev/null || true
 
-# Link simbólico válido para referencia
-ln -sf /etc/httpd/conf/httpd.conf /opt/httpd_config_link 2>/dev/null || true
+# --- INTERMEDIO: Hard links y sus limitaciones ---
+echo "Contenido para hard link practice" > /tmp/original.txt
+ln /tmp/original.txt /tmp/hardlink_backup.txt 2>/dev/null || true
 
-# TROUBLESHOOTING: Servicio falla por link roto
-mkdir -p /opt/myapp/
-echo "PORT=8080
-DB_HOST=localhost
-DB_PORT=5432" > /opt/myapp/app.conf.real
-ln -sf /opt/myapp/config/app.conf /opt/myapp/app.conf 2>/dev/null || true
-# El link apunta a /opt/myapp/config/app.conf que no existe
+# Crear archivo en otro filesystem para demostrar limitación
+mkdir -p /tmp/otro_fs 2>/dev/null || true
+mount --bind /tmp /tmp/otro_fs 2>/dev/null || true
+echo "Archivo en otro punto de montaje" > /tmp/otro_fs/archivo_origen.txt
+# Intentar hard link a través de filesystem (fallará - para demostración)
 
-ok "Escenarios de links listos"
+# --- AVANZADO: Links rotos y cadenas de links ---
+# Links rotos
+ln -sf /etc/nonexistent/config.conf /etc/broken_link1.conf 2>/dev/null || true
+ln -sf /var/log/nonexistent/access.log /var/log/broken_link.log 2>/dev/null || true
+ln -sf /opt/missing/bin/script.sh /usr/local/bin/broken_script 2>/dev/null || true
+
+# Cadena de links (link que apunta a otro link)
+ln -sf /opt/app.conf.current /opt/app.conf.link1 2>/dev/null || true
+ln -sf /opt/app.conf.link1 /opt/app.conf.link2 2>/dev/null || true
+ln -sf /opt/app.conf.link2 /opt/app.conf.link3 2>/dev/null || true
+
+# --- TROUBLESHOOTING: Servicio falla por link roto ---
+mkdir -p /opt/application/{config,bin}
+echo "#!/bin/bash" > /opt/application/bin/start.sh
+echo "echo 'Iniciando aplicación...'" >> /opt/application/bin/start.sh
+echo "source /opt/application/config/settings.conf" >> /opt/application/bin/start.sh
+chmod 755 /opt/application/bin/start.sh
+
+# Crear link roto que el script intenta usar
+ln -sf /opt/application/config/settings.conf.real /opt/application/config/settings.conf 2>/dev/null || true
+# El archivo real está en otro lugar
+echo "APP_ENV=production" > /opt/application/config/settings.conf.real
+echo "DB_HOST=localhost" >> /opt/application/config/settings.conf.real
+
+ok "Escenarios de links mejorados listos"
 
 # =============================================================================
-# BLOQUE 1.6 — COMPRESIÓN
+# BLOQUE 1.6 — COMPRESIÓN (VERSIÓN MEJORADA)
 # =============================================================================
 banner "Bloque 1.6 — Compresión"
 
-# Crear contenido para comprimir
-mkdir -p /lab/para_comprimir/configs
-mkdir -p /lab/para_comprimir/logs
-mkdir -p /lab/para_comprimir/scripts
+# --- BÁSICO: Archivos para comprimir ---
+mkdir -p /lab/compresion/{documentos,logs,backups}
 
-# Copiar archivos reales para comprimir
-cp /etc/*.conf /lab/para_comprimir/configs/ 2>/dev/null | head -20 || true
-cp /var/log/lab/syslog_practice.log /lab/para_comprimir/logs/ 2>/dev/null || true
+# Documentos de diferentes tamaños
+for i in $(seq 1 10); do
+    dd if=/dev/urandom of=/lab/compresion/documentos/archivo_${i}.bin bs=1M count=$i 2>/dev/null || \
+        fallocate -l ${i}M /lab/compresion/documentos/archivo_${i}.bin 2>/dev/null || \
+        for j in $(seq 1 $((i * 1000))); do echo "Contenido aleatorio $RANDOM" >> /lab/compresion/documentos/archivo_${i}.txt; done
+done
 
+# Logs con diferentes patrones (buenos para compresión)
+for i in $(seq 1 1000); do
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Procesando lote $i con ID=$(uuidgen 2>/dev/null || echo $RANDOM)" >> /lab/compresion/logs/app.log
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [ERROR] Fallo en la operación $i" >> /lab/compresion/logs/error.log
+done
+
+# --- INTERMEDIO: Archivos para comparar algoritmos ---
+# Crear archivos con diferentes tipos de contenido
+dd if=/dev/zero of=/lab/compresion/zeros.dat bs=1M count=5 2>/dev/null || \
+    fallocate -l 5M /lab/compresion/zeros.dat
+
+dd if=/dev/urandom of=/lab/compresion/random.dat bs=1M count=5 2>/dev/null || \
+    for i in $(seq 1 5000); do echo $RANDOM >> /lab/compresion/random.txt; done
+
+# Archivo con patrones repetitivos (alta compresión)
+for i in $(seq 1 10000); do
+    echo "Patrón repetitivo número $((i % 10)) para probar compresión" >> /lab/compresion/repetitivo.log
+done
+
+# --- AVANZADO: Backups incrementales y excludes ---
+mkdir -p /lab/compresion/datos_para_backup/{config,data,temp,logs,backups}
+
+# Archivos de configuración (incluir en backup)
 for i in $(seq 1 5); do
-    cat > /lab/para_comprimir/scripts/backup_${i}.sh << EOF
-#!/bin/bash
-# Script de backup número ${i}
-DATE=\$(date +%Y%m%d)
-tar czf /tmp/backup_\${DATE}_${i}.tar.gz /etc/
-echo "Backup ${i} completado: \$(date)"
+    cat > /lab/compresion/datos_para_backup/config/servicio_${i}.conf << EOF
+# Servicio $i
+PORT=$((8000 + i))
+MAX_CONNECTIONS=$((100 * i))
+LOG_LEVEL=info
 EOF
 done
 
-# Archivo temporal (para practicar exclude)
-touch /lab/para_comprimir/configs/temporal.tmp
-touch /lab/para_comprimir/logs/debug.tmp
+# Datos (incluir)
+for i in $(seq 1 10); do
+    echo "Registro de datos $i: $(date)" >> /lab/compresion/datos_para_backup/data/data_$i.log
+done
 
-# Crear un tar.gz con algunos archivos "corruptos" para el ejercicio de troubleshooting
-tar czf /tmp/backup_completo.tar.gz /lab/para_comprimir/ 2>/dev/null || true
-tar czf /tmp/httpd_config_backup.tar.gz /etc/httpd/ 2>/dev/null || true
+# Archivos temporales (excluir del backup)
+touch /lab/compresion/datos_para_backup/temp/temp_1.tmp
+touch /lab/compresion/datos_para_backup/temp/temp_2.tmp
+touch /lab/compresion/datos_para_backup/logs/debug.log
+touch /lab/compresion/datos_para_backup/backups/backup_antiguo.tar.gz
 
-ok "Escenarios de compresión listos"
+# --- TROUBLESHOOTING: Backup corrupto ---
+# Crear un archivo tar.gz y luego corromperlo
+tar czf /tmp/backup_corrupto.tar.gz /etc/hostname /etc/hosts 2>/dev/null || true
+# Corromper el archivo (sobrescribir parte con datos aleatorios)
+dd if=/dev/urandom of=/tmp/backup_corrupto.tar.gz bs=1 count=100 seek=500 conv=notrunc 2>/dev/null || \
+    echo "corrupción" >> /tmp/backup_corrupto.tar.gz
+
+ok "Escenarios de compresión mejorados listos"
 
 # =============================================================================
-# BLOQUE 1.7 — GESTIÓN DE PAQUETES
+# BLOQUE 1.7 — GESTIÓN DE PAQUETES (VERSIÓN MEJORADA)
 # =============================================================================
 banner "Bloque 1.7 — Gestión de paquetes"
 
-# Instalar algunos paquetes para practicar verificación
-dnf install -y vsftpd 2>/dev/null || true
+# Instalar algunos paquetes para práctica
+dnf install -y vsftpd lftp telnet wget curl 2>/dev/null || true
 
-# Modificar un archivo de httpd para que rpm -V lo detecte como modificado
+# --- INTERMEDIO: Módulos y grupos ---
+# Nota: Esto es informativo, no modifica el sistema
+
+# --- AVANZADO: Repositorio local (simulado) ---
+mkdir -p /var/www/html/repo-local
+echo "Simulación de repositorio local" > /var/www/html/repo-local/README
+
+# --- TROUBLESHOOTING: Modificar archivo para rpm -V ---
 if rpm -q httpd &>/dev/null; then
-    echo "# Línea modificada para práctica rpm -V" >> /etc/httpd/conf/httpd.conf
-    ok "Archivo de httpd modificado para práctica de rpm -V"
+    # Backup del original
+    cp /etc/httpd/conf/httpd.conf /etc/httpd/conf/httpd.conf.original 2>/dev/null || true
+    # Modificar archivo
+    echo "# LÍNEA MODIFICADA INTENCIONALMENTE PARA PRÁCTICA RPM -V $(date)" >> /etc/httpd/conf/httpd.conf
+    ok "Archivo de httpd modificado para práctica de verificación"
 fi
 
-ok "Escenarios de gestión de paquetes listos"
+# Crear conflicto de dependencia simulado
+touch /var/lib/rpm-state/conflicto-simulado 2>/dev/null || true
+
+ok "Escenarios de gestión de paquetes mejorados listos"
 
 # =============================================================================
-# BLOQUE 1.8 — VIM (archivos para editar)
+# BLOQUE 1.8 — VIM (VERSIÓN MEJORADA)
 # =============================================================================
 banner "Bloque 1.8 — Vim"
 
-# Archivo con múltiples ocurrencias de Listen para reemplazar
-cat > /etc/httpd/conf/httpd_vim_practice.conf << 'EOF'
-# Apache configuration for practice
-Listen 80
-Listen 443
-Listen 8080
-ServerName server01.lab.local
-Listen 9090
-DocumentRoot /var/www/html
-# Listen comentado: #Listen 8443
-Listen 3000
-ErrorLog /var/log/httpd/error_log
-CustomLog /var/log/httpd/access_log combined
-Listen 5000
-EOF
-
-# Archivo largo de 100 líneas para practicar navegación en vim
-for i in $(seq 1 100); do
-    echo "Línea ${i}: $(date '+%Y-%m-%d %H:%M:%S') — Registro del sistema número ${i} — servidor server01" >> /tmp/archivo_100_lineas.txt
+# --- BÁSICO: Archivo con muchas líneas para navegación ---
+for i in $(seq 1 150); do
+    echo "Línea $i: Este es un archivo de práctica para aprender a navegar en vim.
+Podemos buscar texto, reemplazar, movernos rápidamente, etc.
+La fecha de este registro es $(date '+%Y-%m-%d %H:%M:%S').
+El número aleatorio de hoy es $RANDOM.
+---" >> /tmp/vim_practice_long.txt
 done
 
-# Dos archivos para practicar apertura simultánea en vim
-echo "Configuración del servidor A - producción" > /tmp/config_servidor_a.txt
-echo "IP: 192.168.1.10" >> /tmp/config_servidor_a.txt
-echo "Puerto: 8080" >> /tmp/config_servidor_a.txt
-echo "DB: postgres://localhost/proddb" >> /tmp/config_servidor_a.txt
+# --- INTERMEDIO: Archivo con múltiples ocurrencias para búsqueda/reemplazo ---
+cat > /tmp/vim_practice_replace.txt << 'EOF'
+# Archivo de configuración para práctica de búsqueda y reemplazo en vim
 
-echo "Configuración del servidor B - staging" > /tmp/config_servidor_b.txt
-echo "IP: 192.168.1.20" >> /tmp/config_servidor_b.txt
-echo "Puerto: 8081" >> /tmp/config_servidor_b.txt
-echo "DB: postgres://localhost/stagingdb" >> /tmp/config_servidor_b.txt
+server_name = oldserver01
+server_ip = 192.168.1.100
+server_port = 8080
+oldserver01_admin = admin@oldserver01.com
 
-ok "Archivos para práctica de Vim listos"
+[database]
+db_server = oldserver01
+db_name = olddb
+db_user = olduser
+db_password = oldpass123
+
+[logging]
+log_server = oldserver01
+log_level = INFO
+
+[backup]
+backup_server = oldserver01
+backup_path = /backup/oldserver01
+
+# Nota: Reemplazar todas las ocurrencias de 'oldserver01' por 'newserver01'
+# pero solo en las líneas que no sean comentarios
+EOF
+
+# --- AVANZADO: Múltiples archivos para edición simultánea ---
+cat > /tmp/vim_practice_file1.txt << 'EOF'
+Archivo 1 - Configuración de producción
+IP: 10.0.0.10
+Hostname: prod-server-01
+Ambiente: PRODUCCION
+Puertos: 80,443,22
+EOF
+
+cat > /tmp/vim_practice_file2.txt << 'EOF'
+Archivo 2 - Configuración de staging
+IP: 10.0.0.20
+Hostname: staging-server-01
+Ambiente: STAGING
+Puertos: 8080,8443,22
+EOF
+
+cat > /tmp/vim_practice_file3.txt << 'EOF'
+Archivo 3 - Configuración de desarrollo
+IP: 10.0.0.30
+Hostname: dev-server-01
+Ambiente: DESARROLLO
+Puertos: 3000,5000,22
+EOF
+
+# --- TROUBLESHOOTING: Archivo de sistema para editar sin romper ---
+cat > /tmp/vim_practice_critical.txt << 'EOF'
+# ESTE ES UN ARCHIVO SIMULADO DE SISTEMA
+# En la práctica real, podrías tener que editar /etc/fstab, /etc/sudoers, etc.
+# Debes tener cuidado de no romper la sintaxis
+
+# /etc/fstab simulado
+/dev/mapper/rl-root     /                       xfs     defaults        0 0
+/dev/mapper/rl-swap     none                    swap    defaults        0 0
+/dev/sda1               /boot                   xfs     defaults        0 0
+
+# Este archivo tiene una línea crítica. Si la modificas incorrectamente,
+# el sistema podría no arrancar.
+
+# Punto de montaje de datos IMPORTANTE
+/dev/sdb1               /data                   xfs     defaults        0 0
+
+# NO MODIFICAR LAS LÍNEAS ANTERIORES SIN COMPRENDER LAS CONSECUENCIAS
+EOF
+
+ok "Escenarios de Vim mejorados listos"
 
 # =============================================================================
-# RESUMEN FINAL — GUÍA DE EJERCICIOS
+# GUÍA DE EJERCICIOS MEJORADA (CON MISMO FORMATO QUE BLOQUE 2)
 # =============================================================================
-banner "LAB BLOQUE 1 LISTO — Guía de ejercicios"
+banner "Generando guía de ejercicios mejorada"
 
-cat > /root/LAB_BLOQUE1_EJERCICIOS.txt << 'GUIA'
+cat > /root/LAB_BLOQUE1_EJERCICIOS_MEJORADO.txt << 'GUIA'
 ================================================================
- GUÍA DE EJERCICIOS — BLOQUE 1
- LFCS + RHCSA — Rocky Linux 9
+ GUÍA DE EJERCICIOS — BLOQUE 1 (VERSIÓN MEJORADA)
+ FUNDAMENTOS DEL SISTEMA — LFCS + RHCSA
+ Rocky Linux 9
 ================================================================
 
---- NAVEGACIÓN FILESYSTEM ---
-
-BÁSICO:
-  1. Lista /etc mostrando permisos, propietario y fecha de modificación
-  2. Encuentra archivos .conf en /etc modificados en los últimos 7 días
-     Guarda el resultado en /tmp/recientes.txt
-
-INTERMEDIO:
-  3. Encuentra archivos .log en /var/log mayores de 10MB
-     Muestra cuántas líneas tiene cada uno
-  4. Muestra el inode, propietario y fecha de acceso de /var/log/lab/stat_practice.txt
-
-AVANZADO:
-  5. Encuentra en /etc archivos mayores de 100 bytes, extensión .conf
-     (sin distinguir mayúsculas) y que pertenezcan a root
-
-TROUBLESHOOTING:
-  6. Hay un archivo en /var/log/lab/ cuyo propietario ya no existe en el sistema
-     Encuéntralo y cámbialo al usuario root
-
---- PERMISOS ESTÁNDAR ---
-
-BÁSICO:
-  1. /tmp/reporte.txt tiene permisos incorrectos. Debe ser 644. Corrígelo.
-  2. /opt/app/config.txt debe pertenecer a deploy:developers. Cámbialo.
-
-INTERMEDIO:
-  3. /data/produccion/ debe tener: propietario rw, grupo r, otros sin acceso
-     Corrígelo sin borrar el contenido
-
-AVANZADO:
-  4. /opt/app/config.conf solo debe ser leído por root y por el proceso appd
-     Los demás no deben tener ningún acceso
-
-TROUBLESHOOTING:
-  5. httpd no puede leer /var/www/html/index.html aunque el archivo existe
-     Diagnostica y corrige SIN cambiar el propietario
-
---- PERMISOS ESPECIALES ---
-
-BÁSICO:
-  1. Explica qué tiene de especial /usr/bin/passwd comparado con /usr/bin/cat
-     Pista: usa ls -la
-
-INTERMEDIO:
-  2. /var/tmp/compartido_lab tiene un problema: cualquier usuario puede borrar
-     archivos de otros. Corrígelo.
-  3. Encuentra todos los binarios en /usr/bin con SUID activo
-
-AVANZADO:
-  4. Hay binarios en /usr/local/bin con SUID que NO deberían tenerlo
-     Encuéntralos y elimina el bit SUID
-
-TROUBLESHOOTING:
-  5. /proyectos/dev debería hacer que archivos nuevos hereden el grupo developers
-     Actualmente no lo hace. Corrígelo.
-
---- ACLs ---
-
-BÁSICO:
-  1. Muestra las ACLs actuales de /data/contabilidad
-  2. Agrega permiso de lectura al usuario maria sobre /opt/reporte.csv
-     Sin cambiar propietario ni permisos estándar
-
-INTERMEDIO:
-  3. Configura /proyectos/docs para que archivos nuevos otorguen lectura a auditores
-  4. Agrega rwx al usuario deploy sobre /var/www/html y que se herede
-
-AVANZADO:
-  5. /data/contabilidad: auditor solo lectura, contabilidad rw, ti sin acceso
-
-TROUBLESHOOTING:
-  6. carlos tiene ACL rwx en /datos/privado/secreto.txt pero no puede escribir
-     Investiga por qué y corrígelo
-
---- LINKS ---
-
-BÁSICO:
-  1. Crea un link simbólico /opt/config que apunte a /etc/httpd/conf/httpd.conf
-  2. Crea un hard link de /etc/hostname llamado /tmp/hostname-backup
-
-INTERMEDIO:
-  3. Encuentra todos los links simbólicos ROTOS en /etc y en /opt
-     Pista: find con -L y -type l
-
-TROUBLESHOOTING:
-  4. /opt/myapp/app.conf es un link simbólico roto
-     Corrígelo para que apunte al archivo real en /opt/myapp/app.conf.real
-
---- COMPRESIÓN ---
-
-BÁSICO:
-  1. Comprime /lab/para_comprimir en /tmp/lab_backup.tar.gz
-  2. Lista el contenido de /tmp/backup_completo.tar.gz sin extraerlo
-
-INTERMEDIO:
-  3. Comprime /var/log/lab/app_large.log con gzip y con bzip2
-     Compara los tamaños. ¿Cuál comprime más?
-
-AVANZADO:
-  4. Crea un backup de /lab/para_comprimir que excluya archivos .tmp
-     Guárdalo en /tmp/backup_sin_tmp.tar.gz
-
---- GESTIÓN DE PAQUETES ---
-
-BÁSICO:
-  1. Verifica que httpd está instalado y muestra su versión
-  2. Lista todos los paquetes instalados que contengan 'ssh' en el nombre
-
-INTERMEDIO:
-  3. Muestra el historial de transacciones de dnf
-
-AVANZADO:
-  4. httpd fue instalado pero alguien modificó uno de sus archivos de configuración
-     Usa rpm para detectar qué archivo fue modificado
-
---- VIM ---
-
-BÁSICO:
-  1. Abre /tmp/archivo_100_lineas.txt y ve directo a la línea 50
-
-INTERMEDIO:
-  2. En /etc/httpd/conf/httpd_vim_practice.conf busca todas las ocurrencias
-     de 'Listen' y cámbialas a 'Listen 8080' (sin tocar las líneas comentadas)
-  3. Abre /tmp/config_servidor_a.txt y /tmp/config_servidor_b.txt al mismo tiempo
-     Copia la línea de IP del servidor A al servidor B
+Antes de comenzar:
+- Todos los usuarios tienen contraseña Lab2024!
+- Los archivos de sistema han sido respaldados en /root/lab_backups_bloque1_*
+- Puedes explorar /lab/bloque1/ y /var/log/lab/ para ver los archivos de práctica
 
 ================================================================
- Contraseña de todos los usuarios del lab: Lab2024!
+NAVEGACIÓN RÁPIDA POR NIVELES:
+
+BÁSICO               → Comandos fundamentales (ls, cd, find simple)
+INTERMEDIO           → Operadores más complejos (find -exec, locate, stat)
+AVANZADO             → Condiciones múltiples, scripting
+TROUBLESHOOTING      → Diagnóstico y resolución de problemas reales
+================================================================
+
+
+--- NAVEGACIÓN FILESYSTEM (BÁSICO) ---
+
+Ejercicio 1: ls avanzado
+  Lista el directorio /etc mostrando:
+  - Permisos en formato legible
+  - Propietario y grupo
+  - Tamaño en formato human-readable
+  - Ordenado por fecha de modificación (más reciente primero)
+
+Ejercicio 2: find por tiempo
+  Encuentra todos los archivos .conf en /etc modificados en los últimos 7 días.
+  Guarda la lista completa en /tmp/recientes.txt
+
+Ejercicio 3: find por tamaño
+  Localiza archivos en /var/log mayores de 50MB.
+  Muestra su tamaño y ruta completa.
+
+Ejercicio 4: Uso de pwd y cd
+  Sin usar rutas absolutas, navega desde / hasta /var/log/lab usando solo cd y ..
+  Documenta los pasos.
+
+Ejercicio 5: tree
+  Instala tree si no está y muestra la estructura completa de /lab/bloque1
+  Redirige la salida a /tmp/estructura_lab.txt
+
+
+--- NAVEGACIÓN FILESYSTEM (INTERMEDIO) ---
+
+Ejercicio 6: find con -exec
+  Encuentra todos los archivos .log en /var/log/lab que contengan "ERROR"
+  y muestra las primeras 5 líneas de cada uno.
+
+Ejercicio 7: locate
+  Actualiza la base de datos de locate (updatedb) y busca todos los archivos
+  que contengan "practice" en el nombre en todo el sistema.
+
+Ejercicio 8: stat
+  Usa stat para obtener la siguiente información de /var/log/lab/stat_practice.txt:
+  - Inodo
+  - Permisos en formato numérico
+  - Tiempo de último acceso
+  - Tamaño en bytes
+
+Ejercicio 9: find con condiciones
+  Encuentra archivos en /etc que:
+  - Sean regulares (no directorios)
+  - Tengan tamaño entre 1k y 1M
+  - Sean del usuario root
+  - Muestra solo el nombre y el tamaño
+
+Ejercicio 10: which y type
+  Determina la ubicación exacta de los binarios: ls, find, grep, vim
+  ¿Alguno es un alias? ¿Alguno está en múltiples ubicaciones?
+
+
+--- NAVEGACIÓN FILESYSTEM (AVANZADO) ---
+
+Ejercicio 11: find con múltiples condiciones complejas
+  Encuentra en /usr todos los archivos que:
+  - Tengan extensión .conf O .cfg
+  - Sean mayores de 10KB
+  - NO pertenezcan al grupo root
+  - Hayan sido accedidos en los últimos 30 días
+
+Ejercicio 12: find + stat + awk
+  Genera un reporte de todos los archivos en /etc que contengan "lab_service"
+  mostrando: nombre, tamaño, inodo, propietario, y número de links
+
+Ejercicio 13: Investigación de inodos
+  Encuentra todos los archivos en /var/log/lab que compartan el mismo inodo.
+  ¿Cómo es posible? Explica.
+
+Ejercicio 14: find con expresiones regulares
+  Encuentra archivos en /var/log que tengan números en su nombre
+  (ej: auth_practice.log, pero encuentra cualquier patrón con dígitos)
+
+Ejercicio 15: find con links simbólicos
+  Encuentra todos los links simbólicos en /usr/local/bin
+  Muestra a qué apuntan y si el destino existe
+
+
+--- NAVEGACIÓN FILESYSTEM (TROUBLESHOOTING) ---
+
+Escenario 1: Archivo huérfano
+  Hay un archivo en /var/log/lab/ cuyo propietario (UID) ya no existe en el sistema.
+  Encuéntralo y cámbialo al usuario root.
+
+Escenario 2: Buscar por inode
+  Un proceso está accediendo a un archivo con inode 123456 (simulado).
+  Encuentra qué archivo es usando find.
+
+Escenario 3: Directorio inaccesible
+  El usuario 'juan' reporta que no puede entrar a /proyectos/dev aunque existe.
+  Diagnostica el problema y soluciónalo manteniendo la seguridad.
+
+Escenario 4: Logs que no rotan
+  /var/log/lab/app_large.log está creciendo sin control.
+  Investiga su tamaño y crea una rotación básica manual.
+
+Escenario 5: Archivos ocultos olvidados
+  Busca archivos ocultos en /var/log/lab que estén ocupando espacio.
+  Determina si deben ser eliminados o conservados.
+
+
+--- PERMISOS ESTÁNDAR (BÁSICO) ---
+
+Ejercicio 16: chmod numérico
+  Corrige los permisos de /tmp/estrategia_ventas.txt a 644
+
+Ejercicio 17: chmod simbólico
+  Usando notación simbólica, da permisos de ejecución al propietario de
+  /opt/app/backup_script.sh
+
+Ejercicio 18: chown
+  Cambia el propietario de /opt/app/app.conf a deploy y grupo a developers
+
+Ejercicio 19: Verificación de permisos
+  Verifica con ls -la que los archivos anteriores tienen los permisos correctos
+
+Ejercicio 20: Permisos en directorios
+  El directorio /data/compartido tiene permisos 777. ¿Qué riesgo supone?
+  Cámbialo a 755 y los archivos dentro a 644
+
+
+--- PERMISOS ESTÁNDAR (INTERMEDIO) ---
+
+Ejercicio 21: umask
+  Como usuario juan, crea un archivo nuevo en /home/juan/workspace/test.txt
+  ¿Qué permisos tiene por defecto? Cambia la umask para que los nuevos archivos
+  sean 640 y directorios 750.
+
+Ejercicio 22: Permisos en servicios
+  El directorio /opt/app/config debe tener permisos 750 (root:appd)
+  Verifica y corrige si es necesario.
+
+Ejercicio 23: Permisos recursivos
+  Cambia recursivamente los permisos de /proyectos/dev para que:
+  - Directorios: 755
+  - Archivos: 644
+  (sin afectar a otros directorios)
+
+Ejercicio 24: Sticky bit con permisos estándar
+  Explica cómo interactúa el sticky bit con los permisos estándar
+  Demuestra con un ejemplo práctico.
+
+Ejercicio 25: Propietario vs permisos
+  ¿Puede root leer un archivo con permisos 000? ¿Por qué?
+  Demuéstralo creando un archivo como root con chmod 000 y leyéndolo.
+
+
+--- PERMISOS ESTÁNDAR (AVANZADO) ---
+
+Ejercicio 26: Permisos para aplicaciones
+  Configura /opt/app/config/db.conf para que:
+  - Root: lectura/escritura
+  - Grupo appd: solo lectura
+  - Otros: ningún acceso
+  Verifica que appd (usuario) puede leerlo pero no escribirlo
+
+Ejercicio 27: Permisos mínimos necesarios
+  Determina los permisos MÍNIMOS necesarios para que:
+  - El usuario 'deploy' pueda ejecutar scripts en /opt/app/bin/
+  - El grupo 'developers' pueda leer archivos en /proyectos/docs
+  - Cualquier usuario pueda crear archivos en /srv/compartido
+    pero no borrar los de otros
+
+Ejercicio 28: Script de auditoría de permisos
+  Escribe un script que recorra /opt/app y reporte archivos con:
+  - Permisos 777
+  - SUID activo
+  - Propietario fuera de rangos esperados
+
+Ejercicio 29: Permisos y procesos
+  Inicia un proceso como usuario 'appd' y verifica qué permisos efectivos tiene
+  sobre los archivos en /opt/app/config/
+
+Ejercicio 30: Integración con ACLs
+  Combina permisos estándar y ACLs para dar a 'auditor' acceso de lectura
+  a /opt/app/config sin modificar los permisos estándar.
+
+
+--- PERMISOS ESTÁNDAR (TROUBLESHOOTING) ---
+
+Escenario 6: httpd no puede servir página
+  El servicio httpd no puede mostrar /var/www/html/lab/index.html
+  El archivo existe pero da error 403. Diagnostica y corrige.
+
+Escenario 7: Aplicación no puede escribir logs
+  La aplicación en /opt/app necesita escribir en /opt/app/logs/application.log
+  Actualmente no puede. Corrige el problema.
+
+Escenario 8: Backup falla por permisos
+  Un script de backup que corre como root está fallando al acceder
+  a /data/produccion. Investiga y corrige.
+
+Escenario 9: Usuario puede leer lo que no debe
+  El usuario 'carlos' (en grupo ti) puede leer /data/reportes/rrhh.txt
+  cuando no debería. Corrige sin romper otros accesos.
+
+Escenario 10: Permisos demasiado restrictivos
+  Todos los usuarios del grupo 'developers' no pueden ejecutar scripts
+  en /proyectos/dev/scripts. Diagnostica y soluciona.
+
+
+--- PERMISOS ESPECIALES (BÁSICO) ---
+
+Ejercicio 31: Identificar SUID
+  Encuentra 3 binarios en /usr/bin que tengan SUID activo
+  Explica para qué sirve cada uno
+
+Ejercicio 32: Sticky bit
+  Explica qué hace el sticky bit y en qué directorios del sistema se usa
+  Verifica su presencia en /tmp
+
+Ejercicio 33: SGID básico
+  Crea un directorio /tmp/sgid_test con SGID activo
+  Demuestra que los archivos nuevos heredan el grupo
+
+Ejercicio 34: Comparación SUID/SGID
+  ¿Cuál es la diferencia entre SUID en un archivo y SGID en un directorio?
+  Proporciona ejemplos de uso real
+
+Ejercicio 35: Eliminar sticky bit
+  /var/tmp/compartido_lab tiene un problema de seguridad. Identifícalo
+  y aplícale sticky bit
+
+
+--- PERMISOS ESPECIALES (INTERMEDIO) ---
+
+Ejercicio 36: Auditar SUID en /usr/local/bin
+  Encuentra todos los binarios en /usr/local/bin con SUID activo
+  ¿Cuáles deberían tenerlo? ¿Cuáles son sospechosos?
+
+Ejercicio 37: SGID en proyectos
+  Configura /proyectos/colaboracion para que los archivos nuevos
+  hereden automáticamente el grupo developers
+
+Ejercicio 38: Sticky bit y colaboración
+  Crea un directorio /srv/colaboracion con:
+  - Permisos 1777 (sticky bit)
+  - Grupo por defecto 'colaboradores'
+  - Demuestra su funcionamiento
+
+Ejercicio 39: SUID inseguro
+  /usr/local/bin/cat_viewer tiene SUID. ¿Es seguro? ¿Por qué?
+  Elimínalo si no es necesario.
+
+Ejercicio 40: SUID en scripts
+  ¿Puede un script de shell tener SUID? Explica por qué sí o no
+  Demuéstralo creando un script simple y probando
+
+
+--- PERMISOS ESPECIALES (AVANZADO) ---
+
+Ejercicio 41: Auditoría completa de SUID/SGID
+  Crea un script que:
+  - Encuentre todos los binarios con SUID/SGID en todo el sistema
+  - Los compare con una lista de permitidos
+  - Reporte los inesperados
+  - Genere un informe en /root/suid_audit.txt
+
+Ejercicio 42: SUID en binarios personalizados
+  Analiza /usr/local/bin/find_lab. ¿Por qué tiene SUID? ¿Qué riesgo implica?
+  Documenta tu análisis.
+
+Ejercicio 43: SGID en múltiples niveles
+  Configura /proyectos/releases con SGID y subdirectorios
+  para que toda la estructura herede el grupo 'developers'
+
+Ejercicio 44: Sticky bit y ACLs
+  Combina sticky bit y ACLs en /srv/compartido_avanzado para:
+  - Todos pueden crear archivos
+  - Nadie puede borrar archivos de otros
+  - El grupo 'admins' puede borrar cualquier archivo
+
+Ejercicio 45: SUID bit en binarios del sistema
+  Investiga por qué /usr/bin/passwd tiene SUID y /usr/bin/cat no
+  Explica la razón de seguridad detrás
+
+
+--- PERMISOS ESPECIALES (TROUBLESHOOTING) ---
+
+Escenario 11: Sticky bit faltante
+  En /var/tmp/compartido_publico, los usuarios están borrando archivos
+  de otros. Aplica la solución correcta.
+
+Escenario 12: SGID no funciona
+  /proyectos/dev debería heredar el grupo developers pero no lo hace.
+  Diagnostica por qué y corrígelo.
+
+Escenario 13: SUID innecesario en binario crítico
+  Se ha detectado que /usr/local/bin/cp_lab tiene SUID.
+  ¿Es un riesgo? Elimínalo si corresponde.
+
+Escenario 14: Sticky bit donde no debe
+  /tmp/no_sticky_needed tiene sticky bit pero no debería.
+  Elimínalo y justifica por qué no es necesario.
+
+Escenario 15: Permisos especiales causando fallos
+  Un script falla porque un binario con SUID no se comporta como espera.
+  Investiga y documenta el problema.
+
+
+--- ACLs (BÁSICO) ---
+
+Ejercicio 46: Ver ACLs
+  Muestra las ACLs actuales de /data/empresa/finanzas
+
+Ejercicio 47: Agregar ACL simple
+  Da permiso de lectura al usuario 'auditor' sobre /data/reportes/financiero.txt
+  Sin cambiar propietario ni permisos estándar
+
+Ejercicio 48: getfacl
+  Usa getfacl para ver las ACLs de /data/empresa/rrhh
+  Interpreta cada línea
+
+Ejercicio 49: setfacl básico
+  Agrega permisos de lectura/escritura para el grupo 'desarrolladores'
+  sobre /proyectos/docs/arquitectura.md
+
+Ejercicio 50: Eliminar ACL
+  Elimina la ACL que agregaste en el ejercicio anterior y verifica
+
+
+--- ACLs (INTERMEDIO) ---
+
+Ejercicio 51: ACLs por defecto
+  Configura /proyectos/compartido para que los nuevos archivos
+  otorguen automáticamente lectura al grupo 'auditores'
+
+Ejercicio 52: ACLs recursivas
+  Agrega permisos de lectura para 'auditor' sobre TODO /data/empresa/finanzas
+  de forma recursiva
+
+Ejercicio 53: Máscara de ACL
+  Explica qué es la máscara en ACLs y cómo afecta a los permisos efectivos
+  Demuestra con un ejemplo
+
+Ejercicio 54: ACLs en directorios padres
+  Da permisos rwx al usuario 'deploy' sobre /var/www/html y todos sus subdirectorios
+  de forma que los archivos nuevos también los hereden
+
+Ejercicio 55: ACLs vs permisos estándar
+  ¿Qué prevalece si hay conflicto entre permisos estándar y ACLs?
+  Demuestra con un ejemplo
+
+
+--- ACLs (AVANZADO) ---
+
+Ejercicio 56: Estrategia empresarial con ACLs
+  Implementa la siguiente política en /data/empresa:
+  - Finanzas: contabilidad rw, auditores r
+  - RRHH: solo rrhh rw (ni siquiera root)
+  - IT: desarrolladores rw, operaciones r, auditores r
+  - Ventas: ventas rw, marketing r
+
+Ejercicio 57: Backup y restauración de ACLs
+  Guarda las ACLs de /data/empresa en un archivo
+  Elimínalas y luego restáuralas desde el backup
+
+Ejercicio 58: ACLs en NFS (simulado)
+  Simula una configuración donde ACLs en un directorio exportado por NFS
+  deben ser visibles desde el cliente. Documenta los requisitos.
+
+Ejercicio 59: ACLs y herencia compleja
+  Configura /proyectos/avanzado con:
+  - ACL por defecto que da rwx a developers
+  - ACL por defecto que da r a auditores
+  - ACL específica que da rwx a un usuario 'jefe_proyecto'
+  - Todo heredado correctamente
+
+Ejercicio 60: Script de auditoría de ACLs
+  Crea un script que recorra /data/empresa y reporte:
+  - Directorios con ACLs
+  - Archivos con ACLs
+  - ACLs que permiten acceso a usuarios fuera de rangos normales
+
+
+--- ACLs (TROUBLESHOOTING) ---
+
+Escenario 16: Mask restringiendo permisos
+  carlos tiene ACL rwx en /datos/privado/secreto.txt pero no puede escribir.
+  La máscara está limitando sus permisos. Diagnostica y corrige.
+
+Escenario 17: Directorio padre inaccesible
+  deploy tiene ACLs sobre /opt/restricted/app/config.conf pero no puede acceder.
+  El problema está en los permisos del directorio padre. Soluciónalo.
+
+Escenario 18: ACL no hereda
+  Los nuevos archivos en /proyectos/compartido no heredan las ACLs configuradas.
+  Encuentra por qué y corrígelo.
+
+Escenario 19: Conflicto de ACLs
+  Un usuario tiene acceso por grupo y por ACL, pero se comporta de manera inesperada.
+  Diagnostica cuál prevalece.
+
+Escenario 20: ACLs demasiado permisivas
+  auditor_jefe tiene más permisos de los que debería en /data/empresa/finanzas.
+  Ajusta las ACLs a lo estrictamente necesario.
+
+
+--- LINKS (BÁSICO) ---
+
+Ejercicio 61: Crear link simbólico
+  Crea un link simbólico /opt/app.conf que apunte a /etc/app/config/app.conf
+
+Ejercicio 62: Crear hard link
+  Crea un hard link de /etc/hostname llamado /tmp/hostname_backup
+
+Ejercicio 63: Identificar links
+  Usa ls -la para identificar qué archivos en /etc son links simbólicos
+
+Ejercicio 64: Seguir links
+  Usa readlink para ver a dónde apunta /opt/app.conf
+
+Ejercicio 65: Links y permisos
+  ¿Los permisos de un link simbólico importan? Explica y demuestra
+
+
+--- LINKS (INTERMEDIO) ---
+
+Ejercicio 66: Encontrar links rotos
+  Encuentra todos los links simbólicos rotos en /etc y en /opt
+  (find con -L y -type l)
+
+Ejercicio 67: Hard links vs copias
+  Crea un hard link y una copia de un archivo. Modifica el original.
+  ¿Qué pasa con el link? ¿Qué pasa con la copia?
+
+Ejercicio 68: Hard links en diferentes filesystems
+  Intenta crear un hard link a través de una partición diferente.
+  ¿Qué sucede? ¿Por qué?
+
+Ejercicio 69: Links a directorios
+  Crea un link simbólico a un directorio. Demuestra cómo funciona
+  y en qué se diferencia de un link a un archivo
+
+Ejercicio 70: Contar links
+  Usa stat para ver el número de links de /tmp/original.txt
+  Crea más hard links y observa cómo cambia
+
+
+--- LINKS (AVANZADO) ---
+
+Ejercicio 71: Cadena de links
+  Sigue la cadena de links desde /opt/app.conf.link3 hasta el archivo final
+  Documenta cada paso
+
+Ejercicio 72: Links en scripts
+  Crea un script que verifique todos los links en /usr/local/bin
+  y reporte los que apuntan a ubicaciones inexistentes
+
+Ejercicio 73: Links y backups
+  Diseña una estrategia de backup que maneje correctamente links
+  (¿debes seguir links o copiarlos?)
+
+Ejercicio 74: Hard links y inodos
+  Encuentra todos los archivos en /var/log/lab que comparten inodo con otro
+  ¿Cómo los identificas?
+
+Ejercicio 75: Links relativos vs absolutos
+  Crea links con rutas relativas y absolutas. ¿Cuál es más robusto?
+  Demuestra moviendo el directorio que contiene los links
+
+
+--- LINKS (TROUBLESHOOTING) ---
+
+Escenario 21: Servicio falla por link roto
+  /opt/myapp/app.conf es un link roto y la aplicación falla al iniciar.
+  Corrígelo para que apunte al archivo real (/opt/myapp/app.conf.real)
+
+Escenario 22: Links circulares
+  Crea intencionalmente un link circular (A apunta a B, B apunta a A)
+  ¿Qué pasa cuando intentas acceder? ¿Cómo lo detectas?
+
+Escenario 23: Hard link a punto de montaje
+  Un administrador intentó crear un hard link a un archivo en /media/usb
+  y falló. Explica por qué y sugiere una alternativa.
+
+Escenario 24: Demasiados links
+  Investiga qué límite de hard links tiene tu filesystem
+  ¿Qué pasa cuando se alcanza?
+
+Escenario 25: Link simbólico con path absoluto incorrecto
+  Un link apunta a una ubicación correcta pero en un sistema diferente
+  (paths absolutos que no existen). ¿Cómo lo corriges?
+
+
+--- COMPRESIÓN (BÁSICO) ---
+
+Ejercicio 76: tar crear
+  Comprime /lab/compresion/documentos en /tmp/documentos_backup.tar.gz
+
+Ejercicio 77: tar listar
+  Lista el contenido de /tmp/backup_completo.tar.gz sin extraerlo
+
+Ejercicio 78: tar extraer
+  Extrae /tmp/httpd_config_backup.tar.gz en /tmp/httpd_restaurado
+
+Ejercicio 79: gzip/bzip2/xz básico
+  Comprime /lab/compresion/logs/app.log con gzip, bzip2 y xz
+  Compara los tamaños resultantes
+
+Ejercicio 80: Ver archivos comprimidos
+  Usa zcat, bzcat, xzcat para ver el contenido sin descomprimir
+
+
+--- COMPRESIÓN (INTERMEDIO) ---
+
+Ejercicio 81: Comparar algoritmos
+  Compara la tasa de compresión de gzip, bzip2 y xz sobre:
+  - zeros.dat (todo ceros)
+  - random.dat (aleatorio)
+  - repetitivo.log (patrones)
+  ¿Cuál comprime mejor cada tipo?
+
+Ejercicio 82: tar con exclude
+  Crea un backup de /lab/compresion/datos_para_backup que excluya:
+  - Archivos .tmp
+  - El directorio temp/
+  - Archivos .log
+  Guárdalo en /tmp/backup_limpo.tar.gz
+
+Ejercicio 83: tar incremental
+  Crea un backup completo, luego agrega algunos archivos nuevos
+  y crea un backup incremental. Compara tamaños.
+
+Ejercicio 84: Comprimir por partes
+  Usa split junto con tar para crear un backup fragmentado
+  en archivos de 10MB y luego reconstruirlo
+
+Ejercicio 85: Verificar integridad
+  Usa gzip -t para verificar la integridad de archivos .gz
+  Haz lo mismo con bzip2 y xz
+
+
+--- COMPRESIÓN (AVANZADO) ---
+
+Ejercicio 86: Script de backup con compresión
+  Crea un script que:
+  - Tome un directorio como argumento
+  - Cree un backup con fecha en el nombre
+  - Use el mejor algoritmo según el tipo de archivo
+  - Verifique la integridad del backup
+
+Ejercicio 87: Compresión en pipelines
+  Usa tar con ssh para copiar un directorio comprimido a otra máquina
+  (aunque sea localhost para simular)
+
+Ejercicio 88: Backup con timestamp
+  Crea un backup de /etc que incluya en el nombre del archivo la fecha
+  y hora exacta de creación
+
+Ejercicio 89: Extracción selectiva
+  Extrae solo los archivos .conf del backup /tmp/backup_completo.tar.gz
+  sin extraer el resto
+
+Ejercicio 90: Compresión paralela
+  Investiga y demuestra el uso de pigz (gzip paralelo) si está disponible
+  Compara velocidad con gzip normal
+
+
+--- COMPRESIÓN (TROUBLESHOOTING) ---
+
+Escenario 26: Backup corrupto
+  Intenta extraer /tmp/backup_corrupto.tar.gz. Falla.
+  Usa herramientas de recuperación para rescatar lo que sea posible.
+
+Escenario 27: Espacio insuficiente
+  Simula falta de espacio en /tmp y crea un backup grande.
+  ¿Cómo manejas esta situación?
+
+Escenario 28: Permisos en backup
+  Al extraer un backup, los permisos no se restauran correctamente.
+  ¿Qué opción de tar falta?
+
+Escenario 29: Backup incompleto
+  Un backup parece completo pero faltan archivos.
+  Investiga si el exclude se usó incorrectamente.
+
+Escenario 30: Formato de compresión equivocado
+  Intentas descomprimir un archivo .gz con bzip2. ¿Qué pasa?
+  ¿Cómo identificas el formato correcto?
+
+
+--- GESTIÓN DE PAQUETES (BÁSICO) ---
+
+Ejercicio 91: Verificar paquetes instalados
+  Verifica que httpd está instalado y muestra su versión
+
+Ejercicio 92: Buscar paquetes
+  Lista todos los paquetes instalados que contengan 'ssh' en el nombre
+
+Ejercicio 93: Información de paquete
+  Muestra información detallada del paquete vsftpd
+  (versión, release, tamaño, dependencias)
+
+Ejercicio 94: Archivos de un paquete
+  Lista todos los archivos instalados por el paquete httpd
+
+Ejercicio 95: ¿Qué paquete provee un archivo?
+  Determina qué paquete instaló /etc/vsftpd/vsftpd.conf
+
+
+--- GESTIÓN DE PAQUETES (INTERMEDIO) ---
+
+Ejercicio 96: Historial de dnf
+  Muestra el historial de transacciones de dnf
+  Identifica cuándo se instaló httpd
+
+Ejercicio 97: Grupos de paquetes
+  Lista los grupos de paquetes disponibles
+  Instala el grupo 'Development Tools' (simula con --assumeno)
+
+Ejercicio 98: Módulos dnf
+  Lista los módulos disponibles relacionados con nodejs o php
+  (solo para práctica, sin instalar)
+
+Ejercicio 99: Verificar integridad
+  Usa rpm -V para verificar el paquete httpd
+  ¿Qué archivos aparecen como modificados?
+
+Ejercicio 100: Dependencias
+  Muestra las dependencias del paquete httpd
+  ¿Qué pasa si intentas eliminar una dependencia crítica?
+
+
+--- GESTIÓN DE PAQUETES (AVANZADO) ---
+
+Ejercicio 101: Crear repo local
+  Crea un directorio /repositorio-local, copia algunos RPMs
+  y configura un repositorio local usando createrepo
+
+Ejercicio 102: dnf offline
+  Simula la instalación de un paquete en un sistema sin internet
+  usando el repositorio local creado
+
+Ejercicio 103: rpm -V avanzado
+  Usa rpm -Va para verificar todos los paquetes
+  y guarda un reporte de archivos modificados
+
+Ejercicio 104: Script de auditoría de paquetes
+  Crea un script que liste todos los paquetes instalados,
+  su tamaño y fecha de instalación, ordenado por tamaño
+
+Ejercicio 105: Reconstruir base de datos rpm
+  Simula una base de datos rpm corrupta y reconstruye
+  (con cuidado - práctica teórica)
+
+
+--- GESTIÓN DE PAQUETES (TROUBLESHOOTING) ---
+
+Escenario 31: Dependencia rota
+  Simula una dependencia rota (conceptual) y explica cómo la resolverías
+
+Escenario 32: Repositorio corrupto
+  ¿Qué haces si dnf falla con error de metadatos corruptos?
+
+Escenario 33: Archivo modificado
+  El archivo /etc/httpd/conf/httpd.conf fue modificado.
+  Usa rpm -V para confirmar y decide si restaurarlo
+
+Escenario 34: Paquete duplicado
+  ¿Qué pasa si instalas dos versiones del mismo paquete?
+  ¿Cómo lo resuelves?
+
+Escenario 35: Conflicto de archivos
+  Dos paquetes intentan instalar el mismo archivo.
+  ¿Cómo diagnosticas y resuelves?
+
+
+--- VIM (BÁSICO) ---
+
+Ejercicio 106: Abrir archivo
+  Abre /tmp/vim_practice_long.txt en vim
+
+Ejercicio 107: Navegación
+  Muévete a la línea 50, luego a la última línea, luego al principio
+
+Ejercicio 108: Modos
+  Cambia al modo inserción, escribe "PRÁCTICA VIM", vuelve al modo normal
+
+Ejercicio 109: Guardar y salir
+  Guarda los cambios y sal de vim
+
+Ejercicio 110: Números de línea
+  Activa la numeración de líneas en vim y luego desactívala
+
+
+--- VIM (INTERMEDIO) ---
+
+Ejercicio 111: Buscar texto
+  Busca todas las ocurrencias de "Línea" en el archivo
+
+Ejercicio 112: Reemplazar
+  En /tmp/vim_practice_replace.txt, reemplaza 'oldserver01' por 'newserver01'
+  (solo líneas que no sean comentarios)
+
+Ejercicio 113: Múltiples archivos
+  Abre /tmp/vim_practice_file1.txt y /tmp/vim_practice_file2.txt
+  en la misma sesión de vim
+
+Ejercicio 114: Copiar y pegar
+  Copia la línea de IP del archivo 1 y pégala en el archivo 2
+
+Ejercicio 115: Deshacer/rehacer
+  Haz cambios, deshaz, rehaz, guarda
+
+
+--- VIM (AVANZADO) ---
+
+Ejercicio 116: Macros
+  Graba una macro que agregue "; # Comentado" al final de cada línea
+  que contenga "Listen" y reprodúcela
+
+Ejercicio 117: Splits
+  Abre los tres archivos de práctica en splits horizontales y verticales
+
+Ejercicio 118: vimrc básico
+  Crea un ~/.vimrc personal con numeración de líneas, resaltado de sintaxis,
+  y tabulaciones de 4 espacios
+
+Ejercicio 119: Rangos
+  En el archivo largo, borra las líneas 20 a 30, luego las 50 a 55
+
+Ejercicio 120: Búsqueda avanzada
+  Usa expresiones regulares para buscar líneas que contengan números
+  de teléfono o IPs (patrones específicos)
+
+
+--- VIM (TROUBLESHOOTING) ---
+
+Escenario 36: Editar archivo crítico
+  Debes modificar /tmp/vim_practice_critical.txt (simulando /etc/fstab)
+  sin romper la sintaxis. Haz un cambio seguro.
+
+Escenario 37: Archivo sin permisos de escritura
+  Edita un archivo que no tiene permisos de escritura.
+  ¿Cómo lo guardas con sudo dentro de vim?
+
+Escenario 38: Vim no responde
+  Simula un vim congelado (conceptualmente). ¿Cómo matas el proceso?
+
+Escenario 39: Archivo binario
+  Abre un archivo binario con vim. ¿Qué ves? ¿Cómo sales sin guardar?
+
+Escenario 40: Recuperar archivo
+  Simula un crash mientras editas. ¿Dónde busca vim los archivos de recuperación?
+
+
+================================================================
+EJERCICIOS INTEGRADOS (COMBINAN MÚLTIPLES TEMAS)
+
+Ejercicio 200: Diagnóstico completo de permisos
+  Crea un script que:
+  1. Busque archivos con permisos 777
+  2. Busque archivos con SUID en /usr/local/bin
+  3. Verifique links rotos en /etc
+  4. Genere un reporte consolidado
+
+Ejercicio 201: Backup con verificación
+  Crea un script que:
+  1. Comprima /etc y /var/log
+  2. Verifique la integridad del backup
+  3. Muestre estadísticas de compresión
+  4. Guarde las ACLs de los archivos importantes
+
+Ejercicio 202: Migración de usuario
+  Simula la migración de un usuario:
+  1. Crea un usuario temporal
+  2. Configura sus permisos en varios directorios
+  3. Genera un script de exportación
+  4. "Migra" a otro sistema (localmente)
+
+Ejercicio 203: Hardening básico
+  Crea un script que:
+  1. Elimine binarios con SUID innecesarios
+  2. Corrija permisos en directorios críticos
+  3. Configure sticky bit donde corresponda
+  4. Documente todos los cambios
+
+Ejercicio 204: Forensics básico
+  Investiga /var/log/lab/orphan_file.txt:
+  1. ¿Quién era el propietario original?
+  2. ¿Cuándo se creó?
+  3. ¿Qué proceso podría haberlo creado?
+
+================================================================
+NOTAS IMPORTANTES:
+- Todos los usuarios tienen contraseña: Lab2024!
+- Backups disponibles en: $BACKUP_DIR
+- Si necesitas restaurar: cp $BACKUP_DIR/archivo /ruta/original
+
 ================================================================
 GUIA
 
+# Reemplazar la variable en el archivo
+sed -i "s|\$BACKUP_DIR|$BACKUP_DIR|g" /root/LAB_BLOQUE1_EJERCICIOS_MEJORADO.txt
+
+# =============================================================================
+# SCRIPT DE VERIFICACIÓN DEL LABORATORIO
+# =============================================================================
+cat > /usr/local/bin/verificar_lab_bloque1.sh << 'EOF'
+#!/bin/bash
+# Script para verificar el estado del laboratorio Bloque 1
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+echo "========================================="
+echo "VERIFICACIÓN DEL LABORATORIO - BLOQUE 1"
+echo "========================================="
 echo ""
-echo -e "${GREEN}================================================================${NC}"
-echo -e "${GREEN}  LABORATORIO BLOQUE 1 CONFIGURADO EXITOSAMENTE${NC}"
-echo -e "${GREEN}================================================================${NC}"
+
+# Verificar usuarios
+echo "=== USUARIOS ==="
+for user in juan maria carlos deploy auditor appd; do
+    if id "$user" &>/dev/null; then
+        echo -e "${GREEN}✓${NC} Usuario $user existe"
+    else
+        echo -e "${RED}✗${NC} Usuario $user NO existe"
+    fi
+done
 echo ""
-echo -e "  Guía de ejercicios guardada en: ${CYAN}/root/LAB_BLOQUE1_EJERCICIOS.txt${NC}"
+
+# Verificar grupos
+echo "=== GRUPOS ==="
+for grp in developers auditores contabilidad ti; do
+    if getent group "$grp" &>/dev/null; then
+        echo -e "${GREEN}✓${NC} Grupo $grp existe"
+    else
+        echo -e "${RED}✗${NC} Grupo $grp NO existe"
+    fi
+done
 echo ""
-echo -e "  Usuarios creados (contraseña: ${YELLOW}Lab2024!${NC}):"
-echo -e "    juan, maria, carlos, deploy, auditor, appd"
+
+# Verificar directorios clave
+echo "=== DIRECTORIOS ==="
+for dir in /lab/bloque1 /var/log/lab /opt/app /data /proyectos; do
+    if [ -d "$dir" ]; then
+        echo -e "${GREEN}✓${NC} Directorio $dir existe"
+    else
+        echo -e "${RED}✗${NC} Directorio $dir NO existe"
+    fi
+done
 echo ""
-echo -e "  Grupos creados:"
-echo -e "    developers, auditores, contabilidad, ti"
-echo ""
-echo -e "  Logs de práctica en: ${CYAN}/var/log/lab/${NC}"
-echo -e "  Archivos de lab en:  ${CYAN}/lab/bloque1/${NC}"
-echo ""
-echo -e "  Para ver los ejercicios:"
-echo -e "    ${CYAN}cat /root/LAB_BLOQUE1_EJERCICIOS.txt${NC}"
-echo ""
-echo -e "${GREEN}================================================================${NC}"
+
+# Verificar archivos de práctica
+echo "=== ARCHIVOS DE PRÁCTICA ==="
+files=(
+    "/var/log/lab/auth_practice.log"
+    "/var
