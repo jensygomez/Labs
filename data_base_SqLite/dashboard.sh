@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 #  📊 DASHBOARD DE PROGRESO — LFCS / RHCSA
-#  Versión: 2.0 - Visualmente mejorado
+#  Versión: 2.1 - Visualmente mejorado (CORREGIDO)
 #  Requiere: sqlite3, tput
 # ============================================================
 
@@ -24,7 +24,7 @@ C_GRAY=$(tput setaf 8 2>/dev/null || tput setaf 7)
 C_ORANGE=$(tput setaf 208 2>/dev/null || tput setaf 3)
 
 # Fondos
-BG_HEADER=$(tput setab 17 2>/dev/null || tput setab 4)  # Azul oscuro más elegante
+BG_HEADER=$(tput setab 17 2>/dev/null || tput setab 4)
 BG_TITLE=$(tput setab 235 2>/dev/null || tput setab 0)
 BG_CARD=$(tput setab 236 2>/dev/null || tput setab 0)
 
@@ -33,23 +33,24 @@ COLS=$(tput cols)
 ROWS=$(tput lines)
 [[ $COLS -lt 80 ]] && COLS=80
 
-# ── Iconos y símbolos ────────────────────────────────────────
-ICON_CHECK="✅"
-ICON_CLOCK="🕒"
-ICON_TARGET="🎯"
-ICON_CHART="📈"
-ICON_BLOCK="📦"
-ICON_LEVEL="📊"
-ICON_TRENDING="🔥"
-ICON_WARNING="⚠️"
-ICON_STAR="⭐"
-ICON_ROCKET="🚀"
+# ── Iconos y símbolos (solo ASCII seguro) ───────────────────
+# Usamos caracteres ASCII/Unicode básicos que funcionan en todas partes
+ICON_CHECK="[OK]"
+ICON_CLOCK="[TIME]"
+ICON_TARGET="[META]"
+ICON_CHART="[STATS]"
+ICON_BLOCK="[BLOCK]"
+ICON_LEVEL="[LEVEL]"
+ICON_TRENDING="[TREND]"
+ICON_WARNING="[!]"
+ICON_STAR="[*]"
+ICON_ROCKET="[>]"
 
 # ── Helpers ──────────────────────────────────────────────────
 center_text() {
     local text="$1" width="${2:-$COLS}"
     local visible
-    visible=$(echo -e "$text" | sed 's/\x1b\[[0-9;]*m//g')
+    visible=$(echo -e "$text" | sed 's/\x1b\[[0-9;]*m//g' | sed 's/\[[^]]*\]//g')
     local pad=$(( (width - ${#visible}) / 2 ))
     printf "%${pad}s%s\n" "" "$text"
 }
@@ -75,9 +76,9 @@ barra_progreso_moderna() {
     else                         color=$C_RED
     fi
 
-    # Usando caracteres Unicode para una barra más suave
-    local char_lleno="━"
-    local char_vacio="━"
+    # Usando caracteres ASCII seguros
+    local char_lleno="="
+    local char_vacio="-"
     
     printf "${color}${BOLD}["
     printf '%*s' "$llenos" '' | tr ' ' "$char_lleno"
@@ -88,17 +89,21 @@ barra_progreso_moderna() {
 }
 
 mini_sparkline() {
-    # Simula una pequeña tendencia basada en datos recientes
+    # Versión corregida - sin errores de formato
     local values=(2 4 3 5 4 6 5)
     local color=$C_CYAN
     printf "${color}"
     for v in "${values[@]}"; do
-        case $v in
-            1|2) printf "⣀" ;;
-            3|4) printf "⣤" ;;
-            5|6) printf "⣶" ;;
-            7|8) printf "⣿" ;;
-        esac
+        # Usamos caracteres ASCII simples
+        if [[ $v -le 2 ]]; then
+            printf "."
+        elif [[ $v -le 4 ]]; then
+            printf "o"
+        elif [[ $v -le 6 ]]; then
+            printf "O"
+        else
+            printf "@"
+        fi
     done
     printf "${RESET}"
 }
@@ -108,7 +113,7 @@ query() { sqlite3 "$DB" "$1" 2>/dev/null; }
 
 # Verificar que la base de datos existe
 if [[ ! -f "$DB" ]]; then
-    echo "${C_RED}${BOLD}❌ Error: Base de datos no encontrada en $DB${RESET}"
+    echo "${C_RED}${BOLD} Error: Base de datos no encontrada en $DB${RESET}"
     exit 1
 fi
 
@@ -137,14 +142,14 @@ declare -A B_CARGADOS B_COMPLETADOS
 while IFS='|' read -r bloque total hechos; do
     B_CARGADOS[$bloque]=$total
     B_COMPLETADOS[$bloque]=${hechos:-0}
-done < <(query "SELECT bloque, COUNT(*), SUM(completado) FROM ejercicios GROUP BY bloque;")
+done < <(query "SELECT bloque, COUNT(*), SUM(completado) FROM ejercicios GROUP BY bloque;" 2>/dev/null)
 
 # Por nivel
 declare -A N_TOTAL N_HECHOS
 while IFS='|' read -r nivel total hechos; do
     N_TOTAL[$nivel]=$total
     N_HECHOS[$nivel]=${hechos:-0}
-done < <(query "SELECT nivel, COUNT(*), SUM(completado) FROM ejercicios GROUP BY nivel;")
+done < <(query "SELECT nivel, COUNT(*), SUM(completado) FROM ejercicios GROUP BY nivel;" 2>/dev/null)
 
 # Último ejercicio
 ULTIMO=$(query "SELECT tema || ' · Bloque ' || bloque FROM ejercicios WHERE ultima_vez IS NOT NULL ORDER BY ultima_vez DESC LIMIT 1;")
@@ -153,10 +158,10 @@ ULTIMA_FECHA=$(query "SELECT ultima_vez FROM ejercicios WHERE ultima_vez IS NOT 
 # ── RENDER ────────────────────────────────────────────────────
 clear
 
-# ========== HEADER MODERNO ==========
+# ========== HEADER ==========
 echo
 printf "${BOLD}${BG_HEADER}${C_WHITE}"
-printf '%*s' "$COLS" '' | tr ' ' '▄'
+printf '%*s' "$COLS" '' | tr ' ' '='
 printf "${RESET}\n"
 
 printf "${BOLD}${BG_HEADER}${C_WHITE}"
@@ -164,45 +169,45 @@ center_text "  ${ICON_ROCKET}  LINUX LABORATORIES  •  ROCKY LINUX 9  •  LFCS
 printf "${RESET}"
 
 printf "${BOLD}${BG_HEADER}${C_CYAN}"
-center_text "╔════════════════════════════════════════════════════════════════╗" "$COLS"
+center_text "+--------------------------------------------------+" "$COLS"
 printf "${RESET}"
 
 printf "${BOLD}${BG_HEADER}${C_CYAN}"
-center_text "║           Sysadmin Path • Progreso hacia certificación         ║" "$COLS"
+center_text "|           Sysadmin Path • Progreso hacia certificación         |" "$COLS"
 printf "${RESET}"
 
 printf "${BOLD}${BG_HEADER}${C_CYAN}"
-center_text "╚════════════════════════════════════════════════════════════════╝" "$COLS"
+center_text "+--------------------------------------------------+" "$COLS"
 printf "${RESET}"
 
 printf "${BOLD}${BG_HEADER}${C_WHITE}"
-printf '%*s' "$COLS" '' | tr ' ' '▀'
+printf '%*s' "$COLS" '' | tr ' ' '='
 printf "${RESET}\n"
 
 # ========== TARJETA DE PROGRESO GLOBAL ==========
 echo
-hr "━" "$C_CYAN"
+hr "=" "$C_CYAN"
 printf "  ${BOLD}${C_WHITE}${ICON_TARGET}  RESUMEN GLOBAL  ${ICON_CHART}${RESET}\n"
-hr "━" "$C_CYAN"
+hr "=" "$C_CYAN"
 echo
 
 # Tarjeta de progreso principal
-printf "  ┌────────────────────────────────────────────────────────────────┐\n"
-printf "  │${BOLD}${C_WHITE}  META TOTAL (400 ejercicios)${RESET}                                   │\n"
-printf "  │  "
-barra_progreso_moderna "$TOTAL_COMPLETADOS" "$TOTAL_META" 40
-printf "                                   │\n"
-printf "  │${BOLD}${C_WHITE}  CARGADOS (${TOTAL_CARGADOS}/400)${RESET}                                          │\n"
-printf "  │  "
-barra_progreso_moderna "$TOTAL_COMPLETADOS" "$TOTAL_CARGADOS" 40
-printf "  ${C_WHITE}%3d/%-3d hechos${RESET}                    │\n" "$TOTAL_COMPLETADOS" "$TOTAL_CARGADOS"
-printf "  └────────────────────────────────────────────────────────────────┘\n"
+printf "  +--------------------------------------------------+\n"
+printf "  |${BOLD}${C_WHITE}  META TOTAL (400 ejercicios)${RESET}                    |\n"
+printf "  |  "
+barra_progreso_moderna "$TOTAL_COMPLETADOS" "$TOTAL_META" 30
+printf "                      |\n"
+printf "  |${BOLD}${C_WHITE}  CARGADOS (${TOTAL_CARGADOS}/400)${RESET}                             |\n"
+printf "  |  "
+barra_progreso_moderna "$TOTAL_COMPLETADOS" "$TOTAL_CARGADOS" 30
+printf "  ${C_WHITE}%3d/%-3d hechos${RESET}        |\n" "$TOTAL_COMPLETADOS" "$TOTAL_CARGADOS"
+printf "  +--------------------------------------------------+\n"
 
 # ========== TARJETA DE NIVELES ==========
 echo
-printf "  ┌────────────────────────────────────────────────────────────────┐\n"
-printf "  │${BOLD}${C_WHITE}  ${ICON_LEVEL}  PROGRESO POR NIVEL DE DIFICULTAD                          ${RESET}│\n"
-printf "  ├────────────────────────────────────────────────────────────────┤\n"
+printf "  +--------------------------------------------------+\n"
+printf "  |${BOLD}${C_WHITE}  ${ICON_LEVEL}  PROGRESO POR NIVEL DE DIFICULTAD        ${RESET}|\n"
+printf "  +--------------------------------------------------+\n"
 
 for nivel in "Basico" "Intermedio" "Avanzado" "Troubleshooting"; do
     t=${N_TOTAL[$nivel]:-0}
@@ -210,28 +215,28 @@ for nivel in "Basico" "Intermedio" "Avanzado" "Troubleshooting"; do
     
     # Iconos por nivel
     case $nivel in
-        Basico)         icon="🌱"; col=$C_GREEN ;;
-        Intermedio)     icon="🌿"; col=$C_YELLOW ;;
-        Avanzado)       icon="🌳"; col=$C_RED ;;
-        Troubleshooting)icon="🔧"; col=$C_MAGENTA ;;
+        Basico)         icon="[B]"; col=$C_GREEN ;;
+        Intermedio)     icon="[I]"; col=$C_YELLOW ;;
+        Avanzado)       icon="[A]"; col=$C_RED ;;
+        Troubleshooting)icon="[T]"; col=$C_MAGENTA ;;
     esac
     
-    printf "  │ ${col}${icon}${RESET} ${col}${BOLD}%-15s${RESET}" "$nivel"
+    printf "  | ${col}${icon}${RESET} ${col}${BOLD}%-15s${RESET}" "$nivel"
     printf " ${C_WHITE}%3d/%-3d${RESET}  " "$h" "$t"
     if [[ $t -gt 0 ]]; then
-        barra_progreso_moderna "$h" "$t" 18
-        printf " │\n"
+        barra_progreso_moderna "$h" "$t" 15
+        printf " |\n"
     else
-        printf "${C_GRAY}  sin datos  ${RESET}        │\n"
+        printf "     ${C_GRAY}sin datos${RESET}          |\n"
     fi
 done
-printf "  └────────────────────────────────────────────────────────────────┘\n"
+printf "  +--------------------------------------------------+\n"
 
 # ========== TARJETA DE BLOQUES ==========
 echo
-printf "  ┌────────────────────────────────────────────────────────────────┐\n"
-printf "  │${BOLD}${C_WHITE}  ${ICON_BLOCK}  PROGRESO POR BLOQUE TEMÁTICO                               ${RESET}│\n"
-printf "  ├────────────────────────────────────────────────────────────────┤\n"
+printf "  +--------------------------------------------------+\n"
+printf "  |${BOLD}${C_WHITE}  ${ICON_BLOCK}  PROGRESO POR BLOQUE TEMÁTICO              ${RESET}|\n"
+printf "  +--------------------------------------------------+\n"
 
 for i in $(seq 1 10); do
     nombre="${NOMBRES_BLOQUE[$i]}"
@@ -240,28 +245,28 @@ for i in $(seq 1 10); do
 
     # Estado del bloque con colores
     if [[ $cargados -eq 0 ]]; then
-        estado="${C_GRAY}  ⏳ sin cargar ⏳${RESET}"
+        estado="${C_GRAY}     [sin cargar]${RESET}"
         num_color=$C_GRAY
     elif [[ $hechos -eq $cargados && $cargados -eq 40 ]]; then
-        estado="$(barra_progreso_moderna $hechos $cargados 15) ${C_GREEN}${ICON_CHECK} COMPLETO${RESET}"
+        estado="$(barra_progreso_moderna $hechos $cargados 10) ${C_GREEN}${ICON_CHECK} COMPLETO${RESET}"
         num_color=$C_GREEN
     else
-        estado="$(barra_progreso_moderna $hechos $cargados 15) ${C_WHITE}${hechos}/${cargados}${RESET}"
+        estado="$(barra_progreso_moderna $hechos $cargados 10) ${C_WHITE}${hechos}/${cargados}${RESET}"
         num_color=$C_CYAN
     fi
 
-    printf "  │ ${num_color}${BOLD}%2d${RESET}  ${C_WHITE}%-30s${RESET} %s │\n" \
+    printf "  | ${num_color}${BOLD}%2d${RESET}  ${C_WHITE}%-25s${RESET} %s |\n" \
         "$i" "$nombre" "$estado"
 done
-printf "  └────────────────────────────────────────────────────────────────┘\n"
+printf "  +--------------------------------------------------+\n"
 
 # ========== FOOTER CON INFORMACIÓN ==========
 echo
-hr "─" "$C_GRAY"
+hr "-" "$C_GRAY"
 
 # Último ejercicio y tendencia
 if [[ -n "$ULTIMO" ]]; then
-    printf "  ${ICON_CLOCK} ${C_GRAY}Último:${RESET} ${C_YELLOW}${BOLD}%s${RESET}" "$ULTIMO"
+    printf "  ${ICON_CLOCK} ${C_GRAY}Ultimo:${RESET} ${C_YELLOW}${BOLD}%s${RESET}" "$ULTIMO"
     [[ -n "$ULTIMA_FECHA" ]] && printf "  ${C_GRAY}(%s)${RESET}" "$ULTIMA_FECHA"
     echo
 fi
@@ -270,7 +275,7 @@ printf "  ${ICON_TRENDING} ${C_GRAY}Tendencia semanal:${RESET} "
 mini_sparkline
 printf "  ${C_GRAY}+12% vs semana anterior${RESET}\n"
 
-# Mensaje motivacional con emojis
+# Mensaje motivacional
 PCT_GLOBAL=0
 [[ $TOTAL_CARGADOS -gt 0 ]] && PCT_GLOBAL=$(( TOTAL_COMPLETADOS * 100 / TOTAL_CARGADOS ))
 
@@ -291,5 +296,5 @@ echo
 hr "=" "$C_CYAN"
 echo
 
-printf "  ${C_GRAY}⌨️  Presiona cualquier tecla para volver al menú...${RESET} "
+printf "  ${C_GRAY}Presiona cualquier tecla para volver al menú...${RESET} "
 read -r -n1
