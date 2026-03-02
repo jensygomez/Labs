@@ -94,15 +94,15 @@ mini_sparkline() {
     local color=$C_CYAN
     printf "${color}"
     for v in "${values[@]}"; do
-        # Usamos caracteres ASCII simples
+        # Usamos echo en lugar de printf para evitar problemas de formato
         if [[ $v -le 2 ]]; then
-            printf "."
+            echo -n "."
         elif [[ $v -le 4 ]]; then
-            printf "o"
+            echo -n "o"
         elif [[ $v -le 6 ]]; then
-            printf "O"
+            echo -n "O"
         else
-            printf "@"
+            echo -n "@"
         fi
     done
     printf "${RESET}"
