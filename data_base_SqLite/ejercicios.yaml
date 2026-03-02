@@ -1428,7 +1428,145 @@
     - Verify the PID exists in the 'ps aux' output.
 
 
+# ─── BLOQUE 4: SYSTEMD Y PROCESOS - INTERMEDIO ───
 
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Intermedio"
+  orden: 1
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The service 'lab-bad-permissions.service' is failing because of insecure file permissions.
+    Task: Fix the unit file permissions.
+    Technical Requirements:
+    - Identify the current permissions of /etc/systemd/system/lab-bad-permissions.service.
+    - Change them to the standard 644.
+    - Reload the daemon and start the service.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Intermedio"
+  orden: 2
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: 'lab-no-install.service' exists but cannot be enabled to start at boot.
+    Task: Modify the unit file to allow it to be enabled.
+    Technical Requirements:
+    - Edit the file and add a proper [Install] section.
+    - Set 'WantedBy=multi-user.target'.
+    - Enable the service and verify the symlink creation.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Intermedio"
+  orden: 3
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: 'lab-user-not-exist.service' fails because it tries to run as a non-existent user.
+    Task: Correct the service execution identity.
+    Technical Requirements:
+    - Edit the unit file to use the 'nobody' user and 'nobody' group instead of the fake one.
+    - Restart the service and verify it stays 'active (running)'.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Intermedio"
+  orden: 4
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You need to prioritize a process that is critical for the system.
+    Task: Change the scheduling priority of the 'cpu-hog.sh' process.
+    Technical Requirements:
+    - Find the PID of 'cpu-hog.sh'.
+    - Use 'renice' to set its niceness to -5 (requires root).
+    - Verify the change using 'top' or 'ps -o ni'.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Intermedio"
+  orden: 5
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: 'lab-depend-a.service' fails because its dependency 'lab-depend-b.service' is not active.
+    Task: Fix the dependency chain.
+    Technical Requirements:
+    - Identify why B is not running (it might be disabled or stopped).
+    - Start 'lab-depend-b.service'.
+    - Start 'lab-depend-a.service' and verify both are active.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Intermedio"
+  orden: 6
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The 'lab-backup.timer' is active, but you need it to run every minute instead of its current schedule.
+    Task: Modify the timer frequency.
+    Technical Requirements:
+    - Edit /etc/systemd/system/lab-backup.timer.
+    - Change 'OnCalendar' to run every minute ('*:*:00').
+    - Reload systemd and verify the next execution time with 'list-timers'.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Intermedio"
+  orden: 7
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A process 'sigterm-ignorer.sh' is stuck and ignores normal termination signals.
+    Task: Force the process to terminate.
+    Technical Requirements:
+    - Try 'kill -15' (SIGTERM) first and observe it fails.
+    - Use 'kill -9' (SIGKILL) to remove it.
+    - Confirm the process is gone from the process list.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Intermedio"
+  orden: 8
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You need to run a task that survives even if you close your terminal session.
+    Task: Execute a long-running command using 'nohup'.
+    Technical Requirements:
+    - Run 'nohup sleep 2000 &'
+    - Exit the shell and log back in.
+    - Verify the 'sleep' process is still running and owned by PID 1 (init/systemd).
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Intermedio"
+  orden: 9
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: 'lab-condition-failing.service' won't start because a required file is missing.
+    Task: Satisfy the unit condition.
+    Technical Requirements:
+    - Check 'systemctl status' to see which 'ConditionPathExists' is failing.
+    - Create the missing file (e.g., /etc/archivo-que-no-existe.conf).
+    - Start the service and verify it runs successfully.
+
+- bloque: 4
+  tema: "Systemd & Processes"
+  nivel: "Intermedio"
+  orden: 10
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You need to analyze logs from a previous boot to diagnose a crash.
+    Task: Retrieve logs from the last session.
+    Technical Requirements:
+    - Ensure persistent logging is enabled in /etc/systemd/journald.conf (Storage=persistent).
+    - Use 'journalctl -b -1' to see the logs from the previous boot.
 
 
 
