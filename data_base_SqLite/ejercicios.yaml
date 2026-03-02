@@ -375,3 +375,201 @@
     - Use vim -p or buffers to open files.
     - Perform the search and replace efficiently.
     - Save all changes.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Avanzado"
+  orden: 7
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: The audit department needs a detailed report of specific files in /etc.
+    Task: Generate a report of all files in /etc containing the string "lab_service".
+    Technical Requirements:
+    - The report must show: filename, size, inode, owner, and number of hard links.
+    - Use a combination of find, stat, and awk to format the output.
+    - Save the result in /tmp/lab_service_report.txt.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Avanzado"
+  orden: 8
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You are investigating space consumption in /var/log/lab.
+    Task: Find all files in /var/log/lab that share the same inode.
+    Technical Requirements:
+    - Identify the duplicate files using find -samefile or by searching for a specific inode number.
+    - Explain why this occurs (Hard Links).
+    - Document the inode number and the related filenames.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Avanzado"
+  orden: 9
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Security policy requires monitoring files with unusual naming patterns.
+    Task: Search /var/log for files that contain digits/numbers in their names.
+    Technical Requirements:
+    - Use find with regular expressions (-regex).
+    - The pattern must match files like 'auth_practice.log' or any file with at least one digit.
+    - Redirect the list to /tmp/numeric_logs.txt.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Avanzado"
+  orden: 10
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You are auditing the /usr/local/bin directory for system shortcuts.
+    Task: Find all symbolic links in /usr/local/bin.
+    Technical Requirements:
+    - List the links and show exactly where they point.
+    - Verify if the destination of each link actually exists.
+    - Identify any "broken" links in that directory.
+
+# ─── TROUBLESHOOTING (Bloque 1) ───
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Troubleshooting"
+  orden: 1
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: An audit shows a file in /var/log/lab/ with a UID that does not exist in the system (orphan file).
+    Task: Find the orphan file and fix its ownership.
+    Technical Requirements:
+    - Use find with the -nouser option.
+    - Locate the file /var/log/lab/orphan_file.txt.
+    - Change its owner and group to root:root.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Troubleshooting"
+  orden: 2
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A kernel trace indicates a process is accessing a file with a specific inode number (e.g., 123456).
+    Task: Identify the file associated with that inode.
+    Technical Requirements:
+    - Use find with the -inum option.
+    - Search the entire /var/log/lab directory.
+    - Report the full path of the identified file.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Troubleshooting"
+  orden: 3
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: User 'juan' reports he cannot enter /projects/dev even though he is part of the 'developers' group.
+    Task: Diagnose and fix the directory access.
+    Technical Requirements:
+    - Check the execute (x) bit on the directory.
+    - Ensure the group has appropriate permissions.
+    - Fix it so 'juan' can enter without making the directory world-readable.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Troubleshooting"
+  orden: 4
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: The file /var/log/lab/app_large.log is growing out of control and filling the disk.
+    Task: Reclaim space safely and implement a manual rotation.
+    Technical Requirements:
+    - Empty the file content without deleting it (using truncation: > filename).
+    - Verify the size becomes 0.
+    - Explain why truncating is better than deleting for an active process.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Troubleshooting"
+  orden: 5
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: Several "hidden" files in /var/log/lab are consuming disk space.
+    Task: Locate hidden files (starting with dot) and evaluate them.
+    Technical Requirements:
+    - Find all files in /var/log/lab starting with ".".
+    - Determine their size.
+    - Delete only those that are temporary (.tmp) and keep the rest.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Troubleshooting"
+  orden: 6
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: The httpd service is failing to serve /var/www/html/lab/index.html with a "403 Forbidden" error.
+    Task: Diagnose and fix the permission issue.
+    Technical Requirements:
+    - Check the file permissions (should be 644).
+    - Check the directory path permissions (parent directories must be +x).
+    - Verify that the web server user (apache) can reach the file.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Troubleshooting"
+  orden: 7
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: An application in /opt/app needs to write to /opt/app/logs/application.log but fails.
+    Task: Fix the logging failure.
+    Technical Requirements:
+    - Identify the user running the app.
+    - Grant write permissions to the log directory and file.
+    - Verify by attempting to append text to the log.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Troubleshooting"
+  orden: 8
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A backup script running as 'root' fails when trying to access /data/production.
+    Task: Investigate the root cause.
+    Technical Requirements:
+    - Check for immutable attributes (lsattr).
+    - Verify if the mount point is Read-Only.
+    - Fix the access so the backup can proceed.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Troubleshooting"
+  orden: 9
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: User 'carlos' (in group 'ti') can read /data/reports/hr.txt, which should be restricted to 'hr' group only.
+    Task: Secure the file without breaking other services.
+    Technical Requirements:
+    - Remove 'carlos' or 'ti' group from ACLs if present.
+    - Check for overly permissive 'other' permissions (777/666).
+    - Set permissions to 640 and ensure proper group ownership.
+
+- bloque: 1
+  tema: "System Fundamentals"
+  nivel: "Troubleshooting"
+  orden: 10
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: Developers in the 'developers' group cannot execute scripts in /projects/dev/scripts even though they have 'rwx' permissions.
+    Task: Diagnose why execution is failing.
+    Technical Requirements:
+    - Check if the partition is mounted with the 'noexec' flag.
+    - Check for ACL masks that might be filtering the execute bit.
+    - Fix the issue and verify execution.
