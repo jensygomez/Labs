@@ -291,7 +291,7 @@ else
 fi
 
 # Fecha y hora actual
-printf "\n%s\n" "\n  ${C_GRAY}${DIM}Dashboard actualizado: $(date '+%d/%m/%Y %H:%M')${RESET}"
+printf "\n%s\n" "  ${C_GRAY}${DIM}Dashboard actualizado: $(date '+%d/%m/%Y %H:%M')${RESET}"
 echo
 hr "=" "$C_CYAN"
 echo
