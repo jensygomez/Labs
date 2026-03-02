@@ -193,6 +193,10 @@ case $inicio_opc in
         echo -e "\n  ${GREEN}Presiona cualquier tecla para continuar al menú...${NC}"
         read -n 1 -s
         ;;
+    c|C)
+        bash "$(dirname "$0")/dashboard.sh"
+        ;;
+        
     *)
         # Si presiona 'A' o cualquier otra tecla, entra directo
         echo -e "\n\n  ${BLUE}Cargando bloques de estudio...${NC}"
