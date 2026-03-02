@@ -63,8 +63,8 @@ mostrar_ejercicio() {
     echo -e "  ${BOLD}${CYAN}═════════════════════ ENUNCIADO ═════════════════════${NC}"
     echo ""
     
-    # Formatear el enunciado (reemplazar \n por saltos de línea reales)
-    echo -e "$enunciado" | while IFS= read -r linea; do
+    # Mostrar el enunciado completo (viene con saltos de línea)
+    echo "$enunciado" | while IFS= read -r linea; do
         echo -e "  $linea"
     done
     
