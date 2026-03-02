@@ -179,7 +179,7 @@ for i in $(seq 1 10000); do
     echo "$(date '+%b %d %H:%M:%S') server01 sshd[$$]: Accepted password for $USER from $IP port $PORT ssh2" >> /var/log/lab/auth_practice.log
 done
 
-# Log de aplicación (formato JSON para práctica avanzada)
+# Log de aplicación (formato JSON para práctica avanzada) - CORREGIDO
 for i in $(seq 1 5000); do
     echo "{\"timestamp\":\"$(date -Iseconds)\",\"level\":\"$([ $((RANDOM % 10)) -eq 0 ] && echo "ERROR" || echo "INFO")\",\"service\":\"api-gateway\",\"request_id\":\"$(cat /proc/sys/kernel/random/uuid 2>/dev/null || echo $RANDOM$RANDOM)\",\"method\":\"$([ $((RANDOM % 2)) -eq 0 ] && echo "GET" || echo "POST")\",\"path\":\"/api/v$((RANDOM % 3))/resource/$((RANDOM % 1000))\",\"status\":$([ $((RANDOM % 10)) -eq 0 ] && echo "500" || echo "200\"),\"response_time_ms\":$((RANDOM % 1000))}" >> /var/log/lab/app_json.log
 done
