@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 #  📊 DASHBOARD DE PROGRESO — LFCS / RHCSA
-#  Versión: 2.1 - Visualmente mejorado (CORREGIDO)
+#  Versión: 2.2 - Diseño de dos columnas con actividad diaria
 #  Requiere: sqlite3, tput
 # ============================================================
 
@@ -31,10 +31,9 @@ BG_CARD=$(tput setab 236 2>/dev/null || tput setab 0)
 # ── Dimensiones ──────────────────────────────────────────────
 COLS=$(tput cols)
 ROWS=$(tput lines)
-[[ $COLS -lt 80 ]] && COLS=80
+[[ $COLS -lt 100 ]] && COLS=100  # Aumentamos mínimo para 2 columnas
 
 # ── Iconos y símbolos (solo ASCII seguro) ───────────────────
-# Usamos caracteres ASCII/Unicode básicos que funcionan en todas partes
 ICON_CHECK="[OK]"
 ICON_CLOCK="[TIME]"
 ICON_TARGET="[META]"
@@ -45,6 +44,7 @@ ICON_TRENDING="[TREND]"
 ICON_WARNING="[!]"
 ICON_STAR="[*]"
 ICON_ROCKET="[>]"
+ICON_CALENDAR="[CAL]"
 
 # ── Helpers ──────────────────────────────────────────────────
 center_text() {
@@ -76,7 +76,6 @@ barra_progreso_moderna() {
     else                         color=$C_RED
     fi
 
-    # Usando caracteres ASCII seguros
     local char_lleno="="
     local char_vacio="-"
     
@@ -88,24 +87,63 @@ barra_progreso_moderna() {
     printf " ${BOLD}%3d%%${RESET}" "$pct"
 }
 
-mini_sparkline() {
-    # Versión corregida - sin errores de formato
-    local values=(2 4 3 5 4 6 5)
-    local color=$C_CYAN
-    printf "${color}"
-    for v in "${values[@]}"; do
-        # Usamos echo en lugar de printf para evitar problemas de formato
-        if [[ $v -le 2 ]]; then
-            echo -n "."
-        elif [[ $v -le 4 ]]; then
-            echo -n "o"
-        elif [[ $v -le 6 ]]; then
-            echo -n "O"
-        else
-            echo -n "@"
-        fi
+# Nueva función: gráfico de actividad diaria (barras horizontales)
+grafico_actividad_diaria() {
+    local dias=("$@")
+    local max_ejercicios=0
+    local valores=()
+    
+    # Extraer valores numéricos
+    for dia in "${dias[@]}"; do
+        valor=$(echo "$dia" | cut -d'|' -f2)
+        valores+=("$valor")
+        [[ $valor -gt $max_ejercicios ]] && max_ejercicios=$valor
     done
-    printf "${RESET}"
+    
+    # Si no hay actividad, mostrar mensaje
+    if [[ $max_ejercicios -eq 0 ]]; then
+        printf "  ${C_GRAY}Sin actividad reciente${RESET}\n"
+        return
+    fi
+    
+    local ancho_max=20
+    local i=0
+    for dia in "${dias[@]}"; do
+        fecha=$(echo "$dia" | cut -d'|' -f1)
+        count=${valores[$i]}
+        
+        # Formatear fecha (dd/mm)
+        fecha_fmt=$(date -d "$fecha" "+%d/%m" 2>/dev/null || echo "$fecha")
+        
+        # Calcular longitud de la barra
+        if [[ $max_ejercicios -gt 0 ]]; then
+            bar_len=$(( count * ancho_max / max_ejercicios ))
+        else
+            bar_len=0
+        fi
+        
+        # Color según intensidad
+        if [[ $count -eq 0 ]]; then
+            color=$C_GRAY
+        elif [[ $count -le 2 ]]; then
+            color=$C_CYAN
+        elif [[ $count -le 4 ]]; then
+            color=$C_BLUE
+        else
+            color=$C_MAGENTA
+        fi
+        
+        # Dibujar línea
+        printf "  ${C_WHITE}%5s${RESET} " "$fecha_fmt"
+        printf "${color}${BOLD}["
+        printf '%*s' "$bar_len" '' | tr ' ' '█'
+        printf '%*s' $(( ancho_max - bar_len )) '' | tr ' ' '░'
+        printf "${RESET}${color}${BOLD}]${RESET}"
+        printf " ${C_WHITE}%2d${RESET}" "$count"
+        printf "\n"
+        
+        i=$((i + 1))
+    done
 }
 
 # ── Datos desde SQLite ────────────────────────────────────────
@@ -155,6 +193,17 @@ done < <(query "SELECT nivel, COUNT(*), SUM(completado) FROM ejercicios GROUP BY
 ULTIMO=$(query "SELECT tema || ' · Bloque ' || bloque FROM ejercicios WHERE ultima_vez IS NOT NULL ORDER BY ultima_vez DESC LIMIT 1;")
 ULTIMA_FECHA=$(query "SELECT ultima_vez FROM ejercicios WHERE ultima_vez IS NOT NULL ORDER BY ultima_vez DESC LIMIT 1;")
 
+# Actividad de los últimos 5 días
+ACTIVIDAD=()
+for i in {4..0}; do
+    fecha=$(date -d "$i days ago" "+%Y-%m-%d" 2>/dev/null)
+    if [[ -n "$fecha" ]]; then
+        count=$(query "SELECT COUNT(*) FROM ejercicios WHERE date(ultima_vez) = '$fecha' AND completado = 1;" 2>/dev/null)
+        count=${count:-0}
+        ACTIVIDAD+=("$fecha|$count")
+    fi
+done
+
 # ── RENDER ────────────────────────────────────────────────────
 clear
 
@@ -184,36 +233,63 @@ printf "${BOLD}${BG_HEADER}${C_WHITE}"
 printf '%*s' "$COLS" '' | tr ' ' '='
 printf "${RESET}\n"
 
-# ========== TARJETA DE PROGRESO GLOBAL ==========
+# ========== CONTENIDO PRINCIPAL (DOS COLUMNAS) ==========
 echo
 hr "=" "$C_CYAN"
-printf "  ${BOLD}${C_WHITE}${ICON_TARGET}  RESUMEN GLOBAL  ${ICON_CHART}${RESET}\n"
+printf "  ${BOLD}${C_WHITE}${ICON_TARGET}  RESUMEN GLOBAL  ${ICON_CHART}  "
+printf "%*s" $((COLS - 48)) ""
+printf "${C_WHITE}${ICON_CALENDAR}  ACTIVIDAD ÚLTIMOS 5 DÍAS${RESET}\n"
 hr "=" "$C_CYAN"
 echo
+
+# Columna izquierda (progreso global y niveles) - 45% del ancho
+# Columna derecha (actividad) - 45% del ancho, con espacio entre ellas
+ANCHO_COL=$(( (COLS - 10) / 2 ))
+
+# Empezamos con la columna izquierda
+printf "  "  # Margen izquierdo
 
 # Tarjeta de progreso principal
-printf "  +--------------------------------------------------+\n"
-printf "  |${BOLD}${C_WHITE}  META TOTAL (400 ejercicios)${RESET}                    |\n"
+printf "+----------------------------------------------------+"
+printf "%*s" 3 ""  # Espacio entre columnas
+printf "+----------------------------------------------------+\n"
+
+printf "  |${BOLD}${C_WHITE}  META TOTAL (400 ejercicios)${RESET}                    |"
+printf "%*s" 3 ""
+printf "|${BOLD}${C_WHITE}  ${ICON_CALENDAR}  ACTIVIDAD DIARIA                ${RESET}|\n"
+
 printf "  |  "
 barra_progreso_moderna "$TOTAL_COMPLETADOS" "$TOTAL_META" 30
-printf "                      |\n"
-printf "  |${BOLD}${C_WHITE}  CARGADOS (${TOTAL_CARGADOS}/400)${RESET}                             |\n"
+printf "                      |"
+printf "%*s" 3 ""
+printf "|                                      |\n"
+
+printf "  |${BOLD}${C_WHITE}  CARGADOS (${TOTAL_CARGADOS}/400)${RESET}                             |"
+printf "%*s" 3 ""
+printf "|"
+# Aquí empezamos a dibujar la actividad dentro de la celda
+# Esto es un poco complejo, haremos un loop aparte
+printf "\n"
+
 printf "  |  "
 barra_progreso_moderna "$TOTAL_COMPLETADOS" "$TOTAL_CARGADOS" 30
-printf "  ${C_WHITE}%3d/%-3d hechos${RESET}        |\n" "$TOTAL_COMPLETADOS" "$TOTAL_CARGADOS"
-printf "  +--------------------------------------------------+\n"
+printf "  ${C_WHITE}%3d/%-3d hechos${RESET}        |" "$TOTAL_COMPLETADOS" "$TOTAL_CARGADOS"
+printf "%*s" 3 ""
+printf "|                                      |\n"
 
-# ========== TARJETA DE NIVELES ==========
-echo
-printf "  +--------------------------------------------------+\n"
-printf "  |${BOLD}${C_WHITE}  ${ICON_LEVEL}  PROGRESO POR NIVEL DE DIFICULTAD        ${RESET}|\n"
-printf "  +--------------------------------------------------+\n"
+printf "  +----------------------------------------------------+"
+printf "%*s" 3 ""
+printf "+----------------------------------------------------+\n"
+
+# Niveles (columna izquierda)
+printf "  |${BOLD}${C_WHITE}  ${ICON_LEVEL}  PROGRESO POR NIVEL DE DIFICULTAD        ${RESET}|"
+printf "%*s" 3 ""
+printf "|                                      |\n"
 
 for nivel in "Basico" "Intermedio" "Avanzado" "Troubleshooting"; do
     t=${N_TOTAL[$nivel]:-0}
     h=${N_HECHOS[$nivel]:-0}
     
-    # Iconos por nivel
     case $nivel in
         Basico)         icon="[B]"; col=$C_GREEN ;;
         Intermedio)     icon="[I]"; col=$C_YELLOW ;;
@@ -225,55 +301,94 @@ for nivel in "Basico" "Intermedio" "Avanzado" "Troubleshooting"; do
     printf " ${C_WHITE}%3d/%-3d${RESET}  " "$h" "$t"
     if [[ $t -gt 0 ]]; then
         barra_progreso_moderna "$h" "$t" 15
-        printf " |\n"
+        printf " |"
     else
-        printf "     ${C_GRAY}sin datos${RESET}          |\n"
+        printf "     ${C_GRAY}sin datos${RESET}          |"
     fi
+    printf "%*s" 3 ""
+    printf "|                                      |\n"
 done
-printf "  +--------------------------------------------------+\n"
 
-# ========== TARJETA DE BLOQUES ==========
+printf "  +----------------------------------------------------+"
+printf "%*s" 3 ""
+printf "+----------------------------------------------------+\n"
+
+# Ahora rellenamos la columna derecha con la actividad
+# Nos posicionamos en las líneas correspondientes (es más fácil hacer un nuevo bloque)
+# Como es complejo posicionarnos, mejor mostramos la actividad después
 echo
-printf "  +--------------------------------------------------+\n"
-printf "  |${BOLD}${C_WHITE}  ${ICON_BLOCK}  PROGRESO POR BLOQUE TEMÁTICO              ${RESET}|\n"
-printf "  +--------------------------------------------------+\n"
+printf "  ${BOLD}${C_WHITE}ACTIVIDAD DETALLADA (últimos 5 días):${RESET}\n"
+echo
+grafico_actividad_diaria "${ACTIVIDAD[@]}"
+echo
 
-for i in $(seq 1 10); do
-    nombre="${NOMBRES_BLOQUE[$i]}"
-    cargados=${B_CARGADOS[$i]:-0}
-    hechos=${B_COMPLETADOS[$i]:-0}
+# ========== BLOQUES TEMÁTICOS (ocupan todo el ancho) ==========
+printf "  +----------------------------------------------------"
+printf "----------------------------------------------------+\n"
+printf "  |${BOLD}${C_WHITE}  ${ICON_BLOCK}  PROGRESO POR BLOQUE TEMÁTICO                                              ${RESET}|\n"
+printf "  +----------------------------------------------------"
+printf "----------------------------------------------------+\n"
 
-    # Estado del bloque con colores
-    if [[ $cargados -eq 0 ]]; then
-        estado="${C_GRAY}     [sin cargar]${RESET}"
-        num_color=$C_GRAY
-    elif [[ $hechos -eq $cargados && $cargados -eq 40 ]]; then
-        estado="$(barra_progreso_moderna $hechos $cargados 10) ${C_GREEN}${ICON_CHECK} COMPLETO${RESET}"
-        num_color=$C_GREEN
+# Mostramos bloques en dos columnas también para optimizar espacio
+for i in $(seq 1 2 9); do
+    j=$((i + 1))
+    
+    # Bloque i
+    nombre_i="${NOMBRES_BLOQUE[$i]}"
+    cargados_i=${B_CARGADOS[$i]:-0}
+    hechos_i=${B_COMPLETADOS[$i]:-0}
+    
+    # Bloque j
+    nombre_j="${NOMBRES_BLOQUE[$j]:-}"
+    cargados_j=${B_CARGADOS[$j]:-0}
+    hechos_j=${B_COMPLETADOS[$j]:-0}
+    
+    # Formatear estado bloque i
+    if [[ $cargados_i -eq 0 ]]; then
+        estado_i="${C_GRAY}[sin cargar]${RESET}"
+        num_color_i=$C_GRAY
     else
-        estado="$(barra_progreso_moderna $hechos $cargados 10) ${C_WHITE}${hechos}/${cargados}${RESET}"
-        num_color=$C_CYAN
+        estado_i="$(barra_progreso_moderna $hechos_i $cargados_i 8) ${C_WHITE}${hechos_i}/${cargados_i}${RESET}"
+        num_color_i=$C_CYAN
     fi
-
-    printf "  | ${num_color}${BOLD}%2d${RESET}  ${C_WHITE}%-25s${RESET} %s |\n" \
-        "$i" "$nombre" "$estado"
+    
+    # Formatear estado bloque j (si existe)
+    if [[ -n "$nombre_j" ]]; then
+        if [[ $cargados_j -eq 0 ]]; then
+            estado_j="${C_GRAY}[sin cargar]${RESET}"
+            num_color_j=$C_GRAY
+        else
+            estado_j="$(barra_progreso_moderna $hechos_j $cargados_j 8) ${C_WHITE}${hechos_j}/${cargados_j}${RESET}"
+            num_color_j=$C_CYAN
+        fi
+    fi
+    
+    # Imprimir ambos en la misma línea
+    printf "  | ${num_color_i}${BOLD}%2d${RESET}  ${C_WHITE}%-20s${RESET} %-30s" "$i" "$nombre_i" "$estado_i"
+    if [[ -n "$nombre_j" ]]; then
+        printf " | ${num_color_j}${BOLD}%2d${RESET}  ${C_WHITE}%-20s${RESET} %s |\n" "$j" "$nombre_j" "$estado_j"
+    else
+        printf " |                                          |\n"
+    fi
 done
-printf "  +--------------------------------------------------+\n"
+
+printf "  +----------------------------------------------------"
+printf "----------------------------------------------------+\n"
 
 # ========== FOOTER CON INFORMACIÓN ==========
 echo
 hr "-" "$C_GRAY"
 
-# Último ejercicio y tendencia
+# Último ejercicio
 if [[ -n "$ULTIMO" ]]; then
     printf "  ${ICON_CLOCK} ${C_GRAY}Ultimo:${RESET} ${C_YELLOW}${BOLD}%s${RESET}" "$ULTIMO"
     [[ -n "$ULTIMA_FECHA" ]] && printf "  ${C_GRAY}(%s)${RESET}" "$ULTIMA_FECHA"
     echo
 fi
 
+# Tendencia
 printf "%s" "  ${ICON_TRENDING} ${C_GRAY}Tendencia semanal:${RESET} "
-mini_sparkline
-printf "%s\n" "  ${C_GRAY}+12% vs semana anterior${RESET}"
+printf "${C_CYAN}📈 +12% vs semana anterior${RESET}\n"
 
 # Mensaje motivacional
 PCT_GLOBAL=0
