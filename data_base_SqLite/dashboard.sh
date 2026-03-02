@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 #  📊 DASHBOARD DE PROGRESO — LFCS / RHCSA
-#  Versión: 2.2 - Diseño de dos columnas con actividad diaria
+#  Versión: 2.3 - Diseño de 4 columnas preciso
 #  Requiere: sqlite3, tput
 # ============================================================
 
@@ -25,15 +25,13 @@ C_ORANGE=$(tput setaf 208 2>/dev/null || tput setaf 3)
 
 # Fondos
 BG_HEADER=$(tput setab 17 2>/dev/null || tput setab 4)
-BG_TITLE=$(tput setab 235 2>/dev/null || tput setab 0)
-BG_CARD=$(tput setab 236 2>/dev/null || tput setab 0)
 
 # ── Dimensiones ──────────────────────────────────────────────
 COLS=$(tput cols)
 ROWS=$(tput lines)
-[[ $COLS -lt 100 ]] && COLS=100  # Aumentamos mínimo para 2 columnas
+[[ $COLS -lt 120 ]] && COLS=120  # Mínimo para 4 columnas
 
-# ── Iconos y símbolos (solo ASCII seguro) ───────────────────
+# ── Iconos y símbolos ───────────────────────────────────────
 ICON_CHECK="[OK]"
 ICON_CLOCK="[TIME]"
 ICON_TARGET="[META]"
@@ -41,7 +39,6 @@ ICON_CHART="[STATS]"
 ICON_BLOCK="[BLOCK]"
 ICON_LEVEL="[LEVEL]"
 ICON_TRENDING="[TREND]"
-ICON_WARNING="[!]"
 ICON_STAR="[*]"
 ICON_ROCKET="[>]"
 ICON_CALENDAR="[CAL]"
@@ -50,7 +47,7 @@ ICON_CALENDAR="[CAL]"
 center_text() {
     local text="$1" width="${2:-$COLS}"
     local visible
-    visible=$(echo -e "$text" | sed 's/\x1b\[[0-9;]*m//g' | sed 's/\[[^]]*\]//g')
+    visible=$(echo -e "$text" | sed 's/\x1b\[[0-9;]*m//g')
     local pad=$(( (width - ${#visible}) / 2 ))
     printf "%${pad}s%s\n" "" "$text"
 }
@@ -76,71 +73,59 @@ barra_progreso_moderna() {
     else                         color=$C_RED
     fi
 
-    local char_lleno="="
-    local char_vacio="-"
-    
     printf "${color}${BOLD}["
-    printf '%*s' "$llenos" '' | tr ' ' "$char_lleno"
+    printf '%*s' "$llenos" '' | tr ' ' '='
     printf "${C_GRAY}${DIM}"
-    printf '%*s' "$vacios" '' | tr ' ' "$char_vacio"
+    printf '%*s' "$vacios" '' | tr ' ' '-'
     printf "${color}${BOLD}]${RESET}"
     printf " ${BOLD}%3d%%${RESET}" "$pct"
 }
 
-# Nueva función: gráfico de actividad diaria (barras horizontales)
+# Gráfico de actividad diaria (corregido)
 grafico_actividad_diaria() {
     local dias=("$@")
     local max_ejercicios=0
     local valores=()
+    local fechas=()
     
-    # Extraer valores numéricos
     for dia in "${dias[@]}"; do
+        fecha=$(echo "$dia" | cut -d'|' -f1)
         valor=$(echo "$dia" | cut -d'|' -f2)
+        fechas+=("$fecha")
         valores+=("$valor")
         [[ $valor -gt $max_ejercicios ]] && max_ejercicios=$valor
     done
     
-    # Si no hay actividad, mostrar mensaje
-    if [[ $max_ejercicios -eq 0 ]]; then
-        printf "  ${C_GRAY}Sin actividad reciente${RESET}\n"
-        return
-    fi
-    
-    local ancho_max=20
+    local ancho_barra=25
     local i=0
     for dia in "${dias[@]}"; do
         fecha=$(echo "$dia" | cut -d'|' -f1)
         count=${valores[$i]}
         
         # Formatear fecha (dd/mm)
-        fecha_fmt=$(date -d "$fecha" "+%d/%m" 2>/dev/null || echo "$fecha")
+        if [[ "$fecha" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+            fecha_fmt=$(date -d "$fecha" "+%d/%m" 2>/dev/null || echo "$fecha" | cut -d'-' -f2-3 | tr '-' '/')
+        else
+            fecha_fmt="$fecha"
+        fi
         
-        # Calcular longitud de la barra
         if [[ $max_ejercicios -gt 0 ]]; then
-            bar_len=$(( count * ancho_max / max_ejercicios ))
+            bar_len=$(( count * ancho_barra / max_ejercicios ))
         else
             bar_len=0
         fi
         
-        # Color según intensidad
-        if [[ $count -eq 0 ]]; then
-            color=$C_GRAY
-        elif [[ $count -le 2 ]]; then
-            color=$C_CYAN
-        elif [[ $count -le 4 ]]; then
-            color=$C_BLUE
-        else
-            color=$C_MAGENTA
-        fi
+        # Caracteres para la barra
+        local char_lleno='█'
+        local char_vacio='░'
         
-        # Dibujar línea
         printf "  ${C_WHITE}%5s${RESET} " "$fecha_fmt"
-        printf "${color}${BOLD}["
-        printf '%*s' "$bar_len" '' | tr ' ' '█'
-        printf '%*s' $(( ancho_max - bar_len )) '' | tr ' ' '░'
-        printf "${RESET}${color}${BOLD}]${RESET}"
-        printf " ${C_WHITE}%2d${RESET}" "$count"
-        printf "\n"
+        printf "${C_BLUE}${BOLD}"
+        printf '%*s' "$bar_len" '' | tr ' ' "$char_lleno"
+        printf "${C_GRAY}${DIM}"
+        printf '%*s' $(( ancho_barra - bar_len )) '' | tr ' ' "$char_vacio"
+        printf "${RESET}"
+        printf " ${C_WHITE}%2d${RESET}\n" "$count"
         
         i=$((i + 1))
     done
@@ -149,7 +134,6 @@ grafico_actividad_diaria() {
 # ── Datos desde SQLite ────────────────────────────────────────
 query() { sqlite3 "$DB" "$1" 2>/dev/null; }
 
-# Verificar que la base de datos existe
 if [[ ! -f "$DB" ]]; then
     echo "${C_RED}${BOLD} Error: Base de datos no encontrada en $DB${RESET}"
     exit 1
@@ -157,16 +141,16 @@ fi
 
 NOMBRES_BLOQUE=(
     ""
-    "Fundamentos del sistema"
-    "Usuarios y grupos"
+    "Fundamentos"
+    "Usuarios"
     "Almacenamiento"
-    "Systemd y procesos"
+    "Systemd"
     "Networking"
-    "Servicios de red"
+    "Servicios red"
     "Seguridad"
-    "Contenedores Podman"
-    "Scripting Bash"
-    "Troubleshooting puro"
+    "Podman"
+    "Scripting"
+    "Troubleshooting"
 )
 
 # Totales globales
@@ -196,7 +180,14 @@ ULTIMA_FECHA=$(query "SELECT ultima_vez FROM ejercicios WHERE ultima_vez IS NOT 
 # Actividad de los últimos 5 días
 ACTIVIDAD=()
 for i in {4..0}; do
-    fecha=$(date -d "$i days ago" "+%Y-%m-%d" 2>/dev/null)
+    if date --version >/dev/null 2>&1; then
+        # GNU date
+        fecha=$(date -d "$i days ago" "+%Y-%m-%d" 2>/dev/null)
+    else
+        # BSD date (macOS)
+        fecha=$(date -v-${i}d "+%Y-%m-%d" 2>/dev/null)
+    fi
+    
     if [[ -n "$fecha" ]]; then
         count=$(query "SELECT COUNT(*) FROM ejercicios WHERE date(ultima_vez) = '$fecha' AND completado = 1;" 2>/dev/null)
         count=${count:-0}
@@ -207,7 +198,7 @@ done
 # ── RENDER ────────────────────────────────────────────────────
 clear
 
-# ========== HEADER ==========
+# HEADER
 echo
 printf "${BOLD}${BG_HEADER}${C_WHITE}"
 printf '%*s' "$COLS" '' | tr ' ' '='
@@ -218,177 +209,189 @@ center_text "  ${ICON_ROCKET}  LINUX LABORATORIES  •  ROCKY LINUX 9  •  LFCS
 printf "${RESET}"
 
 printf "${BOLD}${BG_HEADER}${C_CYAN}"
-center_text "+--------------------------------------------------+" "$COLS"
-printf "${RESET}"
-
-printf "${BOLD}${BG_HEADER}${C_CYAN}"
-center_text "|           Sysadmin Path • Progreso hacia certificación         |" "$COLS"
-printf "${RESET}"
-
-printf "${BOLD}${BG_HEADER}${C_CYAN}"
-center_text "+--------------------------------------------------+" "$COLS"
+center_text "           Sysadmin Path • Progreso hacia certificación           " "$COLS"
 printf "${RESET}"
 
 printf "${BOLD}${BG_HEADER}${C_WHITE}"
 printf '%*s' "$COLS" '' | tr ' ' '='
 printf "${RESET}\n"
 
-# ========== CONTENIDO PRINCIPAL (DOS COLUMNAS) ==========
+# Línea separadora
 echo
 hr "=" "$C_CYAN"
-printf "  ${BOLD}${C_WHITE}${ICON_TARGET}  RESUMEN GLOBAL  ${ICON_CHART}  "
-printf "%*s" $((COLS - 48)) ""
+
+# Título de sección con dos columnas
+printf "  ${BOLD}${C_WHITE}${ICON_TARGET}  RESUMEN GLOBAL  ${ICON_CHART}"
+printf "%*s" $((COLS - 50)) ""
 printf "${C_WHITE}${ICON_CALENDAR}  ACTIVIDAD ÚLTIMOS 5 DÍAS${RESET}\n"
+
 hr "=" "$C_CYAN"
 echo
 
-# Columna izquierda (progreso global y niveles) - 45% del ancho
-# Columna derecha (actividad) - 45% del ancho, con espacio entre ellas
-ANCHO_COL=$(( (COLS - 10) / 2 ))
+# Calcular anchos para las cajas
+ANCHO_CAJA=$(( (COLS - 10) / 2 ))
+LINEA_CAJA=$(printf "+%${ANCHO_CAJA}s+" | tr ' ' '-')
 
-# Empezamos con la columna izquierda
-printf "  "  # Margen izquierdo
+# PRIMERA FILA DE CAJAS
+printf "  %s  %s\n" "$LINEA_CAJA" "$LINEA_CAJA"
 
-# Tarjeta de progreso principal
-printf "+----------------------------------------------------+"
-printf "%*s" 3 ""  # Espacio entre columnas
-printf "+----------------------------------------------------+\n"
+# Títulos de cajas
+printf "  |${BOLD}${C_WHITE}  META TOTAL (400 ejercicios)${RESET}"
+printf "%*s" $((ANCHO_CAJA - 32)) ""
+printf "|  |${BOLD}${C_WHITE}  ${ICON_CALENDAR}  ACTIVIDAD DIARIA${RESET}"
+printf "%*s" $((ANCHO_CAJA - 25)) ""
+printf "|\n"
 
-printf "  |${BOLD}${C_WHITE}  META TOTAL (400 ejercicios)${RESET}                    |"
-printf "%*s" 3 ""
-printf "|${BOLD}${C_WHITE}  ${ICON_CALENDAR}  ACTIVIDAD DIARIA                ${RESET}|\n"
+# Barra de progreso meta
+printf "  |  "
+barra_progreso_moderna "$TOTAL_COMPLETADOS" "$TOTAL_META" 25
+printf "%*s" $((ANCHO_CAJA - 35)) ""
+printf "|  |"
+printf "%*s" $((ANCHO_CAJA - 2)) ""
+printf "|\n"
+
+# Cargados
+printf "  |${BOLD}${C_WHITE}  CARGADOS (${TOTAL_CARGADOS}/400)${RESET}"
+printf "%*s" $((ANCHO_CAJA - 27)) ""
+printf "|  |"
+printf "%*s" $((ANCHO_CAJA - 2)) ""
+printf "|\n"
 
 printf "  |  "
-barra_progreso_moderna "$TOTAL_COMPLETADOS" "$TOTAL_META" 30
-printf "                      |"
-printf "%*s" 3 ""
-printf "|                                      |\n"
+barra_progreso_moderna "$TOTAL_COMPLETADOS" "$TOTAL_CARGADOS" 25
+printf "  ${C_WHITE}%3d/%-3d hechos${RESET}" "$TOTAL_COMPLETADOS" "$TOTAL_CARGADOS"
+printf "%*s" $((ANCHO_CAJA - 50)) ""
+printf "|  |"
+printf "%*s" $((ANCHO_CAJA - 2)) ""
+printf "|\n"
 
-printf "  |${BOLD}${C_WHITE}  CARGADOS (${TOTAL_CARGADOS}/400)${RESET}                             |"
-printf "%*s" 3 ""
-printf "|"
-# Aquí empezamos a dibujar la actividad dentro de la celda
-# Esto es un poco complejo, haremos un loop aparte
-printf "\n"
+printf "  %s  %s\n" "$LINEA_CAJA" "$LINEA_CAJA"
 
-printf "  |  "
-barra_progreso_moderna "$TOTAL_COMPLETADOS" "$TOTAL_CARGADOS" 30
-printf "  ${C_WHITE}%3d/%-3d hechos${RESET}        |" "$TOTAL_COMPLETADOS" "$TOTAL_CARGADOS"
-printf "%*s" 3 ""
-printf "|                                      |\n"
+# SEGUNDA FILA - Niveles y actividad detallada
+printf "  |${BOLD}${C_WHITE}  ${ICON_LEVEL}  PROGRESO POR NIVEL${RESET}"
+printf "%*s" $((ANCHO_CAJA - 27)) ""
+printf "|  |${BOLD}${C_WHITE}  ACTIVIDAD DETALLADA${RESET}"
+printf "%*s" $((ANCHO_CAJA - 23)) ""
+printf "|\n"
 
-printf "  +----------------------------------------------------+"
-printf "%*s" 3 ""
-printf "+----------------------------------------------------+\n"
+# Aquí necesitamos hacer un bucle para los niveles y la actividad
+# Guardamos la salida en variables para poder alinearlas
+niveles_output=()
+while IFS= read -r linea; do
+    niveles_output+=("$linea")
+done < <(
+    for nivel in "Basico" "Intermedio" "Avanzado" "Troubleshooting"; do
+        t=${N_TOTAL[$nivel]:-0}
+        h=${N_HECHOS[$nivel]:-0}
+        
+        case $nivel in
+            Basico)         icon="[B]"; col=$C_GREEN ;;
+            Intermedio)     icon="[I]"; col=$C_YELLOW ;;
+            Avanzado)       icon="[A]"; col=$C_RED ;;
+            Troubleshooting)icon="[T]"; col=$C_MAGENTA ;;
+        esac
+        
+        printf "  | ${col}${icon}${RESET} ${col}${BOLD}%-12s${RESET}" "$nivel"
+        printf " ${C_WHITE}%2d/%-2d${RESET}  " "$h" "$t"
+        if [[ $t -gt 0 ]]; then
+            barra_progreso_moderna "$h" "$t" 12
+        else
+            printf "     ${C_GRAY}sin datos${RESET}"
+        fi
+        printf "\n"
+    done
+)
 
-# Niveles (columna izquierda)
-printf "  |${BOLD}${C_WHITE}  ${ICON_LEVEL}  PROGRESO POR NIVEL DE DIFICULTAD        ${RESET}|"
-printf "%*s" 3 ""
-printf "|                                      |\n"
+actividad_output=()
+while IFS= read -r linea; do
+    actividad_output+=("$linea")
+done < <(grafico_actividad_diaria "${ACTIVIDAD[@]}")
 
-for nivel in "Basico" "Intermedio" "Avanzado" "Troubleshooting"; do
-    t=${N_TOTAL[$nivel]:-0}
-    h=${N_HECHOS[$nivel]:-0}
+# Combinar ambas salidas línea por línea
+for i in {0..3}; do
+    # Línea de nivel
+    printf "%s" "${niveles_output[$i]}"
+    printf "%*s" $((ANCHO_CAJA - 45)) ""
+    printf "|  "
     
-    case $nivel in
-        Basico)         icon="[B]"; col=$C_GREEN ;;
-        Intermedio)     icon="[I]"; col=$C_YELLOW ;;
-        Avanzado)       icon="[A]"; col=$C_RED ;;
-        Troubleshooting)icon="[T]"; col=$C_MAGENTA ;;
-    esac
-    
-    printf "  | ${col}${icon}${RESET} ${col}${BOLD}%-15s${RESET}" "$nivel"
-    printf " ${C_WHITE}%3d/%-3d${RESET}  " "$h" "$t"
-    if [[ $t -gt 0 ]]; then
-        barra_progreso_moderna "$h" "$t" 15
-        printf " |"
+    # Línea de actividad correspondiente
+    if [[ $i -lt ${#actividad_output[@]} ]]; then
+        printf "%s" "${actividad_output[$i]}"
+        printf "%*s" $((ANCHO_CAJA - 35)) ""
     else
-        printf "     ${C_GRAY}sin datos${RESET}          |"
+        printf "%*s" $((ANCHO_CAJA - 2)) ""
     fi
-    printf "%*s" 3 ""
-    printf "|                                      |\n"
+    printf "|\n"
 done
 
-printf "  +----------------------------------------------------+"
-printf "%*s" 3 ""
-printf "+----------------------------------------------------+\n"
+# Cerrar cajas
+printf "  %s  %s\n" "$LINEA_CAJA" "$LINEA_CAJA"
 
-# Ahora rellenamos la columna derecha con la actividad
-# Nos posicionamos en las líneas correspondientes (es más fácil hacer un nuevo bloque)
-# Como es complejo posicionarnos, mejor mostramos la actividad después
-echo
-printf "  ${BOLD}${C_WHITE}ACTIVIDAD DETALLADA (últimos 5 días):${RESET}\n"
-echo
-grafico_actividad_diaria "${ACTIVIDAD[@]}"
+# Espacio
 echo
 
-# ========== BLOQUES TEMÁTICOS (ocupan todo el ancho) ==========
-printf "  +----------------------------------------------------"
-printf "----------------------------------------------------+\n"
-printf "  |${BOLD}${C_WHITE}  ${ICON_BLOCK}  PROGRESO POR BLOQUE TEMÁTICO                                              ${RESET}|\n"
-printf "  +----------------------------------------------------"
-printf "----------------------------------------------------+\n"
+# BLOQUES TEMÁTICOS - En 2 columnas
+hr "=" "$C_CYAN"
+printf "  ${BOLD}${C_WHITE}${ICON_BLOCK}  PROGRESO POR BLOQUE TEMÁTICO${RESET}\n"
+hr "=" "$C_CYAN"
+echo
 
-# Mostramos bloques en dos columnas también para optimizar espacio
-for i in $(seq 1 2 9); do
+ANCHO_BLOQUE=$(( (COLS - 10) / 2 ))
+
+for i in $(seq 1 2 10); do
     j=$((i + 1))
+    
+    printf "  "
     
     # Bloque i
     nombre_i="${NOMBRES_BLOQUE[$i]}"
     cargados_i=${B_CARGADOS[$i]:-0}
     hechos_i=${B_COMPLETADOS[$i]:-0}
     
-    # Bloque j
-    nombre_j="${NOMBRES_BLOQUE[$j]:-}"
-    cargados_j=${B_CARGADOS[$j]:-0}
-    hechos_j=${B_COMPLETADOS[$j]:-0}
+    printf "${C_WHITE}%2d${RESET} ${C_CYAN}${BOLD}%-12s${RESET} " "$i" "$nombre_i"
     
-    # Formatear estado bloque i
     if [[ $cargados_i -eq 0 ]]; then
-        estado_i="${C_GRAY}[sin cargar]${RESET}"
-        num_color_i=$C_GRAY
+        printf "${C_GRAY}%12s${RESET}" "[sin cargar]"
     else
-        estado_i="$(barra_progreso_moderna $hechos_i $cargados_i 8) ${C_WHITE}${hechos_i}/${cargados_i}${RESET}"
-        num_color_i=$C_CYAN
+        pct_i=$(( hechos_i * 100 / cargados_i ))
+        barra_progreso_moderna "$hechos_i" "$cargados_i" 8
+        printf " ${C_WHITE}%2d/%-2d${RESET}" "$hechos_i" "$cargados_i"
     fi
     
-    # Formatear estado bloque j (si existe)
-    if [[ -n "$nombre_j" ]]; then
+    # Espacio entre columnas
+    printf "  "
+    
+    # Bloque j (si existe)
+    if [[ $j -le 10 ]]; then
+        nombre_j="${NOMBRES_BLOQUE[$j]}"
+        cargados_j=${B_CARGADOS[$j]:-0}
+        hechos_j=${B_COMPLETADOS[$j]:-0}
+        
+        printf "${C_WHITE}%2d${RESET} ${C_CYAN}${BOLD}%-12s${RESET} " "$j" "$nombre_j"
+        
         if [[ $cargados_j -eq 0 ]]; then
-            estado_j="${C_GRAY}[sin cargar]${RESET}"
-            num_color_j=$C_GRAY
+            printf "${C_GRAY}%12s${RESET}" "[sin cargar]"
         else
-            estado_j="$(barra_progreso_moderna $hechos_j $cargados_j 8) ${C_WHITE}${hechos_j}/${cargados_j}${RESET}"
-            num_color_j=$C_CYAN
+            pct_j=$(( hechos_j * 100 / cargados_j ))
+            barra_progreso_moderna "$hechos_j" "$cargados_j" 8
+            printf " ${C_WHITE}%2d/%-2d${RESET}" "$hechos_j" "$cargados_j"
         fi
     fi
     
-    # Imprimir ambos en la misma línea
-    printf "  | ${num_color_i}${BOLD}%2d${RESET}  ${C_WHITE}%-20s${RESET} %-30s" "$i" "$nombre_i" "$estado_i"
-    if [[ -n "$nombre_j" ]]; then
-        printf " | ${num_color_j}${BOLD}%2d${RESET}  ${C_WHITE}%-20s${RESET} %s |\n" "$j" "$nombre_j" "$estado_j"
-    else
-        printf " |                                          |\n"
-    fi
+    printf "\n"
 done
 
-printf "  +----------------------------------------------------"
-printf "----------------------------------------------------+\n"
-
-# ========== FOOTER CON INFORMACIÓN ==========
 echo
 hr "-" "$C_GRAY"
 
-# Último ejercicio
+# FOOTER
 if [[ -n "$ULTIMO" ]]; then
     printf "  ${ICON_CLOCK} ${C_GRAY}Ultimo:${RESET} ${C_YELLOW}${BOLD}%s${RESET}" "$ULTIMO"
     [[ -n "$ULTIMA_FECHA" ]] && printf "  ${C_GRAY}(%s)${RESET}" "$ULTIMA_FECHA"
     echo
 fi
 
-# Tendencia
-printf "%s" "  ${ICON_TRENDING} ${C_GRAY}Tendencia semanal:${RESET} "
-printf "${C_CYAN}📈 +12% vs semana anterior${RESET}\n"
+printf "  ${ICON_TRENDING} ${C_GRAY}Tendencia semanal:${RESET} ${C_GREEN}📈 +12% vs semana anterior${RESET}\n"
 
 # Mensaje motivacional
 PCT_GLOBAL=0
@@ -405,7 +408,6 @@ else
     center_text "${BOLD}${C_MAGENTA}${ICON_STAR}  El primer paso es el más importante. ¡Tú puedes!  ${ICON_STAR}${RESET}"
 fi
 
-# Fecha y hora actual
 printf "\n%s\n" "  ${C_GRAY}${DIM}Dashboard actualizado: $(date '+%d/%m/%Y %H:%M')${RESET}"
 echo
 hr "=" "$C_CYAN"
