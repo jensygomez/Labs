@@ -1015,7 +1015,6 @@ systemctl start lab-log-generator.service 2>/dev/null || true
 systemctl start lab-file-logger.service 2>/dev/null || true
 systemctl start lab-simple-failing.service 2>/dev/null || true  # Falla inmediatamente
 systemctl start lab-crash-loop.service 2>/dev/null || true  # Entra en crash loop
-
 # =============================================================================
 # CREAR ARCHIVOS ADICIONALES PARA PRÁCTICA
 # =============================================================================
@@ -1060,6 +1059,7 @@ echo ""
 echo "=== FIN DEL DIAGNÓSTICO ==="
 echo "Usa los comandos de systemd y procesos para investigar más."
 EOF
+
 chmod +x /usr/local/bin/check-systemd-lab.sh
 
 # =============================================================================
@@ -1068,4 +1068,4 @@ chmod +x /usr/local/bin/check-systemd-lab.sh
 echo ""
 echo "=================================================================="
 echo "✅ LAB BLOQUE 4 — SYSTEMD Y PROCESOS PREPARADO"
-echo "================================================================
+echo "=================================================================="
