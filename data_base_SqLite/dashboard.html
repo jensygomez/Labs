@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linux Laboratories — LFCS/RHCSA Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0a0e1a;
+    --panel:     #0f1526;
+    --border:    #1e2d4a;
+    --accent:    #00d4ff;
+    --green:     #00ff88;
+    --yellow:    #ffd600;
+    --red:       #ff4757;
+    --magenta:   #c678dd;
+    --orange:    #ff8c00;
+    --text:      #c9d1e0;
+    --dim:       #4a5568;
+    --header-bg: #060912;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--header-bg);
+    border-bottom: 2px solid var(--accent);
+    padding: 18px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  header .title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.05em;
+  }
+
+  header .title span { color: var(--accent); }
+
+  header .subtitle {
+    font-size: 11px;
+    color: var(--dim);
+    margin-top: 4px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  header .timestamp {
+    font-size: 11px;
+    color: var(--dim);
+    text-align: right;
+  }
+
+  header .timestamp .date {
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  /* ── UPLOAD ZONE ── */
+  #upload-zone {
+    background: var(--panel);
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    margin: 24px 32px;
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  #upload-zone:hover, #upload-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(0,212,255,0.05);
+  }
+
+  #upload-zone p { color: var(--dim); margin-top: 8px; font-size: 12px; }
+  #upload-zone .icon { font-size: 32px; margin-bottom: 8px; }
+  #upload-zone input { display: none; }
+
+  /* ── MAIN GRID ── */
+  .main {
+    padding: 0 32px 32px;
+    display: none;
+  }
+
+  /* ── GLOBAL STATS BAR ── */
+  .global-bar {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 28px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .global-bar .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .global-bar .stat-label {
+    font-size: 10px;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .global-bar .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+  }
+
+  .global-bar .stat-value.accent { color: var(--accent); }
+  .global-bar .stat-value.green  { color: var(--green); }
+
+  .global-bar .progress-wrap {
+    flex: 1;
+  }
+
+  .global-bar .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--dim);
+    margin-bottom: 6px;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar {
+    height: 10px;
+    background: var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .progress-bar .fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 1s cubic-bezier(.4,0,.2,1);
+    position: relative;
+  }
+
+  .progress-bar .fill::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .fill.green   { background: linear-gradient(90deg, #00cc6a, var(--green)); }
+  .fill.yellow  { background: linear-gradient(90deg, #e6b800, var(--yellow)); }
+  .fill.orange  { background: linear-gradient(90deg, #cc7000, var(--orange)); }
+  .fill.red     { background: linear-gradient(90deg, #cc2233, var(--red)); }
+  .fill.accent  { background: linear-gradient(90deg, #0099bb, var(--accent)); }
+
+  /* ── 4-CUADRANT GRID ── */
+  .quad-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 20px;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    background: rgba(0,212,255,0.05);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+  }
+
+  .panel-body { padding: 20px; }
+
+  /* ── BLOQUES ── */
+  .bloque-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .bloque-row:last-child { margin-bottom: 0; }
+
+  .bloque-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .bloque-name {
+    width: 110px;
+    font-size: 11px;
+    color: var(--text);
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .bloque-bar { flex: 1; }
+
+  .bloque-count {
+    width: 52px;
+    text-align: right;
+    font-size: 11px;
+    color: var(--dim);
+    flex-shrink: 0;
+  }
+
+  /* ── NIVELES ── */
+  .nivel-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .nivel-row:last-child { margin-bottom: 0; }
+
+  .nivel-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .nivel-badge.B { background: rgba(0,255,136,0.15); color: var(--green); }
+  .nivel-badge.I { background: rgba(255,214,0,0.15);  color: var(--yellow); }
+  .nivel-badge.A { background: rgba(255,71,87,0.15);   color: var(--red); }
+  .nivel-badge.T { background: rgba(198,120,221,0.15); color: var(--magenta); }
+
+  .nivel-info { flex: 1; }
+
+  .nivel-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 5px;
+  }
+
+  .nivel-count {
+    font-size: 11px;
+    color: var(--dim);
+    text-align: right;
+    width: 50px;
+    flex-shrink: 0;
+  }
+
+  /* ── ACTIVIDAD ── */
+  .actividad-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .actividad-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .actividad-fecha {
+    width: 48px;
+    font-size: 11px;
+    color: var(--dim);
+    flex-shrink: 0;
+  }
+
+  .actividad-bar-wrap { flex: 1; }
+
+  .actividad-bar {
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .actividad-bar .fill { height: 100%; border-radius: 4px; }
+
+  .actividad-count {
+    width: 60px;
+    text-align: right;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .actividad-count.active { color: var(--accent); font-weight: 700; }
+  .actividad-count.inactive { color: var(--dim); }
+
+  /* ── FOOTER ── */
+  .footer {
+    margin: 20px 32px 32px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer .ultimo {
+    font-size: 11px;
+    color: var(--dim);
+  }
+
+  .footer .ultimo span { color: var(--yellow); }
+
+  .footer .motivacion {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--green);
+  }
+
+  /* ── DEMO DATA NOTICE ── */
+  .demo-notice {
+    background: rgba(255,214,0,0.08);
+    border: 1px solid rgba(255,214,0,0.3);
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 11px;
+    color: var(--yellow);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty {
+    color: var(--dim);
+    font-size: 11px;
+    font-style: italic;
+    padding: 8px 0;
+  }
+
+  /* ── SCROLL ── */
+  .bloque-scroll {
+    max-height: 340px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .bloque-scroll::-webkit-scrollbar { width: 4px; }
+  .bloque-scroll::-webkit-scrollbar-track { background: var(--border); border-radius: 4px; }
+  .bloque-scroll::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+
+  /* ── PERCENT LABEL ── */
+  .pct-label {
+    font-size: 10px;
+    color: var(--dim);
+    margin-top: 4px;
+    text-align: right;
+  }
+
+  /* ── SIN DATOS ── */
+  .sin-datos {
+    text-align: center;
+    padding: 20px;
+    color: var(--dim);
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="title">⚡ <span>Linux</span> Laboratories</div>
+    <div class="subtitle">Rocky Linux 9 &nbsp;•&nbsp; LFCS / RHCSA &nbsp;•&nbsp; Sysadmin Path</div>
+  </div>
+  <div class="timestamp">
+    <div class="date" id="clock"></div>
+    <div>Dashboard actualizado</div>
+  </div>
+</header>
+
+<!-- Upload zone -->
+<div id="upload-zone" onclick="document.getElementById('file-input').click()">
+  <input type="file" id="file-input" accept=".db,.sqlite,.sqlite3">
+  <div class="icon">🗄️</div>
+  <strong style="color:#fff">Carga tu base de datos SQLite</strong>
+  <p>Arrastra el archivo <code>ejercicios.db</code> aquí, o haz clic para seleccionarlo</p>
+  <p style="margin-top:16px; color: var(--accent);">— o —</p>
+  <button onclick="loadDemo(event)" style="margin-top:12px; background:rgba(0,212,255,0.1); border:1px solid var(--accent); color:var(--accent); padding:8px 20px; border-radius:6px; cursor:pointer; font-family:inherit; font-size:12px;">
+    Ver con datos de ejemplo
+  </button>
+</div>
+
+<!-- Main dashboard -->
+<div class="main" id="main">
+
+  <div class="demo-notice" id="demo-notice" style="display:none">
+    ⚠️ Mostrando datos de ejemplo — carga tu <code>ejercicios.db</code> real para ver tu progreso
+  </div>
+
+  <!-- Global stats -->
+  <div class="global-bar">
+    <div class="stat">
+      <div class="stat-label">Completados</div>
+      <div class="stat-value green" id="g-completados">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Cargados</div>
+      <div class="stat-value accent" id="g-cargados">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Meta total</div>
+      <div class="stat-value" style="color:var(--dim)">400</div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>Progreso hacia meta (400)</span>
+        <span id="g-pct-meta">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="fill accent" id="bar-meta" style="width:0%"></div>
+      </div>
+      <div style="margin-top:8px">
+        <div class="progress-label">
+          <span>Completados / Cargados</span>
+          <span id="g-pct-carg">0%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="fill green" id="bar-carg" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 cuadrantes -->
+  <div class="quad-grid">
+
+    <!-- Q1: Bloques -->
+    <div class="panel">
+      <div class="panel-header">📦 Bloques de estudio</div>
+      <div class="panel-body">
+        <div class="bloque-scroll" id="bloques-container">
+          <div class="sin-datos">Cargando...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q2: Actividad reciente -->
+    <div class="panel">
+      <div class="panel-header">📅 Actividad reciente (7 días)</div>
+      <div class="panel-body">
+        <div class="actividad-list" id="actividad-container">
+          <div class="sin-datos">Sin actividad registrada</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q3: Niveles -->
+    <div class="panel">
+      <div class="panel-header">🎯 Niveles</div>
+      <div class="panel-body" id="niveles-container">
+        <div class="sin-datos">Sin datos</div>
+      </div>
+    </div>
+
+    <!-- Q4: Último ejercicio -->
+    <div class="panel">
+      <div class="panel-header">⏱️ Último ejercicio</div>
+      <div class="panel-body" id="ultimo-container">
+        <div class="sin-datos">Sin actividad aún</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer" id="footer" style="display:none">
+  <div class="ultimo">Último: <span id="footer-ultimo">—</span></div>
+  <div class="motivacion" id="footer-motivacion"></div>
+</div>
+
+<!-- sql.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+<script>
+// ── Clock ────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleDateString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' +
+    now.toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'});
+}
+updateClock();
+setInterval(updateClock, 60000);
+
+// ── Drag & drop ──────────────────────────────────────────────
+const zone = document.getElementById('upload-zone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) loadFile(file);
+});
+document.getElementById('file-input').addEventListener('change', e => {
+  if (e.target.files[0]) loadFile(e.target.files[0]);
+});
+
+// ── Load real SQLite file ────────────────────────────────────
+async function loadFile(file) {
+  const SQL = await initSqlJs({ locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${f}` });
+  const buf = await file.arrayBuffer();
+  const db = new SQL.Database(new Uint8Array(buf));
+  renderDashboard(db, false);
+}
+
+// ── Demo data ────────────────────────────────────────────────
+function loadDemo(e) {
+  e.stopPropagation();
+  const demoData = buildDemoData();
+  renderDashboard(demoData, true);
+}
+
+function buildDemoData() {
+  return {
+    query: (sql) => {
+      // Simulamos las queries que usa el dashboard
+      if (sql.includes('COUNT(*) FROM ejercicios;')) return [[120]];
+      if (sql.includes('SUM(completado) FROM ejercicios;')) return [[61]];
+
+      if (sql.includes('GROUP BY bloque')) return [
+        [1,20,14],[2,15,10],[3,18,12],[4,10,8],[5,22,9],
+        [6,12,5],[7,8,3],[8,10,0],[9,5,0],[10,0,0]
+      ];
+      if (sql.includes('GROUP BY nivel')) return [
+        ['Basico',61,40],['Intermedio',42,15],['Avanzado',17,6]
+      ];
+      if (sql.includes('tema || ')) return [['Configurar SELinux · Bloque 7']];
+      if (sql.includes('ultima_vez FROM ejercicios')) return [['2026-02-27 18:42:00']];
+      if (sql.includes("date(ultima_vez) = '")) {
+        const match = sql.match(/'(\d{4}-\d{2}-\d{2})'/);
+        const fakes = {
+          '2026-02-26': [[3]], '2026-02-27': [[8]], '2026-02-28': [[5]],
+          '2026-03-01': [[0]], '2026-03-02': [[2]]
+        };
+        const d = match && match[1];
+        return fakes[d] || [[0]];
+      }
+      return [[]];
+    }
+  };
+}
+
+// ── Names ────────────────────────────────────────────────────
+const NOMBRES_BLOQUE = {
+  1:'Fundamentos', 2:'Usuarios', 3:'Almacenamiento', 4:'Systemd',
+  5:'Networking', 6:'Servicios red', 7:'Seguridad', 8:'Podman',
+  9:'Scripting', 10:'Troubleshooting'
+};
+
+// ── Color logic ──────────────────────────────────────────────
+function colorClass(pct) {
+  if (pct >= 80) return 'green';
+  if (pct >= 50) return 'yellow';
+  if (pct >= 20) return 'orange';
+  return 'red';
+}
+
+// ── Render ───────────────────────────────────────────────────
+function renderDashboard(db, isDemo) {
+  document.getElementById('upload-zone').style.display = 'none';
+  document.getElementById('main').style.display = 'block';
+  document.getElementById('footer').style.display = 'flex';
+  if (isDemo) document.getElementById('demo-notice').style.display = 'flex';
+
+  function q(sql) {
+    try {
+      if (db.query) return db.query(sql); // demo
+      const res = db.exec(sql);
+      return res[0] ? res[0].values : [];
+    } catch(e) { return []; }
+  }
+
+  const totalCargados    = (q("SELECT COUNT(*) FROM ejercicios;")[0]?.[0]) || 0;
+  const totalCompletados = (q("SELECT SUM(completado) FROM ejercicios;")[0]?.[0]) || 0;
+  const META = 400;
+
+  // Global bar
+  document.getElementById('g-completados').textContent = totalCompletados;
+  document.getElementById('g-cargados').textContent = totalCargados;
+
+  const pctMeta = Math.min(100, Math.round(totalCompletados / META * 100));
+  const pctCarg = totalCargados > 0 ? Math.round(totalCompletados / totalCargados * 100) : 0;
+
+  document.getElementById('g-pct-meta').textContent = pctMeta + '%';
+  document.getElementById('g-pct-carg').textContent = pctCarg + '%';
+
+  setTimeout(() => {
+    document.getElementById('bar-meta').style.width = pctMeta + '%';
+    document.getElementById('bar-meta').className = 'fill ' + colorClass(pctMeta);
+    document.getElementById('bar-carg').style.width = pctCarg + '%';
+    document.getElementById('bar-carg').className = 'fill ' + colorClass(pctCarg);
+  }, 100);
+
+  // Bloques
+  const bloqueRows = q("SELECT bloque, COUNT(*), SUM(completado) FROM ejercicios GROUP BY bloque;");
+  const bEl = document.getElementById('bloques-container');
+  if (bloqueRows.length === 0) {
+    bEl.innerHTML = '<div class="sin-datos">No hay ejercicios cargados aún</div>';
+  } else {
+    bEl.innerHTML = bloqueRows.map(([num, total, hechos]) => {
+      const h = hechos || 0;
+      const pct = total > 0 ? Math.round(h / total * 100) : 0;
+      const cls = colorClass(pct);
+      return `
+        <div class="bloque-row">
+          <div class="bloque-num">${num}</div>
+          <div class="bloque-name">${NOMBRES_BLOQUE[num] || 'Bloque '+num}</div>
+          <div class="bloque-bar">
+            <div class="progress-bar" style="height:8px">
+              <div class="fill ${cls}" style="width:${pct}%"></div>
+            </div>
+            <div class="pct-label">${h}/${total} — ${pct}%</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // Actividad últimos 7 días
+  const aEl = document.getElementById('actividad-container');
+  const today = new Date();
+  let maxCount = 1;
+  const actDays = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const fecha = d.toISOString().split('T')[0];
+    const cnt = parseInt(
+      q(`SELECT COUNT(*) FROM ejercicios WHERE date(ultima_vez) = '${fecha}' AND completado = 1;`)[0]?.[0]
+    ) || 0;
+    actDays.push({ fecha, cnt });
+    if (cnt > maxCount) maxCount = cnt;
+  }
+
+  aEl.innerHTML = actDays.map(({ fecha, cnt }) => {
+    const label = fecha.slice(5).replace('-', '/');
+    const pct = Math.round(cnt / maxCount * 100);
+    const isToday = fecha === today.toISOString().split('T')[0];
+    return `
+      <div class="actividad-row">
+        <div class="actividad-fecha" style="${isToday ? 'color:var(--accent)' : ''}">${label}${isToday ? ' ←' : ''}</div>
+        <div class="actividad-bar-wrap">
+          <div class="actividad-bar">
+            <div class="fill ${cnt > 0 ? 'accent' : ''}" style="width:${pct}%; background:${cnt > 0 ? 'var(--accent)' : 'var(--border)'}"></div>
+          </div>
+        </div>
+        <div class="actividad-count ${cnt > 0 ? 'active' : 'inactive'}">${cnt} ejerc.</div>
+      </div>`;
+  }).join('');
+
+  // Niveles
+  const niveles = q("SELECT nivel, COUNT(*), SUM(completado) FROM ejercicios GROUP BY nivel;");
+  const nEl = document.getElementById('niveles-container');
+  const nivelConfig = {
+    'Basico':         { badge: 'B', cls: 'B', color: 'green' },
+    'Intermedio':     { badge: 'I', cls: 'I', color: 'yellow' },
+    'Avanzado':       { badge: 'A', cls: 'A', color: 'red' },
+    'Troubleshooting':{ badge: 'T', cls: 'T', color: 'magenta' },
+  };
+
+  if (niveles.length === 0) {
+    nEl.innerHTML = '<div class="sin-datos">Sin datos de niveles</div>';
+  } else {
+    nEl.innerHTML = niveles.map(([nivel, total, hechos]) => {
+      const h = hechos || 0;
+      const pct = total > 0 ? Math.round(h / total * 100) : 0;
+      const cfg = nivelConfig[nivel] || { badge: '?', cls: 'B', color: 'accent' };
+      return `
+        <div class="nivel-row">
+          <div class="nivel-badge ${cfg.cls}">${cfg.badge}</div>
+          <div class="nivel-info">
+            <div class="nivel-name">${nivel}</div>
+            <div class="progress-bar" style="height:8px">
+              <div class="fill ${cfg.color}" style="width:${pct}%"></div>
+            </div>
+          </div>
+          <div class="nivel-count">${h}/${total}</div>
+        </div>`;
+    }).join('');
+  }
+
+  // Último ejercicio
+  const ultimo = q("SELECT tema || ' · Bloque ' || bloque FROM ejercicios WHERE ultima_vez IS NOT NULL ORDER BY ultima_vez DESC LIMIT 1;")[0]?.[0];
+  const ultimaFecha = q("SELECT ultima_vez FROM ejercicios WHERE ultima_vez IS NOT NULL ORDER BY ultima_vez DESC LIMIT 1;")[0]?.[0];
+  const uEl = document.getElementById('ultimo-container');
+
+  if (ultimo) {
+    uEl.innerHTML = `
+      <div style="color:var(--yellow); font-weight:700; font-size:13px; margin-bottom:12px">${ultimo}</div>
+      ${ultimaFecha ? `<div style="color:var(--dim); font-size:11px">🕐 ${ultimaFecha}</div>` : ''}
+      <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border)">
+        <div style="color:var(--dim); font-size:10px; text-transform:uppercase; letter-spacing:.1em; margin-bottom:8px">Tu progreso global</div>
+        <div style="font-size:36px; font-weight:800; font-family:'Syne',sans-serif; color:var(--green)">${pctCarg}%</div>
+        <div style="color:var(--dim); font-size:11px">de ejercicios cargados completados</div>
+      </div>`;
+    document.getElementById('footer-ultimo').textContent = ultimo;
+  } else {
+    uEl.innerHTML = '<div class="sin-datos">Sin actividad aún — ¡a practicar!</div>';
+  }
+
+  // Motivación
+  const msgs = [
+    [80, '🚀 ¡Casi en la cima! La certificación te espera.'],
+    [50, '📈 ¡Más de la mitad! Ya eres un experto en construcción.'],
+    [20, '⚡ Buen ritmo. Cada práctica te acerca a la meta.'],
+    [0,  '🌱 El primer paso es el más importante. ¡Tú puedes!'],
+  ];
+  const msg = msgs.find(([min]) => pctCarg >= min)?.[1] || msgs[3][1];
+  document.getElementById('footer-motivacion').textContent = msg;
+}
+</script>
+</body>
+</html>
