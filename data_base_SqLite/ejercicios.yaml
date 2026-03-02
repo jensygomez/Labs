@@ -715,6 +715,144 @@
     - Verify that she can theoretically log in again (the '!' should be gone).
 
 
+# ─── BLOQUE 2: USUARIOS Y GRUPOS - INTERMEDIO ───
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Intermedio"
+  orden: 1
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The company is implementing a new security policy for password rotation.
+    Task: Configure password aging for the user 'ana'.
+    Technical Requirements:
+    - Passwords must be changed every 30 days.
+    - Set a warning period of 5 days before the password expires.
+    - If the password expires, the account should become inactive after 2 days.
+    - Use the 'chage' command and verify the results.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Intermedio"
+  orden: 2
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: A new temporary contractor 'carlos' has a fixed-term contract.
+    Task: Set an expiration date for carlos's account.
+    Technical Requirements:
+    - The account must expire automatically on December 31, 2026.
+    - Verify the expiration date using 'chage -l carlos'.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Intermedio"
+  orden: 3
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You need to ensure all new users have a standard set of welcoming files.
+    Task: Create a new user 'test_skel' using a custom skeleton directory.
+    Technical Requirements:
+    - Use the custom skeleton directory you created at /etc/skel_lab.
+    - Verify that 'test_skel' has the 'README' and '.bashrc_custom' files in their new home directory.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Intermedio"
+  orden: 4
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: For security audits, you need to identify accounts that don't have a password set.
+    Task: Find all users in the system with an empty or null password.
+    Technical Requirements:
+    - Use 'passwd -S -a' and grep, or inspect /etc/shadow directly.
+    - Identify 'usuario_sin_pass' (created by your lab script).
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Intermedio"
+  orden: 5
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: Elena is a developer and needs to restart the web server for her work.
+    Task: Grant 'elena' limited administrative privileges via sudo.
+    Technical Requirements:
+    - Create a file named '/etc/sudoers.d/elena'.
+    - Allow 'elena' to run only '/usr/bin/systemctl restart httpd' as root.
+    - The configuration must not require a password for this specific command.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Intermedio"
+  orden: 6
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: New users are creating files with permissions that are too restrictive for their team.
+    Task: Change the default file creation mask (umask) for the user 'juan'.
+    Technical Requirements:
+    - Modify juan's personal configuration so new files have 640 permissions and directories have 750.
+    - (Hint: umask 027).
+    - Test by logging in as 'juan' and creating a file.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Intermedio"
+  orden: 7
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You are cleaning up the system and found an obsolete group.
+    Task: Delete the group 'proyecto_gamma' only if it's not the primary group of any user.
+    Technical Requirements:
+    - Check if users 'sofia' or 'david' use it as a primary group.
+    - Delete the group and verify it's gone from /etc/group.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Intermedio"
+  orden: 8
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: A developer needs to temporarily work with the 'proyecto_alfa' group permissions.
+    Task: Use the 'newgrp' command as user 'ana'.
+    Technical Requirements:
+    - Log in as 'ana'.
+    - Switch her current effective group to 'proyecto_alfa'.
+    - Create a file 'test_group.txt' and verify it is owned by the 'proyecto_alfa' group.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Intermedio"
+  orden: 9
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: System security requires all users to change their password on their next login.
+    Task: Force the user 'laura' to change her password immediately upon her next access.
+    Technical Requirements:
+    - Use 'chage' to expire her password now.
+    - Verify that 'Password must be changed' appears in the aging information.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Intermedio"
+  orden: 10
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You need to verify which users have administrative (root) power.
+    Task: List all users who are members of the 'wheel' group.
+    Technical Requirements:
+    - Inspect /etc/group or use 'getent group wheel'.
+    - Document which users from your lab script currently have sudo access via this group.
+
+
 
 
 

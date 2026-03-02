@@ -1,0 +1,238 @@
+#!/bin/bash
+# =============================================================================
+# LAB BLOQUE 3 — ALMACENAMIENTO
+# Preparación para LFCS + RHCSA
+# Rocky Linux 9 — Ejecutar como root
+# =============================================================================
+#
+# OBJETIVO
+# --------
+# Preparar un entorno REALISTA para practicar administración de almacenamiento
+# en Linux, alineado con los objetivos oficiales de LFCS y RHCSA.
+#
+# Este script:
+# - NO explica
+# - NO sugiere ejercicios
+# - NO deja documentación operativa en el sistema
+#
+# El alumno deberá inspeccionar el estado del sistema y corregirlo.
+#
+# ---------------------------------------------------------------------------
+# ESTADO INICIAL DE LA VM (IMPORTANTE)
+# ---------------------------------------------------------------------------
+# vda  → Disco del sistema (NO SE TOCA)
+# vdb  → Particiones + errores de montaje
+# vdc  → LVM (creación y errores)
+# vdd  → Swap (partición y archivo)
+# vde  → Filesystem sin montar / olvidado
+#
+# ---------------------------------------------------------------------------
+# TEMAS CUBIERTOS
+# ---------------------------------------------------------------------------
+# - lsblk, blkid, mount, umount
+# - parted / fdisk
+# - ext4 / xfs
+# - /etc/fstab (errores reales)
+# - LVM (PV, VG, LV)
+# - Extensión de LV sin crecer FS
+# - Swap correcto e incorrecto
+# - UUID vs device path
+# - Montajes duplicados / inconsistentes
+#
+# =============================================================================
+
+set -e
+
+
+# -----------------------------------------------------------------------------
+# VERIFICACIÓN
+# -----------------------------------------------------------------------------
+[[ $EUID -eq 0 ]] || { echo "Ejecutar como root"; exit 1; }
+
+# -----------------------------------------------------------------------------
+# VARIABLES (DISCOS EXISTENTES)
+# -----------------------------------------------------------------------------
+DISK_PART="/dev/vdb"
+DISK_LVM="/dev/vdc"
+DISK_SWAP="/dev/vdd"
+DISK_FREE="/dev/vde"
+
+# -----------------------------------------------------------------------------
+# MEJORA 1: VERIFICACIÓN DE DISCOS (NO DESTRUCTIVO)
+# -----------------------------------------------------------------------------
+echo "🔍 Verificando discos de laboratorio..."
+DISKS_MISSING=0
+for disk in vdb vdc vdd vde; do
+    if [ ! -b "/dev/$disk" ]; then
+        echo "⚠️  ADVERTENCIA: /dev/$disk no existe"
+        DISKS_MISSING=$((DISKS_MISSING + 1))
+    else
+        echo "   ✅ /dev/$disk encontrado"
+    fi
+done
+
+if [ $DISKS_MISSING -gt 0 ]; then
+    echo ""
+    echo "❌ ERROR: Faltan $DISKS_MISSING discos de laboratorio"
+    echo "   Para crear discos adicionales en VM:"
+    echo "   - VirtualBox: Crea discos VDI de 5GB cada uno"
+    echo "   - VMware: Añade discos virtuales de 5GB"
+    echo "   - KVM: qemu-img create -f qcow2 lab-disk.qcow2 5G"
+    echo ""
+    echo "El script necesita 4 discos adicionales (vdb, vdc, vdd, vde)"
+    exit 1
+fi
+
+# -----------------------------------------------------------------------------
+# MEJORA 2: BACKUP AUTOMÁTICO DE CONFIGURACIONES
+# -----------------------------------------------------------------------------
+BACKUP_DIR="/root/lab-backup-$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$BACKUP_DIR"
+echo "📦 Creando backup en: $BACKUP_DIR"
+
+# Backup de configuraciones originales
+if [ -f /etc/fstab ]; then
+    cp /etc/fstab "$BACKUP_DIR/fstab.original"
+    echo "   ✅ fstab original respaldado"
+fi
+
+if [ -f /etc/crypttab ]; then
+    cp /etc/crypttab "$BACKUP_DIR/crypttab.original" 2>/dev/null || true
+fi
+
+# Registrar información del sistema antes de modificarlo
+{
+    echo "=== ESTADO ORIGINAL DEL SISTEMA ==="
+    echo "Fecha: $(date)"
+    echo ""
+    echo "--- Discos ---"
+    lsblk -f
+    echo ""
+    echo "--- Montajes actuales ---"
+    mount | grep -E "^/dev"
+    echo ""
+    echo "--- Swap actual ---"
+    swapon --show
+} > "$BACKUP_DIR/estado-inicial.txt"
+
+echo "   ✅ Estado inicial guardado"
+
+# -----------------------------------------------------------------------------
+# LIMPIEZA DE METADATOS (DESTRUCTIVO SOLO EN DISCOS DE LAB)
+# -----------------------------------------------------------------------------
+echo "🧹 Limpiando metadatos de discos de laboratorio..."
+for d in $DISK_PART $DISK_LVM $DISK_SWAP $DISK_FREE; do
+    echo "   Limpiando $d..."
+    # Primero desmontar si está montado
+    umount "$d"* 2>/dev/null || true
+    # Desactivar swap si está activo
+    swapoff "$d"* 2>/dev/null || true
+    # Limpiar firmas
+    wipefs -a "$d" || true
+done
+
+
+# =============================================================================
+# BLOQUE 3.1 — PARTICIONES Y FILESYSTEMS
+# =============================================================================
+
+# vdb → dos particiones
+parted -s $DISK_PART mklabel gpt
+parted -s $DISK_PART mkpart primary ext4 1MiB 2GiB
+parted -s $DISK_PART mkpart primary xfs  2GiB 100%
+
+mkfs.ext4 ${DISK_PART}1
+mkfs.xfs  ${DISK_PART}2
+
+mkdir -p /mnt/ext4_data
+mkdir -p /mnt/xfs_data
+
+mount ${DISK_PART}1 /mnt/ext4_data
+mount ${DISK_PART}2 /mnt/xfs_data
+
+# =============================================================================
+# BLOQUE 3.2 — FSTAB (ERRORES INTENCIONALES)
+# =============================================================================
+
+UUID_EXT4=$(blkid -s UUID -o value ${DISK_PART}1)
+UUID_XFS=$(blkid -s UUID -o value ${DISK_PART}2)
+
+# Correcto
+echo "UUID=$UUID_EXT4 /mnt/ext4_data ext4 defaults 0 2" >> /etc/fstab
+
+# Incorrecto: filesystem equivocado
+echo "UUID=$UUID_XFS /mnt/xfs_data ext4 defaults 0 2" >> /etc/fstab
+
+umount /mnt/ext4_data
+umount /mnt/xfs_data
+
+# =============================================================================
+# BLOQUE 3.3 — LVM
+# =============================================================================
+
+pvcreate $DISK_LVM
+vgcreate vg_storage $DISK_LVM
+
+lvcreate -L 2G -n lv_apps vg_storage
+lvcreate -L 1G -n lv_logs vg_storage
+
+mkfs.ext4 /dev/vg_storage/lv_apps
+mkfs.xfs  /dev/vg_storage/lv_logs
+
+mkdir -p /srv/apps
+mkdir -p /var/log/apps
+
+mount /dev/vg_storage/lv_apps /srv/apps
+mount /dev/vg_storage/lv_logs /var/log/apps
+
+# Mala práctica: usar device path
+echo "/dev/vg_storage/lv_apps /srv/apps ext4 defaults 0 2" >> /etc/fstab
+echo "/dev/vg_storage/lv_logs /var/log/apps xfs  defaults 0 2" >> /etc/fstab
+
+# =============================================================================
+# BLOQUE 3.4 — LVM EXTENDIDO SIN FS
+# =============================================================================
+
+lvextend -L +1G /dev/vg_storage/lv_apps
+# filesystem NO redimensionado a propósito
+
+# =============================================================================
+# BLOQUE 3.5 — SWAP
+# =============================================================================
+
+# Swap por partición
+parted -s $DISK_SWAP mklabel gpt
+parted -s $DISK_SWAP mkpart primary linux-swap 1MiB 100%
+mkswap ${DISK_SWAP}1
+swapon ${DISK_SWAP}1
+
+echo "${DISK_SWAP}1 swap swap defaults 0 0" >> /etc/fstab
+
+# Swap por archivo (mal configurado)
+fallocate -l 512M /swapfile_lab
+chmod 644 /swapfile_lab
+mkswap /swapfile_lab
+swapon /swapfile_lab || true
+
+echo "/swapfile_lab swap swap defaults 0 0" >> /etc/fstab
+
+# =============================================================================
+# BLOQUE 3.6 — DISCO FORMATEADO PERO NO MONTADO
+# =============================================================================
+
+mkfs.ext4 $DISK_FREE
+mkdir -p /data_backup
+# NO se monta
+# NO se agrega a fstab
+
+# =============================================================================
+# BLOQUE 3.7 — MONTAJE DUPLICADO / INCONSISTENTE
+# =============================================================================
+
+mkdir -p /backup_ext4
+mount ${DISK_PART}1 /backup_ext4
+
+# =============================================================================
+# FIN
+# =============================================================================
+echo "LAB BLOQUE 3 — ALMACENAMIENTO PREPARADO"
