@@ -1995,7 +1995,289 @@
     - Use 'firewall-cmd --list-services --zone=public'.
     - Identify if 'ssh' or 'http' are currently allowed.
 
+# ─── BLOQUE 5: NETWORKING - INTERMEDIO ───
 
+- bloque: 5
+  tema: "Networking"
+  nivel: "Intermedio"
+  orden: 1
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The 'lab-static' connection has an incorrect subnet mask (/32) that prevents communication.
+    Task: Fix the IPv4 address and mask using nmcli.
+    Technical Requirements:
+    - Change the IP to 192.168.100.10/24.
+    - Ensure the change is persistent.
+    - Restart the connection (up/down) to apply changes.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Intermedio"
+  orden: 2
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: For a specific project, the 'lab-net0' interface needs a second IP address.
+    Task: Add a secondary IP to the existing 'lab-static' connection.
+    Technical Requirements:
+    - Add 10.0.10.50/24 as a secondary address.
+    - Verify with 'ip addr' that both IPs are active on the same interface.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Intermedio"
+  orden: 3
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The system needs to reach a private network 172.16.50.0/24 through a specific gateway.
+    Task: Add a persistent static route.
+    Technical Requirements:
+    - Route traffic for 172.16.50.0/24 via 192.168.100.1.
+    - Use 'nmcli' to make it persistent.
+    - Verify with 'ip route show'.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Intermedio"
+  orden: 4
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: SSH security needs to be tightened.
+    Task: Change the default SSH port and disable root login.
+    Technical Requirements:
+    - Edit /etc/ssh/sshd_config.
+    - Change Port to 2222.
+    - Ensure 'PermitRootLogin no' is set.
+    - Restart the service and verify it listens on the new port.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Intermedio"
+  orden: 5
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You need to allow the new SSH port through the firewall.
+    Task: Create a custom runtime and permanent firewall rule.
+    Technical Requirements:
+    - Open port 2222/tcp in the 'public' zone.
+    - Remove the standard 'ssh' service (port 22) from the allowed list.
+    - Reload the firewall.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Intermedio"
+  orden: 6
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You want to simplify SSH access to another server.
+    Task: Configure SSH Key-based authentication.
+    Technical Requirements:
+    - Generate a pair of RSA keys without a passphrase.
+    - Copy the public key to 'localhost' (to simulate a remote server).
+    - Verify you can log in without being asked for a password.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Intermedio"
+  orden: 7
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: A web server will be hosted on this machine.
+    Task: Enable the HTTP service in the firewall.
+    Technical Requirements:
+    - Use 'firewall-cmd' to add the 'http' service.
+    - Make sure it persists after a reboot.
+    - Verify the status of the 'public' zone.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Intermedio"
+  orden: 8
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You suspect a network bottleneck or strange traffic.
+    Task: Capture network traffic on 'lab-net0'.
+    Technical Requirements:
+    - Use 'tcpdump'.
+    - Capture only 10 packets.
+    - Filter the output to show only ICMP (ping) traffic.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Intermedio"
+  orden: 9
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: DNS resolution is failing for internal names.
+    Task: Configure custom DNS servers for the 'lab-static' connection.
+    Technical Requirements:
+    - Set DNS servers to 1.1.1.1 and 8.8.4.4.
+    - Set the DNS search domain to 'lab.local'.
+    - Verify the changes in /etc/resolv.conf after restarting the connection.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Intermedio"
+  orden: 10
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You need to see which process is "squatting" on a port.
+    Task: Identify the process name and PID listening on port 80 (or 22).
+    Technical Requirements:
+    - Use 'ss' with the '-p' (processes) flag.
+    - Identify the command name (e.g., sshd, httpd, or nginx).
+
+
+# ─── BLOQUE 5: NETWORKING - AVANZADO ───
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Avanzado"
+  orden: 1
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: High availability is required for the network.
+    Task: Create a Network Team (teaming) using two virtual interfaces.
+    Technical Requirements:
+    - Create a team interface named 'team0' with 'runner: activebackup'.
+    - Assign the IP 192.168.200.10/24 to 'team0'.
+    - Add two dummy interfaces or your lab-net interfaces as slaves.
+    - Verify the team status with 'teamdctl'.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Avanzado"
+  orden: 2
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The server needs to communicate with a specific VLAN.
+    Task: Configure a VLAN tagged interface.
+    Technical Requirements:
+    - Create a VLAN interface on top of 'lab-net0' with ID 50.
+    - Name it 'lab-net0.50'.
+    - Assign the IP 10.50.50.1/24.
+    - Verify that the interface is tagged correctly using 'ip -d link show'.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Avanzado"
+  orden: 3
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You need to implement complex firewall logic that regular services can't handle.
+    Task: Create a Firewalld 'Rich Rule'.
+    Technical Requirements:
+    - In the 'public' zone, reject all traffic from the IP 192.168.100.50.
+    - Log the rejected attempts with a prefix "REJECTED_USER: ".
+    - Ensure the rule is permanent and active.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Avanzado"
+  orden: 4
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You need to access a service on a private network that only the server can reach.
+    Task: Create an SSH Local Port Forwarding tunnel.
+    Technical Requirements:
+    - Forward your local port 8080 to a remote "dummy" IP 1.1.1.1 on port 80 via SSH.
+    - Run the command in the background without executing a remote command (-N -f).
+    - Verify the tunnel is active using 'ss -antp | grep 8080'.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Avanzado"
+  orden: 5
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You are migrating from Firewalld to raw nftables for performance.
+    Task: List the current nftables rules generated by Firewalld.
+    Technical Requirements:
+    - Use the 'nft' command to list all tables and chains.
+    - Identify the 'filter' table and the 'INPUT' chain.
+    - Explain how Firewalld interacts with the nftables backend.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Avanzado"
+  orden: 6
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You need to provide internet access to a private subnet through this server.
+    Task: Enable IP Forwarding and Masquerading.
+    Technical Requirements:
+    - Enable 'net.ipv4.ip_forward' in sysctl persistently.
+    - Enable masquerading in the 'public' zone of Firewalld.
+    - Verify masquerading status with 'firewall-cmd --query-masquerade'.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Avanzado"
+  orden: 7
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: A specific application requires a change in the routing policy based on the source IP.
+    Task: Create a Policy Based Routing (PBR) rule.
+    Technical Requirements:
+    - Use 'ip rule' to create a rule for traffic coming from 10.0.10.50.
+    - Direct this traffic to a new routing table named 'table_custom'.
+    - (Optional) Add a default route to that specific table.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Avanzado"
+  orden: 8
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You need to monitor specific protocol headers for security auditing.
+    Task: Use 'tcpdump' to inspect SSH handshakes.
+    Technical Requirements:
+    - Capture traffic on port 22.
+    - Use the '-X' flag to show hex and ASCII content.
+    - Filter for packets with the 'SYN' flag set.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Avanzado"
+  orden: 9
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You need to protect the SSH service from brute force attacks using Firewalld.
+    Task: Configure a 'recent' limit rule.
+    Technical Requirements:
+    - Use a Rich Rule to limit SSH connections to 3 per minute per source IP.
+    - Use the 'limit value="3/m"' and 'accept' action.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Avanzado"
+  orden: 10
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You need to configure the server as an SSH Bastion.
+    Task: Enable SSH Agent Forwarding.
+    Technical Requirements:
+    - Modify /etc/ssh/ssh_config to allow 'AllowAgentForwarding'.
+    - Explain the security implications of using Agent Forwarding on a compromised host.
 
 
 
