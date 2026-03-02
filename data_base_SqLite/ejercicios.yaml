@@ -1141,3 +1141,156 @@
 # ======================================================================
 # BLOQUE 3 STORAGE
 # ======================================================================
+
+# ─── BLOQUE 3: STORAGE & FILESYSTEMS - BÁSICO ───
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Basico"
+  orden: 1
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to identify the storage devices attached to the system.
+    Task: List all block devices.
+    Technical Requirements:
+    - Display the output in a tree-like format.
+    - Include columns for NAME, SIZE, TYPE, and MOUNTPOINT.
+    - Identify which disk corresponds to /dev/vdb, /dev/vdc, /dev/vdd, and /dev/vde.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Basico"
+  orden: 2
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: A developer needs to know the unique identifier of a partition for a configuration file.
+    Task: Find the UUID of the partitions on /dev/vdb.
+    Technical Requirements:
+    - Use the 'blkid' command.
+    - Document the UUID of /dev/vdb1 and /dev/vdb2.
+    - Identify the filesystem type (TYPE) for each.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Basico"
+  orden: 3
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: Some partitions are configured but not currently accessible in the file tree.
+    Task: Verify which filesystems are currently mounted.
+    Technical Requirements:
+    - Use 'mount' filtered by /dev/vd or use 'df -h'.
+    - Compare this with the partitions found in Exercise 1.
+    - Identify which partitions from /dev/vdb are NOT currently mounted.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Basico"
+  orden: 4
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to check the health of the Physical Volumes for LVM.
+    Task: Inspect the LVM physical layer.
+    Technical Requirements:
+    - Use 'pvdisplay' or 'pvs'.
+    - Identify which disk is being used as a Physical Volume (PV).
+    - Note the total size and free space of the PV.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Basico"
+  orden: 5
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You are looking for the Logical Volumes (LV) where applications are stored.
+    Task: List the existing Volume Groups and Logical Volumes.
+    Technical Requirements:
+    - Use 'vgs' and 'lvs'.
+    - Identify the name of the Volume Group (VG) created in the lab.
+    - List the names of the two Logical Volumes (LV) inside that VG.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Basico"
+  orden: 6
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: The system seems to have multiple swap areas.
+    Task: Inspect the current swap configuration.
+    Technical Requirements:
+    - Use 'swapon --show' or 'free -h'.
+    - Identify if the swap is a partition or a file.
+    - Note the priority and size of each swap area.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Basico"
+  orden: 7
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to verify if the boot process will fail due to fstab errors.
+    Task: Check the /etc/fstab file for consistency.
+    Technical Requirements:
+    - Open /etc/fstab in read-only mode.
+    - Count how many entries are using UUID and how many are using device paths (e.g., /dev/vg...).
+    - Identify any obvious typos in the filesystem types column.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Basico"
+  orden: 8
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to access the data on /dev/vde, which is already formatted.
+    Task: Manually mount the "free" disk.
+    Technical Requirements:
+    - Mount /dev/vde to the /data_backup directory.
+    - Verify it is mounted correctly using the 'mount' command.
+    - Check the available space in that directory.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Basico"
+  orden: 9
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to unmount a duplicated mount point to avoid data corruption.
+    Task: Safely unmount /backup_ext4.
+    Technical Requirements:
+    - Use the 'umount' command.
+    - Verify that the data is still accessible through the primary mount point (/mnt/ext4_data).
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Basico"
+  orden: 10
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to check the filesystem type of the LVM volumes.
+    Task: Identify the filesystem format of 'lv_apps' and 'lv_logs'.
+    Technical Requirements:
+    - Use 'lsblk -f' or 'df -T'.
+    - Confirm which one uses 'ext4' and which one uses 'xfs'.
+
+
+
+
+
+# ======================================================================
+# BLOQUE 4 SYSTEMD AND PROCESS
+# ======================================================================
+
+
+
+
+
