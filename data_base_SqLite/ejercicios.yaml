@@ -997,7 +997,143 @@
     - Allow 'admin2' to run 'systemctl restart httpd' but DENY 'systemctl restart sshd' or any other service.
     - Test the restriction as user 'admin2'.
 
+# ─── BLOQUE 2: USUARIOS Y GRUPOS - TROUBLESHOOTING ───
 
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Troubleshooting"
+  orden: 1
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: The user 'usuario_shell_invalido' reports they cannot log in via SSH or console.
+    Task: Diagnose and fix the login issue.
+    Technical Requirements:
+    - Check the user's shell in /etc/passwd.
+    - Identify that /bin/ksh is missing or not in /etc/shells.
+    - Change the shell to a valid one (/bin/bash) and verify login.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Troubleshooting"
+  orden: 2
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: 'usuario_operaciones' needs to execute a specific script but currently has their shell set to /sbin/nologin.
+    Task: Allow the user to log in and work.
+    Technical Requirements:
+    - Change the shell to /bin/bash.
+    - Verify that the account is not locked in /etc/shadow.
+    - Test switching to this user using 'su - usuario_operaciones'.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Troubleshooting"
+  orden: 3
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: 'usuario_sin_home' logs in but receives an error: "No directory, logging in with HOME=/".
+    Task: Restore the user's working environment.
+    Technical Requirements:
+    - Identify that /home/usuario_sin_home is missing.
+    - Recreate the directory and copy files from /etc/skel.
+    - Set the correct ownership (user:group) and permissions.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Troubleshooting"
+  orden: 4
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: 'usuario_bloqueado' is unable to log in even with the correct password.
+    Task: Identify why the account is inaccessible.
+    Technical Requirements:
+    - Check the password status with 'passwd -S'.
+    - Unlock the account and verify the '!' symbol is removed from /etc/shadow.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Troubleshooting"
+  orden: 5
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: Users report that 'sudo' is completely broken on the system. Any attempt to use it results in an error.
+    Task: Fix the sudoers configuration.
+    Technical Requirements:
+    - Identify that '/etc/sudoers.d/wrong_permissions' has 644 permissions (sudo ignores files that are not 440).
+    - Change the file permissions to 0440.
+    - Use 'visudo -c' to ensure no other errors exist.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Troubleshooting"
+  orden: 6
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: 'usuario_expirado' cannot log in because their account has reached its end-of-life date.
+    Task: Reactivate the account for an emergency task.
+    Technical Requirements:
+    - Use 'chage -l' to confirm the expiration date.
+    - Extend the account expiration date to a future date.
+    - Verify the user can log in again.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Troubleshooting"
+  orden: 7
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: A directory /datos/legacy shows '1050' as the group owner instead of a name.
+    Task: Resolve the "unnamed" group issue.
+    Technical Requirements:
+    - Understand that the GID exists in the file metadata but not in /etc/group.
+    - Create the missing group 'legacy_temp' with GID 1050 or reassign the files to an existing group.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Troubleshooting"
+  orden: 8
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: 'usuario_pass_expirado' is stuck in a loop during login, being asked for a password change that keeps failing.
+    Task: Reset the aging requirement.
+    Technical Requirements:
+    - Use 'chage -d' to set the last password change to today.
+    - Ensure the user is not forced to change it until the next cycle.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Troubleshooting"
+  orden: 9
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The system administrator accidentally messed up the sudoers syntax in '/etc/sudoers.d/broken_syntax'.
+    Task: Fix the syntax errors to restore sudo functionality for the database team.
+    Technical Requirements:
+    - Edit the file and fix the malformed lines (missing colons, extra keywords).
+    - Use 'visudo -f /etc/sudoers.d/broken_syntax' to edit safely.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Troubleshooting"
+  orden: 10
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: 'admin1' reports they can run commands on some servers but not others via sudo, based on the alias configuration.
+    Task: Debug the Host_Alias and Cmnd_Alias logic.
+    Technical Requirements:
+    - Review '/etc/sudoers.d/advanced_practice'.
+    - Identify if the 'Host_Alias' matches the current machine's hostname.
+    - Correct the configuration so the rules apply to the current localhost.
 
 
 
