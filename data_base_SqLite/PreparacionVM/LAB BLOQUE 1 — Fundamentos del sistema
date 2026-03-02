@@ -70,18 +70,36 @@ ok "Paquetes instalados"
 # =============================================================================
 banner "Usuarios y grupos"
 
+# --- Definición ---
 USERS=(juan maria carlos deploy auditor appd)
-GROUPS=(developers auditores contabilidad ti rrhh sistemas operaciones desarrolladores)
 
-for g in "${GROUPS[@]}"; do
-    getent group "$g" >/dev/null || groupadd "$g"
+# Grupos realmente usados en el laboratorio
+CRITICAL_GROUPS=(developers auditores contabilidad ti)
+
+# Grupos adicionales para escenarios posteriores
+EXTRA_GROUPS=(rrhh sistemas operaciones desarrolladores)
+
+# --- Crear grupos críticos (fallo si no se crean) ---
+for g in "${CRITICAL_GROUPS[@]}"; do
+    if ! getent group "$g" >/dev/null; then
+        groupadd "$g" || { echo "ERROR: no se pudo crear el grupo $g"; exit 1; }
+    fi
 done
 
+# --- Crear grupos extra (no críticos) ---
+for g in "${EXTRA_GROUPS[@]}"; do
+    getent group "$g" >/dev/null || groupadd "$g" || true
+done
+
+# --- Crear usuarios ---
 for u in "${USERS[@]}"; do
-    id "$u" &>/dev/null || useradd -m "$u"
+    if ! id "$u" &>/dev/null; then
+        useradd -m "$u"
+    fi
     echo "$u:Lab2024!" | chpasswd
 done
 
+# --- Asignar grupos secundarios (ya validados) ---
 usermod -aG developers juan deploy
 usermod -aG auditores auditor
 usermod -aG contabilidad maria
