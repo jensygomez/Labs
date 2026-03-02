@@ -41,7 +41,7 @@ center_text() {
 }
 
 hr() {
-    local char="${1:-─}" color="${2:-$C_CYAN}"
+    local char="${1:--}" color="${2:-$C_CYAN}"
     printf "${color}"
     printf '%*s' "$COLS" '' | tr ' ' "$char"
     printf "${RESET}\n"
@@ -62,9 +62,9 @@ barra_progreso() {
     fi
 
     printf "${color}["
-    printf '%*s' "$llenos" '' | tr ' ' '█'
+    printf '%*s' "$llenos" '' | tr ' ' '#'
     printf "${C_GRAY}"
-    printf '%*s' "$vacios" '' | tr ' ' '░'
+    printf '%*s' "$vacios" '' | tr ' ' '-'
     printf "${color}]${RESET}"
     printf " ${BOLD}%3d%%${RESET}" "$pct"
 }
@@ -120,11 +120,11 @@ printf '%*s' "$COLS" '' | tr ' ' ' '    # línea rellena
 printf "${RESET}\n"
 
 printf "${BOLD}${BG_HEADER}${C_WHITE}"
-center_text "  🐧  LABORATORIOS LINUX — Rocky Linux 9  " "$COLS"
+center_text "  [LINUX]  LABORATORIOS LINUX - Rocky Linux 9  " "$COLS"
 printf "${RESET}"
 
 printf "${BOLD}${BG_HEADER}${C_CYAN}"
-center_text "Ruta: Sysadmin → LFCS / RHCSA" "$COLS"
+center_text "Ruta: Sysadmin -> LFCS / RHCSA" "$COLS"
 printf "${RESET}"
 
 printf "${BOLD}${BG_HEADER}${C_WHITE}"
@@ -133,9 +133,9 @@ printf "${RESET}\n"
 
 # — Resumen global ————————————————————————————————————————————
 echo
-hr "═" "$C_CYAN"
-center_text "${BOLD}${C_WHITE}📊  PROGRESO GLOBAL${RESET}"
-hr "═" "$C_CYAN"
+hr "=" "$C_CYAN"
+center_text "${BOLD}${C_WHITE}>>> PROGRESO GLOBAL <<<"
+hr "=" "$C_CYAN"
 echo
 
 # Barra global sobre los 400 ejercicios meta
@@ -151,9 +151,9 @@ printf "  ${C_GRAY}%d / %d hechos${RESET}\n" "$TOTAL_COMPLETADOS" "$TOTAL_CARGAD
 echo
 
 # — Desglose por nivel ————————————————————————————————————————
-hr "─" "$C_CYAN"
+hr "-" "$C_CYAN"
 printf "  ${BOLD}${C_CYAN}NIVEL            HECHOS   BARRA${RESET}\n"
-hr "─" "$C_CYAN"
+hr "-" "$C_CYAN"
 
 for nivel in "Basico" "Intermedio" "Avanzado" "Troubleshooting"; do
     t=${N_TOTAL[$nivel]:-0}
@@ -161,10 +161,10 @@ for nivel in "Basico" "Intermedio" "Avanzado" "Troubleshooting"; do
     icon="○"
     col=$C_GRAY
     case $nivel in
-        Basico)         icon="🟢"; col=$C_GREEN ;;
-        Intermedio)     icon="🟡"; col=$C_YELLOW ;;
-        Avanzado)       icon="🔴"; col=$C_RED ;;
-        Troubleshooting)icon="⚡"; col=$C_MAGENTA ;;
+        Basico)         icon="[B]"; col=$C_GREEN ;;
+        Intermedio)     icon="[I]"; col=$C_YELLOW ;;
+        Avanzado)       icon="[A]"; col=$C_RED ;;
+        Troubleshooting)icon="[T]"; col=$C_MAGENTA ;;
     esac
     printf "  ${col}${BOLD}%-18s${RESET}" "$nivel"
     printf " ${C_WHITE}%3d/%-3d${RESET}  " "$h" "$t"
@@ -179,9 +179,9 @@ done
 echo
 
 # — Progreso por bloque ———————————————————————————————————————
-hr "─" "$C_CYAN"
+hr "-" "$C_CYAN"
 printf "  ${BOLD}${C_CYAN}#   BLOQUE                        PROGRESO${RESET}\n"
-hr "─" "$C_CYAN"
+hr "-" "$C_CYAN"
 
 for i in $(seq 1 10); do
     nombre="${NOMBRES_BLOQUE[$i]}"
@@ -193,7 +193,7 @@ for i in $(seq 1 10); do
         estado="${C_GRAY}  ··· sin cargar ···${RESET}"
         num_color=$C_GRAY
     elif [[ $hechos -eq $cargados && $cargados -eq 40 ]]; then
-        estado="$(barra_progreso $hechos $cargados 20) ${C_GREEN}${BOLD}✔ COMPLETO${RESET}"
+        estado="$(barra_progreso $hechos $cargados 20) ${C_GREEN}${BOLD}[COMPLETO]${RESET}"
         num_color=$C_GREEN
     else
         estado="$(barra_progreso $hechos $cargados 20) ${C_WHITE}${hechos}/${cargados}${RESET}"
@@ -209,7 +209,7 @@ hr "─" "$C_CYAN"
 
 # — Último ejercicio ——————————————————————————————————————————
 if [[ -n "$ULTIMO" ]]; then
-    printf "  ${C_GRAY}Último trabajado:${RESET} ${C_YELLOW}${BOLD}%s${RESET}" "$ULTIMO"
+    printf "  ${C_GRAY}Ultimo trabajado:${RESET} ${C_YELLOW}${BOLD}%s${RESET}" "$ULTIMO"
     [[ -n "$ULTIMA_FECHA" ]] && printf "  ${C_GRAY}(%s)${RESET}" "$ULTIMA_FECHA"
     echo
 fi
@@ -220,16 +220,16 @@ PCT_GLOBAL=0
 
 echo
 if   [[ $PCT_GLOBAL -ge 80 ]]; then
-    center_text "${BOLD}${C_GREEN}🔥  Casi en la cima. No pares ahora.${RESET}"
+    center_text "${BOLD}${C_GREEN}>>> Casi en la cima. No pares ahora. <<<${RESET}"
 elif [[ $PCT_GLOBAL -ge 50 ]]; then
-    center_text "${BOLD}${C_YELLOW}⚡  Más de la mitad. El camino está hecho.${RESET}"
+    center_text "${BOLD}${C_YELLOW}>>> Mas de la mitad. El camino esta hecho. <<<${RESET}"
 elif [[ $PCT_GLOBAL -ge 20 ]]; then
-    center_text "${BOLD}${C_CYAN}🚀  Buen ritmo. Cada lab cuenta.${RESET}"
+    center_text "${BOLD}${C_CYAN}>>> Buen ritmo. Cada lab cuenta. <<<${RESET}"
 else
-    center_text "${BOLD}${C_MAGENTA}🌱  El inicio es el paso más difícil. Ya lo diste.${RESET}"
+    center_text "${BOLD}${C_MAGENTA}>>> El inicio es el paso mas dificil. Ya lo diste. <<<${RESET}"
 fi
 echo
-hr "═" "$C_CYAN"
+hr "=" "$C_CYAN"
 echo
 
 printf "  ${C_GRAY}Presiona cualquier tecla para volver al menú...${RESET} "
