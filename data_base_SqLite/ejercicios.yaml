@@ -573,3 +573,155 @@
     - Check if the partition is mounted with the 'noexec' flag.
     - Check for ACL masks that might be filtering the execute bit.
     - Fix the issue and verify execution.
+
+
+# ======================================================================
+# BLOQUE 2 GRUPOS AND USERS
+# ======================================================================
+
+# ─── BLOQUE 2: USUARIOS Y GRUPOS - BÁSICO ───
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Basico"
+  orden: 1
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: A new employee named 'roberto' has joined the Sales department.
+    Task: Create a new user account for 'roberto'.
+    Technical Requirements:
+    - The user must have a standard home directory.
+    - The login shell must be /bin/bash.
+    - Set the initial password to 'Lab2024!'.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Basico"
+  orden: 2
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to verify the configuration of an existing user.
+    Task: Inspect the account of the user 'ana'.
+    Technical Requirements:
+    - Find ana's UID and GID.
+    - List all the groups 'ana' belongs to.
+    - Identify her primary group.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Basico"
+  orden: 3
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: The 'Marketing' team needs a new collaborative group.
+    Task: Create a group named 'marketing_internal'.
+    Technical Requirements:
+    - Create the group with a specific GID of 2000.
+    - Verify the group was created correctly by checking /etc/group.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Basico"
+  orden: 4
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: The user 'lucia' has been promoted and needs to join the 'marketing_internal' group.
+    Task: Add 'lucia' to the newly created group.
+    Technical Requirements:
+    - Add 'lucia' to 'marketing_internal' as a secondary group.
+    - IMPORTANT: Ensure she does not lose her existing group memberships (marketing).
+    - Verify with the 'id' command.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Basico"
+  orden: 5
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: A user named 'raul' reports he cannot remember his password.
+    Task: Reset the password for user 'raul'.
+    Technical Requirements:
+    - Set the password to 'NewPass2024!'.
+    - Ensure the account is not locked after the change.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Basico"
+  orden: 6
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: The user 'pedro' is moving from the Marketing department to Sales.
+    Task: Update 'pedro's' primary group.
+    Technical Requirements:
+    - Change 'pedro's' primary group to 'ventas'.
+    - Verify that his files in his home directory still belong to him (though the group ID in the metadata might change).
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Basico"
+  orden: 7
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: For security reasons, the user 'david' needs a more descriptive comment in his account profile.
+    Task: Modify the GECOS field (comment) for user 'david'.
+    Technical Requirements:
+    - Add the comment "Senior HR Manager" to david's account.
+    - Verify the change in the 5th field of /etc/passwd.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Basico"
+  orden: 8
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: An intern named 'pasante1' has finished their contract.
+    Task: Remove the user 'pasante1' from the system.
+    Technical Requirements:
+    - Delete the user account.
+    - Remove the home directory and mail spool associated with the user.
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Basico"
+  orden: 9
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to lock an account temporarily while an employee is on leave.
+    Task: Disable the account for user 'sofia' without deleting it.
+    Technical Requirements:
+    - Lock the account so no one can log in.
+    - Verify the status of the account in /etc/shadow (look for the '!' or 'L' prefix).
+
+- bloque: 2
+  tema: "Users and Groups"
+  nivel: "Basico"
+  orden: 10
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: The 'sofia' employee has returned from leave.
+    Task: Re-enable (unlock) the account for 'sofia'.
+    Technical Requirements:
+    - Unlock the account.
+    - Verify that she can theoretically log in again (the '!' should be gone).
+
+
+
+
+
+
+
+
+
+# ======================================================================
+# BLOQUE 3 STORAGE
+# ======================================================================
