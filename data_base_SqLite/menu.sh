@@ -182,6 +182,7 @@ echo -e "  ${YELLOW}🛠️  GESTIÓN DEL SISTEMA${NC}"
 echo -e "  $SEP"
 echo -e "  ${BOLD}A)${NC} Entrar directamente a estudiar"
 echo -e "  ${BOLD}B)${NC} Gestionar DB (Cargar YAML / Resetear progreso)"
+echo -e "  ${BOLD}C)${NC} 📊 Ver mi progreso"
 echo ""
 read -n 1 -s -p "  Selecciona una opción: " inicio_opc
 
