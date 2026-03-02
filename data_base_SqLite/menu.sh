@@ -18,6 +18,7 @@ SEP="━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # Cargar funciones de base de datos
 source ./db.sh
+source ./ejercicio.sh
 
 # Inicializar base de datos si no existe
 inicializar_db
@@ -122,11 +123,9 @@ menu_nivel() {
                     continue
                 fi
                 
-                echo ""
-                echo -e "  ${YELLOW}✅ Seleccionaste: $nivel_elegido — Bloque $bloque${NC}"
-                echo -e "  ${BLUE}   [Aquí se mostrará el ejercicio — próximo paso]${NC}"
-                echo ""
-                read -rp "  Presiona ENTER para volver..." _
+                # 🔥 CAMBIO IMPORTANTE: Llamar a ejercicio.sh en lugar del placeholder
+                ./ejercicio.sh "$bloque" "$nivel_elegido"
+                # Cuando termine ejercicio.sh, vuelve aquí y se refresca el menú
                 ;;
         esac
     done
