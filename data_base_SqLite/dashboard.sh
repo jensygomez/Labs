@@ -273,7 +273,7 @@ fi
 
 printf "%s" "  ${ICON_TRENDING} ${C_GRAY}Tendencia semanal:${RESET} "
 mini_sparkline
-printf "%s\n" "  ${C_GRAY}+12% vs semana anterior${RESET}\n"
+printf "%s\n" "  ${C_GRAY}+12% vs semana anterior${RESET}"
 
 # Mensaje motivacional
 PCT_GLOBAL=0
@@ -291,7 +291,7 @@ else
 fi
 
 # Fecha y hora actual
-printf "%s\n" "\n  ${C_GRAY}${DIM}Dashboard actualizado: $(date '+%d/%m/%Y %H:%M')${RESET}\n"
+printf "\n%s\n" "\n  ${C_GRAY}${DIM}Dashboard actualizado: $(date '+%d/%m/%Y %H:%M')${RESET}"
 echo
 hr "=" "$C_CYAN"
 echo
