@@ -38,26 +38,16 @@ EOF
     fi
 }
 
-# Obtener el primer ejercicio pendiente de un bloque y nivel
-# Uso: obtener_siguiente_ejercicio "bloque" "nivel"
 obtener_siguiente_ejercicio() {
     local bloque=$1
     local nivel=$2
     
-    # -list: modo lista
-    # -separator '|': usamos el pipe estándar
+    # El uso de -list y -separator '|' garantiza que 'read' en ejercicio.sh 
+    # reciba exactamente 10 campos, incluso si hay celdas vacías.
     sqlite3 -list -separator '|' "$DB" <<EOF
 SELECT 
-    id, 
-    bloque, 
-    tema, 
-    nivel, 
-    orden, 
-    enunciado, 
-    dificultad, 
-    completado, 
-    IFNULL(ultima_vez, ''), 
-    IFNULL(notas, '')
+    id, bloque, tema, nivel, orden, enunciado, 
+    dificultad, completado, IFNULL(ultima_vez, ''), IFNULL(notas, '')
 FROM ejercicios 
 WHERE bloque = $bloque 
   AND nivel = '$nivel' 
