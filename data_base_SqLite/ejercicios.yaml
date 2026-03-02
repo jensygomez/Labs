@@ -1851,7 +1851,156 @@
     - Terminate the process and clean up any leftover logs in /var/log/lab-services/.
 
 # ======================================================================
-# BLOQUE 5
+# BLOQUE 5 NETWORKING
 # ======================================================================
 
+
+# ─── BLOQUE 5: NETWORKING - BÁSICO ───
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Basico"
+  orden: 1
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to identify the network hardware and its current state.
+    Task: List all available network interfaces on the system.
+    Technical Requirements:
+    - Use the 'ip' command to show all interfaces.
+    - Identify which interfaces are 'UP' and which are 'DOWN'.
+    - Locate the virtual interfaces 'lab-net0' and 'lab-net1' created by the setup script.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Basico"
+  orden: 2
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to verify the IP address assigned to a specific link.
+    Task: Show the IP address details for the 'lab-net0' interface.
+    Technical Requirements:
+    - Use 'ip addr show'.
+    - Note the IP address and the subnet mask (prefix).
+    - Identify if the address is dynamic (DHCP) or static.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Basico"
+  orden: 3
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You prefer using a text-based user interface for network management.
+    Task: Inspect the connection 'lab-static' using the NetworkManager TUI.
+    Technical Requirements:
+    - Launch 'nmtui'.
+    - Navigate to "Edit a connection".
+    - Find 'lab-static' and view its IPv4 configuration (Gateway, DNS, and IP).
+    - Exit without making changes.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Basico"
+  orden: 4
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to check the status of all connections managed by NetworkManager.
+    Task: List all NetworkManager connections.
+    Technical Requirements:
+    - Use 'nmcli connection show'.
+    - Identify which connection is currently active (colored or marked) and which device it is bound to.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Basico"
+  orden: 5
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to test basic connectivity to an external host.
+    Task: Verify if the system can reach Google's public DNS.
+    Technical Requirements:
+    - Use the 'ping' command.
+    - Send exactly 4 packets to 8.8.8.8.
+    - Check the packet loss percentage and average response time.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Basico"
+  orden: 6
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to find the default gateway used by the system to reach the internet.
+    Task: Display the current routing table.
+    Technical Requirements:
+    - Use 'ip route show' or 'route -n'.
+    - Identify the line starting with 'default'.
+    - Note the IP address of the gateway and the interface it uses.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Basico"
+  orden: 7
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to know which services are listening for network connections.
+    Task: List all listening ports on the system.
+    Technical Requirements:
+    - Use the 'ss' command (recommended over netstat).
+    - Use flags to show (t)cp, (u)dp, (l)istening, and (n)umeric ports.
+    - Identify the port used by the SSH service.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Basico"
+  orden: 8
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: A security banner has been implemented for SSH.
+    Task: Verify the SSH banner without logging in.
+    Technical Requirements:
+    - Use 'ssh localhost' or 'ssh 127.0.0.1'.
+    - Read the banner message.
+    - Cancel the login prompt with Ctrl+C.
+
+- bloque: 5
+  tema: "Networking"
+  nivel: "Basico"
+  orden: 9
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to check the status of the local firewall.
+    Task: Verify if firewalld is running and list its default zone.
+    Technical Requirements:
+    - Use 'systemctl status firewalld' to check the service.
+    - Use 'firewall-cmd --get-default-zone' to identify the active zone.
+
+- bloque: 10
+  tema: "Networking"
+  nivel: "Basico"
+  orden: 10
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to verify which services are allowed through the firewall.
+    Task: List all allowed services in the 'public' zone.
+    Technical Requirements:
+    - Use 'firewall-cmd --list-services --zone=public'.
+    - Identify if 'ssh' or 'http' are currently allowed.
+
+
+    
+
+
+
+# ======================================================================
+# BLOQUE 5 NETWORKING
+# ======================================================================
 
