@@ -1,8 +1,8 @@
 #!/bin/bash
 # ============================================================
-#  menu.sh — Menú principal de laboratorios Linux Sysadmin
+#  menu.sh — Menú principal + submenú de niveles
 #  Ubicación: ~/Labs/data_base_SqLite/menu.sh
-#  PASO 1: Solo menú principal — sin DB ni submenús aún
+#  PASO 2: Submenú de niveles — sin DB aún, contadores en 0
 # ============================================================
 
 # ── Colores ─────────────────────────────────────────────────
@@ -18,7 +18,7 @@ SEP="━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # ── Bloques de estudio ───────────────────────────────────────
 BLOQUES=(
-    ""                             # índice 0 vacío — para que BLOQUES[1] = bloque 1
+    ""
     "Fundamentos del sistema"
     "Usuarios y grupos"
     "Almacenamiento"
@@ -31,6 +31,10 @@ BLOQUES=(
     "Troubleshooting puro"
 )
 
+# ── Niveles ──────────────────────────────────────────────────
+NIVELES=("Basico" "Intermedio" "Avanzado" "Troubleshooting")
+ICONOS=("🟢" "🟡" "🔴" "🔥")
+
 # ── Header ───────────────────────────────────────────────────
 mostrar_header() {
     clear
@@ -40,6 +44,55 @@ mostrar_header() {
     echo "║            Ruta: Sysadmin → LFCS / RHCSA                    ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
+}
+
+# ── Submenú de niveles ───────────────────────────────────────
+menu_nivel() {
+    local bloque=$1
+    local tema="${BLOQUES[$bloque]}"
+
+    while true; do
+        mostrar_header
+
+        echo -e "  ${BOLD}🔥 BLOQUE $bloque — $tema${NC}"
+        echo -e "  $SEP"
+        echo -e "  ${BOLD}  Elige el nivel de dificultad:${NC}"
+        echo ""
+
+        for i in 0 1 2 3; do
+            local nivel="${NIVELES[$i]}"
+            local icono="${ICONOS[$i]}"
+            # placeholder — aquí leeremos la DB en el próximo paso
+            local disponibles=0
+
+            printf "  ${BOLD}%d)${NC}  %s  %-16s  %s ejercicios disponibles\n" \
+                "$(( i + 1 ))" "$icono" "$nivel" "$disponibles"
+        done
+
+        echo ""
+        echo -e "  $SEP"
+        echo -e "  ${BOLD}0)${NC}  🔙 Volver al menú principal"
+        echo ""
+        read -rp "$(echo -e "  ${CYAN}Elige un nivel [0-4]: ${NC}")" opcion
+
+        if ! [[ "$opcion" =~ ^[0-4]$ ]]; then
+            echo -e "\n  ${RED}❌ Opción inválida — ingresa un número del 0 al 4${NC}"
+            sleep 1
+            continue
+        fi
+
+        case "$opcion" in
+            0) return ;;
+            1|2|3|4)
+                local idx=$(( opcion - 1 ))
+                echo ""
+                echo -e "  ${YELLOW}✅ Seleccionaste: ${NIVELES[$idx]} — Bloque $bloque${NC}"
+                echo -e "  ${BLUE}   [Aquí se mostrará el ejercicio — próximo paso]${NC}"
+                echo ""
+                read -rp "  Presiona ENTER para volver..." _
+                ;;
+        esac
+    done
 }
 
 # ── Menú principal ───────────────────────────────────────────
@@ -61,25 +114,21 @@ menu_principal() {
         echo ""
         read -rp "$(echo -e "  ${CYAN}Elige un bloque [0-10]: ${NC}")" opcion
 
-        # Validar que sea número entre 0 y 10
         if ! [[ "$opcion" =~ ^[0-9]+$ ]] || (( opcion < 0 || opcion > 10 )); then
             echo -e "\n  ${RED}❌ Opción inválida — ingresa un número del 0 al 10${NC}"
             sleep 1
             continue
         fi
 
-        if (( opcion == 0 )); then
-            echo -e "\n  ${GREEN}👋 Hasta la próxima. Sigue practicando.${NC}\n"
-            exit 0
-        fi
-
-        # ── Aquí irá el submenú (próximo paso) ──────────────
-        echo ""
-        echo -e "  ${YELLOW}✅ Seleccionaste: Bloque $opcion — ${BLOQUES[$opcion]}${NC}"
-        echo -e "  ${BLUE}   [Submenú de niveles — próximo paso]${NC}"
-        echo ""
-        read -rp "  Presiona ENTER para volver..." _
-
+        case "$opcion" in
+            0)
+                echo -e "\n  ${GREEN}👋 Hasta la próxima. Sigue practicando.${NC}\n"
+                exit 0
+                ;;
+            *)
+                menu_nivel "$opcion"
+                ;;
+        esac
     done
 }
 
