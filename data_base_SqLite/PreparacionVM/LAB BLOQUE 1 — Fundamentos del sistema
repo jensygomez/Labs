@@ -66,41 +66,46 @@ dnf install -y acl vim tar gzip bzip2 xz tree httpd \
 ok "Paquetes instalados"
 
 # =============================================================================
-# USUARIOS Y GRUPOS
+# USUARIOS Y GRUPOS (CREACIÓN EXPLÍCITA)
 # =============================================================================
 banner "Usuarios y grupos"
 
-# --- Definición ---
-USERS=(juan maria carlos deploy auditor appd)
+# --- GRUPOS (uno por uno, con validación) ---
+getent group developers    >/dev/null || groupadd developers
+getent group auditores     >/dev/null || groupadd auditores
+getent group contabilidad  >/dev/null || groupadd contabilidad
+getent group ti            >/dev/null || groupadd ti
+getent group rrhh          >/dev/null || groupadd rrhh
+getent group sistemas      >/dev/null || groupadd sistemas
+getent group operaciones   >/dev/null || groupadd operaciones
+getent group desarrolladores >/dev/null || groupadd desarrolladores
 
-# Grupos realmente usados en el laboratorio
-CRITICAL_GROUPS=(developers auditores contabilidad ti)
-
-# Grupos adicionales para escenarios posteriores
-EXTRA_GROUPS=(rrhh sistemas operaciones desarrolladores)
-
-# --- Crear grupos críticos (fallo si no se crean) ---
-for g in "${CRITICAL_GROUPS[@]}"; do
-    if ! getent group "$g" >/dev/null; then
-        groupadd "$g" || { echo "ERROR: no se pudo crear el grupo $g"; exit 1; }
-    fi
+# Verificación dura (si falla, aborta)
+for g in developers auditores contabilidad ti; do
+    getent group "$g" >/dev/null || {
+        echo "ERROR CRÍTICO: grupo $g no existe"
+        exit 1
+    }
 done
 
-# --- Crear grupos extra (no críticos) ---
-for g in "${EXTRA_GROUPS[@]}"; do
-    getent group "$g" >/dev/null || groupadd "$g" || true
-done
+# --- USUARIOS ---
+id juan    &>/dev/null || useradd -m juan
+id maria   &>/dev/null || useradd -m maria
+id carlos  &>/dev/null || useradd -m carlos
+id deploy  &>/dev/null || useradd -m deploy
+id auditor &>/dev/null || useradd -m auditor
+id appd    &>/dev/null || useradd -m appd
 
-# --- Crear usuarios ---
-for u in "${USERS[@]}"; do
-    if ! id "$u" &>/dev/null; then
-        useradd -m "$u"
-    fi
-    echo "$u:Lab2024!" | chpasswd
-done
+echo "juan:Lab2024!"    | chpasswd
+echo "maria:Lab2024!"   | chpasswd
+echo "carlos:Lab2024!"  | chpasswd
+echo "deploy:Lab2024!"  | chpasswd
+echo "auditor:Lab2024!" | chpasswd
+echo "appd:Lab2024!"    | chpasswd
 
-# --- Asignar grupos secundarios (ya validados) ---
-usermod -aG developers juan deploy
+# --- ASIGNACIÓN DE GRUPOS (YA EXISTEN) ---
+usermod -aG developers juan
+usermod -aG developers deploy
 usermod -aG auditores auditor
 usermod -aG contabilidad maria
 usermod -aG ti carlos
