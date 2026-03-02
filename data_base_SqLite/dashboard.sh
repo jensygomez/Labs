@@ -271,9 +271,9 @@ if [[ -n "$ULTIMO" ]]; then
     echo
 fi
 
-printf "  ${ICON_TRENDING} ${C_GRAY}Tendencia semanal:${RESET} "
+printf "%s" "  ${ICON_TRENDING} ${C_GRAY}Tendencia semanal:${RESET} "
 mini_sparkline
-printf "  ${C_GRAY}+12% vs semana anterior${RESET}\n"
+printf "%s\n" "  ${C_GRAY}+12% vs semana anterior${RESET}\n"
 
 # Mensaje motivacional
 PCT_GLOBAL=0
@@ -291,10 +291,10 @@ else
 fi
 
 # Fecha y hora actual
-printf "\n  ${C_GRAY}${DIM}Dashboard actualizado: $(date '+%d/%m/%Y %H:%M')${RESET}\n"
+printf "%s\n" "\n  ${C_GRAY}${DIM}Dashboard actualizado: $(date '+%d/%m/%Y %H:%M')${RESET}\n"
 echo
 hr "=" "$C_CYAN"
 echo
 
-printf "  ${C_GRAY}Presiona cualquier tecla para volver al menú...${RESET} "
+printf "%s" "  ${C_GRAY}Presiona cualquier tecla para volver al menú...${RESET} "
 read -r -n1
