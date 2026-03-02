@@ -403,6 +403,138 @@
     text-align: right;
   }
 
+  /* ── PREDICCIÓN ── */
+  .prediccion-panel {
+    margin-top: 20px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .prediccion-body {
+    padding: 24px 28px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .pred-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .pred-stat-label {
+    font-size: 10px;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .pred-stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+  }
+
+  .pred-stat-value.accent  { color: var(--accent); }
+  .pred-stat-value.green   { color: var(--green); }
+  .pred-stat-value.yellow  { color: var(--yellow); }
+  .pred-stat-value.magenta { color: var(--magenta); }
+
+  .pred-stat-sub {
+    font-size: 11px;
+    color: var(--dim);
+    margin-top: 2px;
+  }
+
+  .pred-timeline {
+    grid-column: span 4;
+    margin-top: 8px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .pred-timeline-label {
+    font-size: 10px;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 14px;
+  }
+
+  .timeline-track {
+    position: relative;
+    height: 6px;
+    background: var(--border);
+    border-radius: 6px;
+    margin-bottom: 12px;
+  }
+
+  .timeline-fill {
+    height: 100%;
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+    transition: width 1.2s cubic-bezier(.4,0,.2,1);
+  }
+
+  .timeline-markers {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--dim);
+  }
+
+  .timeline-markers .marker-today { color: var(--accent); font-weight: 700; }
+  .timeline-markers .marker-exam  { color: var(--green);  font-weight: 700; }
+
+  .pred-scenarios {
+    grid-column: span 4;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-top: 4px;
+  }
+
+  .scenario {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+
+  .scenario.best   { border-color: rgba(0,255,136,0.3); }
+  .scenario.normal { border-color: rgba(0,212,255,0.3); }
+  .scenario.slow   { border-color: rgba(255,214,0,0.3); }
+
+  .scenario-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+
+  .scenario.best   .scenario-title { color: var(--green); }
+  .scenario.normal .scenario-title { color: var(--accent); }
+  .scenario.slow   .scenario-title { color: var(--yellow); }
+
+  .scenario-date {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .scenario-detail {
+    font-size: 10px;
+    color: var(--dim);
+  }
+
   /* ── SIN DATOS ── */
   .sin-datos {
     text-align: center;
@@ -518,6 +650,15 @@
     </div>
 
   </div>
+
+  <!-- Predicción de examen -->
+  <div class="prediccion-panel">
+    <div class="panel-header">🎓 Predicción de fecha de examen LFCS / RHCSA</div>
+    <div class="prediccion-body" id="prediccion-body">
+      <div class="sin-datos" style="grid-column:span 4">Calculando predicción...</div>
+    </div>
+  </div>
+
 </div>
 
 <div class="footer" id="footer" style="display:none">
@@ -754,7 +895,111 @@ function renderDashboard(db, isDemo) {
     uEl.innerHTML = '<div class="sin-datos">Sin actividad aún — ¡a practicar!</div>';
   }
 
-  // Motivación
+  // ── PREDICCIÓN DE EXAMEN ────────────────────────────────────
+  const pEl = document.getElementById('prediccion-body');
+  const META_EXAMEN = 400;
+  const restantes = META_EXAMEN - totalCompletados;
+
+  // Calcular ritmo: ejercicios completados en los últimos 7 días activos
+  const totalActivos7 = actDays.reduce((sum, d) => sum + d.cnt, 0);
+  const diasActivos7  = actDays.filter(d => d.cnt > 0).length;
+  const ritmoSemanal  = totalActivos7; // ejerc/semana
+
+  // Ritmo diario promedio (solo días con actividad)
+  const ritmoActivoDia = diasActivos7 > 0 ? (totalActivos7 / diasActivos7) : 0;
+
+  function fechaDesdeHoy(dias) {
+    const d = new Date();
+    d.setDate(d.getDate() + Math.round(dias));
+    return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  function diasHastaFecha(dias) {
+    if (dias < 7)   return dias + ' días';
+    if (dias < 30)  return Math.round(dias / 7) + ' semanas';
+    if (dias < 365) return Math.round(dias / 30) + ' meses';
+    return Math.round(dias / 365 * 10) / 10 + ' años';
+  }
+
+  if (ritmoSemanal === 0) {
+    pEl.innerHTML = `
+      <div style="grid-column:span 4; text-align:center; padding:20px">
+        <div style="font-size:32px; margin-bottom:12px">⏸️</div>
+        <div style="color:var(--yellow); font-weight:700; margin-bottom:8px">Sin datos de ritmo suficientes</div>
+        <div style="color:var(--dim); font-size:12px">Completa ejercicios durante algunos días para calcular tu predicción automáticamente.</div>
+      </div>`;
+  } else {
+    // Escenarios
+    const ritmoNormal  = ritmoSemanal / 7;             // promedio diario real (incluye días sin actividad)
+    const ritmoOptimo  = ritmoActivoDia * 1.2;         // 20% más que días activos
+    const ritmoLento   = ritmoNormal * 0.5;            // mitad del ritmo actual
+
+    const diasNormal = restantes / ritmoNormal;
+    const diasOptimo = restantes / ritmoOptimo;
+    const diasLento  = restantes / ritmoLento;
+
+    // Porcentaje del camino recorrido (para timeline)
+    const pctCamino = Math.min(99, Math.round(totalCompletados / META_EXAMEN * 100));
+
+    pEl.innerHTML = `
+      <div class="pred-stat">
+        <div class="pred-stat-label">Ritmo actual</div>
+        <div class="pred-stat-value accent">${ritmoSemanal}</div>
+        <div class="pred-stat-sub">ejercicios / semana</div>
+      </div>
+      <div class="pred-stat">
+        <div class="pred-stat-label">Días activos (7d)</div>
+        <div class="pred-stat-value yellow">${diasActivos7} / 7</div>
+        <div class="pred-stat-sub">${Math.round(diasActivos7/7*100)}% constancia</div>
+      </div>
+      <div class="pred-stat">
+        <div class="pred-stat-label">Ejercicios restantes</div>
+        <div class="pred-stat-value magenta">${restantes}</div>
+        <div class="pred-stat-sub">para llegar a 400</div>
+      </div>
+      <div class="pred-stat">
+        <div class="pred-stat-label">ETA (ritmo actual)</div>
+        <div class="pred-stat-value green" style="font-size:18px">${fechaDesdeHoy(diasNormal)}</div>
+        <div class="pred-stat-sub">en ~${diasHastaFecha(diasNormal)}</div>
+      </div>
+
+      <div class="pred-timeline">
+        <div class="pred-timeline-label">Tu camino hacia el examen</div>
+        <div class="timeline-track">
+          <div class="timeline-fill" id="tl-fill" style="width:0%"></div>
+        </div>
+        <div class="timeline-markers">
+          <span>Inicio</span>
+          <span class="marker-today">▲ Hoy (${totalCompletados} ejrc.)</span>
+          <span class="marker-exam">🎓 Examen (400 ejrc.)</span>
+        </div>
+      </div>
+
+      <div class="pred-scenarios">
+        <div class="scenario best">
+          <div class="scenario-title">🚀 Ritmo óptimo (+20%)</div>
+          <div class="scenario-date">${fechaDesdeHoy(diasOptimo)}</div>
+          <div class="scenario-detail">${Math.round(ritmoOptimo * 7)} ejerc/semana · ${diasHastaFecha(diasOptimo)}</div>
+        </div>
+        <div class="scenario normal">
+          <div class="scenario-title">📈 Ritmo actual</div>
+          <div class="scenario-date">${fechaDesdeHoy(diasNormal)}</div>
+          <div class="scenario-detail">${ritmoSemanal} ejerc/semana · ${diasHastaFecha(diasNormal)}</div>
+        </div>
+        <div class="scenario slow">
+          <div class="scenario-title">🐢 Ritmo reducido (−50%)</div>
+          <div class="scenario-date">${fechaDesdeHoy(diasLento)}</div>
+          <div class="scenario-detail">${Math.round(ritmoLento * 7)} ejerc/semana · ${diasHastaFecha(diasLento)}</div>
+        </div>
+      </div>
+    `;
+
+    setTimeout(() => {
+      const tl = document.getElementById('tl-fill');
+      if (tl) tl.style.width = pctCamino + '%';
+    }, 300);
+  }
+
   const msgs = [
     [80, '🚀 ¡Casi en la cima! La certificación te espera.'],
     [50, '📈 ¡Más de la mitad! Ya eres un experto en construcción.'],
