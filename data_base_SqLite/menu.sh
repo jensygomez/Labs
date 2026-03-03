@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-#  menu.sh — Menú principal con Gestión de Base de Datos
+#  menu.sh — Versión Final Optimizada
 # ============================================================
 
 # ── Colores y Formato ────────────────────────────────────────
@@ -51,10 +51,9 @@ menu_nivel() {
             local nivel="${NIVELES[$i]}"
             local total=${totales["$nivel"]:-0}
             local comp=${completados["$nivel"]:-0}
-            local pendientes=$((total - comp))
 
             if [ $total -eq 0 ]; then
-                printf "  ${BOLD}%d)${NC}  %s  %-14s  ${GRAY} (Vacío)${NC}\n" "$((i+1))" "${ICONOS[$i]}" "$nivel"
+                printf "  ${BOLD}%d)${NC}  %s  %-14s  ${GRAY}(Vacío)${NC}\n" "$((i+1))" "${ICONOS[$i]}" "$nivel"
             else
                 printf "  ${BOLD}%d)${NC}  %s  %-14s  ${GREEN}%d${NC}/${BOLD}%d${NC} completados\n" "$((i+1))" "${ICONOS[$i]}" "$nivel" "$comp" "$total"
             fi
@@ -71,6 +70,7 @@ menu_nivel() {
                 local idx=$((opcion-1))
                 local nivel_elegido="${NIVELES[$idx]}"
                 [ ${totales["$nivel_elegido"]:-0} -eq 0 ] && continue
+                # Llamada al script de ejercicios
                 ./ejercicio.sh "$bloque" "$nivel_elegido"
                 ;;
         esac
@@ -96,31 +96,23 @@ menu_principal() {
     done
 }
 
-# ── Pantalla de Inicio / Gestión ──────────────────────────────
+# ── Pantalla de Inicio ────────────────────────────────────────
 mostrar_header
 echo -e "  ${BOLD}🛠️  CENTRO DE CONTROL${NC}"
 echo -e "  $SEP"
 echo -e "  ${BOLD}[A]${NC} ${GREEN}🚀 Entrar a Estudiar${NC}"
-echo -e "  ${BOLD}[B]${NC} ${YELLOW}🔄 Sincronizar YAML (Cargar/Reset)${NC}"
-echo -e "  ${BOLD}[E]${NC} ${RED}📝 Editar/Eliminar Ejercicio (Por ID)${NC}"
+echo -e "  ${BOLD}[B]${NC} ${YELLOW}🔄 Sincronizar YAML (Cargar nuevos)${NC}"
 echo ""
 echo -ne "  ${BOLD}Selecciona una opción:${NC} "
 read -n 1 -s inicio_opc
 
 case $inicio_opc in
     b|B)
-        echo -e "\n\n  ${CYAN}Sincronizando con base de datos...${NC}"
+        echo -e "\n\n  ${CYAN}Buscando nuevos ejercicios en ejercicios.yaml...${NC}"
         python3 cargar_ejercicios.py
-        echo -e "  ${GREEN}¡Listo! Presiona una tecla para continuar...${NC}"
-        read -n 1 -s ;;
-    e|E)
-        # Aquí llamamos al script de gestión que te propuse antes
-        if [ -f "./gestion_db.sh" ]; then
-            bash ./gestion_db.sh
-        else
-            echo -e "\n\n  ${RED}❌ Error: El archivo gestion_db.sh no existe.${NC}"
-            sleep 2
-        fi ;;
+        echo -e "  ${GREEN}¡Proceso finalizado! Presiona una tecla...${NC}"
+        read -n 1 -s 
+        ;;
 esac
 
 menu_principal
