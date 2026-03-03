@@ -3853,3 +3853,327 @@
     Expected Output:
     - All traffic from 172.20.0.99 dropped silently.
     - Kernel log shows BLOCKED_ATTACKER entries.
+
+# ─── BLOQUE 7: SEGURIDAD - AVANZADO ───
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 1
+  tema_especifico: "SELinux"
+  contenedor: "ninguno — trabajar directamente en el host"
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: After enabling SELinux enforcing mode, Apache is failing
+    silently. No error is shown in httpd logs but pages return 403.
+    Task: Use SELinux audit tools to diagnose and fix the AVC denial.
+    Technical Requirements:
+    - Inject the problem:
+        chcon -t default_t /srv/web_lab/index.html
+        curl http://localhost:8080  → returns 403
+    - Search for AVC denials:
+        ausearch -m avc -ts recent
+    - Use sealert to get a human-readable explanation:
+        sealert -a /var/log/audit/audit.log
+    - Identify the suggested fix from sealert output.
+    - Apply the fix using 'restorecon' or 'semanage fcontext'.
+    - Verify curl returns 200 after the fix.
+    - Explain the difference between 'chcon' (temporary)
+      and 'semanage + restorecon' (permanent).
+    Expected Output:
+    - ausearch shows avc denied for httpd reading default_t file.
+    - sealert suggests restorecon or semanage fcontext.
+    - curl returns 200 after fix.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 2
+  tema_especifico: "SELinux"
+  contenedor: "ninguno — trabajar directamente en el host"
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: Apache needs to serve content from a non-standard port
+    (9090) but SELinux is blocking it even though firewalld allows it.
+    Task: Add a custom port to SELinux http_port_t type.
+    Technical Requirements:
+    - Add Listen 9090 to /etc/httpd/conf.d/ports_lab.conf.
+    - Attempt to restart httpd — it will fail.
+    - Check the error:
+        journalctl -u httpd -n 20
+    - Identify SELinux is blocking port 9090 binding.
+    - List current allowed ports:
+        semanage port -l | grep http_port_t
+    - Add port 9090:
+        semanage port -a -t http_port_t -p tcp 9090
+    - Restart httpd and verify:
+        curl http://localhost:9090
+    - Make it permanent and verify with semanage port -l.
+    Expected Output:
+    - httpd fails to start before semanage fix.
+    - httpd starts and serves on 9090 after fix.
+    - semanage port -l shows 9090 in http_port_t.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 3
+  tema_especifico: "sudo / sudoers"
+  contenedor: "ninguno — trabajar directamente en el host"
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: The auditor user needs read-only access to system logs
+    and service status, but must never be able to modify anything.
+    Task: Configure a granular sudo policy for auditor using
+    command aliases.
+    Technical Requirements:
+    - Create /etc/sudoers.d/auditor using visudo:
+        Cmnd_Alias AUDIT_CMDS = \
+            /usr/bin/journalctl, \
+            /usr/bin/ausearch, \
+            /usr/bin/aureport, \
+            /usr/bin/systemctl status *
+        auditor ALL=(ALL) NOPASSWD: AUDIT_CMDS
+    - Test as auditor:
+        sudo journalctl -u httpd       → must succeed
+        sudo ausearch -k lab_secrets   → must succeed
+        sudo systemctl stop httpd      → must be rejected
+        sudo rm /etc/passwd            → must be rejected
+    - Verify with 'sudo -l -U auditor'.
+    Expected Output:
+    - auditor can read logs and check status.
+    - auditor cannot stop services or modify files.
+    - sudo -l -U auditor lists exactly AUDIT_CMDS.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 4
+  tema_especifico: "PAM"
+  contenedor: "ninguno — trabajar directamente en el host"
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: Security policy requires that user accounts are
+    automatically locked after 3 consecutive failed login attempts.
+    Task: Configure PAM account lockout using faillock.
+    Technical Requirements:
+    - Edit /etc/pam.d/system-auth and /etc/pam.d/password-auth.
+    - Add faillock configuration:
+        auth required pam_faillock.so preauth silent
+            deny=3 unlock_time=600 fail_interval=900
+        auth required pam_faillock.so authfail
+            deny=3 unlock_time=600 fail_interval=900
+        account required pam_faillock.so
+    - Alternatively configure via /etc/security/faillock.conf:
+        deny = 3
+        unlock_time = 600
+        fail_interval = 900
+    - Test: attempt 3 failed logins for opsuser then verify lockout:
+        faillock --user opsuser
+    - Unlock manually:
+        faillock --user opsuser --reset
+    Expected Output:
+    - faillock --user opsuser shows 3 failures and locked status.
+    - After reset, opsuser can log in again.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 5
+  tema_especifico: "SSH hardening"
+  contenedor: "lab-client1 (172.20.0.10) y lab-attacker (172.20.0.99)"
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Password-based SSH must be disabled entirely.
+    Only key-based authentication will be allowed going forward.
+    Task: Enforce SSH key-only authentication for all users.
+    Technical Requirements:
+    - On the host generate a key pair for devuser:
+        su - devuser
+        ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ""
+    - Copy the public key to lab-client1:
+        ssh-copy-id -i ~/.ssh/id_ed25519.pub \
+          labuser@172.20.0.10
+    - Disable password auth in sshd:
+        PasswordAuthentication no
+        AuthenticationMethods publickey
+    - Reload sshd: systemctl reload sshd
+    - From lab-attacker verify password login fails:
+        ssh devuser@lab-server
+      Must return "Permission denied (publickey)".
+    - From lab-client1 verify key login works:
+        ssh -i /path/to/key devuser@lab-server
+    Expected Output:
+    - Password auth rejected from lab-attacker.
+    - Key auth succeeds from lab-client1.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 6
+  tema_especifico: "Permisos especiales"
+  contenedor: "ninguno — trabajar directamente en el host"
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: /srv/labgroup_dir is shared by labgroup members but
+    files created there inherit the creator's group instead of
+    labgroup, causing permission issues.
+    Task: Fix group inheritance using SGID and verify the behavior.
+    Technical Requirements:
+    - Verify the problem:
+        su - devuser
+        touch /srv/labgroup_dir/test_devuser.txt
+        ls -l /srv/labgroup_dir/test_devuser.txt
+        # Group shows devuser's primary group, not labgroup
+    - Apply SGID:
+        chmod g+s /srv/labgroup_dir (or chmod 2775)
+    - Verify with 'ls -ld /srv/labgroup_dir' shows 's' in group bit.
+    - Test again as devuser: new files must now show labgroup.
+    - Remove the SUID from /usr/local/bin/cat_lab as it is unnecessary:
+        chmod u-s /usr/local/bin/cat_lab
+    - Verify with 'find /usr/local/bin -perm /4000' returns nothing.
+    Expected Output:
+    - New files in /srv/labgroup_dir inherit labgroup.
+    - cat_lab no longer appears in SUID search.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 7
+  tema_especifico: "auditd"
+  contenedor: "ninguno — trabajar directamente en el host"
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: Compliance requires auditing all sudo usage and
+    any modification to /etc/sudoers or /etc/sudoers.d/.
+    Task: Create comprehensive audit rules for privilege escalation.
+    Technical Requirements:
+    - Add to /etc/audit/rules.d/lab.rules:
+        # Monitor sudo usage
+        -a always,exit -F arch=b64 -S execve \
+          -F path=/usr/bin/sudo -k sudo_usage
+        # Monitor sudoers modifications
+        -w /etc/sudoers -p wa -k sudoers_changes
+        -w /etc/sudoers.d/ -p wa -k sudoers_changes
+        # Monitor user/group changes
+        -w /etc/passwd -p wa -k user_changes
+        -w /etc/group  -p wa -k user_changes
+    - Reload: augenrules --load
+    - Trigger each rule:
+        sudo ls /root
+        echo "test" >> /etc/sudoers.d/test && rm /etc/sudoers.d/test
+    - Verify with:
+        ausearch -k sudo_usage
+        ausearch -k sudoers_changes
+    Expected Output:
+    - ausearch returns events for each key.
+    - Events show correct UID, command, and timestamp.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 8
+  tema_especifico: "fail2ban"
+  contenedor: "lab-attacker (172.20.0.99)"
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: fail2ban must integrate with firewalld to ban IPs
+    using firewall rich rules instead of iptables directly.
+    Task: Configure fail2ban to use the firewalld backend.
+    Technical Requirements:
+    - Edit /etc/fail2ban/jail.d/lab-sshd.conf:
+        [sshd]
+        enabled  = true
+        banaction = firewallcmd-rich-rules
+        banaction_allports = firewallcmd-rich-rules
+        maxretry = 3
+        bantime  = 600
+        findtime = 60
+    - Restart fail2ban: systemctl restart fail2ban
+    - From lab-attacker trigger the ban:
+        for i in $(seq 1 4); do
+          ssh -o StrictHostKeyChecking=no \
+          fakeuser@lab-server 2>/dev/null || true
+        done
+    - Verify the ban appears as a firewalld rich rule:
+        firewall-cmd --zone=public --list-rich-rules
+    - Unban manually:
+        fail2ban-client set sshd unbanip 172.20.0.99
+    Expected Output:
+    - Rich rule visible in firewalld blocking 172.20.0.99.
+    - After unban the rule disappears from firewalld.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 9
+  tema_especifico: "firewalld avanzado"
+  contenedor: "lab-client1 (172.20.0.10)"
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The lab-dmz zone must be assigned to a network
+    interface and tested to confirm its DROP target works correctly.
+    Task: Assign lab-net0 to the lab-dmz zone and validate traffic.
+    Technical Requirements:
+    - Assign the interface to lab-dmz permanently:
+        firewall-cmd --permanent --zone=lab-dmz \
+          --add-interface=lab-net0
+    - Reload: firewall-cmd --reload
+    - Verify the assignment:
+        firewall-cmd --get-active-zones
+    - From lab-client1 test that only HTTP/HTTPS passes:
+        curl http://lab-server     → must succeed (http allowed)
+        ssh lab-server             → must be dropped (not allowed)
+    - Add SSH to lab-dmz only for the lab network source:
+        firewall-cmd --permanent --zone=lab-dmz \
+          --add-rich-rule='rule family="ipv4"
+          source address="172.20.0.0/24"
+          service name="ssh" accept'
+    - Reload and verify SSH now works from lab-client1.
+    Expected Output:
+    - lab-net0 assigned to lab-dmz zone.
+    - HTTP works, SSH initially blocked then allowed after rich rule.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 10
+  tema_especifico: "firewalld avanzado"
+  contenedor: "lab-client1 (172.20.0.10)"
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The server must act as a NAT gateway so that
+    lab-client1 and lab-client2 can reach external networks
+    through the host.
+    Task: Enable IP forwarding and masquerade in firewalld.
+    Technical Requirements:
+    - Enable IP forwarding persistently:
+        echo "net.ipv4.ip_forward = 1" \
+          > /etc/sysctl.d/99-lab-forward.conf
+        sysctl --system
+    - Enable masquerade in the public zone:
+        firewall-cmd --permanent --zone=public \
+          --add-masquerade
+        firewall-cmd --reload
+    - Verify masquerade is active:
+        firewall-cmd --zone=public --query-masquerade
+    - From lab-client1 verify external connectivity:
+        curl -s https://example.com | grep -i "example"
+    - Verify IP forwarding value:
+        sysctl net.ipv4.ip_forward
+    Expected Output:
+    - sysctl shows net.ipv4.ip_forward = 1.
+    - firewall-cmd --query-masquerade returns yes.
+    - curl from lab-client1 reaches external internet.
+
+
