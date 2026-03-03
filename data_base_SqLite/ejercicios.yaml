@@ -3538,3 +3538,516 @@
         1. Port 8080 not open in any zone.
         2. Masquerade disabled in public zone.
         3. lab-dmz zone not assigned to any interface yet.
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Intermedio"
+  orden: 1
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: Apache is failing to serve content from /srv/web_lab
+    because SELinux is blocking access due to wrong file context.
+    Task: Fix the SELinux context on /srv/web_lab so Apache
+    can serve content correctly.
+    Technical Requirements:
+    - Use 'semanage fcontext' to define a persistent rule:
+        semanage fcontext -a -t httpd_sys_content_t "/srv/web_lab(/.*)?"
+    - Apply the rule with 'restorecon -Rv /srv/web_lab'.
+    - Verify with 'ls -Z /srv/web_lab/index.html' that context
+      is now httpd_sys_content_t.
+    - Test with 'curl http://localhost:8080' returns
+      "SELinux Lab Content".
+    - Confirm the rule persists with:
+        semanage fcontext -l | grep web_lab
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Intermedio"
+  orden: 2
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: A web application needs to make outbound network
+    connections but SELinux is blocking them silently.
+    Task: Identify and enable the correct SELinux boolean
+    for Apache network connections.
+    Technical Requirements:
+    - Use 'getsebool -a | grep httpd' to list all httpd booleans.
+    - Identify that 'httpd_can_network_connect' is off.
+    - Enable it persistently:
+        setsebool -P httpd_can_network_connect on
+    - Verify with 'getsebool httpd_can_network_connect'.
+    - Explain the difference between 'setsebool' (runtime only)
+      and 'setsebool -P' (persistent across reboots).
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Intermedio"
+  orden: 3
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: devuser has unrestricted NOPASSWD sudo access which
+    violates the principle of least privilege.
+    Task: Replace devuser's rule with a restricted sudo policy
+    that allows only specific commands.
+    Technical Requirements:
+    - Remove the current rule: rm /etc/sudoers.d/devuser
+    - Create a new rule using 'visudo -f /etc/sudoers.d/devuser'
+      that allows devuser ONLY to:
+        /usr/bin/systemctl restart httpd
+        /usr/bin/journalctl -u httpd
+    - Test as devuser:
+        sudo systemctl restart httpd   → must succeed
+        sudo systemctl restart sshd    → must be rejected
+    - Verify syntax with 'visudo -c -f /etc/sudoers.d/devuser'.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Intermedio"
+  orden: 4
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The password policy must be strengthened to meet
+    the company security baseline requirements.
+    Task: Enforce a strong password policy using pwquality
+    and verify it rejects weak passwords.
+    Technical Requirements:
+    - Edit /etc/security/pwquality.conf:
+        minlen = 12
+        minclass = 3
+        maxrepeat = 2
+        dcredit = -1
+        ucredit = -1
+        lcredit = -1
+        ocredit = -1
+    - Edit /etc/login.defs:
+        PASS_MAX_DAYS 90
+        PASS_MIN_LEN  12
+    - Test by trying to set a weak password for opsuser:
+        echo "opsuser:abc" | chpasswd
+      This must fail with a quality error.
+    - Set a valid strong password:
+        echo "opsuser:Secure@Lab2024" | chpasswd
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Intermedio"
+  orden: 5
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The SSH server has multiple insecure settings that
+    must be fixed without breaking legitimate user access.
+    Task: Harden the SSH configuration and verify from
+    lab-attacker (172.20.0.99) that root login is rejected.
+    Technical Requirements:
+    - Edit /etc/ssh/sshd_config.d/98-lab-insecure.conf:
+        PermitRootLogin no
+        MaxAuthTries 3
+        PermitEmptyPasswords no
+        X11Forwarding no
+        LogLevel VERBOSE
+    - Reload sshd: systemctl reload sshd
+    - From lab-attacker verify root login is rejected:
+        podman exec -it lab-attacker bash
+        ssh root@lab-server  → must return "Permission denied"
+    - Verify devuser can still login successfully:
+        ssh devuser@lab-server
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Intermedio"
+  orden: 6
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: /srv/shared_lab is a shared directory where any user
+    can delete files owned by others because the sticky bit
+    is not set.
+    Task: Fix the shared directory with the sticky bit and verify
+    the protection works correctly.
+    Technical Requirements:
+    - Verify the problem: as devuser create a file, then as
+      opsuser try to delete it — it must succeed (the bug).
+    - Apply the sticky bit: chmod +t /srv/shared_lab
+    - Verify with 'ls -ld /srv/shared_lab' shows 't' at the end
+      of the permission string.
+    - Test again: opsuser must now get "Operation not permitted"
+      when trying to delete a file owned by devuser.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Intermedio"
+  orden: 7
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: Security policy requires that any access to
+    /etc/lab_secrets/credentials.conf must be logged by auditd.
+    Task: Create an audit watch rule for the credentials file
+    and verify it generates events.
+    Technical Requirements:
+    - Add a persistent rule to /etc/audit/rules.d/lab.rules:
+        -w /etc/lab_secrets/credentials.conf -p rwxa -k lab_secrets
+    - Reload rules: augenrules --load
+    - Trigger the rule: cat /etc/lab_secrets/credentials.conf
+    - Search the audit log:
+        ausearch -k lab_secrets
+    - Verify the event shows the correct file, user, and action.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Intermedio"
+  orden: 8
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The SSH service is receiving brute force attempts.
+    fail2ban must be activated to automatically ban attackers.
+    Task: Enable the fail2ban SSH jail and verify it bans
+    lab-attacker (172.20.0.99) after failed attempts.
+    Technical Requirements:
+    - Edit /etc/fail2ban/jail.d/lab-sshd.conf:
+        enabled  = true
+        maxretry = 3
+        bantime  = 300
+        findtime = 60
+    - Restart fail2ban: systemctl restart fail2ban
+    - From lab-attacker simulate 4 failed SSH logins:
+        podman exec -it lab-attacker bash
+        for i in $(seq 1 4); do
+          ssh -o StrictHostKeyChecking=no \
+          fakeuser@lab-server 2>/dev/null || true; done
+    - On the host verify the ban:
+        fail2ban-client status sshd
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Intermedio"
+  orden: 9
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: Port 8080 must be opened in the firewall so that
+    the SELinux lab virtual host is reachable from the network.
+    Task: Open port 8080 permanently in firewalld and verify
+    access from lab-client1 (172.20.0.10).
+    Technical Requirements:
+    - Add port 8080/tcp to the public zone permanently:
+        firewall-cmd --permanent --zone=public --add-port=8080/tcp
+    - Reload the firewall: firewall-cmd --reload
+    - From lab-client1 verify access:
+        podman exec -it lab-client1 bash
+        curl http://lab-server:8080
+      Must return "SELinux Lab Content".
+    - Verify the rule persists:
+        firewall-cmd --zone=public --list-ports
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Intermedio"
+  orden: 10
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: lab-attacker (172.20.0.99) is conducting reconnaissance
+    and must be blocked at the firewall level immediately.
+    Task: Create a Rich Rule to drop all traffic from lab-attacker
+    and verify the block from inside the container.
+    Technical Requirements:
+    - Add a permanent rich rule in the public zone:
+        firewall-cmd --permanent --zone=public \
+          --add-rich-rule='rule family="ipv4"
+          source address="172.20.0.99"
+          log prefix="BLOCKED_ATTACKER: " level="warning"
+          drop'
+    - Reload: firewall-cmd --reload
+    - From lab-attacker verify all traffic is dropped:
+        podman exec -it lab-attacker bash
+        curl http://lab-server    → must time out
+        ssh lab-server            → must time out
+    - On the host verify log entries:
+        journalctl -k | grep BLOCKED_ATTACKER
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 1
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: Apache is running and firewalld allows port 8080,
+    but requests to /srv/web_lab return 403 Forbidden silently.
+    The Apache error log shows "Permission denied" but Linux
+    file permissions look correct.
+    Task: Use SELinux audit tools to diagnose the AVC denial
+    and apply a permanent fix.
+    Technical Requirements:
+    - Inject the problem:
+        chcon -t default_t /srv/web_lab/index.html
+        curl http://localhost:8080  → returns 403
+    - Search for AVC denials:
+        ausearch -m avc -ts recent
+    - Use sealert to get a human-readable explanation:
+        sealert -a /var/log/audit/audit.log
+    - Identify the suggested fix from sealert output.
+    - Apply the permanent fix:
+        semanage fcontext -a -t httpd_sys_content_t "/srv/web_lab(/.*)?"
+        restorecon -Rv /srv/web_lab
+    - Verify curl returns 200 after the fix.
+    - Explain the difference between 'chcon' (temporary, lost
+      on relabel) and 'semanage + restorecon' (permanent).
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 2
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: Apache needs to listen on port 9090 for a new
+    application but fails to start. firewalld allows the port
+    but the service still cannot bind to it.
+    Task: Identify that SELinux is blocking the non-standard
+    port and add it to the allowed http_port_t type.
+    Technical Requirements:
+    - Add Listen 9090 to /etc/httpd/conf.d/ports_lab.conf.
+    - Attempt to restart httpd — it will fail.
+    - Check the error: journalctl -u httpd -n 20
+    - Identify SELinux is blocking port 9090 binding.
+    - List current allowed ports:
+        semanage port -l | grep http_port_t
+    - Add port 9090 permanently:
+        semanage port -a -t http_port_t -p tcp 9090
+    - Restart httpd and verify:
+        curl http://localhost:9090
+    - Confirm with: semanage port -l | grep 9090
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 3
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: The auditor user needs read-only access to system
+    logs and service status but must never be able to modify
+    anything or stop any service.
+    Task: Configure a granular sudo policy for auditor using
+    command aliases in sudoers.
+    Technical Requirements:
+    - Create /etc/sudoers.d/auditor using visudo:
+        Cmnd_Alias AUDIT_CMDS = \
+            /usr/bin/journalctl, \
+            /usr/bin/ausearch, \
+            /usr/bin/aureport, \
+            /usr/bin/systemctl status *
+        auditor ALL=(ALL) NOPASSWD: AUDIT_CMDS
+    - Test as auditor:
+        sudo journalctl -u httpd       → must succeed
+        sudo ausearch -k lab_secrets   → must succeed
+        sudo systemctl stop httpd      → must be rejected
+        sudo rm /etc/passwd            → must be rejected
+    - Verify with: sudo -l -U auditor
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 4
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: Security policy requires that user accounts are
+    automatically locked after 3 consecutive failed login
+    attempts to protect against brute force attacks.
+    Task: Configure PAM account lockout using faillock and
+    verify the lockout and unlock process.
+    Technical Requirements:
+    - Configure /etc/security/faillock.conf:
+        deny = 3
+        unlock_time = 600
+        fail_interval = 900
+    - Verify the configuration is active in
+      /etc/pam.d/system-auth and /etc/pam.d/password-auth
+      — both must reference pam_faillock.so.
+    - Test: attempt 3 failed logins for opsuser then verify:
+        faillock --user opsuser
+      Output must show 3 failures and locked status.
+    - Unlock manually and verify opsuser can log in again:
+        faillock --user opsuser --reset
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 5
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Password-based SSH must be disabled entirely.
+    Only key-based authentication will be allowed going forward.
+    Task: Enforce SSH key-only authentication and verify that
+    password login is rejected from lab-attacker (172.20.0.99)
+    while key login works from lab-client1 (172.20.0.10).
+    Technical Requirements:
+    - On the host generate a key pair for devuser:
+        su - devuser
+        ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ""
+    - Copy the public key to lab-client1:
+        ssh-copy-id -i ~/.ssh/id_ed25519.pub labuser@172.20.0.10
+    - Disable password auth in sshd config:
+        PasswordAuthentication no
+        AuthenticationMethods publickey
+    - Reload sshd: systemctl reload sshd
+    - From lab-attacker verify password login fails:
+        podman exec -it lab-attacker bash
+        ssh devuser@lab-server  → must return "Permission denied (publickey)"
+    - From lab-client1 verify key login works:
+        podman exec -it lab-client1 bash
+        ssh -i ~/.ssh/id_ed25519 devuser@lab-server
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 6
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: /srv/labgroup_dir is shared by labgroup members but
+    files created there inherit the creator's personal group
+    instead of labgroup, causing access issues for other members.
+    Task: Fix group inheritance using SGID and remove the
+    unnecessary SUID from /usr/local/bin/cat_lab.
+    Technical Requirements:
+    - Verify the problem: as devuser create a file in
+      /srv/labgroup_dir and confirm the group is not labgroup.
+    - Apply SGID: chmod g+s /srv/labgroup_dir
+    - Verify with 'ls -ld /srv/labgroup_dir' shows 's'
+      in the group execute position.
+    - Test again: new files created by devuser must now
+      show labgroup as the group owner.
+    - Remove unnecessary SUID from cat_lab:
+        chmod u-s /usr/local/bin/cat_lab
+    - Verify with: find /usr/local/bin -perm /4000
+      Must return no results.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 7
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: Compliance requires auditing all sudo usage and
+    any modification to sudoers files and user/group databases.
+    Task: Create comprehensive audit rules for privilege
+    escalation monitoring.
+    Technical Requirements:
+    - Add to /etc/audit/rules.d/lab.rules:
+        -a always,exit -F arch=b64 -S execve \
+          -F path=/usr/bin/sudo -k sudo_usage
+        -w /etc/sudoers -p wa -k sudoers_changes
+        -w /etc/sudoers.d/ -p wa -k sudoers_changes
+        -w /etc/passwd -p wa -k user_changes
+        -w /etc/group  -p wa -k user_changes
+    - Reload: augenrules --load
+    - Trigger each rule:
+        sudo ls /root
+        echo "test" >> /etc/sudoers.d/test && \
+          rm /etc/sudoers.d/test
+    - Verify events were captured:
+        ausearch -k sudo_usage
+        ausearch -k sudoers_changes
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 8
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: fail2ban must integrate with firewalld to ban IPs
+    using firewall rich rules instead of iptables directly,
+    which is the correct approach on Rocky Linux 9.
+    Task: Configure fail2ban to use the firewalld backend and
+    verify the ban appears as a rich rule in firewalld.
+    Technical Requirements:
+    - Edit /etc/fail2ban/jail.d/lab-sshd.conf:
+        [sshd]
+        enabled  = true
+        banaction = firewallcmd-rich-rules
+        banaction_allports = firewallcmd-rich-rules
+        maxretry = 3
+        bantime  = 600
+        findtime = 60
+    - Restart fail2ban: systemctl restart fail2ban
+    - From lab-attacker trigger the ban:
+        podman exec -it lab-attacker bash
+        for i in $(seq 1 4); do
+          ssh -o StrictHostKeyChecking=no \
+          fakeuser@lab-server 2>/dev/null || true; done
+    - Verify the ban appears as a firewalld rich rule:
+        firewall-cmd --zone=public --list-rich-rules
+    - Unban manually and confirm the rule disappears:
+        fail2ban-client set sshd unbanip 172.20.0.99
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 9
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The lab-dmz zone must be assigned to the lab-net0
+    interface and configured so only HTTP/HTTPS passes by default,
+    with SSH allowed only from the lab network via a rich rule.
+    Task: Assign lab-net0 to lab-dmz and validate zone behavior
+    from lab-client1 (172.20.0.10).
+    Technical Requirements:
+    - Assign the interface permanently:
+        firewall-cmd --permanent --zone=lab-dmz \
+          --add-interface=lab-net0
+    - Reload and verify: firewall-cmd --get-active-zones
+    - From lab-client1 confirm HTTP works but SSH is dropped:
+        podman exec -it lab-client1 bash
+        curl http://lab-server    → must succeed
+        ssh lab-server            → must be dropped
+    - Add SSH only for the lab network via rich rule:
+        firewall-cmd --permanent --zone=lab-dmz \
+          --add-rich-rule='rule family="ipv4"
+          source address="172.20.0.0/24"
+          service name="ssh" accept'
+    - Reload and verify SSH now works from lab-client1.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Avanzado"
+  orden: 10
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: lab-client1 and lab-client2 cannot reach external
+    networks because IP forwarding and masquerade are disabled
+    on the host server.
+    Task: Enable IP forwarding and masquerade so the host acts
+    as a NAT gateway for the lab network.
+    Technical Requirements:
+    - Enable IP forwarding persistently:
+        echo "net.ipv4.ip_forward = 1" \
+          > /etc/sysctl.d/99-lab-forward.conf
+        sysctl --system
+    - Enable masquerade in the public zone permanently:
+        firewall-cmd --permanent --zone=public \
+          --add-masquerade
+        firewall-cmd --reload
+    - Verify masquerade is active:
+        firewall-cmd --zone=public --query-masquerade
+    - Verify IP forwarding value:
+        sysctl net.ipv4.ip_forward  → must return 1
+    - From lab-client1 verify external connectivity:
+        podman exec -it lab-client1 bash
+        curl -s https://example.com | grep -i "example"
+
+
+
