@@ -3348,3 +3348,193 @@
 # ======================================================================
 # BLOQUE 7 SEGURIDAD
 # ======================================================================
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Basico"
+  orden: 1
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to understand the current SELinux enforcement
+    state before making any security changes.
+    Task: Check the current SELinux mode and policy.
+    Technical Requirements:
+    - Use 'getenforce' to see the current mode.
+    - Use 'sestatus' to see the full status including policy type.
+    - Identify if SELinux is Enforcing, Permissive, or Disabled.
+    - Locate the configuration file that sets the mode persistently
+      at /etc/selinux/config.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Basico"
+  orden: 2
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: Apache is serving content from /srv/web_lab but the page
+    returns an error. You suspect a SELinux context issue.
+    Task: Inspect the SELinux context of /srv/web_lab/index.html
+    and compare it with a known correct context.
+    Technical Requirements:
+    - Use 'ls -Z /srv/web_lab/index.html' to see the current context.
+    - Use 'ls -Z /var/www/html/index.html' to compare with a correct context.
+    - Identify that /srv/web_lab/index.html has 'default_t' instead
+      of 'httpd_sys_content_t'.
+    - Do NOT fix it yet, only document the difference.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Basico"
+  orden: 3
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to audit which users have sudo privileges
+    on the system before a security review.
+    Task: List all sudo rules currently configured.
+    Technical Requirements:
+    - Inspect /etc/sudoers with 'visudo -l' or 'cat /etc/sudoers'.
+    - List all files inside /etc/sudoers.d/ with 'ls -l /etc/sudoers.d/'.
+    - Identify the rule that gives devuser unrestricted NOPASSWD access.
+    - Identify that opsuser and auditor have no sudo rules anywhere.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Basico"
+  orden: 4
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: A security audit flagged that the password policy
+    is too weak. You need to review the current configuration.
+    Task: Inspect the current password quality policy and document
+    why it is insecure.
+    Technical Requirements:
+    - Read /etc/security/pwquality.conf and identify: minlen=4,
+      minclass=0, maxrepeat=10.
+    - Read /etc/login.defs and locate PASS_MAX_DAYS and PASS_MIN_LEN.
+    - Document why each value is insecure:
+        minlen=4 is too short (recommended minimum is 12).
+        PASS_MAX_DAYS=999 means passwords almost never expire.
+        minclass=0 means no character complexity is required.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Basico"
+  orden: 5
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: Before hardening SSH you need to document exactly
+    which insecure options are currently active.
+    Task: Audit the current SSH server configuration and verify
+    root login works from lab-attacker (172.20.0.99).
+    Technical Requirements:
+    - Read /etc/ssh/sshd_config.d/98-lab-insecure.conf.
+    - Identify all insecure directives: PermitRootLogin yes,
+      PermitEmptyPasswords yes, MaxAuthTries 10, LogLevel QUIET.
+    - From lab-attacker verify root login is accepted:
+        podman exec -it lab-attacker bash
+        ssh root@lab-server
+    - Document the security risk of each insecure directive.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Basico"
+  orden: 6
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to find all files with SUID or SGID bits set
+    on the system as part of a security baseline audit.
+    Task: Search the filesystem for SUID and SGID binaries and
+    identify which ones are unexpected.
+    Technical Requirements:
+    - Use 'find / -perm /4000 -type f 2>/dev/null' for SUID files.
+    - Use 'find / -perm /2000 -type f 2>/dev/null' for SGID files.
+    - Locate /usr/local/bin/cat_lab in the SUID results.
+    - Explain why an unnecessary SUID binary is a security risk
+      compared to standard expected binaries like passwd or sudo.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Basico"
+  orden: 7
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to verify the audit subsystem is active
+    and understand its current configuration before adding rules.
+    Task: Check auditd status and review existing rules.
+    Technical Requirements:
+    - Use 'systemctl status auditd' to confirm it is active.
+    - Use 'auditctl -l' to list currently loaded rules.
+    - Read /etc/audit/rules.d/lab.rules and confirm it has
+      only a comment line with no custom watch rules.
+    - Locate the audit log file at /var/log/audit/audit.log.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Basico"
+  orden: 8
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: fail2ban is installed but not protecting SSH.
+    You need to understand the current state before fixing it.
+    Task: Inspect the fail2ban configuration and verify that
+    brute force attempts from lab-attacker are not being blocked.
+    Technical Requirements:
+    - Use 'systemctl status fail2ban' to confirm it is running.
+    - Use 'fail2ban-client status' to list all jails.
+    - Read /etc/fail2ban/jail.d/lab-sshd.conf and identify
+      that the sshd jail has 'enabled = false'.
+    - From lab-attacker simulate 5 failed SSH logins:
+        podman exec -it lab-attacker bash
+        for i in $(seq 1 5); do
+          ssh wronguser@lab-server 2>/dev/null || true; done
+    - Verify the IP is NOT banned because the jail is disabled:
+        fail2ban-client status sshd
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Basico"
+  orden: 9
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to understand the full firewall layout
+    including all zones and their current rules before making
+    any security changes.
+    Task: Perform a complete audit of the firewalld configuration.
+    Technical Requirements:
+    - Use 'firewall-cmd --get-zones' to list all zones.
+    - Use 'firewall-cmd --list-all-zones' to see full details.
+    - Identify the custom zone 'lab-dmz' and its target DROP.
+    - Confirm that masquerade is disabled in the public zone
+      with 'firewall-cmd --zone=public --query-masquerade'.
+    - From lab-client1 verify port 8080 is unreachable:
+        podman exec -it lab-client1 bash
+        curl http://lab-server:8080
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Basico"
+  orden: 10
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to verify which zone each network interface
+    belongs to and identify what is missing to fully secure the lab.
+    Task: Map all interfaces to their firewalld zones and document
+    the three security gaps in the current configuration.
+    Technical Requirements:
+    - Use 'firewall-cmd --get-active-zones' to see interface assignments.
+    - Use 'nmcli con show' to list all connections.
+    - Use 'firewall-cmd --zone=public --list-all' to inspect the
+      full public zone configuration.
+    - Identify the 3 security gaps:
+        1. Port 8080 not open in any zone.
+        2. Masquerade disabled in public zone.
+        3. lab-dmz zone not assigned to any interface yet.
