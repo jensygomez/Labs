@@ -1282,9 +1282,444 @@
     - Use 'lsblk -f' or 'df -T'.
     - Confirm which one uses 'ext4' and which one uses 'xfs'.
 
+# ======================================================================
+# BLOQUE 3 STORAGE - INTERMEDIATE
+# ======================================================================
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Intermedio"
+  orden: 1
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The system will fail to mount /mnt/xfs_data after a reboot due to a filesystem type mismatch in the configuration.
+    Task: Identify and fix the mounting error in /etc/fstab.
+    Technical Requirements:
+    - Identify why /dev/vdb2 (XFS) is incorrectly labeled in /etc/fstab.
+    - Correct the entry to use the 'xfs' type instead of 'ext4'.
+    - Run 'mount -a' and ensure the device mounts without errors.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Intermedio"
+  orden: 2
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A Logical Volume was extended in the lab script, but the usable space is not reflected in the filesystem.
+    Task: Synchronize the 'lv_apps' filesystem size.
+    Technical Requirements:
+    - Detect the size mismatch between LVM (lvs) and the filesystem (df -h).
+    - Use 'resize2fs' to extend the 'ext4' filesystem online.
+    - Verify that 'df -h' now shows the full 3GiB capacity.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Intermedio"
+  orden: 3
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The disk /dev/vde is formatted but its mount is not persistent.
+    Task: Configure a persistent mount for the backup disk.
+    Technical Requirements:
+    - Retrieve the UUID of /dev/vde.
+    - Add an entry to /etc/fstab using the UUID.
+    - Mount it at /data_backup with default options.
+    - Verify persistence by running 'umount /data_backup' followed by 'mount -a'.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Intermedio"
+  orden: 4
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: The swap file '/swapfile_lab' was created with insecure permissions (644), which is a security risk.
+    Task: Secure and re-activate the swap file.
+    Technical Requirements:
+    - Deactivate the swap file using 'swapoff'.
+    - Change the file permissions to '0600'.
+    - Re-initialize the swap signature and activate it.
+    - Confirm the change in /etc/fstab is correct.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Intermedio"
+  orden: 5
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The log partition is nearly full and needs more capacity.
+    Task: Extend the 'lv_logs' Logical Volume and its XFS filesystem.
+    Technical Requirements:
+    - Increase the size of 'lv_logs' by 500MB using 'lvextend'.
+    - Resize the XFS filesystem using 'xfs_growfs'.
+    - Verify the new size using 'df -h /var/log/apps'.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Intermedio"
+  orden: 6
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Current best practices require using UUIDs instead of device paths for LVM in fstab.
+    Task: Migrate LVM entries in /etc/fstab to UUID format.
+    Technical Requirements:
+    - Use 'blkid' to find the UUIDs for 'lv_apps' and 'lv_logs'.
+    - Replace '/dev/vg_storage/lv_...' paths in /etc/fstab with their UUIDs.
+    - Validate that 'mount -av' successfully detects all mounts.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Intermedio"
+  orden: 7
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A standard partition (non-LVM) needs to be resized to accommodate more data.
+    Task: Resize /dev/vdb1 without losing existing data.
+    Technical Requirements:
+    - Unmount /mnt/ext4_data.
+    - Use 'fdisk' or 'parted' to grow the partition (ensure the start sector remains identical).
+    - Perform a filesystem check (e2fsck) and resize (resize2fs).
+    - Remount and verify the content is still accessible.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Intermedio"
+  orden: 8
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The 'vg_storage' Volume Group has run out of physical space.
+    Task: Expand the Volume Group using a new physical device.
+    Technical Requirements:
+    - Prepare /dev/vde by wiping existing signatures (wipefs).
+    - Create a Physical Volume (PV) on /dev/vde.
+    - Extend 'vg_storage' to include the new PV.
+    - Verify the 'Free PE' count has increased using 'vgdisplay'.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Intermedio"
+  orden: 9
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A new database service requires a volume with a specific size based on Physical Extents (PE).
+    Task: Create a new Logical Volume using extent-based sizing.
+    Technical Requirements:
+    - Create 'lv_db' in 'vg_storage' with exactly 128 extents.
+    - Format the new volume as 'xfs'.
+    - Create a mount point at /var/lib/mysql_data and mount it manually.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Intermedio"
+  orden: 10
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The system has a redundant mount point '/backup_ext4' that points to the same data as /mnt/ext4_data.
+    Task: Clean up the redundant configuration.
+    Technical Requirements:
+    - Unmount the /backup_ext4 directory.
+    - Remove the directory from the filesystem.
+    - Ensure there are no leftover entries in /etc/fstab that could cause errors during boot.
 
 
+# ======================================================================
+# BLOQUE 3: STORAGE & FILESYSTEMS - AVANZADO
+# ======================================================================
 
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Avanzado"
+  orden: 1
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The system fails to boot and drops to an emergency shell because /etc/fstab contains a reference to a non-existent UUID.
+    Task: Fix a critical boot failure caused by storage misconfiguration.
+    Technical Requirements:
+    - [cite_start]Identify the "poisoned" entry in /etc/fstab that prevents a clean boot[cite: 3, 10].
+    - Comment out or fix the invalid line without losing access to other valid mounts.
+    - Demonstrate the use of 'systemctl daemon-reload' to refresh the mount units.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Avanzado"
+  orden: 2
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You need to implement a modern storage solution using Stratis for a new data project.
+    Task: Create a Stratis pool and a filesystem.
+    Technical Requirements:
+    - Install the 'stratisd' and 'stratis-cli' packages if not present.
+    - [cite_start]Create a Stratis pool named 'pool_data' using the disk /dev/vde[cite: 5, 13].
+    - Create a filesystem named 'fs_strat' within that pool and mount it at /stratis_data.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Avanzado"
+  orden: 3
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: A physical disk in your Volume Group is showing signs of failure.
+    Task: Move data from a failing Physical Volume (PV) to a healthy one.
+    Technical Requirements:
+    - [cite_start]Add a new disk (e.g., /dev/vde) to 'vg_storage'[cite: 5, 13].
+    - [cite_start]Use 'pvmove' to migrate all extents from /dev/vdc to the new disk[cite: 5, 13].
+    - Remove the old /dev/vdc from the Volume Group safely.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Avanzado"
+  orden: 4
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Storage efficiency is a priority. You need to create a VDO (Virtual Data Optimizer) volume.
+    Task: Configure a VDO volume with deduplication and compression.
+    Technical Requirements:
+    - [cite_start]Create a VDO volume named 'vdo_disk' using /dev/vde[cite: 5, 13].
+    - Set the logical size to 50G (sparse provisioning).
+    - Format the VDO device as XFS and mount it with the 'x-systemd.requires=vdo.service' option in fstab.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Avanzado"
+  orden: 5
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You need to reduce the size of an existing Logical Volume to reclaim space for the Volume Group.
+    [cite_start]Task: Reduce 'lv_apps' from 3GiB to 1GiB safely[cite: 17].
+    Technical Requirements:
+    - **Danger**: This is an EXT4 filesystem; it MUST be unmounted first.
+    - Resize the filesystem first using 'resize2fs' after checking it with 'e2fsck'.
+    - Reduce the Logical Volume using 'lvreduce'.
+    - Remount and verify that no data was lost.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Avanzado"
+  orden: 6
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You need to create a point-in-time backup of the 'lv_apps' volume before a risky update.
+    Task: Create and manage an LVM Snapshot.
+    Technical Requirements:
+    - [cite_start]Create a snapshot named 'lv_apps_snap' with a size of 512MB[cite: 17].
+    - Mount the snapshot at /mnt/snapshot and verify its content.
+    - Simulate a change in the original volume and verify the snapshot remains unchanged.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Avanzado"
+  orden: 7
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: For security reasons, a specific data partition must be encrypted at rest.
+    Task: Configure an encrypted volume using LUKS.
+    Technical Requirements:
+    - [cite_start]Encrypt /dev/vde using 'cryptsetup luksFormat'[cite: 11].
+    - Open the encrypted device as 'crypt_data'.
+    - Create an XFS filesystem on the mapped device and mount it at /secure_data.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Avanzado"
+  orden: 8
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The encrypted volume created in the previous task must mount automatically at boot.
+    Task: Configure /etc/crypttab and /etc/fstab for the LUKS device.
+    Technical Requirements:
+    - Create a keyfile to avoid manual password entry at boot.
+    - [cite_start]Add the entry to /etc/crypttab linking the UUID to the keyfile[cite: 11].
+    - Update /etc/fstab to mount the mapped device.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Avanzado"
+  orden: 9
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: A Logical Volume has become corrupted or its configuration is lost.
+    Task: Restore LVM metadata from a backup.
+    Technical Requirements:
+    - Locate the automatic LVM backups in /etc/lvm/archive.
+    - Use 'vgcfgrestore' to restore the metadata of 'vg_storage'.
+    - Verify that all Logical Volumes are visible again using 'lvs'.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Avanzado"
+  orden: 10
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You need to optimize filesystem performance by tuning mount options.
+    Task: Implement specific mount attributes for a data volume.
+    Technical Requirements:
+    - [cite_start]Remount /mnt/xfs_data with 'noatime' and 'nodev' options[cite: 3].
+    - Verify the change using the 'mount' command or by inspecting /proc/mounts.
+    - [cite_start]Make these changes persistent in /etc/fstab[cite: 10].
+
+
+# ======================================================================
+# BLOQUE 3: STORAGE & FILESYSTEMS - TROUBLESHOOTING
+# ======================================================================
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Troubleshooting"
+  orden: 1
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: After running the lab script, the command 'mount -a' returns an error regarding /mnt/xfs_data.
+    Task: Diagnose why the XFS partition fails to mount automatically.
+    Technical Requirements:
+    - Check /etc/fstab and identify the 'ext4' typo for a disk that is actually 'xfs'[cite: 3].
+    - Use 'blkid' to verify the real filesystem type (TYPE) of /dev/vdb2.
+    - Correct /etc/fstab and verify with 'mount -a'.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Troubleshooting"
+  orden: 2
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The swap file '/swapfile_lab' is configured in /etc/fstab but is not active after a reboot[cite: 18].
+    Task: Identify why the swap file fails to activate and fix it.
+    Technical Requirements:
+    - Check 'swapon --show' and system logs (journalctl -xe).
+    - Identify that the file has 644 permissions instead of the required 600[cite: 18].
+    - Correct permissions, run 'mkswap' again if necessary, and activate it.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Troubleshooting"
+  orden: 3
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: The user reports that /srv/apps is only showing 2GB of space, but 'lvs' shows the volume 'lv_apps' is 3GB[cite: 3, 17].
+    Task: Resolve the inconsistency between the Logical Volume and the filesystem.
+    Technical Requirements:
+    - Compare 'lvs' output with 'df -h /srv/apps'[cite: 12].
+    - Identify that 'lvextend' was run without the '-r' (resize) flag[cite: 3].
+    - Apply 'resize2fs' to the live volume to recover the missing 1GB.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Troubleshooting"
+  orden: 4
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: There is a redundant mount point '/backup_ext4' that is causing double-counting in disk usage reports[cite: 3].
+    Task: Identify the source of the duplicate mount and remove it.
+    Technical Requirements:
+    - Use 'lsblk' or 'findmnt' to see that /dev/vdb1 is mounted in two places[cite: 3].
+    - Unmount the redundant path.
+    - Check /etc/fstab to ensure it won't reappear after a reboot.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Troubleshooting"
+  orden: 5
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The system administrator accidentally used device paths (/dev/vg_storage/...) in /etc/fstab instead of UUIDs[cite: 3].
+    Task: Fix the potential boot risk by converting LVM mounts to UUIDs.
+    Technical Requirements:
+    - Extract the UUIDs of all Logical Volumes in 'vg_storage'[cite: 17].
+    - Replace the device paths in /etc/fstab with the proper UUID= strings.
+    - Verify with 'mount -av'.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Troubleshooting"
+  orden: 6
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: A data partition /dev/vde was formatted but "disappeared" because it was never mounted[cite: 3].
+    Task: Recover access to this disk and ensure it survives a reboot.
+    Technical Requirements:
+    - Identify /dev/vde as an existing filesystem without a mount point[cite: 5].
+    - Create the directory /data_backup and mount it manually[cite: 3].
+    - Add the correct entry to /etc/fstab to automate the process.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Troubleshooting"
+  orden: 7
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: The system shows multiple swap areas, which is not the desired standard for this server[cite: 12].
+    Task: Consolidate swap to use only the dedicated partition /dev/vdd1.
+    Technical Requirements:
+    - List all active swap devices[cite: 12].
+    - Deactivate the swap file /swapfile_lab and remove its entry from /etc/fstab[cite: 18].
+    - Ensure /dev/vdd1 remains as the primary and only swap.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Troubleshooting"
+  orden: 8
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: An LVM volume group 'vg_storage' is metadata-heavy, and you suspect a configuration error during creation[cite: 3].
+    Task: Verify the integrity of the LVM physical and logical layers.
+    Technical Requirements:
+    - Run 'pvck' and 'vgck' to check for metadata consistency[cite: 13].
+    - Use 'lvs -o +devices' to ensure segments are properly mapped to /dev/vdc[cite: 5].
+    - Repair any warnings found in the LVM log.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Troubleshooting"
+  orden: 9
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The system is booting into 'emergency mode'. You suspect an error in /etc/fstab related to the lab disks[cite: 3].
+    Task: Perform a critical repair of the filesystem table.
+    Technical Requirements:
+    - Remount the root filesystem as read-write (mount -o remount,rw /).
+    - Use 'blkid' to match UUIDs against fstab entries[cite: 3].
+    - Comment out any entry that refers to a non-existent UUID or device.
+
+- bloque: 3
+  tema: "Storage & Filesystems"
+  nivel: "Troubleshooting"
+  orden: 10
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: The 'lv_logs' volume (XFS) was supposedly extended, but the space is not showing up[cite: 17].
+    Task: Diagnose if the issue is at the LVM level or the Filesystem level.
+    Technical Requirements:
+    - Check 'vgdisplay' to see if there is any free PE left[cite: 3].
+    - If 'lvs' shows the correct size but 'df' doesn't, apply 'xfs_growfs'[cite: 12].
+    - Document why 'resize2fs' is not the correct tool for this specific volume.
 
 # ======================================================================
 # BLOQUE 4 SYSTEMD AND PROCESS
