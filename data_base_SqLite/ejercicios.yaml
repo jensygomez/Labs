@@ -2996,10 +2996,353 @@
     - Identify which of the services (http, nfs, samba, dns, ftp) are NOT yet allowed.
 
 
+# ─── BLOQUE 6: SERVICIOS DE RED - INTERMEDIO ───
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Intermedio"
+  orden: 1
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The containers lab-client1 and lab-client2 need to mount
+    the NFS share, but the server only allows 127.0.0.1.
+    Task: Fix the NFS export so the lab network can mount it.
+    Technical Requirements:
+    - Edit /etc/exports to allow 172.20.0.0/24 instead of 127.0.0.1.
+    - Use 'exportfs -ra' to reload without restarting the service.
+    - From lab-client1, mount /mnt/nfs_share on /mnt/lab_nfs.
+    - Verify the file test.txt is visible inside the container.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Intermedio"
+  orden: 2
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The NFS mount disappears after every reboot of the container.
+    Task: Make the NFS mount persistent inside lab-client1.
+    Technical Requirements:
+    - Add the mount entry to /etc/fstab inside lab-client1.
+    - Use 'mount -a' to verify the fstab entry works.
+    - Entry format: lab-server:/mnt/nfs_share /mnt/lab_nfs nfs defaults 0 0
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Intermedio"
+  orden: 3
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: A developer needs to write files to the Samba share from lab-client2.
+    Task: Connect and write to the Samba share from lab-client2.
+    Technical Requirements:
+    - From lab-client2, use 'smbclient //lab-server/publico -N'.
+    - Upload a file using the 'put' command inside smbclient.
+    - Verify the file exists on the host at /srv/samba/public/.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Intermedio"
+  orden: 4
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The team wants to mount the Samba share permanently.
+    Task: Mount the Samba share via CIFS inside lab-client1.
+    Technical Requirements:
+    - Create mount point /mnt/lab_smb inside lab-client1.
+    - Mount //lab-server/publico using 'mount -t cifs' with guest option.
+    - Verify read/write access by creating a test file.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Intermedio"
+  orden: 5
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The BIND DNS server must respond to queries from the lab network,
+    not just from localhost.
+    Task: Configure BIND to accept queries from 172.20.0.0/24.
+    Technical Requirements:
+    - Edit /etc/named.conf on the host.
+    - Change 'listen-on' to include 172.20.0.1.
+    - Change 'allow-query' to include 172.20.0.0/24.
+    - Restart named and verify with 'dig @172.20.0.1 google.com' from lab-client1.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Intermedio"
+  orden: 6
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You need to serve a custom internal domain for the lab environment.
+    Task: Create a forward DNS zone for 'lab.local'.
+    Technical Requirements:
+    - Add a zone block for 'lab.local' in /etc/named.conf.
+    - Create the zone file at /var/named/lab.local.zone.
+    - Add an A record: server.lab.local → 172.20.0.1.
+    - Verify with 'dig @172.20.0.1 server.lab.local' from lab-client1.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Intermedio"
+  orden: 7
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: Apache must serve a second virtual host for an internal project.
+    Task: Create a Virtual Host for 'proyecto.lab.local'.
+    Technical Requirements:
+    - Create /var/www/proyecto/ with an index.html saying "Proyecto Lab".
+    - Add a VirtualHost block in /etc/httpd/conf.d/proyecto.conf.
+    - Add 'proyecto.lab.local' to /etc/hosts pointing to 127.0.0.1.
+    - Test with 'curl -H "Host: proyecto.lab.local" http://localhost'.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Intermedio"
+  orden: 8
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Security policy requires that Apache serves only HTTPS.
+    Task: Enable SSL/TLS on Apache using a self-signed certificate.
+    Technical Requirements:
+    - Install 'mod_ssl'.
+    - Generate a self-signed certificate with 'openssl req'.
+    - Configure /etc/httpd/conf.d/ssl.conf to use your certificate.
+    - Verify with 'curl -k https://localhost'.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Intermedio"
+  orden: 9
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: Chrony is configured with a fake NTP server and time is drifting.
+    Task: Fix the NTP configuration and force a time sync.
+    Technical Requirements:
+    - Remove the fake server '1.2.3.4' from /etc/chrony.conf.
+    - Add 'pool pool.ntp.org iburst' as the NTP source.
+    - Restart chronyd and verify sync with 'chronyc tracking'.
+    - Confirm a source with '*' appears in 'chronyc sources'.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Intermedio"
+  orden: 10
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: All the services configured so far need to be accessible
+    from the lab network through the firewall.
+    Task: Open all required service ports in firewalld.
+    Technical Requirements:
+    - Add services: http, https, nfs, samba, dns, ftp to the public zone.
+    - Make all rules permanent.
+    - Reload the firewall.
+    - From lab-client1, verify HTTP access with curl http://lab-server.
 
 
+# ─── BLOQUE 6: SERVICIOS DE RED - TROUBLESHOOTING ───
 
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Troubleshooting"
+  orden: 1
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A developer reports that curl http://localhost returns
+    "Connection refused" even though httpd is installed.
+    Task: Diagnose and fix Apache so it serves content locally.
+    Setup (inject bug):
+      systemctl stop httpd
+      systemctl disable httpd
+    Technical Requirements:
+    - Confirm httpd is not running with 'systemctl status httpd'.
+    - Identify the cause: service stopped and disabled.
+    - Enable and start the service.
+    - Verify with 'curl http://localhost' returns "Bienvenido al Lab".
+    - Check that the service survives with 'systemctl is-enabled httpd'.
 
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Troubleshooting"
+  orden: 2
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: 'showmount -e localhost' returns nothing. The NFS share
+    is not visible to any client.
+    Setup (inject bug):
+      systemctl stop nfs-server
+      echo "" > /etc/exports
+    Technical Requirements:
+    - Verify nfs-server is stopped.
+    - Identify that /etc/exports is empty.
+    - Restore the export: /mnt/nfs_share 172.20.0.0/24(rw,sync,no_root_squash)
+    - Start nfs-server and run 'exportfs -ra'.
+    - Confirm from lab-client1 with 'showmount -e lab-server'.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Troubleshooting"
+  orden: 3
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: lab-client1 can mount the NFS share but all files
+    appear owned by 'nobody' and writes fail with "Permission denied".
+    Setup (inject bug):
+      chmod 555 /mnt/nfs_share
+      chown root:root /mnt/nfs_share
+    Technical Requirements:
+    - From lab-client1, attempt to create a file on the NFS mount.
+    - On the host, inspect /mnt/nfs_share permissions.
+    - Identify the dual problem: wrong owner AND wrong permissions.
+    - Fix: chown nobody:nobody and chmod 755 /mnt/nfs_share.
+    - Verify write works from lab-client1 after fix.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Troubleshooting"
+  orden: 4
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: 'smbclient -L localhost -N' shows no shares. The [publico]
+    share has disappeared from the Samba configuration.
+    Setup (inject bug):
+      sed -i '/\[publico\]/,/directory mask/d' /etc/samba/smb.conf
+      systemctl restart smb
+    Technical Requirements:
+    - Confirm the share is missing with 'smbclient -L localhost -N'.
+    - Inspect /etc/samba/smb.conf and identify the missing block.
+    - Restore the [publico] share configuration.
+    - Restart smb and verify the share reappears.
+    - Validate config syntax with 'testparm' before restarting.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Troubleshooting"
+  orden: 5
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: 'dig @localhost google.com' times out. BIND is running
+    but not answering queries.
+    Setup (inject bug):
+      sed -i 's/recursion yes/recursion no/' /etc/named.conf
+      systemctl restart named
+    Technical Requirements:
+    - Confirm named is active with 'systemctl is-active named'.
+    - Run 'dig @localhost google.com' and observe the REFUSED status.
+    - Inspect /etc/named.conf and locate 'recursion no'.
+    - Change back to 'recursion yes'.
+    - Restart named and verify dig returns an ANSWER section.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Troubleshooting"
+  orden: 6
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: The web server returns HTTP 403 Forbidden on every request,
+    including the main page. The index.html file exists.
+    Setup (inject bug):
+      chmod 700 /var/www/html
+      chown root:root /var/www/html
+    Technical Requirements:
+    - Run 'curl -v http://localhost' and confirm 403 response.
+    - Check permissions on /var/www/html with 'ls -ld'.
+    - Identify that Apache cannot read the directory (700 = owner only).
+    - Fix: chmod 755 /var/www/html.
+    - Verify curl returns 200 and "Bienvenido al Lab".
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Troubleshooting"
+  orden: 7
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: chronyd is running but 'chronyc tracking' shows
+    "Cannot talk to daemon". The service is active but unresponsive.
+    Setup (inject bug):
+      sed -i 's/^bindcmdaddress.*/bindcmdaddress 1.2.3.4/' /etc/chrony.conf
+      systemctl restart chronyd
+    Technical Requirements:
+    - Run 'systemctl status chronyd' — confirm it shows active.
+    - Run 'chronyc tracking' and observe the connection error.
+    - Inspect /etc/chrony.conf and locate the wrong 'bindcmdaddress'.
+    - Fix: change back to 'bindcmdaddress 127.0.0.1' or remove the line.
+    - Restart and verify 'chronyc tracking' responds normally.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Troubleshooting"
+  orden: 8
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: FTP anonymous login fails with "530 Login incorrect"
+    even though vsftpd is running.
+    Setup (inject bug):
+      sed -i 's/anonymous_enable=YES/anonymous_enable=NO/' /etc/vsftpd/vsftpd.conf
+      systemctl restart vsftpd
+    Technical Requirements:
+    - Connect with 'ftp localhost' using anonymous login.
+    - Observe "530 Login incorrect" error.
+    - Inspect /etc/vsftpd/vsftpd.conf and find 'anonymous_enable=NO'.
+    - Fix: change to 'anonymous_enable=YES'.
+    - Restart vsftpd and confirm anonymous login succeeds.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Troubleshooting"
+  orden: 9
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: lab-client1 cannot reach http://lab-server even though
+    httpd is running and responding on localhost.
+    Setup (inject bug):
+      firewall-cmd --permanent --zone=public --remove-service=http
+      firewall-cmd --reload
+    Technical Requirements:
+    - From the host, confirm 'curl http://localhost' works.
+    - From lab-client1, confirm 'curl http://lab-server' fails.
+    - On the host, check firewall with 'firewall-cmd --list-services'.
+    - Identify that 'http' is missing from the public zone.
+    - Add the service permanently and reload.
+    - Verify from lab-client1 that the request now succeeds.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Troubleshooting"
+  orden: 10
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: named starts but immediately crashes. journalctl shows
+    a syntax error but the line number is not obvious.
+    Setup (inject bug):
+      sed -i '0,/};/s/};/}/' /etc/named.conf
+      systemctl restart named
+    Technical Requirements:
+    - Run 'systemctl status named' and see it failed.
+    - Use 'journalctl -u named -n 30' to find the error message.
+    - Use 'named-checkconf /etc/named.conf' to pinpoint the syntax error.
+    - Identify the missing closing brace '};'.
+    - Fix the file manually and verify with 'named-checkconf' before restart.
+    - Confirm named is active after the fix.
 
 
 # ======================================================================

@@ -1,0 +1,396 @@
+#!/bin/bash
+# =============================================================================
+# LAB BLOQUE 7 — SEGURIDAD
+# Rocky Linux 9 — sudo bash lab_bloque7_setup.sh
+# Preparación RHCSA + LFCS
+# Requiere: Bloque 6 ejecutado previamente (lab-network debe existir)
+# =============================================================================
+
+set -e
+
+GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; BLUE='\033[0;34m'; NC='\033[0m'
+
+echo ""
+echo "================================================================"
+echo "  LAB BLOQUE 7 — SEGURIDAD"
+echo "  Rocky Linux 9 — Preparacion RHCSA + LFCS"
+echo "================================================================"
+echo ""
+
+# =============================================================================
+# PASO 0: VERIFICACIONES
+# =============================================================================
+echo -e "${YELLOW}[0/10] Verificando prerequisitos...${NC}"
+
+[[ $EUID -ne 0 ]] && echo -e "${RED}ERROR: Ejecutar como root.${NC}" && exit 1
+
+# Verificar que lab-network existe (del Bloque 6)
+if ! podman network exists lab-network 2>/dev/null; then
+    echo -e "${YELLOW}Red lab-network no existe. Creando...${NC}"
+    podman network create \
+        --driver bridge \
+        --subnet 172.20.0.0/24 \
+        --gateway 172.20.0.1 \
+        lab-network
+fi
+
+systemctl is-active --quiet firewalld || systemctl start firewalld
+echo -e "${GREEN}[OK] Prerequisitos verificados${NC}"
+
+# =============================================================================
+# PASO 1: INSTALAR PAQUETES DE SEGURIDAD
+# =============================================================================
+echo ""
+echo -e "${YELLOW}[1/10] Instalando paquetes de seguridad...${NC}"
+
+dnf install -y \
+    policycoreutils \
+    policycoreutils-python-utils \
+    setools-console \
+    setroubleshoot-server \
+    audit \
+    audispd-plugins \
+    fail2ban \
+    fail2ban-firewalld \
+    openssh-server \
+    libpwquality \
+    > /dev/null 2>&1
+
+echo -e "${GREEN}[OK] Paquetes instalados${NC}"
+
+# =============================================================================
+# PASO 2: SELINUX — ESCENARIOS DE PRACTICA
+# =============================================================================
+echo ""
+echo -e "${YELLOW}[2/10] Configurando escenarios SELinux...${NC}"
+
+# Directorio con contexto incorrecto (bug para troubleshooting)
+mkdir -p /srv/web_lab
+echo "SELinux Lab Content" > /srv/web_lab/index.html
+
+# Contexto incorrecto: tiene default_t en vez de httpd_sys_content_t
+# El alumno debe usar restorecon o chcon para arreglarlo
+chcon -t default_t /srv/web_lab/index.html
+
+# Booleano httpd_can_network_connect desactivado (bug para ejercicios)
+setsebool -P httpd_can_network_connect off
+
+# Crear VirtualHost en Apache apuntando a /srv/web_lab
+# (generará AVC denials por contexto incorrecto)
+cat > /etc/httpd/conf.d/selinux_lab.conf << 'EOF'
+<VirtualHost *:8080>
+    DocumentRoot /srv/web_lab
+    <Directory /srv/web_lab>
+        Require all granted
+    </Directory>
+</VirtualHost>
+EOF
+
+# Abrir puerto 8080 en SELinux para httpd
+semanage port -a -t http_port_t -p tcp 8080 2>/dev/null || \
+semanage port -m -t http_port_t -p tcp 8080 2>/dev/null || true
+
+# Añadir puerto 8080 a Apache
+echo "Listen 8080" > /etc/httpd/conf.d/ports_lab.conf
+
+systemctl restart httpd 2>/dev/null || true
+
+echo -e "${GREEN}[OK] SELinux: contexto incorrecto en /srv/web_lab (bug intencional)${NC}"
+echo -e "${GREEN}[OK] SELinux: httpd_can_network_connect=off (bug intencional)${NC}"
+
+# =============================================================================
+# PASO 3: SUDO / SUDOERS — ESCENARIOS
+# =============================================================================
+echo ""
+echo -e "${YELLOW}[3/10] Configurando escenarios sudo/sudoers...${NC}"
+
+# Crear usuarios de practica
+useradd -m devuser  2>/dev/null || true
+useradd -m opsuser  2>/dev/null || true
+useradd -m auditor  2>/dev/null || true
+echo "devuser:dev1234"  | chpasswd
+echo "opsuser:ops1234"  | chpasswd
+echo "auditor:aud1234"  | chpasswd
+
+# Bug intencional: devuser tiene sudo completo sin password (inseguro)
+echo "devuser ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/devuser
+
+# opsuser sin ningun permiso sudo (ejercicio: darle solo systemctl)
+# auditor sin ningun permiso sudo (ejercicio: darle solo lectura de logs)
+
+echo -e "${GREEN}[OK] Usuarios devuser/opsuser/auditor creados${NC}"
+echo -e "${GREEN}[OK] devuser con NOPASSWD:ALL (bug de seguridad intencional)${NC}"
+
+# =============================================================================
+# PASO 4: PAM — POLITICAS DE PASSWORD
+# =============================================================================
+echo ""
+echo -e "${YELLOW}[4/10] Configurando PAM y politicas de password...${NC}"
+
+# Backup de configuracion original
+cp /etc/security/pwquality.conf /etc/security/pwquality.conf.lab_backup
+
+# Bug intencional: politica de passwords muy debil
+cat > /etc/security/pwquality.conf << 'EOF'
+# LAB BLOQUE 7 — Politica debil (bug intencional)
+# El alumno debe fortalecer esta configuracion
+minlen = 4
+minclass = 0
+maxrepeat = 10
+dcredit = 0
+ucredit = 0
+lcredit = 0
+ocredit = 0
+EOF
+
+# Bug en /etc/login.defs: PASS_MAX_DAYS demasiado alto
+cp /etc/login.defs /etc/login.defs.lab_backup
+sed -i 's/^PASS_MAX_DAYS.*/PASS_MAX_DAYS   999/' /etc/login.defs
+sed -i 's/^PASS_MIN_LEN.*/PASS_MIN_LEN    1/'   /etc/login.defs
+
+echo -e "${GREEN}[OK] PAM: politica de passwords debilitada (bug intencional)${NC}"
+
+# =============================================================================
+# PASO 5: SSH HARDENING — CONFIGURACION INSEGURA
+# =============================================================================
+echo ""
+echo -e "${YELLOW}[5/10] Configurando SSH con debilidades de seguridad...${NC}"
+
+cp /etc/ssh/sshd_config /etc/ssh/sshd_config.lab_backup
+
+cat > /etc/ssh/sshd_config.d/98-lab-insecure.conf << 'EOF'
+# LAB BLOQUE 7 — Configuracion insegura (bugs intencionales)
+PermitRootLogin yes
+PasswordAuthentication yes
+MaxAuthTries 10
+PermitEmptyPasswords yes
+X11Forwarding yes
+LogLevel QUIET
+EOF
+
+systemctl reload sshd 2>/dev/null || systemctl restart sshd
+
+echo -e "${GREEN}[OK] SSH: configuracion insegura aplicada (bugs intencionales)${NC}"
+
+# =============================================================================
+# PASO 6: PERMISOS ESPECIALES — SUID/SGID/STICKY
+# =============================================================================
+echo ""
+echo -e "${YELLOW}[6/10] Configurando escenarios SUID/SGID/Sticky Bit...${NC}"
+
+# Directorio compartido sin sticky bit (bug: cualquiera puede borrar archivos ajenos)
+mkdir -p /srv/shared_lab
+chmod 777 /srv/shared_lab
+# Sin sticky bit — bug intencional (deberia ser 1777)
+
+# Binario con SUID innecesario (bug de seguridad)
+cp /usr/bin/cat /usr/local/bin/cat_lab
+chmod u+s /usr/local/bin/cat_lab
+
+# Directorio de grupo sin SGID (bug: archivos no heredan grupo)
+groupadd labgroup 2>/dev/null || true
+usermod -aG labgroup devuser
+usermod -aG labgroup opsuser
+mkdir -p /srv/labgroup_dir
+chown root:labgroup /srv/labgroup_dir
+chmod 775 /srv/labgroup_dir
+# Sin SGID — bug intencional (deberia ser 2775)
+
+echo -e "${GREEN}[OK] SUID/SGID/Sticky: escenarios con bugs creados${NC}"
+
+# =============================================================================
+# PASO 7: AUDITD — CONFIGURACION Y REGLAS
+# =============================================================================
+echo ""
+echo -e "${YELLOW}[7/10] Configurando auditd...${NC}"
+
+systemctl enable auditd --now 2>/dev/null || true
+
+# Archivo sensible para auditar (ejercicios de audit watch)
+mkdir -p /etc/lab_secrets
+echo "password=SuperSecreto123" > /etc/lab_secrets/credentials.conf
+chmod 600 /etc/lab_secrets/credentials.conf
+
+# Bug intencional: sin reglas de audit configuradas
+# El alumno añadirá reglas con auditctl y /etc/audit/rules.d/
+# Verificar que no hay reglas personalizadas
+echo "## Lab Bloque 7 — sin reglas (el alumno las añadira)" \
+    > /etc/audit/rules.d/lab.rules
+
+echo -e "${GREEN}[OK] auditd activo, /etc/lab_secrets listo para auditar${NC}"
+
+# =============================================================================
+# PASO 8: FAIL2BAN — CONFIGURACION CON BUGS
+# =============================================================================
+echo ""
+echo -e "${YELLOW}[8/10] Configurando fail2ban...${NC}"
+
+systemctl enable fail2ban --now 2>/dev/null || true
+
+# Bug intencional: jail de SSH desactivado
+cat > /etc/fail2ban/jail.d/lab-sshd.conf << 'EOF'
+[sshd]
+enabled = false
+port    = ssh
+logpath = /var/log/secure
+maxretry = 3
+bantime  = 300
+findtime = 60
+EOF
+
+# Bug: bantime demasiado corto (10 segundos — inutil en produccion)
+cat > /etc/fail2ban/jail.d/lab-http.conf << 'EOF'
+[http-get-dos]
+enabled  = false
+port     = http,https
+logpath  = /var/log/httpd/access_log
+maxretry = 5
+bantime  = 10
+findtime = 30
+EOF
+
+systemctl restart fail2ban 2>/dev/null || true
+
+echo -e "${GREEN}[OK] fail2ban: jails desactivados (bugs intencionales)${NC}"
+
+# =============================================================================
+# PASO 9: FIREWALLD AVANZADO — ESCENARIOS
+# =============================================================================
+echo ""
+echo -e "${YELLOW}[9/10] Configurando escenarios firewalld avanzado...${NC}"
+
+# Zona custom para el lab de seguridad
+firewall-cmd --permanent --new-zone=lab-dmz 2>/dev/null || true
+firewall-cmd --permanent --zone=lab-dmz --set-target=DROP
+firewall-cmd --permanent --zone=lab-dmz --add-service=http
+firewall-cmd --permanent --zone=lab-dmz --add-service=https
+
+# Bug intencional: puerto 8080 no abierto (SELinux lab necesita esto)
+# El alumno debe abrirlo como parte del ejercicio
+
+# Rich rule que bloquea al atacante (para ejercicios de fail2ban + firewalld)
+# Dejamos la zona sin la regla — el alumno la creara
+
+# Masquerade desactivado (bug para ejercicio de IP forwarding)
+firewall-cmd --permanent --zone=public --remove-masquerade 2>/dev/null || true
+
+firewall-cmd --reload
+
+echo -e "${GREEN}[OK] firewalld: zona lab-dmz creada, masquerade desactivado${NC}"
+
+# =============================================================================
+# PASO 10: CONTENEDOR lab-attacker
+# =============================================================================
+echo ""
+echo -e "${YELLOW}[10/10] Creando contenedor lab-attacker...${NC}"
+
+podman rm -f lab-attacker 2>/dev/null || true
+
+# Imagen attacker: herramientas para simular ataques controlados
+TMPDIR=$(mktemp -d)
+cat > "$TMPDIR/Containerfile" << 'CONTAINEREOF'
+FROM rockylinux/rockylinux:9
+RUN dnf install -y \
+    openssh-clients \
+    hydra \
+    nmap \
+    curl wget \
+    iproute iputils \
+    bind-utils \
+    vim \
+    && dnf clean all 2>/dev/null || \
+    dnf install -y \
+    openssh-clients \
+    nmap \
+    curl wget \
+    iproute iputils \
+    bind-utils \
+    vim \
+    && dnf clean all
+RUN useradd attacker && echo "attacker:att1234" | chpasswd
+CMD ["/bin/bash", "-c", "sleep infinity"]
+CONTAINEREOF
+
+echo -e "  ${YELLOW}Construyendo imagen lab-attacker (1-2 min)...${NC}"
+podman build -t lab-attacker:latest "$TMPDIR" -q
+rm -rf "$TMPDIR"
+
+HOST_IP="172.20.0.1"
+
+podman run -d \
+    --name lab-attacker \
+    --network lab-network \
+    --ip 172.20.0.99 \
+    --hostname lab-attacker \
+    --add-host "lab-server:${HOST_IP}" \
+    --cap-add=NET_ADMIN \
+    lab-attacker:latest
+
+echo -e "  ${GREEN}[OK]${NC} lab-attacker → 172.20.0.99"
+
+# =============================================================================
+# RESUMEN FINAL
+# =============================================================================
+echo ""
+echo "================================================================"
+echo -e "${GREEN}  LAB BLOQUE 7 — SEGURIDAD COMPLETADO${NC}"
+echo "================================================================"
+echo ""
+echo "BUGS INTENCIONALES PARA PRACTICAR:"
+echo ""
+echo "  SELinux:"
+echo "    - /srv/web_lab/index.html tiene contexto default_t (deberia httpd_sys_content_t)"
+echo "    - httpd_can_network_connect=off"
+echo "    - Puerto 8080 no abierto en firewalld"
+echo ""
+echo "  sudo/sudoers:"
+echo "    - devuser tiene NOPASSWD:ALL (inseguro)"
+echo "    - opsuser y auditor sin ningun permiso sudo"
+echo ""
+echo "  PAM:"
+echo "    - minlen=4, minclass=0 (politica debil)"
+echo "    - PASS_MAX_DAYS=999 en /etc/login.defs"
+echo ""
+echo "  SSH:"
+echo "    - PermitRootLogin yes"
+echo "    - PermitEmptyPasswords yes"
+echo "    - MaxAuthTries 10"
+echo "    - LogLevel QUIET"
+echo ""
+echo "  Permisos especiales:"
+echo "    - /srv/shared_lab sin sticky bit (deberia 1777)"
+echo "    - /usr/local/bin/cat_lab con SUID innecesario"
+echo "    - /srv/labgroup_dir sin SGID (deberia 2775)"
+echo ""
+echo "  auditd:"
+echo "    - Sin reglas configuradas en /etc/audit/rules.d/lab.rules"
+echo ""
+echo "  fail2ban:"
+echo "    - jail sshd desactivado (enabled=false)"
+echo "    - bantime=10s (inutil)"
+echo ""
+echo "  firewalld:"
+echo "    - Masquerade desactivado"
+echo "    - Puerto 8080 sin abrir"
+echo ""
+echo "CONTENEDORES DISPONIBLES:"
+echo "  lab-client1   → 172.20.0.10  (cliente general)"
+echo "  lab-client2   → 172.20.0.20  (cliente secundario)"
+echo "  lab-attacker  → 172.20.0.99  (simulacion de ataques)"
+echo "  Host servidor → 172.20.0.1   (lab-server)"
+echo ""
+echo "ACCESO A CONTENEDORES:"
+echo "  podman exec -it lab-client1  bash"
+echo "  podman exec -it lab-client2  bash"
+echo "  podman exec -it lab-attacker bash"
+echo ""
+echo "BACKUPS DE SEGURIDAD:"
+echo "  /etc/ssh/sshd_config.lab_backup"
+echo "  /etc/security/pwquality.conf.lab_backup"
+echo "  /etc/login.defs.lab_backup"
+echo ""
+echo "Para restaurar SSH en cualquier momento:"
+echo "  sudo cp /etc/ssh/sshd_config.lab_backup /etc/ssh/sshd_config"
+echo "  sudo rm /etc/ssh/sshd_config.d/98-lab-insecure.conf"
+echo "  sudo systemctl reload sshd"
+echo "================================================================"
