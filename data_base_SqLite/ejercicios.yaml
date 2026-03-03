@@ -5233,4 +5233,351 @@
 
 
 
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Troubleshooting"
+  orden: 1
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A container built from Containerfile.bug crashes
+    immediately after starting. The team reports it worked
+    yesterday but nobody changed the application code.
+    Setup (inject bug):
+      podman build \
+        -t lab-bug-crash:latest \
+        -f /opt/lab_bloque8/dockerfiles/Containerfile.bug \
+        /opt/lab_bloque8/dockerfiles/
+      podman run -d --name lab-crash \
+        lab-bug-crash:latest
+    Task: Diagnose why the container is crashing and fix
+    the Containerfile.
+    Technical Requirements:
+    - Check the container status:
+        podman ps -a | grep lab-crash
+      Note the Exited status.
+    - Read the container logs:
+        podman logs lab-crash
+    - Inspect the Containerfile:
+        cat /opt/lab_bloque8/dockerfiles/Containerfile.bug
+    - Identify the CMD points to a non-existent binary
+      '/usr/sbin/nginx-lab' instead of '/usr/sbin/nginx'.
+    - Fix the CMD in the Containerfile.
+    - Rebuild and verify the container starts correctly:
+        podman build -t lab-bug-crash:fixed \
+          -f /opt/lab_bloque8/dockerfiles/Containerfile.bug \
+          /opt/lab_bloque8/dockerfiles/
+        podman run -d --name lab-crash-fixed \
+          lab-bug-crash:fixed
+        podman ps | grep lab-crash-fixed
+    - Clean up: podman rm -f lab-crash lab-crash-fixed
 
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Troubleshooting"
+  orden: 2
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A Docker container named lab-bug-duplicate already
+    exists on the system. A new deployment script fails with
+    "container name already in use" error.
+    Setup (inject bug):
+      Already created by the setup script:
+      docker ps -a | grep lab-bug-duplicate
+    Task: Diagnose the naming conflict and resolve it so
+    the new container can be deployed.
+    Technical Requirements:
+    - Try to run a new container with the same name:
+        docker run -d --name lab-bug-duplicate \
+          rockylinux/rockylinux:9 bash -c "sleep infinity"
+      Observe the "name already in use" error.
+    - Identify the existing container:
+        docker ps -a | grep lab-bug-duplicate
+    - Check if it is running or stopped.
+    - Decide the correct action:
+        If stopped and not needed: docker rm lab-bug-duplicate
+        If running and not needed: docker rm -f lab-bug-duplicate
+    - Deploy the new container successfully after removal.
+    - Verify: docker ps | grep lab-bug-duplicate
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Troubleshooting"
+  orden: 3
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: A container fails to write to its bind mount
+    directory. The application logs show "Permission denied"
+    on every write attempt.
+    Setup (inject bug):
+      Already created by the setup script:
+      chmod 000 /opt/lab_bloque8/volumes/broken
+    Task: Diagnose and fix the bind mount permission issue.
+    Technical Requirements:
+    - Try to run a container with the broken bind mount:
+        podman run --rm \
+          -v /opt/lab_bloque8/volumes/broken:/mnt/data:Z \
+          rockylinux/rockylinux:9 \
+          bash -c "echo test > /mnt/data/test.txt"
+      Observe the "Permission denied" error.
+    - On the host check the directory permissions:
+        ls -ld /opt/lab_bloque8/volumes/broken
+    - Identify permissions are 000 — nobody can access it.
+    - Fix the permissions: chmod 755 /opt/lab_bloque8/volumes/broken
+    - Verify the container can now write:
+        podman run --rm \
+          -v /opt/lab_bloque8/volumes/broken:/mnt/data:Z \
+          rockylinux/rockylinux:9 \
+          bash -c "echo fixed > /mnt/data/test.txt"
+    - Confirm the file exists on the host:
+        cat /opt/lab_bloque8/volumes/broken/test.txt
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Troubleshooting"
+  orden: 4
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A deployment script fails because it references
+    lab-web:latest but the image tag no longer exists on
+    the system after a cleanup operation.
+    Setup (inject bug):
+      Already created by the setup script:
+      docker images | grep lab-web
+      Only lab-web:broken exists — latest was removed.
+    Task: Recover the lab-web:latest tag from the existing
+    broken tag without rebuilding the image.
+    Technical Requirements:
+    - Try to run lab-web:latest:
+        docker run --rm lab-web:latest echo test
+      Observe "image not found" error.
+    - List available images: docker images | grep lab-web
+    - Identify lab-web:broken exists with the same image ID.
+    - Re-tag it as latest:
+        docker tag lab-web:broken lab-web:latest
+    - Verify both tags now point to the same image ID:
+        docker images | grep lab-web
+    - Verify lab-web:latest runs correctly:
+        docker run --rm lab-web:latest echo "tag recovered"
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Troubleshooting"
+  orden: 5
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: A Docker container keeps restarting every few
+    seconds. The monitoring system shows it has restarted
+    over 50 times in the last hour.
+    Setup (inject bug):
+      Already created by the setup script:
+      docker ps -a | grep lab-bug-restart
+    Task: Diagnose the restart loop and fix the container
+    configuration.
+    Technical Requirements:
+    - Observe the restart count:
+        docker ps -a | grep lab-bug-restart
+      Note the high restart count.
+    - Read the container logs:
+        docker logs lab-bug-restart
+    - Inspect the restart policy:
+        docker inspect lab-bug-restart \
+          --format '{{.HostConfig.RestartPolicy}}'
+    - Identify the container exits immediately (exit 1)
+      and restart policy is 'no' — so it is not restarting.
+      Re-examine: the container is stopped, not looping.
+    - The real bug is the command exits with error code 1:
+        docker inspect lab-bug-restart \
+          --format '{{.State.ExitCode}}'
+    - Fix by running a container with a valid command
+      and correct restart policy:
+        docker rm lab-bug-restart
+        docker run -d --name lab-bug-restart \
+          --restart unless-stopped \
+          rockylinux/rockylinux:9 \
+          bash -c "sleep infinity"
+    - Verify: docker ps | grep lab-bug-restart
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Troubleshooting"
+  orden: 6
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Docker Compose deployment fails immediately with
+    an image pull error even though the network is working.
+    Setup (inject bug):
+      Already created by the setup script:
+      cat /opt/lab_bloque8/compose/docker-compose-bug.yml
+    Task: Diagnose and fix the Docker Compose file so the
+    stack deploys successfully.
+    Technical Requirements:
+    - Try to deploy the buggy compose file:
+        cd /opt/lab_bloque8/compose/
+        docker compose -f docker-compose-bug.yml up -d
+      Observe the image pull error.
+    - Inspect the compose file:
+        cat docker-compose-bug.yml
+    - Identify the web service references a non-existent
+      image 'lab-imagen-inexistente:999'.
+    - Fix the image to use rockylinux/rockylinux:9.
+    - Also fix the web service to have a valid command:
+        command: bash -c "sleep infinity"
+    - Redeploy and verify both containers start:
+        docker compose -f docker-compose-bug.yml up -d
+        docker compose -f docker-compose-bug.yml ps
+    - Clean up:
+        docker compose -f docker-compose-bug.yml down
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Troubleshooting"
+  orden: 7
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The systemd service for a Podman container fails
+    to start. journalctl shows ExecStart error but the
+    container image exists on the system.
+    Setup (inject bug):
+      Already created by the setup script:
+      cat /etc/systemd/system/lab-container-bug.service
+    Task: Fix the systemd unit file so the Podman container
+    service starts correctly.
+    Technical Requirements:
+    - Try to start the service:
+        systemctl start lab-container-bug
+      Observe it fails immediately.
+    - Check the error:
+        journalctl -u lab-container-bug -n 20
+    - Inspect the unit file:
+        cat /etc/systemd/system/lab-container-bug.service
+    - Identify ExecStart references '/usr/bin/comando-inexistente'
+      which does not exist inside the container.
+    - Fix the ExecStart command to use a valid command:
+        ExecStart=/usr/bin/podman run --name lab-bug-container \
+          rockylinux/rockylinux:9 \
+          bash -c "sleep infinity"
+    - Also add ExecStartPre to remove any existing container:
+        ExecStartPre=-/usr/bin/podman rm -f lab-bug-container
+    - Reload and start:
+        systemctl daemon-reload
+        systemctl start lab-container-bug
+    - Verify: systemctl is-active lab-container-bug
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Troubleshooting"
+  orden: 8
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: A container that was connected to a custom network
+    is now unreachable. Other containers on the same network
+    cannot ping it and it cannot reach the internet.
+    Setup (inject bug):
+      Already created by the setup script:
+      docker ps -a | grep lab-bug-orphan
+      The container exists but is disconnected from all networks.
+    Task: Diagnose the network isolation and reconnect the
+    container to the correct network.
+    Technical Requirements:
+    - Verify the container is running:
+        docker ps | grep lab-bug-orphan
+    - Inspect its network configuration:
+        docker inspect lab-bug-orphan \
+          --format '{{.NetworkSettings.Networks}}'
+      Observe it has no networks assigned.
+    - List available networks:
+        docker network ls
+    - Reconnect the container to lab-bridge:
+        docker network connect lab-bridge lab-bug-orphan
+    - Verify the container now has an IP:
+        docker inspect lab-bug-orphan \
+          --format '{{.NetworkSettings.Networks.lab-bridge.IPAddress}}'
+    - Test connectivity from another container:
+        docker run --rm --network lab-bridge \
+          rockylinux/rockylinux:9 \
+          ping -c 3 lab-bug-orphan
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Troubleshooting"
+  orden: 9
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A rootless Podman container fails to start for
+    a regular user with "cannot create user namespace" error.
+    The system administrator recently edited /etc/subuid.
+    Setup (inject bug):
+      usermod --del-subuids 100000-165535 <your_lab_user> \
+        2>/dev/null || \
+      sed -i '/<your_lab_user>/d' /etc/subuid
+      sed -i '/<your_lab_user>/d' /etc/subgid
+    Task: Diagnose and fix the rootless Podman namespace
+    configuration for the lab user.
+    Technical Requirements:
+    - Switch to lab user and try to run a container:
+        su - <your_lab_user>
+        podman run --rm rockylinux/rockylinux:9 echo test
+      Observe the namespace error.
+    - As root check /etc/subuid and /etc/subgid:
+        grep <your_lab_user> /etc/subuid
+        grep <your_lab_user> /etc/subgid
+      Confirm the entries are missing.
+    - Fix by restoring the subuid and subgid entries:
+        echo "<your_lab_user>:100000:65536" >> /etc/subuid
+        echo "<your_lab_user>:100000:65536" >> /etc/subgid
+    - Switch back to lab user and verify rootless works:
+        su - <your_lab_user>
+        podman run --rm rockylinux/rockylinux:9 echo "fixed"
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Troubleshooting"
+  orden: 10
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: After a system update, a critical containerized
+    service managed by systemd is not starting at boot.
+    podman ps shows no containers running but the service
+    shows as enabled in systemctl.
+    Setup (inject bug):
+      systemctl enable container-lab-systemd-app 2>/dev/null || true
+      sed -i 's|ExecStart=.*|ExecStart=/usr/bin/podman run \
+        --name lab-systemd-app-WRONG \
+        rockylinux/rockylinux:999-nonexistent \
+        bash -c "sleep infinity"|' \
+        /etc/systemd/system/container-lab-systemd-app.service
+      systemctl daemon-reload
+    Task: Diagnose why the systemd container service fails
+    to start and restore it to working condition.
+    Technical Requirements:
+    - Check the service status:
+        systemctl status container-lab-systemd-app
+      Observe it is enabled but failed.
+    - Read the detailed error:
+        journalctl -u container-lab-systemd-app -n 30
+    - Inspect the unit file:
+        cat /etc/systemd/system/container-lab-systemd-app.service
+    - Identify two bugs:
+        1. Image tag ':999-nonexistent' does not exist.
+        2. Container name has '-WRONG' suffix causing
+           potential naming conflicts.
+    - Fix the unit file with the correct image and name:
+        image: rockylinux/rockylinux:9
+        name: lab-systemd-app
+    - Add ExecStartPre to clean up stale containers:
+        ExecStartPre=-/usr/bin/podman rm -f lab-systemd-app
+    - Reload, restart and verify:
+        systemctl daemon-reload
+        systemctl restart container-lab-systemd-app
+        systemctl is-active container-lab-systemd-app
+        podman ps | grep lab-systemd-app
