@@ -4049,5 +4049,297 @@
         podman exec -it lab-client1 bash
         curl -s https://example.com | grep -i "example"
 
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Troubleshooting"
+  orden: 1
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Apache is running and firewalld allows port 80,
+    but every request returns 403 Forbidden. The Apache error
+    log shows "Permission denied" but file permissions look
+    correct when checked with ls -l.
+    Setup (inject bug):
+      chcon -t var_t /var/www/html/index.html
+      systemctl restart httpd
+    Task: Diagnose and fix the SELinux denial blocking Apache
+    following the correct diagnostic order.
+    Technical Requirements:
+    - Confirm httpd is active: systemctl is-active httpd
+    - Confirm firewall allows http: firewall-cmd --list-services
+    - Confirm file permissions look correct: ls -l /var/www/html/
+    - Run 'curl http://localhost' and observe 403.
+    - Use 'ausearch -m avc -ts recent' to find the AVC denial.
+    - Identify the wrong context type 'var_t' on index.html.
+    - Fix with: restorecon -v /var/www/html/index.html
+    - Verify curl returns 200 and "Bienvenido al Lab".
 
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Troubleshooting"
+  orden: 2
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: A junior admin set SELinux to Permissive mode to
+    fix an application issue and forgot to revert it. The
+    security team detected it during a routine audit.
+    Setup (inject bug):
+      setenforce 0
+      sed -i 's/SELINUX=enforcing/SELINUX=permissive/' \
+        /etc/selinux/config
+    Task: Restore SELinux to Enforcing mode safely without
+    breaking any running services.
+    Technical Requirements:
+    - Confirm current mode with 'getenforce' — shows Permissive.
+    - Check /etc/selinux/config — shows permissive.
+    - Before switching back check for existing AVC denials
+      that would block services in enforcing mode:
+        ausearch -m avc -ts today
+    - Fix /etc/selinux/config: SELINUX=enforcing
+    - Switch runtime mode: setenforce 1
+    - Verify 'getenforce' returns Enforcing.
+    - Confirm httpd and sshd still respond after the switch:
+        curl http://localhost
+        systemctl is-active sshd
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Troubleshooting"
+  orden: 3
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: opsuser reports that 'sudo systemctl status httpd'
+    fails with "sudo: command not found" despite having a
+    sudoers rule. The rule was recently edited manually without
+    using visudo.
+    Setup (inject bug):
+      echo "opsuser ALL=(ALL) /usr/bin/systemctl status httpd" \
+        > /etc/sudoers.d/opsuser
+      chmod 777 /etc/sudoers.d/opsuser
+    Task: Find and fix the broken sudoers configuration.
+    Technical Requirements:
+    - Try the command: su - opsuser -c "sudo systemctl status httpd"
+      and observe the error.
+    - Run 'visudo -c' to check overall sudoers syntax.
+    - Run 'visudo -c -f /etc/sudoers.d/opsuser'.
+    - Identify the real problem: sudo silently ignores files
+      with permissions other than 0440.
+    - Fix: chmod 0440 /etc/sudoers.d/opsuser
+    - Verify opsuser can now run the command successfully.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Troubleshooting"
+  orden: 4
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: All users are locked out of the system after a
+    junior admin edited /etc/pam.d/system-auth incorrectly.
+    SSH with keys still works for root — that is your only
+    access to the machine.
+    Setup (inject bug):
+      echo "auth required pam_deny.so" \
+        >> /etc/pam.d/system-auth
+    Task: Fix the PAM configuration to restore all user logins
+    without rebooting the system.
+    Technical Requirements:
+    - Attempt login as devuser — it must fail completely.
+    - As root inspect /etc/pam.d/system-auth carefully.
+    - Identify the rogue 'auth required pam_deny.so' line
+      at the end — it denies ALL authentication unconditionally.
+    - Remove the line:
+        sed -i '/auth required pam_deny.so/d' \
+          /etc/pam.d/system-auth
+    - Verify devuser can now log in successfully.
+    - Explain why pam_deny.so at auth required position
+      is catastrophic and how to prevent it in production.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Troubleshooting"
+  orden: 5
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: After a maintenance window legitimate users cannot
+    SSH into the server. They get "Connection refused" on port 22.
+    The server is reachable via ping from lab-attacker.
+    Setup (inject bug):
+      sed -i 's/^#Port 22/Port 2222/' /etc/ssh/sshd_config
+      systemctl restart sshd
+      firewall-cmd --permanent --zone=public \
+        --remove-service=ssh
+      firewall-cmd --reload
+    Task: Restore SSH access on the standard port 22.
+    Technical Requirements:
+    - From lab-attacker confirm port 22 is refused:
+        podman exec -it lab-attacker bash
+        ssh lab-server   → Connection refused
+    - On the host check which port sshd is listening on:
+        ss -tnlp | grep sshd
+    - Identify sshd moved to port 2222.
+    - Revert the port in /etc/ssh/sshd_config to 22.
+    - Restore ssh service in firewalld public zone permanently.
+    - Restart sshd and verify from lab-attacker:
+        ssh devuser@lab-server   → must succeed on port 22.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Troubleshooting"
+  orden: 6
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Users in labgroup report they cannot write to
+    /srv/labgroup_dir even though they are group members and
+    the directory shows rwxrwxr-x permissions.
+    Setup (inject bug):
+      chown root:root /srv/labgroup_dir
+      chmod 775 /srv/labgroup_dir
+    Task: Diagnose and fix the group ownership problem so
+    labgroup members can write to the directory.
+    Technical Requirements:
+    - As devuser attempt to create a file:
+        su - devuser -c "touch /srv/labgroup_dir/test.txt"
+      Observe "Permission denied".
+    - Check directory ownership: ls -ld /srv/labgroup_dir
+    - Identify the group owner is 'root' instead of 'labgroup'.
+    - Verify devuser is actually in labgroup: groups devuser
+    - Fix: chown root:labgroup /srv/labgroup_dir
+    - Verify devuser can now write:
+        su - devuser -c "touch /srv/labgroup_dir/fixed.txt"
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Troubleshooting"
+  orden: 7
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The security team reports that audit rules are not
+    being loaded after reboot even though the rules file exists
+    at /etc/audit/rules.d/lab.rules.
+    Setup (inject bug):
+      chmod 000 /etc/audit/rules.d/lab.rules
+      systemctl restart auditd
+    Task: Diagnose why audit rules are not loading and fix
+    the root cause.
+    Technical Requirements:
+    - Check loaded rules: auditctl -l
+      Observe no custom rules are present.
+    - Try manually reloading: augenrules --load
+      Observe a permission denied error.
+    - Identify the problem: /etc/audit/rules.d/lab.rules
+      has permissions 000 — augenrules cannot read it.
+    - Fix: chmod 640 /etc/audit/rules.d/lab.rules
+    - Reload rules: augenrules --load
+    - Verify: auditctl -l shows the -w /etc/lab_secrets rule.
+    - Trigger the rule and confirm with ausearch -k lab_secrets.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Troubleshooting"
+  orden: 8
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: fail2ban is running and the sshd jail is enabled
+    but IPs are never getting banned despite multiple failed
+    login attempts from lab-attacker. The fail2ban log shows
+    no matches found.
+    Setup (inject bug):
+      sed -i 's|logpath.*|logpath = /var/log/auth.log|' \
+        /etc/fail2ban/jail.d/lab-sshd.conf
+      systemctl restart fail2ban
+    Task: Find why fail2ban is not detecting failed attempts
+    and fix the configuration.
+    Technical Requirements:
+    - From lab-attacker run 5 failed SSH attempts:
+        podman exec -it lab-attacker bash
+        for i in $(seq 1 5); do
+          ssh -o StrictHostKeyChecking=no \
+          fakeuser@lab-server 2>/dev/null || true; done
+    - Check fail2ban log on the host:
+        tail -50 /var/log/fail2ban.log
+      Observe "File not found" error for /var/log/auth.log.
+    - Identify the problem: Rocky Linux uses /var/log/secure
+      not /var/log/auth.log (Debian/Ubuntu convention).
+    - Fix: sed -i 's|/var/log/auth.log|/var/log/secure|' \
+        /etc/fail2ban/jail.d/lab-sshd.conf
+    - Restart fail2ban and repeat the failed attempts.
+    - Verify: fail2ban-client status sshd shows banned IP.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Troubleshooting"
+  orden: 9
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A rich rule was added to block a specific attacker
+    but now ALL traffic to the server is being dropped including
+    from lab-client1. The admin cannot identify which rule
+    is responsible.
+    Setup (inject bug):
+      firewall-cmd --permanent --zone=public \
+        --add-rich-rule='rule family="ipv4"
+        source address="0.0.0.0/0" drop'
+      firewall-cmd --reload
+    Task: Identify and remove the overly broad rich rule that
+    is blocking all traffic.
+    Technical Requirements:
+    - From lab-client1 confirm all traffic is dropped:
+        podman exec -it lab-client1 bash
+        curl http://lab-server   → times out
+    - On the host list all rich rules in the public zone:
+        firewall-cmd --zone=public --list-rich-rules
+    - Identify the rule dropping 0.0.0.0/0 (all traffic).
+    - Remove the rule permanently:
+        firewall-cmd --permanent --zone=public \
+          --remove-rich-rule='rule family="ipv4"
+          source address="0.0.0.0/0" drop'
+    - Reload and verify from lab-client1 traffic is restored:
+        curl http://lab-server   → must return 200.
+
+- bloque: 7
+  tema: "Seguridad"
+  nivel: "Troubleshooting"
+  orden: 10
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: An admin added firewall rules during an emergency
+    without the --permanent flag. After a routine firewalld
+    reload all services became unreachable again from lab-client1.
+    Setup (inject bug):
+      firewall-cmd --permanent --zone=public \
+        --remove-service=http
+      firewall-cmd --permanent --zone=public \
+        --remove-service=https
+      firewall-cmd --permanent --zone=public \
+        --remove-port=8080/tcp
+      firewall-cmd --reload
+      firewall-cmd --zone=public --add-service=http
+      firewall-cmd --zone=public --add-service=https
+      firewall-cmd --zone=public --add-port=8080/tcp
+    Task: Identify the gap between runtime and permanent
+    firewall configuration and make all rules persistent.
+    Technical Requirements:
+    - From lab-client1 confirm HTTP works before reload:
+        podman exec -it lab-client1 bash
+        curl http://lab-server   → works (runtime rule active)
+    - On the host reload the firewall:
+        firewall-cmd --reload
+    - From lab-client1 confirm HTTP is now broken:
+        curl http://lab-server   → fails (runtime rule gone)
+    - Identify the discrepancy between runtime and permanent:
+        firewall-cmd --zone=public --list-services
+        firewall-cmd --zone=public --permanent --list-services
+    - Add all missing rules permanently and reload.
+    - Verify from lab-client1 that all services survive
+      a second firewall reload.
 
