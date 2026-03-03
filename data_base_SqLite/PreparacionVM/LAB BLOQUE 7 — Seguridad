@@ -287,22 +287,13 @@ echo -e "${YELLOW}[10/10] Creando contenedor lab-attacker...${NC}"
 
 podman rm -f lab-attacker 2>/dev/null || true
 
-# Crear directorio temporal para el contexto de construcción
 TMPDIR=$(mktemp -d)
-
-# Imagen attacker: herramientas para simular ataques controlados
 cat > "$TMPDIR/Containerfile" << 'CONTAINEREOF'
 FROM rockylinux/rockylinux:9
-# 1. Instalamos EPEL y limpiamos caché para evitar que no encuentre paquetes
-# 2. Hacemos swap de curl-minimal a curl para evitar conflictos de dependencias
-# 3. Instalamos herramientas de seguridad
 RUN dnf install -y epel-release && \
-    dnf clean all && \
-    dnf makecache && \
     dnf swap -y curl-minimal curl && \
     dnf install -y \
     openssh-clients \
-    hydra \
     nmap \
     curl wget \
     iproute iputils \
@@ -313,8 +304,7 @@ RUN useradd attacker && echo "attacker:att1234" | chpasswd
 CMD ["/bin/bash", "-c", "sleep infinity"]
 CONTAINEREOF
 
-echo -e "  ${YELLOW}Construyendo imagen lab-attacker (esto puede tardar 1-2 min)...${NC}"
-# Construcción sin usar caché para asegurar que los repositorios se actualicen
+echo -e "  ${YELLOW}Construyendo imagen lab-attacker...${NC}"
 podman build -t lab-attacker:latest "$TMPDIR"
 rm -rf "$TMPDIR"
 
@@ -327,7 +317,7 @@ podman run -d \
     --hostname lab-attacker \
     --add-host "lab-server:${HOST_IP}" \
     --cap-add=NET_ADMIN \
-    lab-attacker:latest [cite: 21]
+    lab-attacker:latest
 
 echo -e "  ${GREEN}[OK]${NC} lab-attacker → 172.20.0.99"
 
