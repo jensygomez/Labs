@@ -287,20 +287,14 @@ echo -e "${YELLOW}[10/10] Creando contenedor lab-attacker...${NC}"
 podman rm -f lab-attacker 2>/dev/null || true
 
 # Imagen attacker: herramientas para simular ataques controlados
-TMPDIR=$(mktemp -d)
+# ... (dentro del PASO 10 del script)
 cat > "$TMPDIR/Containerfile" << 'CONTAINEREOF'
 FROM rockylinux/rockylinux:9
-RUN dnf install -y \
-    openssh-clients \
-    hydra \
-    nmap \
-    curl wget \
-    iproute iputils \
-    bind-utils \
-    vim \
-    && dnf clean all 2>/dev/null || \
+RUN dnf install -y epel-release && \
+    dnf swap -y curl-minimal curl && \
     dnf install -y \
     openssh-clients \
+    hydra \
     nmap \
     curl wget \
     iproute iputils \
@@ -310,6 +304,7 @@ RUN dnf install -y \
 RUN useradd attacker && echo "attacker:att1234" | chpasswd
 CMD ["/bin/bash", "-c", "sleep infinity"]
 CONTAINEREOF
+# ...
 
 echo -e "  ${YELLOW}Construyendo imagen lab-attacker (1-2 min)...${NC}"
 podman build -t lab-attacker:latest "$TMPDIR" -q
