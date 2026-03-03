@@ -4343,3 +4343,894 @@
     - Verify from lab-client1 that all services survive
       a second firewall reload.
 
+# ======================================================================
+# BLOQUE 7 CONTENEDORES
+# ======================================================================
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Basico"
+  orden: 1
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to verify that both container engines are
+    correctly installed and functional on the system.
+    Task: Confirm Podman and Docker are installed and running.
+    Technical Requirements:
+    - Check Podman version: podman --version
+    - Check Docker version: docker --version
+    - Verify Docker daemon is active:
+        systemctl is-active docker
+    - Run a test container with each engine:
+        podman run --rm rockylinux/rockylinux:9 echo "Podman OK"
+        docker run --rm rockylinux/rockylinux:9 echo "Docker OK"
+    - Confirm both commands return their respective OK message.
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Basico"
+  orden: 2
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to understand the lifecycle of a container
+    using Podman — create, start, stop, and remove.
+    Task: Practice the full container lifecycle with Podman.
+    Technical Requirements:
+    - Create and start a detached container:
+        podman run -d --name lab-lifecycle \
+          rockylinux/rockylinux:9 bash -c "sleep infinity"
+    - Verify it is running: podman ps
+    - Stop the container: podman stop lab-lifecycle
+    - Verify it is stopped: podman ps -a
+    - Start it again: podman start lab-lifecycle
+    - Remove it forcefully: podman rm -f lab-lifecycle
+    - Confirm it no longer exists: podman ps -a
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Basico"
+  orden: 3
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to understand the lifecycle of a container
+    using Docker — create, start, stop, and remove.
+    Task: Practice the full container lifecycle with Docker.
+    Technical Requirements:
+    - Create and start a detached container:
+        docker run -d --name lab-docker-lifecycle \
+          rockylinux/rockylinux:9 bash -c "sleep infinity"
+    - Verify it is running: docker ps
+    - Stop the container: docker stop lab-docker-lifecycle
+    - Verify it is stopped: docker ps -a
+    - Start it again: docker start lab-docker-lifecycle
+    - Remove it forcefully: docker rm -f lab-docker-lifecycle
+    - Confirm it no longer exists: docker ps -a
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Basico"
+  orden: 4
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to inspect what is happening inside a
+    running container without entering it interactively.
+    Task: Use Podman and Docker log and inspect commands.
+    Technical Requirements:
+    - Start a container that generates output:
+        podman run -d --name lab-logs \
+          rockylinux/rockylinux:9 \
+          bash -c "while true; do echo Lab log entry; sleep 2; done"
+    - View live logs: podman logs -f lab-logs
+      (exit with Ctrl+C after a few lines)
+    - Inspect the container metadata:
+        podman inspect lab-logs
+    - Find the container IP address:
+        podman inspect lab-logs \
+          --format '{{.NetworkSettings.IPAddress}}'
+    - Clean up: podman rm -f lab-logs
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Basico"
+  orden: 5
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to build a custom image using the
+    Dockerfile.web file prepared by the lab setup script.
+    Task: Build a Docker image and verify it runs correctly.
+    Technical Requirements:
+    - Build the image from the prepared Dockerfile:
+        docker build \
+          -t lab-web:latest \
+          -f /opt/lab_bloque8/dockerfiles/Dockerfile.web \
+          /opt/lab_bloque8/dockerfiles/
+    - Verify the image exists: docker images | grep lab-web
+    - Run a container from it:
+        docker run -d --name lab-web-test \
+          -p 8080:80 lab-web:latest
+    - Verify it serves content:
+        curl http://localhost:8080
+      Must return "Lab Bloque 8 - Web App".
+    - Clean up:
+        docker rm -f lab-web-test
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Basico"
+  orden: 6
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to build a custom image using Podman
+    and the Containerfile.rhcsa prepared by the setup script.
+    Task: Build a Podman image from a Containerfile and verify
+    the labels and environment variables are set correctly.
+    Technical Requirements:
+    - Build the image with Podman:
+        podman build \
+          -t lab-rhcsa:latest \
+          -f /opt/lab_bloque8/dockerfiles/Containerfile.rhcsa \
+          /opt/lab_bloque8/dockerfiles/
+    - Verify the image exists: podman images | grep lab-rhcsa
+    - Inspect the image labels:
+        podman inspect lab-rhcsa:latest \
+          --format '{{.Config.Labels}}'
+    - Inspect environment variables:
+        podman inspect lab-rhcsa:latest \
+          --format '{{.Config.Env}}'
+    - Verify APP_ENV=lab and APP_PORT=8080 are present.
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Basico"
+  orden: 7
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to understand how container networking
+    works and verify the available networks on the system.
+    Task: List and inspect the container networks created
+    by the setup script.
+    Technical Requirements:
+    - List all Docker networks: docker network ls
+    - List all Podman networks: podman network ls
+    - Inspect the lab-bridge Docker network:
+        docker network inspect lab-bridge
+    - Identify the subnet 192.168.50.0/24 and gateway.
+    - Inspect the lab-podman-net Podman network:
+        podman network inspect lab-podman-net
+    - Identify the subnet 192.168.60.0/24 and gateway.
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Basico"
+  orden: 8
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to understand how Docker volumes work
+    and verify the volumes created by the setup script.
+    Task: List, inspect and read data from the existing
+    Docker volumes.
+    Technical Requirements:
+    - List all Docker volumes: docker volume ls
+    - Inspect lab-vol-data:
+        docker volume inspect lab-vol-data
+    - Identify the Mountpoint path on the host.
+    - Run a container to read the data inside the volume:
+        docker run --rm \
+          -v lab-vol-data:/data \
+          rockylinux/rockylinux:9 \
+          cat /data/test.txt
+      Must return "datos persistentes lab bloque 8".
+    - Inspect lab-vol-config: docker volume inspect lab-vol-config
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Basico"
+  orden: 9
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to run Podman as a non-root user to
+    understand rootless container execution for RHCSA.
+    Task: Execute a rootless Podman container as your
+    lab user without using sudo.
+    Technical Requirements:
+    - Switch to your lab user (not root):
+        su - <your_lab_user>
+    - Verify you are not root: whoami && id
+    - Run a rootless container:
+        podman run --rm rockylinux/rockylinux:9 \
+          bash -c "echo Rootless OK && whoami"
+    - Verify the output shows "Rootless OK".
+    - Check rootless info:
+        podman info | grep -E "rootless|cgroupVersion"
+    - Run the test script:
+        bash /opt/lab_bloque8/scripts/test-rootless.sh
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Basico"
+  orden: 10
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to understand how to manage container
+    images — list, tag, and remove them from the local store.
+    Task: Practice image management operations with both
+    Podman and Docker.
+    Technical Requirements:
+    - List all local Docker images: docker images
+    - List all local Podman images: podman images
+    - Tag the lab-data image with a new name:
+        podman tag lab-data:latest lab-data:v1.0
+    - Verify both tags exist: podman images | grep lab-data
+    - Remove the v1.0 tag: podman rmi lab-data:v1.0
+    - Verify only latest remains: podman images | grep lab-data
+    - Search for an image in registries:
+        podman search rockylinux | head -5
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Intermedio"
+  orden: 1
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You need to connect a container to a specific
+    network and verify it can communicate with other containers
+    on the same network.
+    Task: Run two containers on lab-bridge network and verify
+    connectivity between them using Docker.
+    Technical Requirements:
+    - Start a first container on lab-bridge:
+        docker run -d --name lab-net-a \
+          --network lab-bridge \
+          rockylinux/rockylinux:9 bash -c "sleep infinity"
+    - Start a second container on lab-bridge:
+        docker run -d --name lab-net-b \
+          --network lab-bridge \
+          rockylinux/rockylinux:9 bash -c "sleep infinity"
+    - Get the IP of lab-net-a:
+        docker inspect lab-net-a \
+          --format '{{.NetworkSettings.Networks.lab-bridge.IPAddress}}'
+    - From lab-net-b ping lab-net-a by name:
+        docker exec lab-net-b ping -c 3 lab-net-a
+    - Verify DNS resolution works between containers.
+    - Clean up: docker rm -f lab-net-a lab-net-b
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Intermedio"
+  orden: 2
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You need to persist data generated by a container
+    so it survives container removal using Docker volumes.
+    Task: Write data to a Docker volume from one container
+    and read it from a second container.
+    Technical Requirements:
+    - Run a container that writes data to lab-vol-data:
+        docker run --rm \
+          -v lab-vol-data:/data \
+          rockylinux/rockylinux:9 \
+          bash -c "echo 'dato nuevo desde contenedor' \
+          > /data/nuevo.txt"
+    - Run a second container that reads the same volume:
+        docker run --rm \
+          -v lab-vol-data:/data \
+          rockylinux/rockylinux:9 \
+          cat /data/nuevo.txt
+      Must return "dato nuevo desde contenedor".
+    - Verify the file also exists on the host:
+        cat $(docker volume inspect lab-vol-data \
+          --format '{{.Mountpoint}}')/nuevo.txt
+    - Confirm data persists even after both containers are removed.
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Intermedio"
+  orden: 3
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: A container needs access to a directory on the
+    host filesystem using a bind mount with SELinux context.
+    Task: Mount a host directory inside a Podman container
+    using the correct SELinux label option.
+    Technical Requirements:
+    - Verify the bind mount directory exists and has content:
+        ls /opt/lab_bloque8/volumes/bindmount/
+    - Run a Podman container with a bind mount:
+        podman run --rm \
+          -v /opt/lab_bloque8/volumes/bindmount:/mnt/data:Z \
+          rockylinux/rockylinux:9 \
+          cat /mnt/data/data.txt
+      Must return "archivo bind mount".
+    - Explain what the ':Z' option does for SELinux contexts.
+    - Write a new file from inside the container:
+        podman run --rm \
+          -v /opt/lab_bloque8/volumes/bindmount:/mnt/data:Z \
+          rockylinux/rockylinux:9 \
+          bash -c "echo 'escrito desde contenedor' \
+          > /mnt/data/from_container.txt"
+    - Verify the file exists on the host after the container exits:
+        cat /opt/lab_bloque8/volumes/bindmount/from_container.txt
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Intermedio"
+  orden: 4
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You need to pass configuration to a container
+    at runtime using environment variables and verify they
+    are available inside the container.
+    Task: Run containers with environment variables using
+    both Podman and Docker.
+    Technical Requirements:
+    - Run a Podman container with env vars:
+        podman run --rm \
+          -e APP_ENV=production \
+          -e APP_PORT=9090 \
+          -e DB_HOST=192.168.60.1 \
+          rockylinux/rockylinux:9 \
+          bash -c "env | grep -E 'APP_|DB_'"
+    - Verify all three variables appear in the output.
+    - Run a Docker container using an env file:
+        cat > /tmp/lab.env << 'EOF'
+    APP_ENV=staging
+    APP_PORT=8080
+    DB_HOST=192.168.50.1
+    EOF
+        docker run --rm \
+          --env-file /tmp/lab.env \
+          rockylinux/rockylinux:9 \
+          bash -c "env | grep -E 'APP_|DB_'"
+    - Verify all three variables from the file appear.
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Intermedio"
+  orden: 5
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You need to use Docker Compose to deploy a
+    multi-container application and manage its lifecycle.
+    Task: Deploy, verify, and tear down the Compose stack
+    defined by the setup script.
+    Technical Requirements:
+    - Navigate to the compose directory:
+        cd /opt/lab_bloque8/compose/
+    - Deploy the stack:
+        docker compose -f docker-compose.yml up -d
+    - Verify both containers are running:
+        docker compose -f docker-compose.yml ps
+    - Check the web container is serving content:
+        curl http://localhost:8081
+    - View logs of the web service:
+        docker compose -f docker-compose.yml logs web
+    - Stop the stack without removing it:
+        docker compose -f docker-compose.yml stop
+    - Remove the stack completely:
+        docker compose -f docker-compose.yml down -v
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Intermedio"
+  orden: 6
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You need to deploy a multi-container application
+    using Podman Compose as an alternative to Docker Compose.
+    Task: Deploy and verify the Podman Compose stack defined
+    by the setup script.
+    Technical Requirements:
+    - Navigate to the compose directory:
+        cd /opt/lab_bloque8/compose/
+    - Deploy with Podman Compose:
+        podman-compose -f podman-compose.yml up -d
+    - Verify the container is running:
+        podman ps | grep lab-podman-compose-app
+    - Verify the bind mount is accessible inside:
+        podman exec lab-podman-compose-app \
+          cat /mnt/data/data.txt
+      Must return "archivo bind mount".
+    - Tear down the stack:
+        podman-compose -f podman-compose.yml down
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Intermedio"
+  orden: 7
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: For RHCSA, you need to configure a Podman container
+    to start automatically at boot using systemd integration.
+    Task: Generate a systemd unit from a Podman container
+    and enable it to start at boot.
+    Technical Requirements:
+    - Create a container to base the unit on:
+        podman run -d --name lab-boot-app \
+          rockylinux/rockylinux:9 \
+          bash -c "sleep infinity"
+    - Generate the systemd unit file:
+        podman generate systemd \
+          --name lab-boot-app \
+          --files --new
+    - Move the unit to the systemd directory:
+        mv container-lab-boot-app.service \
+          /etc/systemd/system/
+    - Reload systemd: systemctl daemon-reload
+    - Enable the service: systemctl enable container-lab-boot-app
+    - Verify it is enabled:
+        systemctl is-enabled container-lab-boot-app
+    - Remove the original container and start via systemd:
+        podman rm -f lab-boot-app
+        systemctl start container-lab-boot-app
+    - Verify the container is running: podman ps
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Intermedio"
+  orden: 8
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You need to use Skopeo to inspect a remote image
+    without pulling it and copy it between storage locations.
+    Task: Use Skopeo to inspect and copy container images
+    without running a container.
+    Technical Requirements:
+    - Inspect a remote image without pulling it:
+        skopeo inspect docker://docker.io/rockylinux/rockylinux:9
+    - Identify the image architecture and OS from the output.
+    - Copy the lab-data image from Podman storage to a
+      local directory:
+        skopeo copy \
+          containers-storage:localhost/lab-data:latest \
+          oci:/tmp/lab-data-oci
+    - Verify the OCI layout was created:
+        ls /tmp/lab-data-oci/
+    - Inspect the copied image:
+        skopeo inspect oci:/tmp/lab-data-oci
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Intermedio"
+  orden: 9
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You need to configure Podman rootless containers
+    to run as a specific user and understand the UID mapping
+    between host and container.
+    Task: Run a rootless Podman container as your lab user
+    and analyze the UID namespace mapping.
+    Technical Requirements:
+    - Switch to your lab user: su - <your_lab_user>
+    - Run a rootless container and check the UID inside:
+        podman run --rm rockylinux/rockylinux:9 \
+          bash -c "id && cat /proc/self/uid_map"
+    - On the host verify the process UID mapping:
+        podman run -d --name lab-rootless-check \
+          rockylinux/rockylinux:9 bash -c "sleep infinity"
+        ps aux | grep "sleep infinity"
+    - Note the host UID (should be in the 100000+ range).
+    - Confirm the container sees itself as root (UID 0)
+      but the host sees a mapped unprivileged UID.
+    - Clean up: podman rm -f lab-rootless-check
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Intermedio"
+  orden: 10
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You need to use Buildah to build a container image
+    without a Dockerfile using scripted commands, which is
+    an alternative approach for RHCSA and LFCS.
+    Task: Build a custom image using Buildah commands directly
+    without using a Dockerfile or Containerfile.
+    Technical Requirements:
+    - Create a working container from a base image:
+        container=$(buildah from rockylinux/rockylinux:9)
+    - Install a package inside the working container:
+        buildah run $container dnf install -y curl
+    - Create a file inside the container:
+        buildah run $container \
+          bash -c "echo 'Buildah Lab Image' > /etc/lab-info"
+    - Set the default command:
+        buildah config --cmd "cat /etc/lab-info" $container
+    - Commit the image:
+        buildah commit $container lab-buildah:latest
+    - Verify the image exists: podman images | grep lab-buildah
+    - Run it: podman run --rm lab-buildah:latest
+      Must return "Buildah Lab Image".
+
+
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Avanzado"
+  orden: 1
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: A multi-stage build is required to produce a
+    minimal production image that does not include build
+    tools or unnecessary packages.
+    Task: Create a multi-stage Dockerfile that compiles
+    in one stage and produces a minimal final image.
+    Technical Requirements:
+    - Create /opt/lab_bloque8/dockerfiles/Dockerfile.multistage:
+        FROM rockylinux/rockylinux:9 AS builder
+        RUN dnf install -y gcc make && dnf clean all
+        RUN echo '#include<stdio.h>
+        int main(){printf("Lab App OK\n");return 0;}' \
+          > /tmp/app.c
+        RUN gcc /tmp/app.c -o /tmp/lab-app
+
+        FROM rockylinux/rockylinux:9
+        COPY --from=builder /tmp/lab-app /usr/local/bin/lab-app
+        CMD ["/usr/local/bin/lab-app"]
+    - Build the image:
+        docker build -t lab-multistage:latest \
+          -f /opt/lab_bloque8/dockerfiles/Dockerfile.multistage \
+          /opt/lab_bloque8/dockerfiles/
+    - Run it: docker run --rm lab-multistage:latest
+      Must return "Lab App OK".
+    - Compare image sizes:
+        docker images | grep -E "rockylinux|lab-multistage"
+    - Verify gcc is NOT present in the final image:
+        docker run --rm lab-multistage:latest which gcc
+      Must return "no gcc found".
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Avanzado"
+  orden: 2
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You need to implement a complete Docker Compose
+    stack with a web service, a backend, and a shared volume
+    where the web service depends on the backend being healthy.
+    Task: Write and deploy a Docker Compose stack with
+    healthchecks and service dependencies.
+    Technical Requirements:
+    - Create /opt/lab_bloque8/compose/docker-compose-advanced.yml:
+        version: '3.8'
+        services:
+          backend:
+            image: rockylinux/rockylinux:9
+            container_name: lab-adv-backend
+            command: bash -c "sleep infinity"
+            healthcheck:
+              test: ["CMD", "echo", "healthy"]
+              interval: 10s
+              retries: 3
+            networks:
+              - lab-adv-net
+          web:
+            image: rockylinux/rockylinux:9
+            container_name: lab-adv-web
+            command: bash -c "sleep infinity"
+            depends_on:
+              backend:
+                condition: service_healthy
+            networks:
+              - lab-adv-net
+        networks:
+          lab-adv-net:
+            driver: bridge
+    - Deploy: docker compose -f docker-compose-advanced.yml up -d
+    - Verify backend is healthy:
+        docker inspect lab-adv-backend \
+          --format '{{.State.Health.Status}}'
+    - Verify web started only after backend was healthy.
+    - Tear down: docker compose -f docker-compose-advanced.yml down
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Avanzado"
+  orden: 3
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: For RHCSA, a rootless Podman container must be
+    configured to start automatically when the non-root user
+    logs in using systemd user units.
+    Task: Configure a rootless Podman container as a systemd
+    user service that starts on user login.
+    Technical Requirements:
+    - Switch to your lab user: su - <your_lab_user>
+    - Create a container:
+        podman run -d --name lab-user-service \
+          rockylinux/rockylinux:9 bash -c "sleep infinity"
+    - Generate the user systemd unit:
+        mkdir -p ~/.config/systemd/user/
+        podman generate systemd \
+          --name lab-user-service \
+          --files --new
+        mv container-lab-user-service.service \
+          ~/.config/systemd/user/
+    - Enable and start the user service:
+        systemctl --user daemon-reload
+        systemctl --user enable container-lab-user-service
+        systemctl --user start container-lab-user-service
+    - Verify it is running:
+        systemctl --user status container-lab-user-service
+        podman ps
+    - Enable linger so it starts without login:
+        loginctl enable-linger <your_lab_user>
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Avanzado"
+  orden: 4
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You need to implement container resource limits
+    to prevent a single container from consuming all system
+    resources in a production environment.
+    Task: Run containers with CPU and memory limits and
+    verify the limits are enforced.
+    Technical Requirements:
+    - Run a Docker container with resource limits:
+        docker run -d --name lab-limited \
+          --memory 256m \
+          --memory-swap 256m \
+          --cpus 0.5 \
+          rockylinux/rockylinux:9 \
+          bash -c "sleep infinity"
+    - Verify the limits are applied:
+        docker inspect lab-limited \
+          --format '{{.HostConfig.Memory}}'
+        docker inspect lab-limited \
+          --format '{{.HostConfig.NanoCpus}}'
+    - Run a Podman container with resource limits:
+        podman run -d --name lab-podman-limited \
+          --memory 128m \
+          --cpus 0.25 \
+          rockylinux/rockylinux:9 \
+          bash -c "sleep infinity"
+    - Verify with: podman inspect lab-podman-limited \
+        --format '{{.HostConfig.Memory}}'
+    - Clean up:
+        docker rm -f lab-limited
+        podman rm -f lab-podman-limited
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Avanzado"
+  orden: 5
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You need to run a container with reduced Linux
+    capabilities to follow the principle of least privilege,
+    dropping all capabilities and adding back only what
+    the application needs.
+    Task: Run a Podman container with capability restrictions
+    and verify the security profile is applied.
+    Technical Requirements:
+    - Run a container with all capabilities dropped:
+        podman run --rm \
+          --cap-drop ALL \
+          rockylinux/rockylinux:9 \
+          bash -c "cat /proc/self/status | grep CapEff"
+      Note the CapEff value — should be 0000000000000000.
+    - Run a container with only NET_BIND_SERVICE added back:
+        podman run --rm \
+          --cap-drop ALL \
+          --cap-add NET_BIND_SERVICE \
+          rockylinux/rockylinux:9 \
+          bash -c "cat /proc/self/status | grep CapEff"
+      Note the CapEff value is now non-zero.
+    - Run a container in read-only mode:
+        podman run --rm \
+          --read-only \
+          rockylinux/rockylinux:9 \
+          bash -c "echo test > /tmp/test.txt"
+      Must fail with "Read-only file system".
+    - Explain why --cap-drop ALL is a security best practice
+      for production containers.
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Avanzado"
+  orden: 6
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You need to implement a custom container network
+    with specific subnet configuration and connect containers
+    to multiple networks simultaneously.
+    Task: Create a custom Podman network and connect a
+    container to two networks at the same time.
+    Technical Requirements:
+    - Create a second Podman network:
+        podman network create \
+          --driver bridge \
+          --subnet 192.168.70.0/24 \
+          lab-podman-net2
+    - Run a container connected to lab-podman-net:
+        podman run -d --name lab-multi-net \
+          --network lab-podman-net \
+          rockylinux/rockylinux:9 bash -c "sleep infinity"
+    - Connect the same container to the second network:
+        podman network connect lab-podman-net2 lab-multi-net
+    - Verify the container has two interfaces:
+        podman exec lab-multi-net ip addr show
+    - Verify both network IPs are assigned:
+        podman inspect lab-multi-net \
+          --format '{{.NetworkSettings.Networks}}'
+    - Clean up:
+        podman rm -f lab-multi-net
+        podman network rm lab-podman-net2
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Avanzado"
+  orden: 7
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You need to tag and push a locally built image
+    to a local registry, then pull it from the registry
+    to simulate a production image distribution workflow.
+    Task: Deploy a local container registry and push/pull
+    a custom image to it using both Docker and Podman.
+    Technical Requirements:
+    - Start a local registry with Docker:
+        docker run -d \
+          --name lab-registry \
+          -p 5000:5000 \
+          --restart always \
+          registry:2
+    - Tag lab-data image for the local registry:
+        podman tag lab-data:latest localhost:5000/lab-data:latest
+    - Push to the local registry:
+        podman push \
+          --tls-verify=false \
+          localhost:5000/lab-data:latest
+    - Remove the local image:
+        podman rmi localhost:5000/lab-data:latest
+    - Pull it back from the registry:
+        podman pull \
+          --tls-verify=false \
+          localhost:5000/lab-data:latest
+    - Verify the image is available again:
+        podman images | grep lab-data
+    - Clean up: docker rm -f lab-registry
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Avanzado"
+  orden: 8
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: You need to back up and restore a Docker volume
+    to simulate a disaster recovery procedure for a
+    containerized application.
+    Task: Back up lab-vol-data to a tar archive and restore
+    it into a new volume.
+    Technical Requirements:
+    - Create a backup of lab-vol-data:
+        docker run --rm \
+          -v lab-vol-data:/source \
+          -v /tmp:/backup \
+          rockylinux/rockylinux:9 \
+          tar czf /backup/lab-vol-data-backup.tar.gz \
+          -C /source .
+    - Verify the backup was created:
+        ls -lh /tmp/lab-vol-data-backup.tar.gz
+    - Create a new volume for the restore:
+        docker volume create lab-vol-restored
+    - Restore the backup into the new volume:
+        docker run --rm \
+          -v lab-vol-restored:/target \
+          -v /tmp:/backup \
+          rockylinux/rockylinux:9 \
+          tar xzf /backup/lab-vol-data-backup.tar.gz \
+          -C /target
+    - Verify the restored data:
+        docker run --rm \
+          -v lab-vol-restored:/data \
+          rockylinux/rockylinux:9 \
+          cat /data/test.txt
+      Must return "datos persistentes lab bloque 8".
+    - Clean up: docker volume rm lab-vol-restored
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Avanzado"
+  orden: 9
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You need to configure SELinux to allow a rootless
+    Podman container to access a host directory that has
+    a custom SELinux context.
+    Task: Fix SELinux context issues for Podman bind mounts
+    using both the :Z flag and semanage.
+    Technical Requirements:
+    - Create a directory with wrong SELinux context:
+        mkdir -p /opt/lab_selinux_test
+        echo "selinux test data" > /opt/lab_selinux_test/data.txt
+        chcon -t var_log_t /opt/lab_selinux_test/data.txt
+    - Try mounting it without :Z flag:
+        podman run --rm \
+          -v /opt/lab_selinux_test:/mnt/test \
+          rockylinux/rockylinux:9 \
+          cat /mnt/test/data.txt
+      Note the SELinux denial in audit log.
+    - Fix using the :Z flag:
+        podman run --rm \
+          -v /opt/lab_selinux_test:/mnt/test:Z \
+          rockylinux/rockylinux:9 \
+          cat /mnt/test/data.txt
+      Must return "selinux test data".
+    - Verify the context was changed on the host:
+        ls -Z /opt/lab_selinux_test/data.txt
+    - Explain the difference between :z (shared) and
+      :Z (private unshared) SELinux label options.
+
+- bloque: 8
+  tema: "Contenedores"
+  nivel: "Avanzado"
+  orden: 10
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You need to migrate a running Docker container
+    workload to Podman, including its data volumes and
+    network configuration, without losing any data.
+    Task: Migrate lab-vol-data and its container workload
+    from Docker to Podman completely.
+    Technical Requirements:
+    - Inspect the Docker volume location:
+        docker volume inspect lab-vol-data \
+          --format '{{.Mountpoint}}'
+    - Create an equivalent Podman volume:
+        podman volume create lab-podman-vol-data
+    - Copy data from Docker volume to Podman volume:
+        docker run --rm \
+          -v lab-vol-data:/source \
+          -v $(podman volume inspect lab-podman-vol-data \
+            --format '{{.Mountpoint}}'):/target \
+          rockylinux/rockylinux:9 \
+          cp -a /source/. /target/
+    - Verify data integrity in the Podman volume:
+        podman run --rm \
+          -v lab-podman-vol-data:/data \
+          rockylinux/rockylinux:9 \
+          cat /data/test.txt
+      Must return "datos persistentes lab bloque 8".
+    - Run the workload on Podman using the migrated volume:
+        podman run -d --name lab-migrated \
+          -v lab-podman-vol-data:/data \
+          rockylinux/rockylinux:9 \
+          bash -c "sleep infinity"
+    - Verify: podman exec lab-migrated cat /data/test.txt
+    - Clean up: podman rm -f lab-migrated
+
+
+
+
+
