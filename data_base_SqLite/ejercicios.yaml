@@ -5825,7 +5825,7 @@
 - bloque: 9
   tema: "Scripting Bash"
   nivel: "Intermedio"
-  orden: 11
+  orden: 1
   dificultad: 3
   enunciado: |
     Exam Scenario:
@@ -5853,7 +5853,7 @@
 - bloque: 9
   tema: "Scripting Bash"
   nivel: "Intermedio"
-  orden: 12
+  orden: 2
   dificultad: 3
   enunciado: |
     Exam Scenario:
@@ -5879,7 +5879,7 @@
 - bloque: 9
   tema: "Scripting Bash"
   nivel: "Intermedio"
-  orden: 13
+  orden: 3
   dificultad: 3
   enunciado: |
     Exam Scenario:
@@ -5904,7 +5904,7 @@
 - bloque: 9
   tema: "Scripting Bash"
   nivel: "Intermedio"
-  orden: 14
+  orden: 4
   dificultad: 4
   enunciado: |
     Exam Scenario:
@@ -5932,7 +5932,7 @@
 - bloque: 9
   tema: "Scripting Bash"
   nivel: "Intermedio"
-  orden: 15
+  orden: 5
   dificultad: 3
   enunciado: |
     Exam Scenario:
@@ -5961,7 +5961,7 @@
 - bloque: 9
   tema: "Scripting Bash"
   nivel: "Intermedio"
-  orden: 16
+  orden: 6
   dificultad: 3
   enunciado: |
     Exam Scenario:
@@ -5990,7 +5990,7 @@
 - bloque: 9
   tema: "Scripting Bash"
   nivel: "Intermedio"
-  orden: 17
+  orden: 7
   dificultad: 4
   enunciado: |
     Exam Scenario:
@@ -6023,7 +6023,7 @@
 - bloque: 9
   tema: "Scripting Bash"
   nivel: "Intermedio"
-  orden: 18
+  orden: 8
   dificultad: 4
   enunciado: |
     Exam Scenario:
@@ -6050,7 +6050,7 @@
 - bloque: 9
   tema: "Scripting Bash"
   nivel: "Intermedio"
-  orden: 19
+  orden: 9
   dificultad: 4
   enunciado: |
     Exam Scenario:
@@ -6076,7 +6076,7 @@
 - bloque: 9
   tema: "Scripting Bash"
   nivel: "Intermedio"
-  orden: 20
+  orden: 10
   dificultad: 4
   enunciado: |
     Exam Scenario:
@@ -6104,4 +6104,332 @@
         [FAIL] Task 2: Log rotation – reason
     - Final exit code: 0 if all tasks OK, 1 if any failed.
     - Use 'set -uo pipefail' (not -e, to allow per-task error handling).
+
+# ======================================================================
+# BLOQUE 9 - SCRIPTING BASH
+# ======================================================================
+
+
+# ─── BLOQUE 9: SCRIPTING BASH - AVANZADO ───
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Avanzado"
+  orden: 1
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Professional scripts need automated tests to verify
+    they work correctly before deploying to production.
+    Task: Write a mini test framework in bash and use it to test
+    the functions in /opt/labs/bloque09/avanzado/testing/lib/utils.sh.
+    Technical Requirements:
+    - Create /opt/labs/bloque09/avanzado/testing/tests/framework.sh
+      with these functions:
+        assert_eq  <expected> <actual> <msg>  → PASS/FAIL
+        assert_true  <cmd> <msg>              → PASS if exit 0
+        assert_false <cmd> <msg>              → PASS if exit != 0
+      Each function increments counters: PASS_COUNT and FAIL_COUNT.
+      On FAIL, print: "[FAIL] <msg> – expected: <x> got: <y>"
+      On PASS, print: "[PASS] <msg>"
+    - Create tests/test_utils.sh that sources both framework.sh
+      and lib/utils.sh, then runs at least 3 tests per function:
+        validar_ip: "192.168.1.1" valid, "256.0.0.1" invalid,
+                    "192.168.1.300" invalid (finds the bug)
+        bytes_a_human: 500 → "500B", 2048 → "2KB", 2097152 → "2MB"
+        generar_password: output length == 8 (finds the bug)
+    - Final line must print:
+        Tests: X passed, Y failed
+    - Exit code: 0 if Y=0, 1 if Y>0.
+    - Run with: bash tests/test_utils.sh
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Avanzado"
+  orden: 2
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Deployment automation with rollback capability is
+    a key skill for any Linux engineer.
+    Task: Write a deploy script that implements a Capistrano-style
+    release structure using the environment in
+    /opt/labs/bloque09/avanzado/deploy/.
+    Technical Requirements:
+    - Implement these subcommands:
+        deploy    Creates releases/<YYYYMMDD_HHMMSS>/, copies app/
+                  into it, substitutes variables in config.template
+                  using deploy.conf, links shared/config and
+                  shared/logs into the release, then updates the
+                  symlink 'current' atomically:
+                    ln -sfn releases/<new> current
+                  Keeps only last KEEP_RELEASES releases.
+        rollback  Points 'current' to the previous release.
+                  Accepts optional N to go N releases back.
+        status    Prints: current release, total releases, list.
+        list      Lists all releases with date and size (du -sh).
+    - The 'current' symlink must always point to a valid release.
+    - If deploy fails mid-way, remove the incomplete release dir
+      and exit 1. Use trap for cleanup.
+    - Run: bash deploy.sh deploy && bash deploy.sh status
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Avanzado"
+  orden: 3
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: sed and awk are essential tools for a sysadmin.
+    Mastering them is required for both LFCS and RHCSA.
+    Task: Write a script that processes the files in
+    /opt/labs/bloque09/avanzado/regex/ using sed, awk and
+    bash regex.
+    Technical Requirements:
+    - Normalize config_caos.conf using sed (output to config_clean.conf):
+        a) Remove spaces around '=': sed 's/ *= */=/g'
+        b) Convert all keys to uppercase: use awk or sed with \U
+        c) Remove inline comments (# ...): sed 's/#.*$//'
+        d) Remove leading/trailing whitespace from values.
+        e) Remove blank lines: sed '/^$/d'
+    - Validate ips.txt using bash [[ =~ ]] regex:
+        For each IP classify as: private, public, invalid, special.
+        Private ranges: 10.x, 172.16-31.x, 192.168.x
+        Special: 127.x, 0.0.0.0, 255.255.255.255
+        Invalid: any octet > 255 or non-numeric.
+        Print one line per IP: "<ip> → <category>"
+    - Parse facturas.txt using awk:
+        Extract: document number, type (Factura/ABONO), CIF, amount.
+        Print total invoiced and total credited separately.
+        Print net balance: invoiced - credited.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Avanzado"
+  orden: 4
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: A sysadmin must be able to produce a full system
+    inventory report automatically, in multiple formats,
+    without relying on external tools like python or jq.
+    Task: Write a script that collects system information and
+    generates the report in /opt/labs/bloque09/avanzado/.
+    Technical Requirements:
+    - Collect the following data using only bash + coreutils:
+        hostname, kernel (uname -r), OS (from /etc/os-release),
+        CPU model and core count (/proc/cpuinfo),
+        total and used RAM (from /proc/meminfo),
+        disk usage per partition (df -h),
+        list of active network interfaces (ip -br addr),
+        list of failed systemd units (systemctl --failed).
+    - Generate three output files:
+        inventario.txt   plain text, sections with headers
+        inventario.csv   one row per metric: category,key,value
+        inventario.json  valid JSON built with printf/echo, no jq:
+          {
+            "hostname": "...",
+            "kernel": "...",
+            "cpu": {"model": "...", "cores": N},
+            "memory": {"total_mb": N, "used_mb": N},
+            "disks": [...],
+            "interfaces": [...],
+            "failed_units": [...]
+          }
+    - Validate the JSON is well-formed:
+        python3 -c "import sys,json; json.load(sys.stdin)" < inventario.json
+        && echo "JSON OK" || echo "JSON INVALID"
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Avanzado"
+  orden: 5
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: Processing large numbers of tasks efficiently requires
+    parallel execution with controlled concurrency.
+    Task: Write a worker pool script that processes
+    /opt/labs/bloque09/avanzado/paralelo/cola.txt in parallel.
+    Technical Requirements:
+    - cola.txt format: tarea_ID:duracion_segundos:datos
+    - Accept -w N flag to set pool size (default: 4 workers).
+    - Implement the pool without GNU parallel or xargs -P:
+        Use background jobs (&) and track PIDs manually.
+        When running jobs == N, wait for one to finish before
+        launching the next: wait -n (bash 5.1+) or poll with
+        'jobs -p' in a loop.
+    - Each task calls procesar_tarea.sh and saves output to
+      /opt/labs/bloque09/avanzado/paralelo/resultados/<id>.result
+    - Show a live progress line (overwrite same line with \r):
+        Progreso: [=====>    ] 6/20 tareas | workers: 4
+    - On finish print:
+        Completadas: X  Fallidas: Y  Tiempo: Xs
+        Speedup vs secuencial: Xx
+    - The speedup is: sum_of_durations / real_elapsed_time
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Avanzado"
+  orden: 6
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Scripts that interact with APIs or external services
+    need to handle retries and timeouts robustly.
+    Task: Write a generic retry wrapper function and use it to
+    make resilient HTTP checks with curl.
+    Technical Requirements:
+    - Implement a retry() function with this signature:
+        retry <max_attempts> <delay_seconds> <command...>
+      It runs <command>, and if it fails retries up to
+      <max_attempts> times waiting <delay_seconds> between each.
+      On final failure, returns the last exit code.
+      Prints to stderr: "Attempt N/MAX failed, retrying in Xs..."
+    - Use retry() to check if a URL is reachable:
+        retry 3 2 curl -sf --max-time 5 http://localhost
+      (localhost likely has nothing, so it will fail – that's OK,
+      the goal is to observe the retry behavior)
+    - Implement exponential backoff variant retry_exp():
+        delay doubles each attempt: 1s, 2s, 4s, 8s...
+    - Implement a timeout wrapper using bash built-ins:
+        run_with_timeout <seconds> <command>
+        Uses: ( <command> ) & PID=$!; sleep N; kill $PID 2>/dev/null
+    - Write a test that demonstrates all three behaviors
+      with clear output showing each attempt.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Avanzado"
+  orden: 7
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Parsing and transforming structured data without
+    python or jq is a required skill for the RHCSA exam.
+    Task: Write a script that builds a simple key-value store
+    using plain files and implements CRUD operations.
+    Technical Requirements:
+    - Storage: each record is a file in /tmp/lab_kvstore/<key>
+      The file content is the value.
+    - Implement these functions:
+        kv_set  <key> <value>  → writes value to file
+        kv_get  <key>          → prints value, exit 1 if not found
+        kv_del  <key>          → removes file, exit 1 if not found
+        kv_list                → lists all keys (ls /tmp/lab_kvstore/)
+        kv_exists <key>        → exit 0 if exists, 1 if not
+    - Key validation: keys must match ^[a-zA-Z0-9_.-]+$
+      Reject invalid keys with exit 2 and message to stderr.
+    - Implement kv_import <file> that reads a key=value file
+      (like datos_kv.txt) and loads all pairs into the store.
+    - Implement kv_export <file> that dumps all key=value pairs
+      to a file.
+    - Demo: import datos_kv.txt, list keys, get 'nombre',
+      update it, export to /tmp/kvstore_export.txt, delete it,
+      verify deletion fails cleanly.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Avanzado"
+  orden: 8
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: On complex systems, scripts need to interact with
+    systemd to manage custom services programmatically.
+    Task: Write a script that creates, starts, monitors and
+    removes a custom transient systemd service using bash.
+    Technical Requirements:
+    - Create a unit file /etc/systemd/system/lab-counter.service:
+        [Unit]
+        Description=Lab Counter Service
+        [Service]
+        Type=simple
+        ExecStart=/bin/bash -c 'for i in $(seq 1 30); do echo "tick $i"; sleep 1; done'
+        StandardOutput=journal
+        [Install]
+        WantedBy=multi-user.target
+    - The script must implement these actions:
+        create  → writes the unit file, runs systemctl daemon-reload
+        start   → systemctl start lab-counter.service
+        status  → systemctl status lab-counter.service (exit 0/3)
+        logs    → journalctl -u lab-counter.service --no-pager -n 20
+        stop    → systemctl stop lab-counter.service
+        remove  → stop + disable + rm unit file + daemon-reload
+    - After 'start', poll status every 2 seconds for up to 10s:
+        until systemctl is-active lab-counter.service; do sleep 2; done
+    - Verify the service writes to journal:
+        journalctl -u lab-counter.service --no-pager | grep "tick"
+    - Clean up completely with 'remove'.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Avanzado"
+  orden: 9
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: Advanced scripts must handle inter-process communication.
+    Named pipes (FIFOs) allow decoupled producer-consumer patterns.
+    Task: Implement a producer-consumer system using a named pipe
+    to process jobs without race conditions.
+    Technical Requirements:
+    - Create a named pipe: mkfifo /tmp/lab_jobpipe
+    - Producer process: reads cola.txt from
+      /opt/labs/bloque09/avanzado/paralelo/cola.txt and writes
+      each job line to the FIFO, then writes "DONE" as sentinel.
+      Run in background: producer &
+    - Consumer process: reads from the FIFO in a while loop.
+        while IFS= read -r job; do
+            [[ "$job" == "DONE" ]] && break
+            process the job...
+        done < /tmp/lab_jobpipe
+    - The consumer processes each job (just echo + sleep 0.2)
+      and writes results to /tmp/lab_results.txt.
+    - Use trap to clean up the FIFO on EXIT:
+        trap 'rm -f /tmp/lab_jobpipe' EXIT
+    - After both finish, verify:
+        wc -l /tmp/lab_results.txt  → must equal lines in cola.txt
+    - Explain in a comment why this avoids race conditions
+      compared to multiple writers on a plain file.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Avanzado"
+  orden: 10
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The final advanced challenge combines all skills:
+    functions, arrays, parallel processing, signal handling,
+    logging, and report generation.
+    Task: Write a complete infrastructure health-check CLI tool
+    that checks multiple aspects of the system and produces
+    a structured report.
+    Technical Requirements:
+    - Implement these check modules as functions:
+        check_disk()      ALERT if any partition > 80%
+        check_memory()    ALERT if used RAM > 85%
+        check_services()  ALERT if sshd or crond not active
+        check_load()      ALERT if load avg > nproc
+        check_logs()      ALERT if /var/log/messages has errors
+                          in last 100 lines (grep -i error)
+    - Run all checks in parallel using & and wait:
+        for check in check_disk check_memory ...; do
+            $check >> /tmp/check_$check.out 2>&1 &
+        done
+        wait
+    - Each check writes one line to its output file:
+        OK|ALERT  CHECK_NAME  details
+    - After all checks finish, aggregate results and generate
+      /tmp/health_report.txt with color codes if terminal
+      supports it (check with: [[ -t 1 ]]):
+        [OK]    disk       all partitions below 80%
+        [ALERT] memory     used: 87% (threshold: 85%)
+    - Exit code: 0 if all OK, number of ALERTs if any.
+    - Accept --json flag to output JSON instead of text.
+    - Total execution time must not exceed: max(individual checks) + 1s
+      (because they run in parallel).
+
+
 
