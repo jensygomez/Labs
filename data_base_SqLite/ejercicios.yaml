@@ -6777,3 +6777,1107 @@
         (check pipeline.state for completed step names).
         On full success: print "EXAMEN SUPERADO" and exit 0.
         On any failure: print "EXAMEN FALLIDO: <step>" and exit 1.
+
+
+
+
+
+# ======================================================================
+# BLOQUE 10 - BOOT, RECOVERY Y MANTENIMIENTO DEL SISTEMA
+# ======================================================================
+
+
+# ─── BLOQUE 10: BOOT, RECOVERY Y MANTENIMIENTO - BÁSICO ───
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Basico"
+  orden: 1
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to understand the boot sequence of a Linux
+    system to be able to diagnose startup problems.
+    Task: Analyze the boot process of the system and identify
+    its key stages and timing.
+    Technical Requirements:
+    - Display the total boot time broken down by stages:
+        systemd-analyze
+      Note the time for: firmware, loader, kernel, userspace.
+    - Display the top 10 slowest units at boot:
+        systemd-analyze blame | head -10
+    - Generate the boot chain dependency graph in text form:
+        systemd-analyze critical-chain
+    - Verify that lab-boot-monitor.service ran at last boot:
+        journalctl -u lab-boot-monitor.service -b
+    - Check the kernel version and boot parameters used:
+        uname -r
+        cat /proc/cmdline
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Basico"
+  orden: 2
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to inspect and understand the GRUB2
+    configuration before modifying it in a later task.
+    Task: Inspect the current GRUB2 configuration without
+    making any changes.
+    Technical Requirements:
+    - View the GRUB2 default settings file:
+        cat /etc/default/grub
+      Identify: GRUB_TIMEOUT, GRUB_CMDLINE_LINUX,
+      GRUB_DEFAULT, GRUB_DISABLE_RECOVERY.
+    - View the generated GRUB configuration:
+        cat /boot/grub2/grub.cfg | grep -A5 "menuentry"
+    - List all available kernel entries in GRUB:
+        grub2-editenv list
+        grep "^menuentry\|^submenu" /boot/grub2/grub.cfg
+    - Compare the backup taken by the lab script with current:
+        diff /opt/labs/bloque10/boot/grub_backup/grub.default.original \
+             /etc/default/grub
+      Output should be empty (no changes made yet).
+    - Note the location of grub.cfg for BIOS vs UEFI systems:
+        ls /boot/grub2/grub.cfg 2>/dev/null && echo "BIOS"
+        ls /boot/efi/EFI/rocky/grub.cfg 2>/dev/null && echo "UEFI"
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Basico"
+  orden: 3
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: A junior sysadmin needs to know how to safely
+    modify GRUB2 timeout without breaking the system.
+    Task: Change the GRUB2 boot timeout from its current
+    value to 10 seconds and apply the change.
+    Technical Requirements:
+    - Edit /etc/default/grub and change GRUB_TIMEOUT to 10:
+        sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=10/' /etc/default/grub
+    - Verify the change before applying:
+        grep GRUB_TIMEOUT /etc/default/grub
+    - Regenerate grub.cfg (detect BIOS vs UEFI automatically):
+        if [ -f /boot/grub2/grub.cfg ]; then
+            grub2-mkconfig -o /boot/grub2/grub.cfg
+        elif [ -f /boot/efi/EFI/rocky/grub.cfg ]; then
+            grub2-mkconfig -o /boot/efi/EFI/rocky/grub.cfg
+        fi
+    - Verify the change was applied to grub.cfg:
+        grep "set timeout" /boot/grub2/grub.cfg
+    - Restore original value (5 seconds) after verification:
+        sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=5/' /etc/default/grub
+        grub2-mkconfig -o /boot/grub2/grub.cfg
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Basico"
+  orden: 4
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to understand systemd targets to manage
+    the system state and prepare for recovery scenarios.
+    Task: Inspect and work with systemd targets on the running
+    system without rebooting.
+    Technical Requirements:
+    - Display the current default target:
+        systemctl get-default
+    - List all available targets:
+        systemctl list-units --type=target --all
+    - Show the dependencies of multi-user.target:
+        systemctl list-dependencies multi-user.target
+    - Show which target is currently active:
+        systemctl list-units --type=target --state=active
+    - Compare multi-user.target and graphical.target:
+        diff <(systemctl list-dependencies multi-user.target) \
+             <(systemctl list-dependencies graphical.target)
+    - Verify that lab-maintenance.target exists:
+        systemctl status lab-maintenance.target
+        systemctl cat lab-maintenance.target
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Basico"
+  orden: 5
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: On the RHCSA exam you will be asked to change the
+    default boot target permanently.
+    Task: Change the default boot target to multi-user.target,
+    verify it, then restore it to its original value.
+    Technical Requirements:
+    - Record the current default target:
+        systemctl get-default
+    - Change default to multi-user.target:
+        systemctl set-default multi-user.target
+    - Verify the symlink was updated:
+        ls -la /etc/systemd/system/default.target
+    - Verify with systemctl:
+        systemctl get-default
+    - Switch to multi-user target on the running system
+      without rebooting:
+        systemctl isolate multi-user.target
+      Note: if you are in a GUI session it will be lost.
+    - Return to the original default target:
+        systemctl set-default graphical.target
+        (or whatever the original was)
+        systemctl isolate graphical.target
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Basico"
+  orden: 6
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: journald is the primary log system on systemd-based
+    distributions. You need to master its query syntax.
+    Task: Use journalctl to query the system journal in multiple
+    ways using the lab logs already generated.
+    Technical Requirements:
+    - Show all logs from the current boot:
+        journalctl -b
+    - Show only error and critical messages from this boot:
+        journalctl -b -p err
+    - Show logs from the last 30 minutes:
+        journalctl --since "30 minutes ago"
+    - Show logs for a specific unit:
+        journalctl -u lab-boot-monitor.service
+        journalctl -u sshd --since today
+    - Show logs with custom tag generated by the lab:
+        journalctl -t LAB_APP
+        (if empty, generate first: bash /opt/labs/bloque10/logs/generar_logs_lab.sh)
+    - Show disk usage of the journal:
+        journalctl --disk-usage
+    - Follow logs in real time (Ctrl+C to stop):
+        journalctl -f
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Basico"
+  orden: 7
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: rsyslog manages traditional log files. You need to
+    understand its configuration and verify the lab rule is working.
+    Task: Inspect the rsyslog configuration and verify that
+    the lab logging rule routes messages correctly.
+    Technical Requirements:
+    - View the main rsyslog configuration:
+        cat /etc/rsyslog.conf | grep -v "^#" | grep -v "^$"
+    - View the lab rule created by the setup script:
+        cat /etc/rsyslog.d/10-lab.conf
+    - Generate 10 test log entries using the lab script:
+        bash /opt/labs/bloque10/logs/generar_logs_lab.sh 10
+    - Verify messages arrived at /var/log/lab.log:
+        tail -20 /var/log/lab.log
+    - Verify the same messages appear in the journal:
+        journalctl -t LAB_APP --since "2 minutes ago"
+    - Verify rsyslog service is active and has no errors:
+        systemctl status rsyslog
+        journalctl -u rsyslog -b -p err
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Basico"
+  orden: 8
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: Log rotation prevents log files from filling the disk.
+    You need to understand and verify logrotate configuration.
+    Task: Inspect logrotate configuration and manually trigger
+    rotation for the lab log file.
+    Technical Requirements:
+    - View the main logrotate configuration:
+        cat /etc/logrotate.conf
+    - View the lab-specific logrotate rule:
+        cat /etc/logrotate.d/lab
+    - List all logrotate configurations:
+        ls /etc/logrotate.d/
+    - Test the lab logrotate rule without applying it:
+        logrotate -d /etc/logrotate.d/lab
+      Read the output and verify it would rotate correctly.
+    - Force rotation manually:
+        logrotate -f /etc/logrotate.d/lab
+    - Verify rotation happened:
+        ls -lh /var/log/lab.log*
+      You should see lab.log and lab.log.1.gz
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Basico"
+  orden: 9
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: Time synchronization is critical for logs, TLS
+    certificates and Kerberos authentication.
+    Task: Verify and manage time synchronization using chrony
+    and timedatectl.
+    Technical Requirements:
+    - Check overall time and NTP status:
+        timedatectl status
+      Note: NTP service active, synchronized, timezone, RTC time.
+    - Check chrony synchronization details:
+        chronyc tracking
+      Identify: Reference ID, System time offset, Stratum.
+    - List NTP sources and their quality:
+        chronyc sources -v
+      Identify the source marked with '*' (currently selected).
+    - View chrony configuration:
+        cat /etc/chrony.conf
+    - Set the timezone to Europe/Madrid:
+        timedatectl set-timezone Europe/Madrid
+    - Verify the change:
+        timedatectl status | grep "Time zone"
+        date
+    - List available timezones for Spain:
+        timedatectl list-timezones | grep Europe/Madrid
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Basico"
+  orden: 10
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: Scheduled tasks with cron are fundamental for
+    automating sysadmin work. This is always present in LFCS.
+    Task: Schedule two cron jobs using the lab scripts and
+    verify they execute correctly.
+    Technical Requirements:
+    - View the existing system crontab files:
+        ls /etc/cron.d/
+        cat /etc/crontab
+    - Schedule check_disk.sh to run every 5 minutes
+      as root in the root crontab:
+        crontab -e
+        Add: */5 * * * * /opt/labs/bloque10/tareas/cron_scripts/check_disk.sh
+    - Schedule cleanup_tmp.sh to run daily at 02:00:
+        Add: 0 2 * * * /opt/labs/bloque10/tareas/cron_scripts/cleanup_tmp.sh
+    - Verify both entries are installed:
+        crontab -l
+    - As user labtasks, schedule report_gen.sh every Monday at 08:00:
+        su - labtasks -c "crontab -e"
+        Add: 0 8 * * 1 /opt/labs/bloque10/tareas/cron_scripts/report_gen.sh
+        su - labtasks -c "crontab -l"
+    - Wait up to 5 minutes and verify check_disk.sh ran:
+        tail -f /var/log/lab_disk_check.log
+
+
+
+# ======================================================================
+# BLOQUE 10 - BOOT, RECOVERY Y MANTENIMIENTO DEL SISTEMA
+# ======================================================================
+
+
+# ─── BLOQUE 10: BOOT, RECOVERY Y MANTENIMIENTO - INTERMEDIO ───
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Intermedio"
+  orden: 1
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: A system is booting but one service is consistently
+    slowing down the startup. You need to identify it and
+    understand why it delays the boot sequence.
+    Task: Perform a full boot performance analysis and identify
+    the top bottlenecks using systemd-analyze tools.
+    Technical Requirements:
+    - Measure total boot time and save output:
+        systemd-analyze > /tmp/boot_analysis.txt
+        systemd-analyze blame >> /tmp/boot_analysis.txt
+    - Identify units taking more than 1 second:
+        systemd-analyze blame | awk '$1 ~ /s$/ {gsub(/s/,"",$1); if($1+0 > 1) print}'
+    - Inspect the critical chain in detail:
+        systemd-analyze critical-chain --no-pager >> /tmp/boot_analysis.txt
+    - Check if lab-boot-monitor.service is in the chain:
+        systemd-analyze critical-chain lab-boot-monitor.service
+    - Enable lab-broken-service and measure its impact:
+        systemctl enable lab-broken-service.service
+        systemd-analyze blame | grep lab-broken
+        systemctl disable lab-broken-service.service
+    - Plot the critical path units and their start/finish times:
+        systemd-analyze dot --no-pager 2>/dev/null | head -20
+    - Final report: save all findings to /tmp/boot_analysis.txt
+      and print the 3 slowest units with their times.
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Intermedio"
+  orden: 2
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You need to add a custom kernel parameter permanently
+    to enable verbose boot logging for debugging purposes.
+    Task: Add the parameter 'systemd.log_level=debug' to GRUB2
+    on a test basis, verify it, then remove it cleanly.
+    Technical Requirements:
+    - Backup /etc/default/grub before any change:
+        cp /etc/default/grub /etc/default/grub.bak_$(date +%Y%m%d)
+    - Add the parameter to GRUB_CMDLINE_LINUX using sed:
+        sed -i 's/\(GRUB_CMDLINE_LINUX=".*\)"/\1 systemd.log_level=debug"/' \
+            /etc/default/grub
+    - Verify the parameter was added correctly:
+        grep GRUB_CMDLINE_LINUX /etc/default/grub
+    - Regenerate grub.cfg and verify the parameter appears:
+        grub2-mkconfig -o /boot/grub2/grub.cfg
+        grep "systemd.log_level" /boot/grub2/grub.cfg
+    - Remove the parameter (restore from backup):
+        cp /etc/default/grub.bak_$(date +%Y%m%d) /etc/default/grub
+        grub2-mkconfig -o /boot/grub2/grub.cfg
+    - Verify the parameter is no longer present:
+        grep "systemd.log_level" /boot/grub2/grub.cfg \
+            && echo "ERROR: param still present" \
+            || echo "OK: param removed"
+    - Note: A reboot is required for the parameter to take effect,
+      but for this exercise verification of grub.cfg is sufficient.
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Intermedio"
+  orden: 3
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: The initramfs image is a critical component of the
+    boot process. You need to know how to inspect and rebuild it.
+    Task: Inspect the current initramfs image and rebuild it
+    for the running kernel.
+    Technical Requirements:
+    - List all initramfs images on the system:
+        ls -lh /boot/initramfs-*.img
+    - Inspect the contents of the current initramfs
+      without extracting it:
+        lsinitrd /boot/initramfs-$(uname -r).img | head -40
+    - Check which modules are included:
+        lsinitrd /boot/initramfs-$(uname -r).img | grep "\.ko"
+    - Rebuild the initramfs for the running kernel:
+        dracut -f /boot/initramfs-$(uname -r).img $(uname -r)
+      This is required after: kernel updates, driver changes,
+      adding modules to /etc/dracut.conf.d/.
+    - Verify the new image was created (check timestamp):
+        ls -lh /boot/initramfs-$(uname -r).img
+    - Check the image is valid:
+        lsinitrd /boot/initramfs-$(uname -r).img > /dev/null \
+            && echo "initramfs OK" || echo "initramfs CORRUPT"
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Intermedio"
+  orden: 4
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You need to configure rsyslog to separate logs by
+    severity and send specific logs to a dedicated file.
+    Task: Create a custom rsyslog rule that routes all
+    authentication messages to a dedicated file and all
+    critical messages to another.
+    Technical Requirements:
+    - Create /etc/rsyslog.d/30-lab-custom.conf with these rules:
+        # Auth messages to dedicated file
+        auth,authpriv.*    /var/log/lab_auth.log
+        & stop
+        # Critical and above to critical log
+        *.crit             /var/log/lab_critical.log
+        & stop
+    - Restart rsyslog and verify no errors:
+        systemctl restart rsyslog
+        systemctl status rsyslog | grep -i "error\|fail"
+    - Generate an auth log entry to test:
+        logger -p auth.info -t LAB_AUTH "test auth message from lab"
+        logger -p auth.warning -t LAB_AUTH "test auth warning from lab"
+    - Verify messages arrived at /var/log/lab_auth.log:
+        tail -5 /var/log/lab_auth.log
+    - Generate a critical message:
+        logger -p user.crit -t LAB_CRIT "critical test message"
+    - Verify it arrived at /var/log/lab_critical.log:
+        tail -5 /var/log/lab_critical.log
+    - Clean up: remove /etc/rsyslog.d/30-lab-custom.conf
+      and restart rsyslog.
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Intermedio"
+  orden: 5
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: Journal logs must be persistent across reboots and
+    their size must be controlled to prevent disk exhaustion.
+    Task: Configure journald for persistent storage with size
+    limits and verify the configuration is applied.
+    Technical Requirements:
+    - Verify current journal persistence configuration:
+        cat /etc/systemd/journald.conf.d/lab-persist.conf
+        journalctl --disk-usage
+    - Modify the lab configuration to set stricter limits:
+        Edit /etc/systemd/journald.conf.d/lab-persist.conf
+        Set: SystemMaxUse=100M
+             SystemMaxFileSize=10M
+             MaxRetentionSec=1week
+             Compress=yes
+    - Restart journald and verify the configuration took effect:
+        systemctl restart systemd-journald
+        journalctl --disk-usage
+    - Verify journal is stored on disk (persistent):
+        ls -lh /var/log/journal/
+    - Check how many boots are recorded in the journal:
+        journalctl --list-boots
+    - Vacuum the journal to enforce the size limit now:
+        journalctl --vacuum-size=50M
+        journalctl --disk-usage
+    - Restore original lab configuration:
+        Set SystemMaxUse back to 200M
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Intermedio"
+  orden: 6
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: Scheduled tasks must be managed reliably. You need
+    to implement a complete task scheduling setup for a
+    production-like scenario.
+    Task: Create a full scheduling setup using cron and at
+    for automated system maintenance.
+    Technical Requirements:
+    - Create a system cron job in /etc/cron.d/lab-maintenance:
+        # Run disk check every 15 minutes, log output
+        */15 * * * * root \
+          /opt/labs/bloque10/tareas/cron_scripts/check_disk.sh \
+          >> /var/log/lab_disk_check.log 2>&1
+        # Run cleanup every Sunday at 03:00
+        0 3 * * 0 root \
+          /opt/labs/bloque10/tareas/cron_scripts/cleanup_tmp.sh \
+          >> /var/log/lab_cron.log 2>&1
+    - Verify syntax is correct (crond reads /etc/cron.d/ files):
+        crontab -l  (this shows user crontab, not /etc/cron.d)
+        ls -la /etc/cron.d/lab-maintenance
+    - Schedule a one-time task with 'at' to run in 2 minutes:
+        echo "/opt/labs/bloque10/tareas/cron_scripts/report_gen.sh" \
+          | at now + 2 minutes
+    - Verify the at job is queued:
+        atq
+        at -l
+    - Wait 2 minutes then verify execution:
+        ls -lh /var/log/lab_daily_report_$(date +%Y%m%d).txt
+    - List and remove the cron.d file:
+        rm /etc/cron.d/lab-maintenance
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Intermedio"
+  orden: 7
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: tuned profiles optimize system performance for
+    specific workloads. This is tested in both LFCS and RHCSA.
+    Task: Inspect available tuned profiles, apply the lab
+    profile, verify its effects and switch to a standard profile.
+    Technical Requirements:
+    - Check the current active profile:
+        tuned-adm active
+    - List all available profiles with descriptions:
+        tuned-adm list
+    - Get a recommendation for this system:
+        tuned-adm recommend
+    - Inspect the lab custom profile:
+        cat /etc/tuned/lab-perfil/tuned.conf
+    - Apply the lab profile:
+        tuned-adm profile lab-perfil
+        tuned-adm active
+    - Verify the cpu governor changed (if supported by VM):
+        cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor \
+            2>/dev/null || echo "CPU freq scaling not available in VM"
+    - Check transparent hugepages setting:
+        cat /sys/kernel/mm/transparent_hugepage/enabled
+    - Switch to the recommended production profile:
+        tuned-adm profile virtual-guest
+        tuned-adm active
+    - Verify the profile switch:
+        tuned-adm active | grep virtual-guest \
+            && echo "OK" || echo "FAIL"
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Intermedio"
+  orden: 8
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Process priority management is essential when a
+    system is under heavy load. You need to adjust priorities
+    of running and new processes.
+    Task: Use nice and renice to manage process priorities
+    while the system is under load.
+    Technical Requirements:
+    - Generate background CPU load for the exercise:
+        bash /opt/labs/bloque10/performance/benchmarks/generar_carga.sh cpu 120 &
+        LOAD_PID=$!
+    - Observe the process priority with ps:
+        ps -p $LOAD_PID -o pid,ni,pri,%cpu,cmd
+    - Renice the process to priority +15 (low priority):
+        renice -n 15 -p $LOAD_PID
+        ps -p $LOAD_PID -o pid,ni,pri,%cpu,cmd
+    - Launch a new process with high priority (nice -10):
+        nice -n -10 bash -c 'sleep 30' &
+        NICE_PID=$!
+        ps -p $NICE_PID -o pid,ni,pri,%cpu,cmd
+    - View all processes sorted by nice value:
+        ps -eo pid,user,ni,pri,%cpu,cmd --sort=ni | head -20
+    - Renice all processes of labtasks user to +10:
+        renice -n 10 -u labtasks
+    - Stop the load generator:
+        kill $LOAD_PID 2>/dev/null
+        kill $NICE_PID 2>/dev/null
+    - Verify: only root can set negative nice values.
+      Try as labtasks and observe the error:
+        su - labtasks -c "nice -n -5 sleep 10"
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Intermedio"
+  orden: 9
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: sar and iostat are the standard tools to analyze
+    historical and real-time system performance. Mastering them
+    is required for the LFCS exam.
+    Task: Use sysstat tools to analyze system performance
+    using both real-time and historical data.
+    Technical Requirements:
+    - Generate load to have data to analyze:
+        bash /opt/labs/bloque10/performance/benchmarks/generar_carga.sh all 60 &
+    - Capture real-time CPU metrics every 2 seconds, 5 samples:
+        sar -u 2 5 | tee /tmp/sar_cpu.txt
+      Identify: %user, %system, %iowait, %idle
+    - Capture memory metrics:
+        sar -r 2 5 | tee /tmp/sar_mem.txt
+      Identify: kbmemfree, kbmemused, %memused
+    - Capture disk activity:
+        iostat -x 2 5 | tee /tmp/iostat.txt
+      Identify: %util, await, r/s, w/s for each device
+    - Capture load average over time:
+        sar -q 2 5 | tee /tmp/sar_load.txt
+      Identify: runq-sz (run queue), ldavg-1, ldavg-5
+    - Read the sample files generated at setup time:
+        cat /opt/labs/bloque10/performance/sar_data/sar_cpu_sample.txt
+    - Compare: which metric shows the most pressure?
+      Document findings in /tmp/performance_report.txt
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Intermedio"
+  orden: 10
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: On the RHCSA exam you may be asked to create a
+    custom systemd service that starts automatically at boot
+    and integrates with the existing target structure.
+    Task: Create a custom systemd service unit from scratch
+    that runs a maintenance script at boot time.
+    Technical Requirements:
+    - Create the script the service will run:
+        cat > /usr/local/bin/lab-startup.sh << 'EOF'
+        #!/bin/bash
+        echo "$(date) lab-startup ejecutado" >> /var/log/lab_startup.log
+        df -h >> /var/log/lab_startup.log
+        echo "---" >> /var/log/lab_startup.log
+        EOF
+        chmod +x /usr/local/bin/lab-startup.sh
+    - Create the unit file /etc/systemd/system/lab-startup.service:
+        [Unit]
+        Description=Lab Startup Maintenance Script
+        After=network.target
+        Wants=network.target
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/usr/local/bin/lab-startup.sh
+        StandardOutput=journal
+        StandardError=journal
+        [Install]
+        WantedBy=multi-user.target
+    - Reload systemd and enable the service:
+        systemctl daemon-reload
+        systemctl enable lab-startup.service
+        systemctl start lab-startup.service
+    - Verify the service ran correctly:
+        systemctl status lab-startup.service
+        journalctl -u lab-startup.service -n 20
+        cat /var/log/lab_startup.log
+    - Clean up:
+        systemctl disable --now lab-startup.service
+        rm /etc/systemd/system/lab-startup.service
+        rm /usr/local/bin/lab-startup.sh
+        systemctl daemon-reload
+
+
+
+# ======================================================================
+# BLOQUE 10 - BOOT, RECOVERY Y MANTENIMIENTO DEL SISTEMA
+# ======================================================================
+
+
+# ─── BLOQUE 10: BOOT, RECOVERY Y MANTENIMIENTO - AVANZADO ───
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Avanzado"
+  orden: 1
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A system boots into emergency.target because /etc/fstab
+    has an entry pointing to a non-existent device. You need to
+    diagnose and fix it without reinstalling.
+    Task: Simulate and repair an fstab corruption scenario.
+    Technical Requirements:
+    - Study the broken fstab example provided by the lab:
+        cat /opt/labs/bloque10/recovery/fstab_roto.example
+    - Simulate the error safely by adding a bad entry to fstab:
+        cp /etc/fstab /etc/fstab.lab_bak
+        echo "/dev/sdb99  /mnt/data_lab  xfs  defaults  0 0" >> /etc/fstab
+    - Verify the entry would fail at boot without rebooting:
+        mount -a 2>&1 | grep -i "error\|fail\|special"
+      You should see a mount error for /dev/sdb99.
+    - Fix the fstab by removing the bad entry:
+        grep -v "/dev/sdb99" /etc/fstab.lab_bak > /etc/fstab
+    - Verify fstab is now correct:
+        mount -a && echo "fstab OK" || echo "fstab still broken"
+    - Verify the restore matches the original:
+        diff /etc/fstab /etc/fstab.lab_bak \
+            && echo "fstab fully restored" || echo "diff found"
+    - Document in /tmp/fstab_repair.txt the steps taken and
+      what would happen at boot if left broken:
+        emergency.target is activated when a required mount fails.
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Avanzado"
+  orden: 2
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: On the RHCSA exam the most common recovery task is
+    resetting the root password using rd.break.
+    Task: Reset the root password of the system using the
+    rd.break method via GRUB2.
+    Technical Requirements:
+    - This exercise requires a real reboot of the VM.
+      Read the full procedure before starting:
+        cat /opt/labs/bloque10/recovery/procedures/rd_break_procedure.txt
+    - Steps to execute during the exercise:
+        1. Reboot the VM:  systemctl reboot
+        2. At GRUB menu press 'e' to edit the boot entry.
+        3. Find the line starting with 'linux' or 'linuxefi'.
+        4. Append at the end of that line:
+             rd.break enforcing=0
+        5. Press Ctrl+X to boot.
+        6. At the (switch_root) prompt remount sysroot:
+             mount -o remount,rw /sysroot
+        7. Enter chroot:
+             chroot /sysroot
+        8. Change root password:
+             passwd root
+             (set new password: RootLabNew2024!)
+        9. Create SELinux relabel file:
+             touch /.autorelabel
+       10. Exit and reboot:
+             exit
+             exit
+    - After reboot verify:
+        Login as root with new password: RootLabNew2024!
+        getenforce   → should be Enforcing after relabel
+    - Restore original password after verification:
+        passwd root  (set back to your original password)
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Avanzado"
+  orden: 3
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A service is failing at boot and you need to use
+    rescue.target to diagnose and fix it without the full
+    system interfering.
+    Task: Boot into rescue.target, diagnose a failing service
+    and fix it from within rescue mode.
+    Technical Requirements:
+    - This exercise requires a reboot.
+      Read the procedure before starting:
+        cat /opt/labs/bloque10/recovery/procedures/rescue_target_procedure.txt
+    - Before rebooting, break lab-broken-service intentionally:
+        systemctl enable lab-broken-service.service
+    - Reboot into rescue.target:
+        1. At GRUB press 'e' to edit the boot entry.
+        2. Append to the linux line:
+             systemd.unit=rescue.target
+        3. Press Ctrl+X to boot.
+        4. Enter root password when prompted.
+    - Once in rescue.target diagnose the broken service:
+        systemctl status lab-broken-service.service
+        journalctl -u lab-broken-service.service -n 20
+        systemctl cat lab-broken-service.service
+    - Fix the service by editing its ExecStart:
+        systemctl edit --full lab-broken-service.service
+        Change ExecStart to: /bin/true
+        systemctl daemon-reload
+    - Return to normal boot:
+        systemctl default
+    - Verify after full boot:
+        systemctl status lab-broken-service.service
+        systemctl disable lab-broken-service.service
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Avanzado"
+  orden: 4
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A remote server has no GUI and logs need to be
+    centralized from multiple sources. You need to configure
+    rsyslog to receive logs over the network.
+    Task: Configure rsyslog as a log receiver on UDP port 514
+    and send test messages to it from the local system.
+    Technical Requirements:
+    - Configure rsyslog to listen on UDP port 514:
+        Create /etc/rsyslog.d/40-lab-receiver.conf:
+          module(load="imudp")
+          input(type="imudp" port="514")
+          # Store remote logs separately
+          template(name="RemoteLogs" type="string"
+            string="/var/log/remote/%HOSTNAME%/%PROGRAMNAME%.log")
+          if $fromhost-ip != '127.0.0.1' then ?RemoteLogs
+          & stop
+    - Create the remote logs directory:
+        mkdir -p /var/log/remote
+        chmod 755 /var/log/remote
+    - Restart rsyslog and verify it listens on 514/udp:
+        systemctl restart rsyslog
+        ss -ulnp | grep 514
+    - Configure rsyslog to also SEND logs to itself for testing:
+        Create /etc/rsyslog.d/50-lab-sender.conf:
+          *.info  @127.0.0.1:514
+    - Restart rsyslog and generate test traffic:
+        systemctl restart rsyslog
+        logger -p user.info -t LAB_REMOTE "test remote log entry"
+    - Verify the remote log was received:
+        ls /var/log/remote/
+        find /var/log/remote -name "*.log" -exec tail -3 {} \;
+    - Clean up both config files and restart rsyslog.
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Avanzado"
+  orden: 5
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A custom logrotate configuration needs to handle
+    multiple log files with different retention policies and
+    post-rotation actions.
+    Task: Create a complete logrotate configuration for the
+    lab log files with post-rotation hooks.
+    Technical Requirements:
+    - Create /etc/logrotate.d/lab-advanced with this policy:
+        /var/log/lab.log
+        /var/log/lab_disk_check.log
+        /var/log/lab_cron.log {
+            daily
+            rotate 14
+            compress
+            delaycompress
+            missingok
+            notifempty
+            create 0640 root root
+            dateext
+            dateformat -%Y%m%d
+            sharedscripts
+            prerotate
+                echo "$(date) – pre-rotation" >> /var/log/lab_rotate_audit.log
+            endscript
+            postrotate
+                systemctl reload rsyslog > /dev/null 2>&1 || true
+                echo "$(date) – post-rotation" >> /var/log/lab_rotate_audit.log
+            endscript
+        }
+    - Verify the configuration syntax:
+        logrotate -d /etc/logrotate.d/lab-advanced
+    - Force rotation and verify date-suffixed files are created:
+        logrotate -f /etc/logrotate.d/lab-advanced
+        ls -lh /var/log/lab*.log*
+    - Verify the audit log captured the pre/post scripts:
+        cat /var/log/lab_rotate_audit.log
+    - Run rotation a second time and verify rotate 14 behavior:
+        logrotate -f /etc/logrotate.d/lab-advanced
+        ls -lh /var/log/lab.log*
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Avanzado"
+  orden: 6
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: chrony needs to be configured for an isolated
+    network where internet NTP servers are unreachable.
+    The system must act as its own NTP reference.
+    Task: Configure chrony to use the local clock as a
+    stratum 10 reference and verify synchronization.
+    Technical Requirements:
+    - Backup current chrony configuration:
+        cp /etc/chrony.conf /etc/chrony.conf.bak_$(date +%Y%m%d)
+    - Modify /etc/chrony.conf for isolated network:
+        a) Comment out all existing 'pool' and 'server' lines:
+             sed -i 's/^pool/#pool/g; s/^server/#server/g' /etc/chrony.conf
+        b) Add local clock as source at stratum 10:
+             echo "local stratum 10" >> /etc/chrony.conf
+        c) Allow the local network to query this server:
+             echo "allow 192.168.0.0/16" >> /etc/chrony.conf
+    - Restart chronyd:
+        systemctl restart chronyd
+    - Verify the local clock is now the source:
+        chronyc sources -v
+        chronyc tracking
+      The Reference ID should show LOCAL or 127.127.1.1
+    - Verify stratum is 10:
+        chronyc tracking | grep "Stratum"
+    - Test that other systems could query this server:
+        chronyc -h 127.0.0.1 tracking
+    - Restore original configuration:
+        cp /etc/chrony.conf.bak_$(date +%Y%m%d) /etc/chrony.conf
+        systemctl restart chronyd
+        chronyc sources -v
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Avanzado"
+  orden: 7
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: A critical application needs to be monitored by
+    systemd with automatic restart, resource limits and
+    dependency on another service.
+    Task: Create an advanced systemd service unit with
+    restart policy, resource limits and a dependency chain.
+    Technical Requirements:
+    - Create the monitored application script:
+        cat > /usr/local/bin/lab-app.sh << 'EOF'
+        #!/bin/bash
+        trap 'exit 0' SIGTERM
+        COUNT=0
+        while true; do
+            COUNT=$((COUNT + 1))
+            echo "$(date) app ciclo $COUNT"
+            # Simulate random crash every ~20 cycles
+            [[ $((RANDOM % 20)) -eq 0 ]] && exit 1
+            sleep 3
+        done
+        EOF
+        chmod +x /usr/local/bin/lab-app.sh
+    - Create /etc/systemd/system/lab-app.service:
+        [Unit]
+        Description=Lab Application Service
+        After=lab-boot-monitor.service
+        Requires=lab-boot-monitor.service
+        [Service]
+        Type=simple
+        ExecStart=/usr/local/bin/lab-app.sh
+        Restart=on-failure
+        RestartSec=5
+        StartLimitInterval=60
+        StartLimitBurst=3
+        StandardOutput=journal
+        StandardError=journal
+        CPUQuota=20%
+        MemoryLimit=64M
+        [Install]
+        WantedBy=multi-user.target
+    - Enable and start the service:
+        systemctl daemon-reload
+        systemctl enable --now lab-app.service
+    - Observe automatic restart behavior:
+        watch -n2 systemctl status lab-app.service
+        journalctl -u lab-app.service -f
+      Wait for a crash and verify systemd restarts it.
+    - Verify resource limits are applied:
+        systemctl show lab-app.service | grep -E "CPU|Memory"
+    - Clean up:
+        systemctl disable --now lab-app.service
+        rm /etc/systemd/system/lab-app.service
+        rm /usr/local/bin/lab-app.sh
+        systemctl daemon-reload
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Avanzado"
+  orden: 8
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You need to build a complete automated maintenance
+    pipeline that runs weekly, generates a report, rotates logs
+    and alerts if any check fails.
+    Task: Create a systemd timer unit to replace a cron job
+    and implement a complete maintenance workflow.
+    Technical Requirements:
+    - Create the maintenance script /usr/local/bin/lab-weekly.sh:
+        #!/bin/bash
+        set -euo pipefail
+        LOG=/var/log/lab_weekly.log
+        echo "=== Weekly maintenance $(date) ===" >> $LOG
+        # Task 1: disk check
+        df -h | awk 'NR>1{gsub(/%/,"",$5); if($5+0>80)
+          print "ALERT: "$6" at "$5"%"}' >> $LOG
+        # Task 2: rotate lab logs
+        logrotate -f /etc/logrotate.d/lab >> $LOG 2>&1 || true
+        # Task 3: failed services
+        systemctl --failed --no-legend >> $LOG 2>&1 || true
+        echo "=== Done ===" >> $LOG
+    - Create the service unit /etc/systemd/system/lab-weekly.service:
+        [Unit]
+        Description=Lab Weekly Maintenance
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/local/bin/lab-weekly.sh
+        StandardOutput=journal
+        StandardError=journal
+    - Create the timer unit /etc/systemd/system/lab-weekly.timer:
+        [Unit]
+        Description=Lab Weekly Maintenance Timer
+        [Timer]
+        OnCalendar=weekly
+        Persistent=true
+        [Install]
+        WantedBy=timers.target
+    - Enable the timer (not the service directly):
+        systemctl daemon-reload
+        systemctl enable --now lab-weekly.timer
+    - Verify timer is active and see next trigger time:
+        systemctl list-timers | grep lab-weekly
+        systemctl status lab-weekly.timer
+    - Trigger the service manually to test it:
+        systemctl start lab-weekly.service
+        journalctl -u lab-weekly.service -n 30
+        cat /var/log/lab_weekly.log
+    - Clean up:
+        systemctl disable --now lab-weekly.timer
+        rm /etc/systemd/system/lab-weekly.{service,timer}
+        rm /usr/local/bin/lab-weekly.sh
+        systemctl daemon-reload
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Avanzado"
+  orden: 9
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: After a kernel panic or unexpected reboot you need
+    to analyze what happened using only the journal and system
+    logs from before the crash.
+    Task: Analyze a previous boot's logs to identify the
+    cause of a simulated system problem using journalctl
+    and the lab log files.
+    Technical Requirements:
+    - List all recorded boots in the journal:
+        journalctl --list-boots
+      Note the boot IDs and their timestamps.
+    - If there is more than one boot recorded, compare logs
+      between boots:
+        journalctl -b -1 -p err 2>/dev/null \
+            || echo "Only one boot recorded – using current"
+    - Analyze the simulated problem log:
+        cat /opt/labs/bloque10/troubleshooting/log_analysis/sistema_problemas.log
+    - For each problem found in sistema_problemas.log,
+      identify and document:
+        a) ATA disk errors → kernel messages, likely disk failure.
+           Command to check: dmesg | grep -i "ata\|error\|fail"
+        b) NTP sync failure → chrony cannot reach servers.
+           Command to check: journalctl -u chronyd -b
+        c) SSH brute force → multiple failed password attempts.
+           Command to check: journalctl -u sshd | grep "Failed password"
+           Count attempts from same IP:
+             grep "Failed password" /var/log/secure | \
+             awk '{print $11}' | sort | uniq -c | sort -rn
+        d) OOM killer → out of memory, process killed.
+           Command to check: dmesg | grep -i "oom\|killed process"
+        e) Service failure → lab-broken-service failed.
+           Command to check: journalctl -u lab-broken-service -b
+    - Write a structured incident report in /tmp/incident_report.txt
+      with: problem, evidence, likely cause, recommended fix.
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Avanzado"
+  orden: 10
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: This is the final advanced challenge. A system has
+    multiple simultaneous problems affecting boot, logging,
+    scheduling and performance. You must fix them all.
+    Task: Fix 5 independent problems on the system, each in
+    its own area covered by this block.
+    Technical Requirements:
+    - PROBLEM 1 – Boot performance:
+        lab-broken-service.service is enabled but fails,
+        slowing down the boot sequence.
+        Fix: disable it and verify boot time improves:
+          systemctl disable lab-broken-service.service
+          systemd-analyze blame | grep -v lab-broken
+    - PROBLEM 2 – Journal not persistent:
+        Verify /var/log/journal exists and Storage=persistent
+        is set. If not, fix /etc/systemd/journald.conf.d/lab-persist.conf
+        and restart journald:
+          journalctl --disk-usage
+          ls /var/log/journal/
+    - PROBLEM 3 – Cron job missing:
+        The disk check cron job is not installed for root.
+        Install it correctly in /etc/cron.d/lab-final:
+          */10 * * * * root \
+            /opt/labs/bloque10/tareas/cron_scripts/check_disk.sh \
+            >> /var/log/lab_disk_check.log 2>&1
+        Verify: ls /etc/cron.d/lab-final
+    - PROBLEM 4 – Wrong tuned profile:
+        The active tuned profile is not optimized for a VM.
+        Fix: apply virtual-guest profile:
+          tuned-adm profile virtual-guest
+          tuned-adm active | grep virtual-guest && echo "OK"
+    - PROBLEM 5 – Time not synchronized:
+        chronyd is stopped. Start it and verify synchronization:
+          systemctl enable --now chronyd
+          chronyc tracking | grep "Stratum"
+          timedatectl status | grep "NTP service"
+    - Final verification – all 5 fixes must pass:
+        systemctl is-enabled lab-broken-service | grep disabled
+        ls /var/log/journal/
+        ls /etc/cron.d/lab-final
+        tuned-adm active | grep virtual-guest
+        systemctl is-active chronyd
+      Print PASS or FAIL for each check.
+
+
+
+
+
+
