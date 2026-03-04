@@ -7877,7 +7877,465 @@
       Print PASS or FAIL for each check.
 
 
+# ======================================================================
+# BLOQUE 10 - BOOT, RECOVERY Y MANTENIMIENTO DEL SISTEMA
+# ======================================================================
 
+
+# ─── BLOQUE 10: BOOT, RECOVERY Y MANTENIMIENTO - TROUBLESHOOTING ───
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Troubleshooting"
+  orden: 1
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: A system boots extremely slowly. Users report it
+    takes over 3 minutes to reach the login prompt.
+    Nobody has changed anything recently.
+    Task: Diagnose the slow boot and identify the root cause
+    using only systemd analysis tools.
+    Technical Requirements:
+    - Measure and record current boot time:
+        systemd-analyze | tee /tmp/ts_boot_slow.txt
+    - Identify units taking more than 500ms:
+        systemd-analyze blame | awk '{
+            val=$1
+            gsub(/ms/,"",val); gsub(/s/,"",val)
+            if ($1 ~ /ms$/ && val+0 > 500) print
+            if ($1 ~ /s$/ && $1 !~ /ms$/) print
+        }' | head -20
+    - Inspect the critical chain for the slowest unit:
+        systemd-analyze critical-chain <slowest_unit>
+    - Check for units in failed or timeout state at boot:
+        systemctl --failed
+        journalctl -b -p err | grep -i "timeout\|timed out\|failed"
+    - Check for dependency ordering issues:
+        journalctl -b | grep -i "ordering cycle\|loop"
+    - Check if any unit is waiting for a device that never appears:
+        journalctl -b | grep -i "waiting\|Job.*timeout"
+    - Document in /tmp/slow_boot_diagnosis.txt:
+        Slowest unit name, time, likely cause and recommended fix.
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Troubleshooting"
+  orden: 2
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: After a routine update, grub2-mkconfig was run
+    incorrectly and the system no longer finds its kernel.
+    You have access to the GRUB command line at boot.
+    Task: Recover a system from a broken GRUB configuration
+    using the GRUB interactive shell.
+    Technical Requirements:
+    - Simulate the problem by studying the scenario:
+        cat /opt/labs/bloque10/troubleshooting/broken_boot/grub_cmdline_roto.txt
+    - Learn GRUB interactive commands (no reboot needed –
+      study and document the commands you would use):
+        a) List available disks and partitions:
+             grub> ls
+             grub> ls (hd0,gpt2)/
+        b) Find the kernel on the disk:
+             grub> ls (hd0,gpt2)/boot/
+        c) Manually boot the system from GRUB prompt:
+             grub> set root=(hd0,gpt2)
+             grub> linux /boot/vmlinuz-$(uname -r) root=/dev/sda2 ro
+             grub> initrd /boot/initramfs-$(uname -r).img
+             grub> boot
+    - On the running system, verify and document:
+        Current kernel location:
+          ls -lh /boot/vmlinuz-* /boot/initramfs-*.img
+        Current root device:
+          findmnt /
+        Current GRUB root setting:
+          grep "set root" /boot/grub2/grub.cfg | head -3
+    - Create /tmp/grub_recovery_runbook.txt with the exact
+      commands you would type at the GRUB prompt to manually
+      boot this specific system.
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Troubleshooting"
+  orden: 3
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: A developer accidentally ran 'chmod 000 /etc/shadow'
+    and now no user can log in, including root.
+    The system is still running – you have an active root session.
+    Task: Diagnose and fix broken file permissions on critical
+    system files without rebooting.
+    Technical Requirements:
+    - Simulate the problem (safe – you already have root):
+        chmod 000 /etc/shadow
+    - Verify the problem (try to check password auth):
+        su - labtasks 2>&1 | head -3
+        ssh localhost 2>&1 | head -3
+    - Identify the correct permissions for /etc/shadow:
+        man 5 shadow | grep -i "permiss" | head -5
+        getfattr -n security.selinux /etc/shadow 2>/dev/null || true
+    - Fix the permissions:
+        chmod 000 /etc/shadow   → correct permissions are 0000
+        chown root:shadow /etc/shadow
+      Note: /etc/shadow correct permissions ARE 000 (or 400).
+      The real problem to fix is the ownership:
+        ls -la /etc/shadow
+        stat /etc/shadow
+    - Verify the fix by checking what the default should be:
+        rpm -qf /etc/shadow
+        rpm -ql shadow-utils | grep shadow
+        rpm --verify shadow-utils | grep shadow
+    - Test authentication works again:
+        su - labtasks -c "whoami"
+    - Document: what permissions should /etc/passwd,
+      /etc/shadow and /etc/group have and why.
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Troubleshooting"
+  orden: 4
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: The system journal is growing uncontrolled and
+    consuming all available disk space. Additionally, rsyslog
+    is not writing to /var/log/messages.
+    Task: Diagnose and fix two simultaneous logging problems.
+    Technical Requirements:
+    - PROBLEM 1 – Journal consuming too much disk:
+        Check current journal size:
+          journalctl --disk-usage
+        Check available disk space:
+          df -h /var/log
+        Immediate fix – vacuum to 100MB:
+          journalctl --vacuum-size=100M
+        Permanent fix – edit journald configuration:
+          Edit /etc/systemd/journald.conf.d/lab-persist.conf
+          Set SystemMaxUse=150M and RuntimeMaxUse=50M
+          systemctl restart systemd-journald
+        Verify:
+          journalctl --disk-usage
+    - PROBLEM 2 – rsyslog not writing /var/log/messages:
+        Check if rsyslog is running:
+          systemctl status rsyslog
+        Check rsyslog for configuration errors:
+          rsyslogd -N1 2>&1 | grep -i "error\|warning"
+        Check if /var/log/messages exists and has correct
+        permissions:
+          ls -la /var/log/messages
+          stat /var/log/messages
+        Simulate the problem and fix it:
+          chmod 000 /var/log/messages
+          logger "test message"
+          tail /var/log/messages  → should fail
+          chmod 644 /var/log/messages
+          systemctl restart rsyslog
+          logger "test message fixed"
+          tail /var/log/messages  → should work now
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Troubleshooting"
+  orden: 5
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A cron job that was working fine has stopped
+    executing. The sysadmin cannot find any errors.
+    Task: Use a systematic methodology to diagnose why
+    a cron job is not running.
+    Technical Requirements:
+    - Install a cron job that will intentionally fail silently:
+        crontab -e
+        Add: * * * * * /opt/labs/bloque10/tareas/cron_scripts/check_disk.sh
+        Wait 2 minutes and check if it ran:
+          tail /var/log/lab_disk_check.log
+    - If it ran correctly, simulate the failure by breaking it:
+        chmod 000 /opt/labs/bloque10/tareas/cron_scripts/check_disk.sh
+    - Systematic diagnosis checklist:
+        a) Is crond running?
+             systemctl status crond
+        b) Is the crontab installed correctly?
+             crontab -l | grep check_disk
+        c) Is the script executable?
+             ls -la /opt/labs/bloque10/tareas/cron_scripts/check_disk.sh
+        d) Does the script run manually?
+             bash /opt/labs/bloque10/tareas/cron_scripts/check_disk.sh
+        e) Check cron logs for errors:
+             journalctl -u crond --since "10 minutes ago"
+             grep cron /var/log/cron | tail -20
+        f) Is the PATH correct for cron environment?
+             crontab -e → add: PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+        g) Is SELinux blocking execution?
+             ausearch -m avc -ts recent | grep crond
+    - Fix the problem:
+        chmod 755 /opt/labs/bloque10/tareas/cron_scripts/check_disk.sh
+    - Verify the fix:
+        Wait 2 minutes → tail /var/log/lab_disk_check.log
+    - Remove the test cron entry after verification.
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Troubleshooting"
+  orden: 6
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A systemd service is in a restart loop. It starts,
+    fails immediately, restarts, fails again. The system log
+    is filling with repeated failure messages.
+    Task: Diagnose a service restart loop, stop it safely and
+    fix the root cause.
+    Technical Requirements:
+    - Create a service that will enter a restart loop:
+        cat > /etc/systemd/system/lab-loop.service << 'EOF'
+        [Unit]
+        Description=Lab Restart Loop Service
+        [Service]
+        Type=simple
+        ExecStart=/bin/bash -c 'echo "starting..."; sleep 1; exit 1'
+        Restart=always
+        RestartSec=2
+        StartLimitInterval=30
+        StartLimitBurst=10
+        EOF
+        systemctl daemon-reload
+        systemctl start lab-loop.service
+    - Observe the loop in action:
+        watch -n1 systemctl status lab-loop.service
+        journalctl -u lab-loop.service -f &
+        JOURNAL_PID=$!
+        sleep 15
+        kill $JOURNAL_PID
+    - Diagnose the loop:
+        journalctl -u lab-loop.service -n 50
+        systemctl show lab-loop.service | grep -E "Restart|ActiveEnter|NRestarts"
+    - Check how many restarts have occurred:
+        systemctl show lab-loop.service | grep NRestarts
+    - Stop the loop safely (systemd will eventually hit StartLimitBurst):
+        systemctl stop lab-loop.service
+        systemctl reset-failed lab-loop.service
+    - Fix the service ExecStart so it does not fail:
+        systemctl edit --full lab-loop.service
+        Change ExecStart to: /bin/bash -c 'echo "running OK"; sleep infinity'
+        systemctl daemon-reload
+        systemctl restart lab-loop.service
+        systemctl status lab-loop.service
+    - Clean up:
+        systemctl disable --now lab-loop.service
+        rm /etc/systemd/system/lab-loop.service
+        systemctl daemon-reload
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Troubleshooting"
+  orden: 7
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A system is showing high load average but CPU
+    usage appears low. You need to identify whether the
+    problem is I/O wait, memory pressure or zombie processes.
+    Task: Use performance tools to diagnose a simulated
+    high load scenario and identify the root cause.
+    Technical Requirements:
+    - Generate I/O wait load to simulate the problem:
+        bash /opt/labs/bloque10/performance/benchmarks/generar_carga.sh disk 90 &
+        LOAD_PID=$!
+    - Check load average and identify it is above threshold:
+        uptime
+        cat /proc/loadavg
+    - Identify the load is coming from I/O wait (not CPU):
+        a) CPU check – %iowait should be high:
+             sar -u 2 5 | tail -6
+        b) Disk activity confirmation:
+             iostat -x 2 3 | grep -v "^$"
+        c) Which process is causing the I/O:
+             iotop -bn 3 2>/dev/null \
+               || ps -eo pid,%cpu,stat,cmd --sort=-%cpu | grep D | head -10
+           Note: 'D' state = uninterruptible sleep (waiting for I/O)
+        d) Check for memory pressure (swap usage):
+             free -h
+             vmstat 1 5 | tail -5
+           Check si/so columns: swap in/out activity
+        e) Check for zombie processes:
+             ps aux | grep Z | grep -v grep
+             ps -eo stat,pid,ppid,cmd | grep "^Z"
+    - Stop the load generator:
+        kill $LOAD_PID 2>/dev/null; wait $LOAD_PID 2>/dev/null
+    - Document findings in /tmp/load_diagnosis.txt:
+        Load type (CPU/IO/memory), evidence commands and output,
+        process responsible, recommended fix.
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Troubleshooting"
+  orden: 8
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: A system rebooted unexpectedly during the night.
+    There is no one to ask what happened. You need to
+    reconstruct the timeline from available logs.
+    Task: Perform a full post-mortem analysis of an
+    unexpected reboot using journal and system logs.
+    Technical Requirements:
+    - Check how many boots are in the journal:
+        journalctl --list-boots
+    - If multiple boots exist, analyze the boot before last:
+        journalctl -b -1 --no-pager | tail -50
+        journalctl -b -1 -p err --no-pager
+    - If only one boot exists, use the lab scenario log:
+        cat /opt/labs/bloque10/troubleshooting/log_analysis/sistema_problemas.log
+    - Build a timeline of events for the incident:
+        a) When did the system start?
+             journalctl -b | head -3
+        b) What errors appeared before the reboot?
+             journalctl -b -p err | head -20
+        c) Was it an OOM kill?
+             journalctl -b | grep -i "out of memory\|oom\|killed process"
+             dmesg | grep -i "oom"
+        d) Was it a kernel panic?
+             journalctl -b | grep -i "panic\|bug:\|oops"
+        e) Was it a manual reboot or shutdown?
+             last reboot | head -5
+             journalctl | grep -i "reboot\|shutdown\|systemd.*Starting.*Reboot"
+        f) Were there disk errors before reboot?
+             journalctl -b | grep -i "ata\|scsi\|i/o error\|ext4-fs error"
+    - Write a structured post-mortem in /tmp/postmortem.txt:
+        Timeline, evidence for each finding, probable root cause,
+        corrective actions and prevention recommendations.
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Troubleshooting"
+  orden: 9
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: A system has 4 simultaneous problems that appeared
+    after a failed maintenance window. The on-call engineer
+    needs to triage and fix them in order of severity.
+    Task: Diagnose and fix 4 problems across different areas
+    of the system, documenting each fix.
+    Technical Requirements:
+    - Setup – introduce the 4 problems (run as root):
+        # Problem 1: broken cron
+        chmod 000 /opt/labs/bloque10/tareas/cron_scripts/check_disk.sh
+        # Problem 2: journal not persisting
+        rm -rf /var/log/journal
+        systemctl restart systemd-journald
+        # Problem 3: wrong tuned profile
+        tuned-adm profile powersave
+        # Problem 4: chrony stopped
+        systemctl stop chronyd
+    - Triage: assess severity and order of fix:
+        Write in /tmp/triage.txt your priority order and why.
+    - Fix Problem 1 – cron script not executable:
+        chmod 755 /opt/labs/bloque10/tareas/cron_scripts/check_disk.sh
+        Verify: bash /opt/labs/bloque10/tareas/cron_scripts/check_disk.sh
+    - Fix Problem 2 – journal not persistent:
+        mkdir -p /var/log/journal
+        systemd-tmpfiles --create --prefix /var/log/journal
+        systemctl restart systemd-journald
+        Verify: journalctl --disk-usage
+    - Fix Problem 3 – wrong tuned profile:
+        tuned-adm profile virtual-guest
+        Verify: tuned-adm active | grep virtual-guest
+    - Fix Problem 4 – chrony stopped:
+        systemctl enable --now chronyd
+        chronyc makestep
+        Verify: timedatectl status | grep "NTP service"
+    - Final check – all 4 fixes verified:
+        bash /opt/labs/bloque10/tareas/cron_scripts/check_disk.sh && echo "P1 OK"
+        journalctl --disk-usage | grep -v "0 B" && echo "P2 OK"
+        tuned-adm active | grep virtual-guest && echo "P3 OK"
+        systemctl is-active chronyd && echo "P4 OK"
+
+- bloque: 10
+  tema: "Boot, Recovery y Mantenimiento"
+  nivel: "Troubleshooting"
+  orden: 10
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: This is the final exam scenario for the entire
+    course. A production system has multiple critical failures
+    spanning boot, recovery, logging, scheduling and performance.
+    You have 90 minutes and no internet access.
+    Task: Fix all 5 critical problems and leave the system
+    in a clean, verified state.
+    Technical Requirements:
+    - PROBLEM 1 – System boots to wrong target (15 pts):
+        Symptom: default target is set to rescue.target
+        Diagnose:
+          systemctl get-default
+        Fix:
+          systemctl set-default multi-user.target
+        Verify:
+          systemctl get-default | grep multi-user \
+              && echo "P1 PASS" || echo "P1 FAIL"
+
+    - PROBLEM 2 – Critical service not starting at boot (20 pts):
+        Symptom: lab-boot-monitor.service is disabled.
+        Diagnose:
+          systemctl is-enabled lab-boot-monitor.service
+        Fix:
+          systemctl enable lab-boot-monitor.service
+          systemctl start lab-boot-monitor.service
+        Verify:
+          systemctl is-active lab-boot-monitor.service \
+              && echo "P2 PASS" || echo "P2 FAIL"
+
+    - PROBLEM 3 – Logs not being written correctly (20 pts):
+        Symptom: /var/log/lab.log does not exist or is empty.
+        Diagnose:
+          ls -la /var/log/lab.log 2>/dev/null || echo "missing"
+          systemctl status rsyslog
+          cat /etc/rsyslog.d/10-lab.conf
+        Fix:
+          systemctl restart rsyslog
+          bash /opt/labs/bloque10/logs/generar_logs_lab.sh 5
+        Verify:
+          tail -3 /var/log/lab.log \
+              && echo "P3 PASS" || echo "P3 FAIL"
+
+    - PROBLEM 4 – Time synchronization broken (20 pts):
+        Symptom: chronyd is masked (not just stopped).
+        Diagnose:
+          systemctl status chronyd
+          systemctl is-enabled chronyd
+        Fix:
+          systemctl unmask chronyd
+          systemctl enable --now chronyd
+          chronyc makestep
+        Verify:
+          chronyc tracking | grep "Stratum" \
+              && echo "P4 PASS" || echo "P4 FAIL"
+
+    - PROBLEM 5 – No scheduled maintenance task (25 pts):
+        Symptom: no cron job or systemd timer runs disk checks.
+        Fix: create a systemd timer (preferred over cron
+        for RHCSA) that runs check_disk.sh every 10 minutes:
+          Create /etc/systemd/system/lab-final-check.service
+          Create /etc/systemd/system/lab-final-check.timer
+            OnCalendar=*:0/10
+            Persistent=true
+          systemctl daemon-reload
+          systemctl enable --now lab-final-check.timer
+          systemctl start lab-final-check.service
+        Verify:
+          systemctl list-timers | grep lab-final-check \
+              && echo "P5 PASS" || echo "P5 FAIL"
+
+    - FINAL SCORE – run all verifications:
+        for N in 1 2 3 4 5; do
+            echo "Problem $N: $(eval "echo \$P${N}_result")"
+        done
+        All 5 PASS → print "CURSO COMPLETADO – LISTO PARA RHCSA/LFCS"
 
 
 
