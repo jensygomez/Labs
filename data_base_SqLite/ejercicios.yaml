@@ -6432,4 +6432,348 @@
       (because they run in parallel).
 
 
+# ======================================================================
+# BLOQUE 9 - SCRIPTING BASH
+# ======================================================================
 
+
+# ─── BLOQUE 9: SCRIPTING BASH - TROUBLESHOOTING ───
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Troubleshooting"
+  orden: 1
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: A colleague left a backup script that fails with
+    syntax errors. You need to find and fix all the bugs.
+    Task: Analyze and repair
+    /opt/labs/bloque09/troubleshooting/broken_scripts/backup_roto.sh.
+    Technical Requirements:
+    - Run: bash -n backup_roto.sh
+      to detect syntax errors without executing the script.
+    - Run: shellcheck backup_roto.sh
+      and read every warning carefully.
+    - There are exactly 4 bugs to find and fix:
+        Bug 1: missing keyword in an if statement.
+        Bug 2: incorrect operator for numeric comparison.
+        Bug 3: deprecated arithmetic syntax.
+        Bug 4: missing quotes causing word splitting on filenames.
+    - Document each bug in a file BUGS.md:
+        ## Bug N
+        Line: X
+        Problem: description
+        Fix: corrected line
+    - Save the corrected script as backup_corregido.sh.
+    - Verify: bash -n backup_corregido.sh returns exit 0.
+    - Verify: shellcheck backup_corregido.sh returns no errors.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Troubleshooting"
+  orden: 2
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: A script works fine with normal data but crashes
+    with real-world input. You need to make it robust.
+    Task: Fix /opt/labs/bloque09/troubleshooting/edge_cases/procesar_csv.sh
+    so it handles all the test files without errors.
+    Technical Requirements:
+    - Test the original script against each file and document
+      what happens:
+        bash procesar_csv.sh datos_normales.csv       → should work
+        bash procesar_csv.sh datos_con_espacios.csv   → observe
+        bash procesar_csv.sh datos_vacios.csv         → observe
+        bash procesar_csv.sh datos_negativos.csv      → observe
+        bash procesar_csv.sh datos_no_numericos.csv   → observe
+        bash procesar_csv.sh fichero_inexistente.csv  → observe
+        bash procesar_csv.sh                          → observe
+    - Fix all failures in procesar_csv_v2.sh:
+        a) Initialize TOTAL=0 before the loop.
+        b) Validate $1 is provided and file exists.
+        c) Skip lines where 'valor' is empty or non-numeric:
+             [[ "$valor" =~ ^-?[0-9]+$ ]] || continue
+        d) Quote all variables in comparisons.
+        e) Truncate output.txt and alertas.txt at script start.
+    - procesar_csv_v2.sh must exit 0 for all 5 valid test files
+      and exit with non-zero for missing argument or missing file.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Troubleshooting"
+  orden: 3
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: A daily report script works perfectly when run
+    manually but produces nothing when run by cron.
+    Task: Diagnose and fix
+    /opt/labs/bloque09/troubleshooting/cron_lab/reporte_diario.sh.
+    Technical Requirements:
+    - Simulate the cron environment to reproduce the failure:
+        env -i HOME=/root LOGNAME=root \
+            PATH=/usr/bin:/bin SHELL=/bin/sh \
+            bash reporte_diario.sh
+      Observe and document the errors.
+    - Identify all the problems (there are at least 4):
+        a) 'source ~/.bashrc' fails in non-interactive shells.
+        b) PATH does not include /usr/sbin or custom paths.
+        c) Relative path './logs/' fails because cron runs
+           from a different working directory.
+        d) 'mail' command may not be installed.
+    - Create reporte_diario_v2.sh with all fixes:
+        a) Remove the source line entirely.
+        b) Set explicit PATH at the top of the script.
+        c) Use absolute paths for all files and directories.
+        d) Check if 'mail' is available before using it:
+             command -v mail &>/dev/null || echo "mail not found"
+    - Install reporte_diario_v2.sh in cron to run every minute,
+      verify it creates the report file, then remove the cron entry.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Troubleshooting"
+  orden: 4
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A complex script produces wrong results but no errors.
+    You need to use bash debug tools to trace the execution.
+    Task: Debug /opt/labs/bloque09/troubleshooting/optimizacion/analisis_lento.sh
+    using bash tracing tools to find the logic bug.
+    Technical Requirements:
+    - Enable verbose tracing with a custom PS4 before running:
+        export PS4='+(${BASH_SOURCE}:${LINENO}): '
+        bash -x analisis_lento.sh datos_grandes.csv 2>trace.log
+    - Inspect trace.log to find where the logic fails:
+        head -50 trace.log
+    - Add a trap to print variable state on each line:
+        trap 'echo "DBG line $LINENO: SUMA=$SUMA COUNT=$COUNT" >&2' DEBUG
+      Run again and pipe stderr to debug.log.
+    - Identify the logic bug: the script uses 'expr' which exits
+      non-zero when the result is 0, causing 'set -e' to abort.
+    - Create analisis_corregido.sh that fixes:
+        a) Replace all 'expr' with $(( )) arithmetic.
+        b) Replace all 'test' subshells with [[ ]] built-ins.
+        c) Replace 'echo | tr' with ${var^^} / ${var,,}.
+        d) Initialize all variables explicitly.
+    - Compare results: both scripts must produce identical output.
+    - Compare speed: time bash analisis_lento.sh vs corregido.sh
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Troubleshooting"
+  orden: 5
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A counter script that uses parallel processes almost
+    never reaches the expected value due to a race condition.
+    Task: Diagnose the race condition in
+    /opt/labs/bloque09/troubleshooting/race_condition/contador_roto.sh
+    and implement two different fixes.
+    Technical Requirements:
+    - Run the broken script 5 times and record results:
+        for i in $(seq 1 5); do bash contador_roto.sh; done
+      Confirm the output is inconsistent.
+    - Explain in RACE_ANALYSIS.md why the race condition occurs:
+        The read-modify-write sequence is not atomic.
+        Two processes can read the same value simultaneously.
+    - Fix A – flock (file locking) in contador_flock.sh:
+        incrementar() {
+            (
+              flock -x 9
+              local v=$(cat "$CONTADOR_FILE")
+              echo $((v + 1)) > "$CONTADOR_FILE"
+            ) 9>/var/lock/lab_contador.lock
+        }
+    - Fix B – atomic rename in contador_atomic.sh:
+        incrementar() {
+            local tmp=$(mktemp)
+            local v=$(cat "$CONTADOR_FILE")
+            echo $((v + 1)) > "$tmp"
+            mv "$tmp" "$CONTADOR_FILE"
+        }
+    - Verify both fixes always reach 10:
+        for i in $(seq 1 10); do bash contador_flock.sh; done
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Troubleshooting"
+  orden: 6
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A script that processes 10,000 lines takes over
+    60 seconds. It needs to run in under 2 seconds.
+    Task: Optimize
+    /opt/labs/bloque09/troubleshooting/optimizacion/analisis_lento.sh
+    to process datos_grandes.csv in under 2 seconds.
+    Technical Requirements:
+    - Measure baseline performance:
+        time bash analisis_lento.sh datos_grandes.csv
+      Record the time in BENCHMARK.md.
+    - Identify each performance problem using bash -x and
+      counting subprocess invocations in the trace:
+        bash -x analisis_lento.sh datos_grandes.csv 2>&1 | wc -l
+    - Create analisis_rapido.sh applying these optimizations:
+        a) Replace expr with $(( )) – eliminates one fork per line.
+        b) Replace $(test ...) subshells with [[ ]] – no fork.
+        c) Replace $(echo | tr) with ${var^^} – no fork.
+        d) Replace the entire while loop with a single awk call:
+             awk -F',' 'NR>0 {sum+=$3; count++; ...} END {print sum}' file
+    - Measure optimized performance:
+        time bash analisis_rapido.sh datos_grandes.csv
+    - Both scripts must produce identical numerical output.
+    - Document in BENCHMARK.md: time before, time after, speedup factor.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Troubleshooting"
+  orden: 7
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: A script passed to you for code review has several
+    security vulnerabilities. You must identify and fix them all.
+    Task: Audit and harden
+    /opt/labs/bloque09/troubleshooting/hardening/script_inseguro.sh.
+    Technical Requirements:
+    - Run shellcheck script_inseguro.sh and review all warnings.
+    - Identify all 4 vulnerabilities and document them in
+      SECURITY_AUDIT.md with this format per issue:
+        ## VULN N
+        Type: (command injection / race condition / etc.)
+        Line: X
+        Risk: description of what an attacker could do
+        Fix: the corrected code
+    - Vulnerability details to find:
+        VULN 1: eval with unsanitized user input → command injection.
+        VULN 2: eval of user-controlled variable → command injection.
+        VULN 3: predictable temp file path → symlink / race attack.
+        VULN 4: chmod before mkdir → symlink attack on directory.
+    - Create script_seguro.sh with all fixes applied:
+        a) Replace eval with direct commands or whitelisted logic.
+        b) Use mktemp for temp files: TMPFILE=$(mktemp)
+        c) Create directory first, then set permissions:
+             mkdir -p "$TMPDIR" && chmod 700 "$TMPDIR"
+        d) Validate all inputs with a whitelist regex before use:
+             [[ "$FICHERO" =~ ^[a-zA-Z0-9/_.-]+$ ]] || exit 1
+        e) Add set -euo pipefail at the top.
+    - Verify: shellcheck script_seguro.sh returns zero warnings.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Troubleshooting"
+  orden: 8
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: An incident has occurred and you need a script that
+    collects all relevant system data quickly for analysis.
+    Task: Write a diagnostic collection script similar to
+    sosreport, storing all output under
+    /opt/labs/bloque09/troubleshooting/.
+    Technical Requirements:
+    - Create BUNDLE_DIR=/tmp/diag_$(hostname -s)_$(date +%Y%m%d_%H%M%S)
+    - Run each collection in background (&) for speed:
+        collect_os()       uname -a, /etc/os-release, uptime, dmesg tail
+        collect_storage()  df -h, lsblk, mount
+        collect_memory()   free -h, /proc/meminfo, vmstat 1 3
+        collect_network()  ip addr, ip route, ss -tulpn
+        collect_services() systemctl --failed, systemctl list-units
+        collect_logs()     journalctl -p err --since "1 hour ago"
+    - Use wait after launching all collectors.
+    - Each collector writes to $BUNDLE_DIR/<name>.txt.
+    - After collection, generate SUMMARY.txt with automatic alerts:
+        Partitions above 80%  → grep from collect_storage output
+        Failed units          → grep from collect_services output
+        Kernel errors         → grep -i "error\|warn" from dmesg
+    - Compress the bundle:
+        tar -czf ${BUNDLE_DIR}.tar.gz -C /tmp $(basename $BUNDLE_DIR)
+        rm -rf "$BUNDLE_DIR"
+    - Print: "Bundle ready: ${BUNDLE_DIR}.tar.gz (size)"
+    - Total execution time must be under 15 seconds.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Troubleshooting"
+  orden: 9
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You receive a script that is supposed to manage a
+    flat-file database but it fails in multiple ways.
+    Task: The script below has 6 bugs. Find them all, fix them,
+    and verify the corrected version works end to end.
+    Technical Requirements:
+    - Create /tmp/db_roto.sh with this content and debug it:
+        #!/bin/bash
+        DB_DIR=/tmp/kvdb
+        mkdir $DB_DIR
+        db_set() { echo $2 > $DB_DIR/$1; }
+        db_get() { cat $DB_DIR/$1; }
+        db_del() { rm $DB_DIR/$1; }
+        db_list() { ls $DB_DIR; }
+        db_set "nombre" "Juan"
+        db_set "ciudad" "Madrid"
+        echo "nombre: $(db_get nombre)"
+        db_del "apellido"
+        echo "Claves: $(db_list)"
+    - Identify and fix all 6 bugs:
+        Bug 1: mkdir fails on second run (not idempotent).
+        Bug 2: db_set uses unquoted variables (word splitting).
+        Bug 3: db_get has no check for missing key.
+        Bug 4: db_del has no check for missing key (will error).
+        Bug 5: db_list fails silently if DB_DIR is empty.
+        Bug 6: no validation – key "../../etc/passwd" is dangerous.
+    - Save fixed version as /tmp/db_corregido.sh.
+    - The fixed script must:
+        Run twice without errors (idempotent mkdir).
+        Return exit 1 with message when getting/deleting missing key.
+        Reject keys that contain '/' or '..'.
+        Handle empty database without errors.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Troubleshooting"
+  orden: 10
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: This is the final exam challenge for the bash scripting
+    block. It combines debugging, optimization, security hardening
+    and complete script writing under exam conditions.
+    Task: Complete all 4 parts using the data in
+    /opt/labs/bloque09/troubleshooting/examen_final/.
+    Technical Requirements:
+    - PART 1 – Config processor (config/app.conf):
+        Write setup.sh that accepts -e <env> (dev/staging/prod).
+        Read app.conf, validate it has all 4 required keys.
+        If env is 'prod': set DEBUG=false and LOG_LEVEL=error.
+        Output to config/app_<env>.conf.
+        Show diff between original and new file.
+        Exit 0 on success, 1 on missing keys, 2 on invalid env.
+    - PART 2 – Log analyzer (logs/app.log):
+        Write analizar.sh that processes app.log and outputs
+        a JSON summary to /tmp/resultado.json using only
+        printf and echo (no jq, no python):
+          {"errors": N, "warnings": N, "info": N,
+           "avg_response_ms": N, "incident_detected": true|false}
+        An incident = 3 or more ERROR lines within 10 minutes.
+        avg_response_ms = average of the millisecond values in
+        INFO lines: "Request processed: Xms"
+    - PART 3 – Data stats (db/metricas.csv):
+        Write estadisticas.sh that calculates per column:
+        min, max, sum and average using only bash arithmetic.
+        Output a formatted table with printf.
+        No awk, no python, no bc – pure bash $(( )).
+    - PART 4 – Pipeline (pipeline.sh):
+        Run setup.sh, analizar.sh and estadisticas.sh in order.
+        If any step fails, save state to pipeline.state and exit 1.
+        Accept --resume to skip already-completed steps
+        (check pipeline.state for completed step names).
+        On full success: print "EXAMEN SUPERADO" and exit 0.
+        On any failure: print "EXAMEN FALLIDO: <step>" and exit 1.
