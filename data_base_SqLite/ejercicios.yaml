@@ -5581,3 +5581,236 @@
         systemctl restart container-lab-systemd-app
         systemctl is-active container-lab-systemd-app
         podman ps | grep lab-systemd-app
+
+
+
+# ======================================================================
+# BLOQUE 9 - SCRIPTING BASH
+# ======================================================================
+
+
+# ─── BLOQUE 9: SCRIPTING BASH - BÁSICO ───
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Basico"
+  orden: 1
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to write a script that processes a key=value
+    configuration file and works with variables safely.
+    Task: Create a script that reads /opt/labs/bloque09/basico/datos_kv.txt
+    and prints each variable using parameter expansion.
+    Technical Requirements:
+    - Read each line of datos_kv.txt and export the key=value pairs
+      as shell variables.
+    - Print the value of 'nombre' using default expansion:
+        echo ${nombre:-"unknown"}
+    - Print the length of 'ciudad':
+        echo ${#ciudad}
+    - Print the first 3 characters of 'apellido':
+        echo ${apellido:0:3}
+    - Print 'nombre' in uppercase:
+        echo ${nombre^^}
+    - The script must use 'set -euo pipefail' at the top.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Basico"
+  orden: 2
+  dificultad: 1
+  enunciado: |
+    Exam Scenario:
+    Context: You need to validate and classify input data using
+    conditional logic.
+    Task: Create a script that reads /opt/labs/bloque09/basico/numeros.txt
+    and classifies each number.
+    Technical Requirements:
+    - Read numeros.txt line by line using a while loop.
+    - For each number, use if/elif/else to classify it as:
+        "par" or "impar"
+    - At the end, print the total count of each category:
+        Pares: X
+        Impares: Y
+    - Use arithmetic: $((num % 2))
+    - The script must not use any external commands for the math.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Basico"
+  orden: 3
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to classify a list of items using a case statement,
+    which is more readable than chained if/elif for fixed values.
+    Task: Create a script that reads /opt/labs/bloque09/basico/animales.txt
+    and classifies each animal by type using 'case'.
+    Technical Requirements:
+    - For each line in animales.txt, use a 'case' statement to classify:
+        perro|gato|conejo|hamster  → mamifero
+        pajaro                     → ave
+        serpiente|tortuga          → reptil
+        pez                        → pez
+        *)                         → desconocido
+    - Print one line per animal:
+        perro: mamifero
+    - At the end, print a summary count per category.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Basico"
+  orden: 4
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: Scripts in production must accept arguments to be reusable.
+    Task: Create a script that uses 'getopts' to accept options and
+    calls different functions based on the flag passed.
+    Technical Requirements:
+    - Implement getopts with the following options:
+        -n <nombre>   calls funcion saludar()  → "Hola, <nombre>!"
+        -c <num>      calls funcion cuadrado() → imprime num^2
+        -h            prints usage and exits 0
+    - If no arguments are given, print usage and exit 1.
+    - If a required argument is missing (e.g. -n without value),
+      print an error to stderr and exit 2.
+    - Each function must be defined before main logic.
+    - Use 'set -euo pipefail'.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Basico"
+  orden: 5
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: You need to process tabular data from a CSV file using
+    arrays to store and query the information.
+    Task: Load /opt/labs/bloque09/basico/inventario.csv into a
+    bash associative array and answer queries from it.
+    Technical Requirements:
+    - Skip the header line (first line of the CSV).
+    - Use 'declare -A' to create an associative array where the key
+      is the server name and the value is the full CSV line.
+    - Print all servers with estado='activo'.
+    - Print the total sum of memoria_gb for active servers only.
+    - Print the server with the highest cpu_cores value.
+    - Do not use awk or python – use bash parameter expansion
+      and IFS to parse each field.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Basico"
+  orden: 6
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: Log analysis is a daily task for a sysadmin.
+    You need to extract information using pipes and redirection.
+    Task: Write a script that analyzes /opt/labs/bloque09/basico/app.log
+    using pipes, without loading the whole file into memory.
+    Technical Requirements:
+    - Count how many lines exist per log level (INFO, WARN, ERROR, DEBUG).
+      Use: grep | wc -l
+    - Extract only ERROR lines and save them to /tmp/errores.log
+      using redirection (>).
+    - Find the top 3 most frequent log messages (last field).
+      Use: cut | sort | uniq -c | sort -rn | head -3
+    - All output must go to stdout except errors, which go to stderr.
+    - The script must work as a pipeline:
+        bash analizar_log.sh | tee resumen.txt
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Basico"
+  orden: 7
+  dificultad: 2
+  enunciado: |
+    Exam Scenario:
+    Context: Scripts must handle missing or invalid input gracefully.
+    Task: Write a script that accepts a filename as $1 and validates
+    it before processing.
+    Technical Requirements:
+    - If $1 is not provided: print error to stderr, exit 1.
+    - If the file does not exist: print error to stderr, exit 2.
+    - If the file is empty: print warning to stderr, exit 3.
+    - If all checks pass: print the number of lines, words and
+      characters using 'wc', then exit 0.
+    - Test your script with:
+        bash validar.sh
+        bash validar.sh /tmp/no_existe.txt
+        bash validar.sh /dev/null
+        bash validar.sh /opt/labs/bloque09/basico/app.log
+    - Verify each exit code with: echo $?
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Basico"
+  orden: 8
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You need to generate a simple report from system data
+    using printf for formatted, aligned output.
+    Task: Write a script that reads /opt/labs/bloque09/basico/inventario.csv
+    and prints a formatted table to stdout.
+    Technical Requirements:
+    - Use printf to print a header and a separator line:
+        %-15s %-16s %-14s %-10s %-10s
+        Servidor       IP               Estado         Mem(GB)    CPU
+        ─────────────────────────────────────────────────────────────
+    - Print each server row with the same format.
+    - At the bottom print a summary line:
+        Total activos: X  |  Memoria total activa: Y GB
+    - The script must skip the CSV header line.
+    - Use only bash built-ins and printf (no awk, no column).
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Basico"
+  orden: 9
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: Robust scripts use 'trap' to clean up temporary files
+    and handle interruptions gracefully.
+    Task: Write a script that creates a temporary file, does work,
+    and guarantees cleanup even if interrupted.
+    Technical Requirements:
+    - Create a temp file with: TMPFILE=$(mktemp /tmp/lab_XXXXXX)
+    - Register a trap to delete it on EXIT, INT and TERM:
+        trap 'rm -f "$TMPFILE"' EXIT INT TERM
+    - Write 100 lines to the temp file using a for loop.
+    - Simulate an error on line 50: if [[ $i -eq 50 ]]; then exit 99; fi
+    - Verify that $TMPFILE is deleted after the script exits
+      (even with exit code 99):
+        ls /tmp/lab_* 2>/dev/null || echo "Cleanup OK"
+    - Print the exit code used: echo "Exit: $?"
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Basico"
+  orden: 10
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: On the LFCS/RHCSA exam you may be asked to write a script
+    that automates a complete small task end to end.
+    Task: Write a script that performs a mini-audit of the system
+    and saves the result to /tmp/audit_<hostname>_<date>.txt.
+    Technical Requirements:
+    - The output file must be named:
+        /tmp/audit_$(hostname -s)_$(date +%Y%m%d).txt
+    - The file must contain these sections, each with a header:
+        [SISTEMA]   uname -r, uptime -p
+        [DISCO]     df -h output
+        [MEMORIA]   free -h output
+        [USUARIOS]  who output
+        [SERVICIOS] systemctl list-units --state=failed --no-legend
+    - Use a function write_section() that accepts a title and a command:
+        write_section "[DISCO]" "df -h"
+    - At the end print: "Audit saved to <filename>"
+    - The script must use 'set -euo pipefail'.
+    - Permissions on the output file must be 600.
