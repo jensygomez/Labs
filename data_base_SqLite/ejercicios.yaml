@@ -5814,3 +5814,294 @@
     - At the end print: "Audit saved to <filename>"
     - The script must use 'set -euo pipefail'.
     - Permissions on the output file must be 600.
+
+# ======================================================================
+# BLOQUE 9 - SCRIPTING BASH
+# ======================================================================
+
+
+# ─── BLOQUE 9: SCRIPTING BASH - INTERMEDIO ───
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Intermedio"
+  orden: 11
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: Production systems require automated backups with
+    rotation to prevent disk exhaustion.
+    Task: Write a backup script that compresses a directory,
+    names the archive with a timestamp, and keeps only the
+    last 5 backups.
+    Technical Requirements:
+    - Accept source dir as $1 and destination dir as $2.
+      Default source: /opt/labs/bloque09/intermedio/backup_origen
+      Default destination: /opt/labs/bloque09/intermedio/backup_destino
+    - Create archive: backup_YYYYMMDD_HHMMSS.tar.gz
+    - Use tar -czf. Verify exit code; if non-zero print error
+      to stderr and exit 1.
+    - After creating the archive, count existing backups in dest.
+      If count > 5, delete the oldest ones using:
+        ls -t | tail -n +6 | xargs rm -f
+    - Generate a SHA256 checksum file alongside each backup:
+        backup_YYYYMMDD_HHMMSS.tar.gz.sha256
+    - Use a lock file /var/run/lab_backup.lock to prevent
+      concurrent executions. Remove it with trap on EXIT.
+    - Print a summary: filename, size (du -sh), checksum.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Intermedio"
+  orden: 12
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: A sysadmin needs a monitoring script that checks
+    key system metrics and logs alerts when thresholds are exceeded.
+    Task: Write a monitor script that reads thresholds from
+    /opt/labs/bloque09/intermedio/monitor.conf and checks the system.
+    Technical Requirements:
+    - Source monitor.conf to load all variables.
+    - Implement these check functions, each returning 0=OK / 1=ALERT:
+        check_disco()    uses df to check each partition in $PARTICIONES
+        check_memoria()  uses free to check RAM usage percentage
+        check_load()     reads /proc/loadavg, compares to $UMBRAL_LOAD
+        check_servicios() verifies each service in $SERVICIOS is active
+    - Each function must log one line to $LOG_MONITOR:
+        TIMESTAMP [OK|ALERT] METRIC: value (threshold: X)
+    - If $LOG_MONITOR exceeds $MAX_LOG_LINES lines, truncate it
+      keeping only the last $MAX_LOG_LINES lines:
+        tail -n $MAX_LOG_LINES "$LOG_MONITOR" > "$LOG_MONITOR.tmp"
+        mv "$LOG_MONITOR.tmp" "$LOG_MONITOR"
+    - Exit code: 0 if all checks OK, 1 if any check is ALERT.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Intermedio"
+  orden: 13
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: You need to extract statistics from an HTTP access log
+    and generate a plain-text report.
+    Task: Write a parser script that analyzes
+    /opt/labs/bloque09/intermedio/parser_logs/access.log
+    and produces a report.
+    Technical Requirements:
+    - Calculate and print:
+        a) Total number of requests.
+        b) Count per HTTP status code (200, 301, 404, 500, etc.)
+           Use: awk '{print $9}' | sort | uniq -c | sort -rn
+        c) Top 5 most requested URLs (field $7 in access.log).
+        d) Top 5 client IPs by number of requests (field $1).
+        e) Number of requests per hour of the day.
+           Use: cut -d: -f2 to extract the hour from the timestamp.
+    - Format the output using printf for aligned columns.
+    - Save the report to /tmp/access_report.txt using tee.
+    - The script must run in under 5 seconds on 500 lines.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Intermedio"
+  orden: 14
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Managing user accounts in bulk from a CSV is a common
+    sysadmin task during onboarding or offboarding.
+    Task: Write a script that reads
+    /opt/labs/bloque09/intermedio/usuarios_nuevos.csv
+    and creates each user with the specified attributes.
+    Technical Requirements:
+    - Skip the header line.
+    - For each user in the CSV:
+        a) Create the group if it does not exist: groupadd
+        b) Create the user if it does not exist:
+             useradd -m -g <grupo> -s <shell> <username>
+        c) Generate a random 16-character password:
+             tr -dc 'A-Za-z0-9@#%' < /dev/urandom | head -c 16
+        d) Set the password: echo "<user>:<pass>" | chpasswd
+        e) If expiry != "never": chage -E <expiry> <username>
+        f) Save credentials to /root/lab_credentials.txt (chmod 600):
+             username:password
+    - The script must be idempotent: running it twice must not
+      fail or duplicate users. Use 'id <user>' to check existence.
+    - Print a summary: created, skipped, errors.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Intermedio"
+  orden: 15
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: Disk hygiene tasks involve finding and acting on files
+    based on type, age, size or permissions.
+    Task: Write a script that organizes
+    /opt/labs/bloque09/intermedio/find_data using find and xargs.
+    Technical Requirements:
+    - Find and list all files with permissions 777:
+        find . -type f -perm 777
+      Fix their permissions to 644:
+        find . -type f -perm 777 | xargs chmod 644
+    - Find all .tmp files and delete them:
+        find . -name "*.tmp" -type f -delete
+    - Find all .bak files and move them to
+      /opt/labs/bloque09/intermedio/find_data/archive/:
+        find . -name "*.bak" | xargs -I{} mv {} archive/
+    - Find files larger than 100KB and print:
+        filename | size in KB
+      Use: find -size +100k -exec du -k {} \;
+    - Count files per extension and print a summary:
+        .jpg : X files
+        .pdf : Y files
+    - All actions must be logged to /tmp/find_lab.log.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Intermedio"
+  orden: 16
+  dificultad: 3
+  enunciado: |
+    Exam Scenario:
+    Context: Scripts that run as daemons or scheduled jobs need
+    to handle signals properly to shut down cleanly.
+    Task: Write a script that runs in a loop, handles SIGTERM
+    and SIGINT, and exits cleanly on either signal.
+    Technical Requirements:
+    - Use 'trap' to catch SIGTERM and SIGINT:
+        trap 'cleanup' SIGTERM SIGINT
+    - The cleanup() function must:
+        a) Print "Received signal, shutting down..." to stderr.
+        b) Remove /var/run/lab_daemon.pid if it exists.
+        c) Exit with code 0.
+    - On start, write the PID to /var/run/lab_daemon.pid:
+        echo $$ > /var/run/lab_daemon.pid
+    - The main loop runs every 5 seconds and prints:
+        [TIMESTAMP] Ciclo N – sistema OK
+    - Test the signal handling:
+        bash daemon.sh &
+        sleep 6
+        kill -TERM $(cat /var/run/lab_daemon.pid)
+        echo "Exit code: $?"
+    - Verify that /var/run/lab_daemon.pid is removed after kill.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Intermedio"
+  orden: 17
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Configuration files often need to be templated —
+    variables replaced at deploy time from an environment file.
+    Task: Write a script that processes a template file and
+    substitutes all {{VARIABLE}} placeholders with values
+    from a key=value config file.
+    Technical Requirements:
+    - Create the template file /tmp/app.template with content:
+        APP_HOST={{HOST}}
+        APP_PORT={{PORT}}
+        APP_ENV={{ENV}}
+        LOG_FILE=/var/log/{{APP_NAME}}.log
+    - Create the values file /tmp/deploy.env with:
+        HOST=192.168.1.100
+        PORT=8080
+        ENV=production
+        APP_NAME=myapp
+    - The script reads deploy.env line by line, and for each
+      KEY=VALUE, replaces all occurrences of {{KEY}} in the
+      template using sed:
+        sed -i "s|{{${KEY}}}|${VALUE}|g" output_file
+    - Output goes to /tmp/app.conf.
+    - After substitution, verify no {{...}} placeholders remain:
+        grep -c '{{' /tmp/app.conf && echo "ERROR: unreplaced vars" || echo "OK"
+    - Print a diff between template and final output:
+        diff /tmp/app.template /tmp/app.conf
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Intermedio"
+  orden: 18
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Sysadmins often need to produce reports in multiple
+    formats from the same data source.
+    Task: Write a script that reads
+    /opt/labs/bloque09/basico/inventario.csv and generates
+    the same report in three formats.
+    Technical Requirements:
+    - Generate /tmp/report.txt  – plain text table with printf.
+    - Generate /tmp/report.csv  – clean CSV (no header changes,
+      just filter active servers and recalculate fields).
+    - Generate /tmp/report.html – valid HTML with a <table>,
+      <thead> and <tbody>. Use a here-doc for the HTML skeleton
+      and a while loop to generate the <tr> rows.
+    - Each format must include only servers with estado='activo'.
+    - The HTML must have basic inline CSS:
+        <style>table{border-collapse:collapse}
+        td,th{border:1px solid #ccc;padding:4px}</style>
+    - Use a single parse_csv() function that reads the file and
+      calls a callback for each active server row.
+    - Print "Generated: report.txt report.csv report.html" on finish.
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Intermedio"
+  orden: 19
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Automating cron jobs requires not only the script
+    but also its correct installation and verification.
+    Task: Write a script that installs, verifies and removes
+    a cron job programmatically.
+    Technical Requirements:
+    - The cron job to install runs every 5 minutes and calls
+      /opt/labs/bloque09/intermedio/monitor.sh (create a stub
+      if it does not exist).
+    - Install the cron job using crontab:
+        (crontab -l 2>/dev/null; echo "*/5 * * * * /path/monitor.sh >> /tmp/monitor.log 2>&1") | crontab -
+    - Verify the cron job was installed:
+        crontab -l | grep -q "monitor.sh" && echo "OK" || echo "FAIL"
+    - The script must accept one argument:
+        install   → installs the cron job
+        remove    → removes it using: crontab -l | grep -v "monitor.sh" | crontab -
+        status    → prints current crontab
+    - Running 'install' twice must not add duplicate entries.
+      Check with: crontab -l | grep -c "monitor.sh"
+
+- bloque: 9
+  tema: "Scripting Bash"
+  nivel: "Intermedio"
+  orden: 20
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: On the RHCSA exam you may be asked to write a complete
+    maintenance script that combines multiple sysadmin tasks.
+    Task: Write a maintenance script that performs 4 tasks
+    sequentially and reports the result of each.
+    Technical Requirements:
+    - Task 1 – Disk cleanup:
+        Find and delete files in /tmp older than 7 days:
+        find /tmp -maxdepth 1 -type f -mtime +7 -delete
+    - Task 2 – Log rotation:
+        If /var/log/lab_monitor.log exists and has more than
+        500 lines, rotate it:
+        mv /var/log/lab_monitor.log /var/log/lab_monitor.log.1
+        touch /var/log/lab_monitor.log
+    - Task 3 – Service check:
+        Verify sshd and crond are active.
+        If any is inactive: attempt systemctl start <service>
+        Log result as OK or FAILED.
+    - Task 4 – Disk usage report:
+        Print partitions above 70% usage with df -h.
+    - After each task print:
+        [OK]   Task 1: Disk cleanup
+        [FAIL] Task 2: Log rotation – reason
+    - Final exit code: 0 if all tasks OK, 1 if any failed.
+    - Use 'set -uo pipefail' (not -e, to allow per-task error handling).
+
