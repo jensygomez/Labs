@@ -1,95 +1,47 @@
 #!/bin/bash
 # =============================================================================
-# LAB BLOQUE 8 — CONTENEDORES (PODMAN + DOCKER)
-# Rocky Linux 9 — sudo bash lab_bloque8_setup.sh
-# Preparación RHCSA + LFCS
+# LAB BLOQUE 8 — CONTENEDORES (PODMAN + DOCKER) - CORREGIDO
 # =============================================================================
 
-# set -e
+# Comentamos 'set -e' para que el script no aborte si un paquete ya existe 
+# o si hay un alias de docker previo.
+# set -e 
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; BLUE='\033[0;34m'; NC='\033[0m'
 
-echo ""
-echo "================================================================"
-echo "  LAB BLOQUE 8 — CONTENEDORES PODMAN + DOCKER"
-echo "  Rocky Linux 9 — Preparacion RHCSA + LFCS"
-echo "================================================================"
-echo ""
-
-# =============================================================================
-# PASO 0: VERIFICACIONES
-# =============================================================================
 echo -e "${YELLOW}[0/10] Verificando prerequisitos...${NC}"
+[[ $EUID -ne 0 ]] && echo -e "${RED}ERROR: Ejecutar con sudo.${NC}" && exit 1
 
-[[ $EUID -ne 0 ]] && echo -e "${RED}ERROR: Ejecutar como root.${NC}" && exit 1
+# Instalamos EPEL para asegurar que podman-compose esté disponible
+dnf install -y epel-release > /dev/null 2>&1 
 
-# Detectar usuario no-root para ejercicios rootless
-SUDO_USER_HOME=$(eval echo ~${SUDO_USER})
 LAB_USER=${SUDO_USER:-$(logname 2>/dev/null || echo "labuser")}
-
-echo -e "  Usuario de laboratorio detectado: ${BLUE}${LAB_USER}${NC}"
-echo -e "${GREEN}[OK] Prerequisitos verificados${NC}"
+echo -e "  Usuario: ${BLUE}${LAB_USER}${NC}"
 
 # =============================================================================
 # PASO 1: INSTALAR PODMAN
 # =============================================================================
-echo ""
-echo -e "${YELLOW}[1/10] Verificando e instalando Podman...${NC}"
-
-if ! command -v podman &>/dev/null; then
-    echo "  Instalando Podman..."
-    dnf install -y podman podman-compose podman-docker > /dev/null 2>&1
-    echo -e "  ${GREEN}[OK]${NC} Podman instalado"
-else
-    echo -e "  ${GREEN}[OK]${NC} Podman ya instalado: $(podman --version)"
-fi
-
-# Instalar herramientas adicionales de Podman
-dnf install -y \
-    podman-compose \
-    buildah \
-    skopeo \
-    > /dev/null 2>&1 || true
-
-echo -e "${GREEN}[OK] Podman y herramientas listas${NC}"
+echo -e "${YELLOW}[1/10] Instalando Podman y herramientas...${NC}"
+# Añadimos || true para que el script siga aunque ya estén instalados[cite: 4].
+dnf install -y podman podman-compose podman-docker buildah skopeo || true [cite: 3, 4]
 
 # =============================================================================
-# PASO 2: INSTALAR DOCKER CE
+# PASO 2: INSTALAR DOCKER CE (SIN CONFUSIONES)
 # =============================================================================
-echo ""
-echo -e "${YELLOW}[2/10] Verificando e instalando Docker CE...${NC}"
+echo -e "${YELLOW}[2/10] Instalando Docker CE Real...${NC}"
 
-if ! command -v docker &>/dev/null; then
-    echo "  Añadiendo repositorio Docker CE..."
+# Eliminamos el paquete de emulación para que no bloquee al Docker real[cite: 6].
+dnf remove -y podman-docker 2>/dev/null || true [cite: 6]
 
-    # Eliminar conflictos previos
-    dnf remove -y docker docker-client docker-client-latest \
-        docker-common docker-latest docker-latest-logrotate \
-        docker-logrotate docker-engine 2>/dev/null || true
+# Forzamos la configuración del repositorio oficial de Docker
+dnf install -y dnf-plugins-core > /dev/null 2>&1 [cite: 6]
+dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo > /dev/null 2>&1 [cite: 6]
 
-    # Añadir repo oficial Docker
-    dnf install -y dnf-plugins-core > /dev/null 2>&1
-    dnf config-manager --add-repo \
-        https://download.docker.com/linux/centos/docker-ce.repo \
-        > /dev/null 2>&1
+# Instalamos Docker CE asegurando que no se detenga si ya existe[cite: 7].
+dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin || true [cite: 7]
 
-    # Instalar Docker CE
-    dnf install -y \
-        docker-ce \
-        docker-ce-cli \
-        containerd.io \
-        docker-buildx-plugin \
-        docker-compose-plugin \
-        > /dev/null 2>&1
-
-    echo -e "  ${GREEN}[OK]${NC} Docker CE instalado"
-else
-    echo -e "  ${GREEN}[OK]${NC} Docker ya instalado: $(docker --version)"
-fi
-
-# Iniciar y habilitar Docker
 systemctl enable docker --now > /dev/null 2>&1
-echo -e "${GREEN}[OK] Docker CE listo${NC}"
+echo -e "${GREEN}[OK] Docker CE instalado y activo${NC}"
 
 # =============================================================================
 # PASO 3: CONFIGURAR COEXISTENCIA PODMAN + DOCKER
