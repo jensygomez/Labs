@@ -3431,12 +3431,12 @@
     Task: Audit the current SSH server configuration and verify
     root login works from lab-attacker (172.20.0.99).
     Technical Requirements:
-    - Read /etc/ssh/sshd_config.d/98-lab-insecure.conf.
+    - Read /etc/ssh/sshd_config.d/99-lab-insecure.conf.  # CAMBIADO de 98 a 99
     - Identify all insecure directives: PermitRootLogin yes,
-      PermitEmptyPasswords yes, MaxAuthTries 10, LogLevel QUIET.
+      PermitEmptyPasswords yes, MaxAuthTries 10, LogLevel INFO.  # CAMBIADO de QUIET a INFO
     - From lab-attacker verify root login is accepted:
         podman exec -it lab-attacker bash
-        ssh root@lab-server
+        ssh root@172.20.0.1  # CAMBIADO de lab-server a IP
     - Document the security risk of each insecure directive.
 
 - bloque: 7
@@ -3516,7 +3516,7 @@
       with 'firewall-cmd --zone=public --query-masquerade'.
     - From lab-client1 verify port 8080 is unreachable:
         podman exec -it lab-client1 bash
-        curl http://lab-server:8080
+        curl http://172.20.0.1:8080  # CAMBIADO de lab-server a IP
 
 - bloque: 7
   tema: "Seguridad"
@@ -3538,6 +3538,8 @@
         1. Port 8080 not open in any zone.
         2. Masquerade disabled in public zone.
         3. lab-dmz zone not assigned to any interface yet.
+    # Nota: El host no tiene interfaz 'lab-net0', es solo un concepto
+    # para el ejercicio - funciona igualmente.
 - bloque: 7
   tema: "Seguridad"
   nivel: "Intermedio"
@@ -3555,7 +3557,7 @@
     - Apply the rule with 'restorecon -Rv /srv/web_lab'.
     - Verify with 'ls -Z /srv/web_lab/index.html' that context
       is now httpd_sys_content_t.
-    - Test with 'curl http://localhost:8080' returns
+    - Test with 'curl curl http://172.20.0.1:8080' returns
       "SELinux Lab Content".
     - Confirm the rule persists with:
         semanage fcontext -l | grep web_lab
@@ -3652,7 +3654,7 @@
     - Reload sshd: systemctl reload sshd
     - From lab-attacker verify root login is rejected:
         podman exec -it lab-attacker bash
-        ssh root@lab-server  → must return "Permission denied"
+        ssh root@172.20.0.1  → must return "Permission denied"
     - Verify devuser can still login successfully:
         ssh devuser@lab-server
 
