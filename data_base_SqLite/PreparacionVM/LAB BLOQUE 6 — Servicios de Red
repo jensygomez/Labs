@@ -1,17 +1,14 @@
 #!/bin/bash
 # =============================================================================
-# LAB BLOQUE 6 — SERVICIOS DE RED (VERSIÓN INTEGRAL V3)
+# LAB BLOQUE 6 — SERVICIOS DE RED (VERSIÓN 3.1 REVISADA)
 # Rocky Linux 9 — Preparación RHCSA + LFCS
 # =============================================================================
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; BLUE='\033[0;34m'; NC='\033[0m'
 
-echo ""
-echo "================================================================"
-echo "  LAB BLOQUE 6 — SERVICIOS DE RED + CLIENTES PODMAN"
-echo "  Rocky Linux 9 — Configuración Persistente"
-echo "================================================================"
-echo ""
+echo -e "\n${BLUE}================================================================${NC}"
+echo -e "${BLUE}  LAB BLOQUE 6 — CONFIGURACIÓN FINAL ROBUSTA${NC}"
+echo -e "${BLUE}================================================================${NC}\n"
 
 # --- VERIFICACIÓN DE ROOT ---
 if [ $EUID -ne 0 ]; then
@@ -22,63 +19,56 @@ fi
 # =============================================================================
 # PASO 1: INFRAESTRUCTURA DE CONTENEDORES (PODMAN)
 # =============================================================================
-echo -e "${YELLOW}[1/6] Instalando y configurando Podman primero...${NC}"
+echo -e "${YELLOW}[1/6] Configurando Podman y Red...${NC}"
 
 dnf install -y podman podman-plugins > /dev/null 2>&1
 
-# Habilitar el servicio de reinicio de contenedores
+# Forzar el registro de imagen para evitar el error de "short-name resolution"
+IMAGE="quay.io/rockylinux/rockylinux:9"
+
 systemctl enable --now podman-restart.service > /dev/null 2>&1
 
-# Crear la red del laboratorio
 podman network rm lab-network 2>/dev/null || true
-podman network create \
-    --driver bridge \
-    --subnet 172.20.0.0/24 \
-    --gateway 172.20.0.1 \
-    lab-network
+podman network create --driver bridge --subnet 172.20.0.0/24 --gateway 172.20.0.1 lab-network > /dev/null
 
-echo -e "${GREEN}✓ Podman y Red (172.20.0.0/24) preparados${NC}"
+echo -e "${GREEN}✓ Red lab-network (172.20.0.0/24) creada${NC}"
 
 # =============================================================================
-# PASO 2: INSTALAR SERVICIOS DE RED EN EL HOST
+# PASO 2: INSTALAR SERVICIOS DE RED
 # =============================================================================
-echo -e "${YELLOW}[2/6] Instalando servicios de red (esto puede tardar)...${NC}"
+echo -e "${YELLOW}[2/6] Instalando paquetes de red...${NC}"
 
-# Lista de paquetes para los 40 ejercicios
 PACKAGES="httpd nfs-utils samba samba-client bind bind-utils chrony vsftpd rpcbind mod_ssl cifs-utils firewalld"
 
 for pkg in $PACKAGES; do
-    if ! rpm -q $pkg > /dev/null 2>&1; then
-        echo -ne "  Instalando $pkg... "
-        dnf install -y $pkg > /dev/null 2>&1
-        echo -e "${GREEN}OK${NC}"
-    else
-        echo -e "  $pkg ya está instalado."
-    fi
+    echo -ne "  Verificando $pkg... "
+    dnf install -y $pkg > /dev/null 2>&1
+    echo -e "${GREEN}OK${NC}"
 done
 
 # =============================================================================
-# PASO 3: CONFIGURACIÓN DE SERVICIOS (CON BUGS PARA PRACTICAR)
+# PASO 3: CONFIGURACIÓN Y BUGS (CORRECCIÓN DE RUTAS)
 # =============================================================================
-echo -e "${YELLOW}[3/6] Aplicando configuraciones base y 'bugs' de examen...${NC}"
+echo -e "${YELLOW}[3/6] Aplicando configuraciones y retos (Bugs)...${NC}"
 
-# Apache
-mkdir -p /var/www/html/secret
-echo "Bienvenido al Lab" > /var/www/html/index.html
-echo "Contenido Privado" > /var/www/html/secret/index.html
-[cite_start]chmod 700 /var/www/html/secret # Bug: 403 Forbidden intencional [cite: 4]
+# Apache [cite: 4]
+/usr/bin/mkdir -p /var/www/html/secret
+/usr/bin/echo "Bienvenido al Lab" > /var/www/html/index.html
+/usr/bin/echo "Contenido Privado" > /var/www/html/secret/index.html
+/usr/bin/chmod 700 /var/www/html/secret # Bug 403 [cite: 4]
 
-# NFS
-mkdir -p /mnt/nfs_share
-echo "Archivo NFS" > /mnt/nfs_share/test.txt
-chown -R nobody:nobody /mnt/nfs_share
-[cite_start]echo "/mnt/nfs_share 127.0.0.1(rw,sync,no_root_squash)" > /etc/exports # Bug: solo localhost [cite: 5, 17]
+# NFS [cite: 5]
+/usr/bin/mkdir -p /mnt/nfs_share
+/usr/bin/echo "Archivo NFS" > /mnt/nfs_share/test.txt
+/usr/bin/chown -R nobody:nobody /mnt/nfs_share
+/usr/bin/echo "/mnt/nfs_share 127.0.0.1(rw,sync,no_root_squash)" > /etc/exports # Bug localhost [cite: 5]
 
-# Samba
-useradd -s /sbin/nologin smbuser 2>/dev/null || true
-(echo "smbpass"; echo "smbpass") | smbpasswd -a smbuser -s
+# Samba [cite: 6, 7]
+/usr/sbin/useradd -s /sbin/nologin smbuser 2>/dev/null || true
+(echo "smbpass"; echo "smbpass") | /usr/bin/smbpasswd -a smbuser -s > /dev/null
 if ! grep -q "\[publico\]" /etc/samba/smb.conf; then
-cat >> /etc/samba/smb.conf << 'EOF'
+/usr/bin/cat >> /etc/samba/smb.conf << 'EOF'
+
 [publico]
    path = /srv/samba/public
    browseable = yes
@@ -86,61 +76,56 @@ cat >> /etc/samba/smb.conf << 'EOF'
    guest ok = yes
 EOF
 fi
-[cite_start]mkdir -p /srv/samba/public && chmod 777 /srv/samba/public # [cite: 6]
+/usr/bin/mkdir -p /srv/samba/public && /usr/bin/chmod 777 /srv/samba/public [cite: 6]
 
-# Chrony (NTP)
-sed -i 's/^pool /#pool /' /etc/chrony.conf
-[cite_start]echo "server 1.2.3.4 iburst" >> /etc/chrony.conf # Bug: IP falsa [cite: 8]
+# Chrony [cite: 8]
+/usr/bin/sed -i 's/^pool /#pool /' /etc/chrony.conf
+/usr/bin/echo "server 1.2.3.4 iburst" >> /etc/chrony.conf # Bug NTP [cite: 8]
 
-echo -e "${GREEN}✓ Configuraciones aplicadas${NC}"
+echo -e "${GREEN}✓ Archivos de configuración listos${NC}"
 
 # =============================================================================
 # PASO 4: PERSISTENCIA (SYSTEMD)
 # =============================================================================
-echo -e "${YELLOW}[4/6] Activando persistencia de servicios...${NC}"
+echo -e "${YELLOW}[4/6] Iniciando servicios con persistencia...${NC}"
 
 SERVICES="firewalld rpcbind nfs-server httpd smb nmb named chronyd vsftpd"
 for svc in $SERVICES; do
-    systemctl enable "$svc" --now > /dev/null 2>&1
+    /usr/bin/systemctl enable "$svc" --now > /dev/null 2>&1 [cite: 9]
 done
 
-echo -e "${GREEN}✓ Todos los servicios en 'enabled'${NC}"
+echo -e "${GREEN}✓ Servicios activos y habilitados${NC}"
 
 # =============================================================================
-# PASO 5: DESPLIEGUE DE CLIENTES (3 CONTENEDORES)
+# PASO 5: DESPLIEGUE DE CLIENTES PERSISTENTES
 # =============================================================================
-echo -e "${YELLOW}[5/6] Desplegando 3 clientes persistentes...${NC}"
-
-# Usamos una sola imagen para ahorrar tiempo
-IMAGE="rockylinux/rockylinux:9"
-podman pull $IMAGE > /dev/null 2>&1
+echo -e "${YELLOW}[5/6] Levantando contenedores (3 clientes)...${NC}"
 
 declare -A CLIENTS=( ["lab-client1"]="10" ["lab-client2"]="20" ["lab-admin"]="30" )
 
 for NAME in "${!CLIENTS[@]}"; do
-    podman rm -f "$NAME" 2>/dev/null || true
+    /usr/bin/podman rm -f "$NAME" 2>/dev/null || true [cite: 13]
     
-    # --restart always asegura que inicien al bootear la PC
-    podman run -d --name "$NAME" \
+    # Usamos la URL completa de la imagen para evitar errores de TTY 
+    /usr/bin/podman run -d --name "$NAME" \
         --network lab-network --ip "172.20.0.${CLIENTS[$NAME]}" \
         --hostname "$NAME" \
         --add-host "lab-server:172.20.0.1" \
         --restart always \
         --cap-add=NET_ADMIN --cap-add=SYS_ADMIN \
-        $IMAGE sleep infinity > /dev/null
+        $IMAGE sleep infinity > /dev/null [cite: 15]
     
-    echo -e "  Container $NAME → 172.20.0.${CLIENTS[$NAME]} ${GREEN}ACTIVO${NC}"
+    echo -e "  ${BLUE}Container $NAME → 172.20.0.${CLIENTS[$NAME]}${NC} ${GREEN}OK${NC}"
 done
 
 # =============================================================================
 # PASO 6: RESUMEN FINAL
 # =============================================================================
-echo ""
-echo -e "${BLUE}================================================================"
-echo -e "${GREEN}  LISTO PARA LOS 40 EJERCICIOS (Básico/Interm/Avanz/Trouble)${NC}"
+echo -e "\n${BLUE}================================================================"
+echo -e "${GREEN}  LISTO PARA LOS 40 EJERCICIOS${NC}"
 echo -e "================================================================${NC}"
-echo -e "  Host (Servidor): 172.20.0.1"
+echo -e "  Host IP: 172.20.0.1"
 echo -e "  Clientes: lab-client1, lab-client2, lab-admin"
-echo -e "  Persistencia: Contenedores y servicios iniciarán con la PC."
-echo -e "  Nota: Firewall activo. Deberás abrir puertos para avanzar."
-echo -e "${BLUE}================================================================${NC}"
+echo -e "  Prueba de acceso: podman exec -it lab-client1 bash"
+echo -e "  Nota: Recuerda abrir el firewall en el primer ejercicio básico."
+echo -e "${BLUE}================================================================${NC}\n"
