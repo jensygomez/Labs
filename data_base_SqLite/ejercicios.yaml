@@ -3148,7 +3148,168 @@
     - Reload the firewall.
     - From lab-client1, verify HTTP access with curl http://lab-server.
 
+# ─── BLOQUE 6: SERVICIOS DE RED - AVANZADO ───
 
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Avanzado"
+  orden: 1
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: Security policy requires that the Samba share 'publico' is only 
+    accessible from the laboratory network, denying any other network.
+    Task: Restrict Samba access at the service level.
+    Technical Requirements:
+    - Edit /etc/samba/smb.conf.
+    - Add 'hosts allow = 127. 172.20.0.' to the [publico] section or global.
+    - Restart smb and nmb services.
+    - Verify access from lab-client1 and ensure it would fail from an external IP.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Avanzado"
+  orden: 2
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You need to implement a reverse DNS zone to allow IP-to-name 
+    resolution for the laboratory network.
+    Task: Configure the reverse zone for 172.20.0.0/24.
+    Technical Requirements:
+    - Add a reverse zone block '0.20.172.in-addr.arpa' in /etc/named.conf.
+    - Create the zone file /var/named/172.20.0.rev.
+    - Add a PTR record: 172.20.0.1 -> server.lab.local.
+    - Restart named and verify with 'dig -x 172.20.0.1 @localhost'.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Avanzado"
+  orden: 3
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: The web server must handle high traffic for a specific internal 
+    application. You need to configure a custom log format and location.
+    Task: Create a dedicated log for the 'proyecto.lab.local' virtual host.
+    Technical Requirements:
+    - Edit the virtual host file for 'proyecto.lab.local'.
+    - Set 'CustomLog' to /var/log/httpd/proyecto_access.log.
+    - Set 'ErrorLog' to /var/log/httpd/proyecto_error.log.
+    - Reload httpd and verify logs are generated when accessing from lab-client1.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Avanzado"
+  orden: 4
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You need to share a directory via NFS, but it must be read-only 
+    for everyone except lab-admin, which should have read-write access.
+    Task: Configure granular NFS exports.
+    Technical Requirements:
+    - Create /mnt/nfs_admin.
+    - Edit /etc/exports: 
+      /mnt/nfs_admin 172.20.0.30(rw,no_root_squash) 172.20.0.0/24(ro)
+    - Run 'exportfs -ra'.
+    - Verify 'ro' mount from lab-client1 and 'rw' mount from lab-admin.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Avanzado"
+  orden: 5
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: To improve performance and security, you want to use Apache 
+    as a Reverse Proxy for a service running on lab-client1.
+    Task: Proxy requests from http://lab-server/app to http://172.20.0.10:8080.
+    Technical Requirements:
+    - Ensure 'mod_proxy' and 'mod_proxy_http' are loaded.
+    - Use 'ProxyPass' and 'ProxyPassReverse' directives in a new config file.
+    - Test from the host: 'curl http://localhost/app'.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Avanzado"
+  orden: 6
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: The FTP server must be hardened. Anonymous upload must be 
+    disabled, but a specific local user 'ftpuser' must be able to upload.
+    Task: Configure vsftpd for local user uploads and chroot jail.
+    Technical Requirements:
+    - Set 'local_enable=YES' and 'write_enable=YES' in vsftpd.conf.
+    - Enable 'chroot_local_user=YES'.
+    - Create 'ftpuser' and verify they can upload files to their home.
+    - Ensure anonymous can still download but NOT upload.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Avanzado"
+  orden: 7
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: The company requires that all time synchronization 
+    traffic is authenticated using a symmetric key.
+    Task: Configure Chrony to use a key for the local network.
+    Technical Requirements:
+    - Generate a key in /etc/chrony.keys.
+    - Configure 'allow 172.20.0.0/24' in chrony.conf to act as a server.
+    - Configure lab-client1 to sync from lab-server using the same key.
+    - Verify with 'chronyc sources' on the client.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Avanzado"
+  orden: 8
+  dificultad: 4
+  enunciado: |
+    Exam Scenario:
+    Context: For troubleshooting, you need to monitor network traffic 
+    on the server's bridge interface to see DNS requests in real-time.
+    Task: Capture and analyze DNS traffic.
+    Technical Requirements:
+    - Use 'tcpdump' on the network interface.
+    - Filter for port 53.
+    - Trigger a query from lab-client1: 'dig @172.20.0.1 google.com'.
+    - Identify the query and response in the tcpdump output.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Avanzado"
+  orden: 9
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You need to migrate the Apache website to a non-standard 
+    port (e.g., 8081) to avoid conflict with another service.
+    Task: Change Apache port and update all dependencies.
+    Technical Requirements:
+    - Change 'Listen 80' to 'Listen 8081' in httpd.conf.
+    - Update VirtualHosts to use port 8081.
+    - Update firewalld: remove port 80, add port 8081/tcp.
+    - Verify with 'curl http://localhost:8081'.
+
+- bloque: 6
+  tema: "Servicios de Red"
+  nivel: "Avanzado"
+  orden: 10
+  dificultad: 5
+  enunciado: |
+    Exam Scenario:
+    Context: You want to automate the verification of the web server 
+    status and restart it if it fails.
+    Task: Create a Bash script and a systemd timer.
+    Technical Requirements:
+    - Script: Check if httpd is active; if not, log the failure and restart it.
+    - Create a systemd service to run the script.
+    - Create a systemd timer to run the service every 1 minute.
+    - Test by stopping httpd manually and waiting for the timer to recover it.
+    
 # ─── BLOQUE 6: SERVICIOS DE RED - TROUBLESHOOTING ───
 
 - bloque: 6
