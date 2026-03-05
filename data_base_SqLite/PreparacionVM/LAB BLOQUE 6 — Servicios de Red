@@ -1,91 +1,97 @@
 #!/bin/bash
 # =============================================================================
-# LAB BLOQUE 6 — VERSION PRO (Persistente + Multicliente)
+# LAB BLOQUE 6 — CORREGIDO Y PERSISTENTE
 # Rocky Linux 9 — sudo bash lab_bloque6_setup.sh
 # =============================================================================
 
 set -e
-GREEN='\033[0;32m'; YELLOW='\1;33m'; RED='\033[0;31m'; BLUE='\033[0;34m'; NC='\033[0m'
+
+# Definición de colores corregida 
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+echo -e "${BLUE}Iniciando configuración del Laboratorio...${NC}"
 
 # --- PASO 0: VERIFICACIONES ---
 echo -e "${YELLOW}[0/10] Verificando entorno...${NC}"
-[[ $EUID -ne 0 ]] && echo -e "${RED}ERROR: Ejecutar como root.${NC}" && exit 1 [cite: 3]
+[[ $EUID -ne 0 ]] && echo -e "${RED}ERROR: Ejecutar como root.${NC}" && exit 1
 
-# --- PASO 1: INSTALACIÓN COMPLETA ---
-echo -e "${YELLOW}[1/10] Instalando todos los servicios del Bloque 6...${NC}"
+# --- PASO 1: INSTALACIÓN ---
+echo -e "${YELLOW}[1/10] Instalando servicios (httpd, nfs, samba, bind, chrony, vsftpd)...${NC}"
 dnf install -y httpd nfs-utils samba samba-client bind bind-utils \
-    chrony vsftpd rpcbind mod_ssl cifs-utils > /dev/null 2>&1 [cite: 4]
+    chrony vsftpd rpcbind mod_ssl cifs-utils podman > /dev/null 2>&1 [cite: 4]
 
-# --- PASO 2: ESTRUCTURA DE ARCHIVOS Y BUGS INICIALES ---
+# --- PASO 2: ESTRUCTURA Y BUGS ---
+echo -e "${YELLOW}[2/10] Configurando carpetas y bugs intencionales...${NC}"
 mkdir -p /var/www/html/secret /mnt/nfs_share /srv/samba/public
 echo "Bienvenido al Lab" > /var/www/html/index.html
 echo "Contenido Privado" > /var/www/html/secret/index.html
 chmod 700 /var/www/html/secret # Bug 403 intencional [cite: 16]
 
 echo "Archivo NFS" > /mnt/nfs_share/test.txt
-chown -R nobody:nobody /mnt/nfs_share [cite: 4]
-echo "/mnt/nfs_share 127.0.0.1(rw,sync,no_root_squash)" > /etc/exports [cite: 17]
+chown -R nobody:nobody /mnt/nfs_share [cite: 5]
+# Bug: Solo exporta a localhost inicialmente [cite: 17]
+echo "/mnt/nfs_share 127.0.0.1(rw,sync,no_root_squash)" > /etc/exports
 
-# --- PASO 3: CONFIGURACIÓN DE SAMBA ---
-useradd -s /sbin/nologin smbuser 2>/dev/null || true [cite: 5, 6]
+# --- PASO 3: SAMBA ---
+echo -e "${YELLOW}[3/10] Configurando Samba...${NC}"
+useradd -s /sbin/nologin smbuser 2>/dev/null || true [cite: 6]
 (echo "smbpass"; echo "smbpass") | smbpasswd -a smbuser -s
-grep -q "\[publico\]" /etc/samba/smb.conf || cat >> /etc/samba/smb.conf << 'EOF'
+if ! grep -q "\[publico\]" /etc/samba/smb.conf; then [cite: 7]
+cat >> /etc/samba/smb.conf << 'EOF'
 [publico]
    path = /srv/samba/public
    browseable = yes
    writable = yes
    guest ok = yes
 EOF
-[cite: 7]
+fi
 
-# --- PASO 4: BIND Y CHRONY (CON BUGS) ---
-# Chrony con IP falsa para forzar ejercicio de troubleshooting [cite: 8, 16]
+# --- PASO 4: CHRONY ---
+echo -e "${YELLOW}[4/10] Configurando Chrony (Bug NTP)...${NC}"
 sed -i 's/^pool /#pool /' /etc/chrony.conf
 echo "server 1.2.3.4 iburst" >> /etc/chrony.conf [cite: 8]
 
-# --- PASO 5: AUTO-START DE SERVICIOS (PERSISTENCIA) ---
-echo -e "${YELLOW}[5/10] Configurando persistencia de servicios...${NC}"
+# --- PASO 5: PERSISTENCIA SERVICIOS ---
+echo -e "${YELLOW}[5/10] Activando servicios...${NC}"
 for svc in rpcbind nfs-server httpd smb nmb named chronyd vsftpd; do
-    systemctl enable "$svc" --now 2>/dev/null [cite: 9]
+    systemctl enable "$svc" --now 2>/dev/null || echo -e "${RED}Warn: $svc falló${NC}" [cite: 9, 10]
 done
 
 # --- PASO 6: RED PODMAN ---
+echo -e "${YELLOW}[6/10] Configurando Red de Contenedores...${NC}"
 podman network rm lab-network 2>/dev/null || true [cite: 12]
-podman network create --subnet 172.20.0.0/24 --gateway 172.20.0.1 lab-network [cite: 12]
+podman network create --subnet 172.20.0.0/24 --gateway 172.20.0.1 lab-network
 
-# --- PASO 7: IMAGEN DE CLIENTE ROBUSTA ---
-echo -e "${YELLOW}[7/10] Creando imagen de herramientas (esto tarda un poco)...${NC}"
-TMPDIR=$(mktemp -d)
-cat > "$TMPDIR/Containerfile" << 'CONTAINEREOF'
-FROM rockylinux/rockylinux:9
-RUN dnf install -y nfs-utils samba-client cifs-utils bind-utils curl wget ftp iproute iputils net-tools tcpdump procps-ng sudo && dnf clean all
-RUN useradd -m labuser && echo "labuser:lab1234" | chpasswd && echo "labuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-CMD ["/usr/sbin/init"] 
-CONTAINEREOF
-podman build -t lab-tools:latest "$TMPDIR" -q 
+# --- PASO 7: IMAGEN Y CONTENEDORES ---
+echo -e "${YELLOW}[7/10] Creando contenedores (lab-client1, lab-client2, lab-admin)...${NC}"
+# Usamos una imagen ligera de Rocky 9 para los clientes 
+podman pull rockylinux/rockylinux:9
 
-# --- PASO 8: DESPLIEGUE DE 3 CONTENEDORES (RESTART POLICY) ---
-# Usamos --restart always para que inicien al bootear la VM
 declare -A CLIENTS=( ["lab-client1"]="10" ["lab-client2"]="20" ["lab-admin"]="30" )
 
 for NAME in "${!CLIENTS[@]}"; do
-    podman rm -f "$NAME" 2>/dev/null || true [cite: 13]
+    podman rm -f "$NAME" 2>/dev/null || true
     podman run -d --name "$NAME" \
         --network lab-network --ip "172.20.0.${CLIENTS[$NAME]}" \
         --hostname "$NAME" \
         --add-host "lab-server:172.20.0.1" \
         --restart always \
         --cap-add=NET_ADMIN --cap-add=SYS_ADMIN \
-        lab-tools:latest
-    echo -e "  ${GREEN}[OK]${NC} $NAME activo en 172.20.0.${CLIENTS[$NAME]}" 
+        rockylinux/rockylinux:9 sleep infinity [cite: 15]
+    
+    # Instalamos herramientas mínimas dentro de cada container post-inicio
+    echo -e "  Instalando herramientas en $NAME..."
+    podman exec "$NAME" dnf install -y nfs-utils samba-client cifs-utils bind-utils curl iproute iputils > /dev/null 2>&1
 done
 
-# --- PASO 9: HABILITAR PODMAN RESTART SERVICE ---
 systemctl enable --now podman-restart.service 2>/dev/null || true
 
-echo -e "\n${BLUE}================================================================${NC}"
-echo -e "${GREEN}ENTORNO LISTO PARA LOS 40 EJERCICIOS${NC}"
-echo -e "1. Los containers iniciarán solos al reiniciar la VM."
-echo -e "2. Tienes 3 clientes: lab-client1, lab-client2 y lab-admin."
-echo -e "3. Recuerda: El Firewall del host bloquea todo por defecto (Reto 1)."
-echo -e "${BLUE}================================================================${NC}"
+echo -e "\n${GREEN}================================================================${NC}"
+echo -e "${GREEN}LABORATORIO PREPARADO CORRECTAMENTE${NC}"
+echo -e "Los contenedores sobrevivirán a reinicios de la VM."
+echo -e "Prueba con: podman ps"
+echo -e "${GREEN}================================================================${NC}"
