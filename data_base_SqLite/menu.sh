@@ -17,7 +17,7 @@ source ./ejercicio.sh
 inicializar_db
 
 # ── Configuración de Bloques ────────────────────────────────
-BLOQUES=("" "Fundamentos del sistema" "Usuarios y grupos" "Almacenamiento" "Systemd y procesos" "Networking" "Servicios de red" "Seguridad" "Contenedores con Podman" "Scripting Bash" "Troubleshooting puro")
+BLOQUES=("" "Fundamentos del sistema" "Usuarios y grupos" "Almacenamiento" "Systemd y procesos" "Networking" "Servicios de red" "Seguridad" "Contenedores con Podman" "Scripting Bash" "Boot and Recovery")
 NIVELES=("Basico" "Intermedio" "Avanzado" "Troubleshooting")
 ICONOS=("🟢" "🟡" "🔴" "🔥")
 
