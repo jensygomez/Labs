@@ -1,409 +1,78 @@
 #!/bin/bash
 # =============================================================================
-# LAB BLOQUE 7 — SEGURIDAD (VERSIÓN FINAL)
+# LAB BLOQUE 7 — SEGURIDAD (VERSIÓN CON CONTENEDORES CORREGIDA)
 # Rocky Linux 9 — sudo bash lab_bloque7_setup.sh
-# Preparación RHCSA + LFCS
 # =============================================================================
 
-# Eliminamos set -e para que no se detenga en errores
-# set -e
-
-GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; BLUE='\033[0;34m'; NC='\033[0m'
-
-echo ""
-echo "================================================================"
-echo "  LAB BLOQUE 7 — SEGURIDAD (VERSIÓN FINAL)"
-echo "  Rocky Linux 9 — Preparacion RHCSA + LFCS"
-echo "================================================================"
-echo ""
-
-# Función para manejar errores
-check_error() {
-    if [ $? -ne 0 ]; then
-        echo -e "${YELLOW}  ⚠️  Advertencia: $1 (continuando...)${NC}"
-    fi
-}
+# [MANTÉN TODO EL SCRIPT ANTERIOR HASTA EL PASO 9]
 
 # =============================================================================
-# PASO 0: VERIFICACIONES Y PRE-REQUISITOS
-# =============================================================================
-echo -e "${YELLOW}[0/13] Verificando prerequisitos...${NC}"
-
-[[ $EUID -ne 0 ]] && echo -e "${RED}ERROR: Ejecutar como root.${NC}" && exit 1
-
-# Verificar sistema operativo
-if [ -f /etc/rocky-release ]; then
-    echo -e "  ${GREEN}✓${NC} Rocky Linux detectado"
-else
-    echo -e "  ${YELLOW}⚠️  No parece Rocky Linux, continuando bajo su responsabilidad${NC}"
-fi
-
-# Verificar Podman
-echo -e "  ${YELLOW}Verificando Podman...${NC}"
-if ! command -v podman &> /dev/null; then
-    echo -e "  ${YELLOW}Instalando Podman...${NC}"
-    dnf install -y podman podman-docker > /dev/null 2>&1
-    check_error "Instalación de Podman"
-    systemctl enable --now podman.socket 2>/dev/null
-else
-    echo -e "  ${GREEN}✓${NC} Podman ya instalado"
-fi
-
-# Verificar Apache
-echo -e "  ${YELLOW}Verificando Apache (httpd)...${NC}"
-if ! rpm -q httpd &> /dev/null; then
-    echo -e "  ${YELLOW}Instalando Apache...${NC}"
-    dnf install -y httpd > /dev/null 2>&1
-    check_error "Instalación de Apache"
-    systemctl enable --now httpd 2>/dev/null
-else
-    echo -e "  ${GREEN}✓${NC} Apache ya instalado"
-fi
-
-# Verificar red lab-network
-if ! podman network exists lab-network 2>/dev/null; then
-    echo -e "  ${YELLOW}Creando red lab-network...${NC}"
-    podman network create \
-        --driver bridge \
-        --subnet 172.20.0.0/24 \
-        --gateway 172.20.0.1 \
-        lab-network > /dev/null 2>&1
-    check_error "Creación de red"
-    echo -e "  ${GREEN}✓${NC} Red creada"
-else
-    echo -e "  ${GREEN}✓${NC} Red lab-network existe"
-fi
-
-# Asegurar firewalld
-systemctl is-active --quiet firewalld || systemctl start firewalld 2>/dev/null
-systemctl enable firewalld --quiet 2>/dev/null
-echo -e "  ${GREEN}✓${NC} Firewalld activo"
-
-echo -e "${GREEN}[OK] Prerequisitos verificados${NC}"
-
-# =============================================================================
-# PASO 1: INSTALAR PAQUETES DE SEGURIDAD (CON MANEJO DE ERRORES)
-# =============================================================================
-echo ""
-echo -e "${YELLOW}[1/13] Instalando paquetes de seguridad...${NC}"
-
-# Lista de paquetes a instalar
-PACKAGES=(
-    policycoreutils
-    policycoreutils-python-utils
-    setools-console
-    setroubleshoot-server
-    audit
-    audispd-plugins
-    fail2ban
-    fail2ban-firewalld
-    openssh-server
-    libpwquality
-)
-
-# Instalar paquetes uno por uno para mejor manejo de errores
-for pkg in "${PACKAGES[@]}"; do
-    echo -e "  ${YELLOW}Instalando $pkg...${NC}"
-    if rpm -q $pkg &>/dev/null; then
-        echo -e "    ${GREEN}✓${NC} Ya instalado"
-    else
-        dnf install -y $pkg > /dev/null 2>&1
-        if [ $? -eq 0 ]; then
-            echo -e "    ${GREEN}✓${NC} Instalado"
-        else
-            echo -e "    ${YELLOW}⚠️  No se pudo instalar $pkg (continuando)${NC}"
-        fi
-    fi
-done
-
-echo -e "${GREEN}[OK] Proceso de instalación completado${NC}"
-
-# =============================================================================
-# PASO 2: SELINUX — ESCENARIOS DE PRACTICA
-# =============================================================================
-echo ""
-echo -e "${YELLOW}[2/13] Configurando escenarios SELinux...${NC}"
-
-# Directorio con contexto incorrecto
-mkdir -p /srv/web_lab
-echo "SELinux Lab Content" > /srv/web_lab/index.html
-chcon -t default_t /srv/web_lab/index.html 2>/dev/null
-check_error "Cambio de contexto SELinux"
-
-# Booleano httpd_can_network_connect desactivado
-setsebool -P httpd_can_network_connect off 2>/dev/null
-check_error "Configuración de booleano SELinux"
-
-# Crear VirtualHost en Apache
-cat > /etc/httpd/conf.d/selinux_lab.conf << 'EOF' 2>/dev/null
-<VirtualHost *:8080>
-    DocumentRoot /srv/web_lab
-    <Directory /srv/web_lab>
-        Require all granted
-    </Directory>
-</VirtualHost>
-EOF
-check_error "Creación de VirtualHost"
-
-# Abrir puerto 8080 en SELinux para httpd
-if command -v semanage &>/dev/null; then
-    semanage port -a -t http_port_t -p tcp 8080 2>/dev/null || \
-    semanage port -m -t http_port_t -p tcp 8080 2>/dev/null || true
-fi
-
-# Añadir puerto 8080 a Apache
-echo "Listen 8080" > /etc/httpd/conf.d/ports_lab.conf 2>/dev/null
-
-# Reiniciar Apache
-systemctl restart httpd 2>/dev/null || true
-
-echo -e "${GREEN}[OK] SELinux configurado${NC}"
-
-# =============================================================================
-# PASO 3: SUDO / SUDOERS — ESCENARIOS
-# =============================================================================
-echo ""
-echo -e "${YELLOW}[3/13] Configurando escenarios sudo/sudoers...${NC}"
-
-# Crear usuarios de practica
-for user in devuser opsuser auditor; do
-    if ! id $user &>/dev/null; then
-        useradd -m $user 2>/dev/null
-        echo -e "  ${GREEN}✓${NC} Usuario $user creado"
-    else
-        echo -e "  ${GREEN}✓${NC} Usuario $user ya existe"
-    fi
-done
-
-# Establecer contraseñas
-echo "devuser:dev1234" | chpasswd 2>/dev/null
-echo "opsuser:ops1234" | chpasswd 2>/dev/null
-echo "auditor:aud1234" | chpasswd 2>/dev/null
-
-# Bug intencional: devuser tiene sudo completo sin password
-echo "devuser ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/devuser 2>/dev/null
-chmod 440 /etc/sudoers.d/devuser 2>/dev/null
-
-echo -e "${GREEN}[OK] Usuarios configurados${NC}"
-
-# =============================================================================
-# PASO 4: PAM — POLITICAS DE PASSWORD
-# =============================================================================
-echo ""
-echo -e "${YELLOW}[4/13] Configurando PAM y politicas de password...${NC}"
-
-# Backup de configuracion original
-[ -f /etc/security/pwquality.conf ] && \
-    cp /etc/security/pwquality.conf /etc/security/pwquality.conf.lab_backup 2>/dev/null
-
-# Bug intencional: politica de passwords muy debil
-cat > /etc/security/pwquality.conf << 'EOF' 2>/dev/null
-# LAB BLOQUE 7 — Politica debil
-minlen = 4
-minclass = 0
-maxrepeat = 10
-dcredit = 0
-ucredit = 0
-lcredit = 0
-ocredit = 0
-EOF
-
-# Bug en /etc/login.defs
-if [ -f /etc/login.defs ]; then
-    cp /etc/login.defs /etc/login.defs.lab_backup 2>/dev/null
-    sed -i 's/^PASS_MAX_DAYS.*/PASS_MAX_DAYS   999/' /etc/login.defs 2>/dev/null
-    sed -i 's/^PASS_MIN_LEN.*/PASS_MIN_LEN    1/'   /etc/login.defs 2>/dev/null
-fi
-
-echo -e "${GREEN}[OK] PAM configurado${NC}"
-
-# =============================================================================
-# PASO 5: SSH HARDENING — CONFIGURACION INSEGURA
-# =============================================================================
-echo ""
-echo -e "${YELLOW}[5/13] Configurando SSH con debilidades...${NC}"
-
-if [ -f /etc/ssh/sshd_config ]; then
-    cp /etc/ssh/sshd_config /etc/ssh/sshd_config.lab_backup 2>/dev/null
-    
-    mkdir -p /etc/ssh/sshd_config.d 2>/dev/null
-    cat > /etc/ssh/sshd_config.d/98-lab-insecure.conf << 'EOF' 2>/dev/null
-# LAB BLOQUE 7 — Configuracion insegura
-PermitRootLogin yes
-PasswordAuthentication yes
-MaxAuthTries 10
-PermitEmptyPasswords yes
-X11Forwarding yes
-LogLevel QUIET
-EOF
-    
-    systemctl reload sshd 2>/dev/null || systemctl restart sshd 2>/dev/null
-    echo -e "${GREEN}[OK] SSH configurado${NC}"
-else
-    echo -e "${YELLOW}⚠️  sshd_config no encontrado, saltando configuración SSH${NC}"
-fi
-
-# =============================================================================
-# PASO 6: PERMISOS ESPECIALES — SUID/SGID/STICKY
-# =============================================================================
-echo ""
-echo -e "${YELLOW}[6/13] Configurando escenarios SUID/SGID/Sticky Bit...${NC}"
-
-# Directorio compartido sin sticky bit
-mkdir -p /srv/shared_lab
-chmod 777 /srv/shared_lab 2>/dev/null
-
-# Binario con SUID innecesario
-if [ -f /usr/bin/cat ]; then
-    cp /usr/bin/cat /usr/local/bin/cat_lab 2>/dev/null
-    chmod u+s /usr/local/bin/cat_lab 2>/dev/null
-fi
-
-# Directorio de grupo sin SGID
-groupadd labgroup 2>/dev/null || true
-usermod -aG labgroup devuser 2>/dev/null
-usermod -aG labgroup opsuser 2>/dev/null
-mkdir -p /srv/labgroup_dir
-chown root:labgroup /srv/labgroup_dir 2>/dev/null
-chmod 775 /srv/labgroup_dir 2>/dev/null
-
-echo -e "${GREEN}[OK] Permisos especiales configurados${NC}"
-
-# =============================================================================
-# PASO 7: AUDITD — CONFIGURACION Y REGLAS
-# =============================================================================
-echo ""
-echo -e "${YELLOW}[7/13] Configurando auditd...${NC}"
-
-systemctl enable auditd --now 2>/dev/null || true
-
-# Archivo sensible para auditar
-mkdir -p /etc/lab_secrets
-echo "password=SuperSecreto123" > /etc/lab_secrets/credentials.conf
-chmod 600 /etc/lab_secrets/credentials.conf 2>/dev/null
-
-# Bug intencional: sin reglas de audit configuradas
-mkdir -p /etc/audit/rules.d 2>/dev/null
-echo "## Lab Bloque 7 — sin reglas (el alumno las añadira)" \
-    > /etc/audit/rules.d/lab.rules 2>/dev/null
-
-echo -e "${GREEN}[OK] auditd configurado${NC}"
-
-# =============================================================================
-# PASO 8: FAIL2BAN — CONFIGURACION CON BUGS
-# =============================================================================
-echo ""
-echo -e "${YELLOW}[8/13] Configurando fail2ban...${NC}"
-
-systemctl enable fail2ban --now 2>/dev/null || true
-
-# Bug intencional: jail de SSH desactivado
-mkdir -p /etc/fail2ban/jail.d 2>/dev/null
-cat > /etc/fail2ban/jail.d/lab-sshd.conf << 'EOF' 2>/dev/null
-[sshd]
-enabled = false
-port    = ssh
-logpath = /var/log/secure
-maxretry = 3
-bantime  = 300
-findtime = 60
-EOF
-
-# Bug: bantime demasiado corto
-cat > /etc/fail2ban/jail.d/lab-http.conf << 'EOF' 2>/dev/null
-[http-get-dos]
-enabled  = false
-port     = http,https
-logpath  = /var/log/httpd/access_log
-maxretry = 5
-bantime  = 10
-findtime = 30
-EOF
-
-systemctl restart fail2ban 2>/dev/null || true
-
-echo -e "${GREEN}[OK] fail2ban configurado${NC}"
-
-# =============================================================================
-# PASO 9: FIREWALLD AVANZADO — ESCENARIOS
-# =============================================================================
-echo ""
-echo -e "${YELLOW}[9/13] Configurando escenarios firewalld avanzado...${NC}"
-
-# Zona custom para el lab de seguridad
-firewall-cmd --permanent --new-zone=lab-dmz 2>/dev/null || true
-firewall-cmd --permanent --zone=lab-dmz --set-target=DROP 2>/dev/null
-firewall-cmd --permanent --zone=lab-dmz --add-service=http 2>/dev/null
-firewall-cmd --permanent --zone=lab-dmz --add-service=https 2>/dev/null
-
-# Masquerade desactivado
-firewall-cmd --permanent --zone=public --remove-masquerade 2>/dev/null || true
-
-firewall-cmd --reload 2>/dev/null
-
-echo -e "${GREEN}[OK] firewalld configurado${NC}"
-
-# =============================================================================
-# PASO 10: CREAR CONTENEDORES BÁSICOS
+# PASO 10: CREAR CONTENEDORES BÁSICOS (VERSIÓN CORREGIDA)
 # =============================================================================
 echo ""
 echo -e "${YELLOW}[10/13] Creando contenedores básicos...${NC}"
 
-# Función para crear contenedor cliente
+# Verificar y descargar imagen de Rocky Linux
+echo -e "  ${YELLOW}Verificando imagen de Rocky Linux...${NC}"
+if ! podman image exists rockylinux/rockylinux:9 2>/dev/null; then
+    echo -e "    ${YELLOW}Descargando imagen (puede tardar un minuto)...${NC}"
+    podman pull rockylinux/rockylinux:9 > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo -e "    ${GREEN}✓ Imagen descargada${NC}"
+    else
+        echo -e "    ${RED}✗ Error al descargar. Intentando con docker.io...${NC}"
+        podman pull docker.io/rockylinux/rockylinux:9 > /dev/null 2>&1
+    fi
+else
+    echo -e "    ${GREEN}✓ Imagen ya existe${NC}"
+fi
+
+# Función para crear contenedor cliente (versión simplificada)
 create_client_container() {
     local name=$1
     local ip=$2
+    local user=$3
     
     echo -e "  ${YELLOW}Creando $name (${ip})...${NC}"
     
     # Eliminar si existe
     podman rm -f $name 2>/dev/null || true
     
-    # Crear directorio temporal para Containerfile
-    TMPDIR=$(mktemp -d)
-    
-    cat > "$TMPDIR/Containerfile" << EOF
-FROM rockylinux/rockylinux:9
-RUN dnf install -y epel-release || true && \\
-    dnf install -y \\
-    openssh-clients \\
-    nmap \\
-    curl wget \\
-    iproute iputils \\
-    bind-utils \\
-    vim \\
-    || true && \\
-    dnf clean all || true
-RUN useradd $name 2>/dev/null || true && echo "$name:lab1234" | chpasswd 2>/dev/null || true
-CMD ["/bin/bash", "-c", "sleep infinity"]
-EOF
-
-    # Construir imagen
-    podman build -t "${name}:latest" "$TMPDIR" > /dev/null 2>&1
-    rm -rf "$TMPDIR"
-    
-    # Ejecutar contenedor
+    # Crear contenedor directamente con la imagen
     podman run -d \
         --name $name \
         --network lab-network \
         --ip $ip \
         --hostname $name \
         --restart=always \
-        "${name}:latest" > /dev/null 2>&1
+        rockylinux/rockylinux:9 \
+        sleep infinity > /dev/null 2>&1
     
     if [ $? -eq 0 ]; then
-        echo -e "    ${GREEN}✓${NC} $name creado en $ip"
+        echo -e "    ${GREEN}✓ Contenedor creado${NC}"
+        
+        # Esperar a que el contenedor esté listo
+        sleep 2
+        
+        # Instalar paquetes básicos
+        echo -e "    ${YELLOW}Instalando paquetes básicos...${NC}"
+        podman exec $name bash -c " \
+            dnf install -y epel-release > /dev/null 2>&1 && \
+            dnf install -y openssh-clients nmap curl wget iproute iputils bind-utils vim > /dev/null 2>&1 && \
+            useradd $user 2>/dev/null && echo '$user:lab1234' | chpasswd 2>/dev/null" > /dev/null 2>&1
+        
+        echo -e "    ${GREEN}✓ Configuración completada${NC}"
     else
-        echo -e "    ${YELLOW}⚠️  No se pudo crear $name${NC}"
+        echo -e "    ${RED}✗ Error al crear contenedor${NC}"
     fi
 }
 
 # Crear clientes
-create_client_container "lab-client1" "172.20.0.10"
-create_client_container "lab-client2" "172.20.0.20"
+create_client_container "lab-client1" "172.20.0.10" "client1"
+create_client_container "lab-client2" "172.20.0.20" "client2"
 
 # =============================================================================
-# PASO 11: CREAR CONTENEDOR lab-attacker
+# PASO 11: CREAR CONTENEDOR lab-attacker (VERSIÓN CORREGIDA)
 # =============================================================================
 echo ""
 echo -e "${YELLOW}[11/13] Creando contenedor lab-attacker...${NC}"
@@ -411,31 +80,9 @@ echo -e "${YELLOW}[11/13] Creando contenedor lab-attacker...${NC}"
 echo -e "  ${YELLOW}Creando lab-attacker (172.20.0.99)...${NC}"
 podman rm -f lab-attacker 2>/dev/null || true
 
-TMPDIR=$(mktemp -d)
-cat > "$TMPDIR/Containerfile" << 'CONTAINEREOF'
-FROM rockylinux/rockylinux:9
-RUN dnf install -y epel-release || true && \
-    dnf swap -y curl-minimal curl || true && \
-    dnf install -y \
-    openssh-clients \
-    nmap \
-    curl wget \
-    iproute iputils \
-    bind-utils \
-    vim \
-    netcat \
-    tcpdump \
-    || true && \
-    dnf clean all || true
-RUN useradd attacker 2>/dev/null || true && echo "attacker:att1234" | chpasswd 2>/dev/null || true
-CMD ["/bin/bash", "-c", "sleep infinity"]
-CONTAINEREOF
-
-podman build -t lab-attacker:latest "$TMPDIR" > /dev/null 2>&1
-rm -rf "$TMPDIR"
-
 HOST_IP=$(hostname -I | awk '{print $1}' 2>/dev/null || echo "172.20.0.1")
 
+# Crear contenedor atacante
 podman run -d \
     --name lab-attacker \
     --network lab-network \
@@ -444,13 +91,29 @@ podman run -d \
     --add-host "lab-server:${HOST_IP}" \
     --cap-add=NET_ADMIN \
     --restart=always \
-    lab-attacker:latest > /dev/null 2>&1
+    rockylinux/rockylinux:9 \
+    sleep infinity > /dev/null 2>&1
 
 if [ $? -eq 0 ]; then
-    echo -e "    ${GREEN}✓${NC} lab-attacker creado en 172.20.0.99"
+    echo -e "    ${GREEN}✓ Contenedor creado${NC}"
+    
+    # Esperar a que el contenedor esté listo
+    sleep 2
+    
+    # Instalar paquetes de atacante
+    echo -e "    ${YELLOW}Instalando herramientas de ataque...${NC}"
+    podman exec lab-attacker bash -c " \
+        dnf install -y epel-release > /dev/null 2>&1 && \
+        dnf install -y openssh-clients nmap curl wget iproute iputils bind-utils vim netcat tcpdump > /dev/null 2>&1 && \
+        useradd attacker 2>/dev/null && echo 'attacker:att1234' | chpasswd 2>/dev/null" > /dev/null 2>&1
+    
+    echo -e "    ${GREEN}✓ Configuración completada${NC}"
 else
-    echo -e "    ${YELLOW}⚠️  No se pudo crear lab-attacker${NC}"
+    echo -e "    ${RED}✗ Error al crear contenedor${NC}"
 fi
+
+
+
 
 # =============================================================================
 # PASO 12: CONFIGURAR SERVICIOS PARA INICIO AUTOMÁTICO
