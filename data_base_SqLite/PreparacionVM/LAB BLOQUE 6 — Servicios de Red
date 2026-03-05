@@ -76,7 +76,7 @@ if ! grep -q "\[publico\]" /etc/samba/smb.conf; then
    guest ok = yes
 EOF
 fi
-/usr/bin/mkdir -p /srv/samba/public && /usr/bin/chmod 777 /srv/samba/public [cite: 6]
+/usr/bin/mkdir -p /srv/samba/public && /usr/bin/chmod 777 /srv/samba/public
 
 # Chrony [cite: 8]
 /usr/bin/sed -i 's/^pool /#pool /' /etc/chrony.conf
