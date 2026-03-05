@@ -1,210 +1,413 @@
 #!/bin/bash
 # =============================================================================
-# LAB BLOQUE 7 — SEGURIDAD (VERSIÓN CON CONTENEDORES CORREGIDA)
-# Rocky Linux 9 — sudo bash lab_bloque7_setup.sh
+# LAB BLOQUE 7 — SEGURIDAD (VERSIÓN COMPLETA Y FUNCIONAL)
+# Rocky Linux 9 — Preparación RHCSA + LFCS
 # =============================================================================
 
-# [MANTÉN TODO EL SCRIPT ANTERIOR HASTA EL PASO 9]
+GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; BLUE='\033[0;34m'; NC='\033[0m'
 
-# =============================================================================
-# PASO 10: CREAR CONTENEDORES BÁSICOS (VERSIÓN CORREGIDA)
-# =============================================================================
 echo ""
-echo -e "${YELLOW}[10/13] Creando contenedores básicos...${NC}"
+echo "================================================================"
+echo "  LAB BLOQUE 7 — SEGURIDAD"
+echo "  Rocky Linux 9 — Preparacion RHCSA + LFCS"
+echo "================================================================"
+echo ""
 
-# Verificar y descargar imagen de Rocky Linux
-echo -e "  ${YELLOW}Verificando imagen de Rocky Linux...${NC}"
-if ! podman image exists rockylinux/rockylinux:9 2>/dev/null; then
-    echo -e "    ${YELLOW}Descargando imagen (puede tardar un minuto)...${NC}"
-    podman pull rockylinux/rockylinux:9 > /dev/null 2>&1
-    if [ $? -eq 0 ]; then
-        echo -e "    ${GREEN}✓ Imagen descargada${NC}"
-    else
-        echo -e "    ${RED}✗ Error al descargar. Intentando con docker.io...${NC}"
-        podman pull docker.io/rockylinux/rockylinux:9 > /dev/null 2>&1
-    fi
-else
-    echo -e "    ${GREEN}✓ Imagen ya existe${NC}"
+# =============================================================================
+# VERIFICACIÓN INICIAL
+# =============================================================================
+echo -e "${YELLOW}[VERIFICANDO] Comprobando requisitos...${NC}"
+
+# Verificar que somos root
+if [ $EUID -ne 0 ]; then
+    echo -e "${RED}ERROR: Este script debe ejecutarse como root${NC}"
+    echo "Ejecuta: sudo $0"
+    exit 1
 fi
 
-# Función para crear contenedor cliente (versión simplificada)
-create_client_container() {
-    local name=$1
-    local ip=$2
-    local user=$3
+# Verificar Rocky Linux
+if [ ! -f /etc/rocky-release ]; then
+    echo -e "${YELLOW}ADVERTENCIA: No parece Rocky Linux, continuando...${NC}"
+fi
+
+echo -e "${GREEN}✓ Requisitos OK${NC}"
+echo ""
+
+# =============================================================================
+# PASO 1: INSTALAR PAQUETES NECESARIOS
+# =============================================================================
+echo -e "${YELLOW}[1/7] Instalando paquetes necesarios...${NC}"
+
+# Actualizar repositorios
+dnf makecache -y > /dev/null 2>&1
+
+# Instalar paquetes básicos
+dnf install -y epel-release > /dev/null 2>&1
+
+# Instalar todos los paquetes necesarios
+dnf install -y \
+    podman \
+    httpd \
+    policycoreutils \
+    policycoreutils-python-utils \
+    setools-console \
+    setroubleshoot-server \
+    audit \
+    fail2ban \
+    openssh-server \
+    libpwquality \
+    firewalld \
+    > /dev/null 2>&1
+
+echo -e "${GREEN}✓ Paquetes instalados${NC}"
+echo ""
+
+# =============================================================================
+# PASO 2: CONFIGURAR SERVICIOS BÁSICOS
+# =============================================================================
+echo -e "${YELLOW}[2/7] Configurando servicios básicos...${NC}"
+
+# Activar firewalld
+systemctl start firewalld > /dev/null 2>&1
+systemctl enable firewalld > /dev/null 2>&1
+
+# Activar httpd
+systemctl start httpd > /dev/null 2>&1
+systemctl enable httpd > /dev/null 2>&1
+
+# Activar auditd
+systemctl start auditd > /dev/null 2>&1
+systemctl enable auditd > /dev/null 2>&1
+
+# Activar sshd
+systemctl start sshd > /dev/null 2>&1
+systemctl enable sshd > /dev/null 2>&1
+
+echo -e "${GREEN}✓ Servicios configurados${NC}"
+echo ""
+
+# =============================================================================
+# PASO 3: CONFIGURAR RED DE CONTENEDORES
+# =============================================================================
+echo -e "${YELLOW}[3/7] Configurando red de contenedores...${NC}"
+
+# Crear red para contenedores si no existe
+if ! podman network exists lab-network 2>/dev/null; then
+    podman network create \
+        --driver bridge \
+        --subnet 172.20.0.0/24 \
+        --gateway 172.20.0.1 \
+        lab-network > /dev/null 2>&1
+    echo -e "${GREEN}✓ Red lab-network creada${NC}"
+else
+    echo -e "${GREEN}✓ Red lab-network ya existe${NC}"
+fi
+echo ""
+
+# =============================================================================
+# PASO 4: CONFIGURAR ESCENARIOS DE SEGURIDAD (BUGS INTENCIONALES)
+# =============================================================================
+echo -e "${YELLOW}[4/7] Configurando escenarios de seguridad (bugs intencionales)...${NC}"
+
+# ---- SELINUX ----
+echo "  Configurando SELinux..."
+
+# Directorio con contexto incorrecto
+mkdir -p /srv/web_lab
+echo "SELinux Lab Content - Corregir contexto" > /srv/web_lab/index.html
+chcon -t default_t /srv/web_lab/index.html 2>/dev/null
+
+# Configurar Apache para puerto 8080
+echo "Listen 8080" > /etc/httpd/conf.d/ports_lab.conf
+
+# Configurar VirtualHost
+cat > /etc/httpd/conf.d/selinux_lab.conf << 'EOF'
+<VirtualHost *:8080>
+    DocumentRoot /srv/web_lab
+    <Directory /srv/web_lab>
+        Require all granted
+    </Directory>
+</VirtualHost>
+EOF
+
+# Configurar SELinux para puerto 8080
+semanage port -a -t http_port_t -p tcp 8080 2>/dev/null || \
+semanage port -m -t http_port_t -p tcp 8080 2>/dev/null
+
+# Desactivar booleano (bug intencional)
+setsebool -P httpd_can_network_connect off 2>/dev/null
+
+# Reiniciar Apache
+systemctl restart httpd 2>/dev/null
+
+echo "  ✓ SELinux configurado"
+
+# ---- USUARIOS Y SUDO ----
+echo "  Configurando usuarios..."
+
+# Crear usuarios
+for user in devuser opsuser auditor; do
+    if ! id $user &>/dev/null; then
+        useradd -m $user 2>/dev/null
+    fi
+done
+
+# Establecer contraseñas
+echo "devuser:dev1234" | chpasswd 2>/dev/null
+echo "opsuser:ops1234" | chpasswd 2>/dev/null
+echo "auditor:aud1234" | chpasswd 2>/dev/null
+
+# Bug intencional: devuser con sudo sin password
+echo "devuser ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/devuser
+chmod 440 /etc/sudoers.d/devuser
+
+echo "  ✓ Usuarios configurados"
+
+# ---- PAM (POLÍTICAS DE CONTRASEÑAS) ----
+echo "  Configurando políticas de contraseñas..."
+
+# Backup
+[ -f /etc/security/pwquality.conf ] && \
+    cp /etc/security/pwquality.conf /etc/security/pwquality.conf.backup
+
+# Política débil (bug intencional)
+cat > /etc/security/pwquality.conf << 'EOF'
+# POLÍTICA DÉBIL - BUG INTENCIONAL
+minlen = 4
+minclass = 1
+maxrepeat = 5
+dcredit = 0
+ucredit = 0
+lcredit = 0
+ocredit = 0
+EOF
+
+# Configurar login.defs
+if [ -f /etc/login.defs ]; then
+    cp /etc/login.defs /etc/login.defs.backup
+    sed -i 's/^PASS_MAX_DAYS.*/PASS_MAX_DAYS   999/' /etc/login.defs
+    sed -i 's/^PASS_MIN_DAYS.*/PASS_MIN_DAYS    0/' /etc/login.defs
+    sed -i 's/^PASS_MIN_LEN.*/PASS_MIN_LEN     4/' /etc/login.defs
+fi
+
+echo "  ✓ Políticas configuradas"
+
+# ---- SSH (CONFIGURACIÓN INSEGURA) ----
+echo "  Configurando SSH inseguro..."
+
+if [ -f /etc/ssh/sshd_config ]; then
+    cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
     
-    echo -e "  ${YELLOW}Creando $name (${ip})...${NC}"
+    # Crear configuración insegura
+    mkdir -p /etc/ssh/sshd_config.d
+    cat > /etc/ssh/sshd_config.d/99-lab-insecure.conf << 'EOF'
+# CONFIGURACIÓN INSEGURA - BUG INTENCIONAL
+PermitRootLogin yes
+PasswordAuthentication yes
+MaxAuthTries 10
+PermitEmptyPasswords yes
+X11Forwarding yes
+LogLevel INFO
+EOF
+    
+    systemctl restart sshd 2>/dev/null
+fi
+
+echo "  ✓ SSH configurado"
+
+# ---- PERMISOS ESPECIALES (SUID/SGID) ----
+echo "  Configurando permisos especiales..."
+
+# Directorio compartido sin sticky bit
+mkdir -p /srv/shared_lab
+chmod 777 /srv/shared_lab
+
+# Binario con SUID innecesario
+if [ -f /usr/bin/cat ]; then
+    cp /usr/bin/cat /usr/local/bin/cat_lab
+    chmod u+s /usr/local/bin/cat_lab
+fi
+
+# Directorio de grupo sin SGID
+groupadd labgroup 2>/dev/null
+usermod -aG labgroup devuser 2>/dev/null
+usermod -aG labgroup opsuser 2>/dev/null
+mkdir -p /srv/labgroup_dir
+chown root:labgroup /srv/labgroup_dir
+chmod 775 /srv/labgroup_dir
+
+echo "  ✓ Permisos configurados"
+
+# ---- FAIL2BAN (DESACTIVADO) ----
+echo "  Configurando fail2ban..."
+
+# Desactivar jails
+mkdir -p /etc/fail2ban/jail.d
+cat > /etc/fail2ban/jail.d/99-lab.conf << 'EOF'
+# FAIL2BAN DESACTIVADO - BUG INTENCIONAL
+[sshd]
+enabled = false
+
+[http-get-dos]
+enabled = false
+EOF
+
+systemctl restart fail2ban 2>/dev/null || true
+
+echo "  ✓ fail2ban configurado"
+
+echo -e "${GREEN}✓ Escenarios de seguridad configurados${NC}"
+echo ""
+
+# =============================================================================
+# PASO 5: CREAR CONTENEDORES
+# =============================================================================
+echo -e "${YELLOW}[5/7] Creando contenedores para el laboratorio...${NC}"
+
+# Descargar imagen de Rocky Linux
+echo "  Descargando imagen base (puede tardar un momento)..."
+podman pull rockylinux/rockylinux:9 > /dev/null 2>&1
+echo "  ✓ Imagen lista"
+
+# Función para crear contenedor
+crear_contenedor() {
+    local nombre=$1
+    local ip=$2
+    local usuario=$3
+    local herramientas=$4
+    
+    echo "  Creando $nombre ($ip)..."
     
     # Eliminar si existe
-    podman rm -f $name 2>/dev/null || true
+    podman rm -f $nombre 2>/dev/null
     
-    # Crear contenedor directamente con la imagen
+    # Crear contenedor
     podman run -d \
-        --name $name \
+        --name $nombre \
         --network lab-network \
         --ip $ip \
-        --hostname $name \
+        --hostname $nombre \
         --restart=always \
         rockylinux/rockylinux:9 \
         sleep infinity > /dev/null 2>&1
     
     if [ $? -eq 0 ]; then
-        echo -e "    ${GREEN}✓ Contenedor creado${NC}"
+        echo "    ✓ Contenedor creado"
         
-        # Esperar a que el contenedor esté listo
+        # Esperar un momento
         sleep 2
         
         # Instalar paquetes básicos
-        echo -e "    ${YELLOW}Instalando paquetes básicos...${NC}"
-        podman exec $name bash -c " \
+        echo "    Instalando herramientas básicas..."
+        podman exec $nombre bash -c " \
             dnf install -y epel-release > /dev/null 2>&1 && \
-            dnf install -y openssh-clients nmap curl wget iproute iputils bind-utils vim > /dev/null 2>&1 && \
-            useradd $user 2>/dev/null && echo '$user:lab1234' | chpasswd 2>/dev/null" > /dev/null 2>&1
+            dnf install -y openssh-clients curl wget iproute iputils bind-utils vim $herramientas > /dev/null 2>&1" > /dev/null 2>&1
         
-        echo -e "    ${GREEN}✓ Configuración completada${NC}"
+        # Crear usuario
+        podman exec $nombre bash -c " \
+            useradd $usuario 2>/dev/null && \
+            echo '$usuario:lab1234' | chpasswd 2>/dev/null" > /dev/null 2>&1
+        
+        echo "    ✓ Configuración completada"
     else
-        echo -e "    ${RED}✗ Error al crear contenedor${NC}"
+        echo "    ${RED}✗ Error al crear contenedor${NC}"
     fi
 }
 
-# Crear clientes
-create_client_container "lab-client1" "172.20.0.10" "client1"
-create_client_container "lab-client2" "172.20.0.20" "client2"
+# Crear contenedores
+crear_contenedor "lab-client1" "172.20.0.10" "client1" ""
+crear_contenedor "lab-client2" "172.20.0.20" "client2" ""
+crear_contenedor "lab-attacker" "172.20.0.99" "attacker" "nmap netcat tcpdump"
 
-# =============================================================================
-# PASO 11: CREAR CONTENEDOR lab-attacker (VERSIÓN CORREGIDA)
-# =============================================================================
+echo -e "${GREEN}✓ Contenedores creados${NC}"
 echo ""
-echo -e "${YELLOW}[11/13] Creando contenedor lab-attacker...${NC}"
-
-echo -e "  ${YELLOW}Creando lab-attacker (172.20.0.99)...${NC}"
-podman rm -f lab-attacker 2>/dev/null || true
-
-HOST_IP=$(hostname -I | awk '{print $1}' 2>/dev/null || echo "172.20.0.1")
-
-# Crear contenedor atacante
-podman run -d \
-    --name lab-attacker \
-    --network lab-network \
-    --ip 172.20.0.99 \
-    --hostname lab-attacker \
-    --add-host "lab-server:${HOST_IP}" \
-    --cap-add=NET_ADMIN \
-    --restart=always \
-    rockylinux/rockylinux:9 \
-    sleep infinity > /dev/null 2>&1
-
-if [ $? -eq 0 ]; then
-    echo -e "    ${GREEN}✓ Contenedor creado${NC}"
-    
-    # Esperar a que el contenedor esté listo
-    sleep 2
-    
-    # Instalar paquetes de atacante
-    echo -e "    ${YELLOW}Instalando herramientas de ataque...${NC}"
-    podman exec lab-attacker bash -c " \
-        dnf install -y epel-release > /dev/null 2>&1 && \
-        dnf install -y openssh-clients nmap curl wget iproute iputils bind-utils vim netcat tcpdump > /dev/null 2>&1 && \
-        useradd attacker 2>/dev/null && echo 'attacker:att1234' | chpasswd 2>/dev/null" > /dev/null 2>&1
-    
-    echo -e "    ${GREEN}✓ Configuración completada${NC}"
-else
-    echo -e "    ${RED}✗ Error al crear contenedor${NC}"
-fi
-
-
-
 
 # =============================================================================
-# PASO 12: CONFIGURAR SERVICIOS PARA INICIO AUTOMÁTICO
+# PASO 6: CONFIGURAR INICIO AUTOMÁTICO
 # =============================================================================
-echo ""
-echo -e "${YELLOW}[12/13] Configurando servicios para inicio automático...${NC}"
-
-# Crear script de systemd para iniciar contenedores
-cat > /etc/systemd/system/podman-lab-containers.service << 'EOF' 2>/dev/null
-[Unit]
-Description=Podman Lab Containers for Bloque 7
-After=network.target firewalld.service podman.service
-Requires=podman.service
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/usr/local/bin/start-lab-containers.sh
-ExecStop=/usr/bin/podman stop lab-client1 lab-client2 lab-attacker
-
-[Install]
-WantedBy=multi-user.target
-EOF
+echo -e "${YELLOW}[6/7] Configurando inicio automático...${NC}"
 
 # Crear script de inicio
-cat > /usr/local/bin/start-lab-containers.sh << 'EOF' 2>/dev/null
+cat > /usr/local/bin/iniciar-lab.sh << 'EOF'
 #!/bin/bash
-# Script para iniciar contenedores del lab
+# Iniciar contenedores del laboratorio
 
-# Esperar a que la red esté disponible
 sleep 5
 
-# Iniciar contenedores si no están corriendo
-for container in lab-client1 lab-client2 lab-attacker; do
-    if ! podman ps --format '{{.Names}}' 2>/dev/null | grep -q "^$container$"; then
-        if podman ps -a --format '{{.Names}}' 2>/dev/null | grep -q "^$container$"; then
-            podman start $container 2>/dev/null
+for contenedor in lab-client1 lab-client2 lab-attacker; do
+    if podman ps -a --format '{{.Names}}' 2>/dev/null | grep -q "^$contenedor$"; then
+        if ! podman ps --format '{{.Names}}' 2>/dev/null | grep -q "^$contenedor$"; then
+            podman start $contenedor 2>/dev/null
         fi
     fi
 done
 EOF
 
-chmod +x /usr/local/bin/start-lab-containers.sh 2>/dev/null
+chmod +x /usr/local/bin/iniciar-lab.sh
 
-# Habilitar servicio
-systemctl daemon-reload 2>/dev/null
-systemctl enable podman-lab-containers.service 2>/dev/null
-systemctl start podman-lab-containers.service 2>/dev/null
+# Crear servicio systemd
+cat > /etc/systemd/system/lab-contenedores.service << 'EOF'
+[Unit]
+Description=Iniciar contenedores del laboratorio
+After=network.target podman.service
+Requires=podman.service
 
-# Aliases útiles
-cat >> /root/.bashrc << 'EOF' 2>/dev/null
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/iniciar-lab.sh
+RemainAfterExit=yes
 
-# Alias para el laboratorio de seguridad
-alias lab-ps='podman ps -a'
-alias lab-logs='podman logs -f'
-alias lab-client1='podman exec -it lab-client1 bash 2>/dev/null || echo "Contenedor no disponible"'
-alias lab-client2='podman exec -it lab-client2 bash 2>/dev/null || echo "Contenedor no disponible"'
-alias lab-attacker='podman exec -it lab-attacker bash 2>/dev/null || echo "Contenedor no disponible"'
-alias lab-restart='systemctl restart podman-lab-containers.service'
-alias lab-status='systemctl status podman-lab-containers.service'
+[Install]
+WantedBy=multi-user.target
 EOF
 
-echo -e "${GREEN}[OK] Servicios configurados${NC}"
+# Activar servicio
+systemctl daemon-reload
+systemctl enable lab-contenedores.service > /dev/null 2>&1
+systemctl start lab-contenedores.service > /dev/null 2>&1
 
-# =============================================================================
-# PASO 13: VERIFICACIÓN FINAL
-# =============================================================================
+# Crear alias en .bashrc
+cat >> /root/.bashrc << 'EOF'
+
+# Alias para el laboratorio de seguridad
+alias lab-client1='podman exec -it lab-client1 bash'
+alias lab-client2='podman exec -it lab-client2 bash'
+alias lab-attacker='podman exec -it lab-attacker bash'
+alias lab-ps='podman ps -a'
+alias lab-logs='podman logs -f'
+alias lab-status='systemctl status lab-contenedores.service'
+EOF
+
+echo -e "${GREEN}✓ Inicio automático configurado${NC}"
 echo ""
-echo -e "${YELLOW}[13/13] Verificando estado final...${NC}"
 
-# Verificar servicios del host
-echo -e "  Servicios del host:"
-for service in httpd firewalld sshd auditd fail2ban; do
-    if systemctl is-active --quiet $service 2>/dev/null; then
-        echo -e "    ${GREEN}✓${NC} $service está activo"
+# =============================================================================
+# PASO 7: VERIFICACIÓN FINAL
+# =============================================================================
+echo -e "${YELLOW}[7/7] Verificando instalación...${NC}"
+echo ""
+
+# Verificar servicios
+echo "  Servicios del sistema:"
+for servicio in httpd firewalld sshd auditd; do
+    if systemctl is-active --quiet $servicio 2>/dev/null; then
+        echo "    ${GREEN}✓${NC} $servicio: activo"
     else
-        echo -e "    ${YELLOW}⚠️  $service NO está activo (puede no ser crítico)${NC}"
+        echo "    ${RED}✗${NC} $servicio: inactivo"
     fi
 done
 
-# Verificar contenedores
-echo -e "\n  Contenedores:"
-for container in lab-client1 lab-client2 lab-attacker; do
-    if podman ps --format '{{.Names}}' 2>/dev/null | grep -q "^$container$"; then
-        IP=$(podman inspect $container 2>/dev/null | grep -m1 IPAddress | cut -d'"' -f4 2>/dev/null || echo "IP desconocida")
-        echo -e "    ${GREEN}✓${NC} $container → $IP"
+echo ""
+echo "  Contenedores:"
+for contenedor in lab-client1 lab-client2 lab-attacker; do
+    if podman ps --format '{{.Names}}' 2>/dev/null | grep -q "^$contenedor$"; then
+        ip=$(podman inspect $contenedor 2>/dev/null | grep IPAddress | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -1)
+        echo "    ${GREEN}✓${NC} $contenedor: $ip (activo)"
     else
-        if podman ps -a --format '{{.Names}}' 2>/dev/null | grep -q "^$container$"; then
-            echo -e "    ${YELLOW}⚠️  $container existe pero no está corriendo${NC}"
+        if podman ps -a --format '{{.Names}}' 2>/dev/null | grep -q "^$contenedor$"; then
+            echo "    ${YELLOW}⚠${NC} $contenedor: detenido"
         else
-            echo -e "    ${RED}✗${NC} $container NO existe"
+            echo "    ${RED}✗${NC} $contenedor: no existe"
         fi
     fi
 done
@@ -214,19 +417,53 @@ done
 # =============================================================================
 echo ""
 echo "================================================================"
-echo -e "${GREEN}  LAB BLOQUE 7 — SEGURIDAD COMPLETADO${NC}"
+echo -e "${GREEN}  LABORATORIO DE SEGURIDAD - COMPLETADO${NC}"
 echo "================================================================"
 echo ""
-echo "✅ El script ha finalizado. Algunos errores menores pueden haber"
-echo "   ocurrido pero no afectan la funcionalidad principal del lab."
+echo "📋 BUGS INTENCIONALES PARA PRACTICAR:"
 echo ""
-echo "📋 Para acceder a los contenedores:"
-echo "   source /root/.bashrc  # Para cargar los alias"
-echo "   lab-client1           # Acceder al cliente 1"
-echo "   lab-client2           # Acceder al cliente 2"
-echo "   lab-attacker          # Acceder al atacante"
+echo "  🔴 SELinux:"
+echo "    - /srv/web_lab/index.html tiene contexto incorrecto (default_t)"
+echo "    - httpd_can_network_connect=off"
 echo ""
-echo "🔄 Los contenedores se iniciarán automáticamente al reiniciar"
+echo "  🔴 Usuarios y sudo:"
+echo "    - devuser tiene NOPASSWD:ALL (inseguro)"
+echo "    - opsuser y auditor sin permisos sudo"
 echo ""
-echo "🐞 Bugs intencionales disponibles para practicar (ver README)"
+echo "  🔴 Políticas de contraseñas:"
+echo "    - Longitud mínima: 4 caracteres"
+echo "    - PASS_MAX_DAYS: 999 días"
+echo ""
+echo "  🔴 SSH:"
+echo "    - PermitRootLogin yes"
+echo "    - PermitEmptyPasswords yes"
+echo ""
+echo "  🔴 Permisos especiales:"
+echo "    - /srv/shared_lab sin sticky bit"
+echo "    - /usr/local/bin/cat_lab con SUID"
+echo ""
+echo "  🔴 fail2ban:"
+echo "    - Jails desactivados"
+echo ""
+echo "🖥️  CONTENEDORES DISPONIBLES:"
+echo "    lab-client1  → 172.20.0.10 (cliente normal)"
+echo "    lab-client2  → 172.20.0.20 (cliente normal)"
+echo "    lab-attacker → 172.20.0.99 (herramientas de ataque)"
+echo ""
+echo "🚀 COMANDOS ÚTILES (después de 'source /root/.bashrc'):"
+echo "    lab-client1    - Acceder al cliente 1"
+echo "    lab-client2    - Acceder al cliente 2"
+echo "    lab-attacker   - Acceder al atacante"
+echo "    lab-ps         - Ver contenedores"
+echo "    lab-status     - Ver estado del servicio"
+echo ""
+echo "💾 BACKUPS CREADOS:"
+echo "    /etc/ssh/sshd_config.backup"
+echo "    /etc/security/pwquality.conf.backup"
+echo "    /etc/login.defs.backup"
+echo ""
 echo "================================================================"
+echo ""
+echo -e "${YELLOW}Para empezar, ejecuta: source /root/.bashrc${NC}"
+echo -e "${YELLOW}Luego: lab-client1 (para acceder al primer cliente)${NC}"
+echo ""
