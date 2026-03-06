@@ -526,18 +526,36 @@ echo "📦 BACKUP: $BACKUP_DIR"
 echo ""
 echo "========================================================================"
 
-# Instrucciones para discos loop
+# =============================================================================
+# SERVICIO SYSTEMD — PERSISTENCIA DE LOOPS TRAS REBOOT
+# =============================================================================
 if [[ "$DISK_SWAP" == /dev/loop* ]]; then
-    echo ""
-    echo "⚠️  IMPORTANTE - Discos Loop detectados:"
-    echo "   Para reactivar después de reboot:"
-    echo "   # Asociar archivos a loop devices"
-    echo "   for img in /root/lab_disks/*.img; do losetup -f --show \$img; done"
-    echo "   # Activar LVM"
-    echo "   vgchange -ay"
-    echo "   # Activar swap y montajes"
-    echo "   swapon -a && mount -a"
-    echo ""
+    log_info "⚙️  Instalando servicio systemd para persistencia de loops..."
+
+    cat > /etc/systemd/system/lab-loops.service << 'EOF'
+[Unit]
+Description=Re-asociar discos loop del laboratorio al arranque
+After=local-fs.target
+Before=lvm2-activation.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/bash -c '\
+    for img in /root/lab_disks/*.img; do \
+        [ -f "$img" ] && losetup -f --show "$img"; \
+    done'
+ExecStartPost=/bin/bash -c 'vgchange -ay; swapon -a 2>/dev/null || true'
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    systemctl daemon-reload
+    systemctl enable lab-loops.service
+
+    log_success "Servicio lab-loops.service instalado y habilitado"
+    log_info "   Los loops se re-asociarán automáticamente en cada reboot"
 fi
 
 log_success "✅ LABORATORIO LISTO PARA PRACTICAR"
