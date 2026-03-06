@@ -1,19 +1,8 @@
 #!/bin/bash
 # =============================================================================
-# LAB BLOQUE 3 — ALMACENAMIENTO (VERSIÓN DEFINITIVA - INTELIGENTE)
+# LAB BLOQUE 3 — ALMACENAMIENTO (VERSIÓN DEFINITIVA - CORREGIDA)
 # Preparación para LFCS + RHCSA
 # Rocky Linux 9 — Ejecutar como root
-# =============================================================================
-#
-# CARACTERÍSTICAS CLAVE:
-# -----------------------------------------------------------------------------
-# ✅ DETECCIÓN INTELIGENTE: Se adapta a cualquier tamaño de disco
-# ✅ SIN TAMAÑOS FIJOS: Todo se calcula en porcentajes o sobre el espacio disponible
-# ✅ SOPORTE PARA DISPOSITIVOS LOOP: Funciona perfectamente con discos de archivo
-# ✅ COMPATIBLE CON NVMe: Maneja correctamente /dev/nvme0n1 (particiones p1, p2)
-# ✅ BACKUP AUTOMÁTICO: Guarda configuración original antes de modificar
-# ✅ 100% DE LOS EJERCICIOS CUBIERTOS: Incluyendo UUID inexistente para boot failure
-#
 # =============================================================================
 
 set -e  # Salir si hay error
@@ -45,12 +34,15 @@ log_error() {
     echo "❌ $1" >&2
 }
 
-# Función para obtener nombre de partición correcto (sdX1 vs nvme0n1p1)
+# Función para obtener nombre de partición correcto
 get_partition_name() {
     local disk=$1
     local part_num=$2
     
-    if [[ "$disk" == *"nvme"* ]]; then
+    # Para discos loop, las particiones son loop0p1, loop1p1, etc.
+    if [[ "$disk" == *"loop"* ]]; then
+        echo "${disk}p${part_num}"
+    elif [[ "$disk" == *"nvme"* ]]; then
         echo "${disk}p${part_num}"
     else
         echo "${disk}${part_num}"
@@ -68,10 +60,9 @@ get_size_mb() {
 # -----------------------------------------------------------------------------
 log_info "🔍 Detectando discos disponibles..."
 
-# Encontrar el disco del sistema (donde está montada la raíz)
+# Encontrar el disco del sistema
 ROOT_DEVICE=$(findmnt -n -o SOURCE /)
 if [[ $ROOT_DEVICE == /dev/mapper/* ]]; then
-    # Si es un LV, encontrar el disco físico subyacente
     ROOT_DISK=$(lsblk -no pkname "$ROOT_DEVICE" | head -n1)
     if [[ -z "$ROOT_DISK" ]]; then
         ROOT_DISK=$(lsblk -nd --output NAME | head -n1)
@@ -83,19 +74,13 @@ else
 fi
 log_info "Disco del sistema (NO se tocará): $ROOT_DISK"
 
-# Obtener lista de discos adicionales (excluyendo el del sistema y CDROM)
+# Obtener lista de discos adicionales
 ALL_DISKS=$(lsblk -nd --output NAME,TYPE,RO | grep ' disk ' | grep ' 0$' | awk '{print "/dev/" $1}')
 
 AVAILABLE_DISKS=()
 for disk in $ALL_DISKS; do
     if [[ "$disk" != "$ROOT_DISK"* ]]; then
-        # Verificar que el disco no tenga particiones o LVM
-        HAS_PARTITIONS=$(lsblk -n "$disk" 2>/dev/null | wc -l)
-        if [[ "$HAS_PARTITIONS" -le 1 ]]; then
-            AVAILABLE_DISKS+=("$disk")
-        else
-            log_warning "Disco $disk tiene particiones y no se usará automáticamente."
-        fi
+        AVAILABLE_DISKS+=("$disk")
     fi
 done
 
@@ -115,7 +100,6 @@ if [[ $NUM_DISKS -lt 4 ]]; then
         LOOP_DIR="/root/lab_disks"
         mkdir -p "$LOOP_DIR"
         
-        # Calcular cuántos discos faltan
         DISKS_NEEDED=$((4 - NUM_DISKS))
         for i in $(seq 1 "$DISKS_NEEDED"); do
             LOOP_FILE="$LOOP_DIR/disk_lab_$i.img"
@@ -129,7 +113,7 @@ if [[ $NUM_DISKS -lt 4 ]]; then
     fi
 fi
 
-# Ordenar discos por tamaño (el más pequeño primero)
+# Ordenar discos por tamaño
 SORTED_DISKS=()
 while IFS= read -r disk; do
     SORTED_DISKS+=("$disk")
@@ -138,11 +122,10 @@ done < <(for disk in "${AVAILABLE_DISKS[@]}"; do
     echo "$SIZE $disk"
 done | sort -n | awk '{print $2}')
 
-# Asignación inteligente de roles según tamaño
-DISK_SWAP="${SORTED_DISKS[0]}"      # El más pequeño -> Swap
-DISK_LVM="${SORTED_DISKS[1]}"        # Segundo más pequeño -> LVM
-DISK_PART="${SORTED_DISKS[2]}"       # Tercero -> Particiones
-DISK_FREE="${SORTED_DISKS[3]}"       # Cuarto -> Disco libre
+DISK_SWAP="${SORTED_DISKS[0]}"
+DISK_LVM="${SORTED_DISKS[1]}"
+DISK_PART="${SORTED_DISKS[2]}"
+DISK_FREE="${SORTED_DISKS[3]}"
 
 log_success "✅ Asignación de discos:"
 echo "   - Swap (${DISK_SWAP}): $(( $(get_size_mb "$DISK_SWAP") / 1024 ))GB"
@@ -158,7 +141,6 @@ mkdir -p "$BACKUP_DIR"
 log_info "📦 Creando backup en: $BACKUP_DIR"
 
 [ -f /etc/fstab ] && cp /etc/fstab "$BACKUP_DIR/fstab.original"
-[ -f /etc/crypttab ] && cp /etc/crypttab "$BACKUP_DIR/crypttab.original" 2>/dev/null || true
 
 {
     echo "=== ESTADO ORIGINAL DEL SISTEMA ==="
@@ -180,30 +162,28 @@ log_success "✅ Estado inicial guardado"
 # -----------------------------------------------------------------------------
 log_info "🧹 Limpiando metadatos de discos de laboratorio..."
 
-cleanup_disk() {
-    local disk=$1
+for disk in "$DISK_PART" "$DISK_LVM" "$DISK_SWAP" "$DISK_FREE"; do
     log_info "   Limpiando $disk..."
     
-    # Desmontar particiones
-    for part in $(lsblk -ln -o NAME "$disk" | grep -v "^$(basename "$disk")\$" | awk '{print "/dev/" $1}'); do
-        umount "$part" 2>/dev/null || true
-    done
+    # Para discos loop, necesitamos eliminar las particiones primero
+    if [[ "$disk" == *"loop"* ]]; then
+        # Eliminar particiones de loop si existen
+        for part in $(lsblk -ln -o NAME "$disk" 2>/dev/null | grep -v "^$(basename "$disk")\$"); do
+            umount "/dev/$part" 2>/dev/null || true
+        done
+    fi
     
-    # Desactivar LVM y swap
-    pvs | grep -q "$disk" && pvremove -ffy "$disk" || true
+    # Desmontar y limpiar
+    umount "$disk"* 2>/dev/null || true
     swapoff "$disk"* 2>/dev/null || true
+    pvs | grep -q "$disk" && pvremove -ffy "$disk" || true
     
     # Limpiar firmas
     wipefs -a "$disk" 2>/dev/null || true
-}
+done
 
-cleanup_disk "$DISK_PART"
-cleanup_disk "$DISK_LVM"
-cleanup_disk "$DISK_SWAP"
-cleanup_disk "$DISK_FREE"
-
-# Dar tiempo al sistema para reconocer los cambios
-udevadm settle || partprobe || true
+# Dar tiempo al sistema
+udevadm settle 2>/dev/null || partprobe 2>/dev/null || true
 sleep 2
 
 log_success "✅ Limpieza completada."
@@ -213,25 +193,43 @@ log_success "✅ Limpieza completada."
 # =============================================================================
 log_info "📀 Configurando disco de particiones ($DISK_PART)..."
 
-# Calcular tamaños de partición (40% y 60%)
-DISK_SIZE_MB=$(get_size_mb "$DISK_PART")
-PART1_SIZE_MB=$((DISK_SIZE_MB * 40 / 100))
-PART2_SIZE_MB=$((DISK_SIZE_MB - PART1_SIZE_MB - 1))
-
+# Crear las particiones
 parted -s "$DISK_PART" mklabel gpt
-parted -s "$DISK_PART" mkpart primary ext4 1MiB "${PART1_SIZE_MB}MiB"
-parted -s "$DISK_PART" mkpart primary xfs  "${PART1_SIZE_MB}MiB" 100%
 
-partprobe "$DISK_PART" || udevadm settle
+# Para discos loop, necesitamos un pequeño retraso después de crear la tabla
+sleep 1
+
+# Crear particiones
+parted -s "$DISK_PART" mkpart primary ext4 1MiB 40%
+parted -s "$DISK_PART" mkpart primary xfs 40% 100%
+
+# Esperar a que el kernel reconozca las particiones
+sleep 2
+partprobe "$DISK_PART" 2>/dev/null || udevadm settle 2>/dev/null || true
 sleep 2
 
-# Obtener nombres correctos de particiones
+# Obtener nombres de particiones
 PART1=$(get_partition_name "$DISK_PART" 1)
 PART2=$(get_partition_name "$DISK_PART" 2)
 
+# Verificar que las particiones existen
+if [[ ! -e "$PART1" ]]; then
+    log_error "No se pudo crear $PART1"
+    ls -la /dev/loop*
+    exit 1
+fi
+
+if [[ ! -e "$PART2" ]]; then
+    log_error "No se pudo crear $PART2"
+    ls -la /dev/loop*
+    exit 1
+fi
+
+# Formatear
 mkfs.ext4 -F "$PART1"
 mkfs.xfs -f "$PART2"
 
+# Crear puntos de montaje y montar
 mkdir -p /mnt/ext4_data
 mkdir -p /mnt/xfs_data
 
@@ -239,8 +237,8 @@ mount "$PART1" /mnt/ext4_data
 mount "$PART2" /mnt/xfs_data
 
 log_success "✅ Particiones creadas:"
-echo "   - $PART1 (ext4) - ${PART1_SIZE_MB}MB"
-echo "   - $PART2 (xfs) - ${PART2_SIZE_MB}MB"
+echo "   - $PART1 (ext4)"
+echo "   - $PART2 (xfs)"
 
 # =============================================================================
 # BLOQUE 3.2 — FSTAB (ERRORES INTENCIONALES)
@@ -248,24 +246,22 @@ echo "   - $PART2 (xfs) - ${PART2_SIZE_MB}MB"
 UUID_EXT4=$(blkid -s UUID -o value "$PART1")
 UUID_XFS=$(blkid -s UUID -o value "$PART2")
 
-# Backup del fstab actual
 cp /etc/fstab "$BACKUP_DIR/fstab.before_lab"
 
 {
     echo ""
     echo "# --- LAB STORAGE: PARTICIONES ---"
-    echo "UUID=$UUID_EXT4 /mnt/ext4_data ext4 defaults 0 2"      # Correcto
-    echo "UUID=$UUID_XFS /mnt/xfs_data ext4 defaults 0 2"        # ERROR: FS type incorrecto
+    echo "UUID=$UUID_EXT4 /mnt/ext4_data ext4 defaults 0 2"
+    echo "UUID=$UUID_XFS /mnt/xfs_data ext4 defaults 0 2"
     echo ""
-    echo "# --- LAB STORAGE: BOOT FAILURE (UUID INEXISTENTE) ---"
-    echo "# La siguiente línea causa fallo al arrancar (comentada por seguridad)"
+    echo "# --- LAB STORAGE: BOOT FAILURE ---"
     echo "# UUID=12345678-1234-1234-1234-123456789abc /mnt/noexiste ext4 defaults 0 2"
 } >> /etc/fstab
 
 umount /mnt/ext4_data
 umount /mnt/xfs_data
 
-log_success "✅ Entradas de fstab creadas (con error intencional en XFS)"
+log_success "✅ Entradas de fstab creadas"
 
 # =============================================================================
 # BLOQUE 3.3 — LVM INTELIGENTE
@@ -275,14 +271,14 @@ log_info "💾 Configurando disco LVM ($DISK_LVM)..."
 pvcreate "$DISK_LVM"
 vgcreate vg_storage "$DISK_LVM"
 
-# Calcular tamaños de LV basados en el tamaño del VG (60% y 40%)
-VG_SIZE_MB=$(vgs vg_storage --noheadings --units m -o vg_size | sed 's/[^0-9]//g')
+VG_SIZE_MB=$(vgs vg_storage --noheadings --units m -o vg_size 2>/dev/null | sed 's/[^0-9]//g')
+if [[ -z "$VG_SIZE_MB" ]]; then
+    # Fallback si vgs no funciona
+    VG_SIZE_MB=$(get_size_mb "$DISK_LVM")
+fi
+
 LV_APPS_SIZE=$((VG_SIZE_MB * 60 / 100))
 LV_LOGS_SIZE=$((VG_SIZE_MB - LV_APPS_SIZE))
-
-# Redondear a números enteros de MB
-LV_APPS_SIZE=$((LV_APPS_SIZE / 1))
-LV_LOGS_SIZE=$((LV_LOGS_SIZE / 1))
 
 log_info "   Tamaños LVM: lv_apps=${LV_APPS_SIZE}MB, lv_logs=${LV_LOGS_SIZE}MB"
 
@@ -300,7 +296,7 @@ mount /dev/vg_storage/lv_logs /var/log/apps
 
 {
     echo ""
-    echo "# --- LAB STORAGE: LVM (MALA PRÁCTICA - usar /dev/ path) ---"
+    echo "# --- LAB STORAGE: LVM ---"
     echo "/dev/vg_storage/lv_apps /srv/apps ext4 defaults 0 2"
     echo "/dev/vg_storage/lv_logs /var/log/apps xfs defaults 0 2"
 } >> /etc/fstab
@@ -308,81 +304,79 @@ mount /dev/vg_storage/lv_logs /var/log/apps
 log_success "✅ LVM configurado"
 
 # =============================================================================
-# BLOQUE 3.4 — LVM EXTENDIDO SIN FS (50% más)
+# BLOQUE 3.4 — LVM EXTENDIDO SIN FS
 # =============================================================================
 log_info "📈 Extendiendo lv_apps sin redimensionar FS..."
 
-EXTEND_SIZE=$((LV_APPS_SIZE / 2))  # Extender un 50%
+EXTEND_SIZE=$((LV_APPS_SIZE / 2))
 lvextend -L "+${EXTEND_SIZE}M" /dev/vg_storage/lv_apps
-# Filesystem NO redimensionado a propósito
 
-log_success "✅ lv_apps extendido a $((LV_APPS_SIZE + EXTEND_SIZE))MB (FS sigue en ${LV_APPS_SIZE}MB)"
+log_success "✅ lv_apps extendido (FS sin redimensionar)"
 
 # =============================================================================
-# BLOQUE 3.5 — SWAP (PARTICIÓN + ARCHIVO CON ERROR)
+# BLOQUE 3.5 — SWAP
 # =============================================================================
 log_info "🔄 Configurando swap..."
 
-# Swap por partición (100% del disco)
+# Swap por partición
 parted -s "$DISK_SWAP" mklabel gpt
+sleep 1
 parted -s "$DISK_SWAP" mkpart primary linux-swap 1MiB 100%
-partprobe "$DISK_SWAP" || udevadm settle
+sleep 2
+partprobe "$DISK_SWAP" 2>/dev/null || udevadm settle 2>/dev/null || true
 sleep 2
 
 SWAP_PART=$(get_partition_name "$DISK_SWAP" 1)
 
-mkswap "$SWAP_PART"
-swapon "$SWAP_PART"
-{
-    echo ""
-    echo "# --- LAB STORAGE: SWAP PARTICION ---"
-    echo "$SWAP_PART swap swap defaults 0 0"
-} >> /etc/fstab
+if [[ -e "$SWAP_PART" ]]; then
+    mkswap "$SWAP_PART"
+    swapon "$SWAP_PART"
+    {
+        echo ""
+        echo "# --- LAB STORAGE: SWAP PARTICION ---"
+        echo "$SWAP_PART swap swap defaults 0 0"
+    } >> /etc/fstab
+    log_success "✅ Swap partición creada"
+else
+    log_warning "No se pudo crear la partición swap en $DISK_SWAP"
+fi
 
-# Swap por archivo (con error de permisos)
+# Swap por archivo (con error)
 SWAPFILE="/swapfile_lab"
-fallocate -l 512M "$SWAPFILE"
-chmod 644 "$SWAPFILE"  # Permiso incorrecto (debería ser 600)
+fallocate -l 512M "$SWAPFILE" 2>/dev/null || dd if=/dev/zero of="$SWAPFILE" bs=1M count=512
+chmod 644 "$SWAPFILE"
 mkswap "$SWAPFILE"
-swapon "$SWAPFILE" 2>/dev/null || log_warning "Swapfile no activo (permisos incorrectos - es intencional)"
+swapon "$SWAPFILE" 2>/dev/null || log_warning "Swapfile no activo (permisos incorrectos)"
 {
     echo ""
     echo "# --- LAB STORAGE: SWAP ARCHIVO (ERROR) ---"
     echo "$SWAPFILE swap swap defaults 0 0"
 } >> /etc/fstab
 
-log_success "✅ Swap configurado (partición activa, swapfile con error)"
+log_success "✅ Swap configurado"
 
 # =============================================================================
-# BLOQUE 3.6 — DISCO FORMATEADO NO MONTADO
+# BLOQUE 3.6 — DISCO LIBRE
 # =============================================================================
 log_info "💿 Configurando disco libre ($DISK_FREE)..."
 
 mkfs.ext4 -F "$DISK_FREE"
 mkdir -p /data_backup
-# NO se monta, NO se añade a fstab
 
-log_success "✅ Disco libre formateado (ext4) pero no montado"
+log_success "✅ Disco libre formateado (no montado)"
 
 # =============================================================================
 # BLOQUE 3.7 — MONTAJE DUPLICADO
 # =============================================================================
 log_info "🔗 Creando montaje duplicado..."
 
-mkdir -p /backup_ext4
-mount "$PART1" /backup_ext4
-
-log_success "✅ Montaje duplicado creado ($PART1 en /mnt/ext4_data y /backup_ext4)"
-
-# =============================================================================
-# BLOQUE 3.8 — ESPACIO LIBRE EN VG PARA EJERCICIOS AVANZADOS
-# =============================================================================
-# Verificamos que queda espacio libre en el VG para snapshots, nuevos LVs, etc.
-FREE_PE=$(vgdisplay vg_storage | grep "Free" | awk '{print $5}')
-if [[ -n "$FREE_PE" && "$FREE_PE" -gt 0 ]]; then
-    log_success "✅ VG tiene espacio libre ($FREE_PE extents) para ejercicios avanzados"
+# Verificar que la partición existe antes de montar
+if [[ -e "$PART1" ]]; then
+    mkdir -p /backup_ext4
+    mount "$PART1" /backup_ext4
+    log_success "✅ Montaje duplicado creado"
 else
-    log_warning "VG sin espacio libre - algunos ejercicios avanzados pueden no funcionar"
+    log_warning "No se pudo crear montaje duplicado - $PART1 no existe"
 fi
 
 # =============================================================================
@@ -390,56 +384,35 @@ fi
 # =============================================================================
 echo ""
 echo "========================================================================"
-echo "🎉 LAB BLOQUE 3 — ALMACENAMIENTO PREPARADO (VERSIÓN INTELIGENTE)"
+echo "🎉 LAB BLOQUE 3 — ALMACENAMIENTO PREPARADO"
 echo "========================================================================"
 echo ""
-echo "📊 CONFIGURACIÓN DE DISCOS:"
+echo "📊 CONFIGURACIÓN:"
 echo "---------------------------"
-echo "🔹 SWAP:        $DISK_SWAP ($(( $(get_size_mb "$DISK_SWAP") / 1024 ))GB)"
-echo "   └─ Partición swap activa + swapfile con error (permisos 644)"
-echo ""
-echo "🔹 LVM:         $DISK_LVM ($(( $(get_size_mb "$DISK_LVM") / 1024 ))GB)"
-echo "   ├─ vg_storage (tamaño total: $((VG_SIZE_MB / 1024))GB)"
-echo "   ├─ lv_apps (ext4, ${LV_APPS_SIZE}MB + ${EXTEND_SIZE}MB extendido sin FS)"
-echo "   └─ lv_logs (xfs, ${LV_LOGS_SIZE}MB)"
-echo ""
-echo "🔹 PARTICIONES: $DISK_PART ($(( $(get_size_mb "$DISK_PART") / 1024 ))GB)"
-echo "   ├─ ${PART1} (ext4, ${PART1_SIZE_MB}MB) - Montado en /mnt/ext4_data y /backup_ext4"
-echo "   └─ ${PART2} (xfs, ${PART2_SIZE_MB}MB) - ERROR en fstab (tipo ext4)"
-echo ""
-echo "🔹 LIBRE:       $DISK_FREE ($(( $(get_size_mb "$DISK_FREE") / 1024 ))GB)"
-echo "   └─ Formateado ext4 pero NO montado"
+echo "Swap:        $DISK_SWAP"
+echo "LVM:         $DISK_LVM"
+echo "Particiones: $DISK_PART"
+echo "Libre:       $DISK_FREE"
 echo ""
 echo "⚠️  ERRORES INTENCIONALES:"
-echo "---------------------------"
-echo "1. /etc/fstab: Partición XFS con tipo 'ext4' (línea 2 de PARTICIONES)"
-echo "2. /etc/fstab: Uso de /dev/ paths en lugar de UUIDs para LVM"
-echo "3. lv_apps: Tamaño LVM > tamaño FS (necesita resize2fs)"
-echo "4. /swapfile_lab: Permisos 644 (debería ser 600)"
-echo "5. Montaje duplicado: /dev/vdb1 en /mnt/ext4_data y /backup_ext4"
-echo "6. /dev/vde: Formateado pero no montado"
+echo "1. /etc/fstab: Partición XFS con tipo 'ext4'"
+echo "2. LVM: Usa /dev/ paths en lugar de UUIDs"
+echo "3. lv_apps: Tamaño LVM > tamaño FS"
+echo "4. /swapfile_lab: Permisos 644"
+echo "5. Montaje duplicado: Misma partición en 2 lugares"
+echo "6. /dev/$DISK_FREE: Formateado pero no montado"
 echo ""
 echo "📦 BACKUP: $BACKUP_DIR"
 echo ""
-echo "🚀 EJERCICIOS DISPONIBLES:"
-echo "   - Básicos: 1-10 (todos)"
-echo "   - Intermedios: 1-10 (todos)"
-echo "   - Avanzados: 1-10 (excepto Stratis/VDO que requieren instalación)"
-echo "   - Troubleshooting: 1-10 (todos)"
-echo ""
 echo "========================================================================"
 
-# Mostrar advertencia si hay discos loop
+# Instrucciones para discos loop
 if [[ "$DISK_SWAP" == /dev/loop* ]]; then
     echo ""
-    echo "⚠️  IMPORTANTE - Discos Loop detectados:"
-    echo "   Los discos loop NO son persistentes después de reiniciar."
+    echo "⚠️  IMPORTANTE - Discos Loop:"
     echo "   Para reactivar después de reboot:"
-    echo "   # Asociar archivos a loop devices"
     echo "   for img in /root/lab_disks/*.img; do losetup -f --show \$img; done"
-    echo "   # Activar LVM"
     echo "   vgchange -ay"
-    echo "   # Activar swap y montajes"
     echo "   swapon -a && mount -a"
     echo ""
 fi
