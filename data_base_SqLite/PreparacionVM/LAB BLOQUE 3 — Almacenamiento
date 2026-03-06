@@ -1,106 +1,167 @@
 #!/bin/bash
 # =============================================================================
-# LAB BLOQUE 3 — ALMACENAMIENTO
+# LAB BLOQUE 3 — ALMACENAMIENTO (VERSIÓN PORTABLE)
 # Preparación para LFCS + RHCSA
 # Rocky Linux 9 — Ejecutar como root
 # =============================================================================
 #
 # OBJETIVO
 # --------
-# Preparar un entorno REALISTA para practicar administración de almacenamiento
-# en Linux, alineado con los objetivos oficiales de LFCS y RHCSA.
+# Preparar un entorno REALISTA para practicar administración de almacenamiento.
+# AHORA CON DETECCIÓN INTELIGENTE DE DISCOS.
 #
-# Este script:
-# - NO explica
-# - NO sugiere ejercicios
-# - NO deja documentación operativa en el sistema
-#
-# El alumno deberá inspeccionar el estado del sistema y corregirlo.
-#
-# ---------------------------------------------------------------------------
-# ESTADO INICIAL DE LA VM (IMPORTANTE)
-# ---------------------------------------------------------------------------
-# vda  → Disco del sistema (NO SE TOCA)
-# vdb  → Particiones + errores de montaje
-# vdc  → LVM (creación y errores)
-# vdd  → Swap (partición y archivo)
-# vde  → Filesystem sin montar / olvidado
+# El script:
+# - Detecta automáticamente discos libres (que no son el sistema).
+# - Los asigna a los diferentes escenarios basándose en su tamaño.
+# - Usa tamaños relativos (%) para particiones, en lugar de fijos.
+# - Sigue SIN explicar, documentar o sugerir ejercicios en el sistema.
 #
 # ---------------------------------------------------------------------------
-# TEMAS CUBIERTOS
+# ESTADO INICIAL DE LA VM (AHORA DINÁMICO)
 # ---------------------------------------------------------------------------
-# - lsblk, blkid, mount, umount
-# - parted / fdisk
-# - ext4 / xfs
-# - /etc/fstab (errores reales)
-# - LVM (PV, VG, LV)
-# - Extensión de LV sin crecer FS
-# - Swap correcto e incorrecto
-# - UUID vs device path
-# - Montajes duplicados / inconsistentes
+# El script necesita al menos 4 discos adicionales. Los clasificará así:
+# - Disco Pequeño  (ej. < 3G):  Se usará para SWAP.
+# - Disco Mediano  (ej. ~5G):   Se usará para LVM.
+# - Disco Grande   (ej. > 5G):   Se usará para PARTICIONES.
+# - Disco Extra    (cualquier tamaño): Se dejará formateado y sin montar.
+#
+# Si no encuentra 4 discos, te ofrecerá alternativas.
 #
 # =============================================================================
 
-set -e
-
-
-# -----------------------------------------------------------------------------
-# VERIFICACIÓN
-# -----------------------------------------------------------------------------
-[[ $EUID -eq 0 ]] || { echo "Ejecutar como root"; exit 1; }
+set -e  # Salir si hay error
+# set -x # Descomentar para depuración
 
 # -----------------------------------------------------------------------------
-# VARIABLES (DISCOS EXISTENTES)
+# VERIFICACIÓN INICIAL
 # -----------------------------------------------------------------------------
-DISK_PART="/dev/vdb"
-DISK_LVM="/dev/vdc"
-DISK_SWAP="/dev/vdd"
-DISK_FREE="/dev/vde"
-
-# -----------------------------------------------------------------------------
-# MEJORA 1: VERIFICACIÓN DE DISCOS (NO DESTRUCTIVO)
-# -----------------------------------------------------------------------------
-echo "🔍 Verificando discos de laboratorio..."
-DISKS_MISSING=0
-for disk in vdb vdc vdd vde; do
-    if [ ! -b "/dev/$disk" ]; then
-        echo "⚠️  ADVERTENCIA: /dev/$disk no existe"
-        DISKS_MISSING=$((DISKS_MISSING + 1))
-    else
-        echo "   ✅ /dev/$disk encontrado"
-    fi
-done
-
-if [ $DISKS_MISSING -gt 0 ]; then
-    echo ""
-    echo "❌ ERROR: Faltan $DISKS_MISSING discos de laboratorio"
-    echo "   Para crear discos adicionales en VM:"
-    echo "   - VirtualBox: Crea discos VDI de 5GB cada uno"
-    echo "   - VMware: Añade discos virtuales de 5GB"
-    echo "   - KVM: qemu-img create -f qcow2 lab-disk.qcow2 5G"
-    echo ""
-    echo "El script necesita 4 discos adicionales (vdb, vdc, vdd, vde)"
+if [[ $EUID -ne 0 ]]; then
+    echo "❌ Este script debe ejecutarse como root."
     exit 1
 fi
 
 # -----------------------------------------------------------------------------
-# MEJORA 2: BACKUP AUTOMÁTICO DE CONFIGURACIONES
+# FUNCIONES DE UTILIDAD
+# -----------------------------------------------------------------------------
+log_info() {
+    echo "ℹ️  $1"
+}
+
+log_success() {
+    echo "✅ $1"
+}
+
+log_warning() {
+    echo "⚠️  $1" >&2
+}
+
+log_error() {
+    echo "❌ $1" >&2
+}
+
+# -----------------------------------------------------------------------------
+# DETECCIÓN INTELIGENTE DE DISCOS
+# -----------------------------------------------------------------------------
+log_info "Detectando discos disponibles..."
+
+# Encontrar el disco del sistema (donde está montada la raíz)
+ROOT_DEVICE=$(findmnt -n -o SOURCE /)
+if [[ $ROOT_DEVICE == /dev/mapper/* ]]; then
+    # Si es un LV, encontrar el disco físico subyacente (simplificado)
+    ROOT_DISK=$(lsblk -no pkname "$ROOT_DEVICE" | head -n1)
+    if [[ -z "$ROOT_DISK" ]]; then
+        # Fallback: listar discos y asumir que el primero es el del sistema (menos seguro)
+        ROOT_DISK=$(lsblk -nd --output NAME | head -n1)
+        log_warning "No se pudo determinar el disco del sistema con certeza. Se asumirá que es /dev/$ROOT_DISK."
+    else
+        ROOT_DISK="/dev/$ROOT_DISK"
+    fi
+else
+    # Extraer el disco base (ej. /dev/vda de /dev/vda3)
+    ROOT_DISK=$(echo "$ROOT_DEVICE" | sed -E 's/[0-9]+$//')
+fi
+log_info "Disco del sistema (no se tocará): $ROOT_DISK"
+
+# Obtener lista de todos los discos, excluyendo el del sistema y discos de solo lectura (como CDROM)
+ALL_DISKS=$(lsblk -nd --output NAME,TYPE,RO | grep '^[a-z]* disk ' | grep ' 0$' | awk '{print "/dev/" $1}')
+
+AVAILABLE_DISKS=()
+for disk in $ALL_DISKS; do
+    if [[ "$disk" != "$ROOT_DISK"* ]]; then
+        # Verificar que el disco no tenga particiones o LVM (esté "limpio")
+        HAS_PARTITIONS=$(lsblk -n "$disk" 2>/dev/null | wc -l)
+        if [[ "$HAS_PARTITIONS" -le 1 ]]; then
+            AVAILABLE_DISKS+=("$disk")
+        else
+            log_warning "Disco $disk tiene particiones y no se usará automáticamente."
+        fi
+    fi
+done
+
+NUM_DISKS=${#AVAILABLE_DISKS[@]}
+log_info "Discos adicionales libres encontrados: $NUM_DISKS (${AVAILABLE_DISKS[*]})"
+
+if [[ $NUM_DISKS -lt 4 ]]; then
+    log_error "Se encontraron $NUM_DISKS, pero el script necesita al menos 4 discos libres."
+    log_info "Puedes:"
+    echo "  1) Añadir más discos virtuales a la VM."
+    echo "  2) Usar archivos como discos de loop (solución parcial, no recomendada)."
+    echo "  3) Salir y configurarlo manualmente."
+    read -p "¿Quieres crear discos de archivo de loop para simular los que faltan? (s/N): " -r CREATE_LOOP
+    if [[ "$CREATE_LOOP" =~ ^[Ss]$ ]]; then
+        log_info "Creando discos de loop en /root/lab_disks/ ..."
+        LOOP_DIR="/root/lab_disks"
+        mkdir -p "$LOOP_DIR"
+        DISKS_NEEDED=$((4 - NUM_DISKS))
+        for i in $(seq 1 "$DISKS_NEEDED"); do
+            LOOP_FILE="$LOOP_DIR/disk_lab_$i.img"
+            dd if=/dev/zero of="$LOOP_FILE" bs=1M count=2048 status=progress  # 2GB cada uno
+            LOOP_DEV=$(losetup -f --show "$LOOP_FILE")
+            AVAILABLE_DISKS+=("$LOOP_DEV")
+            log_success "Creado disco de loop: $LOOP_DEV (2GB)"
+        done
+    else
+        exit 1
+    fi
+fi
+
+# Ordenar discos por tamaño (el más pequeño primero)
+SORTED_DISKS=()
+while IFS= read -r disk; do
+    SORTED_DISKS+=("$disk")
+done < <(for disk in "${AVAILABLE_DISKS[@]}"; do
+    SIZE=$(blockdev --getsize64 "$disk" 2>/dev/null || echo 0)
+    echo "$SIZE $disk"
+done | sort -n | awk '{print $2}')
+
+log_info "Discos ordenados por tamaño (pequeño -> grande): ${SORTED_DISKS[*]}"
+
+# Asignación de roles:
+# El más pequeño -> SWAP
+# El segundo más pequeño -> LVM (para tener espacio)
+# El más grande -> PARTICIONES (para dividirlo)
+# El segundo más grande (o el que quede) -> DISCO LIBRE
+DISK_SWAP="${SORTED_DISKS[0]}"
+DISK_LVM="${SORTED_DISKS[1]}"
+DISK_PART="${SORTED_DISKS[2]}"
+DISK_FREE="${SORTED_DISKS[3]}"
+
+log_success "Asignación de discos:"
+echo "   - Swap (pequeño):      $DISK_SWAP"
+echo "   - LVM (mediano):        $DISK_LVM"
+echo "   - Particiones (grande): $DISK_PART"
+echo "   - Libre (extra):        $DISK_FREE"
+
+# -----------------------------------------------------------------------------
+# BACKUP AUTOMÁTICO DE CONFIGURACIONES
 # -----------------------------------------------------------------------------
 BACKUP_DIR="/root/lab-backup-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$BACKUP_DIR"
-echo "📦 Creando backup en: $BACKUP_DIR"
+log_info "Creando backup en: $BACKUP_DIR"
 
-# Backup de configuraciones originales
-if [ -f /etc/fstab ]; then
-    cp /etc/fstab "$BACKUP_DIR/fstab.original"
-    echo "   ✅ fstab original respaldado"
-fi
+[ -f /etc/fstab ] && cp /etc/fstab "$BACKUP_DIR/fstab.original"
+[ -f /etc/crypttab ] && cp /etc/crypttab "$BACKUP_DIR/crypttab.original" 2>/dev/null || true
 
-if [ -f /etc/crypttab ]; then
-    cp /etc/crypttab "$BACKUP_DIR/crypttab.original" 2>/dev/null || true
-fi
-
-# Registrar información del sistema antes de modificarlo
 {
     echo "=== ESTADO ORIGINAL DEL SISTEMA ==="
     echo "Fecha: $(date)"
@@ -114,70 +175,99 @@ fi
     echo "--- Swap actual ---"
     swapon --show
 } > "$BACKUP_DIR/estado-inicial.txt"
-
-echo "   ✅ Estado inicial guardado"
+log_success "Estado inicial guardado en $BACKUP_DIR"
 
 # -----------------------------------------------------------------------------
-# LIMPIEZA DE METADATOS (DESTRUCTIVO SOLO EN DISCOS DE LAB)
+# LIMPIEZA DE METADATOS
 # -----------------------------------------------------------------------------
-echo "🧹 Limpiando metadatos de discos de laboratorio..."
-for d in $DISK_PART $DISK_LVM $DISK_SWAP $DISK_FREE; do
-    echo "   Limpiando $d..."
-    # Primero desmontar si está montado
-    umount "$d"* 2>/dev/null || true
-    # Desactivar swap si está activo
+log_info "Limpiando metadatos de discos de laboratorio..."
+for d in "$DISK_PART" "$DISK_LVM" "$DISK_SWAP" "$DISK_FREE"; do
+    log_info "   Limpiando $d..."
+    # Desmontar particiones si las hay
+    for part in $(lsblk -ln -o NAME "$d" | grep -v "^$(basename "$d")\$" | awk '{print "/dev/" $1}'); do
+        umount "$part" 2>/dev/null || true
+    done
+    # Desactivar LVM y swap
+    pvs | grep "$d" && pvremove -ffy "$d" || true
     swapoff "$d"* 2>/dev/null || true
     # Limpiar firmas
     wipefs -a "$d" || true
 done
+log_success "Limpieza completada."
 
-
-# =============================================================================
+# -----------------------------------------------------------------------------
 # BLOQUE 3.1 — PARTICIONES Y FILESYSTEMS
-# =============================================================================
+# -----------------------------------------------------------------------------
+log_info "Configurando disco de particiones ($DISK_PART)..."
 
-# vdb → dos particiones
-parted -s $DISK_PART mklabel gpt
-parted -s $DISK_PART mkpart primary ext4 1MiB 2GiB
-parted -s $DISK_PART mkpart primary xfs  2GiB 100%
+# Obtener tamaño del disco en MB para cálculos
+DISK_SIZE_MB=$(($(blockdev --getsize64 "$DISK_PART") / 1024 / 1024))
+PART1_SIZE_MB=$((DISK_SIZE_MB * 40 / 100))  # 40% del disco
+PART2_SIZE_MB=$((DISK_SIZE_MB - PART1_SIZE_MB - 1)) # El resto, dejando 1MB de margen
 
-mkfs.ext4 ${DISK_PART}1
-mkfs.xfs  ${DISK_PART}2
+parted -s "$DISK_PART" mklabel gpt
+parted -s "$DISK_PART" mkpart primary ext4 1MiB "${PART1_SIZE_MB}MiB"
+parted -s "$DISK_PART" mkpart primary xfs  "${PART1_SIZE_MB}MiB" 100%
+
+# Dar tiempo a que el kernel reconozca las nuevas particiones
+partprobe "$DISK_PART" || udevadm settle
+
+# Formatear (asumiendo que las particiones son, ej., /dev/vdb1 y /dev/vdb2)
+PART1="${DISK_PART}1"
+PART2="${DISK_PART}2"
+# Manejar nombres de NVMe (ej. /dev/nvme0n1p1)
+if [[ "$DISK_PART" == *"nvme"* ]]; then
+    PART1="${DISK_PART}p1"
+    PART2="${DISK_PART}p2"
+fi
+
+mkfs.ext4 -F "$PART1"
+mkfs.xfs -f "$PART2"
 
 mkdir -p /mnt/ext4_data
 mkdir -p /mnt/xfs_data
 
-mount ${DISK_PART}1 /mnt/ext4_data
-mount ${DISK_PART}2 /mnt/xfs_data
+mount "$PART1" /mnt/ext4_data
+mount "$PART2" /mnt/xfs_data
 
-# =============================================================================
+log_success "Disco de particiones listo."
+
+# -----------------------------------------------------------------------------
 # BLOQUE 3.2 — FSTAB (ERRORES INTENCIONALES)
-# =============================================================================
+# -----------------------------------------------------------------------------
+UUID_EXT4=$(blkid -s UUID -o value "$PART1")
+UUID_XFS=$(blkid -s UUID -o value "$PART2")
 
-UUID_EXT4=$(blkid -s UUID -o value ${DISK_PART}1)
-UUID_XFS=$(blkid -s UUID -o value ${DISK_PART}2)
+# Backup del fstab actual
+cp /etc/fstab "$BACKUP_DIR/fstab.before_lab"
 
-# Correcto
-echo "UUID=$UUID_EXT4 /mnt/ext4_data ext4 defaults 0 2" >> /etc/fstab
-
-# Incorrecto: filesystem equivocado
-echo "UUID=$UUID_XFS /mnt/xfs_data ext4 defaults 0 2" >> /etc/fstab
+# Añadir entradas (una correcta, una incorrecta)
+{
+    echo ""
+    echo "# --- LAB STORAGE: PARTICIONES (ERRORES) ---"
+    echo "UUID=$UUID_EXT4 /mnt/ext4_data ext4 defaults 0 2"      # Correcto
+    echo "UUID=$UUID_XFS /mnt/xfs_data ext4 defaults 0 2"        # Incorrecto (FS type mal)
+} >> /etc/fstab
 
 umount /mnt/ext4_data
 umount /mnt/xfs_data
 
-# =============================================================================
+log_success "Entradas de fstab con error creadas."
+
+# -----------------------------------------------------------------------------
 # BLOQUE 3.3 — LVM
-# =============================================================================
+# -----------------------------------------------------------------------------
+log_info "Configurando disco LVM ($DISK_LVM)..."
 
-pvcreate $DISK_LVM
-vgcreate vg_storage $DISK_LVM
+pvcreate "$DISK_LVM"
+vgcreate vg_storage "$DISK_LVM"
 
-lvcreate -L 2G -n lv_apps vg_storage
-lvcreate -L 1G -n lv_logs vg_storage
+# Crear LVs usando porcentaje del VG para ser flexibles con el tamaño
+lvcreate -L 2G -n lv_apps vg_storage    # Fijo por ahora, podría ser %
+lvcreate -L 1G -n lv_logs vg_storage    # Fijo por ahora, podría ser %
 
-mkfs.ext4 /dev/vg_storage/lv_apps
-mkfs.xfs  /dev/vg_storage/lv_logs
+mkfs.ext4 -F /dev/vg_storage/lv_apps
+mkfs.xfs -f /dev/vg_storage/lv_logs
 
 mkdir -p /srv/apps
 mkdir -p /var/log/apps
@@ -185,54 +275,110 @@ mkdir -p /var/log/apps
 mount /dev/vg_storage/lv_apps /srv/apps
 mount /dev/vg_storage/lv_logs /var/log/apps
 
-# Mala práctica: usar device path
-echo "/dev/vg_storage/lv_apps /srv/apps ext4 defaults 0 2" >> /etc/fstab
-echo "/dev/vg_storage/lv_logs /var/log/apps xfs  defaults 0 2" >> /etc/fstab
+# Mala práctica: usar device path en lugar de UUID
+{
+    echo ""
+    echo "# --- LAB STORAGE: LVM (MALA PRÁCTICA) ---"
+    echo "/dev/vg_storage/lv_apps /srv/apps ext4 defaults 0 2"
+    echo "/dev/vg_storage/lv_logs /var/log/apps xfs defaults 0 2"
+} >> /etc/fstab
 
-# =============================================================================
+log_success "LVM configurado."
+
+# -----------------------------------------------------------------------------
 # BLOQUE 3.4 — LVM EXTENDIDO SIN FS
-# =============================================================================
-
+# -----------------------------------------------------------------------------
+log_info "Extendiendo LV lv_apps sin redimensionar el filesystem..."
 lvextend -L +1G /dev/vg_storage/lv_apps
 # filesystem NO redimensionado a propósito
+log_success "LV lv_apps extendido (pero el FS sigue siendo de 2G)."
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # BLOQUE 3.5 — SWAP
-# =============================================================================
+# -----------------------------------------------------------------------------
+log_info "Configurando disco swap ($DISK_SWAP)..."
 
 # Swap por partición
-parted -s $DISK_SWAP mklabel gpt
-parted -s $DISK_SWAP mkpart primary linux-swap 1MiB 100%
-mkswap ${DISK_SWAP}1
-swapon ${DISK_SWAP}1
+parted -s "$DISK_SWAP" mklabel gpt
+parted -s "$DISK_SWAP" mkpart primary linux-swap 1MiB 100%
+partprobe "$DISK_SWAP" || udevadm settle
 
-echo "${DISK_SWAP}1 swap swap defaults 0 0" >> /etc/fstab
+SWAP_PART="${DISK_SWAP}1"
+if [[ "$DISK_SWAP" == *"nvme"* ]]; then
+    SWAP_PART="${DISK_SWAP}p1"
+fi
 
-# Swap por archivo (mal configurado)
-fallocate -l 512M /swapfile_lab
-chmod 644 /swapfile_lab
-mkswap /swapfile_lab
-swapon /swapfile_lab || true
+mkswap "$SWAP_PART"
+swapon "$SWAP_PART"
+{
+    echo ""
+    echo "# --- LAB STORAGE: SWAP PARTICION ---"
+    echo "$SWAP_PART swap swap defaults 0 0"
+} >> /etc/fstab
 
-echo "/swapfile_lab swap swap defaults 0 0" >> /etc/fstab
+# Swap por archivo (mal configurado: permisos incorrectos)
+SWAPFILE="/swapfile_lab"
+fallocate -l 512M "$SWAPFILE"
+chmod 644 "$SWAPFILE"          # Permiso incorrecto (debería ser 600)
+mkswap "$SWAPFILE"
+swapon "$SWAPFILE" 2>/dev/null || log_warning "El swapfile no se pudo activar (permisos incorrectos, es a propósito)."
+{
+    echo ""
+    echo "# --- LAB STORAGE: SWAP ARCHIVO (ERROR) ---"
+    echo "$SWAPFILE swap swap defaults 0 0"
+} >> /etc/fstab
 
-# =============================================================================
+log_success "Swap configurado (con errores intencionales)."
+
+# -----------------------------------------------------------------------------
 # BLOQUE 3.6 — DISCO FORMATEADO PERO NO MONTADO
-# =============================================================================
+# -----------------------------------------------------------------------------
+log_info "Configurando disco libre ($DISK_FREE)..."
 
-mkfs.ext4 $DISK_FREE
+mkfs.ext4 -F "$DISK_FREE"
 mkdir -p /data_backup
 # NO se monta
 # NO se agrega a fstab
 
-# =============================================================================
+log_success "Disco libre listo (formateado pero no montado)."
+
+# -----------------------------------------------------------------------------
 # BLOQUE 3.7 — MONTAJE DUPLICADO / INCONSISTENTE
-# =============================================================================
-
+# -----------------------------------------------------------------------------
+log_info "Creando montaje duplicado..."
 mkdir -p /backup_ext4
-mount ${DISK_PART}1 /backup_ext4
+mount "$PART1" /backup_ext4
+log_success "Partición EXT4 montada también en /backup_ext4."
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # FIN
-# =============================================================================
-echo "LAB BLOQUE 3 — ALMACENAMIENTO PREPARADO"
+# -----------------------------------------------------------------------------
+echo ""
+echo "========================================================================"
+echo "🎉 LAB BLOQUE 3 — ALMACENAMIENTO PREPARADO (VERSIÓN PORTABLE)"
+echo "========================================================================"
+echo ""
+echo "Resumen de la configuración:"
+echo "---------------------------"
+echo "Disco del sistema: $ROOT_DISK (NO TOCADO)"
+echo "Disco Particiones ($DISK_PART):"
+echo "  - $PART1 (ext4) montado en /mnt/ext4_data y /backup_ext4"
+echo "  - $PART2 (xfs) montado en /mnt/xfs_data"
+echo "  - ERROR en fstab: la línea de xfs tiene tipo 'ext4'."
+echo ""
+echo "Disco LVM ($DISK_LVM):"
+echo "  - VG 'vg_storage', LV 'lv_apps' (ext4, /srv/apps) y 'lv_logs' (xfs, /var/log/apps)"
+echo "  - ERROR: lv_apps tiene 3G pero el FS es de 2G."
+echo "  - MALA PRÁCTICA: fstab usa /dev/... en lugar de UUID."
+echo ""
+echo "Disco Swap ($DISK_SWAP):"
+echo "  - Partición swap activa."
+echo "  - /swapfile_lab con permisos 644 (incorrecto)."
+echo ""
+echo "Disco Libre ($DISK_FREE):"
+echo "  - Formateado como ext4 pero no montado."
+echo ""
+echo "📦 Backup de configuraciones originales en: $BACKUP_DIR"
+echo ""
+echo "¡A practicar! Recuerda inspeccionar y corregir los errores."
+echo "========================================================================"
