@@ -88,12 +88,13 @@ fi
 # Verificar que ROOT_DISK es un disco válido
 if [[ -z "$ROOT_DISK" ]] || [[ ! -b "$ROOT_DISK" ]]; then
     log_warning "No se pudo determinar el disco del sistema automáticamente."
-    # Listar discos y pedir al usuario que identifique
-    echo "Discos disponibles:"
-    lsblk -d -o NAME,SIZE,TYPE | grep disk
-    echo ""
-    read -p "Introduce el nombre del disco del sistema (ej. vda, sda): " SYS_DISK
-    ROOT_DISK="/dev/$SYS_DISK"
+    # Autodetectar: el disco que tiene alguna partición montada en / o /boot
+    ROOT_DISK=$(lsblk -no PKNAME,MOUNTPOINT | awk '$2 == "/" || $2 == "/boot" {print "/dev/" $1}' | head -1)
+    if [[ -z "$ROOT_DISK" ]] || [[ ! -b "$ROOT_DISK" ]]; then
+        # Último fallback: el primer disco no loop y no cdrom
+        ROOT_DISK=$(lsblk -nd -o NAME,TYPE | grep " disk" | grep -v "^sr" | awk 'NR==1 {print "/dev/" $1}')
+    fi
+    log_info "Disco del sistema detectado automáticamente: $ROOT_DISK"
 fi
 
 log_info "Disco del sistema (NO se tocará): $ROOT_DISK"
@@ -131,33 +132,25 @@ done
 # -----------------------------------------------------------------------------
 if [[ $NUM_DISKS -lt 4 ]]; then
     DISKS_NEEDED=$((4 - NUM_DISKS))
-    log_warning "Se necesitan 4 discos. Faltan: $DISKS_NEEDED"
+    log_warning "Se necesitan 4 discos. Faltan: $DISKS_NEEDED. Creando discos loop automáticamente..."
     
-    # Preguntar si crear discos loop
-    read -p "¿Crear discos loop para completar? (s/N): " -r CREATE_LOOP
+    LOOP_DIR="/root/lab_disks"
+    mkdir -p "$LOOP_DIR"
     
-    if [[ "$CREATE_LOOP" =~ ^[Ss]$ ]]; then
-        log_info "Creando $DISKS_NEEDED discos loop de 3GB en /root/lab_disks/..."
-        LOOP_DIR="/root/lab_disks"
-        mkdir -p "$LOOP_DIR"
-        
-        # Limpiar loops existentes
-        losetup -D 2>/dev/null || true
-        
-        for i in $(seq 1 "$DISKS_NEEDED"); do
-            LOOP_FILE="$LOOP_DIR/disk_lab_$i.img"
-            if [[ ! -f "$LOOP_FILE" ]]; then
-                dd if=/dev/zero of="$LOOP_FILE" bs=1M count=3072 status=progress 2>/dev/null
-            fi
-            LOOP_DEV=$(losetup -f --show "$LOOP_FILE")
-            AVAILABLE_DISKS+=("$LOOP_DEV")
-            log_success "Creado disco loop: $LOOP_DEV (3GB)"
-            sleep 1
-        done
-    else
-        log_error "Se necesitan 4 discos para el laboratorio."
-        exit 1
-    fi
+    # Limpiar loops existentes de laboratorio previo
+    for img in "$LOOP_DIR"/*.img; do
+        [[ -f "$img" ]] && losetup -j "$img" | awk -F: '{print $1}' | xargs -r losetup -d 2>/dev/null || true
+    done
+    
+    for i in $(seq 1 "$DISKS_NEEDED"); do
+        LOOP_FILE="$LOOP_DIR/disk_lab_$i.img"
+        if [[ ! -f "$LOOP_FILE" ]]; then
+            dd if=/dev/zero of="$LOOP_FILE" bs=1M count=3072 status=none
+        fi
+        LOOP_DEV=$(losetup -f --show "$LOOP_FILE")
+        AVAILABLE_DISKS+=("$LOOP_DEV")
+        log_success "Creado disco loop: $LOOP_DEV (3GB)"
+    done
 fi
 
 # -----------------------------------------------------------------------------
@@ -165,9 +158,17 @@ fi
 # -----------------------------------------------------------------------------
 VALID_DISKS=()
 for disk in "${AVAILABLE_DISKS[@]}"; do
-    if [[ -b "$disk" ]] && [[ "$disk" != "$ROOT_DISK" ]]; then
-        VALID_DISKS+=("$disk")
+    # Excluir si no es un bloque válido
+    [[ ! -b "$disk" ]] && continue
+    # Excluir el disco del sistema explícitamente
+    [[ "$disk" == "$ROOT_DISK" ]] && continue
+    # Excluir cualquier disco que tenga particiones con montajes activos
+    ACTIVE_MOUNTS=$(lsblk -ln -o MOUNTPOINT "$disk" 2>/dev/null | grep -v "^$" | wc -l)
+    if [[ "$ACTIVE_MOUNTS" -gt 0 ]]; then
+        log_warning "Excluyendo $disk: tiene $ACTIVE_MOUNTS montajes activos"
+        continue
     fi
+    VALID_DISKS+=("$disk")
 done
 
 if [[ ${#VALID_DISKS[@]} -lt 4 ]]; then
@@ -349,25 +350,26 @@ LVM_SIZE_MB=$((LVM_SIZE_MB - 10))  # Dejar margen para metadata
 pvcreate "$DISK_LVM"
 vgcreate vg_storage "$DISK_LVM"
 
-# Calcular tamaños de LV (60% y 40% del espacio disponible)
-TOTAL_PE=$(vgdisplay vg_storage | grep "Total PE" | awk '{print $3}')
-if [[ -n "$TOTAL_PE" ]]; then
-    # Usar extents si está disponible
-    LV_APPS_PE=$((TOTAL_PE * 60 / 100))
-    LV_LOGS_PE=$((TOTAL_PE - LV_APPS_PE))
-    
-    lvcreate -l "$LV_APPS_PE" -n lv_apps vg_storage
-    lvcreate -l "$LV_LOGS_PE" -n lv_logs vg_storage
-    
-    LV_APPS_SIZE=$((LV_APPS_PE * 4))  # Aproximación en MB (cada extent suele ser 4MB)
-    LV_LOGS_SIZE=$((LV_LOGS_PE * 4))
-else
-    # Fallback a MB
-    LV_APPS_SIZE=$((LVM_SIZE_MB * 60 / 100))
-    LV_LOGS_SIZE=$((LVM_SIZE_MB - LV_APPS_SIZE))
-    
+# Calcular tamaños de LV usando extents disponibles reales
+TOTAL_PE=$(vgs --noheadings --units m -o vg_free vg_storage 2>/dev/null | tr -d ' m' | cut -d. -f1)
+if [[ -z "$TOTAL_PE" ]] || [[ "$TOTAL_PE" -eq 0 ]]; then
+    # Fallback: usar extents del vgdisplay
+    TOTAL_PE=$(vgdisplay vg_storage 2>/dev/null | awk '/Free  PE/ {print $5}')
+fi
+
+if [[ -n "$TOTAL_PE" ]] && [[ "$TOTAL_PE" -gt 10 ]]; then
+    # Calcular en MB: 60% para apps, 40% para logs, dejar 1 extent libre
+    LV_APPS_SIZE=$((TOTAL_PE * 60 / 100))
+    LV_LOGS_SIZE=$((TOTAL_PE * 38 / 100))  # Dejamos margen explícito
+
+    log_info "   Espacio libre en VG: ${TOTAL_PE}MB → lv_apps=${LV_APPS_SIZE}MB, lv_logs=${LV_LOGS_SIZE}MB"
+
     lvcreate -L "${LV_APPS_SIZE}M" -n lv_apps vg_storage
     lvcreate -L "${LV_LOGS_SIZE}M" -n lv_logs vg_storage
+else
+    log_error "No se pudo determinar espacio libre en vg_storage (TOTAL_PE='$TOTAL_PE')"
+    vgs vg_storage
+    exit 1
 fi
 
 log_info "   Tamaños LVM: lv_apps=${LV_APPS_SIZE}MB, lv_logs=${LV_LOGS_SIZE}MB"
