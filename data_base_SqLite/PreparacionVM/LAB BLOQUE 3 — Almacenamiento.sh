@@ -202,8 +202,8 @@ log_info "💾 Configurando disco LVM ($DISK_LVM)..."
 pvcreate "$DISK_LVM"
 vgcreate vg_storage "$DISK_LVM"
 
-TOTAL_PE=$(vgs --noheadings --units m -o vg_free vg_storage 2>/dev/null | tr -d ' m' | cut -d. -f1)
-[[ -z "$TOTAL_PE" ]] && TOTAL_PE=$(vgdisplay vg_storage 2>/dev/null | awk '/Free  PE/ {print $5}')
+TOTAL_PE=$(vgdisplay vg_storage 2>/dev/null | awk '/Free  PE/ {print $5}')
+
 
 if [[ -n "$TOTAL_PE" ]] && [[ "$TOTAL_PE" -gt 10 ]]; then
     LV_APPS_SIZE=$((TOTAL_PE * 60 / 100))
