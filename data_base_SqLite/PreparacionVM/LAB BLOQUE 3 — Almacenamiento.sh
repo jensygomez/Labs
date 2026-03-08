@@ -88,7 +88,7 @@ if [[ $NUM_DISKS -lt 4 ]]; then
     
     # Limpiar loops existentes
     for img in "$LOOP_DIR"/*.img; do
-        [[ -f "$img" ]] && losetet -j "$img" | awk -F: '{print $1}' | xargs -r losetup -d 2>/dev/null || true
+        [[ -f "$img" ]] && losetup -j "$img" | awk -F: '{print $1}' | xargs -r losetup -d 2>/dev/null || true
     done
     
     for i in $(seq 1 "$DISKS_NEEDED"); do
