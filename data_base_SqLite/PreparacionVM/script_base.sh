@@ -48,7 +48,7 @@ dnf install -y \
     lsof \
     strace \
     ltrace \
-    plocate \
+    mlocate \
     mlocate \
     findutils \
     diffutils \
