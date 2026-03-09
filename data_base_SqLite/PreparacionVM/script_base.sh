@@ -49,7 +49,6 @@ dnf install -y \
     strace \
     ltrace \
     mlocate \
-    mlocate \
     findutils \
     diffutils \
     patch \
