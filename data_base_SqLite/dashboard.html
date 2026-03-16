@@ -4,21 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Linux Laboratories — LFCS/RHCSA Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:        #0a0e1a;
-    --panel:     #0f1526;
-    --border:    #1e2d4a;
-    --accent:    #00d4ff;
-    --green:     #00ff88;
-    --yellow:    #ffd600;
-    --red:       #ff4757;
-    --magenta:   #c678dd;
-    --orange:    #ff8c00;
-    --text:      #c9d1e0;
-    --dim:       #4a5568;
-    --header-bg: #060912;
+    --bg:        #0a0c12;
+    --panel:     #141a24;
+    --border:    #263445;
+    --accent:    #4ae2ff;
+    --accent-glow: rgba(74, 226, 255, 0.3);
+    --green:     #4aff9e;
+    --green-dim: rgba(74, 255, 158, 0.2);
+    --yellow:    #ffe14a;
+    --red:       #ff6b7c;
+    --magenta:   #cc8eff;
+    --orange:    #ffa64a;
+    --text:      #e3e9f2;
+    --text-dim:  #7b8ba4;
+    --header-bg: #0b0f17;
+    --shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -29,136 +32,123 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
     min-height: 100vh;
-    padding: 0;
+    line-height: 1.5;
   }
 
-  /* ── HEADER ── */
+  /* ── HEADER MEJORADO ── */
   header {
     background: var(--header-bg);
     border-bottom: 2px solid var(--accent);
-    padding: 18px 32px;
+    padding: 20px 32px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
   }
 
   header .title {
-    font-family: 'Syne', sans-serif;
-    font-size: 22px;
-    font-weight: 800;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
     color: #fff;
-    letter-spacing: 0.05em;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
-  header .title span { color: var(--accent); }
+  header .title span { 
+    background: none;
+    -webkit-text-fill-color: initial; 
+    color: var(--accent);
+  }
 
   header .subtitle {
     font-size: 11px;
-    color: var(--dim);
+    color: var(--text-dim);
     margin-top: 4px;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
   }
 
   header .timestamp {
     font-size: 11px;
-    color: var(--dim);
+    color: var(--text-dim);
     text-align: right;
   }
 
   header .timestamp .date {
     color: var(--accent);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
   }
 
-  /* ── UPLOAD ZONE ── */
+  /* ── UPLOAD ZONE (más atractiva) ── */
   #upload-zone {
     background: var(--panel);
     border: 2px dashed var(--border);
-    border-radius: 8px;
-    margin: 24px 32px;
-    padding: 32px;
+    border-radius: 20px;
+    margin: 32px;
+    padding: 48px 32px;
     text-align: center;
     cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
+    transition: border-color 0.2s, background 0.2s, transform 0.2s, box-shadow 0.2s;
+    box-shadow: var(--shadow);
   }
 
   #upload-zone:hover, #upload-zone.drag-over {
     border-color: var(--accent);
-    background: rgba(0,212,255,0.05);
+    background: rgba(74, 226, 255, 0.08);
+    transform: scale(1.02);
+    box-shadow: 0 20px 40px rgba(0,212,255,0.2);
   }
 
-  #upload-zone p { color: var(--dim); margin-top: 8px; font-size: 12px; }
-  #upload-zone .icon { font-size: 32px; margin-bottom: 8px; }
+  #upload-zone .icon { font-size: 48px; margin-bottom: 16px; filter: drop-shadow(0 0 10px var(--accent-glow));}
+  #upload-zone strong { color: #fff; font-size: 18px; }
+  #upload-zone p { color: var(--text-dim); margin-top: 8px; font-size: 13px; }
   #upload-zone input { display: none; }
 
-  /* ── MAIN GRID ── */
+  /* ── MAIN ── */
   .main {
     padding: 0 32px 32px;
     display: none;
   }
 
-  /* ── GLOBAL STATS BAR ── */
+  /* ── GLOBAL STATS BAR (más integrada) ── */
   .global-bar {
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 20px 28px;
-    margin-bottom: 20px;
+    border-radius: 24px;
+    padding: 24px 32px;
+    margin-bottom: 24px;
     display: flex;
     align-items: center;
     gap: 40px;
+    box-shadow: var(--shadow);
   }
 
-  .global-bar .stat {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
+  .global-bar .stat { display: flex; flex-direction: column; gap: 4px; }
+  .global-bar .stat-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; }
+  .global-bar .stat-value { font-size: 32px; font-weight: 700; color: #fff; font-family: 'Space Grotesk', sans-serif; line-height: 1; }
+  .global-bar .stat-value.accent { color: var(--accent); text-shadow: 0 0 15px var(--accent-glow); }
+  .global-bar .stat-value.green  { color: var(--green); text-shadow: 0 0 15px var(--green-dim); }
+  .global-bar .progress-wrap { flex: 1; }
+  .global-bar .progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); margin-bottom: 6px; }
 
-  .global-bar .stat-label {
-    font-size: 10px;
-    color: var(--dim);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-  }
-
-  .global-bar .stat-value {
-    font-size: 28px;
-    font-weight: 700;
-    color: #fff;
-    font-family: 'Syne', sans-serif;
-  }
-
-  .global-bar .stat-value.accent { color: var(--accent); }
-  .global-bar .stat-value.green  { color: var(--green); }
-
-  .global-bar .progress-wrap {
-    flex: 1;
-  }
-
-  .global-bar .progress-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-    color: var(--dim);
-    margin-bottom: 6px;
-  }
-
-  /* ── PROGRESS BAR ── */
+  /* ── PROGRESS BAR (mejorada con contexto) ── */
   .progress-bar {
-    height: 10px;
+    height: 12px; /* Un poco más alta */
     background: var(--border);
-    border-radius: 6px;
+    border-radius: 20px;
     overflow: hidden;
     position: relative;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
   }
 
   .progress-bar .fill {
     height: 100%;
-    border-radius: 6px;
-    transition: width 1s cubic-bezier(.4,0,.2,1);
+    border-radius: 20px;
+    transition: width 1s cubic-bezier(.34,1.56,.64,1);
     position: relative;
   }
 
@@ -166,7 +156,7 @@
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%);
     animation: shimmer 2s infinite;
   }
 
@@ -175,373 +165,217 @@
     100% { transform: translateX(100%); }
   }
 
-  .fill.green   { background: linear-gradient(90deg, #00cc6a, var(--green)); }
-  .fill.yellow  { background: linear-gradient(90deg, #e6b800, var(--yellow)); }
-  .fill.orange  { background: linear-gradient(90deg, #cc7000, var(--orange)); }
-  .fill.red     { background: linear-gradient(90deg, #cc2233, var(--red)); }
-  .fill.accent  { background: linear-gradient(90deg, #0099bb, var(--accent)); }
+  .fill.green   { background: linear-gradient(90deg, #2ecc71, var(--green)); }
+  .fill.yellow  { background: linear-gradient(90deg, #f39c12, var(--yellow)); }
+  .fill.orange  { background: linear-gradient(90deg, #e67e22, var(--orange)); }
+  .fill.red     { background: linear-gradient(90deg, #e74c3c, var(--red)); }
+  .fill.accent  { background: linear-gradient(90deg, #3498db, var(--accent)); }
 
-  /* ── 4-CUADRANT GRID ── */
+  /* ── 4-CUADRANT GRID (con tarjetas más bonitas) ── */
   .quad-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto;
-    gap: 20px;
+    gap: 24px;
   }
 
   .panel {
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 24px;
     overflow: hidden;
+    backdrop-filter: blur(2px);
+    box-shadow: var(--shadow);
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .panel:hover {
+    border-color: var(--accent);
+    transform: translateY(-4px);
   }
 
   .panel-header {
-    background: rgba(0,212,255,0.05);
+    background: rgba(74, 226, 255, 0.08);
     border-bottom: 1px solid var(--border);
-    padding: 12px 20px;
+    padding: 16px 20px;
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--accent);
     text-transform: uppercase;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.1em;
   }
 
   .panel-body { padding: 20px; }
 
-  /* ── BLOQUES ── */
+  /* ── BLOQUES (scrollbar más elegante) ── */
+  .bloque-scroll {
+    max-height: 360px;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+  .bloque-scroll::-webkit-scrollbar { width: 6px; }
+  .bloque-scroll::-webkit-scrollbar-track { background: var(--border); border-radius: 8px; }
+  .bloque-scroll::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 8px; }
+
   .bloque-row {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 14px;
-  }
-
-  .bloque-row:last-child { margin-bottom: 0; }
-
-  .bloque-num {
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    background: var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--accent);
-    flex-shrink: 0;
-  }
-
-  .bloque-name {
-    width: 110px;
-    font-size: 11px;
-    color: var(--text);
-    flex-shrink: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .bloque-bar { flex: 1; }
-
-  .bloque-count {
-    width: 52px;
-    text-align: right;
-    font-size: 11px;
-    color: var(--dim);
-    flex-shrink: 0;
-  }
-
-  /* ── NIVELES ── */
-  .nivel-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
     margin-bottom: 18px;
   }
+  .bloque-row:last-child { margin-bottom: 0; }
+  .bloque-num {
+    width: 28px; height: 28px; border-radius: 8px; background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: var(--accent);
+    flex-shrink: 0;
+  }
+  .bloque-name {
+    width: 120px; font-size: 12px; color: var(--text);
+    flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .bloque-bar { flex: 1; }
+  .bloque-count { width: 52px; text-align: right; font-size: 11px; color: var(--text-dim); flex-shrink: 0; }
 
+  /* ── NIVELES (con badges más cool) ── */
+  .nivel-row { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
   .nivel-row:last-child { margin-bottom: 0; }
-
   .nivel-badge {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 700;
-    flex-shrink: 0;
+    width: 32px; height: 32px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; flex-shrink: 0;
   }
-
-  .nivel-badge.B { background: rgba(0,255,136,0.15); color: var(--green); }
-  .nivel-badge.I { background: rgba(255,214,0,0.15);  color: var(--yellow); }
-  .nivel-badge.A { background: rgba(255,71,87,0.15);   color: var(--red); }
-  .nivel-badge.T { background: rgba(198,120,221,0.15); color: var(--magenta); }
-
+  .nivel-badge.B { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+  .nivel-badge.I { background: rgba(255,225,74,0.15); color: var(--yellow); border: 1px solid var(--yellow); }
+  .nivel-badge.A { background: rgba(255,107,124,0.15); color: var(--red); border: 1px solid var(--red); }
+  .nivel-badge.T { background: rgba(204,142,255,0.15); color: var(--magenta); border: 1px solid var(--magenta); }
   .nivel-info { flex: 1; }
-
-  .nivel-name {
-    font-size: 11px;
-    font-weight: 700;
-    color: #fff;
-    margin-bottom: 5px;
-  }
-
-  .nivel-count {
-    font-size: 11px;
-    color: var(--dim);
-    text-align: right;
-    width: 50px;
-    flex-shrink: 0;
-  }
+  .nivel-name { font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 5px; }
+  .nivel-count { font-size: 11px; color: var(--text-dim); text-align: right; width: 50px; flex-shrink: 0; }
 
   /* ── ACTIVIDAD ── */
   .actividad-list { display: flex; flex-direction: column; gap: 12px; }
-
-  .actividad-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .actividad-fecha {
-    width: 48px;
-    font-size: 11px;
-    color: var(--dim);
-    flex-shrink: 0;
-  }
-
+  .actividad-row { display: flex; align-items: center; gap: 12px; }
+  .actividad-fecha { width: 48px; font-size: 11px; color: var(--text-dim); flex-shrink: 0; }
   .actividad-bar-wrap { flex: 1; }
-
-  .actividad-bar {
-    height: 8px;
-    background: var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  .actividad-bar .fill { height: 100%; border-radius: 4px; }
-
-  .actividad-count {
-    width: 60px;
-    text-align: right;
-    font-size: 11px;
-    flex-shrink: 0;
-  }
-
+  .actividad-bar { height: 8px; background: var(--border); border-radius: 10px; overflow: hidden; }
+  .actividad-bar .fill { height: 100%; border-radius: 10px; }
+  .actividad-count { width: 60px; text-align: right; font-size: 11px; flex-shrink: 0; }
   .actividad-count.active { color: var(--accent); font-weight: 700; }
-  .actividad-count.inactive { color: var(--dim); }
+  .actividad-count.inactive { color: var(--text-dim); }
 
-  /* ── FOOTER ── */
-  .footer {
-    margin: 20px 32px 32px;
-    background: var(--panel);
+  /* ── NUEVO: HEATMAP DE INICIO (DÍA 1) ── */
+  .journey-heatmap {
+    background: rgba(74, 226, 255, 0.05);
+    border-radius: 16px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px 24px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
   }
-
-  .footer .ultimo {
+  .journey-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .journey-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .journey-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .journey-badge {
+    background: var(--green-dim);
+    border: 1px solid var(--green);
+    border-radius: 40px;
+    padding: 4px 16px;
     font-size: 11px;
-    color: var(--dim);
-  }
-
-  .footer .ultimo span { color: var(--yellow); }
-
-  .footer .motivacion {
-    font-size: 12px;
     font-weight: 700;
     color: var(--green);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
   }
 
-  /* ── DEMO DATA NOTICE ── */
-  .demo-notice {
-    background: rgba(255,214,0,0.08);
-    border: 1px solid rgba(255,214,0,0.3);
-    border-radius: 6px;
-    padding: 10px 16px;
-    font-size: 11px;
-    color: var(--yellow);
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  /* ── EMPTY STATE ── */
-  .empty {
-    color: var(--dim);
-    font-size: 11px;
-    font-style: italic;
-    padding: 8px 0;
-  }
-
-  /* ── SCROLL ── */
-  .bloque-scroll {
-    max-height: 340px;
-    overflow-y: auto;
-    padding-right: 4px;
-  }
-
-  .bloque-scroll::-webkit-scrollbar { width: 4px; }
-  .bloque-scroll::-webkit-scrollbar-track { background: var(--border); border-radius: 4px; }
-  .bloque-scroll::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
-
-  /* ── PERCENT LABEL ── */
-  .pct-label {
-    font-size: 10px;
-    color: var(--dim);
-    margin-top: 4px;
-    text-align: right;
-  }
-
-  /* ── PREDICCIÓN ── */
+  /* ── PREDICCIÓN (con más estilo) ── */
   .prediccion-panel {
-    margin-top: 20px;
+    margin-top: 24px;
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 24px;
     overflow: hidden;
+    box-shadow: var(--shadow);
   }
-
   .prediccion-body {
-    padding: 24px 28px;
+    padding: 28px 30px;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
     gap: 24px;
     align-items: start;
   }
-
-  .pred-stat {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .pred-stat-label {
-    font-size: 10px;
-    color: var(--dim);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-  }
-
-  .pred-stat-value {
-    font-family: 'Syne', sans-serif;
-    font-size: 26px;
-    font-weight: 800;
-    color: #fff;
-    line-height: 1;
-  }
-
-  .pred-stat-value.accent  { color: var(--accent); }
+  .pred-stat { display: flex; flex-direction: column; gap: 6px; }
+  .pred-stat-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em; }
+  .pred-stat-value { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 800; color: #fff; line-height: 1; }
+  .pred-stat-value.accent  { color: var(--accent); text-shadow: 0 0 10px var(--accent-glow); }
   .pred-stat-value.green   { color: var(--green); }
   .pred-stat-value.yellow  { color: var(--yellow); }
   .pred-stat-value.magenta { color: var(--magenta); }
+  .pred-stat-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
 
-  .pred-stat-sub {
-    font-size: 11px;
-    color: var(--dim);
-    margin-top: 2px;
-  }
-
-  .pred-timeline {
-    grid-column: span 4;
-    margin-top: 8px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
-  }
-
-  .pred-timeline-label {
-    font-size: 10px;
-    color: var(--dim);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    margin-bottom: 14px;
-  }
-
-  .timeline-track {
-    position: relative;
-    height: 6px;
-    background: var(--border);
-    border-radius: 6px;
-    margin-bottom: 12px;
-  }
-
-  .timeline-fill {
-    height: 100%;
-    border-radius: 6px;
-    background: linear-gradient(90deg, var(--accent), var(--green));
-    transition: width 1.2s cubic-bezier(.4,0,.2,1);
-  }
-
-  .timeline-markers {
-    display: flex;
-    justify-content: space-between;
-    font-size: 10px;
-    color: var(--dim);
-  }
-
+  .pred-timeline { grid-column: span 4; margin-top: 8px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .pred-timeline-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 14px; }
+  .timeline-track { position: relative; height: 8px; background: var(--border); border-radius: 20px; margin-bottom: 12px; }
+  .timeline-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, var(--accent), var(--green)); transition: width 1.2s cubic-bezier(.34,1.56,.64,1); }
+  .timeline-markers { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-dim); }
   .timeline-markers .marker-today { color: var(--accent); font-weight: 700; }
   .timeline-markers .marker-exam  { color: var(--green);  font-weight: 700; }
 
-  .pred-scenarios {
-    grid-column: span 4;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 12px;
-    margin-top: 4px;
-  }
-
+  .pred-scenarios { grid-column: span 4; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 8px; }
   .scenario {
-    background: rgba(255,255,255,0.03);
+    background: rgba(255,255,255,0.02);
     border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 14px 16px;
+    border-radius: 20px;
+    padding: 16px 18px;
+    transition: all 0.2s;
   }
-
-  .scenario.best   { border-color: rgba(0,255,136,0.3); }
-  .scenario.normal { border-color: rgba(0,212,255,0.3); }
-  .scenario.slow   { border-color: rgba(255,214,0,0.3); }
-
-  .scenario-title {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 8px;
-  }
-
+  .scenario:hover { border-color: var(--accent); background: rgba(74,226,255,0.05); }
+  .scenario.best   { border-left: 4px solid var(--green); }
+  .scenario.normal { border-left: 4px solid var(--accent); }
+  .scenario.slow   { border-left: 4px solid var(--yellow); }
+  .scenario-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
   .scenario.best   .scenario-title { color: var(--green); }
   .scenario.normal .scenario-title { color: var(--accent); }
   .scenario.slow   .scenario-title { color: var(--yellow); }
+  .scenario-date { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+  .scenario-detail { font-size: 10px; color: var(--text-dim); }
 
-  .scenario-date {
-    font-family: 'Syne', sans-serif;
-    font-size: 18px;
-    font-weight: 800;
-    color: #fff;
-    margin-bottom: 4px;
+  .footer {
+    margin: 24px 32px 32px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 18px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow);
   }
+  .footer .ultimo { font-size: 11px; color: var(--text-dim); }
+  .footer .ultimo span { color: var(--yellow); font-weight: 700; }
+  .footer .motivacion { font-size: 13px; font-weight: 700; color: var(--green); }
 
-  .scenario-detail {
-    font-size: 10px;
-    color: var(--dim);
-  }
-
-  /* ── SIN DATOS ── */
-  .sin-datos {
-    text-align: center;
-    padding: 20px;
-    color: var(--dim);
-    font-size: 12px;
-  }
+  .demo-notice { background: rgba(255,225,74,0.1); border: 1px solid var(--yellow); border-radius: 40px; padding: 12px 20px; font-size: 11px; color: var(--yellow); margin-bottom: 24px; display: flex; align-items: center; gap: 8px; }
+  .sin-datos { color: var(--text-dim); font-size: 12px; font-style: italic; padding: 20px; text-align: center; }
 </style>
 </head>
 <body>
@@ -549,7 +383,7 @@
 <header>
   <div>
     <div class="title">⚡ <span>Linux</span> Laboratories</div>
-    <div class="subtitle">Rocky Linux 9 &nbsp;•&nbsp; LFCS / RHCSA &nbsp;•&nbsp; Sysadmin Path</div>
+    <div class="subtitle">Rocky Linux 9  •  LFCS / RHCSA  •  Sysadmin Path</div>
   </div>
   <div class="timestamp">
     <div class="date" id="clock"></div>
@@ -563,8 +397,8 @@
   <div class="icon">🗄️</div>
   <strong style="color:#fff">Carga tu base de datos SQLite</strong>
   <p>Arrastra el archivo <code>ejercicios.db</code> aquí, o haz clic para seleccionarlo</p>
-  <p style="margin-top:16px; color: var(--accent);">— o —</p>
-  <button onclick="loadDemo(event)" style="margin-top:12px; background:rgba(0,212,255,0.1); border:1px solid var(--accent); color:var(--accent); padding:8px 20px; border-radius:6px; cursor:pointer; font-family:inherit; font-size:12px;">
+  <p style="margin-top:20px; color: var(--accent);">— o —</p>
+  <button onclick="loadDemo(event)" style="margin-top:12px; background:rgba(74,226,255,0.15); border:1px solid var(--accent); color:var(--accent); padding:10px 24px; border-radius:40px; cursor:pointer; font-family:inherit; font-size:12px; font-weight:700;">
     Ver con datos de ejemplo
   </button>
 </div>
@@ -574,6 +408,19 @@
 
   <div class="demo-notice" id="demo-notice" style="display:none">
     ⚠️ Mostrando datos de ejemplo — carga tu <code>ejercicios.db</code> real para ver tu progreso
+  </div>
+
+  <!-- NUEVO: HEATMAP DE INICIO Y RACHA -->
+  <div class="journey-heatmap" id="journey-heatmap" style="display: none;">
+    <div class="journey-item">
+      <span class="journey-label">Viaje iniciado</span>
+      <span class="journey-value" id="journey-first-date">—</span>
+    </div>
+    <div class="journey-item">
+      <span class="journey-label">Días desde entonces</span>
+      <span class="journey-value" id="journey-days">—</span>
+    </div>
+    <div class="journey-badge" id="journey-streak">⚡ Rachas</div>
   </div>
 
   <!-- Global stats -->
@@ -588,7 +435,7 @@
     </div>
     <div class="stat">
       <div class="stat-label">Meta total</div>
-      <div class="stat-value" style="color:var(--dim)">400</div>
+      <div class="stat-value" style="color:var(--text-dim)">400</div>
     </div>
     <div class="progress-wrap">
       <div class="progress-label">
@@ -598,7 +445,7 @@
       <div class="progress-bar">
         <div class="fill accent" id="bar-meta" style="width:0%"></div>
       </div>
-      <div style="margin-top:8px">
+      <div style="margin-top:12px">
         <div class="progress-label">
           <span>Completados / Cargados</span>
           <span id="g-pct-carg">0%</span>
@@ -612,8 +459,6 @@
 
   <!-- 4 cuadrantes -->
   <div class="quad-grid">
-
-    <!-- Q1: Bloques -->
     <div class="panel">
       <div class="panel-header">📦 Bloques de estudio</div>
       <div class="panel-body">
@@ -622,8 +467,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Q2: Actividad reciente -->
     <div class="panel">
       <div class="panel-header">📅 Actividad reciente (7 días)</div>
       <div class="panel-body">
@@ -632,23 +475,18 @@
         </div>
       </div>
     </div>
-
-    <!-- Q3: Niveles -->
     <div class="panel">
       <div class="panel-header">🎯 Niveles</div>
       <div class="panel-body" id="niveles-container">
         <div class="sin-datos">Sin datos</div>
       </div>
     </div>
-
-    <!-- Q4: Último ejercicio -->
     <div class="panel">
       <div class="panel-header">⏱️ Último ejercicio</div>
       <div class="panel-body" id="ultimo-container">
         <div class="sin-datos">Sin actividad aún</div>
       </div>
     </div>
-
   </div>
 
   <!-- Predicción de examen -->
@@ -711,10 +549,8 @@ function loadDemo(e) {
 function buildDemoData() {
   return {
     query: (sql) => {
-      // Simulamos las queries que usa el dashboard
       if (sql.includes('COUNT(*) FROM ejercicios;')) return [[120]];
       if (sql.includes('SUM(completado) FROM ejercicios;')) return [[61]];
-
       if (sql.includes('GROUP BY bloque')) return [
         [1,20,14],[2,15,10],[3,18,12],[4,10,8],[5,22,9],
         [6,12,5],[7,8,3],[8,10,0],[9,5,0],[10,0,0]
@@ -723,7 +559,8 @@ function buildDemoData() {
         ['Basico',61,40],['Intermedio',42,15],['Avanzado',17,6]
       ];
       if (sql.includes('tema || ')) return [['Configurar SELinux · Bloque 7']];
-      if (sql.includes('ultima_vez FROM ejercicios')) return [['2026-02-27 18:42:00']];
+      if (sql.includes('ultima_vez FROM ejercicios ORDER BY ultima_vez ASC LIMIT 1')) return [['2026-02-15 10:30:00']];  // MEJORA: primera fecha
+      if (sql.includes('ultima_vez FROM ejercicios ORDER BY ultima_vez DESC LIMIT 1')) return [['2026-02-27 18:42:00']];
       if (sql.includes("date(ultima_vez) = '")) {
         const match = sql.match(/'(\d{4}-\d{2}-\d{2})'/);
         const fakes = {
@@ -738,14 +575,12 @@ function buildDemoData() {
   };
 }
 
-// ── Names ────────────────────────────────────────────────────
 const NOMBRES_BLOQUE = {
   1:'Fundamentos', 2:'Usuarios', 3:'Almacenamiento', 4:'Systemd',
   5:'Networking', 6:'Servicios red', 7:'Seguridad', 8:'Podman',
   9:'Scripting', 10:'Troubleshooting'
 };
 
-// ── Color logic ──────────────────────────────────────────────
 function colorClass(pct) {
   if (pct >= 80) return 'green';
   if (pct >= 50) return 'yellow';
@@ -753,7 +588,7 @@ function colorClass(pct) {
   return 'red';
 }
 
-// ── Render ───────────────────────────────────────────────────
+// ── Render (MEJORADO) ────────────────────────────────────────
 function renderDashboard(db, isDemo) {
   document.getElementById('upload-zone').style.display = 'none';
   document.getElementById('main').style.display = 'block';
@@ -762,17 +597,16 @@ function renderDashboard(db, isDemo) {
 
   function q(sql) {
     try {
-      if (db.query) return db.query(sql); // demo
+      if (db.query) return db.query(sql);
       const res = db.exec(sql);
       return res[0] ? res[0].values : [];
-    } catch(e) { return []; }
+    } catch(e) { console.warn("Query error:", sql, e); return []; }
   }
 
   const totalCargados    = (q("SELECT COUNT(*) FROM ejercicios;")[0]?.[0]) || 0;
   const totalCompletados = (q("SELECT SUM(completado) FROM ejercicios;")[0]?.[0]) || 0;
   const META = 400;
 
-  // Global bar
   document.getElementById('g-completados').textContent = totalCompletados;
   document.getElementById('g-cargados').textContent = totalCargados;
 
@@ -788,6 +622,25 @@ function renderDashboard(db, isDemo) {
     document.getElementById('bar-carg').style.width = pctCarg + '%';
     document.getElementById('bar-carg').className = 'fill ' + colorClass(pctCarg);
   }, 100);
+
+  // ── MEJORA: OBTENER PRIMER EJERCICIO (DÍA DE INICIO) ──
+  const firstDateRaw = q("SELECT ultima_vez FROM ejercicios WHERE ultima_vez IS NOT NULL ORDER BY ultima_vez ASC LIMIT 1;")[0]?.[0];
+  if (firstDateRaw) {
+    document.getElementById('journey-heatmap').style.display = 'flex';
+    const firstDate = new Date(firstDateRaw.replace(' ', 'T'));
+    const today = new Date();
+    const diffTime = Math.abs(today - firstDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    document.getElementById('journey-first-date').textContent = firstDate.toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' });
+    document.getElementById('journey-days').textContent = diffDays + ' días';
+    
+    // Pequeña racha: días consecutivos hasta hoy (simplificado, podrías mejorarlo después)
+    const streak = diffDays; // simplificación: consideramos todos los días desde el inicio como "racha base"
+    document.getElementById('journey-streak').textContent = `🔥 Días totales: ${diffDays}`;
+  } else {
+    document.getElementById('journey-heatmap').style.display = 'none';
+  }
 
   // Bloques
   const bloqueRows = q("SELECT bloque, COUNT(*), SUM(completado) FROM ejercicios GROUP BY bloque;");
@@ -831,11 +684,11 @@ function renderDashboard(db, isDemo) {
 
   aEl.innerHTML = actDays.map(({ fecha, cnt }) => {
     const label = fecha.slice(5).replace('-', '/');
-    const pct = Math.round(cnt / maxCount * 100);
+    const pct = maxCount > 0 ? Math.round(cnt / maxCount * 100) : 0;
     const isToday = fecha === today.toISOString().split('T')[0];
     return `
       <div class="actividad-row">
-        <div class="actividad-fecha" style="${isToday ? 'color:var(--accent)' : ''}">${label}${isToday ? ' ←' : ''}</div>
+        <div class="actividad-fecha" style="${isToday ? 'color:var(--accent); font-weight:700' : ''}">${label}${isToday ? ' ←' : ''}</div>
         <div class="actividad-bar-wrap">
           <div class="actividad-bar">
             <div class="fill ${cnt > 0 ? 'accent' : ''}" style="width:${pct}%; background:${cnt > 0 ? 'var(--accent)' : 'var(--border)'}"></div>
@@ -884,61 +737,62 @@ function renderDashboard(db, isDemo) {
   if (ultimo) {
     uEl.innerHTML = `
       <div style="color:var(--yellow); font-weight:700; font-size:13px; margin-bottom:12px">${ultimo}</div>
-      ${ultimaFecha ? `<div style="color:var(--dim); font-size:11px">🕐 ${ultimaFecha}</div>` : ''}
+      ${ultimaFecha ? `<div style="color:var(--text-dim); font-size:11px">🕐 ${ultimaFecha}</div>` : ''}
       <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border)">
-        <div style="color:var(--dim); font-size:10px; text-transform:uppercase; letter-spacing:.1em; margin-bottom:8px">Tu progreso global</div>
-        <div style="font-size:36px; font-weight:800; font-family:'Syne',sans-serif; color:var(--green)">${pctCarg}%</div>
-        <div style="color:var(--dim); font-size:11px">de ejercicios cargados completados</div>
+        <div style="color:var(--text-dim); font-size:10px; text-transform:uppercase; letter-spacing:.1em; margin-bottom:8px">Tu progreso global</div>
+        <div style="font-size:36px; font-weight:800; font-family:'Space Grotesk',sans-serif; color:var(--green)">${pctCarg}%</div>
+        <div style="color:var(--text-dim); font-size:11px">de ejercicios cargados completados</div>
       </div>`;
     document.getElementById('footer-ultimo').textContent = ultimo;
   } else {
     uEl.innerHTML = '<div class="sin-datos">Sin actividad aún — ¡a practicar!</div>';
   }
 
-  // ── PREDICCIÓN DE EXAMEN ────────────────────────────────────
+  // Predicción de examen
   const pEl = document.getElementById('prediccion-body');
   const META_EXAMEN = 400;
-  const restantes = META_EXAMEN - totalCompletados;
+  const restantes = Math.max(0, META_EXAMEN - totalCompletados);
 
-  // Calcular ritmo: ejercicios completados en los últimos 7 días activos
   const totalActivos7 = actDays.reduce((sum, d) => sum + d.cnt, 0);
   const diasActivos7  = actDays.filter(d => d.cnt > 0).length;
-  const ritmoSemanal  = totalActivos7; // ejerc/semana
-
-  // Ritmo diario promedio (solo días con actividad)
+  const ritmoSemanal  = totalActivos7;
   const ritmoActivoDia = diasActivos7 > 0 ? (totalActivos7 / diasActivos7) : 0;
 
   function fechaDesdeHoy(dias) {
+    if (!isFinite(dias) || dias > 10000) return '—';
     const d = new Date();
     d.setDate(d.getDate() + Math.round(dias));
     return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
   function diasHastaFecha(dias) {
-    if (dias < 7)   return dias + ' días';
+    if (!isFinite(dias) || dias > 10000) return '—';
+    if (dias < 7)   return Math.round(dias) + ' días';
     if (dias < 30)  return Math.round(dias / 7) + ' semanas';
     if (dias < 365) return Math.round(dias / 30) + ' meses';
     return Math.round(dias / 365 * 10) / 10 + ' años';
   }
 
-  if (ritmoSemanal === 0) {
+  if (ritmoSemanal === 0 || restantes === 0) {
     pEl.innerHTML = `
-      <div style="grid-column:span 4; text-align:center; padding:20px">
-        <div style="font-size:32px; margin-bottom:12px">⏸️</div>
-        <div style="color:var(--yellow); font-weight:700; margin-bottom:8px">Sin datos de ritmo suficientes</div>
-        <div style="color:var(--dim); font-size:12px">Completa ejercicios durante algunos días para calcular tu predicción automáticamente.</div>
+      <div style="grid-column:span 4; text-align:center; padding:30px">
+        <div style="font-size:40px; margin-bottom:16px">${restantes === 0 ? '🎉' : '⏸️'}</div>
+        <div style="color:var(--yellow); font-weight:700; margin-bottom:8px">
+          ${restantes === 0 ? '¡Felicidades, llegaste a la meta!' : 'Sin datos de ritmo suficientes'}
+        </div>
+        <div style="color:var(--text-dim); font-size:12px">
+          ${restantes === 0 ? 'Ya completaste 400 ejercicios. ¡Prepárate para el examen!' : 'Completa ejercicios durante algunos días para calcular tu predicción.'}
+        </div>
       </div>`;
   } else {
-    // Escenarios
-    const ritmoNormal  = ritmoSemanal / 7;             // promedio diario real (incluye días sin actividad)
-    const ritmoOptimo  = ritmoActivoDia * 1.2;         // 20% más que días activos
-    const ritmoLento   = ritmoNormal * 0.5;            // mitad del ritmo actual
+    const ritmoNormal  = ritmoSemanal / 7;
+    const ritmoOptimo  = ritmoActivoDia * 1.2;
+    const ritmoLento   = ritmoNormal * 0.5;
 
     const diasNormal = restantes / ritmoNormal;
     const diasOptimo = restantes / ritmoOptimo;
     const diasLento  = restantes / ritmoLento;
 
-    // Porcentaje del camino recorrido (para timeline)
     const pctCamino = Math.min(99, Math.round(totalCompletados / META_EXAMEN * 100));
 
     pEl.innerHTML = `
@@ -959,7 +813,7 @@ function renderDashboard(db, isDemo) {
       </div>
       <div class="pred-stat">
         <div class="pred-stat-label">ETA (ritmo actual)</div>
-        <div class="pred-stat-value green" style="font-size:18px">${fechaDesdeHoy(diasNormal)}</div>
+        <div class="pred-stat-value green" style="font-size:20px">${fechaDesdeHoy(diasNormal)}</div>
         <div class="pred-stat-sub">en ~${diasHastaFecha(diasNormal)}</div>
       </div>
 
