@@ -542,6 +542,11 @@
     color: var(--dim);
     font-size: 12px;
   }
+
+  /* ── RACHA GLOW ── */
+  #g-racha {
+    text-shadow: 0 0 12px rgba(255,140,0,0.6);
+  }
 </style>
 </head>
 <body>
@@ -589,6 +594,16 @@
     <div class="stat">
       <div class="stat-label">Meta total</div>
       <div class="stat-value" style="color:var(--dim)">400</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">🔥 Racha actual</div>
+      <div class="stat-value" id="g-racha" style="color:var(--orange)">0</div>
+      <div style="font-size:10px;color:var(--dim)" id="g-racha-label">días</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">📅 Desde el día 1</div>
+      <div class="stat-value" id="g-dias-total" style="color:var(--magenta); font-size:20px">—</div>
+      <div style="font-size:10px;color:var(--dim)" id="g-inicio-label">—</div>
     </div>
     <div class="progress-wrap">
       <div class="progress-label">
@@ -643,7 +658,7 @@
 
     <!-- Q4: Último ejercicio -->
     <div class="panel">
-      <div class="panel-header">⏱️ Último ejercicio</div>
+      <div class="panel-header">⏱️ Sesión & Progreso</div>
       <div class="panel-body" id="ultimo-container">
         <div class="sin-datos">Sin actividad aún</div>
       </div>
@@ -776,6 +791,30 @@ function renderDashboard(db, isDemo) {
   document.getElementById('g-completados').textContent = totalCompletados;
   document.getElementById('g-cargados').textContent = totalCargados;
 
+  // Racha actual
+  const today = new Date();
+  let racha = 0;
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const fecha = d.toISOString().split('T')[0];
+    const cnt = parseInt(q(`SELECT COUNT(*) FROM ejercicios WHERE date(ultima_vez) = '${fecha}' AND completado = 1;`)[0]?.[0]) || 0;
+    if (cnt > 0) racha++;
+    else if (i > 0) break; // solo rompe si no es hoy
+  }
+  document.getElementById('g-racha').textContent = racha;
+  document.getElementById('g-racha-label').textContent = racha === 1 ? 'día seguido' : 'días seguidos';
+
+  // Primer ejercicio y días totales estudiando
+  const primerDia = q("SELECT MIN(ultima_vez) FROM ejercicios WHERE ultima_vez IS NOT NULL;")[0]?.[0];
+  if (primerDia) {
+    const inicio = new Date(primerDia);
+    const diasEstudiando = Math.floor((today - inicio) / (1000 * 60 * 60 * 24)) + 1;
+    document.getElementById('g-dias-total').textContent = diasEstudiando + ' días';
+    const fechaStr = inicio.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+    document.getElementById('g-inicio-label').textContent = 'desde ' + fechaStr;
+  }
+
   const pctMeta = Math.min(100, Math.round(totalCompletados / META * 100));
   const pctCarg = totalCargados > 0 ? Math.round(totalCompletados / totalCargados * 100) : 0;
 
@@ -879,16 +918,33 @@ function renderDashboard(db, isDemo) {
   // Último ejercicio
   const ultimo = q("SELECT tema || ' · Bloque ' || bloque FROM ejercicios WHERE ultima_vez IS NOT NULL ORDER BY ultima_vez DESC LIMIT 1;")[0]?.[0];
   const ultimaFecha = q("SELECT ultima_vez FROM ejercicios WHERE ultima_vez IS NOT NULL ORDER BY ultima_vez DESC LIMIT 1;")[0]?.[0];
+  const primerEj = q("SELECT tema || ' · Bloque ' || bloque FROM ejercicios WHERE ultima_vez IS NOT NULL ORDER BY ultima_vez ASC LIMIT 1;")[0]?.[0];
+  const primeraFecha = q("SELECT ultima_vez FROM ejercicios WHERE ultima_vez IS NOT NULL ORDER BY ultima_vez ASC LIMIT 1;")[0]?.[0];
   const uEl = document.getElementById('ultimo-container');
 
   if (ultimo) {
+    const pctCamino2 = Math.min(99, Math.round(totalCompletados / META * 100));
     uEl.innerHTML = `
-      <div style="color:var(--yellow); font-weight:700; font-size:13px; margin-bottom:12px">${ultimo}</div>
-      ${ultimaFecha ? `<div style="color:var(--dim); font-size:11px">🕐 ${ultimaFecha}</div>` : ''}
-      <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border)">
+      <div style="margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid var(--border)">
+        <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px">🟢 Último ejercicio</div>
+        <div style="color:var(--yellow); font-weight:700; font-size:12px">${ultimo}</div>
+        ${ultimaFecha ? `<div style="color:var(--dim); font-size:10px; margin-top:3px">🕐 ${ultimaFecha}</div>` : ''}
+      </div>
+      ${primerEj ? `
+      <div style="margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid var(--border)">
+        <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px">🚀 Primer ejercicio</div>
+        <div style="color:var(--accent); font-weight:700; font-size:12px">${primerEj}</div>
+        ${primeraFecha ? `<div style="color:var(--dim); font-size:10px; margin-top:3px">📅 ${primeraFecha}</div>` : ''}
+      </div>` : ''}
+      <div>
         <div style="color:var(--dim); font-size:10px; text-transform:uppercase; letter-spacing:.1em; margin-bottom:8px">Tu progreso global</div>
         <div style="font-size:36px; font-weight:800; font-family:'Syne',sans-serif; color:var(--green)">${pctCarg}%</div>
-        <div style="color:var(--dim); font-size:11px">de ejercicios cargados completados</div>
+        <div style="color:var(--dim); font-size:11px; margin-bottom:10px">de ejercicios cargados completados</div>
+        <div style="font-size:10px;color:var(--dim);margin-bottom:4px">${totalCompletados} / ${META} hacia la certificación</div>
+        <div class="progress-bar" style="height:6px">
+          <div class="fill ${colorClass(pctCamino2)}" style="width:${pctCamino2}%"></div>
+        </div>
+        <div style="font-size:10px;color:var(--dim);margin-top:4px;text-align:right">${pctCamino2}% del camino</div>
       </div>`;
     document.getElementById('footer-ultimo').textContent = ultimo;
   } else {
