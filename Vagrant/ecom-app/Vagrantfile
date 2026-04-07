@@ -1,0 +1,114 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "centos/stream8"
+  config.vm.synced_folder ".", "/vagrant", disabled: true  # Deshabilita default
+  config.vm.synced_folder "./html", "/var/www/html", create: true  # Persiste web si quieres customizar
+
+  config.vm.network "forwarded_port", guest: 80, host: 8080
+  config.vm.network "forwarded_port", guest: 3306, host: 3306
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "1024"
+    vb.cpus = 1
+  end
+
+  # Provisioner principal: todo en un heredoc inline
+  config.vm.provision "shell", privileged: true, inline: <<-SHELL
+    # Update y pre-reqs
+    yum update -y
+    yum install -y firewalld mariadb-server httpd php php-mysqlnd git
+
+    # FirewallD
+    systemctl start firewalld
+    systemctl enable firewalld
+    firewall-cmd --permanent --zone=public --add-port=80/tcp
+    firewall-cmd --permanent --zone=public --add-port=3306/tcp
+    firewall-cmd --reload
+
+    # MariaDB
+    systemctl start mariadb
+    systemctl enable mariadb
+    mysql_secure_installation <<EOF
+
+    y
+    ecompassword
+    ecompassword
+    y
+    y
+    y
+    y
+    EOF
+
+    # Config DB
+    mysql -u root -pecompassword <<EOF
+    CREATE DATABASE ecomdb;
+    CREATE USER 'ecomuser'@'localhost' IDENTIFIED BY 'ecompassword';
+    GRANT ALL PRIVILEGES ON *.* TO 'ecomuser'@'localhost';
+    FLUSH PRIVILEGES;
+    EOF
+
+    # Load data
+    cat > /tmp/db-load-script.sql <<-DBEOF
+    USE ecomdb;
+    CREATE TABLE products (id mediumint(8) unsigned NOT NULL auto_increment,Name varchar(255) default NULL,Price varchar(255) default NULL, ImageUrl varchar(255) default NULL,PRIMARY KEY (id)) AUTO_INCREMENT=1;
+    INSERT INTO products (Name,Price,ImageUrl) VALUES ("Laptop","100","c-1.png"),("Drone","200","c-2.png"),("VR","300","c-3.png"),("Tablet","50","c-5.png"),("Watch","90","c-6.png"),("Phone Covers","20","c-7.png"),("Phone","80","c-8.png"),("Laptop","150","c-4.png");
+    DBEOF
+    mysql -u root -pecompassword < /tmp/db-load-script.sql
+    rm /tmp/db-load-script.sql
+
+    # Httpd config
+    sed -i 's/index.html/index.php/g' /etc/httpd/conf/httpd.conf
+    systemctl start httpd
+    systemctl enable httpd
+
+    # Git clone app
+    rm -rf /var/www/html/*
+    git clone https://github.com/kodekloudhub/learning-app-ecommerce.git /var/www/html/
+
+    # .env
+    cat > /var/www/html/.env <<-ENVEOF
+    DB_HOST=localhost
+    DB_USER=ecomuser
+    DB_PASSWORD=ecompassword
+    DB_NAME=ecomdb
+    ENVEOF
+
+    # Actualiza index.php con loadEnv (agrega al inicio si no existe)
+    INDEX_PHP="/var/www/html/index.php"
+    if ! grep -q "loadEnv" $INDEX_PHP; then
+      sed -i '1i\\
+<?php\
+// Function to load environment variables from a .env file\
+function loadEnv($path)\
+{\
+    if (!file_exists($path)) {\
+        return false;\
+    }\
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);\
+    foreach ($lines as $line) {\
+        if (strpos(trim($line), "#") === 0) {\
+            continue;\
+        }\
+        list($name, $value) = explode("=", $line, 2);\
+        $name = trim($name);\
+        $value = trim($value);\
+        putenv(sprintf("%s=%s", $name, $value));\
+    }\
+    return true;\
+}\
+loadEnv(__DIR__ . "/.env");\
+$dbHost = getenv("DB_HOST");\
+$dbUser = getenv("DB_USER");\
+$dbPassword = getenv("DB_PASSWORD");\
+$dbName = getenv("DB_NAME");\
+?>\
+' $INDEX_PHP
+    fi
+
+    echo "E-commerce listo! Accede: http://localhost:8080 (host)"
+  SHELL
+config.vm.provider "libvirt" do |libvirt|
+  libvirt.driver = "kvm"
+  libvirt.memory = "1024"
+  libvirt.cpus = 1
+  libvirt.storage_pool_name = "default"  # O tu pool en virt-manager
+end
