@@ -1,0 +1,38 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "almalinux/8"
+
+  config.vm.provider "libvirt" do |libvirt|
+    libvirt.driver = "kvm"
+    libvirt.memory = "1024"
+    # Añadimos dos discos extras de 2GB para practicar
+    libvirt.storage :file, :size => '2G', :device => 'vdb'
+    libvirt.storage :file, :size => '2G', :device => 'vdc'
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    # Creamos el archivo de la tarea para el estudiante
+    cat > /home/vagrant/TAREA_EXAMEN.txt <<EOF
+==========================================================
+          EXAMEN DE PRÁCTICA: ALMACENAMIENTO
+==========================================================
+Tu objetivo es configurar el almacenamiento siguiendo estos pasos:
+
+1. Identifica los dos discos nuevos de 2GB (pueden ser /dev/vdb y /dev/vdc).
+2. Crea un Volume Group (VG) llamado 'vg_datos' usando ambos discos.
+3. Crea un Logical Volume (LV) llamado 'lv_nomina' de 1.5GB dentro de ese VG.
+4. Formatea el LV con el sistema de archivos XFS.
+5. Monta el volumen de forma PERSISTENTE (en /etc/fstab) en el directorio '/mnt/nomina'.
+6. Crea un archivo de prueba en '/mnt/nomina/test.log' para verificar.
+
+Pista: Usa 'lsblk' para ver los discos y 'pvs', 'vgs', 'lvs' para el progreso.
+==========================================================
+EOF
+    chown vagrant:vagrant /home/vagrant/TAREA_EXAMEN.txt
+    
+    # Instalamos herramientas necesarias por si acaso
+    yum install -y lvm2 xfsprogs
+    
+    echo "¡Laboratorio de Almacenamiento desplegado!"
+    echo "Escribe 'vagrant ssh' y luego 'cat TAREA_EXAMEN.txt' para empezar."
+  SHELL
+end
