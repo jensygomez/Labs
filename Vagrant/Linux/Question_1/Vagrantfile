@@ -1,0 +1,68 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "almalinux/8"        # o "bento/ubuntu-22.04", "generic/rocky8", etc.
+  config.vm.hostname = "ec2-low-disk"
+
+  config.vm.provider "libvirt" do |libvirt|
+    libvirt.driver = "kvm"
+    libvirt.memory = "2048"
+    libvirt.cpus = 2
+    
+    # Disco raíz pequeño (simula un EBS de 8GB)
+    libvirt.machine_virtual_size = 8     # 8 GB - muy típico en entrevistas
+    
+    # Disco extra de 10GB (simula poder agregar un nuevo EBS)
+    libvirt.storage :file, :size => '10G', :device => 'vdb'
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    echo "=== Configurando laboratorio: EC2 con poco espacio en disco ==="
+
+    # Instalamos herramientas útiles
+    dnf install -y ncdu tree lsof htop iotop
+
+    # Llenamos el disco raíz para simular "out of space"
+    echo "Llenando / con archivos dummy (dejando ~300-500MB libres)..."
+    dd if=/dev/zero of=/var/log/dummy.log bs=1M count=4000 status=progress 2>/dev/null || true
+    dd if=/dev/zero of=/var/tmp/bigfile.tmp bs=1M count=1500 status=progress 2>/dev/null || true
+    dd if=/dev/zero of=/home/vagrant/bigdata.bin bs=1M count=800 status=progress 2>/dev/null || true
+
+    # Creamos logs grandes de aplicaciones (muy común en EC2)
+    mkdir -p /var/log/nginx /var/log/application
+    dd if=/dev/zero of=/var/log/nginx/access.log bs=1M count=1200 2>/dev/null || true
+    dd if=/dev/zero of=/var/log/application/app.log bs=1M count=900 2>/dev/null || true
+
+    # Archivo de la tarea (el "examen")
+    cat > /home/vagrant/TAREA_LOW_DISK.txt << 'EOF'
+================================================================
+          ENTREVISTA PRÁCTICA - EC2 OUT OF DISK SPACE
+================================================================
+
+Tu EC2 instance está reportando "No space left on device".
+
+Acciones esperadas:
+
+1. Diagnosticar: ¿Cuánto espacio queda? ¿Qué está consumiendo más?
+2. Encontrar los archivos/directorios más grandes.
+3. Liberar espacio de forma segura (logs, temp, etc.).
+4. Soluciones a largo plazo:
+   - Extender el volumen raíz (resize)
+   - Agregar y montar un nuevo volumen (/dev/vdb)
+5. Hacer que los cambios sean persistentes.
+
+Comandos recomendados: df -h, du -sh /*, ncdu /, lsblk, growpart, lvextend, resize2fs/xfs_growfs, etc.
+
+¡Buena suerte!
+================================================================
+EOF
+
+    chown vagrant:vagrant /home/vagrant/TAREA_LOW_DISK.txt
+
+    echo ""
+    echo "=================================================="
+    echo "¡Laboratorio listo!"
+    echo "Para empezar:"
+    echo "   vagrant ssh"
+    echo "   cat TAREA_LOW_DISK.txt"
+    echo "=================================================="
+  SHELL
+end
