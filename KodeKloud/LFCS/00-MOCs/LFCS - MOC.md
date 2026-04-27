@@ -19,3 +19,7 @@ Preparación para certificación LFCS con enfoque práctico (hands-on)
 
 ## 🧪 Labs
 #lab #hands-on
+
+### 03 - Operations - Deployment
+
+- [[09 - Lab - Manage Processes and Analyze Log Files]]

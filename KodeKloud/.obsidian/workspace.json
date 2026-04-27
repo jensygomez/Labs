@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "95e75e998df3e617",
+        "id": "416f9f3682044a83",
         "type": "tabs",
         "children": [
           {
-            "id": "2097a6e53fab6edd",
+            "id": "aba333ed73fd3ce1",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "LFCS/03-Operations-Deployment/08 - Locate and Analyze System Log Files.md.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "08 - Locate and Analyze System Log Files.md"
+              "title": "Nova aba"
             }
           }
         ]
@@ -181,9 +177,21 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "2097a6e53fab6edd",
+  "active": "aba333ed73fd3ce1",
   "lastOpenFiles": [
+    "ChatGPT Image 19 de abr. de 2026, 07_59_54.png",
+    "DOCKER/02 - Docker Engine/04 - Demo - Docker Engine Setup - Ubuntu.md",
+    "04 -",
+    "DOCKER/02 - Docker Engine",
+    "DOCKER/01 - Introduction",
+    "DOCKER",
+    "2026-04-27.md",
+    "LFCS/03-Operations-Deployment/09 - Lab - Manage Processes and Analyze Log Files.md",
+    "LFCS/00-MOCs/LFCS - MOC.md",
     "LFCS/00-MOCs/Operations - MOC.md",
+    "LFCS/00-MOCs/Introduction - MOC.md",
+    "LFCS/03-Operations-Deployment/07 - Diagnose and Manage Processes.md",
+    "09 - Diagnose and Manage Processes.md",
     "LFCS/03-Operations-Deployment/08 - Locate and Analyze System Log Files.md.md",
     "LINUX_Main_MOC.md",
     "Plantilla Laboratorios.md",
@@ -192,10 +200,6 @@
     "Plantillas",
     "template.md",
     "Sem título.canvas",
-    "LFCS/00-MOCs/LFCS - MOC.md",
-    "2026-04-27.md",
-    "LFCS/00-MOCs/Introduction - MOC.md",
-    "LFCS/03-Operations-Deployment/07 - Diagnose and Manage Processes.md",
     "LFCS/01-Introduction/06 - KodeKloud Community.md",
     "LFCS/01-Introduction/05 - LFCS Command Cheat Sheet.md",
     "LFCS/01-Introduction/04 - Certification and Discounts.md",
@@ -207,18 +211,10 @@
     "LFCS/02-Essential-Commands/04 - Links (Hard and Soft).md",
     "LFCS/02-Essential-Commands/09 - Grep and Regex.md",
     "LFCS/02-Essential-Commands/05 - File Permissions.md",
-    "LFCS/02-Essential-Commands/13 - Git Basics.md",
-    "LFCS/02-Essential-Commands/06 - Special Permissions.md",
-    "LFCS/02-Essential-Commands/02 - System Documentation.md",
-    "LFCS/02-Essential-Commands/08 - File Content.md",
     "LFCS/07-Mock-Exams",
     "LFCS/06-Storage",
     "LFCS/05-Networking",
     "LFCS/04-Users-Groups",
-    "LFCS/03-Operations-Deployment",
-    "LFCS/02-Essential-Commands",
-    "LFCS/01-Introduction",
-    "LFCS/00-MOCs",
-    "LFCS"
+    "LFCS/03-Operations-Deployment"
   ]
 }
