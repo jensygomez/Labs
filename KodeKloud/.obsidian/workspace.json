@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "867315d38217550f",
+        "id": "32820e0be9a5230b",
         "type": "tabs",
         "children": [
           {
-            "id": "94657738d1a3a40d",
+            "id": "3d99c606afe92dc1",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "LFCS/00-Index/LFCS-Dashboard.md.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "LFCS-Dashboard.md"
+              "title": "Nova aba"
             }
           }
         ]
@@ -182,6 +178,32 @@
   },
   "active": "71e502a7760e2595",
   "lastOpenFiles": [
+    "LFCS/00-MOCs/03 - Essential Commands - MOC.md.md",
+    "LFCS/00-MOCs/01 - LFCS - MOC.md.md",
+    "LFCS/00-MOCs/02 - Introduction - MOC.md.md",
+    "LFCS/LFCS.md.md",
+    "04 - Operations - MOC.md.md",
+    "LFCS/03-Operations-Deployment/07 - Diagnose and Manage Processes.md",
+    "LFCS/02-Essential-Commands/13 - Git Basics.md.md",
+    "LFCS/02-Essential-Commands/12 - SSL Certificates.md.md",
+    "LFCS/02-Essential-Commands/10 - Compression and Archive.md.md",
+    "LFCS/02-Essential-Commands/11 - IO Redirection.md.md",
+    "LFCS/02-Essential-Commands/09 - Grep and Regex.md.md",
+    "LFCS/02-Essential-Commands/08 - File Content.md.md",
+    "LFCS/02-Essential-Commands/07 - Search Files.md.md",
+    "LFCS/02-Essential-Commands/06 - Special Permissions.md.md",
+    "LFCS/02-Essential-Commands/05 - File Permissions.md.md",
+    "LFCS/02-Essential-Commands/04 - Links (Hard and Soft).md.md",
+    "LFCS/01-Introduction/01 - Course Introduction.md.md",
+    "LFCS/01-Introduction/05 - LFCS Command Cheat Sheet.md.md",
+    "LFCS/02-Essential-Commands/03 - Files and Directories.md.md",
+    "LFCS/02-Essential-Commands/02 - System Documentation.md.md",
+    "LFCS/02-Essential-Commands/01 - Log in to Local & Remote Consoles.md.md",
+    "LFCS/01-Introduction/06 - KodeKloud Community.md.md",
+    "LFCS/01-Introduction/04 - Certification and Discounts.md.md",
+    "LFCS/01-Introduction/03 - Prerequisites and Exam Details.md.md",
+    "LFCS/01-Introduction/02 - Course Structure.md.md",
+    "Sem título",
     "LFCS/07-Mock-Exams",
     "LFCS/06-Storage",
     "LFCS/05-Networking",
@@ -190,16 +212,8 @@
     "LFCS/02-Essential-Commands",
     "LFCS/01-Introduction",
     "Sem título.canvas",
-    "LFCS/00-Index/LFCS-Dashboard.md.md",
     "0001 - Pods con YAML.md",
-    "0002 - Lab-File-Content-Regular-Expressions.md",
-    "LFCS/00-Index/LFCS-Dashboard.md",
-    "LFCS/00-Index",
-    "LFCS",
-    "Não confirmado 898026.crdownload",
-    "Bash Scripting.md",
-    "0005 - Archive, Backup, Compress, IO Redirection.md",
-    "0004 - Deployments.md",
-    "0003 - ReplicaSets.md"
+    "LFCS/00-MOCs",
+    "LFCS"
   ]
 }
