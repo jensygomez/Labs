@@ -4,21 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "c91336cd88aa5d8a",
+        "id": "95e75e998df3e617",
         "type": "tabs",
         "children": [
           {
-            "id": "72d8fd7c49b0c890",
+            "id": "2097a6e53fab6edd",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "LFCS/05-Networking/Networking - MOC.md",
+                "file": "LFCS/03-Operations-Deployment/08 - Locate and Analyze System Log Files.md.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Networking - MOC"
+              "title": "08 - Locate and Analyze System Log Files.md"
             }
           }
         ]
@@ -177,13 +177,20 @@
       "daily-notes:Abrir a nota de hoje": false,
       "templates:Inserir modelo": false,
       "command-palette:Abrir paleta de comandos": false,
-      "bases:Criar nova base": false
+      "bases:Criar nova base": false,
+      "templater-obsidian:Templater": false
     }
   },
-  "active": "72d8fd7c49b0c890",
+  "active": "2097a6e53fab6edd",
   "lastOpenFiles": [
-    "template.md",
+    "LFCS/00-MOCs/Operations - MOC.md",
+    "LFCS/03-Operations-Deployment/08 - Locate and Analyze System Log Files.md.md",
+    "LINUX_Main_MOC.md",
+    "Plantilla Laboratorios.md",
+    "{{title}}.md",
     "LFCS/05-Networking/Networking - MOC.md",
+    "Plantillas",
+    "template.md",
     "Sem título.canvas",
     "LFCS/00-MOCs/LFCS - MOC.md",
     "2026-04-27.md",
@@ -195,7 +202,6 @@
     "LFCS/01-Introduction/03 - Prerequisites and Exam Details.md",
     "LFCS/01-Introduction/02 - Course Structure.md",
     "LFCS/01-Introduction/01 - Course Introduction.md",
-    "LFCS/00-MOCs/Operations - MOC.md",
     "LFCS/00-MOCs/01 - LFCS - MOC.md",
     "LFCS/02-Essential-Commands/12 - SSL Certificates.md",
     "LFCS/02-Essential-Commands/04 - Links (Hard and Soft).md",
@@ -205,11 +211,6 @@
     "LFCS/02-Essential-Commands/06 - Special Permissions.md",
     "LFCS/02-Essential-Commands/02 - System Documentation.md",
     "LFCS/02-Essential-Commands/08 - File Content.md",
-    "LFCS/02-Essential-Commands/07 - Search Files.md",
-    "LFCS/02-Essential-Commands/10 - Compression and Archive.md",
-    "LFCS/02-Essential-Commands/03 - Files and Directories.md",
-    "LFCS/02-Essential-Commands/01 - Log in to Local & Remote Consoles.md",
-    "Sem título",
     "LFCS/07-Mock-Exams",
     "LFCS/06-Storage",
     "LFCS/05-Networking",
