@@ -1,5 +1,5 @@
 # Prerequisites and Exam Details
-
+#linux #lfcs #introduction 
 ## 📌 Prerrequisitos
 - Conocimientos básicos de computación
 - Uso básico de terminal (recomendado)

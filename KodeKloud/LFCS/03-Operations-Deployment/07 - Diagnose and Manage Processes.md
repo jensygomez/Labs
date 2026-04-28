@@ -1,6 +1,6 @@
 # Diagnose and Manage Processes
 
-#lfcs #linux #operations #processes #troubleshooting
+#lfcs #linux #operations #processes #troubleshooting  #Operations-Deployments 
 
 ## 📌 Concepto
 Un proceso es una instancia en ejecución de un programa. La gestión de procesos permite monitorear, controlar y optimizar el uso de recursos del sistema.

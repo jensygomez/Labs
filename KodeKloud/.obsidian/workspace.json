@@ -4,39 +4,20 @@
     "type": "split",
     "children": [
       {
-        "id": "416f9f3682044a83",
+        "id": "cd2e504bb67d80c9",
         "type": "tabs",
         "children": [
           {
-            "id": "aba333ed73fd3ce1",
+            "id": "8529cb72201aa502",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "LFCS/03-Operations-Deployment/09 - Lab - Manage Processes and Analyze Log Files.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "09 - Lab - Manage Processes and Analyze Log Files"
-            }
-          },
-          {
-            "id": "fb2d7bb1c6b8a3c4",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "10 - Schedule Tasks to Run at a Set Date and Time.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "10 - Schedule Tasks to Run at a Set Date and Time"
+              "title": "Nova aba"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -196,10 +177,21 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "fb2d7bb1c6b8a3c4",
+  "active": "8529cb72201aa502",
   "lastOpenFiles": [
+    "0002 - Lab-File-Content-Regular-Expressions.md",
+    "LFCS/03-Operations-Deployment/11 - Lab - Schedule Tasks.md",
     "LFCS/03-Operations-Deployment/09 - Lab - Manage Processes and Analyze Log Files.md",
-    "10 - Schedule Tasks to Run at a Set Date and Time.md",
+    "LFCS/01-Introduction/06 - KodeKloud Community.md",
+    "LFCS/01-Introduction/05 - LFCS Command Cheat Sheet.md",
+    "LFCS/01-Introduction/04 - Certification and Discounts.md",
+    "LFCS/01-Introduction/03 - Prerequisites and Exam Details.md",
+    "LFCS/01-Introduction/02 - Course Structure.md",
+    "LFCS/01-Introduction/01 - Course Introduction.md",
+    "LFCS/00-MOCs/LFCS - MOC.md",
+    "LFCS/03-Operations-Deployment/07 - Diagnose and Manage Processes.md",
+    "LFCS/03-Operations-Deployment/08 - Locate and Analyze System Log Files.md.md",
+    "LFCS/03-Operations-Deployment/10 - Schedule Tasks to Run at a Set Date and Time.md",
     "ChatGPT Image 19 de abr. de 2026, 07_59_54.png",
     "DOCKER/02 - Docker Engine/04 - Demo - Docker Engine Setup - Ubuntu.md",
     "04 -",
@@ -207,12 +199,9 @@
     "DOCKER/01 - Introduction",
     "DOCKER",
     "2026-04-27.md",
-    "LFCS/00-MOCs/LFCS - MOC.md",
     "LFCS/00-MOCs/Operations - MOC.md",
     "LFCS/00-MOCs/Introduction - MOC.md",
-    "LFCS/03-Operations-Deployment/07 - Diagnose and Manage Processes.md",
     "09 - Diagnose and Manage Processes.md",
-    "LFCS/03-Operations-Deployment/08 - Locate and Analyze System Log Files.md.md",
     "LINUX_Main_MOC.md",
     "Plantilla Laboratorios.md",
     "{{title}}.md",
@@ -220,17 +209,9 @@
     "Plantillas",
     "template.md",
     "Sem título.canvas",
-    "LFCS/01-Introduction/06 - KodeKloud Community.md",
-    "LFCS/01-Introduction/05 - LFCS Command Cheat Sheet.md",
-    "LFCS/01-Introduction/04 - Certification and Discounts.md",
-    "LFCS/01-Introduction/03 - Prerequisites and Exam Details.md",
-    "LFCS/01-Introduction/02 - Course Structure.md",
-    "LFCS/01-Introduction/01 - Course Introduction.md",
     "LFCS/00-MOCs/01 - LFCS - MOC.md",
     "LFCS/02-Essential-Commands/12 - SSL Certificates.md",
     "LFCS/02-Essential-Commands/04 - Links (Hard and Soft).md",
-    "LFCS/02-Essential-Commands/09 - Grep and Regex.md",
-    "LFCS/02-Essential-Commands/05 - File Permissions.md",
     "LFCS/07-Mock-Exams",
     "LFCS/06-Storage",
     "LFCS/05-Networking",

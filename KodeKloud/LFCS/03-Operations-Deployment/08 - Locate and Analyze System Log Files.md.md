@@ -2,7 +2,7 @@
 
 # Locate and Analyze System Log Files  
   
-#lfcs #linux #operations #logs #troubleshooting  
+#lfcs #linux #operations #logs #troubleshooting  #Operations-Deployments 
   
 ## 📌 Concepto  
   

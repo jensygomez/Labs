@@ -1,5 +1,6 @@
 # Course Introduction
 
+#lfcs #linux #introduction
 ## 📌 Objetivo del curso
 Preparar para la certificación LFCS (Linux Foundation Certified System Administrator).
 
