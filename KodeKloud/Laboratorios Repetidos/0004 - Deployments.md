@@ -1,5 +1,5 @@
 # ☸️ Kubernetes Lab: Deployments (11 Tareas)
-
+#lab #kubernetes 
 **Evidencia de Laboratorio - Gestión de Ciclo de Vida y Estrategias de Despliegue**
 
 Este documento resume las competencias técnicas adquiridas durante el laboratorio de Kubernetes enfocado en **Deployments**, cubriendo desde el diagnóstico de errores de descarga de imágenes (`ImagePullBackOff`) hasta la creación declarativa de servidores web escalables.

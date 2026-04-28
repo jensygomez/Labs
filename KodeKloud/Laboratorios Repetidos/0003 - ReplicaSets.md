@@ -1,4 +1,4 @@
-
+#lab #kubernetes 
 # ☸️ Kubernetes Lab: ReplicaSets (16 Tareas)
 **Evidencia de Laboratorio - Gestión de Disponibilidad y Control de Replicación**
 

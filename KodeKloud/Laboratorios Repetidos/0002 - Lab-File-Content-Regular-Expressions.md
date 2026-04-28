@@ -1,9 +1,9 @@
 ---
 tags:
-  - laboratorio
   - kubernetes
   - iac
   - devops
+  - "#lab"
 fecha_inicio: 2026-04-27
 estado: completado
 plataforma: KodeKloud

@@ -4,7 +4,7 @@ title: Configure the Repositories of Package Manager
 course: LFCS Prep Course
 module: Operational Deployments
 date: 2026-04-28
-tags: #linux #lfcs #package-manager #repositories #sysadmin #devops 
+ tags: #linux #lfcs #package-manager #repositories #sysadmin #devops 
 ---
 
 # 📦 Configure the Repositories of Package Manager

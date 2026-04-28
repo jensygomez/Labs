@@ -5,7 +5,7 @@
 **tiempo:** 30 minutos  
 **nota:** 6/10  
 **estado:** En progreso (repetición)  
-**tags:** #linux #lfcs #EssentialCommands #Repeticion #laboratorio  #Archive #compression #Redirection
+**tags:** #linux #lfcs #EssentialCommands #Repeticion #lab   #Archive #compression #Redirection
 
 
 En este laboratorio estuve practicando nuevamente los conceptos de archivado, compresión y redirección de entrada/salida dentro del módulo _Essential Commands_. Trabajé con comandos como `tar`, `gzip`, `bzip2` y redirecciones (`>`, `2>`, etc.), reforzando el manejo de archivos y automatización básica en Linux. Algunos ejercicios los pude completar correctamente, como la creación de archivos `.tar` y la extracción de archivos comprimidos, aunque encontré errores relacionados principalmente con permisos y sintaxis.

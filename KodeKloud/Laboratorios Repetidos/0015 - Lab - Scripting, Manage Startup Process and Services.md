@@ -7,6 +7,7 @@
 **Estado:** 🛠️ Finalizado
 
 ---
+#lab #linux #Script
 
 ## 📚 Mapa Mental: Administración de Servicios en Linux
 
@@ -111,7 +112,7 @@ La configuración de `kkloud.service` demostró que una unidad debe ser capaz de
 
 ## 📚 Material de Referencia
 
-- **Temas Relacionados:** [[Bash Scripting]], [[Gestión de Procesos]], [[Systemd Avanzado]]
+
 - **Siguientes pasos:** Explorar `journalctl` para logs detallados de servicios.
 
 ---

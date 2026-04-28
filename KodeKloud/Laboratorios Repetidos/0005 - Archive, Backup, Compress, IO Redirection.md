@@ -2,7 +2,7 @@
 **Sistema:** Ubuntu | **Objetivo:** Dominar herramientas de compresión, archivado y redirección de entrada/salida en Linux
 
 ---
-
+#lab #linux 
 ## 📋 Introducción
 
 Este laboratorio cubre las operaciones fundamentales de un Sysadmin Linux: crear backups, comprimir archivos, y gestionar flujos de entrada/salida (I/O). Habilidades críticas para troubleshooting, mantenimiento de sistemas y automatización.

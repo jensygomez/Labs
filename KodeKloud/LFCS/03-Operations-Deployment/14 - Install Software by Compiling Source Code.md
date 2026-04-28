@@ -4,7 +4,7 @@ title: "Install Software by Compiling Source Code"
 course: "LFCS Prep Course - Linux Foundation Certified System Administrator"
 module: "Operational Deployments"
 date: 2026-04-28
-tags: #linux #lfcs #sysadmin #compilation #source-code #software #make #configure
+ tags: #linux #lfcs #sysadmin #compilation #source-code #software #make #configure
 ---
 
 # ⚙️ Install Software by Compiling Source Code

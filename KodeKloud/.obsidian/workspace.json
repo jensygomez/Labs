@@ -4,21 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "ef38b98e09cc408e",
+        "id": "b753991bffccc9e7",
         "type": "tabs",
         "children": [
           {
-            "id": "712c79e95c894f79",
+            "id": "5dd317452202d039",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "LFCS/03-Operations-Deployment/14 - Install Software by Compiling Source Code.md",
+                "file": "Laboratorios Repetidos/0002 - Lab-File-Content-Regular-Expressions.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "14 - Install Software by Compiling Source Code"
+              "title": "0002 - Lab-File-Content-Regular-Expressions"
             }
           }
         ]
@@ -54,7 +54,7 @@
               "type": "search",
               "state": {
                 "query": "",
-                "matchingCase": false,
+                "matchingCase": true,
                 "explainSearch": false,
                 "collapseAll": false,
                 "extraContext": false,
@@ -74,7 +74,8 @@
               "title": "Marcadores"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -181,45 +182,45 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "71e502a7760e2595",
+  "active": "5dd317452202d039",
   "lastOpenFiles": [
+    "Operations - MOC.md",
+    "LFCS/03-Operations-Deployment/09 - Lab - Manage Processes and Analyze Log Files.md",
     "LFCS/03-Operations-Deployment/14 - Install Software by Compiling Source Code.md",
-    "LFCS/03-Operations-Deployment/12 - Manage Software with Package Manager.md",
-    "LFCS/03-Operations-Deployment/13 - Configure the Repositories of Package Manager.md",
-    "Laboratorios Repetidos/01 - Lab - Archive, Back Up, Compress, IO Redirection.md",
     "Laboratorios Repetidos/0001 - Pods con YAML.md",
+    "LFCS/03-Operations-Deployment/13 - Configure the Repositories of Package Manager.md",
+    "LFCS/03-Operations-Deployment/12 - Manage Software with Package Manager.md",
+    "LFCS/03-Operations-Deployment/11 - Lab - Schedule Tasks.md",
+    "LFCS/03-Operations-Deployment/10 - Schedule Tasks to Run at a Set Date and Time.md",
+    "LFCS/03-Operations-Deployment/08 - Locate and Analyze System Log Files.md.md",
+    "LFCS/03-Operations-Deployment/07 - Diagnose and Manage Processes.md",
+    "LFCS/02-Essential-Commands/13 - Git Basics.md",
+    "LFCS/02-Essential-Commands/12 - SSL Certificates.md",
+    "LFCS/02-Essential-Commands/11 - IO Redirection.md",
+    "LFCS/02-Essential-Commands/10 - Compression and Archive.md",
+    "LFCS/02-Essential-Commands/09 - Grep and Regex.md",
+    "LFCS/02-Essential-Commands/08 - File Content.md",
+    "LFCS/02-Essential-Commands/07 - Search Files.md",
+    "LFCS/02-Essential-Commands/06 - Special Permissions.md",
+    "LFCS/02-Essential-Commands/05 - File Permissions.md",
+    "LFCS/02-Essential-Commands/04 - Links (Hard and Soft).md",
+    "LFCS/02-Essential-Commands/03 - Files and Directories.md",
+    "LFCS/02-Essential-Commands/02 - System Documentation.md",
+    "LFCS/02-Essential-Commands/01 - Log in to Local & Remote Consoles.md",
+    "LFCS/01-Introduction/06 - KodeKloud Community.md",
+    "LFCS/01-Introduction/05 - LFCS Command Cheat Sheet.md",
+    "LFCS/01-Introduction/04 - Certification and Discounts.md",
+    "Laboratorios Repetidos/0007 - Linux_Sysadmin_Lab_Report.pdf",
+    "Laboratorios Repetidos/0006 - Lab_Git_SSL_Documentation.pdf",
     "Laboratorios Repetidos",
-    "Laboratorios Repetidos/0015 - Lab - Scripting, Manage Startup Process and Services.md",
-    "Laboratorios Repetidos/0014 - Expresiones_Regulares_Linux.md",
     "Laboratorios Repetidos/0013 - Unix_Linux_Text_Processing_Guide.pdf",
     "Laboratorios Repetidos/0012 - CommandLine_Arguments_Lab_Report.pdf",
     "Laboratorios Repetidos/0011 - LFCS_Lab_Report.pdf",
     "Laboratorios Repetidos/0010 - Linux_Lab_File_Permissions_Report.pdf",
     "Laboratorios Repetidos/0009 - File_Permissions_Search_Exercises.pdf",
     "Laboratorios Repetidos/0008 - Linux_Fundamentals_Exercises.pdf",
-    "Laboratorios Repetidos/0007 - Linux_Sysadmin_Lab_Report.pdf",
-    "Laboratorios Repetidos/0006 - Lab_Git_SSL_Documentation.pdf",
-    "Laboratorios Repetidos/0005 - Archive, Backup, Compress, IO Redirection.md",
-    "Laboratorios Repetidos/0004 - Deployments.md",
-    "Laboratorios Repetidos/0003 - ReplicaSets.md",
-    "Laboratorios Repetidos/0002 - Lab-File-Content-Regular-Expressions.md",
-    "LFCS/03-Operations-Deployment/11 - Lab - Schedule Tasks.md",
-    "LFCS/03-Operations-Deployment/09 - Lab - Manage Processes and Analyze Log Files.md",
-    "LFCS/01-Introduction/06 - KodeKloud Community.md",
-    "LFCS/01-Introduction/05 - LFCS Command Cheat Sheet.md",
-    "LFCS/01-Introduction/04 - Certification and Discounts.md",
-    "LFCS/01-Introduction/03 - Prerequisites and Exam Details.md",
-    "LFCS/01-Introduction/02 - Course Structure.md",
-    "LFCS/01-Introduction/01 - Course Introduction.md",
-    "LFCS/00-MOCs/LFCS - MOC.md",
-    "LFCS/03-Operations-Deployment/07 - Diagnose and Manage Processes.md",
-    "LFCS/03-Operations-Deployment/08 - Locate and Analyze System Log Files.md.md",
-    "LFCS/03-Operations-Deployment/10 - Schedule Tasks to Run at a Set Date and Time.md",
     "ChatGPT Image 19 de abr. de 2026, 07_59_54.png",
-    "DOCKER/02 - Docker Engine/04 - Demo - Docker Engine Setup - Ubuntu.md",
     "04 -",
-    "2026-04-27.md",
-    "LFCS/00-MOCs/Operations - MOC.md",
     "Sem título.canvas"
   ]
 }

@@ -7,7 +7,7 @@
 **Estado:** 💯 Completado (17/17 ejercicios)
 
 ---
-
+#lab #linux 
 ## 📚 Mapa Mental: Herramientas para Manipulación de Archivos
 
 ```
@@ -419,7 +419,6 @@ diff -i file1 file2                           # Ignorar caso
 
 - **Plataforma:** Kodekloud
 - **Dificultad:** Intermedia ✓ Completado
-- **Temas Relacionados:** [[Manipulación de Archivos Linux]], [[AWK y SED Avanzado]], [[Bash Scripting]]
 - **Siguientes Labs:** File Permissions, Process Management, Network Services
 
 ---

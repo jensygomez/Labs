@@ -1,4 +1,4 @@
-#lab  #lfcs #linux   #operations     #processes        #completed       #with-help     #time:20min      #Operations-Deployments #laboratorio 
+#lab  #lfcs #linux   #operations     #processes        #completed       #with-help     #time:20min      #Operations-Deployments #lab 
 
 **Tiempo:** 20 minutos | **Completado:** ✅ Con ayuda
 
