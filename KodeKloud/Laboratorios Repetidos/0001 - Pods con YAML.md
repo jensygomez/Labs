@@ -1,12 +1,15 @@
 ---
+Curso:
+Modulo:
+Tema:
+Typo: Laboratorio
+Fecha: 14/04/2026
+Estado: completado
 tags:
   - kubernetes
   - iac
   - devops
-  - "#lab"
-fecha_inicio: 14/04/2026
-estado: completado
-plataforma: KodeKloud
+  - lab
 ---
 
 # [[LINUX]] - [[KUBERNETES - Pods con YAML]]
