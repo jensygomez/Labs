@@ -11,10 +11,14 @@
             "id": "712c79e95c894f79",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "LFCS/03-Operations-Deployment/14 - Install Software by Compiling Source Code.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "Nova aba"
+              "title": "14 - Install Software by Compiling Source Code"
             }
           }
         ]
@@ -179,6 +183,7 @@
   },
   "active": "71e502a7760e2595",
   "lastOpenFiles": [
+    "LFCS/03-Operations-Deployment/14 - Install Software by Compiling Source Code.md",
     "LFCS/03-Operations-Deployment/12 - Manage Software with Package Manager.md",
     "LFCS/03-Operations-Deployment/13 - Configure the Repositories of Package Manager.md",
     "Laboratorios Repetidos/01 - Lab - Archive, Back Up, Compress, IO Redirection.md",
@@ -215,7 +220,6 @@
     "04 -",
     "2026-04-27.md",
     "LFCS/00-MOCs/Operations - MOC.md",
-    "LFCS/00-MOCs/Introduction - MOC.md",
     "Sem título.canvas"
   ]
 }
