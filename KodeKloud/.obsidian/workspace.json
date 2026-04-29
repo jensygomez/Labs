@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "LFCS/03 - Operations-Deployment/17 - Lab - Verify Integrity and Availability of Resources and Key Processes.md",
+                "file": "LFCS/03 - Operations-Deployment/18 - Change Kernel Runtime Parameters, Persistent and Non-Persistent.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "17 - Lab - Verify Integrity and Availability of Resources and Key Processes"
+              "title": "18 - Change Kernel Runtime Parameters, Persistent and Non-Persistent"
             }
           }
         ]
@@ -181,13 +181,13 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "71e502a7760e2595",
+  "active": "100aba9740ba4bbc",
   "lastOpenFiles": [
+    "LFCS/03 - Operations-Deployment/17 - Lab - Verify Integrity and Availability of Resources and Key Processes.md",
+    "LFCS/03 - Operations-Deployment/18 - Change Kernel Runtime Parameters, Persistent and Non-Persistent.md",
     "LFCS/03 - Operations-Deployment/16 - Verify Integrity and Availability of Resources and Processes.md",
     "LFCS/03 - Operations-Deployment/15 - Lab Manage Software, Repositories & Install Software from Source.md",
     "LFCS/03 - Operations-Deployment/14 - Install Software by Compiling Source Code.md",
-    "LFCS/03 - Operations-Deployment/17 - Lab - Verify Integrity and Availability of Resources and Key Processes.md",
-    "LFCS/03 - Operations-Deployment/17 - Lab - Verify Integrity and Availability of Resources and Key Processes.md",
     "Laboratorios Repetidos/0001 - Pods con YAML.md",
     "DOCKER/02 - Docker Engine/06 - Basic Container Operations.md",
     "LINUX.md",
@@ -208,7 +208,6 @@
     "LFCS/02-Essential-Commands/10 - Compression and Archive.md",
     "LFCS/02-Essential-Commands/09 - Grep and Regex.md",
     "LFCS/02-Essential-Commands/08 - File Content.md",
-    "LFCS/02-Essential-Commands/07 - Search Files.md",
     "Laboratorios Repetidos/0007 - Linux_Sysadmin_Lab_Report.pdf",
     "Laboratorios Repetidos/0006 - Lab_Git_SSL_Documentation.pdf",
     "Laboratorios Repetidos",
