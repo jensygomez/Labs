@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "LFCS/03 - Operations-Deployment/18 - Change Kernel Runtime Parameters, Persistent and Non-Persistent.md",
+                "file": "LFCS/03 - Operations-Deployment/19 - List and Identify SELinux File and Process Contexts.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "18 - Change Kernel Runtime Parameters, Persistent and Non-Persistent"
+              "title": "19 - List and Identify SELinux File and Process Contexts"
             }
           }
         ]
@@ -183,8 +183,9 @@
   },
   "active": "100aba9740ba4bbc",
   "lastOpenFiles": [
-    "LFCS/03 - Operations-Deployment/17 - Lab - Verify Integrity and Availability of Resources and Key Processes.md",
     "LFCS/03 - Operations-Deployment/18 - Change Kernel Runtime Parameters, Persistent and Non-Persistent.md",
+    "LFCS/03 - Operations-Deployment/19 - List and Identify SELinux File and Process Contexts.md",
+    "LFCS/03 - Operations-Deployment/17 - Lab - Verify Integrity and Availability of Resources and Key Processes.md",
     "LFCS/03 - Operations-Deployment/16 - Verify Integrity and Availability of Resources and Processes.md",
     "LFCS/03 - Operations-Deployment/15 - Lab Manage Software, Repositories & Install Software from Source.md",
     "LFCS/03 - Operations-Deployment/14 - Install Software by Compiling Source Code.md",
