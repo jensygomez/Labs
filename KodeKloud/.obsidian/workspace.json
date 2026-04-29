@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "LFCS/03-Operations-Deployment/16 - Verify Integrity and Availability of Resources and Processes.md",
+                "file": "LFCS/03-Operations-Deployment/17 - Lab - Verify Integrity and Availability of Resources and Key Processes.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "16 - Verify Integrity and Availability of Resources and Processes"
+              "title": "17 - Lab - Verify Integrity and Availability of Resources and Key Processes"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "tag:#lfcs",
+                "query": "tag:Resourse",
                 "matchingCase": true,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -181,10 +181,11 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "100aba9740ba4bbc",
+  "active": "71e502a7760e2595",
   "lastOpenFiles": [
-    "LFCS/03-Operations-Deployment/15 - Lab Manage Software, Repositories & Install Software from Source.md",
     "LFCS/03-Operations-Deployment/16 - Verify Integrity and Availability of Resources and Processes.md",
+    "LFCS/03-Operations-Deployment/17 - Lab - Verify Integrity and Availability of Resources and Key Processes.md",
+    "LFCS/03-Operations-Deployment/15 - Lab Manage Software, Repositories & Install Software from Source.md",
     "Laboratorios Repetidos/0001 - Pods con YAML.md",
     "DOCKER/02 - Docker Engine/06 - Basic Container Operations.md",
     "LINUX.md",
@@ -208,7 +209,6 @@
     "LFCS/02-Essential-Commands/08 - File Content.md",
     "LFCS/02-Essential-Commands/07 - Search Files.md",
     "LFCS/02-Essential-Commands/06 - Special Permissions.md",
-    "LFCS/02-Essential-Commands/05 - File Permissions.md",
     "Laboratorios Repetidos/0007 - Linux_Sysadmin_Lab_Report.pdf",
     "Laboratorios Repetidos/0006 - Lab_Git_SSL_Documentation.pdf",
     "Laboratorios Repetidos",
