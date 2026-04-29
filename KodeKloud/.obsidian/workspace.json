@@ -181,11 +181,13 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "71e502a7760e2595",
+  "active": "100aba9740ba4bbc",
   "lastOpenFiles": [
     "LFCS/03-Operations-Deployment/16 - Verify Integrity and Availability of Resources and Processes.md",
-    "LFCS/03-Operations-Deployment/17 - Lab - Verify Integrity and Availability of Resources and Key Processes.md",
     "LFCS/03-Operations-Deployment/15 - Lab Manage Software, Repositories & Install Software from Source.md",
+    "LFCS/03-Operations-Deployment/14 - Install Software by Compiling Source Code.md",
+    "LFCS/03-Operations-Deployment/17 - Lab - Verify Integrity and Availability of Resources and Key Processes.md",
+    "LFCS/03-Operations-Deployment/17 - Lab - Verify Integrity and Availability of Resources and Key Processes.md",
     "Laboratorios Repetidos/0001 - Pods con YAML.md",
     "DOCKER/02 - Docker Engine/06 - Basic Container Operations.md",
     "LINUX.md",
@@ -194,7 +196,6 @@
     "Laboratorios Repetidos/0002 - Lab-File-Content-Regular-Expressions.md",
     "Operations - MOC.md",
     "LFCS/03-Operations-Deployment/09 - Lab - Manage Processes and Analyze Log Files.md",
-    "LFCS/03-Operations-Deployment/14 - Install Software by Compiling Source Code.md",
     "LFCS/03-Operations-Deployment/13 - Configure the Repositories of Package Manager.md",
     "LFCS/03-Operations-Deployment/12 - Manage Software with Package Manager.md",
     "LFCS/03-Operations-Deployment/11 - Lab - Schedule Tasks.md",
@@ -208,7 +209,6 @@
     "LFCS/02-Essential-Commands/09 - Grep and Regex.md",
     "LFCS/02-Essential-Commands/08 - File Content.md",
     "LFCS/02-Essential-Commands/07 - Search Files.md",
-    "LFCS/02-Essential-Commands/06 - Special Permissions.md",
     "Laboratorios Repetidos/0007 - Linux_Sysadmin_Lab_Report.pdf",
     "Laboratorios Repetidos/0006 - Lab_Git_SSL_Documentation.pdf",
     "Laboratorios Repetidos",
