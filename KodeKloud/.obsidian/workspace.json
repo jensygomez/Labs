@@ -179,6 +179,7 @@
   },
   "active": "a68130218ea40c4b",
   "lastOpenFiles": [
+    "LFCS/03 - Operations-Deployment/22 - Create and Manage Containers.md",
     "LFCS/03 - Operations-Deployment/21 Lab - Kernel Runtime Parameters and SELinux AppArmor.md",
     "LFCS/03 - Operations-Deployment/20 - Create and Enforce MAC Using SELinux.md",
     "LFCS/03 - Operations-Deployment/15 - Lab Manage Software, Repositories & Install Software from Source.md",
@@ -204,7 +205,6 @@
     "LFCS/02-Essential-Commands/13 - Git Basics.md",
     "LFCS/02-Essential-Commands/12 - SSL Certificates.md",
     "LFCS/02-Essential-Commands/11 - IO Redirection.md",
-    "LFCS/02-Essential-Commands/10 - Compression and Archive.md",
     "Laboratorios Repetidos/0007 - Linux_Sysadmin_Lab_Report.pdf",
     "Laboratorios Repetidos/0006 - Lab_Git_SSL_Documentation.pdf",
     "Laboratorios Repetidos",
