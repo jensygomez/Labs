@@ -7,7 +7,7 @@ Fecha: 29/04/2026
 Estado: completado
 Dificultad: Media
 Calificación: N/A
-Time: N/A
+Time: 37 min
 tags:
   - linux
   - lfcs
