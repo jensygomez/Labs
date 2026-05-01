@@ -11,14 +11,10 @@
             "id": "a68130218ea40c4b",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "LFCS/04 - Users-Groups/03 - Lab - Manage User Accounts and Groups.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "03 - Lab - Manage User Accounts and Groups"
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Visualização em gráfico"
             }
           }
         ]
@@ -183,8 +179,10 @@
   },
   "active": "a68130218ea40c4b",
   "lastOpenFiles": [
-    "LFCS/04 - Users-Groups/02 - Create, Delete, and Modify Local Groups and Group Memberships.md",
+    "LFCS/04 - Users-Groups/05 - Manage Template User Environment.md",
+    "LFCS/04 - Users-Groups/04 - Manage System-Wide Environment Profiles.md",
     "LFCS/04 - Users-Groups/03 - Lab - Manage User Accounts and Groups.md",
+    "LFCS/04 - Users-Groups/02 - Create, Delete, and Modify Local Groups and Group Memberships.md",
     "LFCS/04 - Users-Groups/01 - Create, Delete, and Modify Local User Accounts.md",
     "LFCS/03 - Operations-Deployment/25 - Installing an Operating System on a Virtual Machine.md",
     "LFCS/03 - Operations-Deployment/26 - Lab - Manage Containers and VMs.md",
@@ -207,8 +205,6 @@
     "DOCKER/02 - Docker Engine/05 - Docker Service Configuration.md",
     "Laboratorios Repetidos/0002 - Lab-File-Content-Regular-Expressions.md",
     "Operations - MOC.md",
-    "LFCS/03 - Operations-Deployment/09 - Lab - Manage Processes and Analyze Log Files.md",
-    "LFCS/03 - Operations-Deployment/13 - Configure the Repositories of Package Manager.md",
     "Laboratorios Repetidos/0007 - Linux_Sysadmin_Lab_Report.pdf",
     "Laboratorios Repetidos/0006 - Lab_Git_SSL_Documentation.pdf",
     "Laboratorios Repetidos",
