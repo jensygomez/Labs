@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "LFCS/04 - Users-Groups/08 - Manage User Privileges.md",
+                "file": "LFCS/04 - Users-Groups/09 - Lab - Configure User Resource Limits and User Privileges.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "08 - Manage User Privileges"
+              "title": "09 - Lab - Configure User Resource Limits and User Privileges"
             }
           }
         ]
@@ -183,8 +183,9 @@
   },
   "active": "a68130218ea40c4b",
   "lastOpenFiles": [
-    "LFCS/04 - Users-Groups/07 - Configure User Resource Limits.md",
     "LFCS/04 - Users-Groups/08 - Manage User Privileges.md",
+    "LFCS/04 - Users-Groups/09 - Lab - Configure User Resource Limits and User Privileges.md",
+    "LFCS/04 - Users-Groups/07 - Configure User Resource Limits.md",
     "LFCS/04 - Users-Groups/06 - Lab - Manage System-Wide Environment Profiles and Template User Environments.md",
     "LFCS/04 - Users-Groups/05 - Manage Template User Environment.md",
     "LFCS/04 - Users-Groups/04 - Manage System-Wide Environment Profiles.md",
@@ -208,7 +209,6 @@
     "Laboratorios Repetidos/0001 - Pods con YAML.md",
     "DOCKER/02 - Docker Engine/06 - Basic Container Operations.md",
     "LINUX.md",
-    "Laboratorios Repetidos/01 - Lab - Archive, Back Up, Compress, IO Redirection.md",
     "Laboratorios Repetidos/0007 - Linux_Sysadmin_Lab_Report.pdf",
     "Laboratorios Repetidos/0006 - Lab_Git_SSL_Documentation.pdf",
     "Laboratorios Repetidos",
