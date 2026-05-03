@@ -5,7 +5,7 @@ Tema: Conditional Logic
 Typo: Video
 Fecha: 03/05/2026
 Estado: completado
-Dificultad:
+Dificultad: Básico Medio
 Calificación:
 Time: 12 min
 tags:

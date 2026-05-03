@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Shell Scripts for Beginners/03 - Flow Control/01 - Conditional Logic.md",
+                "file": "LFCS/05 - Networking/01 - Configure IPV4 and IPV6 Netwotking and Hostname Resolution - Theory.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "01 - Conditional Logic"
+              "title": "01 - Configure IPV4 and IPV6 Netwotking and Hostname Resolution - Theory"
             }
           }
         ]
@@ -183,12 +183,16 @@
   },
   "active": "a68130218ea40c4b",
   "lastOpenFiles": [
-    "Shell Scripts for Beginners/02 - Shell Script Introduction/12 - Lab - Arithmetic Operations.md",
+    "LFCS/04 - Users-Groups/11 - Configure the System to Use LDAP User and Group Accounts.md",
+    "LFCS/05 - Networking/01 - Configure IPV4 and IPV6 Netwotking and Hostname Resolution - Theory.md",
+    "Shell Scripts for Beginners/03 - Flow Control/03 - Loops - For.md",
+    "LFCS/05 - Networking/Networking - MOC.md",
+    "Shell Scripts for Beginners/03 - Flow Control/02 - Lab Conditional Logic.md",
     "Shell Scripts for Beginners/03 - Flow Control/01 - Conditional Logic.md",
+    "Shell Scripts for Beginners/02 - Shell Script Introduction/12 - Lab - Arithmetic Operations.md",
     "Shell Scripts for Beginners/03 - Flow Control",
     "Sem título.canvas",
     "Shell Scripts for Beginners/02 - Shell Script Introduction/11 - Arithmetic Operations.md",
-    "LFCS/04 - Users-Groups/11 - Configure the System to Use LDAP User and Group Accounts.md",
     "Shell Scripts for Beginners/02 - Shell Script Introduction",
     "Shell Scripts for Beginners",
     "LFCS/04 - Users-Groups/10 - Manage Access to Root Account.md",
@@ -209,10 +213,6 @@
     "LFCS/03 - Operations-Deployment/22 - Create and Manage Containers.md",
     "LFCS/03 - Operations-Deployment/21 Lab - Kernel Runtime Parameters and SELinux AppArmor.md",
     "LFCS/03 - Operations-Deployment/20 - Create and Enforce MAC Using SELinux.md",
-    "LFCS/03 - Operations-Deployment/15 - Lab Manage Software, Repositories & Install Software from Source.md",
-    "LFCS/03 - Operations-Deployment/14 - Install Software by Compiling Source Code.md",
-    "LFCS/03 - Operations-Deployment/19 - List and Identify SELinux File and Process Contexts.md",
-    "LFCS/03 - Operations-Deployment/18 - Change Kernel Runtime Parameters, Persistent and Non-Persistent.md",
     "Laboratorios Repetidos/0007 - Linux_Sysadmin_Lab_Report.pdf",
     "Laboratorios Repetidos/0006 - Lab_Git_SSL_Documentation.pdf",
     "Laboratorios Repetidos",
