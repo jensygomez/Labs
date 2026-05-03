@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "LFCS/04 - Users-Groups/11 - Configure the System to Use LDAP User and Group Accounts.md",
+                "file": "Shell Scripts for Beginners/02 - Shell Script Introduction/11 - Arithmetic Operations.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "11 - Configure the System to Use LDAP User and Group Accounts"
+              "title": "11 - Arithmetic Operations"
             }
           }
         ]
@@ -183,8 +183,11 @@
   },
   "active": "a68130218ea40c4b",
   "lastOpenFiles": [
-    "LFCS/04 - Users-Groups/10 - Manage Access to Root Account.md",
     "LFCS/04 - Users-Groups/11 - Configure the System to Use LDAP User and Group Accounts.md",
+    "Shell Scripts for Beginners/02 - Shell Script Introduction/11 - Arithmetic Operations.md",
+    "Shell Scripts for Beginners/02 - Shell Script Introduction",
+    "Shell Scripts for Beginners",
+    "LFCS/04 - Users-Groups/10 - Manage Access to Root Account.md",
     "LFCS/04 - Users-Groups/09 - Lab - Configure User Resource Limits and User Privileges.md",
     "LFCS/04 - Users-Groups/08 - Manage User Privileges.md",
     "LFCS/04 - Users-Groups/07 - Configure User Resource Limits.md",
@@ -208,7 +211,6 @@
     "LFCS/03 - Operations-Deployment/18 - Change Kernel Runtime Parameters, Persistent and Non-Persistent.md",
     "LFCS/03 - Operations-Deployment/17 - Lab - Verify Integrity and Availability of Resources and Key Processes.md",
     "LFCS/03 - Operations-Deployment/16 - Verify Integrity and Availability of Resources and Processes.md",
-    "Laboratorios Repetidos/0001 - Pods con YAML.md",
     "Laboratorios Repetidos/0007 - Linux_Sysadmin_Lab_Report.pdf",
     "Laboratorios Repetidos/0006 - Lab_Git_SSL_Documentation.pdf",
     "Laboratorios Repetidos",
@@ -217,9 +219,7 @@
     "Laboratorios Repetidos/0011 - LFCS_Lab_Report.pdf",
     "Laboratorios Repetidos/0010 - Linux_Lab_File_Permissions_Report.pdf",
     "Laboratorios Repetidos/0009 - File_Permissions_Search_Exercises.pdf",
-    "Laboratorios Repetidos/0008 - Linux_Fundamentals_Exercises.pdf",
     "ChatGPT Image 19 de abr. de 2026, 07_59_54.png",
-    "04 -",
     "Sem título.canvas"
   ]
 }
