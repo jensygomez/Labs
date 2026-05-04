@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "03 - Advanced Bash Scripting/01 - Introduction/01 - Course Introduction.md",
+                "file": "03 - Advanced Bash Scripting/01 - Introduction/02 - Why learn advanced bash scripting?.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "01 - Course Introduction"
+              "title": "02 - Why learn advanced bash scripting?"
             }
           }
         ]
@@ -181,11 +181,12 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "71e502a7760e2595",
+  "active": "a68130218ea40c4b",
   "lastOpenFiles": [
+    "03 - Advanced Bash Scripting/01 - Introduction/01 - Course Introduction.md",
+    "03 - Advanced Bash Scripting/01 - Introduction/02 - Why learn advanced bash scripting?.md",
     "03 - Advanced Bash Scripting/01 - Introduction",
     "Advanced Bash Scripting/01 - Introduction.canvas",
-    "03 - Advanced Bash Scripting/01 - Introduction/01 - Course Introduction.md",
     "02 - Shell Scripts for Beginners/03 - Flow Control/04 - Lab For Loops.md",
     "0",
     "03 - Advanced Bash Scripting",
@@ -219,7 +220,6 @@
     "Laboratorios Repetidos/0006 - Lab_Git_SSL_Documentation.pdf",
     "Laboratorios Repetidos",
     "Laboratorios Repetidos/0013 - Unix_Linux_Text_Processing_Guide.pdf",
-    "Laboratorios Repetidos/0012 - CommandLine_Arguments_Lab_Report.pdf",
     "ChatGPT Image 19 de abr. de 2026, 07_59_54.png"
   ]
 }
