@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "LFCS/05 - Networking/03 - Start, Stop, and Check Status of Network Services.md",
+                "file": "Shell Scripts for Beginners/03 - Flow Control/03 - Loops - For.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "03 - Start, Stop, and Check Status of Network Services"
+              "title": "03 - Loops - For"
             }
           }
         ]
@@ -183,8 +183,8 @@
   },
   "active": "a68130218ea40c4b",
   "lastOpenFiles": [
-    "LFCS/05 - Networking/02 - Configure IPV4 and IPV6 Netwotking and Hostname Resolution - Demo.md",
     "LFCS/05 - Networking/03 - Start, Stop, and Check Status of Network Services.md",
+    "LFCS/05 - Networking/02 - Configure IPV4 and IPV6 Netwotking and Hostname Resolution - Demo.md",
     "LFCS/05 - Networking/01 - Configure IPV4 and IPV6 Netwotking and Hostname Resolution - Theory.md",
     "LFCS/04 - Users-Groups/11 - Configure the System to Use LDAP User and Group Accounts.md",
     "Shell Scripts for Beginners/03 - Flow Control/03 - Loops - For.md",
