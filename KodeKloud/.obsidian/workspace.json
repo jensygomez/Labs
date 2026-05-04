@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "03 - Advanced Bash Scripting/01 - Introduction/04 - Shell scripting vs Bash scripting.md",
+                "file": "03 - Advanced Bash Scripting/01 - Introduction/05 - Terminology.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "04 - Shell scripting vs Bash scripting"
+              "title": "05 - Terminology"
             }
           }
         ]
@@ -183,8 +183,9 @@
   },
   "active": "a68130218ea40c4b",
   "lastOpenFiles": [
-    "03 - Advanced Bash Scripting/01 - Introduction/03 - Interactive-vs-non-interactive-shell.md",
     "03 - Advanced Bash Scripting/01 - Introduction/04 - Shell scripting vs Bash scripting.md",
+    "03 - Advanced Bash Scripting/01 - Introduction/05 - Terminology.md",
+    "03 - Advanced Bash Scripting/01 - Introduction/03 - Interactive-vs-non-interactive-shell.md",
     "03 - Advanced Bash Scripting/01 - Introduction/02 - Why learn advanced bash scripting?.md",
     "03 - Advanced Bash Scripting/01 - Introduction/01 - Course Introduction.md",
     "03 - Advanced Bash Scripting/01 - Introduction",
@@ -215,7 +216,6 @@
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/07 - Configure User Resource Limits.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/06 - Lab - Manage System-Wide Environment Profiles and Template User Environments.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/05 - Manage Template User Environment.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/04 - Manage System-Wide Environment Profiles.md",
     "Laboratorios Repetidos/0007 - Linux_Sysadmin_Lab_Report.pdf",
     "Laboratorios Repetidos/0006 - Lab_Git_SSL_Documentation.pdf",
     "Laboratorios Repetidos",
