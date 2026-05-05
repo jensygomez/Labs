@@ -3,11 +3,11 @@ Curso: Prep Course - LFCS Certification
 Modulo: Networking
 Tema: Lab - Packet Filtering
 Typo: Laboratorio
-Fecha: 04/05/2026
+Fecha: 05/05/2026
 Estado: completado
 Dificultad: Intermedio-Baja
 Calificación: 40 %
-Time:
+Time: 20 min
 tags:
   - linux
   - lfcs
@@ -17,6 +17,7 @@ tags:
   - security
   - packet-filtering
   - iptables
+  - lab
 ---
 
 

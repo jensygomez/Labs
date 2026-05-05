@@ -8,49 +8,20 @@
         "type": "tabs",
         "children": [
           {
-            "id": "a68130218ea40c4b",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "03 - Advanced Bash Scripting/01 - Introduction/06 - How to take this course.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "06 - How to take this course"
-            }
-          },
-          {
-            "id": "f3ccc638d06d96bb",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "03 - Advanced Bash Scripting/01 - Introduction/06 - How to take this course.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "06 - How to take this course"
-            }
-          },
-          {
             "id": "318818ba0ad7a15f",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/08 - Lab - Packet Filtering.md",
+                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/09 - Port Redirection and Network Address Translation (NAT).md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "08 - Lab - Packet Filtering"
+              "title": "09 - Port Redirection and Network Address Translation (NAT)"
             }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "vertical"
@@ -212,9 +183,10 @@
   },
   "active": "318818ba0ad7a15f",
   "lastOpenFiles": [
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/08 - Lab - Packet Filtering.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/09 - Port Redirection and Network Address Translation (NAT).md",
     "02 - Shell Scripts for Beginners/03 - Flow Control/05 - Loops - While.md",
     "02 - Shell Scripts for Beginners/03 - Flow Control/04 - Lab For Loops.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/08 - Lab - Packet Filtering.md",
     "03 - Advanced Bash Scripting/01 - Introduction/06 - How to take this course.md",
     "03 - Advanced Bash Scripting/01 - Introduction/05 - Terminology.md",
     "03 - Advanced Bash Scripting/01 - Introduction/04 - Shell scripting vs Bash scripting.md",
@@ -244,7 +216,6 @@
     "02 - Shell Scripts for Beginners",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/10 - Manage Access to Root Account.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/09 - Lab - Configure User Resource Limits and User Privileges.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/08 - Manage User Privileges.md",
     "Laboratorios Repetidos/0007 - Linux_Sysadmin_Lab_Report.pdf",
     "Laboratorios Repetidos/0006 - Lab_Git_SSL_Documentation.pdf",
     "Laboratorios Repetidos",
