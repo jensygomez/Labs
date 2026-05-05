@@ -5,8 +5,8 @@ Tema: Lab - Packet Filtering
 Typo: Laboratorio
 Fecha: 04/05/2026
 Estado: completado
-Dificultad:
-Calificación:
+Dificultad: Intermedio-Baja
+Calificación: 40 %
 Time:
 tags:
   - linux
@@ -15,43 +15,39 @@ tags:
   - firewall
   - ufw
   - security
+  - packet-filtering
+  - iptables
 ---
 
 
-## Configuración de Packet Filtering con UFW
+## Resumen
 
-**UFW (Uncomplicated Firewall)** es la herramienta estándar en Ubuntu para gestionar reglas de firewall de forma simplificada. Su filosofía es mantener todo bloqueado por defecto y, únicamente, otorgar acceso explícito a los puertos y servicios necesarios. Al activar UFW con `sudo ufw enable`, el servidor se cierra completamente. Desde ese punto, se deben ir creando reglas permisivas para permitir el tráfico deseado. Por ejemplo, `sudo ufw allow 22` permite conexiones SSH y es la primera regla crítica para no perder acceso remoto. Una vez configuradas las reglas básicas, es posible verificar el estado y las conexiones activas con `sudo ufw status` y `ss -tn` para ver qué tráfico efectivamente está llegando al servidor.
+El laboratorio de Packet Filtering con UFW (Uncomplicated Firewall) se enfoca en la configuración correcta de reglas de cortafuegos en Linux. El concepto clave es entender el orden de evaluación de las reglas: UFW procesa las reglas de forma secuencial y se detiene en la primera coincidencia, por lo que una regla restrictiva después de una permisiva nunca se ejecutará. Durante este lab se configuraron reglas para permitir tráfico específico (SSH puerto 22, HTTP puerto 80, DNS puerto 53 TCP) y desde direcciones IP concretas, además de aprender a identificar y corregir errores de posicionamiento de reglas que impiden el funcionamiento esperado del firewall.
 
-La potencia de UFW radica en su granularidad: es posible crear reglas específicas por interfaz de red, rango de IPs, puertos, y protocolos. Por ejemplo, `sudo ufw allow from 10.0.0.0/24 to any port 22` restringe SSH únicamente a la subred 10.0.0.0/24, o `sudo ufw deny from 10.0.0.37` rechaza todo tráfico de una IP específica. Las reglas de negación se pueden insertar en posiciones específicas con `sudo ufw insert 1 deny from IP`, lo que permite prioridades. En configuraciones avanzadas con múltiples interfaces de red, es posible ser muy preciso: `sudo ufw allow in on enp0s3 from 10.0.0.192 to 10.0.0.100 proto tcp` solo permite tráfico TCP desde esa IP específica hacia ese destino en la interfaz enp0s3.
+La importancia de este laboratorio radica en desarrollar la capacidad de troubleshooting en configuraciones de firewall, un skill crítico para cualquier administrador de sistemas. Se aprende que las reglas deben ordenarse lógicamente: primero las excepciones específicas y luego las reglas generales, evitando que reglas restrictivas sean enmascaradas por reglas permisivas anteriores. Este conocimiento es fundamental para mantener la seguridad de un servidor sin bloquear servicios legítimos.
 
-### Ejemplos de Comandos
+## Ejemplos de comandos
 
 ```bash
-# Activar UFW y habilitar al inicio
+# Habilitar UFW y permitir SSH (paso inicial crítico)
 sudo ufw enable
-sudo ufw status
+sudo ufw allow 22/tcp
 
-# Permitir SSH (critico antes de activar)
-sudo ufw allow 22
+# Permitir tráfico HTTP
+sudo ufw allow 80/tcp
 
-# Permitir desde una subred específica
-sudo ufw allow from 10.0.0.0/24 to any port 22
+# Permitir tráfico DNS sobre TCP
+sudo ufw allow 53/tcp
 
-# Denegar una IP específica
-sudo ufw deny from 10.0.0.37
+# Permitir todo tráfico desde una IP específica
+sudo ufw allow from 207.45.232.181
 
-# Insertar regla en posición específica
-sudo ufw insert 1 deny from 10.0.0.37
+# Listar todas las reglas numeradas
+sudo ufw status numbered
 
-# Regla granular por interfaz, IP origen, destino y protocolo
-sudo ufw allow in on enp0s3 from 10.0.0.192 to 10.0.0.100 proto tcp
+# Eliminar una regla por número (si está mal posicionada)
+sudo ufw delete 5
 
-# Bloquear tráfico saliente hacia una IP específica
-sudo ufw deny out on enp0s3 to 8.8.8.8
-
-# Ver conexiones activas
-ss -tn
+# Reinsertar una regla en posición correcta
+sudo ufw insert 1 deny from 10.0.0.19
 ```
-
----
-
