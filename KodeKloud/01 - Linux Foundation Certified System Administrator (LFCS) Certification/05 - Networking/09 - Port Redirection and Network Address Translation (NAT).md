@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Networking
 Tema: Port Redirection and Network Address Translation (NAT)
-Typo: Laboratorio
+Typo: Video
 Fecha: 05/05/2026
 Estado: completado
 Dificultad: Intermedio-Alto

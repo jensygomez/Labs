@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Networking
 Tema: Implement Reverse Proxies and Load Balancers
-Typo: Laboratorio
+Typo: Video
 Fecha: 05/05/2026
 Estado: completado
 Dificultad:
