@@ -3,9 +3,9 @@ Curso: Prep Course - LFCS Certification
 Modulo: Networking
 Tema: Set and Synchronize System Time Using Time Servers
 Typo: Video
-Fecha: 05/05/2026
+Fecha: 06/05/2026
 Estado: completado
-Dificultad:
+Dificultad: Básico Medio
 Calificación:
 Time: 10 min
 tags:

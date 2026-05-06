@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/11 - Set and Synchronize System Time Using Time Servers.md",
+                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/12 - Configure SSH Servers and Clients.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "11 - Set and Synchronize System Time Using Time Servers"
+              "title": "12 - Configure SSH Servers and Clients"
             }
           }
         ]
@@ -183,10 +183,11 @@
   },
   "active": "318818ba0ad7a15f",
   "lastOpenFiles": [
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/11 - Set and Synchronize System Time Using Time Servers.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/12 - Configure SSH Servers and Clients.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/10 - Implement Reverse Proxies and Load Balancers.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/09 - Port Redirection and Network Address Translation (NAT).md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/08 - Lab - Packet Filtering.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/11 - Set and Synchronize System Time Using Time Servers.md",
     "02 - Shell Scripts for Beginners/03 - Flow Control/05 - Loops - While.md",
     "02 - Shell Scripts for Beginners/03 - Flow Control/04 - Lab For Loops.md",
     "03 - Advanced Bash Scripting/01 - Introduction/06 - How to take this course.md",
@@ -213,7 +214,6 @@
     "02 - Shell Scripts for Beginners/03 - Flow Control/01 - Conditional Logic.md",
     "02 - Shell Scripts for Beginners/02 - Shell Script Introduction/12 - Lab - Arithmetic Operations.md",
     "02 - Shell Scripts for Beginners/03 - Flow Control",
-    "02 - Shell Scripts for Beginners/02 - Shell Script Introduction/11 - Arithmetic Operations.md",
     "02 - Shell Scripts for Beginners/02 - Shell Script Introduction",
     "02 - Shell Scripts for Beginners",
     "Laboratorios Repetidos/0007 - Linux_Sysadmin_Lab_Report.pdf",
