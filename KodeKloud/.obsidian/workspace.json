@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/01 - List, Create, Delete, and Modify Physical Storage Partitions.md",
+                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/02 - Configure and Manage Swap Space.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "01 - List, Create, Delete, and Modify Physical Storage Partitions"
+              "title": "02 - Configure and Manage Swap Space"
             }
           }
         ]
@@ -183,8 +183,9 @@
   },
   "active": "318818ba0ad7a15f",
   "lastOpenFiles": [
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/13 - Lab - Configure SSH Servers and Clients.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/02 - Configure and Manage Swap Space.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/01 - List, Create, Delete, and Modify Physical Storage Partitions.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/13 - Lab - Configure SSH Servers and Clients.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/12 - Configure SSH Servers and Clients.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/11 - Set and Synchronize System Time Using Time Servers.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/10 - Implement Reverse Proxies and Load Balancers.md",
@@ -212,7 +213,6 @@
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/01 - Configure IPV4 and IPV6 Netwotking and Hostname Resolution - Theory.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/11 - Configure the System to Use LDAP User and Group Accounts.md",
     "LFCS/05 - Networking/Networking - MOC.md",
-    "02 - Shell Scripts for Beginners/03 - Flow Control/02 - Lab Conditional Logic.md",
     "02 - Shell Scripts for Beginners/03 - Flow Control",
     "02 - Shell Scripts for Beginners/02 - Shell Script Introduction",
     "02 - Shell Scripts for Beginners",
