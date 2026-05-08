@@ -3,6 +3,9 @@
     "aliases": "aliases",
     "cssclasses": "multitext",
     "tags": "tags",
-    "plataforma": "multitext"
+    "plataforma": "multitext",
+    "Fecha": "date",
+    "Dificultad": "text",
+    "verificar": "checkbox"
   }
 }
