@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/05 - Configure Systems to Mount Filesystems at or During Boot.md",
+                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/06 - Lab - Create Filesystems and Mount Them at Boot.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "05 - Configure Systems to Mount Filesystems at or During Boot"
+              "title": "06 - Lab - Create Filesystems and Mount Them at Boot"
             }
           }
         ]
@@ -184,6 +184,7 @@
   "active": "a5721c1d8ad7bd2c",
   "lastOpenFiles": [
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/05 - Configure Systems to Mount Filesystems at or During Boot.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/06 - Lab - Create Filesystems and Mount Them at Boot.md",
     "2007-05-20.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/04 - Create and Configure File Systems.md",
     "Sem título.base",
@@ -213,7 +214,6 @@
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/06 - Configure Bridge and Bonding Devices - Demo.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/05 - Configure Bridge and Bonding Devices - Theory.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/04 - Lab - Configure Networking, Start Stop Check Status of Network Services.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/03 - Start, Stop, and Check Status of Network Services.md",
     "02 - Shell Scripts for Beginners/03 - Flow Control",
     "02 - Shell Scripts for Beginners/02 - Shell Script Introduction",
     "02 - Shell Scripts for Beginners",
