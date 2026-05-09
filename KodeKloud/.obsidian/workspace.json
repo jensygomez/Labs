@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/09 - Use Remote Filesystems --->NFS.md",
+                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/10 - Lab - Remote File Systems --> NFS.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "09 - Use Remote Filesystems --->NFS"
+              "title": "10 - Lab - Remote File Systems --> NFS"
             }
           }
         ]
@@ -183,8 +183,9 @@
   },
   "active": "a5721c1d8ad7bd2c",
   "lastOpenFiles": [
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/08 - Lab - Filesystem Features and Mount Options.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/09 - Use Remote Filesystems --->NFS.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/10 - Lab - Remote File Systems --> NFS.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/08 - Lab - Filesystem Features and Mount Options.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/07 - Filesystem and Mount Options.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/06 - Lab - Create Filesystems and Mount Them at Boot.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/05 - Configure Systems to Mount Filesystems at or During Boot.md",
@@ -213,7 +214,6 @@
     "Advanced Bash Scripting/01 - Introduction.canvas",
     "0",
     "03 - Advanced Bash Scripting",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/07 - Configure Packet Filtering (Firewall).md",
     "02 - Shell Scripts for Beginners/03 - Flow Control",
     "02 - Shell Scripts for Beginners/02 - Shell Script Introduction",
     "02 - Shell Scripts for Beginners",
