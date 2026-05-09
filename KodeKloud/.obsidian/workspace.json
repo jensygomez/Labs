@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/12 - Manage and Configure LVM Storage.md",
+                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/13 - Lab - Manage LVM.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "12 - Manage and Configure LVM Storage"
+              "title": "13 - Lab - Manage LVM"
             }
           }
         ]
@@ -183,8 +183,9 @@
   },
   "active": "a5721c1d8ad7bd2c",
   "lastOpenFiles": [
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/11 - Use Network Block Devices --> NBD.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/12 - Manage and Configure LVM Storage.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/13 - Lab - Manage LVM.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/11 - Use Network Block Devices --> NBD.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/10 - Lab - Remote File Systems --> NFS.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/09 - Use Remote Filesystems --->NFS.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/08 - Lab - Filesystem Features and Mount Options.md",
@@ -209,7 +210,6 @@
     "03 - Advanced Bash Scripting/01 - Introduction/06 - How to take this course.md",
     "03 - Advanced Bash Scripting/01 - Introduction/05 - Terminology.md",
     "03 - Advanced Bash Scripting/01 - Introduction/04 - Shell scripting vs Bash scripting.md",
-    "03 - Advanced Bash Scripting/01 - Introduction/03 - Interactive-vs-non-interactive-shell.md",
     "03 - Advanced Bash Scripting/01 - Introduction",
     "Advanced Bash Scripting/01 - Introduction.canvas",
     "0",
