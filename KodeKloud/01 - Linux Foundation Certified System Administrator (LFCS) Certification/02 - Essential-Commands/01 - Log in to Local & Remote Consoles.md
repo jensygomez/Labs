@@ -3,6 +3,9 @@
 
 #lfcs #linux #essential-commands #access #ssh
 
+
+
+
 ## 📌 Tipos de acceso
 - Local console (físico)
 - Remote console (SSH)

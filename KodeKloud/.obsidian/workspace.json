@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/08 - Lab - Files, Directories, Hard and Soft Links.md",
+                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/12 - Lab - File Permissions, Search for Files.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "08 - Lab - Files, Directories, Hard and Soft Links"
+              "title": "12 - Lab - File Permissions, Search for Files"
             }
           }
         ]
@@ -183,8 +183,10 @@
   },
   "active": "a5721c1d8ad7bd2c",
   "lastOpenFiles": [
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/04 - Lab - Logging in and System Documentation.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/08 - Lab - Files, Directories, Hard and Soft Links.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/12 - Lab - File Permissions, Search for Files.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/01 - Log in to Local & Remote Consoles.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/04 - Lab - Logging in and System Documentation.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/03 - Read and Use System Documentation.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/16 - Lab - Advanced Permissions.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/03 - Lab - Manage User Accounts and Groups.md",
@@ -209,8 +211,6 @@
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/04 - Create and Configure File Systems.md",
     "Sem título.base",
     "03 - Disk Partitioning.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/03 - Lab - Manage Partitions and Swap Space.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/02 - Configure and Manage Swap Space.md",
     "03 - Advanced Bash Scripting/01 - Introduction",
     "Advanced Bash Scripting/01 - Introduction.canvas",
     "0",
