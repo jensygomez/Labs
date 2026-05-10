@@ -6,6 +6,8 @@
     "plataforma": "multitext",
     "Fecha": "date",
     "Dificultad": "text",
-    "verificar": "checkbox"
+    "verificar": "checkbox",
+    "Repetido": "multitext",
+    "Repeticion": "number"
   }
 }
