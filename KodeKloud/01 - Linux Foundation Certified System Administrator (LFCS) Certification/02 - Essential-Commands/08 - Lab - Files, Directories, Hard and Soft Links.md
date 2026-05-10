@@ -8,7 +8,6 @@ tags:
   - Type/Laboratorio
   - Time/15min
   - Calificacion/100
-  - Tareas-del-Lab/10
   - Type/Laboratorio/Repetido/1
   - Dificultad/Basico-Medio
   - Learning/Essential-Commands
@@ -16,6 +15,7 @@ tags:
   - Learning/Hard-Links
   - Learning/Soft-Links
   - Learning/Directories
+  - Tareas-del-Lab/18
 ---
 Este laboratorio profundizó en la gestión de archivos y directorios, uno de los pilares fundamentales del sysadmin Linux. Cubrió desde conceptos teóricos (estructura jerárquica del filesystem, directorios raíz) hasta operaciones prácticas complejas: copiar directorios preservando atributos, crear estructuras anidadas de directorios, y manipular enlaces. Un aspecto crítico fue comprender la diferencia entre hard links (referencias directas al inode) y soft links (atajos simbólicos), incluyendo sus limitaciones (los hard links no funcionan entre filesystems). También practicaste opciones avanzadas de `ls` para ver timestamps exactos, `mkdir -p` para crear estructuras profundas de una vez, y el uso de `mv` para mover contenido manteniendo la integridad.
 

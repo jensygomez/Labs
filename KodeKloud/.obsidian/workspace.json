@@ -11,10 +11,14 @@
             "id": "a5721c1d8ad7bd2c",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Visualização em gráfico"
+              "type": "markdown",
+              "state": {
+                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/08 - Lab - Files, Directories, Hard and Soft Links.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "08 - Lab - Files, Directories, Hard and Soft Links"
             }
           }
         ]
@@ -177,10 +181,10 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "71e502a7760e2595",
+  "active": "a5721c1d8ad7bd2c",
   "lastOpenFiles": [
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/08 - Lab - Files, Directories, Hard and Soft Links.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/04 - Lab - Logging in and System Documentation.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/08 - Lab - Files, Directories, Hard and Soft Links.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/03 - Read and Use System Documentation.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/16 - Lab - Advanced Permissions.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/03 - Lab - Manage User Accounts and Groups.md",
