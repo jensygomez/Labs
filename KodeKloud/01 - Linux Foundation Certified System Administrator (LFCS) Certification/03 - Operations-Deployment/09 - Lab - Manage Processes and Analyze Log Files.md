@@ -3,7 +3,6 @@
 
 **Tiempo:** 20 minutos | **Completado:** ✅ Con ayuda
 
-**Módulo:** [[Operations - MOC]] 
 
 ---
 

@@ -4,21 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "e0749ca13c17566d",
+        "id": "4eeaa1933abbb213",
         "type": "tabs",
         "children": [
           {
-            "id": "a5721c1d8ad7bd2c",
+            "id": "f2a96843f1457f4e",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "02 - Shell Scripts for Beginners/03 - Flow Control/08 - Labs - Case Statements.md",
+                "file": "02 - Shell Scripts for Beginners/04 - Shebang/01 - Shebang.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "08 - Labs - Case Statements"
+              "title": "01 - Shebang"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "tag:Linux/Shell-Scripts-for-Beginners/Flow-Control/Calificacion/100",
+                "query": "tag:Linux/LFCS-Certification",
                 "matchingCase": true,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -74,8 +74,7 @@
               "title": "Marcadores"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -182,13 +181,22 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "446ac136e3bc09e0",
+  "active": "f2a96843f1457f4e",
   "lastOpenFiles": [
-    "02 - Shell Scripts for Beginners/03 - Flow Control/07 - Case Statements.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/18 - Lab - File Content, Regular Expressions.md",
+    "02 - Shell Scripts for Beginners/04 - Shebang/01 - Shebang.md",
+    "02 - Shell Scripts for Beginners/04 - Shebang",
+    "03 - Advanced Bash Scripting/01 - Introduction/02 - Why learn advanced bash scripting?.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/01 - Log in to Local & Remote Consoles.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/09 - Lab - Manage Processes and Analyze Log Files.md",
+    "Operations - MOC.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/13 - Git Basics.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/12 - Lab - File Permissions, Search for Files.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/16 - Lab - Advanced Permissions.md",
     "02 - Shell Scripts for Beginners/03 - Flow Control/08 - Labs - Case Statements.md",
+    "02 - Shell Scripts for Beginners/03 - Flow Control/07 - Case Statements.md",
     "02 - Shell Scripts for Beginners/02 - Shell Script Introduction/11 - Arithmetic Operations.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/07 - Conclusion/01 - Conclusion.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/16 - Lab - Advanced Permissions.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/15 - Create, Manage, and Diagnose Advanced Filesystem Permissions.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/14 - Monitor Storage Performance.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/13 - Lab - Manage LVM.md",
@@ -201,15 +209,6 @@
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/06 - Lab - Create Filesystems and Mount Them at Boot.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/05 - Configure Systems to Mount Filesystems at or During Boot.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/04 - Create and Configure File Systems.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/03 - Lab - Manage Partitions and Swap Space.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/02 - Configure and Manage Swap Space.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/01 - List, Create, Delete, and Modify Physical Storage Partitions.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/02 - Configure IPV4 and IPV6 Netwotking and Hostname Resolution - Demo.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/01 - Configure IPV4 and IPV6 Netwotking and Hostname Resolution - Theory.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/13 - Lab - Configure SSH Servers and Clients.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/08 - Lab - Packet Filtering.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/12 - Configure SSH Servers and Clients.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/11 - Set and Synchronize System Time Using Time Servers.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/07 - Conclusion",
     "Sem título.base",
     "03 - Advanced Bash Scripting/01 - Introduction",
@@ -220,7 +219,6 @@
     "02 - Shell Scripts for Beginners/02 - Shell Script Introduction",
     "02 - Shell Scripts for Beginners",
     "Laboratorios Repetidos/0007 - Linux_Sysadmin_Lab_Report.pdf",
-    "Laboratorios Repetidos/0006 - Lab_Git_SSL_Documentation.pdf",
     "ChatGPT Image 19 de abr. de 2026, 07_59_54.png"
   ]
 }

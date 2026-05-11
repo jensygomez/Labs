@@ -1,11 +1,9 @@
 
 # Log in to Local & Remote Consoles
 
+#Linux
+#LFCS-Certification
 #Linux/LFCS-Certification/Essential-Commands
-
-
-
-
 ## 📌 Tipos de acceso
 - Local console (físico)
 - Remote console (SSH)
