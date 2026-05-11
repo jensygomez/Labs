@@ -1,5 +1,5 @@
 
-#lfcs #linux #operations #Operations-Deployments #TaskScheduling #Cron #Anacron #At  #lab 
+#Linux/LFCS-Certification/Operations-Deployment/Laboratorio 
 
 **Curso:** Prep Course - Linux Foundation Certified System Administrator (LFCS) Certification **Módulo:** Operations Deployment **Laboratorio:** Schedule Tasks **Duración:** 20 minutos **Resultado:** Bajo - Necesita refuerzo **Fecha:** 27 Abril 2026
 

@@ -8,14 +8,7 @@ Estado: completado
 Dificultad: Media
 Calificación: Media
 tags:
-  - linux
-  - lfcs
-  - operations
-  - Operations-Deployments
-  - APT
-  - package-manager
-  - repositories
-  - troubleshooting
+  - "#Linux/LFCS-Certification/Operations-Deployment/Laboratorio"
 ---
 
 

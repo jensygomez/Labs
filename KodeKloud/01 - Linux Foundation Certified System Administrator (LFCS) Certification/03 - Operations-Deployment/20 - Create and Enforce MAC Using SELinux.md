@@ -9,15 +9,7 @@ Dificultad: Media
 Calificación: N/A
 Time: 37 min
 tags:
-  - linux
-  - lfcs
-  - "#operations"
-  - "#Operations-Deployments"
-  - "#security"
-  - "#permissions"
-  - "#SELinux"
-  - "#mac"
-  - "#access-control"
+  - "#Linux/LFCS-Certification/Operations-Deployment"
 ---
 SELinux (Security Enhanced Linux) es un módulo de control de acceso obligatorio (MAC) que se implementa a nivel del kernel para reforzar la seguridad del sistema. El video mostró cómo desactivar AppArmor en Ubuntu e instalar SELinux desde cero. Después de la instalación, se verificó el estado con `sestatus` (inicialmente desabilitado) y se activó con `selinux-activate`, requiriendo un reinicio de la VM. Una vez reiniciada, SELinux quedó en modo PERMISSIVE, permitiendo auditar políticas sin bloquear acciones. Se demostró cómo verificar contextos de seguridad con comandos como `ps -eZ | grep sshd_t` para procesos, y se utilizó `audit2allow` para generar módulos personalizados basados en logs de auditoría.
 

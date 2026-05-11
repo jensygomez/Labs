@@ -5,7 +5,7 @@
 course: "Prep Course - Linux Foundation Certified System Administrator (LFCS)"  
 module: "Operational Deployments"  
 date: 2026-04-28  
-tags: #linux #lfcs #SysAdmin, #APT, #PackageManager, #Operations-Deployments #DevOps, #Ubuntu, #Nginx
+tags: #Linux/LFCS-Certification/Operations-Deployment 
 
 ## 🐧 Manage Software with Package Manager
 

@@ -9,13 +9,7 @@ Dificultad: Intermedio
 Calificación: N/A
 Time: N/A
 tags:
-  - linux
-  - lfcs
-  - "#operations"
-  - "#Operations-Deployments"
-  - "#Kernel"
-  - "#Sysctl"
-  - "#System-Tuning"
+  - "#Linux/LFCS-Certification/Operations-Deployment"
 ---
 
 ## Resumen

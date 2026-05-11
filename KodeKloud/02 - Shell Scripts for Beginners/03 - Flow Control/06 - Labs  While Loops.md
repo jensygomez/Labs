@@ -10,14 +10,7 @@ Calificación: 0% de  aciertos
 Tareas del Lab: "4"
 Time: 15 min
 tags:
-  - linux
-  - lfcs
-  - lab
-  - shell-script
-  - bash
-  - while-loops
-  - flow-control
-  - debugging
+  - Linux/Shell-Scripts-for-Beginners/Flow-Control/Laboratorio
 ---
 **Resumen:**
 

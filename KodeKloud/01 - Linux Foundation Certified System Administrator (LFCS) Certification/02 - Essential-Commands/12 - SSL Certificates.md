@@ -1,7 +1,7 @@
 
 # SSL Certificates
 
-#lfcs #linux #essential-commands #security
+#Linux/LFCS-Certification/Essential-Commands 
 
 ## 📌 Uso
 Seguridad en comunicaciones

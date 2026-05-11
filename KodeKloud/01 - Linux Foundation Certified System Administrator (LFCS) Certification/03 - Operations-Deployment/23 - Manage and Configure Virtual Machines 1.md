@@ -9,11 +9,5 @@ Dificultad:
 Calificación: N/A
 Time: 15 min
 tags:
-  - linux
-  - lfcs
-  - operations
-  - Operations-Deployments
-  - kvm
-  - qemu
-  - virtualization
+  - "#Linux/LFCS-Certification/Operations-Deployment"
 ---

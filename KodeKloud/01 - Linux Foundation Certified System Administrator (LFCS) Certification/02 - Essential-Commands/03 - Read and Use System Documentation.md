@@ -1,7 +1,7 @@
 
 # System Documentation
 
-#lfcs #linux #essential-commands #documentation #Linux/LFCSCertification/EssentialCommands 
+#Linux/LFCS-Certification/Essential-Commands
 
 ## 📌 Herramientas
 - man

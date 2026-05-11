@@ -8,12 +8,7 @@ Estado: completado
 Dificultad: Intermedio-Baja
 Calificación: N/A
 tags:
-  - linux
-  - lfcs
-  - operations
-  - Operations-Deployments
-  - "#System-Health"
-  - "#Resource-Monitoring"
+  - "#Linux/LFCS-Certification/Operations-Deployment"
 ---
 Para monitorear la salud del sistema es fundamental verificar los recursos disponibles. El almacenamiento se puede evaluar con `df -h` para ignorar tmpfs, y `du -sh` para obtener el tamaño de directorios específicos. La memoria se revisa con `free -h`, prestando atención a las columnas "available" y "free", las cuales indican la memoria realmente disponible para el sistema. El procesador se monitorea con `uptime`, que muestra el "load average" en tres intervalos diferentes (1, 5 y 15 minutos), permitiendo detectar si el sistema está sobrecargado. Para más detalles del procesador, se utiliza `lscpu`.
 

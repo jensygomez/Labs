@@ -1,4 +1,4 @@
-#lfcs #linux #introduction 
+#Linux/LFCS-Certification/Introduction 
 # LFCS Command Cheat Sheet
 
 ## 📌 Qué es

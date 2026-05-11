@@ -1,7 +1,7 @@
 
 # File Content
 
-#lfcs #linux #essential-commands #text-processing
+#Linux/LFCS-Certification/Essential-Commands 
 
 ## 🛠️ Comandos
 - cat

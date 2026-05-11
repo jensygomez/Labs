@@ -1,7 +1,7 @@
 
 # Special Permissions
 
-#lfcs #linux #essential-commands #permissions
+#Linux/LFCS-Certification/Essential-Commands 
 
 ## 📌 Tipos
 - SUID

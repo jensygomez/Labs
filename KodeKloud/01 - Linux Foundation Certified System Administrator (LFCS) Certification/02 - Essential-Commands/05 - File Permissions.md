@@ -1,7 +1,7 @@
 
 # File Permissions
 
-#lfcs #linux #essential-commands #permissions
+#Linux/LFCS-Certification/Essential-Commands 
 
 ## 📌 Tipos
 - r (read)

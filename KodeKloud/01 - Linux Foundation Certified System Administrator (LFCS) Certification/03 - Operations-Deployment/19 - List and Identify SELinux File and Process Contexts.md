@@ -9,13 +9,7 @@ Dificultad: Intermedio
 Calificación: N/A
 Time: N/A
 tags:
-  - linux
-  - lfcs
-  - "#operations"
-  - "#Operations-Deployments"
-  - "#security"
-  - "#permissions"
-  - "#SELinux"
+  - "#Linux/LFCS-Certification/Operations-Deployment"
 ---
 ### Contenido
 

@@ -1,4 +1,4 @@
-#lfcs #linux #introduction 
+#Linux/LFCS-Certification/Introduction 
 # Course Structure
 
 ## 📚 Estructura general

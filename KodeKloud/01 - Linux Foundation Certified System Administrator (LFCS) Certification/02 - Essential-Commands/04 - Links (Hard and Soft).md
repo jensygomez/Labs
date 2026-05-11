@@ -1,7 +1,7 @@
 
 # Links (Hard and Soft)
 
-#lfcs #linux #essential-commands #files #links
+#Linux/LFCS-Certification/Essential-Commands 
 
 ## 📌 Tipos
 - Hard link

@@ -9,13 +9,7 @@ Dificultad: Básico Medio
 Calificación: 20 %
 Time: 20 min
 tags:
-  - linux
-  - shell-script
-  - bash
-  - scripting
-  - loops
-  - flow-control
-  - foor-loops
+  - Linux/Shell-Scripts-for-Beginners/Flow-Control/Laboratorio
 ---
 ## Resumen
 

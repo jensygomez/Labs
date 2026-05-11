@@ -1,7 +1,7 @@
 
 # Log in to Local & Remote Consoles
 
-#lfcs #linux #essential-commands #access #ssh
+#Linux/LFCS-Certification/Essential-Commands
 
 
 

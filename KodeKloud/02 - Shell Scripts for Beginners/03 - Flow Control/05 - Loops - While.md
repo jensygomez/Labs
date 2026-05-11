@@ -9,12 +9,7 @@ Dificultad:
 Calificación:
 Time: 10 min
 tags:
-  - linux
-  - shell-script
-  - bash
-  - scripting
-  - loops
-  - flow-control
+  - Linux/Shell-Scripts-for-Beginners/Flow-Control
 ---
 
 ## Resumen

@@ -1,7 +1,7 @@
 
 # Input Output Redirection
 
-#lfcs #linux #essential-commands #io
+#Linux/LFCS-Certification/Essential-Commands 
 
 ## 🛠️ Operadores
 - >

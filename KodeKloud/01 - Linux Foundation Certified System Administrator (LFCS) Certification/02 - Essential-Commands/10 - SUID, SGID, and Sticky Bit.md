@@ -1,7 +1,7 @@
 
 # Files and Directories
 
-#lfcs #linux #essential-commands #files
+#Linux/LFCS-Certification/Essential-Commands 
 
 ## 🛠️ Comandos básicos
 - ls

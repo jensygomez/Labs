@@ -9,15 +9,7 @@ Dificultad: Básico Medio
 Calificación: 0%
 Time: 15 min
 tags:
-  - linux
-  - shell-script
-  - bash
-  - scripting
-  - conditional-logic
-  - flow-control
-  - lab
-  - if-staments
-  - command-line-arguments
+  - Linux/Shell-Scripts-for-Beginners/Flow-Control/Laboratorio
 ---
 ## Resumen
 

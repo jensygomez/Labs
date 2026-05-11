@@ -1,7 +1,7 @@
 
 # Compression and Archive
 
-#lfcs #linux #essential-commands #compression
+#Linux/LFCS-Certification/Essential-Commands 
 
 ## 🛠️ Comandos
 - tar

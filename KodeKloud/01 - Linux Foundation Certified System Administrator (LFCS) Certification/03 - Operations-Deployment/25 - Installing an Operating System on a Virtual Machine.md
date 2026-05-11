@@ -9,12 +9,7 @@ Dificultad: Básico
 Calificación: N/A
 Time: 8 min
 tags:
-  - linux
-  - lfcs
-  - operations
-  - Operations-Deployments
-  - virtualization
-  - virt-install
+  - "#Linux/LFCS-Certification/Operations-Deployment"
 ---
 
 

@@ -9,16 +9,7 @@ Dificultad: Media
 Calificación: 1/6
 Time: 20 min
 tags:
-  - linux
-  - lfcs
-  - operations
-  - Operations-Deployments
-  - "#System-Health"
-  - "#Resource-Monitoring"
-  - "#disk-management"
-  - "#Memory-Monitoring"
-  - "#Cpu-Analisys"
-  - "#Filesystem-Integrity"
+  - "#Linux/LFCS-Certification/Operations-Deployment/Laboratorio"
 ---
 En este laboratorio se practicó la identificación y monitoreo de recursos críticos del sistema usando comandos esenciales de diagnóstico. Se trabajó con `df` para verificar el uso de particiones, `du` para analizar consumo de directorios, `free` para monitoreo de memoria RAM, `uptime` para tiempo de actividad del sistema, y `lscpu` para información de núcleos de procesador. Cada resultado se guardó en archivos específicos en /home/bob/, simulando un proceso real de recopilación de métricas para auditorías de salud del sistema.
 

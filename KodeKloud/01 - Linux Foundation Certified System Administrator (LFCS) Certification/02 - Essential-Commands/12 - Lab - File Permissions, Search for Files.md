@@ -4,18 +4,7 @@ Modulo: Essential Commands
 Tema: Lab - File Permissions, Search for Files
 Fecha: 2026-05-11
 tags:
-  - Linux/LFCS-Certification/Essential-Commands
-  - Type/Laboratorio
-  - Calificacion/100
-  - Type/Laboratorio/Repetido/1
-  - Tareas-del-Lab/18
-  - Dificultad/Intermedio-Bajo
-  - Time/30min
-  - Tareas-del-Lab/16
-  - File-Permissions
-  - Find-Command
-  - chmod
-  - Special-Permissions
+  - Linux/LFCS-Certification/Essential-Commands/Laboratorio/Repetido/1
 ---
 
 

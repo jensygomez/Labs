@@ -9,12 +9,7 @@ Dificultad: Básico Medio
 Calificación:
 Time: 12 min
 tags:
-  - linux
-  - shell-script
-  - bash
-  - scripting
-  - conditional-logic
-  - flow-control
+  - Linux/Shell-Scripts-for-Beginners/Flow-Control
 ---
 ### Resumen
 

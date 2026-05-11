@@ -9,13 +9,7 @@ Dificultad: Intermedio
 Calificación: N/A
 Time: 12 min
 tags:
-  - linux
-  - lfcs
-  - operations
-  - Operations-Deployments
-  - virtualization
-  - kvm
-  - libvirt
+  - "#Linux/LFCS-Certification/Operations-Deployment"
 ---
 
 ## Creación y Arranque de Máquinas Virtuales

@@ -1,7 +1,7 @@
 
 # Grep and Regex
 
-#lfcs #linux #essential-commands #text-processing #regex
+#Linux/LFCS-Certification/Essential-Commands 
 
 ## 🛠️ Comandos
 - grep

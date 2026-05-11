@@ -6,15 +6,7 @@ Typo: Laboratorio
 Fecha: 2026-05-10
 tags:
   - Linux/LFCS-Certification/Essential-Commands
-  - Learning/ssh
-  - Learning/man-pages
-  - Learning/apropos
-  - Type/Laboratorio
-  - Time/15min
-  - Calificacion/100
-  - Tareas-del-Lab/10
-  - Type/Laboratorio/Repetido/1
-  - Dificultad/Basico-Medio
+  - Laboratorio/Repetido/1
 ---
 Este laboratorio se enfocó en dominar los comandos esenciales para navegación del sistema y troubleshooting. Las tareas cubrieron desde usar `man` para consultar documentación de comandos (como encontrar opciones de SSH), hasta el uso de `apropos` para buscar páginas del manual por palabras clave. Un punto clave fue entender que `apropos` requiere que las páginas de manual estén indexadas, lo cual se resuelve ejecutando `mandb` para reconstruir la base de datos. También practicaste conectividad SSH remota entre hosts, incluyendo troubleshooting de conexiones rechazadas con flags de verbosidad.
 

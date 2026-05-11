@@ -1,7 +1,7 @@
 
 # Git Basics
 
-#lfcs #linux #essential-commands #git
+#Linux/LFCS-Certification/Essential-Commands 
 
 ## 🛠️ Comandos
 - git init
