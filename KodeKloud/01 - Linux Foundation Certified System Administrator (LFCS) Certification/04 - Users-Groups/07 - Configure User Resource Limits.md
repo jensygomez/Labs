@@ -9,11 +9,7 @@ Dificultad: Básico Medio
 Calificación:
 Time: 10 min
 tags:
-  - linux
-  - lfcs
-  - users
-  - groups
-  - resource-limits
+  - "#Linux/LFCS-Certification/Users-Groups"
 ---
 
 

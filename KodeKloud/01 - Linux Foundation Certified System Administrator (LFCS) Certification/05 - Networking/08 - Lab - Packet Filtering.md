@@ -9,15 +9,13 @@ Dificultad: Intermedio-Baja
 Calificación: 40 %
 Time: 20 min
 tags:
-  - linux
-  - lfcs
-  - networking
-  - firewall
-  - ufw
-  - security
-  - packet-filtering
-  - iptables
-  - lab
+  - "#Linux/LFCS-Certification/Networking"
+  - "#Linux/LFCS-Certification/Networking/Laboratorio"
+  - "#Linux/LFCS-Certification/Networking/Iptables"
+  - "#Linux/LFCS-Certification/Networking/Firewall"
+  - "#Linux/LFCS-Certification/Networking/UFW"
+  - "#Linux/LFCS-Certification/Networking/Security"
+  - "#Linux/LFCS-Certification/Networking/Packet-filtering"
 ---
 
 

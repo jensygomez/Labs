@@ -10,15 +10,13 @@ Calificación: 88,88 %
 Task: "9"
 Time: 20 min
 tags:
-  - linux
-  - lfcs
-  - storage
-  - swap
-  - memoria
-  - partitions
-  - lab
-  - cfdisk
-  - mkswap
+  - "#Linux/LFCS-Certification/Storage"
+  - "#Linux/LFCS-Certification/Storage/Laboratorio"
+  - "#Linux/LFCS-Certification/Storage/Swap"
+  - "#Linux/LFCS-Certification/Storage/Memory"
+  - "#Linux/LFCS-Certification/Storage/Partitions"
+  - "#Linux/LFCS-Certification/Storage/cfdisk"
+  - "#Linux/LFCS-Certification/Storage/mkswap"
 ---
 
 

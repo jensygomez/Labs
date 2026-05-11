@@ -9,14 +9,7 @@ Dificultad: Intermedio-Baja
 Calificación:
 Time: 20 min
 tags:
-  - linux
-  - lfcs
-  - users
-  - groups
-  - ldap
-  - authentication
-  - centralized-management
-  - nsswitch
+  - "#Linux/LFCS-Certification/Users-Groups"
 ---
 ## Problema y Solución
 

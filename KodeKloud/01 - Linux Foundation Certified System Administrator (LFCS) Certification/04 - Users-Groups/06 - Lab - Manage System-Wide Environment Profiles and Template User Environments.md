@@ -9,12 +9,7 @@ Dificultad: Básico Medio
 Calificación: 4/12
 Time: 20 min
 tags:
-  - linux
-  - lfcs
-  - users
-  - groups
-  - environment-variables
-  - lab
+  - "#Linux/LFCS-Certification/Users-Groups/Laboratorio"
 ---
 
 El laboratorio se enfocó en comprender cómo funcionan las variables de entorno en Linux y su gestión a nivel del sistema. Se cubrieron conceptos clave como la visualización de variables (echo $VAR), la distinción entre variables locales y globales, y cómo archivos críticos como `/etc/environment` permiten establecer variables disponibles para todos los usuarios. También se exploró el directorio `/etc/skel`, que actúa como plantilla de donde se copian archivos a la home de nuevos usuarios al momento de su creación.

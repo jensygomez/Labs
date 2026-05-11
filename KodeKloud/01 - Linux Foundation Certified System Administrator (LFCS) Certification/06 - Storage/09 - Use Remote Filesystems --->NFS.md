@@ -10,13 +10,11 @@ Calificación:
 Tareas del Lab:
 Time: 15 min
 tags:
-  - linux
-  - lfcs
-  - storage
-  - Network-File-System
-  - Remote-Filesystems
-  - networking
-  - Server-Client
+  - "#Linux/LFCS-Certification/Storage"
+  - "#Linux/LFCS-Certification/Storage/Remote-Filesystems"
+  - "#Linux/LFCS-Certification/Storage/Network-File-System"
+  - "#Linux/LFCS-Certification/Storage/Networking"
+  - "#Linux/LFCS-Certification/Storage/Server-Client"
 ---
 
 

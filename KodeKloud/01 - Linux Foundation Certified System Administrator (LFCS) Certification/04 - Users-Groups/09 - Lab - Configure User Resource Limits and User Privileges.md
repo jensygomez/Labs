@@ -9,14 +9,7 @@ Dificultad: Intermedio-Baja
 Calificación: 27 %
 Time: 20 min
 tags:
-  - linux
-  - lfcs
-  - users
-  - groups
-  - lab
-  - security-limits
-  - sudoers
-  - access-control
+  - "#Linux/LFCS-Certification/Users-Groups/Laboratorio"
 ---
 
 ## Resumen

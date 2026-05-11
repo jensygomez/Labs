@@ -9,14 +9,11 @@ Dificultad: Básico Medio
 Calificación:
 Time: 30 min
 tags:
-  - linux
-  - lfcs
-  - networking
-  - IPV4
-  - IPV6
-  - tcp-ip
-  - netplan
-  - route
+  - "#Linux/LFCS-Certification/Networking/TCP-IP"
+  - "#Linux/LFCS-Certification/Networking/Netplan"
+  - "#Linux/LFCS-Certification/Networking/Route"
+  - "#Linux/LFCS-Certification/Networking/IPV4"
+  - "#Linux/LFCS-Certification/Networking/IPV6"
 ---
 El video cubre los fundamentos de configuración de red en Ubuntu, comenzando con el uso de `ip link` para visualizar las interfaces de red (loopback y físicas) y `ip addr` para ver direcciones IP asignadas y estado de conexión. Se explica cómo agregar y eliminar direcciones IP manualmente en las interfaces, teniendo en cuenta que una interfaz puede poseer múltiples direcciones IPv4 e IPv6 simultáneamente, aunque estos cambios son temporales si no se persisten.
 

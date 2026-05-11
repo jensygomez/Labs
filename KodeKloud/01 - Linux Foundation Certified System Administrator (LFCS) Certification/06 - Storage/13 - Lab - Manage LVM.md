@@ -10,13 +10,11 @@ Calificación: 66 %
 Tareas del Lab: "12"
 Time: 30 min
 tags:
-  - linux
-  - lfcs
-  - storage
-  - Logicall-Volume-Manager
-  - disk-management
-  - lab
-  - filesystems
+  - "#Linux/LFCS-Certification/Storage/cfdisk"
+  - "#Linux/LFCS-Certification/Storage/Laboratorio"
+  - "#Linux/LFCS-Certification/Storage/Disk-Management"
+  - "#Linux/LFCS-Certification/Storage/Logical-Volume-Manager"
+  - "#Linux/LFCS-Certification/Storage/FileSystems"
 ---
 
 ## LVM Hands-On: Del Disco Físico al Volumen Lógico

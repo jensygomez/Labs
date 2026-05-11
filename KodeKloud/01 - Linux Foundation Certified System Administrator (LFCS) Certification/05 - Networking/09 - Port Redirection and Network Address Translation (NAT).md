@@ -9,13 +9,11 @@ Dificultad: Intermedio-Alto
 Calificación:
 Time: 30 min
 tags:
-  - linux
-  - lfcs
-  - networking
-  - port-forwarding
-  - iptables
-  - netfilter
-  - masquerading
+  - "#Linux/LFCS-Certification/Networking"
+  - "#Linux/LFCS-Certification/Networking/Iptables"
+  - "#Linux/LFCS-Certification/Networking/Masquerading"
+  - "#Linux/LFCS-Certification/Networking/Port-Forwarding"
+  - "#Linux/LFCS-Certification/Networking/NetFilter"
 ---
 
 ## Resumen

@@ -10,13 +10,11 @@ Calificación:
 Task:
 Time: 20 min
 tags:
-  - linux
-  - lfcs
-  - storage
-  - filesystems
-  - ext4
-  - xfs
-  - mkfs
+  - "#Linux/LFCS-Certification/Storage"
+  - "#Linux/LFCS-Certification/Storage/FileSystems"
+  - "#Linux/LFCS-Certification/Storage/ext4"
+  - "#Linux/LFCS-Certification/Storage/xfs"
+  - "#Linux/LFCS-Certification/Storage/mkfs"
 ---
 
 ## Creación y Configuración de Sistemas de Archivos

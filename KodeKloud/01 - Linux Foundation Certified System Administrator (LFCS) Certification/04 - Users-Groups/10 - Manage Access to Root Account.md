@@ -9,12 +9,7 @@ Dificultad: Básico Bajo
 Calificación:
 Time: 5 min
 tags:
-  - linux
-  - lfcs
-  - users
-  - groups
-  - root-access
-  - sudo
+  - "#Linux/LFCS-Certification/Users-Groups"
 ---
 **Acceso a la Cuenta Root en Linux**
 

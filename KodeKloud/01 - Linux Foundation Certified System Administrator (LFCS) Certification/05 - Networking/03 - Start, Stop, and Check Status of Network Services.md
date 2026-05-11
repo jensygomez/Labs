@@ -9,11 +9,9 @@ Dificultad: Básico Medio
 Calificación:
 Time: 9 min
 tags:
-  - linux
-  - lfcs
-  - networking
-  - systemctl
-  - network-services
+  - "#Linux/LFCS-Certification/Networking"
+  - "#Linux/LFCS-Certification/Networking/Systemctl"
+  - "#Linux/LFCS-Certification/Networking/Services"
 ---
 Los servicios de red son programas que se ejecutan en background esperando conexiones en puertos específicos. Para identificar qué servicios están escuchando en tu sistema, utilizamos `sudo ss -ltunp` que nos muestra todos los sockets TCP y UDP activos. Este comando es esencial en troubleshooting de conectividad ya que nos revela qué puertos están abiertos, qué procesos los están utilizando y sus PIDs asociados.
 

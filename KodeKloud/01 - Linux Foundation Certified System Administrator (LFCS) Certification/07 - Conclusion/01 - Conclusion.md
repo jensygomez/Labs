@@ -10,11 +10,8 @@ Calificación:
 Tareas del Lab:
 Time: 5 min
 tags:
-  - linux
-  - lfcs
-  - Certification
-  - Review
-  - Conclusion
+  - "#Linux/LFCS-Certification/Storage"
+  - "#Linux/LFCS-Certification/Storage/Conclussion"
 ---
 **Resumen:**
 

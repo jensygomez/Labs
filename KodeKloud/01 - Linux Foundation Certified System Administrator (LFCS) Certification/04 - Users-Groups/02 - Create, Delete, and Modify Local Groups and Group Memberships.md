@@ -9,11 +9,7 @@ Dificultad: Básico
 Calificación: N/A
 Time: 8 min
 tags:
-  - linux
-  - lfcs
-  - users
-  - groups
-  - permissions
+  - "#Linux/LFCS-Certification/Users-Groups"
 ---
 
 Los grupos en Linux son fundamentales para la gestión de permisos y acceso a recursos. Cada usuario debe pertenecer a un grupo primario, pero también puede ser miembro de múltiples grupos secundarios. Esto proporciona una manera flexible y escalable de otorgar y revocar acceso, especialmente cuando necesitas administrar permisos para múltiples usuarios simultáneamente o cuando cambias la estructura organizacional.

@@ -9,12 +9,10 @@ Dificultad: Básico Medio
 Calificación:
 Time: 15 min
 tags:
-  - linux
-  - lfcs
-  - storage
-  - partitions
-  - fdisk
-  - lsblk
+  - "#Linux/LFCS-Certification/Storage"
+  - "#Linux/LFCS-Certification/Storage/Partitions"
+  - "#Linux/LFCS-Certification/Storage/fdisck"
+  - "#Linux/LFCS-Certification/Storage/lsblk"
 ---
 
 ## Particionamiento de Discos en Linux

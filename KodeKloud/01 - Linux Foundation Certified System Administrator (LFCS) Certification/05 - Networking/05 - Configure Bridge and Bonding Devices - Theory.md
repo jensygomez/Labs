@@ -9,12 +9,10 @@ Dificultad: Básico Medio
 Calificación:
 Time: 10 min
 tags:
-  - linux
-  - lfcs
-  - networking
-  - bridge
-  - bonding
-  - network-interfaces
+  - "#Linux/LFCS-Certification/Networking/Interfaces"
+  - "#Linux/LFCS-Certification/Networking"
+  - "#Linux/LFCS-Certification/Networking/Bridge"
+  - "#Linux/LFCS-Certification/Networking/Bonding"
 ---
 ### Contenido
 

@@ -10,18 +10,15 @@ Calificación: 50 % de aciertos
 Tareas del Lab: "8"
 Time: 15 min
 tags:
-  - linux
-  - lfcs
-  - storage
-  - ACLs
-  - permissions
-  - setfacl
-  - chattr
-  - file-atributes
-  - lab
-  - RAID1
-  - mdadm
-  - file-attributes
+  - "#Linux/LFCS-Certification/Storage"
+  - "#Linux/LFCS-Certification/Storage/Laboratorio"
+  - "#Linux/LFCS-Certification/Storage/ACLs"
+  - "#Linux/LFCS-Certification/Storage/Permissions"
+  - "#Linux/LFCS-Certification/Storage/setdacl"
+  - "#Linux/LFCS-Certification/Storage/chattr"
+  - "#Linux/LFCS-Certification/Storage/File-Atribute"
+  - "#Linux/LFCS-Certification/Storage/RAID1"
+  - "#Linux/LFCS-Certification/Storage/mdadm"
 ---
 **Resumen:**
 

@@ -9,12 +9,10 @@ Dificultad: Intermedio-Baja
 Calificación:
 Time: 30 min
 tags:
-  - linux
-  - lfcs
-  - networking
-  - ssh
-  - authentication
-  - criptografia
+  - "#Linux/LFCS-Certification/Networking"
+  - "#Linux/LFCS-Certification/Networking/ssh"
+  - "#Linux/LFCS-Certification/Networking/Cryptografy"
+  - "#Linux/LFCS-Certification/Networking/Authentication"
 ---
 SSH (Secure Shell) es el protocolo estándar para acceso remoto seguro en Linux. La configuración del servidor SSH se realiza en `/etc/ssh/sshd_config` (donde la 'd' indica daemon), mientras que la del cliente se maneja sin la 'd'. Los parámetros críticos incluyen Port (puerto de escucha), AddressFamily, ListenAddress (para restringir conexiones a IPs específicas), PermitRootLogin, PasswordAuthentication, KbdInteractiveAuthentication y X11Forwarding. También es posible configurar reglas por usuario con directivas Per-user para personalizar accesos según necesidades específicas.
 

@@ -10,12 +10,10 @@ Calificación:
 Tareas del Lab:
 Time: 20 min
 tags:
-  - linux
-  - lfcs
-  - storage
-  - iostat
-  - performance
-  - sysstat
+  - "#Linux/LFCS-Certification/Storage"
+  - "#Linux/LFCS-Certification/Storage/iostat"
+  - "#Linux/LFCS-Certification/Storage/Performance"
+  - "#Linux/LFCS-Certification/Storage/systat"
 ---
 **Resumen:**
 

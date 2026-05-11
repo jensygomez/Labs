@@ -9,14 +9,7 @@ Dificultad: Intermedio
 Calificación: 11/13
 Time: 30 min
 tags:
-  - linux
-  - lfcs
-  - users
-  - groups
-  - permissions
-  - useradd
-  - usermod
-  - groupadd
+  - "#Linux/LFCS-Certification/Users-Groups/Laboratorio"
 ---
 
 ## Resumen

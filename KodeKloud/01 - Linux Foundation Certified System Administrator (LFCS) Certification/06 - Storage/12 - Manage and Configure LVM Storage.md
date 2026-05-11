@@ -10,11 +10,9 @@ Calificación:
 Tareas del Lab:
 Time: 15 min
 tags:
-  - linux
-  - lfcs
-  - storage
-  - Logicall-Volume-Manager
-  - disk-management
+  - "#Linux/LFCS-Certification/Storage"
+  - "#Linux/LFCS-Certification/Storage/Disk-Management"
+  - "#Linux/LFCS-Certification/Storage/Logical-Volume-Manager"
 ---
 
 ## Logical Volume Manager (LVM) - Flexibilidad de Almacenamiento

@@ -10,16 +10,14 @@ Calificación: 80 %
 Tareas del Lab: "5"
 Time: 15 min
 tags:
-  - linux
-  - lfcs
-  - storage
-  - filesystems
-  - fstab
-  - mount
-  - mount-options
-  - security
-  - lab
-  - remount
+  - "#Linux/LFCS-Certification/Storage"
+  - "#Linux/LFCS-Certification/Storage/Laboratorio"
+  - "#Linux/LFCS-Certification/Storage/FileSystems"
+  - "#Linux/LFCS-Certification/Storage/Security"
+  - "#Linux/LFCS-Certification/Storage/Mount-Options"
+  - "#Linux/LFCS-Certification/Storage/mount"
+  - "#Linux/LFCS-Certification/Storage/fstab"
+  - "#Linux/LFCS-Certification/Storage/Remount"
 ---
 
 ## Control Granular de Filesystems mediante Opciones de Montaje

@@ -9,14 +9,12 @@ Dificultad: Básico Medio
 Calificación:
 Time: 20 min
 tags:
-  - linux
-  - lfcs
-  - networking
-  - bridge
-  - bonding
-  - network-interfaces
-  - netplan
-  - configuration-Red
+  - "#Linux/LFCS-Certification/Networking"
+  - "#Linux/LFCS-Certification/Networking/Bridge"
+  - "#Linux/LFCS-Certification/Networking/IP-Addressing"
+  - "#Linux/LFCS-Certification/Networking/Interfaces"
+  - "#Linux/LFCS-Certification/Networking/Netplan"
+  - "#Linux/LFCS-Certification/Networking/Configuration-Red"
 ---
 El video demonstró la importancia del directorio `/usr/share/doc/netplan/examples` como referencia para configurar dispositivos de red. El proceso consiste en copiar ejemplos existentes desde este directorio hacia `/etc/netplan`, verificar las interfaces de red disponibles con los comandos apropiados, y luego adaptar la configuración YAML según las necesidades específicas del entorno. Este enfoque reduce errores de sintaxis y acelera el proceso de configuración.
 

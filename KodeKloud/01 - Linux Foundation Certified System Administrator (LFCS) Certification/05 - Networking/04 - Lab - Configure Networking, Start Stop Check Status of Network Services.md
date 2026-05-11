@@ -9,11 +9,9 @@ Dificultad: Intermedio-Baja
 Calificación: 50 %
 Time: 35 min
 tags:
-  - linux
-  - lfcs
-  - networking
-  - netplan
-  - ip-addressing
+  - "#Linux/LFCS-Certification/Networking"
+  - "#Linux/LFCS-Certification/Networking/Netplan"
+  - "#Linux/LFCS-Certification/Networking/IP-Addressing"
 ---
 ### Resumen
 

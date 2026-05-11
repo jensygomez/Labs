@@ -10,12 +10,10 @@ Calificación:
 Tareas del Lab:
 Time: 15 min
 tags:
-  - linux
-  - lfcs
-  - storage
-  - Network-Block-Device
-  - Remote-Storage
-  - Server-Client
+  - "#Linux/LFCS-Certification/Storage"
+  - "#Linux/LFCS-Certification/Storage/Server-Client"
+  - "#Linux/LFCS-Certification/Storage/Network-Block-Device"
+  - "#Linux/LFCS-Certification/Storage/Remote-Storage"
 ---
 
 ## Network Block Devices (NBD) Overview

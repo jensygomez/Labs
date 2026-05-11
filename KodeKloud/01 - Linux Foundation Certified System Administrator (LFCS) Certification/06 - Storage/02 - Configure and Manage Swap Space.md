@@ -9,11 +9,9 @@ Dificultad: Básico Medio
 Calificación:
 Time: 10 min
 tags:
-  - linux
-  - lfcs
-  - storage
-  - swap
-  - memoria
+  - "#Linux/LFCS-Certification/Storage"
+  - "#Linux/LFCS-Certification/Storage/Swap"
+  - "#Linux/LFCS-Certification/Storage/Memory"
 ---
 
 ## Espacio Swap: Extensión Virtual de Memoria RAM
