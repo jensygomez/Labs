@@ -11,10 +11,14 @@
             "id": "f2a96843f1457f4e",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Visualização em gráfico"
+              "type": "markdown",
+              "state": {
+                "file": "02 - Shell Scripts for Beginners/04 - Shebang/05 - Functions.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "05 - Functions"
             }
           }
         ]
@@ -179,8 +183,9 @@
   },
   "active": "f2a96843f1457f4e",
   "lastOpenFiles": [
-    "02 - Shell Scripts for Beginners/04 - Shebang/04 - Lab Exit Codes.md",
     "02 - Shell Scripts for Beginners/04 - Shebang/03 - Exit Codes.md",
+    "02 - Shell Scripts for Beginners/04 - Shebang/05 - Functions.md",
+    "02 - Shell Scripts for Beginners/04 - Shebang/04 - Lab Exit Codes.md",
     "02 - Shell Scripts for Beginners/04 - Shebang/01 - Shebang.md",
     "02 - Shell Scripts for Beginners/04 - Shebang/02 - Lab Shebang.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/18 - Lab - File Content, Regular Expressions.md",
@@ -205,7 +210,6 @@
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/09 - Use Remote Filesystems --->NFS.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/08 - Lab - Filesystem Features and Mount Options.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/07 - Filesystem and Mount Options.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/06 - Lab - Create Filesystems and Mount Them at Boot.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/07 - Conclusion",
     "Sem título.base",
     "03 - Advanced Bash Scripting/01 - Introduction",
