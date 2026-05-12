@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "02 - Shell Scripts for Beginners/04 - Shebang/06 - Lab Functions.md",
+                "file": "02 - Shell Scripts for Beginners/04 - Shebang/07 - Tips &amp; Tricks - ShellCheck &amp; IDE.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "06 - Lab Functions"
+              "title": "07 - Tips &amp; Tricks - ShellCheck &amp; IDE"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "tag:#Linux/LFCS-Certification/Storage",
+                "query": "tag:Linux/Shebang/Shell-Scripts-for-Beginners/Funtion/Scripting",
                 "matchingCase": true,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -181,11 +181,12 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "f2a96843f1457f4e",
+  "active": "71e502a7760e2595",
   "lastOpenFiles": [
-    "02 - Shell Scripts for Beginners/04 - Shebang/04 - Lab Exit Codes.md",
-    "02 - Shell Scripts for Beginners/04 - Shebang/06 - Lab Functions.md",
     "02 - Shell Scripts for Beginners/04 - Shebang/05 - Functions.md",
+    "02 - Shell Scripts for Beginners/04 - Shebang/07 - Tips &amp; Tricks - ShellCheck &amp; IDE.md",
+    "02 - Shell Scripts for Beginners/04 - Shebang/06 - Lab Functions.md",
+    "02 - Shell Scripts for Beginners/04 - Shebang/04 - Lab Exit Codes.md",
     "02 - Shell Scripts for Beginners/04 - Shebang/03 - Exit Codes.md",
     "02 - Shell Scripts for Beginners/04 - Shebang/01 - Shebang.md",
     "02 - Shell Scripts for Beginners/04 - Shebang/02 - Lab Shebang.md",
@@ -209,7 +210,6 @@
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/11 - Use Network Block Devices --> NBD.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/10 - Lab - Remote File Systems --> NFS.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/09 - Use Remote Filesystems --->NFS.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/08 - Lab - Filesystem Features and Mount Options.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/07 - Conclusion",
     "Sem título.base",
     "03 - Advanced Bash Scripting/01 - Introduction",
