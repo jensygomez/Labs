@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "02 - Shell Scripts for Beginners/05 - Project - KodeKloud e-commerce application/02 - Demo - KodeKloud e-commerce application.md",
+                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/23 - Lab - Archive, Back Up, Compress, IO Redirection.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "02 - Demo - KodeKloud e-commerce application"
+              "title": "23 - Lab - Archive, Back Up, Compress, IO Redirection"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "tag:#Linux/LFCS-Certification/Storage",
+                "query": "tag:Linux/LFCS-Certification/Essential-Commands/Laboratorio/Dificultad/Intermedio-Medio",
                 "matchingCase": true,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -181,10 +181,12 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "f2a96843f1457f4e",
+  "active": "71e502a7760e2595",
   "lastOpenFiles": [
-    "02 - Shell Scripts for Beginners/05 - Project - KodeKloud e-commerce application/01 - e-commerce application.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/18 - Lab - File Content, Regular Expressions.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/23 - Lab - Archive, Back Up, Compress, IO Redirection.md",
     "02 - Shell Scripts for Beginners/05 - Project - KodeKloud e-commerce application/02 - Demo - KodeKloud e-commerce application.md",
+    "02 - Shell Scripts for Beginners/05 - Project - KodeKloud e-commerce application/01 - e-commerce application.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/07 - Conclusion/01 - Conclusion.md",
     "02 - Shell Scripts for Beginners/04 - Shebang/05 - Functions.md",
     "02 - Shell Scripts for Beginners/05 - Project - KodeKloud e-commerce application",
@@ -194,7 +196,6 @@
     "02 - Shell Scripts for Beginners/04 - Shebang/03 - Exit Codes.md",
     "02 - Shell Scripts for Beginners/04 - Shebang/01 - Shebang.md",
     "02 - Shell Scripts for Beginners/04 - Shebang/02 - Lab Shebang.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/18 - Lab - File Content, Regular Expressions.md",
     "02 - Shell Scripts for Beginners/04 - Shebang",
     "03 - Advanced Bash Scripting/01 - Introduction/02 - Why learn advanced bash scripting?.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/01 - Log in to Local & Remote Consoles.md",
@@ -210,7 +211,6 @@
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/14 - Monitor Storage Performance.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/13 - Lab - Manage LVM.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/12 - Manage and Configure LVM Storage.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/11 - Use Network Block Devices --> NBD.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/07 - Conclusion",
     "Sem título.base",
     "03 - Advanced Bash Scripting/01 - Introduction",
