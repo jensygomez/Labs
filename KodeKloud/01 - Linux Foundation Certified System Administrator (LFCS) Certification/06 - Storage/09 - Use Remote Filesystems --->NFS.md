@@ -15,6 +15,8 @@ tags:
   - "#Linux/LFCS-Certification/Storage/Network-File-System"
   - "#Linux/LFCS-Certification/Storage/Networking"
   - "#Linux/LFCS-Certification/Storage/Server-Client"
+  - "#Linux"
+  - "#Linux/LFCS-Certification"
 ---
 
 

@@ -15,6 +15,8 @@ tags:
   - "#Linux/LFCS-Certification/Storage/Disk-Management"
   - "#Linux/LFCS-Certification/Storage/Logical-Volume-Manager"
   - "#Linux/LFCS-Certification/Storage/FileSystems"
+  - "#Linux"
+  - "#Linux/LFCS-Certification"
 ---
 
 ## LVM Hands-On: Del Disco Físico al Volumen Lógico

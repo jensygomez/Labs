@@ -12,6 +12,8 @@ tags:
   - "#Linux/LFCS-Certification/Storage"
   - "#Linux/LFCS-Certification/Storage/Swap"
   - "#Linux/LFCS-Certification/Storage/Memory"
+  - "#Linux"
+  - "#Linux/LFCS-Certification"
 ---
 
 ## Espacio Swap: Extensión Virtual de Memoria RAM

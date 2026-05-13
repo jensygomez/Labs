@@ -9,12 +9,14 @@ Dificultad:
 Calificación:
 Time: 5 min
 tags:
-  - linux
-  - shell-script
-  - bash
-  - scripting
-  - advanced
-  - portabilidad
+  - Linux
+  - Linux/Advanced-Bash-Scripting
+  - Linux/Advanced-Bash-Scripting/Introduction
+  - Linux/Advanced-Bash-Scripting/Introduction/Shell-Vs-Bash
+  - Linux/Advanced-Bash-Scripting/Introduction/Shell-Vs-Bash/Shell-Script
+  - Linux/Advanced-Bash-Scripting/Introduction/Shell-Vs-Bash/Bash
+  - Linux/Advanced-Bash-Scripting/Introduction/Shell-Vs-Bash/Scripting
+  - Linux/Advanced-Bash-Scripting/Introduction/Shell-Vs-Bash/Portabilidad
 ---
 
 ## Shell Scripting vs Bash Scripting

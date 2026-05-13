@@ -17,6 +17,8 @@ tags:
   - "#Linux/LFCS-Certification/Storage/Partitions"
   - "#Linux/LFCS-Certification/Storage/cfdisk"
   - "#Linux/LFCS-Certification/Storage/mkswap"
+  - "#Linux"
+  - "#Linux/LFCS-Certification"
 ---
 
 

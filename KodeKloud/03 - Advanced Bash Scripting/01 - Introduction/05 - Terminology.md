@@ -1,6 +1,6 @@
 ---
 Curso: Advanced Bash Scripting
-Modulo: Shell Script Introduction
+Modulo: Introduction
 Tema: Terminology
 Typo: Video
 Fecha: 04/05/2026
@@ -9,13 +9,13 @@ Dificultad:
 Calificación:
 Time: 5 min
 tags:
-  - linux
-  - shell-script
-  - bash
-  - scripting
-  - advanced
-  - teminology
-  - posix
+  - Linux/Advanced-Bash-Scripting
+  - Linux/Advanced-Bash-Scripting/Terminology
+  - Linux/Advanced-Bash-Scripting/Terminology/Posix
+  - Linux/Advanced-Bash-Scripting/Terminology/Bash
+  - Linux/Advanced-Bash-Scripting/Terminology/Scripting
+  - Linux
+  - Linux/Advanced-Bash-Scripting/Introduction
 ---
 
 ## Terminology: Conceptos Fundamentales

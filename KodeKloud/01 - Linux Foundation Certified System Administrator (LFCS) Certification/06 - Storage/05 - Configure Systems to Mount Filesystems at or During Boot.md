@@ -15,6 +15,8 @@ tags:
   - "#Linux/LFCS-Certification/Storage/fstab"
   - "#Linux/LFCS-Certification/Storage/mount"
   - "#Linux/LFCS-Certification/Storage/UUID"
+  - "#Linux"
+  - "#Linux/LFCS-Certification"
 ---
 ## Montaje Permanente de Sistemas de Archivos en el Arranque
 

@@ -16,6 +16,8 @@ tags:
   - "#Linux/LFCS-Certification/Storage/mount"
   - "#Linux/LFCS-Certification/Storage/Mount-Options"
   - "#Linux/LFCS-Certification/Storage/Security"
+  - "#Linux"
+  - "#Linux/LFCS-Certification"
 ---
 ## Opciones de Montaje y Configuración Avanzada de Filesystems
 

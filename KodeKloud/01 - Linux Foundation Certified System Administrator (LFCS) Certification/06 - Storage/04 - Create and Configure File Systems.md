@@ -15,6 +15,8 @@ tags:
   - "#Linux/LFCS-Certification/Storage/ext4"
   - "#Linux/LFCS-Certification/Storage/xfs"
   - "#Linux/LFCS-Certification/Storage/mkfs"
+  - "#Linux"
+  - "#Linux/LFCS-Certification"
 ---
 
 ## Creación y Configuración de Sistemas de Archivos

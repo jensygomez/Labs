@@ -16,6 +16,8 @@ tags:
   - "#Linux/LFCS-Certification/Storage/setdacl"
   - "#Linux/LFCS-Certification/Storage/chattr"
   - "#Linux/LFCS-Certification/Storage/File-Atribute"
+  - "#Linux"
+  - "#Linux/LFCS-Certification"
 ---
 
 **Resumen:**

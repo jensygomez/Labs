@@ -1,6 +1,6 @@
 ---
 Curso: Advanced Bash Scripting
-Modulo: Shell Script Introduction
+Modulo: Introduction
 Tema: How to take this course
 Typo: Lectura
 Fecha: 04/05/2026
@@ -9,13 +9,14 @@ Dificultad:
 Calificación:
 Time:
 tags:
-  - linux
-  - shell-script
-  - bash
-  - scripting
-  - advanced
-  - editor-vim
-  - learning
+  - Linux
+  - Linux/Advanced-Bash-Scripting
+  - Linux/Advanced-Bash-Scripting/Introduction/How-To-Take-This-Course
+  - Linux/Advanced-Bash-Scripting/Introduction/How-To-Take-This-Course/Shell-Script
+  - Linux/Advanced-Bash-Scripting/Introduction/How-To-Take-This-Course/Bash
+  - Linux/Advanced-Bash-Scripting/Introduction/How-To-Take-This-Course/Scripting
+  - Linux/Advanced-Bash-Scripting/Introduction/How-To-Take-This-Course/Advanced
+  - Linux/Advanced-Bash-Scripting/Introduction/How-To-Take-This-Course/Editor-VIM
 ---
 
 ## Cómo Aprovechar Este Curso

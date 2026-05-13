@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/23 - Lab - Archive, Back Up, Compress, IO Redirection.md",
+                "file": "03 - Advanced Bash Scripting/02 - Conventions/01 - Overview.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "23 - Lab - Archive, Back Up, Compress, IO Redirection"
+              "title": "01 - Overview"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "tag:Linux/LFCS-Certification/Essential-Commands/Laboratorio/Dificultad/Intermedio-Medio",
+                "query": "tag:Linux/Advanced-Bash-Scripting/How-To-Take-This-Course",
                 "matchingCase": true,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -183,34 +183,35 @@
   },
   "active": "71e502a7760e2595",
   "lastOpenFiles": [
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/18 - Lab - File Content, Regular Expressions.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/23 - Lab - Archive, Back Up, Compress, IO Redirection.md",
-    "02 - Shell Scripts for Beginners/05 - Project - KodeKloud e-commerce application/02 - Demo - KodeKloud e-commerce application.md",
-    "02 - Shell Scripts for Beginners/05 - Project - KodeKloud e-commerce application/01 - e-commerce application.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/07 - Conclusion/01 - Conclusion.md",
-    "02 - Shell Scripts for Beginners/04 - Shebang/05 - Functions.md",
-    "02 - Shell Scripts for Beginners/05 - Project - KodeKloud e-commerce application",
-    "02 - Shell Scripts for Beginners/04 - Shebang/07 - Tips &amp; Tricks - ShellCheck &amp; IDE.md",
-    "02 - Shell Scripts for Beginners/04 - Shebang/06 - Lab Functions.md",
-    "02 - Shell Scripts for Beginners/04 - Shebang/04 - Lab Exit Codes.md",
-    "02 - Shell Scripts for Beginners/04 - Shebang/03 - Exit Codes.md",
-    "02 - Shell Scripts for Beginners/04 - Shebang/01 - Shebang.md",
-    "02 - Shell Scripts for Beginners/04 - Shebang/02 - Lab Shebang.md",
-    "02 - Shell Scripts for Beginners/04 - Shebang",
+    "03 - Advanced Bash Scripting/01 - Introduction/06 - How to take this course.md",
+    "03 - Advanced Bash Scripting/02 - Conventions/01 - Overview.md",
+    "01.md",
+    "03 - Advanced Bash Scripting/02 - Conventions",
+    "03 - Advanced Bash Scripting/01 - Introduction/05 - Terminology.md",
+    "03 - Advanced Bash Scripting/01 - Introduction/04 - Shell scripting vs Bash scripting.md",
+    "03 - Advanced Bash Scripting/01 - Introduction/01 - Course Introduction.md",
     "03 - Advanced Bash Scripting/01 - Introduction/02 - Why learn advanced bash scripting?.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/01 - Log in to Local & Remote Consoles.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/09 - Lab - Manage Processes and Analyze Log Files.md",
-    "Operations - MOC.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/13 - Git Basics.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/12 - Lab - File Permissions, Search for Files.md",
+    "03 - Advanced Bash Scripting/01 - Introduction/03 - Interactive-vs-non-interactive-shell.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/16 - Lab - Advanced Permissions.md",
-    "02 - Shell Scripts for Beginners/03 - Flow Control/08 - Labs - Case Statements.md",
-    "02 - Shell Scripts for Beginners/03 - Flow Control/07 - Case Statements.md",
-    "02 - Shell Scripts for Beginners/02 - Shell Script Introduction/11 - Arithmetic Operations.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/15 - Create, Manage, and Diagnose Advanced Filesystem Permissions.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/14 - Monitor Storage Performance.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/13 - Lab - Manage LVM.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/12 - Manage and Configure LVM Storage.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/11 - Use Network Block Devices --> NBD.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/10 - Lab - Remote File Systems --> NFS.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/09 - Use Remote Filesystems --->NFS.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/08 - Lab - Filesystem Features and Mount Options.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/07 - Filesystem and Mount Options.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/06 - Lab - Create Filesystems and Mount Them at Boot.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/05 - Configure Systems to Mount Filesystems at or During Boot.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/04 - Create and Configure File Systems.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/03 - Lab - Manage Partitions and Swap Space.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/02 - Configure and Manage Swap Space.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/01 - List, Create, Delete, and Modify Physical Storage Partitions.md",
+    "02 - Shell Scripts for Beginners/05 - Project - KodeKloud e-commerce application/03 - Lab - Project.md",
+    "02 - Shell Scripts for Beginners/05 - Project - KodeKloud e-commerce application/02 - Demo - KodeKloud e-commerce application.md",
+    "02 - Shell Scripts for Beginners/05 - Project - KodeKloud e-commerce application",
+    "02 - Shell Scripts for Beginners/04 - Shebang",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/07 - Conclusion",
     "Sem título.base",
     "03 - Advanced Bash Scripting/01 - Introduction",
@@ -219,7 +220,6 @@
     "03 - Advanced Bash Scripting",
     "02 - Shell Scripts for Beginners/03 - Flow Control",
     "02 - Shell Scripts for Beginners/02 - Shell Script Introduction",
-    "02 - Shell Scripts for Beginners",
     "ChatGPT Image 19 de abr. de 2026, 07_59_54.png"
   ]
 }

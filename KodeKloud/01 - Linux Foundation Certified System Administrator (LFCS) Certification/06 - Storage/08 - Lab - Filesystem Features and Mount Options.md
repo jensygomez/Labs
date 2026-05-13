@@ -18,6 +18,8 @@ tags:
   - "#Linux/LFCS-Certification/Storage/mount"
   - "#Linux/LFCS-Certification/Storage/fstab"
   - "#Linux/LFCS-Certification/Storage/Remount"
+  - "#Linux"
+  - "#Linux/LFCS-Certification"
 ---
 
 ## Control Granular de Filesystems mediante Opciones de Montaje

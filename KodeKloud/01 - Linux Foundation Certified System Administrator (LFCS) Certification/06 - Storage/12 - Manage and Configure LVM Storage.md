@@ -13,6 +13,8 @@ tags:
   - "#Linux/LFCS-Certification/Storage"
   - "#Linux/LFCS-Certification/Storage/Disk-Management"
   - "#Linux/LFCS-Certification/Storage/Logical-Volume-Manager"
+  - "#Linux"
+  - "#Linux/LFCS-Certification"
 ---
 
 ## Logical Volume Manager (LVM) - Flexibilidad de Almacenamiento

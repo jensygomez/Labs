@@ -19,6 +19,8 @@ tags:
   - "#Linux/LFCS-Certification/Storage/File-Atribute"
   - "#Linux/LFCS-Certification/Storage/RAID1"
   - "#Linux/LFCS-Certification/Storage/mdadm"
+  - "#Linux"
+  - "#Linux/LFCS-Certification"
 ---
 **Resumen:**
 

@@ -18,6 +18,8 @@ tags:
   - "#Linux/LFCS-Certification/Storage/fstab"
   - "#Linux/LFCS-Certification/Storage/mount"
   - "#Linux/LFCS-Certification/Storage/mkfs"
+  - "#Linux"
+  - "#Linux/LFCS-Certification"
 ---
 
 ## Creación de Filesystems y Configuración de Montaje Automático en Boot

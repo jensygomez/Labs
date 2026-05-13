@@ -14,6 +14,8 @@ tags:
   - "#Linux/LFCS-Certification/Storage/Server-Client"
   - "#Linux/LFCS-Certification/Storage/Network-Block-Device"
   - "#Linux/LFCS-Certification/Storage/Remote-Storage"
+  - "#Linux"
+  - "#Linux/LFCS-Certification"
 ---
 
 ## Network Block Devices (NBD) Overview
