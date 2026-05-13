@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "03 - Advanced Bash Scripting/02 - Conventions/02 - Variables.md",
+                "file": "03 - Advanced Bash Scripting/02 - Conventions/03 - Functions.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "02 - Variables"
+              "title": "03 - Functions"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "tag:#Linux/Advanced-Bash-Scripting/Conventions",
+                "query": "tag:Linux/Advanced-Bash-Scripting/Conventions/Variables/Time/5-min",
                 "matchingCase": true,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -183,6 +183,7 @@
   },
   "active": "f2a96843f1457f4e",
   "lastOpenFiles": [
+    "03 - Advanced Bash Scripting/02 - Conventions/03 - Functions.md",
     "03 - Advanced Bash Scripting/02 - Conventions/02 - Variables.md",
     "03 - Advanced Bash Scripting/02 - Conventions/01 - Overview.md",
     "03 - Advanced Bash Scripting/01 - Introduction/06 - How to take this course.md",
@@ -209,7 +210,6 @@
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/03 - Lab - Manage Partitions and Swap Space.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/02 - Configure and Manage Swap Space.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/01 - List, Create, Delete, and Modify Physical Storage Partitions.md",
-    "02 - Shell Scripts for Beginners/05 - Project - KodeKloud e-commerce application/03 - Lab - Project.md",
     "02 - Shell Scripts for Beginners/05 - Project - KodeKloud e-commerce application",
     "02 - Shell Scripts for Beginners/04 - Shebang",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/07 - Conclusion",
