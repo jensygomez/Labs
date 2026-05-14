@@ -11,8 +11,8 @@
 - [x] [[08 - Lab - Files, Directories, Hard and Soft Links]] | 100 %
 - [x] [[12 - Lab - File Permissions, Search for Files]] | 100 %
 - [x] [[18 - Lab - File Content, Regular Expressions]] | 100 %
-- [ ] [[23 - Lab - Archive, Back Up, Compress, IO Redirection]] | **Subí al 26%**
-- [ ] [[28 - Lab - Git & SSL Certificates]] | 
+- [ ] [[23 - Lab - Archive, Back Up, Compress, IO Redirection]] |  26 % Segundo intento
+- [ ] [[28 - Lab - Git & SSL Certificates]]                                          |  10 % Primer intento
 
 ### 2. Operations Deployment
 - [ ] [[26 - Lab - Manage Containers and VMs]]

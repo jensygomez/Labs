@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/28 - Lab - Git & SSL Certificates.md",
+                "file": "03 - Advanced Bash Scripting/03 - Refresher/01 - Overview.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "28 - Lab - Git & SSL Certificates"
+              "title": "01 - Overview"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "tag:Linux/LFCS-Certification/Essential-Commands/Laboratorio",
+                "query": "tag:Linux/Advanced-Bash-Scripting/Conventions",
                 "matchingCase": true,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -183,23 +183,29 @@
   },
   "active": "7b912db7337f03ac",
   "lastOpenFiles": [
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/00 - MOC LFCS Certification.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/23 - Lab - Archive, Back Up, Compress, IO Redirection.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/28 - Lab - Git & SSL Certificates.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/12 - Lab - File Permissions, Search for Files.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs",
+    "03 - Advanced Bash Scripting/00 - Menu/00 - Menu Advanced Bash.md",
+    "03 - Advanced Bash Scripting/03 - Refresher/01 - Overview.md",
+    "03 - Advanced Bash Scripting/02 - Conventions/05 - Quiz - Conventions.md",
     "03 - Advanced Bash Scripting/02 - Conventions/04 - Expanding.md",
+    "03 - Advanced Bash Scripting/03 - Refresher",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/28 - Lab - Git & SSL Certificates.md",
+    "05 -.md",
     "03 - Advanced Bash Scripting/02 - Conventions/03 - Functions.md",
     "03 - Advanced Bash Scripting/02 - Conventions/02 - Variables.md",
     "03 - Advanced Bash Scripting/02 - Conventions/01 - Overview.md",
     "03 - Advanced Bash Scripting/01 - Introduction/06 - How to take this course.md",
-    "01.md",
-    "03 - Advanced Bash Scripting/02 - Conventions",
     "03 - Advanced Bash Scripting/01 - Introduction/05 - Terminology.md",
     "03 - Advanced Bash Scripting/01 - Introduction/04 - Shell scripting vs Bash scripting.md",
-    "03 - Advanced Bash Scripting/01 - Introduction/01 - Course Introduction.md",
-    "03 - Advanced Bash Scripting/01 - Introduction/02 - Why learn advanced bash scripting?.md",
     "03 - Advanced Bash Scripting/01 - Introduction/03 - Interactive-vs-non-interactive-shell.md",
+    "03 - Advanced Bash Scripting/01 - Introduction/02 - Why learn advanced bash scripting?.md",
+    "03 - Advanced Bash Scripting/01 - Introduction/01 - Course Introduction.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/23 - Lab - Archive, Back Up, Compress, IO Redirection.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/00 - MOC LFCS Certification.md",
+    "03 - Advanced Bash Scripting/00 - Menu",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/12 - Lab - File Permissions, Search for Files.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs",
+    "01.md",
+    "03 - Advanced Bash Scripting/02 - Conventions",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/16 - Lab - Advanced Permissions.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/15 - Create, Manage, and Diagnose Advanced Filesystem Permissions.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/14 - Monitor Storage Performance.md",
@@ -207,10 +213,6 @@
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/12 - Manage and Configure LVM Storage.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/11 - Use Network Block Devices --> NBD.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/10 - Lab - Remote File Systems --> NFS.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/09 - Use Remote Filesystems --->NFS.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/08 - Lab - Filesystem Features and Mount Options.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/07 - Filesystem and Mount Options.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/06 - Lab - Create Filesystems and Mount Them at Boot.md",
     "02 - Shell Scripts for Beginners/05 - Project - KodeKloud e-commerce application",
     "02 - Shell Scripts for Beginners/04 - Shebang",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/07 - Conclusion",
@@ -218,8 +220,6 @@
     "03 - Advanced Bash Scripting/01 - Introduction",
     "Advanced Bash Scripting/01 - Introduction.canvas",
     "0",
-    "03 - Advanced Bash Scripting",
-    "02 - Shell Scripts for Beginners/03 - Flow Control",
     "ChatGPT Image 19 de abr. de 2026, 07_59_54.png"
   ]
 }
