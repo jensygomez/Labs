@@ -2,22 +2,32 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Essential Commands
 Tema: Lab - Archive, Back Up, Compress, IO Redirection
-Fecha: 2026-05-12
+Fecha de Inicio: 2026-05-12
+Dificultad: Basico-Medio
+Tareas Totales: "15"
 tags:
   - Linux
   - Linux/LFCS-Certification
   - Linux/LFCS-Certification/Essential-Commands
   - Linux/LFCS-Certification/Essential-Commands/Laboratorio
-  - Linux/LFCS-Certification/Essential-Commands/Laboratorio/Repetido/1
-  - Linux/LFCS-Certification/Essential-Commands/Laboratorio/Tareas/15
-  - Linux/LFCS-Certification/Essential-Commands/Laboratorio/Time/45-min
-  - Linux/LFCS-Certification/Essential-Commands/Laboratorio/Calificacion/16-porciento
-  - Linux/LFCS-Certification/Essential-Commands/Laboratorio/Dificultad/Basico-Medio
-  - Linux/LFCS-Certification/Essential-Commands/Laboratorio/Compress
-  - Linux/LFCS-Certification/Essential-Commands/Laboratorioio-redirection
-  - Linux/LFCS-Certification/Essential-Commands/Laboratorio/backup
+---
+# Lab 23 - Archive, Back Up, Compress, IO Redirection
+
+## 📊 Bitácora de Intentos
+| Fecha      | Tiempo | Éxito | Notas Rápidas                     |
+| :--------- | :----- | :---- | :-------------------------------- |
+| 2026-05-12 | 45 min | 16%   | Problemas con redirección stderr. |
+| 2026-05-13 | --     | --    | *Esperando resultado de hoy...*   |
+|            |        |       |                                   |
+
 ---
 
+## 🛠️ Comandos Clave (Tu Manual de Consulta)
+*(Aquí dejas los comandos que ya tienes, son tu referencia única)*
+```bash
+# Crear archivo tar comprimido con gzip
+tar -cvzf logs.tar.gz /var/log/
+# ... todos tus comandos clave aquí ...
 
 ### Resumen
 
