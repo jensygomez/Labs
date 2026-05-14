@@ -11,8 +11,6 @@ tags:
   - Linux/LFCS-Certification/Essential-Commands
   - Linux/LFCS-Certification/Essential-Commands/Laboratorio
 ---
-# Lab 23 - Archive, Back Up, Compress, IO Redirection
-
 ## 📊 Bitácora de Intentos
 | Fecha      | Tiempo | Éxito | Notas Rápidas                     |
 | :--------- | :----- | :---- | :-------------------------------- |

@@ -7,10 +7,12 @@
 ## 🛠️ Roadmap de Laboratorios (Repaso Final)
 
 ### 1. Essential Commands
+
+- [x] [[08 - Lab - Files, Directories, Hard and Soft Links]] | 100 %
+- [x] [[12 - Lab - File Permissions, Search for Files]] | 100 %
+- [x] [[18 - Lab - File Content, Regular Expressions]] | 100 %
 - [ ] [[23 - Lab - Archive, Back Up, Compress, IO Redirection]] | **Subí al 26%**
-- [ ] [[18 - Lab - File Content, Regular Expressions]] | 🟡 %60 (Reforzar Sed/Grep)
-- [ ] [[12 - Lab - File Permissions, Search for Files]] | 🔴 (Pendiente Repetir)
-- [ ] [[08 - Lab - Files, Directories, Hard and Soft Links]] | 🔴 (Pendiente Repetir)
+- [ ] [[28 - Lab - Git & SSL Certificates]] | 
 
 ### 2. Operations Deployment
 - [ ] [[26 - Lab - Manage Containers and VMs]]
