@@ -4,39 +4,24 @@
     "type": "split",
     "children": [
       {
-        "id": "4eeaa1933abbb213",
+        "id": "4b01788c982de9de",
         "type": "tabs",
         "children": [
           {
-            "id": "f2a96843f1457f4e",
+            "id": "7b912db7337f03ac",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/23 - Lab - Archive, Back Up, Compress, IO Redirection.md",
+                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/00 - MOC LFCS Certification.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "23 - Lab - Archive, Back Up, Compress, IO Redirection"
-            }
-          },
-          {
-            "id": "8018b02a6c7500b0",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/23 - Lab - Archive, Back Up, Compress, IO Redirection.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "23 - Lab - Archive, Back Up, Compress, IO Redirection"
+              "title": "00 - MOC LFCS Certification"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -93,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 551.5
+    "width": 200
   },
   "right": {
     "id": "268fa62162b4574b",
@@ -196,12 +181,12 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "8018b02a6c7500b0",
+  "active": "7b912db7337f03ac",
   "lastOpenFiles": [
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/23 - Lab - Archive, Back Up, Compress, IO Redirection.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/00 - MOC LFCS Certification.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/12 - Lab - File Permissions, Search for Files.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/23 - Lab - Archive, Back Up, Compress, IO Redirection.md",
     "03 - Advanced Bash Scripting/02 - Conventions/04 - Expanding.md",
     "03 - Advanced Bash Scripting/02 - Conventions/03 - Functions.md",
     "03 - Advanced Bash Scripting/02 - Conventions/02 - Variables.md",

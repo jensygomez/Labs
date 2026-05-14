@@ -17,7 +17,7 @@ tags:
 | Fecha      | Tiempo | Éxito | Notas Rápidas                     |
 | :--------- | :----- | :---- | :-------------------------------- |
 | 2026-05-12 | 45 min | 16%   | Problemas con redirección stderr. |
-| 2026-05-13 | --     | --    | *Esperando resultado de hoy...*   |
+| 2026-05-14 | 45 min | 26%   | Seguieremos practicando           |
 |            |        |       |                                   |
 
 ---

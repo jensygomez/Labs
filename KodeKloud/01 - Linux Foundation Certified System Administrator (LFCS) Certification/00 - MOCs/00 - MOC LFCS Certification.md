@@ -4,22 +4,22 @@
 
 ## 🚀 Fase de Repaso: Laboratorios
 *Usa estos enlaces para saltar rápido a tus prácticas:*
+## 🛠️ Roadmap de Laboratorios (Repaso Final)
 
 ### 1. Essential Commands
-- [[23 - Lab - Archive, Back Up, Compress, IO Redirection]]
-- [[18 - Lab - File Content, Regular Expressions]]
-- [[12 - Lab - File Permissions, Search for Files]]
+- [ ] [[23 - Lab - Archive, Back Up, Compress, IO Redirection]] | **Subí al 26%**
+- [ ] [[18 - Lab - File Content, Regular Expressions]] | 🟡 %60 (Reforzar Sed/Grep)
+- [ ] [[12 - Lab - File Permissions, Search for Files]] | 🔴 (Pendiente Repetir)
+- [ ] [[08 - Lab - Files, Directories, Hard and Soft Links]] | 🔴 (Pendiente Repetir)
 
 ### 2. Operations Deployment
-- [[26 - Lab - Manage Containers and VMs]]
-- [[21 Lab - Kernel Runtime Parameters and SELinux AppArmor]]
-- [[17 - Lab - Verify Integrity and Availability of Resources and Key Processes]]
+- [ ] [[26 - Lab - Manage Containers and VMs]]
+- [ ] [[21 Lab - Kernel Runtime Parameters and SELinux AppArmor]]
+- [ ] [[17 - Lab - Verify Integrity and Availability of Resources and Key Processes]]
 
-### 3. Storage (¡Crítico!)
-- [[13 - Lab - Manage LVM]]
-- [[10 - Lab - Remote File Systems --> NFS]]
-- [[06 - Lab - Create Filesystems and Mount Them at Boot]]
-
+### 3. Storage (Prioridad Alta)
+- [ ] [[13 - Lab - Manage LVM]] 
+- [ ] [[10 - Lab - Remote File Systems --> NFS]]
 ---
 ## 📝 Notas de Examen (Mock Exams)
 - [[LFCS Mock Exam 1]]
