@@ -23,6 +23,7 @@
 ### 3. Refresher
 
 - [ ] [[03 - Advanced Bash Scripting/03 - Refresher/01 - Overview|01 - Overview]]
+- [ ] [[01 - Scriptflow]]
 
 
 

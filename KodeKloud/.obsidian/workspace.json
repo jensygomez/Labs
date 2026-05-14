@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "03 - Advanced Bash Scripting/03 - Refresher/01 - Overview.md",
+                "file": "03 - Advanced Bash Scripting/03 - Refresher/01 - Scriptflow.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "01 - Overview"
+              "title": "01 - Scriptflow"
             }
           }
         ]
@@ -184,6 +184,7 @@
   "active": "7b912db7337f03ac",
   "lastOpenFiles": [
     "03 - Advanced Bash Scripting/00 - Menu/00 - Menu Advanced Bash.md",
+    "03 - Advanced Bash Scripting/03 - Refresher/01 - Scriptflow.md",
     "03 - Advanced Bash Scripting/03 - Refresher/01 - Overview.md",
     "03 - Advanced Bash Scripting/02 - Conventions/05 - Quiz - Conventions.md",
     "03 - Advanced Bash Scripting/02 - Conventions/04 - Expanding.md",
@@ -212,7 +213,6 @@
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/13 - Lab - Manage LVM.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/12 - Manage and Configure LVM Storage.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/11 - Use Network Block Devices --> NBD.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/10 - Lab - Remote File Systems --> NFS.md",
     "02 - Shell Scripts for Beginners/05 - Project - KodeKloud e-commerce application",
     "02 - Shell Scripts for Beginners/04 - Shebang",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/07 - Conclusion",
