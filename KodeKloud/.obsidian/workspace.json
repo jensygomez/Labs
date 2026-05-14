@@ -78,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 431.5
+    "width": 389.5
   },
   "right": {
     "id": "268fa62162b4574b",
@@ -181,7 +181,7 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "71e502a7760e2595",
+  "active": "7b912db7337f03ac",
   "lastOpenFiles": [
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/00 - MOC LFCS Certification.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/23 - Lab - Archive, Back Up, Compress, IO Redirection.md",
