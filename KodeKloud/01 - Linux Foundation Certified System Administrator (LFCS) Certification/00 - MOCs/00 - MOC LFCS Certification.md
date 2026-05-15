@@ -15,9 +15,12 @@
 - [ ] [[28 - Lab - Git & SSL Certificates]]                                          |  10 %      -->  
 
 ### 2. Operations Deployment
-- [ ] [[26 - Lab - Manage Containers and VMs]]
+
+- [ ] [[06 - Lab - Scripting, Manage Startup Process and Services]]
 - [ ] [[21 Lab - Kernel Runtime Parameters and SELinux AppArmor]]
 - [ ] [[17 - Lab - Verify Integrity and Availability of Resources and Key Processes]]
+- [ ] [[26 - Lab - Manage Containers and VMs]]
+- [ ] 
 
 ### 3. Storage (Prioridad Alta)
 - [ ] [[13 - Lab - Manage LVM]] 

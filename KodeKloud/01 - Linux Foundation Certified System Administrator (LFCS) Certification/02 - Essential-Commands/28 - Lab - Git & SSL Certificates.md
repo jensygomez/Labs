@@ -13,10 +13,10 @@ tags:
   - Linux/LFCS-Certification/Essential-Commands/Lab-Git-SSL-Certificates/Laboratorio
 ---
 ## 📊 Bitácora de Intentos
-| Fecha      | Tiempo | Éxito | Notas Rápidas                                                                     |
-| :--------- | :----- | :---- | :-------------------------------------------------------------------------------- |
-| 2026-05-14 | 42 min | 10 %  | Problemas iniciales con conceptos de merge y errores esperados en branch deletion |
-|            |        |       |                                                                                   |
+| Fecha      | Tiempo | Éxito | Notas Rápidas                               |
+| :--------- | :----- | :---- | :------------------------------------------ |
+| 2026-05-14 | 42 min | 10 %  | Problemas iniciales con conceptos de merge. |
+|            |        |       |                                             |
 
 ---
 
