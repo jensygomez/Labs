@@ -3,25 +3,22 @@ Curso: Prep Course - LFCS Certification
 Modulo: Essential Commands
 Tema: Lab - File Content, Regular Expressions
 Fecha: 2026-05-11
+Dificultad: Intermedio-Medio
+Tareas Totales: "17"
 tags:
   - Linux
   - Linux/LFCS-Certification
   - Linux/LFCS-Certification/Essential-Commands
   - Linux/LFCS-Certification/Essential-Commands/Laboratorio
-  - Linux/LFCS-Certification/Essential-Commands/Laboratorio/Repetido/1
-  - Linux/LFCS-Certification/Essential-Commands/Laboratorio/Tareas/17
-  - Linux/LFCS-Certification/Essential-Commands/Laboratorio/Time/30min
-  - Linux/LFCS-Certification/Essential-Commands/Laboratorio/Calificacion/77-porciento
-  - Linux/LFCS-Certification/Essential-Commands/file-content
-  - Linux/LFCS-Certification/Essential-CommandsRegular-Expressions
-  - Linux/LFCS-Certification/Essential-Commands/grep
-  - Linux/LFCS-Certification/Essential-Commands/sed
-  - Linux/LFCS-Certification/Essential-Commands/awk
-  - Linux/LFCS-Certification/Essential-Commands/Text-Maniipulation
-  - Linux/LFCS-Certification/Essential-Commands/Diff
-  - Linux/LFCS-Certification/Essential-Commands/Laboratorio/Dificultad/Intermedio-Medio
 ---
+---
+## 📊 Bitácora de Intentos
+| Fecha          | Tiempo | Éxito | Notas Rápidas |
+| :------------- | :----- | :---- | :------------ |
+| 11 - 05 - 2026 | 30 min | 77 %  |               |
+| 14 - 05 - 2026 | 35 min | 82 %  |               |
 
+---
 
 
 ## Resumen

@@ -12,11 +12,11 @@ tags:
   - Linux/LFCS-Certification/Essential-Commands/Laboratorio
 ---
 ## 📊 Bitácora de Intentos
-| Fecha      | Tiempo | Éxito | Notas Rápidas                     |
-| :--------- | :----- | :---- | :-------------------------------- |
-| 2026-05-12 | 45 min | 16%   | Problemas con redirección stderr. |
-| 2026-05-14 | 45 min | 26%   | Seguieremos practicando           |
-|            |        |       |                                   |
+| Fecha          | Tiempo | Éxito | Notas Rápidas                     |
+| :------------- | :----- | :---- | :-------------------------------- |
+| 12 - 05 - 2026 | 45 min | 16%   | Problemas con redirección stderr. |
+| 14 - 05 - 2026 | 45 min | 26%   | Seguieremos practicando           |
+| 15 - 05 - 2026 | 35 min | 60%   | Evolución clara y constante.      |
 
 ---
 
