@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "03 - Advanced Bash Scripting/03 - Refresher/05 - Command Line Arguments.md",
+                "file": "03 - Advanced Bash Scripting/03 - Refresher/06 - Lab - CLI.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "05 - Command Line Arguments"
+              "title": "06 - Lab - CLI"
             }
           }
         ]
@@ -184,9 +184,10 @@
   "active": "7b912db7337f03ac",
   "lastOpenFiles": [
     "03 - Advanced Bash Scripting/00 - Menu/00 - Menu Advanced Bash.md",
+    "03 - Advanced Bash Scripting/03 - Refresher/06 - Lab - CLI.md",
+    "03 - Advanced Bash Scripting/03 - Refresher/04 - Lab - Functions.md",
     "03 - Advanced Bash Scripting/03 - Refresher/05 - Command Line Arguments.md",
     "03 - Advanced Bash Scripting/03 - Refresher/03 - Functions.md",
-    "03 - Advanced Bash Scripting/03 - Refresher/04 - Lab - Functions.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/28 - Lab - Git & SSL Certificates.md",
     "03 - Advanced Bash Scripting/03 - Refresher/02 - Scriptflow.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/00 - MOC LFCS Certification.md",
@@ -212,7 +213,6 @@
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs",
     "01.md",
     "03 - Advanced Bash Scripting/02 - Conventions",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/16 - Lab - Advanced Permissions.md",
     "02 - Shell Scripts for Beginners/05 - Project - KodeKloud e-commerce application",
     "02 - Shell Scripts for Beginners/04 - Shebang",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/07 - Conclusion",
