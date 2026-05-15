@@ -8,11 +8,11 @@
 
 ### 1. Essential Commands
 
-- [ ] [[08 - Lab - Files, Directories, Hard and Soft Links]]            | 100 %
+- [ ] [[08 - Lab - Files, Directories, Hard and Soft Links]]            | 100 %    -->
 - [ ] [[12 - Lab - File Permissions, Search for Files]]                     | 100 %
 - [ ] [[18 - Lab - File Content, Regular Expressions]]                   |  82 %      --> 15 Mayo  2026
-- [ ] [[23 - Lab - Archive, Back Up, Compress, IO Redirection]] |  26 % Segundo intento
-- [ ] [[28 - Lab - Git & SSL Certificates]]                                          |  10 % Primer intento
+- [ ] [[23 - Lab - Archive, Back Up, Compress, IO Redirection]] |  60 %      -->  15 Mayo 2026
+- [ ] [[28 - Lab - Git & SSL Certificates]]                                          |  10 %      -->  
 
 ### 2. Operations Deployment
 - [ ] [[26 - Lab - Manage Containers and VMs]]
