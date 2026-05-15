@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/00 - MOC LFCS Certification.md",
+                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/06 - Lab - Scripting, Manage Startup Process and Services.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "00 - MOC LFCS Certification"
+              "title": "06 - Lab - Scripting, Manage Startup Process and Services"
             }
           }
         ]
@@ -183,8 +183,8 @@
   },
   "active": "7b912db7337f03ac",
   "lastOpenFiles": [
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/06 - Lab - Scripting, Manage Startup Process and Services.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/00 - MOC LFCS Certification.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/06 - Lab - Scripting, Manage Startup Process and Services.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/07 - Diagnose and Manage Processes.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/28 - Lab - Git & SSL Certificates.md",
     "03 - Advanced Bash Scripting/03 - Refresher/06 - Lab - CLI.md",
