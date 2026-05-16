@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/17 - Lab - Verify Integrity and Availability.md",
+                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/21 - Lab - Kernel Runtime Parameters and SELinux.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "17 - Lab - Verify Integrity and Availability"
+              "title": "21 - Lab - Kernel Runtime Parameters and SELinux"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "tag:Linux/LFCS-Certification/Operations-Deployment/Lab-Manage-Software-Repositories",
+                "query": "tag:Linux/LFCS-Certification/Operations-Deployment/Lab-Verify-Integrity-and-Availability",
                 "matchingCase": true,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -183,8 +183,12 @@
   },
   "active": "7b912db7337f03ac",
   "lastOpenFiles": [
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/00 - MOC LFCS Certification.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/18 - Change Kernel Runtime Parameters, Persistent and Non-Persistent.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/17 - Lab - Verify Integrity and Availability.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/19 - List and Identify SELinux File and Process Contexts.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/20 - Create and Enforce MAC Using SELinux.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/21 - Lab - Kernel Runtime Parameters and SELinux.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/00 - MOC LFCS Certification.md",
     "17 - Lab - Verify Integrity and Availability of Resources.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/15 - Lab Manage Software, Repositories.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/17 - Lab - Verify Integrity and Availability of Resources.md",
@@ -205,10 +209,6 @@
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/28 - Lab - Git & SSL Certificates.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/07 - Diagnose and Manage Processes.md",
     "03 - Advanced Bash Scripting/03 - Refresher/06 - Lab - CLI.md",
-    "03 - Advanced Bash Scripting/00 - Menu/00 - Menu Advanced Bash.md",
-    "03 - Advanced Bash Scripting/03 - Refresher/04 - Lab - Functions.md",
-    "03 - Advanced Bash Scripting/03 - Refresher/05 - Command Line Arguments.md",
-    "03 - Advanced Bash Scripting/03 - Refresher/03 - Functions.md",
     "03 - Advanced Bash Scripting/03 - Refresher",
     "03 - Advanced Bash Scripting/00 - Menu",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs",
