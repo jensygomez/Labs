@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/17 - Lab - Verify Integrity and Availability of Resources.md",
+                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/17 - Lab - Verify Integrity and Availability.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "17 - Lab - Verify Integrity and Availability of Resources"
+              "title": "17 - Lab - Verify Integrity and Availability"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "tag:Linux/LFCS-Certification/Essential-Commands/Lab-Schedule-Tasks/Laboratorio",
+                "query": "tag:Linux/LFCS-Certification/Operations-Deployment/Lab-Manage-Software-Repositories",
                 "matchingCase": true,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -184,8 +184,10 @@
   "active": "7b912db7337f03ac",
   "lastOpenFiles": [
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/00 - MOC LFCS Certification.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/17 - Lab - Verify Integrity and Availability of Resources.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/17 - Lab - Verify Integrity and Availability.md",
+    "17 - Lab - Verify Integrity and Availability of Resources.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/15 - Lab Manage Software, Repositories.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/17 - Lab - Verify Integrity and Availability of Resources.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/14 - Install Software by Compiling Source Code.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/11 - Lab - Schedule Tasks.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/09 - Lab - Manage Processes and Analyze Log Files.md",
@@ -207,7 +209,6 @@
     "03 - Advanced Bash Scripting/03 - Refresher/04 - Lab - Functions.md",
     "03 - Advanced Bash Scripting/03 - Refresher/05 - Command Line Arguments.md",
     "03 - Advanced Bash Scripting/03 - Refresher/03 - Functions.md",
-    "03 - Advanced Bash Scripting/03 - Refresher/02 - Scriptflow.md",
     "03 - Advanced Bash Scripting/03 - Refresher",
     "03 - Advanced Bash Scripting/00 - Menu",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs",
