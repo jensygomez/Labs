@@ -1,98 +1,59 @@
+---
+Curso: Prep Course - LFCS Certification
+Modulo: Operations Deployment
+Tema: Lab - Schedule Tasks
+Fecha de Inicio: 2026-04-27
+Dificultad: Intermedio-Baja
+Tareas Totales: "12"
+tags:
+  - Linux
+  - Linux/LFCS-Certification
+  - Linux/LFCS-Certification/Essential-Commands
+  - Linux/LFCS-Certification/Essential-Commands/Lab-Schedule-Tasks
+  - Linux/LFCS-Certification/Essential-Commands/Lab-Schedule-Tasks/Laboratorio
+---
+## 📊 Bitácora de Intentos
+| Fecha          | Tiempo | Éxito | Notas Rápidas |
+| :------------- | :----- | :---- | :------------ |
+| 16 - 05 - 2026 | 25 min |  0 %  |               |
+|                |        |       |               |
 
-#Linux/LFCS-Certification/Operations-Deployment/Laboratorio 
+  ### 📝 Resumen
 
-**Curso:** Prep Course - Linux Foundation Certified System Administrator (LFCS) Certification **Módulo:** Operations Deployment **Laboratorio:** Schedule Tasks **Duración:** 20 minutos **Resultado:** Bajo - Necesita refuerzo **Fecha:** 27 Abril 2026
+Este laboratorio se enfoca en la programación de tareas en Linux, una habilidad esencial para automatizar operaciones repetitivas en servidores. Cubre tres mecanismos principales: **crontab** para tareas recurrentes con precisión de minutos, **at** para ejecuciones únicas en fechas/horas específicas, y **anacron** para trabajos que se ejecutan independientemente del estado del sistema. A través de 12 ejercicios, se practica la sintaxis de cron (minuto, hora, día del mes, mes, día de la semana), creación de jobs para diferentes usuarios (root, bob, alex), y gestión de tareas programadas. Casos de uso incluyen reinicio automático de servicios, creación de archivos de prueba en horarios específicos, y limpieza de bases de datos con intervalos definidos.
 
-## Resumen
+El laboratorio integra conceptos de seguridad (ejecución con sudo), auditoría (verificación de logs en /var/log/cron), y troubleshooting de tareas fallidas. Dominar estas herramientas es crítico para un sysadmin Linux: permite automatizar backups, rotación de logs, actualizaciones de sistemas, y monitoreo sin intervención manual. La diferencia entre crontab (requiere que el sistema esté activo) y anacron (tolera sistemas apagados) es fundamental para entornos de producción heterogéneos.
 
-Este laboratorio cubre los tres mecanismos principales de programación de tareas en Linux: **cron** (tareas repetitivas), **anacron** (tareas para sistemas que no están siempre encendidos) y **at** (tareas puntuales). Son conceptos fundamentales para cualquier sysadmin que necesita automatizar procesos, gestionar backups y mantener sistemas sin intervención manual. Las preguntas prácticas exigían tanto comprensión teórica como capacidad de ejecutar comandos correctamente.
+### 💻 Ejemplos de Comandos
 
-El desempeño bajo refleja que aún no domino completamente la sintaxis de cron y los comandos específicos de anacron y at. Estos son pilares de la automatización en Linux y necesito dedicar más tiempo a la práctica hands-on en mi VM Rocky Linux 9.7. Especialmente las preguntas 4, 5, 6 y 7 revelan gaps en el conocimiento de la utilidad `at` y la configuración de crontab.
-
-## Respuestas Correctas
-
-|Q|Pregunta|Respuesta Correcta|
-|---|---|---|
-|1|¿Cuándo corre: `0 3 15 * * /usr/bin/touch test_passed`?|15 de cada mes a las 3 AM|
-|2|¿Ver crontab del root estando logueado como alex?|`sudo crontab -u root -l`|
-|3|¿Qué archivo analizar para verificar anacron?|`/var/log/anacron`|
-
-## Respuestas Que Necesito Dominar
-
-### Q4: Force anacron para rerun todos los jobs
+bash
 
 ```bash
+# Ver sintaxis cron: minuto hora día_mes mes día_semana comando
+# Ejemplo: ejecutar comando cada día a las 21:30
+crontab -e
+# 30 21 * * * /usr/bin/touch test_passed
+
+# Editar crontab del usuario root como otro usuario
+sudo crontab -u root -e
+
+# Ver crontab del usuario actual
+crontab -l
+
+# Programar comando único con at (15:30 del 20 de agosto de 2054)
+at 15:30 20.08.2054
+# /usr/bin/touch atscheduler
+
+# Ver trabajos at programados
+atq
+
+# Remover todos los jobs de at del usuario bob
+atrm $(atq | grep bob | awk '{print $1}')
+
+# Agregar job anacron (cada 10 días, delay 5 min, id: db_cleanup)
+# Se edita /etc/anacrontab o /etc/anacron.d/
+10 5 db_cleanup /usr/bin/touch /root/anacron_created_this
+
+# Forzar ejecución de todos los jobs anacron
 anacron -f
 ```
-
-La opción `-f` fuerza la ejecución inmediata, ignorando los tiempos de ejecución anterior.
-
-### Q5: Ver scheduled jobs de at utility
-
-```bash
-atq  # O también: at -l
-```
-
-Para guardar en `/home/bob/at_jobs.txt`: `atq > /home/bob/at_jobs.txt`
-
-### Q6: Remover todos los at jobs del usuario bob
-
-```bash
-atrm $(atq | grep -E '^[0-9]+' | awk '{print $1}')
-```
-
-O más simple: `for job in $(atq | awk '{print $1}'); do atrm $job; done`
-
-### Q7: Agregar cron a root para correr diariamente a 21:30
-
-```bash
-sudo crontab -e
-# Agregar esta línea:
-30 21 * * * /usr/bin/touch test_passed
-```
-
-### Q8: Crear anacron job cada 10 días con 5 min delay
-
-Editar `/etc/anacrontab` como root:
-
-```
-10  5   db_cleanup   /usr/bin/touch /root/anacron_created_this
-```
-
-### Q9: Usar at para ejecutar comando el 20 agosto 2054 a las 15:30
-
-```bash
-sudo at 15:30 aug 20 2054
-# Luego ingresar el comando en el prompt
-/usr/bin/touch atscheduler
-# Presionar Ctrl+D para terminar
-```
-
-### Q10: Cron para correr a las 00:00 del 1er día de cada mes
-
-```bash
-0 0 1 * * /usr/bin/touch monthly
-```
-
-### Q11: Cron para correr a las 11:00 AM cada domingo
-
-```bash
-0 11 * * 0 /usr/bin/touch weekly
-```
-
-### Q12: Cron para bob - restart nginx domingos a 6am y 11pm
-
-```bash
-# Como root:
-sudo crontab -u bob -e
-# Agregar:
-0 6 * * 0 /usr/bin/systemctl restart nginx
-0 23 * * 0 /usr/bin/systemctl restart nginx
-```
-
-## Próximos Pasos
-
-1. **Practicar en VM:** Ejecutar cada comando en Rocky Linux 9.7 hasta interiorizarlos
-2. **Memorizar sintaxis cron:** `min hour day month day-of-week command`
-3. **Entender diferencias:** cron vs anacron vs at
-4. **Revisar logs:** Verificar `/var/log/cron` y `/var/log/anacron`

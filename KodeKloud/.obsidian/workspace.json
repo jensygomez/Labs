@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/09 - Lab - Manage Processes and Analyze Log Files.md",
+                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/11 - Lab - Schedule Tasks.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "09 - Lab - Manage Processes and Analyze Log Files"
+              "title": "11 - Lab - Schedule Tasks"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "tag:Linux/LFCS-Certification/Essential-Commands/Lab-Manage-Processes-and-Analyze-Log-Files",
+                "query": "tag:Linux/LFCS-Certification/Essential-Commands/Lab-Schedule-Tasks",
                 "matchingCase": true,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -184,7 +184,18 @@
   "active": "7b912db7337f03ac",
   "lastOpenFiles": [
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/00 - MOC LFCS Certification.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/11 - Lab - Schedule Tasks.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/09 - Lab - Manage Processes and Analyze Log Files.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/08 - Lab - Files, Directories, Hard and Soft Links.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/04 - Lab - Logging in and System Documentation.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/10 - SUID, SGID, and Sticky Bit.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/10 - Compression and Archive.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/09 - Grep and Regex.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/08 - File Content.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/07 - Search Files.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/06 - Special Permissions.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/04 - Links (Hard and Soft).md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/05 - File Permissions.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/06 - Lab - Scripting, Manage Startup Process and Services.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/28 - Lab - Git & SSL Certificates.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/17 - Lab - Verify Integrity and Availability of Resources.md",
@@ -195,20 +206,9 @@
     "03 - Advanced Bash Scripting/03 - Refresher/05 - Command Line Arguments.md",
     "03 - Advanced Bash Scripting/03 - Refresher/03 - Functions.md",
     "03 - Advanced Bash Scripting/03 - Refresher/02 - Scriptflow.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/08 - Lab - Files, Directories, Hard and Soft Links.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/23 - Lab - Archive, Back Up, Compress, IO Redirection.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/18 - Lab - File Content, Regular Expressions.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/12 - Lab - File Permissions, Search for Files.md",
-    "03 - Advanced Bash Scripting/03 - Refresher/01 - Overview.md",
-    "03 - Advanced Bash Scripting/02 - Conventions/05 - Quiz - Conventions.md",
-    "03 - Advanced Bash Scripting/02 - Conventions/04 - Expanding.md",
     "03 - Advanced Bash Scripting/03 - Refresher",
-    "05 -.md",
-    "03 - Advanced Bash Scripting/02 - Conventions/03 - Functions.md",
-    "03 - Advanced Bash Scripting/02 - Conventions/02 - Variables.md",
-    "03 - Advanced Bash Scripting/02 - Conventions/01 - Overview.md",
-    "03 - Advanced Bash Scripting/01 - Introduction/06 - How to take this course.md",
-    "03 - Advanced Bash Scripting/01 - Introduction/05 - Terminology.md",
     "03 - Advanced Bash Scripting/00 - Menu",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs",
     "03 - Advanced Bash Scripting/02 - Conventions",
