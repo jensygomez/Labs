@@ -8,17 +8,17 @@
 
 ### 1. Essential Commands
 
-- [ ] [[08 - Lab - Files, Directories, Hard and Soft Links]]            | 100 %    -->
-- [ ] [[12 - Lab - File Permissions, Search for Files]]                     | 100 %
-- [ ] [[18 - Lab - File Content, Regular Expressions]]                   |  82 %      --> 15 Mayo  2026
-- [ ] [[23 - Lab - Archive, Back Up, Compress, IO Redirection]] |  60 %      -->  15 Mayo 2026
-- [ ] [[28 - Lab - Git & SSL Certificates]]                                          |  10 %      -->  
+- [ ] [[08 - Lab - Files, Directories, Hard and Soft Links]]                          100 %  
+- [ ] [[12 - Lab - File Permissions, Search for Files]]                                   100 %
+- [ ] [[18 - Lab - File Content, Regular Expressions]]                                    82 %    --> 15 Mayo  2026
+- [ ] [[23 - Lab - Archive, Back Up, Compress, IO Redirection]]                   60 %    -->  15 Mayo 2026
+- [ ] [[28 - Lab - Git & SSL Certificates]]                                                           10 %    -->  14 Mayo 2026
 
 ### 2. Operations Deployment
 
-- [ ] [[06 - Lab - Scripting, Manage Startup Process and Services]]
+- [ ] [[06 - Lab - Scripting, Manage Startup Process and Services]]          35 %     --> 15 Mayo  2026
 - [ ] [[21 Lab - Kernel Runtime Parameters and SELinux AppArmor]]
-- [ ] [[17 - Lab - Verify Integrity and Availability of Resources and Key Processes]]
+- [ ] [[17 - Lab - Verify Integrity and Availability of Resources]]
 - [ ] [[26 - Lab - Manage Containers and VMs]]
 - [ ] 
 
