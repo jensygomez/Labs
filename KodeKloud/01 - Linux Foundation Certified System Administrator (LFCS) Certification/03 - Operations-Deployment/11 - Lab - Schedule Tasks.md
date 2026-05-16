@@ -8,9 +8,9 @@ Tareas Totales: "12"
 tags:
   - Linux
   - Linux/LFCS-Certification
-  - Linux/LFCS-Certification/Essential-Commands
-  - Linux/LFCS-Certification/Essential-Commands/Lab-Schedule-Tasks
-  - Linux/LFCS-Certification/Essential-Commands/Lab-Schedule-Tasks/Laboratorio
+  - Linux/LFCS-Certification/Operations-Deployment
+  - Linux/LFCS-Certification/Operations-Deployment/Lab-Schedule-Tasks
+  - Linux/LFCS-Certification/Operations-Deployment/Lab-Schedule-Tasks/Laboratorio
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |

@@ -21,10 +21,11 @@
 - [ ] [[06 - Lab - Scripting, Manage Startup Process and Services]]          35 %     --> 15 Mayo  2026
 - [ ] [[09 - Lab - Manage Processes and Analyze Log Files]]                         7 %    -->  16 Mayo 2026
 - [ ] [[11 - Lab - Schedule Tasks]]                                                                       0 %    -->  16 Mayo 2026
+- [ ] [[15 - Lab Manage Software, Repositories]]
 - [ ] [[21 Lab - Kernel Runtime Parameters and SELinux AppArmor]]
 - [ ] [[17 - Lab - Verify Integrity and Availability of Resources]]
 - [ ] [[26 - Lab - Manage Containers and VMs]]
-- [ ] 
+
 
 ### 3. Storage (Prioridad Alta)
 - [ ] [[13 - Lab - Manage LVM]] 
