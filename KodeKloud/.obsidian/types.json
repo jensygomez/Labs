@@ -8,6 +8,7 @@
     "Dificultad": "text",
     "verificar": "checkbox",
     "Repetido": "multitext",
-    "Repeticion": "number"
+    "Repeticion": "number",
+    "Fecha de Inicio": "date"
   }
 }

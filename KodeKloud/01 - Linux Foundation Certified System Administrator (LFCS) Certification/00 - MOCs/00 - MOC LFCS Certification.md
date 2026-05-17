@@ -27,9 +27,9 @@
 - [ ] [[26 - Lab - Manage Containers and VMs]]                                           40 %    -->  17 Mayo 2026
 
 
-### 3. Storage (Prioridad Alta)
-- [ ] [[13 - Lab - Manage LVM]] 
-- [ ] [[10 - Lab - Remote File Systems --> NFS]]
+### 3. Users and Groups
+- [ ] [[03 - Lab - Manage User Accounts and Groups]]
+- [ ] 
 ---
 ## 📝 Notas de Examen (Mock Exams)
 - [[LFCS Mock Exam 1]]

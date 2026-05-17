@@ -1,7 +1,7 @@
 ---
 Curso: Prep Course - LFCS Certification
 Modulo: Essential Commands
-Tema: Read and Use System Documentation
+Tema: Create and Manage Soft Links
 Fecha de Inicio: 2026-04-10
 Dificultad: Básico Medio
 Tareas Totales:
@@ -9,5 +9,5 @@ tags:
   - Linux
   - Linux/LFCS-Certification
   - Linux/LFCS-Certification/Essential-Commands
-  - Linux/LFCS-Certification/Essential-Commands/Read-and-Use-System-Documentation
+  - Linux/LFCS-Certification/Essential-Commands/Create-and-Manage-Soft-Links
 ---
