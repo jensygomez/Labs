@@ -4,7 +4,7 @@ Modulo: Essential Commands
 Tema: Lab - File Permissions, Search for Files
 Fecha: 2026-05-11
 tags:
-  - Linux/LFCS-Certification/Essential-Commands/Laboratorio/Repetido/1
+  - Linux/LFCS-Certification/Essential-Commands/Laboratorio
 ---
 
 

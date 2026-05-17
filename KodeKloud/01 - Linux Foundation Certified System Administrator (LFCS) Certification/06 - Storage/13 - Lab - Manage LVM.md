@@ -12,9 +12,6 @@ Time: 30 min
 tags:
   - "#Linux/LFCS-Certification/Storage/cfdisk"
   - "#Linux/LFCS-Certification/Storage/Laboratorio"
-  - "#Linux/LFCS-Certification/Storage/Disk-Management"
-  - "#Linux/LFCS-Certification/Storage/Logical-Volume-Manager"
-  - "#Linux/LFCS-Certification/Storage/FileSystems"
   - "#Linux"
   - "#Linux/LFCS-Certification"
 ---

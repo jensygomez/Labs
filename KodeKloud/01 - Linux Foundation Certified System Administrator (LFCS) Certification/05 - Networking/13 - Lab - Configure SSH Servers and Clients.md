@@ -11,10 +11,6 @@ Time: 40 min
 tags:
   - "#Linux/LFCS-Certification/Networking"
   - "#Linux/LFCS-Certification/Networking/Laboratorio"
-  - "#Linux/LFCS-Certification/Networking/ssh"
-  - "#Linux/LFCS-Certification/Networking/Reverse-Proxy"
-  - "#Linux/LFCS-Certification/Networking/Squid"
-  - "#Linux/LFCS-Certification/Networking/Security"
 ---
 
 ## SSH Server y Squid Proxy - Configuración Avanzada

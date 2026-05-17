@@ -10,9 +10,6 @@ Calificación:
 Time: 10 min
 tags:
   - "#Linux/LFCS-Certification/Networking"
-  - "#Linux/LFCS-Certification/Networking/Systemd"
-  - "#Linux/LFCS-Certification/Networking/Network-Time-Protocol"
-  - "#Linux/LFCS-Certification/Networking/TimeDateCtl"
 ---
 
 La sincronización de la hora en sistemas Linux es fundamental para el correcto funcionamiento de aplicaciones, logs y servicios. Diferentes máquinas y zonas horarias pueden causar desincronización, por lo que es necesario establecer servidores NTP (Network Time Protocol) confiables. La utilidad `timedatectl` permite gestionar tanto la zona horaria como la sincronización automática de la hora del sistema.

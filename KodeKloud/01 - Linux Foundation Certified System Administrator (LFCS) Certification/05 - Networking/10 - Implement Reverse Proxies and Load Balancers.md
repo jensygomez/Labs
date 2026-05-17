@@ -10,11 +10,6 @@ Calificación:
 Time: 20 min
 tags:
   - "#Linux/LFCS-Certification/Networking"
-  - "#Linux/LFCS-Certification/Networking/Reverse-Proxy"
-  - "#Linux/LFCS-Certification/Networking/Load/Balancer"
-  - "#Linux/LFCS-Certification/Networking/Nginx"
-  - "#Linux/LFCS-Certification/Networking/High-availability"
-  - "#Linux/LFCS-Certification/Networking/Infrastructure"
 ---
 
 

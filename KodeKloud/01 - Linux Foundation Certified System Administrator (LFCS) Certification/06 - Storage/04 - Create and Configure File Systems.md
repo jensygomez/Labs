@@ -11,10 +11,6 @@ Task:
 Time: 20 min
 tags:
   - "#Linux/LFCS-Certification/Storage"
-  - "#Linux/LFCS-Certification/Storage/FileSystems"
-  - "#Linux/LFCS-Certification/Storage/ext4"
-  - "#Linux/LFCS-Certification/Storage/xfs"
-  - "#Linux/LFCS-Certification/Storage/mkfs"
   - "#Linux"
   - "#Linux/LFCS-Certification"
 ---

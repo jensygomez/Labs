@@ -11,10 +11,6 @@ Task:
 Time: 15 min
 tags:
   - "#Linux/LFCS-Certification/Storage"
-  - "#Linux/LFCS-Certification/Storage/FileSystems"
-  - "#Linux/LFCS-Certification/Storage/fstab"
-  - "#Linux/LFCS-Certification/Storage/mount"
-  - "#Linux/LFCS-Certification/Storage/UUID"
   - "#Linux"
   - "#Linux/LFCS-Certification"
 ---

@@ -10,11 +10,7 @@ Calificación:
 Time: 15 min
 tags:
   - "#Linux/LFCS-Certification/Storage"
-  - "#Linux/LFCS-Certification/Storage/Partitions"
-  - "#Linux/LFCS-Certification/Storage/fdisck"
-  - "#Linux/LFCS-Certification/Storage/lsblk"
   - Linux
-  - "#Linux/LFCS-Certification"
 ---
 
 ## Particionamiento de Discos en Linux

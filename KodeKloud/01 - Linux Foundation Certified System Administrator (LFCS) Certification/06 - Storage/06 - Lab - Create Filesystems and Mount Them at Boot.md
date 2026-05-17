@@ -11,13 +11,6 @@ Tareas del Lab: "9"
 Time: 20 min
 tags:
   - "#Linux/LFCS-Certification/Storage"
-  - "#Linux/LFCS-Certification/Storage/FileSystems"
-  - "#Linux/LFCS-Certification/Storage/Swap"
-  - "#Linux/LFCS-Certification/Storage/Laboratorio"
-  - "#Linux/LFCS-Certification/Storage/UUID"
-  - "#Linux/LFCS-Certification/Storage/fstab"
-  - "#Linux/LFCS-Certification/Storage/mount"
-  - "#Linux/LFCS-Certification/Storage/mkfs"
   - "#Linux"
   - "#Linux/LFCS-Certification"
 ---

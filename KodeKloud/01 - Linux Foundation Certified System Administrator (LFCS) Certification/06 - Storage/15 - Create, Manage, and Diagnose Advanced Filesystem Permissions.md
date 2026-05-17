@@ -11,11 +11,6 @@ Tareas del Lab:
 Time: 15 min
 tags:
   - "#Linux/LFCS-Certification/Storage"
-  - "#Linux/LFCS-Certification/Storage/ACLs"
-  - "#Linux/LFCS-Certification/Storage/Permissions"
-  - "#Linux/LFCS-Certification/Storage/setdacl"
-  - "#Linux/LFCS-Certification/Storage/chattr"
-  - "#Linux/LFCS-Certification/Storage/File-Atribute"
   - "#Linux"
   - "#Linux/LFCS-Certification"
 ---

@@ -12,11 +12,6 @@ Time: 20 min
 tags:
   - "#Linux/LFCS-Certification/Storage"
   - "#Linux/LFCS-Certification/Storage/Laboratorio"
-  - "#Linux/LFCS-Certification/Storage/Swap"
-  - "#Linux/LFCS-Certification/Storage/Memory"
-  - "#Linux/LFCS-Certification/Storage/Partitions"
-  - "#Linux/LFCS-Certification/Storage/cfdisk"
-  - "#Linux/LFCS-Certification/Storage/mkswap"
   - "#Linux"
   - "#Linux/LFCS-Certification"
 ---

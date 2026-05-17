@@ -12,12 +12,6 @@ Time: 15 min
 tags:
   - "#Linux/LFCS-Certification/Storage"
   - "#Linux/LFCS-Certification/Storage/Laboratorio"
-  - "#Linux/LFCS-Certification/Storage/FileSystems"
-  - "#Linux/LFCS-Certification/Storage/Security"
-  - "#Linux/LFCS-Certification/Storage/Mount-Options"
-  - "#Linux/LFCS-Certification/Storage/mount"
-  - "#Linux/LFCS-Certification/Storage/fstab"
-  - "#Linux/LFCS-Certification/Storage/Remount"
   - "#Linux"
   - "#Linux/LFCS-Certification"
 ---

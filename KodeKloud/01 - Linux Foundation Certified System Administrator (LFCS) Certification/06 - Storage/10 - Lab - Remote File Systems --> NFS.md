@@ -12,11 +12,6 @@ Time:
 tags:
   - "#Linux/LFCS-Certification/Storage"
   - "#Linux/LFCS-Certification/Storage/Laboratorio"
-  - "#Linux/LFCS-Certification/Storage/Remote-Filesystems"
-  - "#Linux/LFCS-Certification/Storage/Networking"
-  - "#Linux/LFCS-Certification/Storage/Network-File-System"
-  - "#Linux/LFCS-Certification/Storage/Exports"
-  - "#Linux/LFCS-Certification/Storage/Server-Client"
   - "#Linux"
   - "#Linux/LFCS-Certification"
 ---

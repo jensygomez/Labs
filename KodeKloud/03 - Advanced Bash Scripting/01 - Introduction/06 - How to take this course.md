@@ -11,12 +11,8 @@ Time:
 tags:
   - Linux
   - Linux/Advanced-Bash-Scripting
+  - Linux/Advanced-Bash-Scripting/Introduction
   - Linux/Advanced-Bash-Scripting/Introduction/How-To-Take-This-Course
-  - Linux/Advanced-Bash-Scripting/Introduction/How-To-Take-This-Course/Shell-Script
-  - Linux/Advanced-Bash-Scripting/Introduction/How-To-Take-This-Course/Bash
-  - Linux/Advanced-Bash-Scripting/Introduction/How-To-Take-This-Course/Scripting
-  - Linux/Advanced-Bash-Scripting/Introduction/How-To-Take-This-Course/Advanced
-  - Linux/Advanced-Bash-Scripting/Introduction/How-To-Take-This-Course/Editor-VIM
 ---
 
 ## Cómo Aprovechar Este Curso

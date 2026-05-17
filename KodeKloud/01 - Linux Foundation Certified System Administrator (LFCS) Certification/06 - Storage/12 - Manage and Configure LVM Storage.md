@@ -11,8 +11,6 @@ Tareas del Lab:
 Time: 15 min
 tags:
   - "#Linux/LFCS-Certification/Storage"
-  - "#Linux/LFCS-Certification/Storage/Disk-Management"
-  - "#Linux/LFCS-Certification/Storage/Logical-Volume-Manager"
   - "#Linux"
   - "#Linux/LFCS-Certification"
 ---

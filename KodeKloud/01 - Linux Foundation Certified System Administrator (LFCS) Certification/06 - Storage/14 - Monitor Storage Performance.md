@@ -11,9 +11,6 @@ Tareas del Lab:
 Time: 20 min
 tags:
   - "#Linux/LFCS-Certification/Storage"
-  - "#Linux/LFCS-Certification/Storage/iostat"
-  - "#Linux/LFCS-Certification/Storage/Performance"
-  - "#Linux/LFCS-Certification/Storage/systat"
   - "#Linux"
   - "#Linux/LFCS-Certification"
 ---

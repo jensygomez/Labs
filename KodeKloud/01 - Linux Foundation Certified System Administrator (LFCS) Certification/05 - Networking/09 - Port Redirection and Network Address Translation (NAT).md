@@ -10,10 +10,6 @@ Calificación:
 Time: 30 min
 tags:
   - "#Linux/LFCS-Certification/Networking"
-  - "#Linux/LFCS-Certification/Networking/Iptables"
-  - "#Linux/LFCS-Certification/Networking/Masquerading"
-  - "#Linux/LFCS-Certification/Networking/Port-Forwarding"
-  - "#Linux/LFCS-Certification/Networking/NetFilter"
 ---
 
 ## Resumen

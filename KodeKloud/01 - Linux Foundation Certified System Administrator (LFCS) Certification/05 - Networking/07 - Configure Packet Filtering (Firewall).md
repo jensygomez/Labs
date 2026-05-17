@@ -10,9 +10,6 @@ Calificación:
 Time: 30 min
 tags:
   - "#Linux/LFCS-Certification/Networking"
-  - "#Linux/LFCS-Certification/Networking/Firewall"
-  - "#Linux/LFCS-Certification/Networking/UFW"
-  - "#Linux/LFCS-Certification/Networking/Security"
 ---
 
 

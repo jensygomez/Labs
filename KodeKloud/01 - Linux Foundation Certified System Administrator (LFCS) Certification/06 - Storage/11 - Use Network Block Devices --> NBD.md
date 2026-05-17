@@ -11,9 +11,6 @@ Tareas del Lab:
 Time: 15 min
 tags:
   - "#Linux/LFCS-Certification/Storage"
-  - "#Linux/LFCS-Certification/Storage/Server-Client"
-  - "#Linux/LFCS-Certification/Storage/Network-Block-Device"
-  - "#Linux/LFCS-Certification/Storage/Remote-Storage"
   - "#Linux"
   - "#Linux/LFCS-Certification"
 ---

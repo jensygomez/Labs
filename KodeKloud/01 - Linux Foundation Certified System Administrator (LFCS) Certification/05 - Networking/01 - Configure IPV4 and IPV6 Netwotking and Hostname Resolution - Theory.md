@@ -10,8 +10,6 @@ Calificación:
 Time: 10 min
 tags:
   - "#Linux/LFCS-Certification/Networking"
-  - "#Linux/LFCS-Certification/Networking/IPV4"
-  - "#Linux/LFCS-Certification/Networking/IPV6"
 ---
 El protocolo **IPv4** es el estándar más utilizado en redes modernas, compuesto por 4 octetos de 8 bits cada uno (rango 0-255 por octeto), lo que genera un total de 32 bits. La estructura se complementa con una máscara de red que determina qué porción de la dirección pertenece a la red y cuál al host. La notación CIDR (/24, /16, /32) simplifica la representación de estas máscaras y es fundamental para entender subnetting y determinar si dos hosts pertenecen a la misma red o no.
 

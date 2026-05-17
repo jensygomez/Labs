@@ -11,11 +11,6 @@ Tareas del Lab:
 Time: 10 min
 tags:
   - "#Linux/LFCS-Certification/Storage"
-  - "#Linux/LFCS-Certification/Storage/FileSystems"
-  - "#Linux/LFCS-Certification/Storage/fstab"
-  - "#Linux/LFCS-Certification/Storage/mount"
-  - "#Linux/LFCS-Certification/Storage/Mount-Options"
-  - "#Linux/LFCS-Certification/Storage/Security"
   - "#Linux"
   - "#Linux/LFCS-Certification"
 ---
