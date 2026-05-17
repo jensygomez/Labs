@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/00 - MOC LFCS Certification.md",
+                "file": "03 - Advanced Bash Scripting/03 - Refresher/07 - pid.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "00 - MOC LFCS Certification"
+              "title": "07 - pid"
             }
           },
           {
@@ -197,8 +197,18 @@
   },
   "active": "54ae7d5370f8c8a5",
   "lastOpenFiles": [
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/03 - Lab - Manage User Accounts and Groups.md",
+    "03 - Advanced Bash Scripting/03 - Refresher/05 - Command Line Arguments.md",
+    "03 - Advanced Bash Scripting/03 - Refresher/07 - pid.md",
+    "03 - Advanced Bash Scripting/03 - Refresher/06 - Lab - CLI.md",
+    "03 - Advanced Bash Scripting/00 - Menu/00 - Menu Advanced Bash.md",
+    "02 - Shell Scripts for Beginners/03 - Flow Control/04 - Lab For Loops.md",
+    "02 - Shell Scripts for Beginners/03 - Flow Control/03 - Loops - For.md",
+    "02 - Shell Scripts for Beginners/03 - Flow Control/02 - Lab Conditional Logic.md",
+    "02 - Shell Scripts for Beginners/03 - Flow Control/01 - Conditional Logic.md",
+    "02 - Shell Scripts for Beginners/02 - Shell Script Introduction/12 - Lab - Arithmetic Operations.md",
+    "02 - Shell Scripts for Beginners/02 - Shell Script Introduction/11 - Arithmetic Operations.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/00 - MOC LFCS Certification.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/03 - Lab - Manage User Accounts and Groups.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/26 - Lab - Manage Containers and VMs.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/07 - Create and Manage Soft Links.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/06 - Create and Manage Hard Links.md",
@@ -213,16 +223,6 @@
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/17 - Lab - Verify Integrity and Availability.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/19 - List and Identify SELinux File and Process Contexts.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/20 - Create and Enforce MAC Using SELinux.md",
-    "17 - Lab - Verify Integrity and Availability of Resources.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/15 - Lab Manage Software, Repositories.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/17 - Lab - Verify Integrity and Availability of Resources.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/14 - Install Software by Compiling Source Code.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/11 - Lab - Schedule Tasks.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/09 - Lab - Manage Processes and Analyze Log Files.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/08 - Lab - Files, Directories, Hard and Soft Links.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/10 - SUID, SGID, and Sticky Bit.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/10 - Compression and Archive.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/09 - Grep and Regex.md",
     "03 - Advanced Bash Scripting/03 - Refresher",
     "03 - Advanced Bash Scripting/00 - Menu",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs",

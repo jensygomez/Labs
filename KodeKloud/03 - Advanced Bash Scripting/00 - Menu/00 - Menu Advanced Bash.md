@@ -22,12 +22,8 @@
 
 ### 3. Refresher
 
-- [ ] [[03 - Advanced Bash Scripting/03 - Refresher/01 - Overview|01 - Overview]]
-- [ ] [[02 - Scriptflow]]
-- [ ] [[03 - Advanced Bash Scripting/03 - Refresher/03 - Functions|03 - Functions]]
 - [ ] [[04 - Lab - Functions]]                                                  ---->    63 %      15 Mayo 2026
-- [ ] [[05 - Command Line Arguments]]
-- [ ] [[06 - Lab - CLI]]
+- [ ] [[06 - Lab - CLI]]                                                              ---->    43 %      15 Mayo 2026                        
 - [ ] 
 
 
