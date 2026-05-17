@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/04 - Lab - Logging in and System Documentation.md",
+                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/01 - Log in to Local & Remote Graphical and Text Mode Consoles.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "04 - Lab - Logging in and System Documentation"
+              "title": "01 - Log in to Local & Remote Graphical and Text Mode Consoles"
             }
           }
         ]
@@ -183,8 +183,11 @@
   },
   "active": "7b912db7337f03ac",
   "lastOpenFiles": [
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/00 - MOC LFCS Certification.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/04 - Lab - Logging in and System Documentation.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/01 - Log in to Local & Remote Graphical and Text Mode Consoles.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/01 - Log in to Local & Remote Consoles.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/03 - Read and Use System Documentation.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/00 - MOC LFCS Certification.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/26 - Lab - Manage Containers and VMs.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/21 - Lab - Kernel Runtime Parameters and SELinux.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/18 - Change Kernel Runtime Parameters, Persistent and Non-Persistent.md",
@@ -206,8 +209,6 @@
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/06 - Special Permissions.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/04 - Links (Hard and Soft).md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/05 - File Permissions.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/06 - Lab - Scripting, Manage Startup Process and Services.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/28 - Lab - Git & SSL Certificates.md",
     "03 - Advanced Bash Scripting/03 - Refresher",
     "03 - Advanced Bash Scripting/00 - Menu",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs",
