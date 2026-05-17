@@ -23,7 +23,7 @@
 - [ ] [[11 - Lab - Schedule Tasks]]                                                                     0 %    -->  16 Mayo 2026
 - [ ] [[15 - Lab Manage Software, Repositories]]                                        14 %    -->  16 Mayo 2026
 - [ ] [[17 - Lab - Verify Integrity and Availability]]                                          0 %    -->  16 Mayo 2026   
-- [ ] [[21 - Lab - Kernel Runtime Parameters and SELinux]]
+- [ ] [[21 - Lab - Kernel Runtime Parameters and SELinux]]                        0 %    -->  16 Mayo 2026
 - [ ] [[26 - Lab - Manage Containers and VMs]]
 
 
