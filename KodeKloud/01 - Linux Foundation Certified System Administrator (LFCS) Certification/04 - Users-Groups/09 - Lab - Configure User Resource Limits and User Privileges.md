@@ -9,7 +9,11 @@ Dificultad: Intermedio-Baja
 Calificación: 27 %
 Time: 20 min
 tags:
-  - "#Linux/LFCS-Certification/Users-Groups/Laboratorio"
+  - Linux
+  - Linux/LFCS-Certification
+  - Linux/LFCS-Certification/Users-Groups
+  - Linux/LFCS-Certification/Users-Groups/Lab-Configure-User-Resource-Limits
+  - Linux/LFCS-Certification/Users-Groups/Lab-Configure-User-Resource-Limits/Laboratorio
 ---
 
 ## Resumen

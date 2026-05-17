@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "03 - Advanced Bash Scripting/03 - Refresher/08 - Built-in Commands.md",
+                "file": "03 - Advanced Bash Scripting/03 - Refresher/09 - Keywords-builtins.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "08 - Built-in Commands"
+              "title": "09 - Keywords-builtins"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "tag:#Linux/Advanced-Bash-Scripting",
+                "query": "tag:#Linux/LFCS-Certification/Introduction",
                 "matchingCase": true,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -183,11 +183,23 @@
   },
   "active": "1f0b02008d084478",
   "lastOpenFiles": [
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/01 - Introduction/03 - Prerequisites and Exam Details.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/06 - Lab - Manage System-Wide Environment Profiles and Template User Environments.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/09 - Lab - Configure User Resource Limits and User Privileges.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/01 - Introduction/02 - Course Structure.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/10 - Manage Access to Root Account.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/02 - Configure IPV4 and IPV6 Netwotking and Hostname Resolution - Demo.md",
+    "02 - Shell Scripts for Beginners/02 - Shell Script Introduction/12 - Lab - Arithmetic Operations.md",
+    "02 - Shell Scripts for Beginners/03 - Flow Control/04 - Lab For Loops.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/10 - Implement Reverse Proxies and Load Balancers.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/01 - Introduction/04 - Certification and Discounts.md",
+    "02 - Shell Scripts for Beginners/03 - Flow Control/08 - Labs - Case Statements.md",
+    "03 - Advanced Bash Scripting/03 - Refresher/09 - Keywords-builtins.md",
+    "03 - Advanced Bash Scripting/03 - Refresher/08 - Built-in Commands.md",
     "LINUX/00 - qui/Sem título.canvas",
     "LINUX/MENU.md",
     "LINUX/00 - qui/Sem título.base",
     "LINUX/00 - qui",
-    "03 - Advanced Bash Scripting/03 - Refresher/08 - Built-in Commands.md",
     "LINUX",
     "03 - Advanced Bash Scripting/01 - Introduction/06 - How to take this course.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/07 - Conclusion/01 - Conclusion.md",
@@ -201,17 +213,6 @@
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/09 - Use Remote Filesystems --->NFS.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/08 - Lab - Filesystem Features and Mount Options.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/07 - Filesystem and Mount Options.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/06 - Lab - Create Filesystems and Mount Them at Boot.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/05 - Configure Systems to Mount Filesystems at or During Boot.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/04 - Create and Configure File Systems.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/03 - Lab - Manage Partitions and Swap Space.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/02 - Configure and Manage Swap Space.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/01 - List, Create, Delete, and Modify Physical Storage Partitions.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/13 - Lab - Configure SSH Servers and Clients.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/12 - Configure SSH Servers and Clients.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/11 - Set and Synchronize System Time Using Time Servers.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/10 - Implement Reverse Proxies and Load Balancers.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/09 - Port Redirection and Network Address Translation (NAT).md",
     "03 - Advanced Bash Scripting/03 - Refresher",
     "03 - Advanced Bash Scripting/00 - Menu",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs",

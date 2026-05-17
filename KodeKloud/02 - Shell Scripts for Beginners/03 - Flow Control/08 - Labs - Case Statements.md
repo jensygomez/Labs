@@ -4,15 +4,10 @@ Modulo: Flow Control
 Tema: "Labs: Case Statements"
 Fecha: 2026-05-11
 tags:
+  - Linux
+  - Linux/Shell-Scripts-for-Beginners
   - Linux/Shell-Scripts-for-Beginners/Flow-Control
-  - Linux/Shell-Scripts-for-Beginners/Flow-Control/Basico-Medio
-  - Linux/Shell-Scripts-for-Beginners/Flow-Control/Time/10min
-  - Linux/Shell-Scripts-for-Beginners/Flow-Control/Case-Statement
-  - Linux/Shell-Scripts-for-Beginners/Flow-Control/Conditionals
-  - Linux/Shell-Scripts-for-Beginners/Flow-Control/Tareas/5
-  - Linux/Shell-Scripts-for-Beginners/Flow-Control/Calificacion/0
   - Linux/Shell-Scripts-for-Beginners/Flow-Control/Laboratorio
-  - Linux/Shell-Scripts-for-Beginners/Flow-Control/Debugging
 ---
 ## Resumen
 
