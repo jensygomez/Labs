@@ -3,8 +3,8 @@ Curso: Prep Course - LFCS Certification
 Modulo: Operations Deployment
 Tema: Lab - Manage Containers and VMs
 Fecha de Inicio: 2026-04-30
-Dificultad:
-Tareas Totales:
+Dificultad: Intermedio-Alto
+Tareas Totales: "15"
 tags:
   - Linux
   - Linux/LFCS-Certification
@@ -15,56 +15,87 @@ tags:
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |
 | :------------- | :----- | :---- | :------------ |
-| 17 - 05 - 2026 |  min   | 0 %   |               |
+| 17 - 05 - 2026 | 40 min | 40 %  |               |
 |                |        |       |               |
 
 
 ---
 
+
 ## 📝 Resumen
 
-Este laboratorio cubre dos áreas críticas para la administración de sistemas Linux: la configuración de parámetros del kernel en tiempo de ejecución y la gestión de SELinux. Los parámetros del kernel permiten ajustar el comportamiento del sistema (como swappiness y configuración de módulos) de forma temporal o persistente usando `sysctl`, mientras que SELinux proporciona control de acceso granular mediante etiquetas de contexto. En este lab se practican 9 tareas que incluyen cambiar contextos SELinux en archivos, verificar etiquetas en procesos, ajustar parámetros de kernel y cambiar el modo SELinux, habilidades esenciales para un Sysadmin que necesita optimizar seguridad y rendimiento del sistema.
+Este laboratorio cubre la gestión integral de contenedores Docker y máquinas virtuales (VMs) usando libvirt/KVM en sistemas Linux, herramientas fundamentales para un Sysadmin moderno. El lab se divide en dos partes principales: la primera enfocada en Docker donde se practican operaciones como descargar imágenes, crear y ejecutar contenedores con opciones de mapeo de puertos, políticas de reinicio y gestión del ciclo de vida; la segunda parte aborda virtualización con virsh y qemu-kvm, permitiendo crear, configurar, iniciar y gestionar máquinas virtuales, incluyendo la automatización de inicio al boot y la modificación de recursos (memoria, vCPUs). Estas 15 tareas representan el flujo completo de un Sysadmin que debe administrar tanto infraestructura containerizada como basada en máquinas virtuales.
 
-La práctica comienza identificando etiquetas SELinux en procesos (sshd) y archivos (/bin/sudo), continuando con la deshabilitación de carga de módulos del kernel y el ajuste del parámetro vm.swappiness para optimizar el uso de memoria. Luego se trabaja con cambios de contexto SELinux en archivos web (/var/index.html), cambio de modo SELinux a Permissive, identificación de roles SELinux para usuarios específicos y finalmente la restauración de etiquetas por defecto en directorios del sistema (/var/log) usando herramientas como `semanage`, `chcon` y `restorecon`.
+El aprendizaje progresa desde conceptos teóricos (qué hace ciertos comandos) hasta operaciones prácticas avanzadas: primero se valida comprensión de herramientas (virsh destroy, listar contenedores), luego se practican operaciones Docker fundamentales (pull de imágenes, crear contenedores con puertos y políticas de reinicio, eliminar recursos), y finalmente se domina la gestión de VMs (crear desde archivos XML, modificar recursos en tiempo real, establecer autostart al boot, provisionar máquinas desde imágenes cloud). Al completar este lab, tendrás experiencia en los dos paradigmas de virtualización más usados en la nube y data centers modernos.
 
 ## 💻 Comandos Clave
 
 ```bash
-# Consultar contexto SELinux de un archivo
-ls -lZ /bin/sudo
+# === DOCKER ===
+# Descargar imagen Docker
+docker pull docker.io/library/nginx
 
-# Cambiar contexto SELinux de un archivo
-sudo chcon -t httpd_sys_content_t /var/index.html
+# Crear y ejecutar contenedor (detached, mapeo puertos, nombre)
+docker run -d -p 1234:80 --name website docker.io/library/nginx
 
-# Listar etiquetas SELinux de un proceso
-ps -eZ | grep sshd
+# Ejecutar contenedor con política de reinicio automático
+docker run -d -p 9080:80 --restart always --name webinstance1 docker.io/library/httpd
 
-# Ver parámetros del kernel actualmente
-sysctl net.ipv6.conf.lo.seg6_enabled
+# Listar todos los contenedores (incluyendo stopped)
+docker ps -a
 
-# Establecer parámetro kernel temporalmente
-sudo sysctl -w vm.swappiness=10
+# Eliminar contenedor
+docker rm <container_id>
 
-# Hacer persistente un parámetro del kernel
-echo "vm.swappiness=10" | sudo tee -a /etc/sysctl.conf
-sudo sysctl -p
+# Eliminar todos los contenedores
+docker rm $(docker ps -aq)
 
-# Deshabilitar carga de módulos kernel
-sudo sysctl -w kernel.modules_disabled=1
+# Eliminar imagen Docker
+docker rmi docker.io/library/nginx
 
-# Ver modo SELinux actual
-getenforce
+# === VIRTUALIZATION (VIRSH/KVM) ===
+# Listar máquinas virtuales (running y stopped)
+sudo virsh list --all
 
-# Cambiar SELinux a Permissive (temporal)
-sudo setenforce Permissive
+# Información detallada de una VM
+sudo virsh dominfo VM2
 
-# Restaurar contextos SELinux por defecto
-sudo restorecon -Rv /var/log
+# Iniciar una VM
+sudo virsh start VM1
 
-# Ver roles SELinux de un usuario
-sudo semanage user -l | grep staff_u
+# Detener una VM (graceful shutdown)
+sudo virsh shutdown VM1
+
+# Apagar forzadamente una VM
+sudo virsh destroy TestMachine
+
+# Crear VM desde archivo XML de configuración
+sudo virsh create /opt/testmachine2.xml
+
+# Modificar memoria de una VM (temporal)
+sudo virsh setmem VM2 80M
+
+# Establecer autostart para VM al boot
+sudo virsh autostart VM2
+
+# Deshabilitar autostart
+sudo virsh autostart --disable VM2
+
+# Eliminar completamente una VM
+sudo virsh undefine VM1
+
+# Crear VM desde imagen cloud
+sudo virt-install \
+  --name kk-ubuntu \
+  --memory 1024 \
+  --vcpus 1 \
+  --disk /var/lib/libvirt/images/ubuntu-22.04-minimal-cloudimg-amd64.img \
+  --os-variant ubuntu22.04 \
+  --graphics none \
+  --network default \
+  --import
 ```
 
 ---
 
-**Inicio Lab:** 2026-04-30 | **Sesión:** 16-05-2026 (40 min)
+**Inicio Lab:** 2026-04-30 | **Última sesión:** 17-05-2026 (40 min) | **Progreso:** 40%
