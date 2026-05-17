@@ -2,12 +2,10 @@
 
 # 🗺️ Mapa de Control: LFCS
 
-## 🚀 Fase de Repaso: Laboratorios
-*Usa estos enlaces para saltar rápido a tus prácticas:*
-## 🛠️ Roadmap de Laboratorios (Repaso Final)
+
+## 🛠️ Roadmap de Laboratorios 
 
 ### 1. Essential Commands
-
  
 - [ ] [[04 - Lab - Logging in and System Documentation]]                         90 %    -->  17 Mayo 2026  
 - [ ] [[08 - Lab - Files, Directories, Hard and Soft Links]]                           100 %  
@@ -28,9 +26,6 @@
 
 
 ### 3. Users and Groups
-- [ ] [[03 - Lab - Manage User Accounts and Groups]]
+- [ ] [[03 - Lab - Manage User Accounts and Groups]]                                23 %  -->  17 Mayo 2026
 - [ ] 
 ---
-## 📝 Notas de Examen (Mock Exams)
-- [[LFCS Mock Exam 1]]
-- [[LFCS Mock Exam 2]]
