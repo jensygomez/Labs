@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Users and Groups
 Tema: Lab - Manage System-Wide Environment Profiles
-Fecha de Inicio: 01/05/2026
+Fecha de Inicio: 2001-04-20
 Dificultad: Básico Medio
 Tareas Totales: "12"
 tags:

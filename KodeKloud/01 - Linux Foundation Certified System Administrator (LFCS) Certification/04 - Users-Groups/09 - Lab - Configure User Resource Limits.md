@@ -1,19 +1,24 @@
 ---
 Curso: Prep Course - LFCS Certification
 Modulo: Users and Groups
-Tema: Lab - Configure User Resource Limits and User Privileges
-Typo: Laboratorio
-Fecha: 02/05/2026
-Estado: completado
+Tema: Lab - Configure User Resource Limits
+Fecha: 2002-04-20
 Dificultad: Intermedio-Baja
-Calificación: 27 %
-Time: 20 min
+Tareaas Total: "11"
 tags:
   - Linux
   - Linux/LFCS-Certification
   - Linux/LFCS-Certification/Users-Groups
   - Linux/LFCS-Certification/Users-Groups/Lab-Configure-User-Resource-Limits
   - Linux/LFCS-Certification/Users-Groups/Lab-Configure-User-Resource-Limits/Laboratorio
+---
+## 📊 Bitácora de Intentos
+| Fecha          | Tiempo | Éxito | Notas Rápidas |
+| :------------- | :----- | :---- | :------------ |
+| 20 - 04 - 2026 | 20 min | 27 %  |               |
+| 17 - 05 -2026  | 25 min | 27 %  |               |
+
+
 ---
 
 ## Resumen
