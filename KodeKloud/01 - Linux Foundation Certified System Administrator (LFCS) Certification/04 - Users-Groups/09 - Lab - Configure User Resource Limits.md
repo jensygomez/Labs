@@ -4,7 +4,7 @@ Modulo: Users and Groups
 Tema: Lab - Configure User Resource Limits
 Fecha: 2002-04-20
 Dificultad: Intermedio-Baja
-Tareaas Total: "11"
+Tareas Totales: "11"
 tags:
   - Linux
   - Linux/LFCS-Certification

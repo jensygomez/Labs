@@ -2,15 +2,26 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Networking
 Tema: Lab - Configure Networking, Start/Stop/Check Status of Network Services
-Typo: Laboratorio
-Fecha: 04/05/2026
-Estado: completado
+Fecha: 2026-04-20
 Dificultad: Intermedio-Baja
-Calificación: 50 %
-Time: 35 min
+Tareas Totales:
 tags:
-  - "#Linux/LFCS-Certification/Networking"
+  - Linux
+  - Linux/LFCS-Certification
+  - Linux/LFCS-Certification/Networking
+  - Linux/LFCS-Certification/Networking/Lab-Configure-Networking-Start-Stop-Check-Status
+  - Linux/LFCS-Certification/Networking/Lab-Configure-Networking-Start-Stop-Check-Status/Laboratorio
 ---
+## 📊 Bitácora de Intentos
+| Fecha          | Tiempo | Éxito | Notas Rápidas |
+| :------------- | :----- | :---- | :------------ |
+| 20 - 04 - 2026 | 35 min | 50 %  |               |
+| 18 - 05 -2026  | min    | %     |               |
+
+
+---
+
+
 ### Resumen
 
 Este laboratorio cubre la configuración fundamental de networking en Linux, enfocándose en la administración de interfaces de red, direccionamiento IP estático y dinámico, y la resolución de nombres. Se practicó la creación de configuraciones permanentes con Netplan, la adición de IPs temporales con el comando `ip`, y la identificación de procesos que escuchan en puertos específicos. Además, se configuró resolución estática de hostnames y DNS global a nivel de sistema.
@@ -25,7 +36,7 @@ bash
 
 ```bash
 # Listar procesos escuchando en puertos específicos
-sudo ss -tlnp | grep :8080
+sudo ss --tcp --listening --numeric --processes | grep :8080
 
 # Obtener información de interfaces de red
 ip addr show
@@ -37,7 +48,7 @@ sudo ip addr add 192.168.9.3/24 dev eth1
 ip route show
 
 # Listar puertos abiertos entrantes
-sudo ss -tlnp
+sudo ss --tcp --listening --numeric --processes
 
 # Aplicar cambios de Netplan
 sudo netplan apply
