@@ -27,5 +27,6 @@
 ---
 ### 5. Networking
 - [ ] [[04 - Lab - Configure Networking Start Stop Check]]                      50 %  -->  18 Mayo 2026
+- [ ] [[08 - Lab - Packet Filtering]]                                                                 50 %  -->  18 Mayo 2026
 
 ---

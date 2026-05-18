@@ -2,15 +2,24 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Networking
 Tema: Lab - Packet Filtering
-Typo: Laboratorio
-Fecha: 05/05/2026
-Estado: completado
+Fecha: 2026-04-20
 Dificultad: Intermedio-Baja
-Calificación: 40 %
-Time: 20 min
+Tareas Totales: "10"
 tags:
-  - "#Linux/LFCS-Certification/Networking"
+  - Linux
+  - Linux/LFCS-Certification
+  - Linux/LFCS-Certification/Networking
+  - Linux/LFCS-Certification/Networking/Lab-Packet-Filtering
 ---
+## 📊 Bitácora de Intentos
+| Fecha          | Tiempo | Éxito | Notas Rápidas |
+| :------------- | :----- | :---- | :------------ |
+| 20 - 04 - 2026 | 20 min | 40 %  |               |
+| 18 - 05 -2026  | 20 min | 50 %  |               |
+
+
+---
+
 
 
 ## Resumen
