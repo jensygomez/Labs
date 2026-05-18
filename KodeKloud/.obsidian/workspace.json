@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/00 - MOC LFCS Certification.md",
+                "file": "03 - Advanced Bash Scripting/03 - Refresher/10 - Lab - Builtin.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "00 - MOC LFCS Certification"
+              "title": "10 - Lab - Builtin"
             }
           }
         ]
@@ -183,13 +183,17 @@
   },
   "active": "1f0b02008d084478",
   "lastOpenFiles": [
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/08 - Lab - Packet Filtering.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/04 - Lab - Configure Networking Start Stop Check.md",
+    "03 - Advanced Bash Scripting/03 - Refresher/10 - Lab - Builtin.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/03 - Lab - Manage Partitions and Swap Space.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/08 - Lab - Filesystem Features and Mount Options.md",
+    "03 - Advanced Bash Scripting/03 - Refresher/06 - Lab - CLI.md",
+    "03 - Advanced Bash Scripting/03 - Refresher/09 - Keywords-builtins.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/00 - MOC LFCS Certification.md",
+    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/08 - Lab - Packet Filtering.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/09 - Lab - Configure User Resource Limits.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/06 - Lab - Manage System-Wide Environment Profiles.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/03 - Lab - Manage User Accounts and Groups.md",
-    "03 - Advanced Bash Scripting/03 - Refresher/09 - Keywords-builtins.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/01 - Introduction/03 - Prerequisites and Exam Details.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/01 - Introduction/02 - Course Structure.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/10 - Manage Access to Root Account.md",
@@ -209,10 +213,6 @@
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/07 - Conclusion/01 - Conclusion.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/16 - Lab - Advanced Permissions.md",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/15 - Create, Manage, and Diagnose Advanced Filesystem Permissions.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/14 - Monitor Storage Performance.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/13 - Lab - Manage LVM.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/12 - Manage and Configure LVM Storage.md",
-    "01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/11 - Use Network Block Devices --> NBD.md",
     "03 - Advanced Bash Scripting/03 - Refresher",
     "03 - Advanced Bash Scripting/00 - Menu",
     "01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs",
