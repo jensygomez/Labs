@@ -1,19 +1,24 @@
 ---
 Curso: Prep Course - LFCS Certification
 Modulo: Users and Groups
-Tema: Lab - Manage System-Wide Environment Profiles and Template User Environments
-Typo: Laboratorio
-Fecha: 01/05/2026
-Estado: completado
+Tema: Lab - Manage System-Wide Environment Profiles
+Fecha de Inicio: 01/05/2026
 Dificultad: Básico Medio
-Calificación: 4/12
-Time: 20 min
+Tareas Totales: "12"
 tags:
   - Linux
   - Linux/LFCS-Certification
   - "#Linux/LFCS-Certification/Users-Groups"
-  - "#Linux/LFCS-Certification/Users-Groups/Lab-Manage-System-Wide-Enviroment"
-  - "#Linux/LFCS-Certification/Users-Groups/Lab-Manage-System-Wide-Enviroment/Laboratorio"
+  - "#Linux/LFCS-Certification/Users-Groups/Lab-Manage-System-Wide-Enviroment-Profiles"
+  - "#Linux/LFCS-Certification/Users-Groups/Lab-Manage-System-Wide-Enviroment-Profiles/Laboratorio"
+---
+## 📊 Bitácora de Intentos
+| Fecha          | Tiempo | Éxito | Notas Rápidas |
+| :------------- | :----- | :---- | :------------ |
+| 20 - 04 - 2026 | 20 min | 33 %  |               |
+| 17 - 05 -2026  | 35 min | 33 %  |               |
+
+
 ---
 
 El laboratorio se enfocó en comprender cómo funcionan las variables de entorno en Linux y su gestión a nivel del sistema. Se cubrieron conceptos clave como la visualización de variables (echo $VAR), la distinción entre variables locales y globales, y cómo archivos críticos como `/etc/environment` permiten establecer variables disponibles para todos los usuarios. También se exploró el directorio `/etc/skel`, que actúa como plantilla de donde se copian archivos a la home de nuevos usuarios al momento de su creación.
