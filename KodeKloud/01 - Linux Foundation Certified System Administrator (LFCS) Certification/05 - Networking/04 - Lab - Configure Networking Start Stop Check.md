@@ -2,9 +2,9 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Networking
 Tema: Lab - Configure Networking, Start/Stop/Check Status of Network Services
-Fecha: 2026-04-20
+Fecha de Inicio: 2026-04-20
 Dificultad: Intermedio-Baja
-Tareas Totales:
+Tareas Totales: "14"
 tags:
   - Linux
   - Linux/LFCS-Certification
@@ -16,7 +16,7 @@ tags:
 | Fecha          | Tiempo | Éxito | Notas Rápidas |
 | :------------- | :----- | :---- | :------------ |
 | 20 - 04 - 2026 | 35 min | 50 %  |               |
-| 18 - 05 -2026  | min    | %     |               |
+| 18 - 05 -2026  | 40 min | 50 %  |               |
 
 
 ---

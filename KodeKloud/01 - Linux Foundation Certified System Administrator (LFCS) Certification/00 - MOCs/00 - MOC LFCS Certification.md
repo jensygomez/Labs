@@ -26,6 +26,6 @@
 - [ ] [[09 - Lab - Configure User Resource Limits]]                                        27 %  -->  18 Mayo 2026
 ---
 ### 5. Networking
-- [ ] [[04 - Lab - Configure Networking Start Stop Check]]                      23 %  -->  18 Mayo 2026
+- [ ] [[04 - Lab - Configure Networking Start Stop Check]]                      50 %  -->  18 Mayo 2026
 
 ---
