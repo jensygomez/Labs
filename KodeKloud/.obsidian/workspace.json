@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/08 - Lab - Filesystem Features and Mount Options.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/10 - Lab - Remote File Systems --> NFS.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "08 - Lab - Filesystem Features and Mount Options"
+              "title": "10 - Lab - Remote File Systems --> NFS"
             }
           }
         ]
@@ -183,10 +183,10 @@
   },
   "active": "bd1107ead2d4e0d3",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/06 - Lab - Create Filesystems and Mount Them at Boot.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/08 - Lab - Filesystem Features and Mount Options.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/LFCS Certification.md",
     "01 - Linux/00 - Menu/Linux System Administration.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/08 - Lab - Filesystem Features and Mount Options.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/06 - Lab - Create Filesystems and Mount Them at Boot.md",
     "01 - Linux/03 - Advanced Bash Scripting/00 - Menu/Advanced Bash Scripting.md",
     "01 - Linux/00 - Menu",
     "01 - Linux/Sem título.base",

@@ -4,16 +4,10 @@ Modulo: Storage
 Tema: Lab - Remote File Systems --> NFS
 Typo: Laboratorio
 Fecha: 2026-05-09
-Estado: completado
 Dificultad: Intermedio-Baja
 Calificación: 0%
 Tareas del Lab: "8"
 Time:
-tags:
-  - "#Linux/LFCS-Certification/Storage"
-  - "#Linux/LFCS-Certification/Storage/Laboratorio"
-  - "#Linux"
-  - "#Linux/LFCS-Certification"
 ---
 
 

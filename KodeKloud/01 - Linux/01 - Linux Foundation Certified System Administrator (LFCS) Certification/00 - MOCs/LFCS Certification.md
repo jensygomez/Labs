@@ -35,7 +35,7 @@
 ### 6. Storage
 [[03 - Lab - Manage Partitions and Swap Space]]                                             44 %  -->  19 Mayo 2026
 [[06 - Lab - Create Filesystems and Mount Them at Boot]]                            55 %  -->  19 Mayo 2026
-[[08 - Lab - Filesystem Features and Mount Options]]
+[[08 - Lab - Filesystem Features and Mount Options]]                                    40 %  -->  19 Mayo 2026
 
 
 ---
