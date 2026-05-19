@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Networking
 Tema: Lab - Packet Filtering
-Fecha: 2026-04-20
+Fecha de Inicio: 2026-04-20
 Dificultad: Intermedio-Baja
 Tareas Totales: "10"
 tags:

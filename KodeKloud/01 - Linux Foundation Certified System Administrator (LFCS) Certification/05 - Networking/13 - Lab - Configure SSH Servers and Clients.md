@@ -2,16 +2,26 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Networking
 Tema: Lab - Configure SSH Servers and Clients
-Typo: Laboratorio
-Fecha: 07/05/2026
-Estado: completado
-Dificultad: Intermedio-Baja
-Calificación: 8,3 %
-Time: 40 min
+Fecha de Inicio: 2026-04-20
+Dificultad:
+Tareas Totales:
 tags:
-  - "#Linux/LFCS-Certification/Networking"
-  - "#Linux/LFCS-Certification/Networking/Laboratorio"
+  - Linux
+  - Linux/LFCS-Certification
+  - Linux/LFCS-Certification/Networking
+  - Linux/LFCS-Certification/Networking/Lab-Configure-SSH-Servers-and-Clients
+  - Linux/LFCS-Certification/Networking/Lab-Configure-SSH-Servers-and-Clients/Laboratorio
 ---
+## 📊 Bitácora de Intentos
+| Fecha          | Tiempo | Éxito | Notas Rápidas |
+| :------------- | :----- | :---- | :------------ |
+| 20 - 04 - 2026 | 40 min | 9 %   |               |
+| 18 - 05 -2026  | min    | %     |               |
+
+
+---
+
+
 
 ## SSH Server y Squid Proxy - Configuración Avanzada
 
