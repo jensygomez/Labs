@@ -33,52 +33,15 @@
 ---
 
 ### 6. Storage
-- [ ] [[03 - Lab - Manage Partitions and Swap Space]]                                     44 %  -->  19 Mayo 2026
-- [ ] [[06 - Lab - Create Filesystems and Mount Them at Boot]]                     55 %  -->  19 Mayo 2026
+[[03 - Lab - Manage Partitions and Swap Space]]                                             44 %  -->  19 Mayo 2026
+[[06 - Lab - Create Filesystems and Mount Them at Boot]]                            55 %  -->  19 Mayo 2026
+[[08 - Lab - Filesystem Features and Mount Options]]
 
 
 ---
 
 
 
-
-# 🗺️ MOC: LFCS Certification
-
-> **Estatus del Roadmap:** Linux Foundation Certified System Administrator
-> **Enfoque de Estudio:** Infraestructura como Código, administración manual y consistencia en el Kernel.
-
----
-
-## 📊 Panel de Control de Laboratorios (Práctica Recurrente)
-*Usa esta sección para registrar cada repetición de los laboratorios críticos. El objetivo es la automatización mental y la velocidad en la CLI.*
-
-| Módulo / Laboratorio | Guía de Referencia (Teoría/Tips) | Último Intento | Estado / Progreso |
-| :--- | :--- | :--- | :--- |
-| **02 - Essential Commands** | [[04 - Lab - Logging in and System Documentation]] | [[2026-05-19 - Intent 1 - Lab Logging]] | 🟢 Perfecto / Fluido |
-| | [[08 - Lab - Files, Directories, Hard and Soft Links]] | | ⏳ Pendiente Re-intento |
-| | [[12 - Lab - File Permissions, Search for Files]] | | ⏳ Pendiente Re-intento |
-| | [[18 - Lab - File Content, Regular Expressions]] | | ⏳ Pendiente Re-intento |
-| | [[23 - Lab - Archive, Back Up, Compress, IO Redirection]] | | ⏳ Pendiente Re-intento |
-| | [[28 - Lab - Git & SSL Certificates]] | | ⏳ Pendiente Re-intento |
-| **03 - Operations-Deployment**| [[06 - Lab - Scripting, Manage Startup Process and Services]]| | ⏳ Pendiente Re-intento |
-| | [[09 - Lab - Manage Processes and Analyze Log Files]] | | ⏳ Pendiente Re-intento |
-| | [[11 - Lab - Schedule Tasks]] | | ⏳ Pendiente Re-intento |
-| | [[15 - Lab Manage Software, Repositories]] | | ⏳ Pendiente Re-intento |
-| | [[17 - Lab - Verify Integrity and Availability]] | | ⏳ Pendiente Re-intento |
-| | [[21 - Lab - Kernel Runtime Parameters and SELinux]] | | ⏳ Pendiente Re-intento |
-| | [[26 - Lab - Manage Containers and VMs]] | | ⏳ Pendiente Re-intento |
-| **04 - Users-Groups** | [[03 - Lab - Manage User Accounts and Groups]] | | ⏳ Pendiente Re-intento |
-| | [[06 - Lab - Manage System-Wide Environment Profiles]]| | ⏳ Pendiente Re-intento |
-| | [[09 - Lab - Configure User Resource Limits]] | | ⏳ Pendiente Re-intento |
-| **05 - Networking** | [[04 - Lab - Configure Networking Start Stop Check]] | | ⏳ Pendiente Re-intento |
-| | [[08 - Lab - Packet Filtering]] | | ⏳ Pendiente Re-intento |
-| | [[13 - Lab - Configure SSH Servers and Clients]] | | ⏳ Pendiente Re-intento |
-| **06 - Storage** | [[03 - Lab - Manage Partitions and Swap Space]] | | ⏳ Pendiente Re-intento |
-| | [[06 - Lab - Create Filesystems and Mount Them at Boot]]| | ⏳ Pendiente Re-intento |
-| | [[08 - Lab - Filesystem Features and Mount Options]] | | ⏳ Pendiente Re-intento |
-| | [[10 - Lab - Remote File Systems --> NFS]] | | ⏳ Pendiente Re-intento |
-| | [[13 - Lab - Manage LVM]] | | ⏳ Pendiente Re-intento |
-| | [[16 - Lab - Advanced Permissions]] | | ⏳ Pendiente Re-intento |
 
 ---
 

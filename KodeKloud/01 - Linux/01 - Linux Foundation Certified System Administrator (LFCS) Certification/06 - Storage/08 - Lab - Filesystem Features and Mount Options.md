@@ -2,19 +2,17 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Storage
 Tema: Lab - Filesystem Features and Mount Options
-Typo: Laboratorio
-Fecha: 2026-05-08
-Estado: completado
+Fecha de Inicio: 2026-05-08
 Dificultad: Básico Alto
-Calificación: 80 %
 Tareas del Lab: "5"
-Time: 15 min
-tags:
-  - Linux
-  - Linux/LFCS-Certification
-  - Linux/LFCS-Certification/Storage
-  - Linux/LFCS-Certification/Storage/Lab-Filesystem-Features-and-Mount-Options
-  - Linux/LFCS-Certification/Storage/Lab-Filesystem-Features-and-Mount-Options/Laboratorio
+---
+## 📊 Bitácora de Intentos
+| Fecha          | Tiempo | Éxito | Notas Rápidas |
+| :------------- | :----- | :---- | :------------ |
+| 08 - 05 - 2026 | 15 min | 80 %  |               |
+| 19 - 05 - 2026 |        |  %    |               |
+
+
 ---
 
 ## Control Granular de Filesystems mediante Opciones de Montaje
