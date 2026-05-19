@@ -3,8 +3,8 @@ Curso: Prep Course - LFCS Certification
 Modulo: Networking
 Tema: Lab - Configure SSH Servers and Clients
 Fecha de Inicio: 2026-04-20
-Dificultad:
-Tareas Totales:
+Dificultad: Intermedio-Baja
+Tareas Totales: "12"
 tags:
   - Linux
   - Linux/LFCS-Certification
@@ -16,7 +16,7 @@ tags:
 | Fecha          | Tiempo | Éxito | Notas Rápidas |
 | :------------- | :----- | :---- | :------------ |
 | 20 - 04 - 2026 | 40 min | 9 %   |               |
-| 18 - 05 -2026  | min    | %     |               |
+| 19 - 05 - 2026 | 45 min | 16 %  |               |
 
 
 ---

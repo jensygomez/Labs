@@ -2,19 +2,26 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Storage
 Tema: Lab - Manage Partitions and Swap Space
-Typo: Laboratorio
-Fecha: 07/05/2026
-Estado: completado
+Fecha de Inicio: 2026-04-20
 Dificultad: Básico Alto
-Calificación: 88,88 %
 Task: "9"
-Time: 20 min
 tags:
-  - "#Linux/LFCS-Certification/Storage"
-  - "#Linux/LFCS-Certification/Storage/Laboratorio"
   - "#Linux"
-  - "#Linux/LFCS-Certification"
+  - Linux/LFCS-Certification
+  - Linux/LFCS-Certification/Storage
+  - Linux/LFCS-Certification/Storage/Lab-Manage-Partitions-and-Swap
+  - Linux/LFCS-Certification/Storage/Lab-Manage-Partitions-and-Swap/Laboratorio
 ---
+## 📊 Bitácora de Intentos
+| Fecha          | Tiempo | Éxito | Notas Rápidas |
+| :------------- | :----- | :---- | :------------ |
+| 20 - 04 - 2026 | 20 min | 90 %  |               |
+| 19 - 05 - 2026 | min    | %     |               |
+
+
+---
+
+
 
 
 ## Gestión Práctica de Particiones y Swap en Dispositivo Virtual

@@ -28,5 +28,12 @@
 ### 5. Networking
 - [ ] [[04 - Lab - Configure Networking Start Stop Check]]                      50 %  -->  18 Mayo 2026
 - [ ] [[08 - Lab - Packet Filtering]]                                                                 50 %  -->  18 Mayo 2026
+- [ ] [[13 - Lab - Configure SSH Servers and Clients]]                                16 %  -->  19 Mayo 2026
+
+---
+
+### 6. Storage
+- [ ] [[04 - Lab - Configure Networking Start Stop Check]]                      50 %  -->  18 Mayo 2026
+
 
 ---
