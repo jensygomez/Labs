@@ -11,11 +11,10 @@ Tareas del Lab: "18"
 |    Fecha     | Tiempo | Éxito | Task |
 | :----------: | :----: | :---: | :--: |
 | `10/05/2026` | 15 min | 50 %  |  18  |
-| `20/05/2026` |  min   |   %   |  8   |
+| `20/05/2026` | 20 min | 100 % |  18  |
 
 [[Laboratorios del LFCS]]
 
-**Aquí tienes el resumen en inglés, en primera persona del singular (nivel B2):**
 
 ---
 
