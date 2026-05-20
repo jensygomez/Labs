@@ -44,7 +44,8 @@
 *   **Interfaces y Capa 3:** [[01 - Configure IPV4 and IPV6 Netwotking and Hostname Resolution - Theory]], [[02 - Configure IPV4 and IPV6 Netwotking and Hostname Resolution - Demo]], [[03 - Start, Stop, and Check Status of Network Services]]
 *   **Alta Disponibilidad:** [[05 - Configure Bridge and Bonding Devices - Theory]], [[06 - Configure Bridge and Bonding Devices - Demo]]
 *   **Seguridad perimetral:** [[07 - Configure Packet Filtering (Firewall)]], [[09 - Port Redirection and Network Address Translation (NAT)]]
-*   **Servicios de Red:** [[10 - Implement Reverse Proxies and Load Balancers]], [[11 - Set and Synchronize System Time Using Time Servers]], [[12 - Configure SSH Servers and Clients]]
+*   **Servicios de Red:** [[10 - Implement Reverse Proxies and Load Balancers]], [[11 - Set and Synchronize System Time Using Time Servers]], [[12 - Configure SSH Servers and Clients]] [[06 - Configure Bridge and Bonding Devices - Demo]]
+* 
 
 ### 💾 06 - Storage
 *   **Discos y Particiones:** [[01 - List, Create, Delete, and Modify Physical Storage Partitions]], [[02 - Configure and Manage Swap Space]]

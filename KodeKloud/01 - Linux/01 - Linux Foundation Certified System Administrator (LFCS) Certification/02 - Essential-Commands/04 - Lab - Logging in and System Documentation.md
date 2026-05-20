@@ -5,6 +5,7 @@ Tema: Lab - Manage Containers and VMs
 Fecha de Inicio: 2026-04-10
 Dificultad: Básico Medio
 Tareas Totales: "10"
+Type: Laboratorios del LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |

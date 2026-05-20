@@ -6,11 +6,7 @@ Fecha de Inicio: 2026-04-29
 Dificultad: Intermedio-Baja
 Tareas Totales: "6"
 tags:
-  - Linux
-  - Linux/LFCS-Certification
-  - Linux/LFCS-Certification/Operations-Deployment
-  - Linux/LFCS-Certification/Operations-Deployment/Lab-Verify-Integrity-and-Availability
-  - Linux/LFCS-Certification/Operations-Deployment/Lab-Verify-Integrity-and-Availability/Laboratorio
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |

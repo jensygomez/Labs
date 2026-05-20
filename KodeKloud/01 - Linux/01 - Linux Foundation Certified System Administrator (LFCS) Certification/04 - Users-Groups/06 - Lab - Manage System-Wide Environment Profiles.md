@@ -5,12 +5,6 @@ Tema: Lab - Manage System-Wide Environment Profiles
 Fecha de Inicio: 2001-04-20
 Dificultad: Básico Medio
 Tareas Totales: "12"
-tags:
-  - Linux
-  - Linux/LFCS-Certification
-  - "#Linux/LFCS-Certification/Users-Groups"
-  - "#Linux/LFCS-Certification/Users-Groups/Lab-Manage-System-Wide-Enviroment-Profiles"
-  - "#Linux/LFCS-Certification/Users-Groups/Lab-Manage-System-Wide-Enviroment-Profiles/Laboratorio"
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |
@@ -18,6 +12,7 @@ tags:
 | 20 - 04 - 2026 | 20 min | 33 %  |               |
 | 17 - 05 -2026  | 35 min | 33 %  |               |
 
+[[Laboratorios del LFCS]]
 
 ---
 

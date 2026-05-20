@@ -1,4 +1,10 @@
+---
+tags:
+  - Laboratorios-del-LFCS
+---
 # 🗺️ Mapa de Control: LFCS
+
+
 
 
 ## 🛠️ Roadmap de Laboratorios 
@@ -26,6 +32,9 @@
 - [ ] [[03 - Lab - Manage User Accounts and Groups]]                                     23 %  -->  17 Mayo 2026
 - [ ] [[06 - Lab - Manage System-Wide Environment Profiles]]                       33 %  -->  17 Mayo 2026
 - [ ] [[09 - Lab - Configure User Resource Limits]]                                            27 %  -->  18 Mayo 2026
+
+
+
 ---
 ### 5. Networking
 - [ ] [[04 - Lab - Configure Networking Start Stop Check]]                              50 %  -->  18 Mayo 2026
