@@ -3,6 +3,19 @@ Curso: Prep Course - LFCS Certification
 Modulo: Essential Commands
 Tema: Lab - File Permissions, Search for Files
 Fecha: 2026-05-11
+Dificultad:
+Tareas del Lab: "16"
+---
+
+## 📊 Bitácora de Intentos
+|    Fecha     | Tiempo | Éxito | Task |
+| :----------: | :----: | :---: | :--: |
+| `11/05/2026` | 20 min | 50 %  |  16  |
+| `20/05/2026` | 20 min | 100 % |  18  |
+
+[[Laboratorios del LFCS]]
+
+
 ---
 
 
