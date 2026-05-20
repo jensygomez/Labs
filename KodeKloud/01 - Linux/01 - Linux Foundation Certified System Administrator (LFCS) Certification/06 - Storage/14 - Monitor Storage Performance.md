@@ -9,10 +9,6 @@ Dificultad: Básico Alto
 Calificación:
 Tareas del Lab:
 Time: 20 min
-tags:
-  - "#Linux/LFCS-Certification/Storage"
-  - "#Linux"
-  - "#Linux/LFCS-Certification"
 ---
 **Resumen:**
 

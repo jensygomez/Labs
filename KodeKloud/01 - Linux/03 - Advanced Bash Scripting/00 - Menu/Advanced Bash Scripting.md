@@ -14,17 +14,26 @@
 
 ### 2. Conventions
 
-- [ ] [[01 - Linux/03 - Advanced Bash Scripting/03 - Refresher/01 - Overview]]
-- [ ] [[02 - Variables]]
-- [ ] [[01 - Linux/03 - Advanced Bash Scripting/02 - Conventions/03 - Functions]]
-- [ ] [[04 - Expanding]]
-- [ ] [[05 - Quiz - Conventions]]                                                         |    67 %
+[[01 - Linux/03 - Advanced Bash Scripting/02 - Conventions/01 - Overview|01 - Overview]]
+[[02 - Variables]]
+[[01 - Linux/03 - Advanced Bash Scripting/02 - Conventions/03 - Functions|03 - Functions]]
+[[04 - Expanding]]
+[[05 - Quiz - Conventions]]                                                         |    67 %
 
 ### 3. Refresher
 
-- [ ] [[04 - Lab - Functions]]                                                  ---->    63 %      15 Mayo 2026
-- [ ] [[06 - Lab - CLI]]                                                              ---->    43 %      15 Mayo 2026                        
-- [ ] 
+[[01 - Linux/03 - Advanced Bash Scripting/03 - Refresher/01 - Overview|01 - Overview]]
+[[02 - Scriptflow]]
+[[01 - Linux/03 - Advanced Bash Scripting/03 - Refresher/03 - Functions|03 - Functions]]
+[[04 - Lab - Functions]]                                                  ---->    63 %      15 Mayo 2026
+[[05 - Command Line Arguments]]
+[[06 - Lab - CLI]]                                                              ---->    43 %      15 Mayo 2026                        
+[[07 - pid]]
+[[08 - Built-in Commands]]
+[[09 - Keywords-builtins]]
+[[10 - Lab - Builtin]]
+
+
 
 
 

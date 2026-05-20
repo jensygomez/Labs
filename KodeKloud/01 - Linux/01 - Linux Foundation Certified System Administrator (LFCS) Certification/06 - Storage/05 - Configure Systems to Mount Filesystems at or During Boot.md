@@ -9,10 +9,6 @@ Dificultad: Básico Medio
 Calificación:
 Task:
 Time: 15 min
-tags:
-  - "#Linux/LFCS-Certification/Storage"
-  - "#Linux"
-  - "#Linux/LFCS-Certification"
 ---
 ## Montaje Permanente de Sistemas de Archivos en el Arranque
 

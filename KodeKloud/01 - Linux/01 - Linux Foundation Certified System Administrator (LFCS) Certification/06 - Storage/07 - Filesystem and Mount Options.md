@@ -9,10 +9,6 @@ Dificultad: Básico Medio
 Calificación:
 Tareas del Lab:
 Time: 10 min
-tags:
-  - "#Linux/LFCS-Certification/Storage"
-  - "#Linux"
-  - "#Linux/LFCS-Certification"
 ---
 ## Opciones de Montaje y Configuración Avanzada de Filesystems
 

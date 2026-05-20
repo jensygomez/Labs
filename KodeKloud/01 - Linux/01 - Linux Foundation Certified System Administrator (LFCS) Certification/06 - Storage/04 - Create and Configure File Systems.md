@@ -9,10 +9,6 @@ Dificultad: Básico Medio
 Calificación:
 Task:
 Time: 20 min
-tags:
-  - "#Linux/LFCS-Certification/Storage"
-  - "#Linux"
-  - "#Linux/LFCS-Certification"
 ---
 
 ## Creación y Configuración de Sistemas de Archivos

@@ -9,11 +9,6 @@ Dificultad: Intermedio-Medio
 Calificación: 50 % de aciertos
 Tareas del Lab: "8"
 Time: 15 min
-tags:
-  - "#Linux/LFCS-Certification/Storage"
-  - "#Linux/LFCS-Certification/Storage/Laboratorio"
-  - "#Linux"
-  - "#Linux/LFCS-Certification"
 ---
 **Resumen:**
 

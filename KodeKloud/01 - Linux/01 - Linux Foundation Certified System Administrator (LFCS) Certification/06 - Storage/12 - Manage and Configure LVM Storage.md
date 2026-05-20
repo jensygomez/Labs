@@ -9,10 +9,6 @@ Dificultad: Básico Alto
 Calificación:
 Tareas del Lab:
 Time: 15 min
-tags:
-  - "#Linux/LFCS-Certification/Storage"
-  - "#Linux"
-  - "#Linux/LFCS-Certification"
 ---
 
 ## Logical Volume Manager (LVM) - Flexibilidad de Almacenamiento

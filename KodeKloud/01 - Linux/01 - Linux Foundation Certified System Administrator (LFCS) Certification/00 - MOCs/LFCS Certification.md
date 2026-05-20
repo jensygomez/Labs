@@ -1,54 +1,26 @@
-
-
 # 🗺️ Mapa de Control: LFCS
 
-
-## 🛠️ Roadmap de Laboratorios 
-
-### 2. Essential Commands
- - [ ] [[04 - Lab - Logging in and System Documentation]]                           90 %  -->  17 Mayo 2026  
-- [ ] [[08 - Lab - Files, Directories, Hard and Soft Links]]                           100 %  
-- [ ] [[12 - Lab - File Permissions, Search for Files]]                                    100 %
-- [ ] [[18 - Lab - File Content, Regular Expressions]]                                        82 %  -->  15 Mayo 2026
-- [ ] [[23 - Lab - Archive, Back Up, Compress, IO Redirection]]                      60 %  -->  15 Mayo 2026
-- [ ] [[28 - Lab - Git & SSL Certificates]]                                                               10 %  -->  14 Mayo 2026
-### 3. Operations Deployment
-- [ ] [[06 - Lab - Scripting, Manage Startup Process and Services]]               35 %  -->  15 Mayo 2026
-- [ ] [[09 - Lab - Manage Processes and Analyze Log Files]]                              7 %  -->  16 Mayo 2026
-- [ ] [[11 - Lab - Schedule Tasks]]                                                                            0 %  -->  16 Mayo 2026
-- [ ] [[15 - Lab Manage Software, Repositories]]                                               14 %  -->  16 Mayo 2026
-- [ ] [[17 - Lab - Verify Integrity and Availability]]                                               0 %  -->  16 Mayo 2026 
-- [ ] [[21 - Lab - Kernel Runtime Parameters and SELinux]]                              0 %  -->  16 Mayo 2026
-- [ ] [[26 - Lab - Manage Containers and VMs]]                                                 40 %  -->  17 Mayo 2026
-### 4. Users and Groups
-- [ ] [[03 - Lab - Manage User Accounts and Groups]]                                     23 %  -->  17 Mayo 2026
-- [ ] [[06 - Lab - Manage System-Wide Environment Profiles]]                       33 %  -->  17 Mayo 2026
-- [ ] [[09 - Lab - Configure User Resource Limits]]                                            27 %  -->  18 Mayo 2026
 ---
-### 5. Networking
-- [ ] [[04 - Lab - Configure Networking Start Stop Check]]                              50 %  -->  18 Mayo 2026
-- [ ] [[08 - Lab - Packet Filtering]]                                                                         50 %  -->  18 Mayo 2026
-- [ ] [[13 - Lab - Configure SSH Servers and Clients]]                                       16 %  -->  19 Mayo 2026
-
----
-
-### 6. Storage
-[[03 - Lab - Manage Partitions and Swap Space]]                                             44 %  -->  19 Mayo 2026
-[[06 - Lab - Create Filesystems and Mount Them at Boot]]                            55 %  -->  19 Mayo 2026
-[[08 - Lab - Filesystem Features and Mount Options]]                                    40 %  -->  19 Mayo 2026
-
-
----
-
-
-
-
----
+[[Laboratorios del LFCS]]
 
 ## 📑 Índice Temático del Curso (Módulos Oficiales)
 
+### 01 - Introduction
+[[01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/01 - Introduction/01 - Course Introduction|01 - Course Introduction]]
+[[02 - Course Structure]]
+[[03 - Prerequisites and Exam Details]]
+[[04 - Certification and Discounts]]
+[[05 - LFCS Command Cheat Sheet]]
+[[06 - KodeKloud Community]]
+
+
+
+
+
 ### 🗂️ 02 - Essential Commands
 *   **Fundamentos:** [[01 - Log in to Local & Remote Graphical and Text Mode Consoles]], [[03 - Read and Use System Documentation]]
+* [[02 - Log in to Local & Remote Graphical and Text Mode Consoles]]
+* 
 *   **Estructura de Archivos:** [[05 - Create, Delete, Copy, and Move Files and Directories]], [[06 - Create and Manage Hard Links]], [[07 - Create and Manage Soft Links]]
 *   **Permisos e Inyección:** [[10 - SUID, SGID, and Sticky Bit]], [[11 - IO Redirection]]
 *   **Servicios Core:** [[12 - SSL Certificates]], [[13 - Git Basics]]

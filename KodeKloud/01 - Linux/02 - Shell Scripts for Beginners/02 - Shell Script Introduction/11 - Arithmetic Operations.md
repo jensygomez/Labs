@@ -8,8 +8,6 @@ Estado: completado
 Dificultad: Básico Bajo
 Calificación:
 Time: 6 min
-tags:
-  - Linux/Shell-Scripts-for-Beginners/Arithmetic-Operations
 ---
 Las operaciones aritméticas en shell scripts se pueden realizar de varias formas. La más tradicional es utilizar el comando `expr`, que evalúa expresiones matemáticas simples. Sin embargo, existen alternativas más modernas y eficientes que son preferibles en scripts actuales. El uso de doble paréntesis precedido del símbolo `$` permite realizar operaciones aritméticas directamente sin necesidad de comandos externos, mejorando el rendimiento del script.
 

@@ -9,10 +9,6 @@ Dificultad:
 Calificación:
 Tareas del Lab:
 Time: 15 min
-tags:
-  - "#Linux/LFCS-Certification/Storage"
-  - "#Linux"
-  - "#Linux/LFCS-Certification"
 ---
 
 **Resumen:**

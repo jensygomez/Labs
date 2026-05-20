@@ -2,18 +2,18 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Storage
 Tema: Lab - Manage LVM
-Typo: Laboratorio
-Fecha: 2026-05-09
-Estado: completado
+Fecha de Inicio: 2026-05-09
 Dificultad: Intermedio-Baja
-Calificación: 66 %
 Tareas del Lab: "12"
-Time: 30 min
-tags:
-  - "#Linux/LFCS-Certification/Storage/cfdisk"
-  - "#Linux/LFCS-Certification/Storage/Laboratorio"
-  - "#Linux"
-  - "#Linux/LFCS-Certification"
+---
+## 📊 Bitácora de Intentos
+| Fecha          | Tiempo | Éxito | Notas Rápidas |
+| :------------- | :----- | :---- | :------------ |
+| 09 - 05 - 2026 | 30 min | 66 %  |               |
+| 20 - 05 - 2026 | min    | %     |               |
+
+[[Laboratorios del LFCS]]
+
 ---
 
 ## LVM Hands-On: Del Disco Físico al Volumen Lógico

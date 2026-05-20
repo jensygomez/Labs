@@ -5,12 +5,6 @@ Tema: Lab - Manage Partitions and Swap Space
 Fecha de Inicio: 2026-04-20
 Dificultad: Básico Alto
 Tareas del Lab: "9"
-tags:
-  - "#Linux"
-  - Linux/LFCS-Certification
-  - Linux/LFCS-Certification/Storage
-  - Linux/LFCS-Certification/Storage/Lab-Manage-Partitions-and-Swap
-  - Linux/LFCS-Certification/Storage/Lab-Manage-Partitions-and-Swap/Laboratorio
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |
