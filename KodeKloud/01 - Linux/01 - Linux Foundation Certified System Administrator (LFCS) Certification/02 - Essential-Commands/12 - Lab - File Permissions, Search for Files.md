@@ -11,7 +11,7 @@ Tareas del Lab: "16"
 |    Fecha     | Tiempo | Éxito | Task |
 | :----------: | :----: | :---: | :--: |
 | `11/05/2026` | 20 min | 50 %  |  16  |
-| `20/05/2026` | 20 min | 100 % |  18  |
+| `20/05/2026` |  min   |   %   |  16  |
 
 [[Laboratorios del LFCS]]
 
