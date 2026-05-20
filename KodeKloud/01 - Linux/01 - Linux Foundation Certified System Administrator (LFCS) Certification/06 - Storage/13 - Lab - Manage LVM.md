@@ -10,56 +10,27 @@ Tareas del Lab: "12"
 | Fecha          | Tiempo | Éxito | Notas Rápidas |
 | :------------- | :----- | :---- | :------------ |
 | 09 - 05 - 2026 | 30 min | 66 %  |               |
-| 20 - 05 - 2026 | min    | %     |               |
+| 20 - 05 - 2026 | 45 min | 66 %  |               |
 
 [[Laboratorios del LFCS]]
 
 ---
 
-## LVM Hands-On: Del Disco Físico al Volumen Lógico
+# Laboratorio LVM
 
-Este laboratorio cubrió el ciclo completo de administración de LVM desde cero. Se comenzó instalando lvm2 y creando Physical Volumes a partir de discos nuevos (/dev/vdd y /dev/vde), luego se agruparon en un Volume Group llamado volume1. El concepto clave fue entender cómo los discos físicos se abstraen en PVs, estos se agrupan en VGs, y dentro de los VGs se crean LVs con tamaños específicos. Se practicó la expansión dinámica del VG añadiendo nuevos discos cuando el espacio se agotaba, y la reducción de discos cuando ya no eran necesarios.
+LVM es la respuesta a un problema clásico en infraestructura: ¿qué haces cuando un disco se llena y no puedes parar el sistema? Aquí aprendes a separar el hardware físico de la lógica del almacenamiento. Tus discos crudos se convierten en bloques que puedes agrupar, expandir y contraer sin downtime. Es elasticidad de almacenamiento—lo mismo que ves en AWS o Azure, pero en tu VM. El flujo es simple: declaras discos como Physical Volumes, los agrupas en un Volume Group, y de ahí creas Logical Volumes que el sistema usa normalmente. Cuando se llena, agregas otro disco al grupo. Sin perder datos, sin parar nada.
 
-La parte práctica incluyó operaciones críticas para sysadmins: crear Logical Volumes con tamaños específicos (0.5GB), redimensionar LVs dinámicamente (a 752MB), y crear filesystems en ellos (XFS en este caso). El aspecto operacional importante fue entender que redimensionar un LV no requiere downtime si usas `lvresize --resizefs`. Finalmente, se practicó destruir componentes completamente (remover LVs y PVs). Este lab refuerza que LVM es la base para almacenamiento flexible en entornos de producción Linux.
+Lo que ves en este lab es exactamente lo que harás como Sysadmin en Accenture: instalar LVM, preparar discos físicos, crear un contenedor de almacenamiento flexible, y después expandirlo cuando lo necesites. También aprenderás que remover capacidad requiere planificación—no puedes quitar un disco si tiene datos. Y destruir volúmenes es permanente. Estos detalles importan. Al redimensionar, usarás XFS como filesystem porque permite crecer en caliente. Es el ciclo completo: crear infraestructura, hacer crecer bajo presión, y finalmente desmantelar lo que ya no sirve.
 
-## Comandos Prácticos Completos
+La razón por la que esto importa para una entrevista es que muestra que entiendes cómo la industria resuelve problemas de almacenamiento a escala. No es solo "instalé LVM"—es que captaste por qué existe, cuándo usarlo, y cuáles son sus límites. Cuando un reclutador te pregunte "¿cómo creces almacenamiento sin parar el servicio?", tienes la respuesta. Y cuando te muestren un datacenter con servidores físicos, ya sabes que bajo el capó probablemente hay LVM (o sus equivalentes en almacenamiento enterprise). Para la certificación, recuerda que es una herramienta fundamental que aparecerá en cualquier examen de Sysadmin serio.
+
+---
+
+## Comandos Clave
 
 ```bash
-# 1. Instalar LVM
-sudo apt install lvm2
-
-# 2. Crear Physical Volumes
-sudo pvcreate /dev/vdd /dev/vde
-
-# 3. Ver información de PVs
-sudo pvs
-# Guardar PSize: sudo pvs /dev/vde > /root/pvsize
-
-# 4. Crear Volume Group
-sudo vgcreate volume1 /dev/vdd
-
-# 5. Ver información de VGs
-sudo vgs
-# Guardar VSize: sudo vgs volume1 > /root/volume1
-
-# 6. Expandir Volume Group
-sudo vgextend volume1 /dev/vde
-
-# 7. Crear Logical Volume (0.5GB)
-sudo lvcreate --size 0.5G --name smalldata volume1
-
-# 8. Redimensionar LV (a 752MB)
-sudo lvresize --resizefs --size 752M volume1/smalldata
-
-# 9. Crear filesystem XFS
-sudo mkfs.xfs /dev/volume1/smalldata
-
-# 10. Remover disco de VG
-sudo vgreduce volume1 /dev/vde
-
-# 11. Remover Physical Volume
-sudo pvremove /dev/vde
-
-# 12. Remover Logical Volume
-sudo lvremove volume1/smalldata
+pvcreate /dev/vdd /dev/vde          # Declarar discos como Physical Volumes
+vgcreate volume1 /dev/vdd           # Crear Volume Group
+vgextend volume1 /dev/vde           # Agregar disco a VG existente
+lvcreate -L 0.5G -n smalldata volume1  # Crear Logical Volume
 ```

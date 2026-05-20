@@ -30,21 +30,13 @@
 
 ---
 
-### 6. Storage
-[[03 - Lab - Manage Partitions and Swap Space]]                                             44 %  -->  19 Mayo 2026
-[[06 - Lab - Create Filesystems and Mount Them at Boot]]                            55 %  -->  19 Mayo 2026
-[[08 - Lab - Filesystem Features and Mount Options]]                                    40 %  -->  19 Mayo 2026
-[[10 - Lab - Remote File Systems --> NFS]]                                                         25 %  -->  20 Mayo 2026
-[[13 - Lab - Manage LVM]]
-
-| 6. Storage                                               | **Progres** | **Fecha**    | Ciclo                           |
-| -------------------------------------------------------- | ----------- | ------------ | ------------------------------- |
-| [[03 - Lab - Manage Partitions and Swap Space]]          | 44 %        | `19/05/2026` | <input type="checkbox" checked> |
-| [[06 - Lab - Create Filesystems and Mount Them at Boot]] | 55 %        | `19/05/2026` | <input type="checkbox" checked> |
-| [[08 - Lab - Filesystem Features and Mount Options]]     | 40 %        | `19/05/2026` | <input type="checkbox" checked> |
-| [[10 - Lab - Remote File Systems --> NFS]]               | 25 %        | `20/05/2026` | <input type="checkbox" checked> |
-| [[13 - Lab - Manage LVM]]                                |             | `20/05/2026` | <input type="checkbox" checked> |
-|                                                          |             |              |                                 |
+| 6. Storage                                               | **Progres** | **Fecha**    | Ciclo                                                          |
+| -------------------------------------------------------- | ----------- | ------------ | -------------------------------------------------------------- |
+| [[03 - Lab - Manage Partitions and Swap Space]]          | 44 %        | `19/05/2026` | <input type="checkbox" checked><input type="checkbox" checked> |
+| [[06 - Lab - Create Filesystems and Mount Them at Boot]] | 55 %        | `19/05/2026` | <input type="checkbox" checked><input type="checkbox" checked> |
+| [[08 - Lab - Filesystem Features and Mount Options]]     | 40 %        | `19/05/2026` | <input type="checkbox" checked><input type="checkbox" checked> |
+| [[10 - Lab - Remote File Systems --> NFS]]               | 25 %        | `20/05/2026` | <input type="checkbox" checked><input type="checkbox" checked> |
+| [[13 - Lab - Manage LVM]]                                | 66%         | `20/05/2026` | <input type="checkbox" checked><input type="checkbox" checked> |
 
 
 
