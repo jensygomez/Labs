@@ -2,41 +2,37 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Storage
 Tema: Lab - Advanced Permissions
-Typo: Laboratorio
-Fecha: 2026-05-09
-Estado: completado
+Fecha de Inicio: 2026-05-09
 Dificultad: Intermedio-Medio
-Calificación: 50 % de aciertos
 Tareas del Lab: "8"
-Time: 15 min
 ---
-**Resumen:**
+## 📊 Bitácora de Intentos
+|    Fecha     | Tiempo | Éxito | Task |
+| :----------: | :----: | :---: | :--: |
+| `09/05/2026` | 15 min | 50 %  |  8   |
+| `20/05/2026` | 25 min | 75 %  |  8   |
 
-Este laboratorio integró conceptos clave de permisos avanzados y almacenamiento RAID en Linux. Las tareas enfocadas en ACLs requirieron manipulación precisa de permisos a nivel de usuario y grupo, tanto para archivos individuales como para directorios completos de forma recursiva. El dominio de `setfacl`, `getfacl` y la remoción selectiva de permisos ACL son operaciones críticas cuando se necesita control granular de acceso en ambientes multi-usuario, especialmente en servidores de archivos compartidos donde los permisos tradicionales resultan insuficientes.
+[[Laboratorios del LFCS]]
 
-La segunda parte del laboratorio introdujo conceptos de RAID con `mdadm`, herramienta esencial para configurar arrays de almacenamiento redundante en sistemas Linux. Comprender RAID 1 (mirroring) y cómo crear arrays con múltiples dispositivos físicos es fundamental para implementar soluciones de alta disponibilidad y recuperación ante fallos. El laboratorio consolidó tanto la seguridad de acceso a datos como la redundancia de almacenamiento, pilares del trabajo de un Sysadmin Linux en producción.
+**Here’s how it would sound in English, first person singular (B2 level):**
 
-**Comandos de ejemplo:**
+---
 
-bash
+In Linux, I really like the philosophy of building robust and reliable systems. One good example is using mirrored arrays, also known as RAID 1. This technique copies the same data on two or more disks so that if one disk fails, the information is still safe and the system can continue working. Understanding how to create and check these RAID arrays helps me prepare for real production environments where data availability is very important.
 
-```bash
-# ACL - Permisos recursivos en directorio
-sudo setfacl --recursive --modify user:john:rwx /home/bob/collection
+Another important concept I learned is the use of ACLs, which are Access Control Lists. While traditional Linux permissions are simple and effective, ACLs give me more precise control. They allow me to give specific permissions to certain users or groups without changing the main owner or group permissions. This is very useful in multi-user servers when I need to share files safely and flexibly.
 
-# ACL - Permisos para grupo
-sudo setfacl --modify group:mail:rx specialfile
+Mastering RAID and ACLs shows that I understand the Linux way of thinking: keeping systems secure, manageable, and reliable. In a technical interview, I can explain that these tools help balance data protection, security, and simplicity. This knowledge not only helps me pass the certification exam but also prepares me to solve real problems that companies face every day.
 
-# ACL - Visualizar permisos
-getfacl specialfile
+---
 
-# ACL - Remover permisos de usuario
-sudo setfacl --remove user:john specialfile
+**Key commands to remember:**
 
-# RAID - Crear array RAID 1 (mirror)
-sudo mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/vdd /dev/vde
+- `mdadm --detail --scan`
+- `getfacl filename`
+- `setfacl -m u:john:rw file`
+- `setfacl -R -m u:john:rwx directory`
 
-# RAID - Ver estado de arrays
-sudo mdadm --detail /dev/md0
-cat /proc/mdstat
-```
+---
+
+Would you like me to make it a bit shorter, longer, or change anything?

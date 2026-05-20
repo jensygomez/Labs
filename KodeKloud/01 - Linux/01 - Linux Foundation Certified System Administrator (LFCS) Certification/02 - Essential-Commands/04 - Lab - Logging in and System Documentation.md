@@ -12,6 +12,7 @@ Tareas Totales: "10"
 | 17 - 05 - 2026 | 10 min | 90 %  |               |
 |                |        |       |               |
 
+[[Laboratorios del LFCS]]
 
 ---
 

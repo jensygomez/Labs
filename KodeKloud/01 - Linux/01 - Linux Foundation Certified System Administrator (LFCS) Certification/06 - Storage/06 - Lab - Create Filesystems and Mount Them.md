@@ -12,6 +12,7 @@ Tareas del Lab: "9"
 | 08 - 05 - 2026 | 20 min | 66 %  |               |
 | 19 - 05 - 2026 | 20 min | 55 %  |               |
 
+[[Laboratorios del LFCS]]
 
 ---
 

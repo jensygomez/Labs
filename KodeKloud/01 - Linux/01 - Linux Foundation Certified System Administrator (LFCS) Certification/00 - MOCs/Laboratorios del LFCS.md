@@ -4,8 +4,13 @@
 ## 🛠️ Roadmap de Laboratorios 
 
 ### 2. Essential Commands
- - [ ] [[04 - Lab - Logging in and System Documentation]]                           90 %  -->  17 Mayo 2026  
-- [ ] [[08 - Lab - Files, Directories, Hard and Soft Links]]                           100 %  
+| 6. Storage                                             | Taks | **Progres** |  **Fecha**   |                             Ciclo                              |
+| :----------------------------------------------------- | :--: | :---------: | :----------: | :------------------------------------------------------------: |
+| [[04 - Lab - Logging in and System Documentation]]     |  10  |    90 %     | `17/05/2026` | <input type="checkbox" checked><input type="checkbox" checked> |
+| [[08 - Lab - Files Directories Hard and Soft Links]] |      |             | `10/04/2026` | <input type="checkbox" checked><input type="checkbox" checked> |
+
+
+
 - [ ] [[12 - Lab - File Permissions, Search for Files]]                                    100 %
 - [ ] [[18 - Lab - File Content, Regular Expressions]]                                        82 %  -->  15 Mayo 2026
 - [ ] [[23 - Lab - Archive, Back Up, Compress, IO Redirection]]                      60 %  -->  15 Mayo 2026
@@ -30,13 +35,14 @@
 
 ---
 
-| 6. Storage                                               | **Progres** | **Fecha**    | Ciclo                                                          |
-| -------------------------------------------------------- | ----------- | ------------ | -------------------------------------------------------------- |
-| [[03 - Lab - Manage Partitions and Swap Space]]          | 44 %        | `19/05/2026` | <input type="checkbox" checked><input type="checkbox" checked> |
-| [[06 - Lab - Create Filesystems and Mount Them at Boot]] | 55 %        | `19/05/2026` | <input type="checkbox" checked><input type="checkbox" checked> |
-| [[08 - Lab - Filesystem Features and Mount Options]]     | 40 %        | `19/05/2026` | <input type="checkbox" checked><input type="checkbox" checked> |
-| [[10 - Lab - Remote File Systems --> NFS]]               | 25 %        | `20/05/2026` | <input type="checkbox" checked><input type="checkbox" checked> |
-| [[13 - Lab - Manage LVM]]                                | 66%         | `20/05/2026` | <input type="checkbox" checked><input type="checkbox" checked> |
+| 6. Storage                                               | Taks | **Progres** |  **Fecha**   |                             Ciclo                              |
+| :------------------------------------------------------- | :--: | :---------: | :----------: | :------------------------------------------------------------: |
+| [[03 - Lab - Manage Partitions and Swap Space]]          |      |    44 %     | `19/05/2026` | <input type="checkbox" checked><input type="checkbox" checked> |
+| [[06 - Lab - Create Filesystems and Mount Them]] |      |    55 %     | `19/05/2026` | <input type="checkbox" checked><input type="checkbox" checked> |
+| [[08 - Lab - Filesystem Features and Mount Options]]     |      |    40 %     | `19/05/2026` | <input type="checkbox" checked><input type="checkbox" checked> |
+| [[10 - Lab - Remote File Systems --> NFS]]               |      |    25 %     | `20/05/2026` | <input type="checkbox" checked><input type="checkbox" checked> |
+| [[13 - Lab - Manage LVM]]                                |      |     66%     | `20/05/2026` | <input type="checkbox" checked><input type="checkbox" checked> |
+| [[16 - Lab - Advanced Permissions]]                      |  8   |    75 %     | `20/05/2026` | <input type="checkbox" checked><input type="checkbox" checked> |
 
 
 

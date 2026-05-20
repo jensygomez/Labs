@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/08 - Lab - Files Directories Hard and Soft Links.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Laboratorios del LFCS"
+              "title": "08 - Lab - Files Directories Hard and Soft Links"
             }
           }
         ]
@@ -183,10 +183,13 @@
   },
   "active": "90a6f32021a842a3",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/13 - Lab - Manage LVM.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/10 - Lab - Remote File Systems --> NFS.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/16 - Lab - Advanced Permissions.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/08 - Lab - Files Directories Hard and Soft Links.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/06 - Lab - Create Filesystems and Mount Them.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/04 - Lab - Logging in and System Documentation.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/13 - Lab - Manage LVM.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/10 - Lab - Remote File Systems --> NFS.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/15 - Create, Manage, and Diagnose Advanced Filesystem Permissions.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/14 - Monitor Storage Performance.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/12 - Manage and Configure LVM Storage.md",
@@ -194,7 +197,6 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/09 - Use Remote Filesystems --->NFS.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/08 - Lab - Filesystem Features and Mount Options.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/07 - Filesystem and Mount Options.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/06 - Lab - Create Filesystems and Mount Them at Boot.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/05 - Configure Systems to Mount Filesystems at or During Boot.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/04 - Create and Configure File Systems.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/03 - Lab - Manage Partitions and Swap Space.md",
@@ -210,8 +212,6 @@
     "01 - Linux/00 - Menu",
     "01 - Linux/Sem título.base",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/28 - Lab - Git & SSL Certificates.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/23 - Lab - Archive, Back Up, Compress, IO Redirection.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/18 - Lab - File Content, Regular Expressions.md",
     "03 - Kubernetes",
     "02 - Containers",
     "01 - Linux",
