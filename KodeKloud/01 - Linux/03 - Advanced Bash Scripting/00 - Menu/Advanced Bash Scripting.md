@@ -1,3 +1,7 @@
+---
+tags:
+  - Advanced-Bash-Scripting
+---
 
 
 # 🗺️ Mapa de Control: ADVANCED BASH SCRIPTING

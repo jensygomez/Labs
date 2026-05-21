@@ -20,6 +20,20 @@
         "a": 1,
         "rgb": 16711680
       }
+    },
+    {
+      "query": "tag:#Advanced-Bash-Scripting  ",
+      "color": {
+        "a": 1,
+        "rgb": 11657298
+      }
+    },
+    {
+      "query": "",
+      "color": {
+        "a": 1,
+        "rgb": 5431378
+      }
     }
   ],
   "collapse-display": false,
@@ -33,5 +47,5 @@
   "linkStrength": 1,
   "linkDistance": 250,
   "scale": 0.31214753848498666,
-  "close": true
+  "close": false
 }
