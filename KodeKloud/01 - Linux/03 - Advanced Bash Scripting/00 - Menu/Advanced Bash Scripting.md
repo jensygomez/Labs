@@ -46,6 +46,7 @@ tags:
 [[01 - Linux/03 - Advanced Bash Scripting/04 - Streams/01 - Overview|01 - Overview]]
 [[02 - Stdout and stderr]]
 [[03 - File descriptors]]
+[[04 - dev null]]
 
 
 
