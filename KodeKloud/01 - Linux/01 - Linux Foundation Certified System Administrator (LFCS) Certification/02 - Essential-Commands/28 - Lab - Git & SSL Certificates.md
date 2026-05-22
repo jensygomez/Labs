@@ -11,6 +11,7 @@ Tareas Totales: "10"
 | :--------- | :----- | :---- | :------------------------------------------ |
 | 2026-05-14 | 42 min | 10 %  | Problemas iniciales con conceptos de merge. |
 |            |        |       |                                             |
+[[Laboratorios del LFCS]]
 
 ---
 

@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/03 - Advanced Bash Scripting/03 - Refresher/11 - Guard Clause.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/23 - Lab - Archive, Back Up, Compress.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "11 - Guard Clause"
+              "title": "23 - Lab - Archive, Back Up, Compress"
             }
           }
         ]
@@ -183,11 +183,12 @@
   },
   "active": "16d5cf06b2a2684d",
   "lastOpenFiles": [
-    "01 - Linux/03 - Advanced Bash Scripting/00 - Menu/Advanced Bash Scripting.md",
-    "01 - Linux/03 - Advanced Bash Scripting/03 - Refresher/11 - Guard Clause.md",
-    "01 - Linux/03 - Advanced Bash Scripting/03 - Refresher/09 - Keywords-builtins.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/23 - Lab - Archive, Back Up, Compress, IO Redirection.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/28 - Lab - Git & SSL Certificates.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/23 - Lab - Archive, Back Up, Compress.md",
+    "01 - Linux/03 - Advanced Bash Scripting/03 - Refresher/11 - Guard Clause.md",
+    "01 - Linux/03 - Advanced Bash Scripting/00 - Menu/Advanced Bash Scripting.md",
+    "01 - Linux/03 - Advanced Bash Scripting/03 - Refresher/09 - Keywords-builtins.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/18 - Lab - File Content, Regular Expressions.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/LFCS Certification.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/12 - Lab - File Permissions, Search for Files.md",
@@ -208,7 +209,6 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/14 - Monitor Storage Performance.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/12 - Manage and Configure LVM Storage.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/11 - Use Network Block Devices --> NBD.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/09 - Use Remote Filesystems --->NFS.md",
     "01 - Linux/02 - Shell Scripts for Beginners/00 - Menu",
     "01 - Linux/00 - Menu",
     "01 - Linux/Sem título.base",
