@@ -15,6 +15,7 @@ tags:
 | `22/05/26` | 20 min | 50 %  |
 |            |        |       |
 
+[[Advanced Bash Scripting]]
 
 ---
 
