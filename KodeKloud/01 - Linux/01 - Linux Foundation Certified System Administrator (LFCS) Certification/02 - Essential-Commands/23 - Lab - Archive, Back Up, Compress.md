@@ -5,6 +5,8 @@ Tema: Lab - Archive, Back Up, Compress, IO Redirection
 Fecha de Inicio: 2026-05-12
 Dificultad: Basico-Medio
 Tareas Totales: "15"
+tags:
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas                     |

@@ -10,14 +10,14 @@ tags:
 ## 🛠️ Roadmap de Laboratorios 
 
 ### 2. Essential Commands
-| 6. Storage                                           | Taks | **Progres** | **Fecha**  |                                             Ciclo                                             |
-| :--------------------------------------------------- | :--: | :---------: | :--------: | :-------------------------------------------------------------------------------------------: |
-| [[04 - Lab - Logging in and System Documentation]]   |  10  |    90 %     | `17/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-| [[08 - Lab - Files Directories Hard and Soft Links]] |  18  |    100 %    | `20/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-| [[12 - Lab - File Permissions, Search for Files]]    |  16  |    75 %     | `21/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-| [[18 - Lab - File Content, Regular Expressions]]     |  17  |    82 %     | `15/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-| [[23 - Lab - Archive, Back Up, Compress]]            |  15  |             | `22/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-| [[28 - Lab - Git & SSL Certificates]]                |      |             |            |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+| 6. Storage                                           | Taks | **Progres** | **Fecha**  |                                                            Ciclo                                                             |
+| :--------------------------------------------------- | :--: | :---------: | :--------: | :--------------------------------------------------------------------------------------------------------------------------: |
+| [[04 - Lab - Logging in and System Documentation]]   |  10  |    90 %     | `17/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[08 - Lab - Files Directories Hard and Soft Links]] |  18  |    100 %    | `20/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[12 - Lab - File Permissions, Search for Files]]    |  16  |    75 %     | `21/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[18 - Lab - File Content, Regular Expressions]]     |  17  |    82 %     | `15/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[23 - Lab - Archive, Back Up, Compress]]            |  15  |    66 %     | `22/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
+| [[28 - Lab - Git & SSL Certificates]]                |      |             |            |                                <input type="checkbox" checked><input type="checkbox" checked>                                |
 
 
 
