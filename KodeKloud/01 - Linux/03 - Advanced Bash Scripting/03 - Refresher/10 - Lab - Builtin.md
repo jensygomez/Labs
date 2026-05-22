@@ -6,11 +6,7 @@ Fecha de Inicio: 2026-05-18
 Dificultad: Básico Medio
 Tareas Totales: "8"
 tags:
-  - Linux
-  - Linux/Advanced-Bash-Scripting
-  - Linux/Advanced-Bash-Scripting/Refresher
-  - Linux/Advanced-Bash-Scripting/Refresher/Lab-Builtin
-  - Linux/Advanced-Bash-Scripting/Refresher/Lab-Builtin/Laboratorio
+  - Advanced-Bash-Scripting
 ---
 ---
 ## 📊 Bitácora de Intentos
