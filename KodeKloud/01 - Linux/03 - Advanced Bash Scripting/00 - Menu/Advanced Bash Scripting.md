@@ -47,7 +47,4 @@ tags:
 [[02 - Stdout and stderr]]
 [[03 - File descriptors]]
 [[04 - dev null]]
-
-
-
-
+[[05 - Input]]

@@ -4,37 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "1e26cc4b944f2cc1",
+        "id": "dbf03294254c0127",
         "type": "tabs",
         "children": [
           {
-            "id": "16d5cf06b2a2684d",
+            "id": "4f9d6ee3de52ddcc",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/04 - dev null.md",
+                "file": "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/05 - Input.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "04 - dev null"
-            }
-          }
-        ]
-      },
-      {
-        "id": "700c4fc0385a5e32",
-        "type": "tabs",
-        "children": [
-          {
-            "id": "321489608e6c5b35",
-            "type": "leaf",
-            "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Visualização em gráfico"
+              "title": "05 - Input"
             }
           }
         ]
@@ -94,7 +78,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 389.5
+    "width": 389.5,
+    "collapsed": true
   },
   "right": {
     "id": "268fa62162b4574b",
@@ -197,8 +182,9 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "16d5cf06b2a2684d",
+  "active": "4f9d6ee3de52ddcc",
   "lastOpenFiles": [
+    "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/05 - Input.md",
     "01 - Linux/03 - Advanced Bash Scripting/00 - Menu/Advanced Bash Scripting.md",
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/04 - dev null.md",
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/03 - File descriptors.md",
@@ -225,7 +211,6 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/06 - Lab - Manage System-Wide Environment Profiles.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/03 - Lab - Manage User Accounts and Groups.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/06 - Configure Bridge and Bonding Devices - Demo.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/16 - Lab - Advanced Permissions.md",
     "01 - Linux/02 - Shell Scripts for Beginners/00 - Menu",
     "01 - Linux/00 - Menu",
     "01 - Linux/Sem título.base",
