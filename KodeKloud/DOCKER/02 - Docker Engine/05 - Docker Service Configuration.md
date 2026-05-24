@@ -10,7 +10,7 @@
 		video 
 ### Duration:
 		
-Tags: #docker #dca #containerization #networking #security
+Tags: 
 
 El daemon de Docker (`dockerd`) es el proceso central que gestiona los contenedores. Por defecto, utiliza un socket IPC (Inter-Process Communication) para la comunicación entre procesos en el mismo host, pero cuando necesitas comunicación entre múltiples hosts con Docker, debes configurar el protocolo TCP. La configuración se realiza mediante el comando `dockerd` con parámetros específicos, y también es posible utilizar archivos de configuración en formato JSON para mayor flexibilidad y organización.
 
@@ -24,4 +24,3 @@ dockerd --debug --host=tcp://0.0.0.0:2376 --tlsverify --tlscacert=/path/to/ca.pe
 
 ---
 
-**Tags conectados:** #docker → #dca → #containerization → #networking → #security → #devops
