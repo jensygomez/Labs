@@ -5,6 +5,8 @@ Tema: Lab - Manage LVM
 Fecha de Inicio: 2026-05-09
 Dificultad: Intermedio-Baja
 Tareas del Lab: "12"
+tags:
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |

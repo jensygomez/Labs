@@ -6,11 +6,7 @@ Fecha de Inicio: 2026-04-20
 Dificultad: Intermedio-Medio
 Tareas Totales: "13"
 tags:
-  - Linux
-  - Linux/LFCS-Certification
-  - Linux/LFCS-Certification/User-and-Groups
-  - Linux/LFCS-Certification/User-and-Groups/Lab-Manage-User-Accounts-and-Groups
-  - Linux/LFCS-Certification/User-and-Groups/Lab-Manage-User-Accounts-and-Groups/Laboratorio
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |
@@ -18,6 +14,7 @@ tags:
 | 17 - 05 - 2026 | 30 min | 23 %  |               |
 |                |        |       |               |
 
+[[Laboratorios del LFCS]]
 
 ---
 

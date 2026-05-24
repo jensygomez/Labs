@@ -5,6 +5,8 @@ Tema: Lab - Manage Partitions and Swap Space
 Fecha de Inicio: 2026-04-20
 Dificultad: Básico Alto
 Tareas del Lab: "9"
+tags:
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |
@@ -12,6 +14,7 @@ Tareas del Lab: "9"
 | 20 - 04 - 2026 | 20 min | 90 %  |               |
 | 19 - 05 - 2026 | 20 min | 44 %  |               |
 
+[[Laboratorios del LFCS]]
 
 ---
 

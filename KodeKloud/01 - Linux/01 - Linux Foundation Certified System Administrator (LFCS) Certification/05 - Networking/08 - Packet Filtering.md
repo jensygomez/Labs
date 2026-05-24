@@ -6,10 +6,7 @@ Fecha de Inicio: 2026-04-20
 Dificultad: Intermedio-Baja
 Tareas Totales: "10"
 tags:
-  - Linux
-  - Linux/LFCS-Certification
-  - Linux/LFCS-Certification/Networking
-  - Linux/LFCS-Certification/Networking/Lab-Packet-Filtering
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |
@@ -20,6 +17,7 @@ tags:
 
 ---
 
+[[Laboratorios del LFCS]]
 
 
 ## Resumen

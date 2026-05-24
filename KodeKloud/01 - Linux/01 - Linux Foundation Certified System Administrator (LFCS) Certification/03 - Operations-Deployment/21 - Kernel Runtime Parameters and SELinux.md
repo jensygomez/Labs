@@ -6,17 +6,15 @@ Fecha de Inicio: 2026-04-30
 Dificultad: Intermedio-Medio
 Tareas Totales: "9"
 tags:
-  - Linux
-  - Linux/LFCS-Certification
-  - Linux/LFCS-Certification/Operations-Deployment
-  - Linux/LFCS-Certification/Operations-Deployment/Lab-Kernel-Runtime-Parameters-and-SELinux
-  - Linux/LFCS-Certification/Operations-Deployment/Lab-Kernel-Runtime-Parameters-and-SELinux/Laboratorio
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |
 | :------------- | :----- | :---- | :------------ |
 | 16 - 05 - 2026 | 40 min | 0 %   |               |
 |                |        |       |               |
+
+[[Laboratorios del LFCS]]
 
 
 ---

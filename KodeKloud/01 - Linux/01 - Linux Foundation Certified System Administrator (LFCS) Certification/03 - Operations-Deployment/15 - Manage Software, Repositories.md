@@ -6,17 +6,17 @@ Fecha de Inicio: 2026-04-29
 Dificultad: Intermedio-Medio
 Tareas Totales: "7"
 tags:
-  - Linux
-  - Linux/LFCS-Certification
-  - Linux/LFCS-Certification/Operations-Deployment
-  - Linux/LFCS-Certification/Operations-Deployment/Lab-Manage-Software-Repositories
-  - Linux/LFCS-Certification/Operations-Deployment/Lab-Manage-Software-Repositories/Laboratorio
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |
 | :------------- | :----- | :---- | :------------ |
 | 16 - 05 - 2026 | 20 min | 14 %  |               |
 |                |        |       |               |
+|                |        |       |               |
+[[Laboratorios del LFCS]]
+
+
 ### 📝 Resumen
 
 Este laboratorio aborda la gestión completa de software en sistemas Linux basados en Debian/Ubuntu, cubriendo tanto la instalación mediante gestores de paquetes como la compilación desde código fuente. A través de 7 ejercicios prácticos, se domina el uso de **apt** para búsqueda, instalación y desinstalación de paquetes, la identificación de paquetes a partir de binarios específicos, y la configuración de repositorios adicionales. También se practican conceptos críticos como la diferencia entre `apt update` (actualiza la lista de paquetes disponibles) y `apt upgrade` (instala actualizaciones de seguridad), la gestión de dependencias, y la compilación de aplicaciones desde fuente (descarga, compilación con `./configure && make` e instalación).

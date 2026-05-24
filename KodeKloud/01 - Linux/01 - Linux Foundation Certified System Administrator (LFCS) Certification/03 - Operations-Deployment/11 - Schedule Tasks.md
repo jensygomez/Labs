@@ -6,17 +6,15 @@ Fecha de Inicio: 2026-04-27
 Dificultad: Intermedio-Baja
 Tareas Totales: "12"
 tags:
-  - Linux
-  - Linux/LFCS-Certification
-  - Linux/LFCS-Certification/Operations-Deployment
-  - Linux/LFCS-Certification/Operations-Deployment/Lab-Schedule-Tasks
-  - Linux/LFCS-Certification/Operations-Deployment/Lab-Schedule-Tasks/Laboratorio
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |
 | :------------- | :----- | :---- | :------------ |
 | 16 - 05 - 2026 | 25 min |  0 %  |               |
 |                |        |       |               |
+
+[[Laboratorios del LFCS]]
 
   ### 📝 Resumen
 

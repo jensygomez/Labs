@@ -5,6 +5,8 @@ Tema: Lab - Filesystem Features and Mount Options
 Fecha de Inicio: 2026-05-08
 Dificultad: Básico Alto
 Tareas del Lab: "5"
+tags:
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |
@@ -12,6 +14,7 @@ Tareas del Lab: "5"
 | 08 - 05 - 2026 | 15 min | 80 %  |               |
 | 19 - 05 - 2026 | 15 min | 40 %  |               |
 
+[[Laboratorios del LFCS]]
 
 ---
 

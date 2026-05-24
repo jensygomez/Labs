@@ -6,11 +6,7 @@ Fecha de Inicio: 2026-04-20
 Dificultad: Intermedio-Baja
 Tareas Totales: "12"
 tags:
-  - Linux
-  - Linux/LFCS-Certification
-  - Linux/LFCS-Certification/Networking
-  - Linux/LFCS-Certification/Networking/Lab-Configure-SSH-Servers-and-Clients
-  - Linux/LFCS-Certification/Networking/Lab-Configure-SSH-Servers-and-Clients/Laboratorio
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |
@@ -18,6 +14,7 @@ tags:
 | 20 - 04 - 2026 | 40 min | 9 %   |               |
 | 19 - 05 - 2026 | 45 min | 16 %  |               |
 
+[[Laboratorios del LFCS]]
 
 ---
 

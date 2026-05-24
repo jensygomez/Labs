@@ -6,18 +6,14 @@ Fecha de Inicio: 2026-05-16
 Dificultad: Intermedio-Baja
 Tareas Totales: "13"
 tags:
-  - Linux
-  - Linux/LFCS-Certification
-  - Linux/LFCS-Certification/Essential-Commands
-  - Linux/LFCS-Certification/Essential-Commands/Lab-Manage-Processes-and-Analyze-Log-Files
-  - Linux/LFCS-Certification/Essential-Commands/Lab-Manage-Processes-and-Analyze-Log-Files/Laboratorio
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |
 | :------------- | :----- | :---- | :------------ |
 | 16 - 05 - 2026 | 35 min | 7 %   |               |
 |                |        |       |               |
-
+[[Laboratorios del LFCS]]
 ### 📝 Resumen
 
 Este laboratorio cubre dos pilares fundamentales de la administración de sistemas Linux: la gestión de procesos y el análisis de logs del sistema. A través de 13 ejercicios prácticos, se trabaja con herramientas como `ps`, `systemctl` y `journalctl` para monitorear, controlar y enviar señales a procesos. También se practican filtros avanzados en logs, extracción de información crítica como PIDs, direcciones IP de conexiones SSH, y redirección de salidas a archivos específicos. Los conceptos clave incluyen valores de prioridad (nice), información de recursos de procesos, y búsqueda de patrones en archivos de log del sistema.

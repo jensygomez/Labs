@@ -5,6 +5,8 @@ Tema: Lab - Remote File Systems --> NFS
 Fecha de Inicio: 2026-05-09
 Dificultad: Intermedio-Baja
 Tareas del Lab: "8"
+tags:
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |

@@ -13,6 +13,9 @@ tags:
 | :------------- | :----- | :---- | :------------ |
 | 16 - 05 - 2026 | 30 min | 0 %   |               |
 |                |        |       |               |
+
+[[Laboratorios del LFCS]]
+
 ### 📝 Resumen
 
 Este laboratorio se centra en la verificación de integridad y disponibilidad de sistemas Linux, habilidades críticas para mantener la salud operacional de servidores en producción. A través de 6 ejercicios prácticos, se trabaja con herramientas de monitoreo de recursos como `df` (espacio en disco), `du` (uso de directorios), `free` (memoria RAM), `uptime` (tiempo de disponibilidad del sistema), `lscpu` (información de CPU), y `xfs_repair`/`xfs_admin` (integridad de filesystems XFS). Cada tarea requiere extraer información específica del sistema y almacenarla en archivos para auditoría y documentación.

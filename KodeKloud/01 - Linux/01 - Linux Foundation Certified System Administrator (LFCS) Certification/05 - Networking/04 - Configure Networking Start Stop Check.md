@@ -6,11 +6,7 @@ Fecha de Inicio: 2026-04-20
 Dificultad: Intermedio-Baja
 Tareas Totales: "14"
 tags:
-  - Linux
-  - Linux/LFCS-Certification
-  - Linux/LFCS-Certification/Networking
-  - Linux/LFCS-Certification/Networking/Lab-Configure-Networking-Start-Stop-Check-Status
-  - Linux/LFCS-Certification/Networking/Lab-Configure-Networking-Start-Stop-Check-Status/Laboratorio
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |
@@ -21,6 +17,7 @@ tags:
 
 ---
 
+[[Laboratorios del LFCS]]
 
 ### Resumen
 

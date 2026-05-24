@@ -5,6 +5,8 @@ Tema: Lab - Manage System-Wide Environment Profiles
 Fecha de Inicio: 2001-04-20
 Dificultad: Básico Medio
 Tareas Totales: "12"
+tags:
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |

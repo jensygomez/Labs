@@ -5,6 +5,8 @@ Tema: Lab - Create Filesystems and Mount Them at Boot
 Fecha de Inicio: 2026-05-08
 Dificultad: Básico Alto
 Tareas del Lab: "9"
+tags:
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |

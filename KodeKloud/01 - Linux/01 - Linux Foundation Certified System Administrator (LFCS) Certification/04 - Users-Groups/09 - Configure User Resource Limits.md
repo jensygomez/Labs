@@ -6,11 +6,7 @@ Fecha: 2002-04-20
 Dificultad: Intermedio-Baja
 Tareas Totales: "11"
 tags:
-  - Linux
-  - Linux/LFCS-Certification
-  - Linux/LFCS-Certification/Users-Groups
-  - Linux/LFCS-Certification/Users-Groups/Lab-Configure-User-Resource-Limits
-  - Linux/LFCS-Certification/Users-Groups/Lab-Configure-User-Resource-Limits/Laboratorio
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |
@@ -18,6 +14,7 @@ tags:
 | 20 - 04 - 2026 | 20 min | 27 %  |               |
 | 17 - 05 -2026  | 25 min | 27 %  |               |
 
+[[Laboratorios del LFCS]]
 
 ---
 

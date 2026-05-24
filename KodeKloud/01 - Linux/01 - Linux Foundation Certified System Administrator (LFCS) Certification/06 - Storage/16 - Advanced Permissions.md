@@ -5,6 +5,8 @@ Tema: Lab - Advanced Permissions
 Fecha de Inicio: 2026-05-09
 Dificultad: Intermedio-Medio
 Tareas del Lab: "8"
+tags:
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 |    Fecha     | Tiempo | Éxito | Task |
