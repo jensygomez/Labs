@@ -9,52 +9,33 @@ tags:
   - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
-| Fecha          | Tiempo | Éxito | Notas Rápidas |
-| :------------- | :----- | :---- | :------------ |
-| 15 - 05 - 2026 | 40 min | 35 %  |               |
-|                |        |       |               |
+| Fecha      | Tiempo | Éxito | Notas Rápidas |
+| :--------- | :----- | :---- | :------------ |
+| `15/05/26` | 40 min | 35 %  |               |
+| `24/05/26` | 40 min | 35 %  |               |
 
 [[Laboratorios del LFCS]]
-# 📚 Scripting y Gestión de Servicios Systemd
 
-Este laboratorio se enfoca en dominar la creación de scripts bash y la administración de servicios systemd en Linux. A través de 14 tareas progresivas, aprendes a manipular archivos de servicio, configurar el comportamiento de reinicio, crear scripts ejecutables y gestionar el estado de servicios críticos como SSH y Apache2. Las tareas incluyen desde la edición de archivos systemd y corrección de directivas (como RestartPolicy y After), hasta la creación de scripts que interactúen con el sistema de servicios y la configuración del sistema de arranque.
+**Here’s your summary in Advanced B2 English, first person singular:**
 
-El laboratorio cubre conceptos esenciales para un Sysadmin: entender shebangs, permisos de ejecución, gestión de PIDs, archivos tar.gz, targets de boot (graphical vs text), y la programación de apagados del sistema. Dominar estos conceptos es crítico para administrar servidores Linux en producción, especialmente en la automatización de tareas y la resolución de problemas de arranque y servicios.
+---
 
-## 💡 Comandos de Ejemplo
+In this laboratory, I practiced essential system administration tasks related to startup processes and service management. I learned how to schedule a system shutdown, change the default boot target from text-only (multi-user) to graphical desktop, and cancel scheduled tasks. I also worked with systemd services by checking their status, finding process PIDs, masking and unmasking services, and editing service unit files to modify restart behavior and dependencies. These skills reflect the Linux philosophy of having complete control over when and how the system starts and runs services.
 
-```bash
-# Ver estado completo de un servicio
-systemctl status sshd.service
+I also strengthened my Bash scripting abilities. I created scripts to perform practical tasks such as creating compressed archives, modifying directory permissions, and checking service status. I paid special attention to using the correct shebang and making scripts executable. This lab emphasized writing simple but useful automation scripts, which is a core skill for any Linux administrator who wants to work efficiently.
 
-# Encontrar archivo de servicio y editarlo
-find / -name kkloud.service 2>/dev/null
-sudo systemctl edit kkloud.service
+Overall, this lab helped me understand how to manage the boot process and services in modern Linux systems using systemd. In a technical interview, I can confidently explain how to control system startup, create useful scripts, and properly manage services — including editing unit files to improve reliability and security. These are highly valued skills for real production environments.
 
-# Mask/Unmask de servicios
-sudo systemctl mask apache2.service
-sudo systemctl unmask apache2.service
+---
 
-# Crear script ejecutable con shebang
-#!/bin/bash
-chmod +x script.sh
-./script.sh
+**Key commands to remember:**
 
-# Programar apagado en 2 horas
-sudo shutdown -h +120
-
-# Cambiar target de boot (graphical)
-sudo systemctl set-default graphical.target
-sudo systemctl get-default
-```
-
-## 🎯 Conceptos Clave a Retener
-
-- **Shebang**: `#!/bin/bash` es obligatorio al inicio de scripts
-- **RestartPolicy**: Cambiar de `on-failure` a `always` para reinicio incondicional
-- **ExecStop**: Define el comando exacto para detener el servicio
-- **After**: Define dependencias de arranque entre servicios
-- **Mask/Unmask**: Prevenir o permitir que un servicio se inicie
-- **Systemd targets**: `graphical.target` (GUI) vs `multi-user.target` (CLI)
+- `shutdown -h +120` / `shutdown -c`
+- `systemctl set-default graphical.target`
+- `./script.sh` or `bash script.sh`
+- `systemctl status sshd`
+- `systemctl mask apache2` / `systemctl unmask apache2`
+- `tar -czf archive.tar.gz dir1`
+- `chmod u=x,go= directory`
 
 ---
