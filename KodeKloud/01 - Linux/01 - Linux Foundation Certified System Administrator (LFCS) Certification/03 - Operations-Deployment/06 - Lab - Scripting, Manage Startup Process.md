@@ -6,11 +6,7 @@ Fecha de Inicio: 2026-05-15
 Dificultad: Intermedio-Medio
 Tareas Totales: "14"
 tags:
-  - Linux
-  - Linux/LFCS-Certification
-  - Linux/LFCS-Certification/Essential-Commands
-  - Linux/LFCS-Certification/Essential-Commands/Lab-Scripting-Process-Services
-  - Linux/LFCS-Certification/Essential-Commands/Lab-Scripting-Process-Services/Laboratorio
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha          | Tiempo | Éxito | Notas Rápidas |
@@ -18,7 +14,7 @@ tags:
 | 15 - 05 - 2026 | 40 min | 35 %  |               |
 |                |        |       |               |
 
-
+[[Laboratorios del LFCS]]
 # 📚 Scripting y Gestión de Servicios Systemd
 
 Este laboratorio se enfoca en dominar la creación de scripts bash y la administración de servicios systemd en Linux. A través de 14 tareas progresivas, aprendes a manipular archivos de servicio, configurar el comportamiento de reinicio, crear scripts ejecutables y gestionar el estado de servicios críticos como SSH y Apache2. Las tareas incluyen desde la edición de archivos systemd y corrección de directivas (como RestartPolicy y After), hasta la creación de scripts que interactúen con el sistema de servicios y la configuración del sistema de arranque.

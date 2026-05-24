@@ -5,6 +5,8 @@ Tema: Lab - Git & SSL Certificates
 Fecha de Inicio: 2026-05-14
 Dificultad: Intermedio-Baja
 Tareas Totales: "10"
+tags:
+  - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
 | Fecha        | Tiempo | Éxito |

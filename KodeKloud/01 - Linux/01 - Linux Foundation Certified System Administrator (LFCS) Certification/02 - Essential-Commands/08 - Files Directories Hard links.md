@@ -5,6 +5,8 @@ Tema: Lab - Files, Directories, Hard and Soft Links
 Fecha de Inicio: 2026-05-10
 Dificultad: Básico Alto
 Tareas del Lab: "18"
+tags:
+  - Laboratorios-del-LFCS
 ---
 
 ## 📊 Bitácora de Intentos

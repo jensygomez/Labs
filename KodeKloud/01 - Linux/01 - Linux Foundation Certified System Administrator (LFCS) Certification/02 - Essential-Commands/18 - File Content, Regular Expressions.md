@@ -5,6 +5,8 @@ Tema: Lab - File Content, Regular Expressions
 Fecha: 2026-05-11
 Dificultad: Intermedio-Medio
 Tareas Totales: "17"
+tags:
+  - Laboratorios-del-LFCS
 ---
 ---
 ## 📊 Bitácora de Intentos

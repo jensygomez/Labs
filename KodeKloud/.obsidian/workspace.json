@@ -11,14 +11,10 @@
             "id": "08aaba8a2c1c0ff7",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/28 - Lab - Git & SSL Certificates.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "28 - Lab - Git & SSL Certificates"
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Visualização em gráfico"
             }
           }
         ]
@@ -193,10 +189,14 @@
   },
   "active": "08aaba8a2c1c0ff7",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/23 - Lab - Archive, Back Up, Compress.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/28 - Lab - Git & SSL Certificates.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/18 - Lab - File Content, Regular Expressions.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/28 - Git & SSL Certificates.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/23 - Archive, Back Up, Compress.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/18 - File Content, Regular Expressions.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/12 - File Permissions, Search for Files.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/08 - Files Directories Hard links.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/04 - Logging in and System Documentation.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/06 - Lab - Scripting, Manage Startup Process.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/LFCS Certification.md",
     "01 - Linux/00 - Menu/Linux System Administration.md",
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/05 - Input.md",
@@ -211,15 +211,11 @@
     "01 - Linux/03 - Advanced Bash Scripting/03 - Refresher/10 - Lab - Builtin.md",
     "01 - Linux/03 - Advanced Bash Scripting/03 - Refresher/11 - Guard Clause.md",
     "01 - Linux/03 - Advanced Bash Scripting/03 - Refresher/09 - Keywords-builtins.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/12 - Lab - File Permissions, Search for Files.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/17 - Lab - Verify Integrity and Availability.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/08 - Lab - Files Directories Hard and Soft Links.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/04 - Lab - Configure Networking Start Stop Check.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/04 - Lab - Logging in and System Documentation.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/01 - Introduction/02 - Course Structure.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/06 - Lab - Manage System-Wide Environment Profiles.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/03 - Lab - Manage User Accounts and Groups.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/06 - Configure Bridge and Bonding Devices - Demo.md",
     "01 - Linux/02 - Shell Scripts for Beginners/00 - Menu",
     "01 - Linux/00 - Menu",
     "01 - Linux/Sem título.base",

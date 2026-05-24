@@ -9,28 +9,26 @@ tags:
 
 ## 🛠️ Roadmap de Laboratorios 
 
-### 2. Essential Commands
-| 6. Storage                                           | Taks | **Progres** | **Fecha**  |                                                            Ciclo                                                             |
-| :--------------------------------------------------- | :--: | :---------: | :--------: | :--------------------------------------------------------------------------------------------------------------------------: |
-| [[04 - Lab - Logging in and System Documentation]]   |  10  |    90 %     | `17/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
-| [[08 - Lab - Files Directories Hard and Soft Links]] |  18  |    100 %    | `20/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
-| [[12 - Lab - File Permissions, Search for Files]]    |  16  |    75 %     | `21/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
-| [[18 - Lab - File Content, Regular Expressions]]     |  17  |    82 %     | `15/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
-| [[23 - Lab - Archive, Back Up, Compress]]            |  15  |    66 %     | `22/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-| [[28 - Lab - Git & SSL Certificates]]                |      |             |            |                                <input type="checkbox" checked><input type="checkbox" checked>                                |
+| 2. Essentials Commands                               | Taks | **Progres** |  **Fecha**   |                                                            Ciclo                                                             |
+| :--------------------------------------------------- | :--: | :---------: | :----------: | :--------------------------------------------------------------------------------------------------------------------------: |
+| [[04 - Logging in and System Documentation]]   |  10  |    90 %     |  `17/05/26`  |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[08 - Files Directories Hard links]] |  18  |    100 %    |  `20/05/26`  |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[12 - File Permissions, Search for Files]]    |  16  |    75 %     |  `21/05/26`  |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[18 - File Content, Regular Expressions]]     |  17  |    82 %     |  `15/05/26`  |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[23 - Archive, Back Up, Compress]]            |  15  |    66 %     |  `22/05/26`  | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
+| [[28 - Git & SSL Certificates]]                |  10  |    20 %     | `24/05/2026` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
+
+| 3. Operations Deployment                                      | Taks | **Progres** | **Fecha**  |              Ciclo              |
+| :------------------------------------------------------------ | :--: | :---------: | :--------: | :-----------------------------: |
+| [[06 - Lab - Scripting, Manage Startup Process]] |      |    35 %     | `15/05/26` | <input type="checkbox" checked> |
+| [[09 - Lab - Manage Processes and Analyze Log Files]]         |      |     7 %     | `16/05/26` |                                 |
+| [[11 - Lab - Schedule Tasks]]                                 |      |     0 %     | `16/05/26` |                                 |
+| [[15 - Lab Manage Software, Repositories]]                    |      |    14 %     | `16/05/26` |                                 |
+| [[17 - Lab - Verify Integrity and Availability]]              |      |     0 %     | `16/05/26` |                                 |
+| [[21 - Lab - Kernel Runtime Parameters and SELinux]]          |      |     0 %     | `16/05/26` |                                 |
+| [[26 - Lab - Manage Containers and VMs]]                      |      |    40 %     | `17/05/26` |                                 |
 
 
-
-
-
-### 3. Operations Deployment
-- [ ] [[06 - Lab - Scripting, Manage Startup Process and Services]]               35 %  -->  15 Mayo 2026
-- [ ] [[09 - Lab - Manage Processes and Analyze Log Files]]                              7 %  -->  16 Mayo 2026
-- [ ] [[11 - Lab - Schedule Tasks]]                                                                            0 %  -->  16 Mayo 2026
-- [ ] [[15 - Lab Manage Software, Repositories]]                                               14 %  -->  16 Mayo 2026
-- [ ] [[17 - Lab - Verify Integrity and Availability]]                                               0 %  -->  16 Mayo 2026 
-- [ ] [[21 - Lab - Kernel Runtime Parameters and SELinux]]                              0 %  -->  16 Mayo 2026
-- [ ] [[26 - Lab - Manage Containers and VMs]]                                                 40 %  -->  17 Mayo 2026
 ### 4. Users and Groups
 - [ ] [[03 - Lab - Manage User Accounts and Groups]]                                     23 %  -->  17 Mayo 2026
 - [ ] [[06 - Lab - Manage System-Wide Environment Profiles]]                       33 %  -->  17 Mayo 2026
