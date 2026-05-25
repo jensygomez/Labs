@@ -9,40 +9,31 @@ tags:
   - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
-| Fecha          | Tiempo | Éxito | Notas Rápidas |
-| :------------- | :----- | :---- | :------------ |
-| 16 - 05 - 2026 | 35 min | 7 %   |               |
-|                |        |       |               |
+| Fecha      | Tiempo | Éxito | Notas Rápidas |
+| :--------- | :----- | :---- | :------------ |
+| `16/05/26` | 35 min | 7 %   |               |
+| `25/05/26` | 40 min | 23 %  |               |
 [[Laboratorios del LFCS]]
-### 📝 Resumen
 
-Este laboratorio cubre dos pilares fundamentales de la administración de sistemas Linux: la gestión de procesos y el análisis de logs del sistema. A través de 13 ejercicios prácticos, se trabaja con herramientas como `ps`, `systemctl` y `journalctl` para monitorear, controlar y enviar señales a procesos. También se practican filtros avanzados en logs, extracción de información crítica como PIDs, direcciones IP de conexiones SSH, y redirección de salidas a archivos específicos. Los conceptos clave incluyen valores de prioridad (nice), información de recursos de procesos, y búsqueda de patrones en archivos de log del sistema.
 
-El laboratorio integra comandos de gestión de procesos con análisis de logs, simulando tareas reales de troubleshooting que un sysadmin Linux debe dominar diariamente. Desde identificar procesos por PID hasta extraer información de seguridad de logs de SSH, cada tarea prepara para auditorías, optimización de recursos y resolución de problemas en entornos de producción.
 
-### 💻 Ejemplos de Comandos
 
-bash
+---
 
-```bash
-# Ver todos los procesos con sus nice values
-ps aux
+In this laboratory, I focused on managing processes and analyzing log files, two critical skills for any Linux administrator. I learned how to view all running processes along with their nice values, change process priority using `nice`, identify PIDs, and send signals such as SIGHUP to services. I also practiced running processes in the background and checking resource usage of specific processes like PID 1. These tasks reinforced the Linux philosophy that the system administrator has full control over what runs on the machine and how resources are allocated.
 
-# Obtener información de CPU y memoria del PID 1
-ps -p 1 -o pid,user,cmd,%cpu,%mem
+I also gained practical experience working with system logs. I searched for specific information in traditional log files under `/var/log` and used `journalctl` to filter logs by priority (errors, info, etc.) and content. This included finding the last successful SSH connection IP and searching for reboot records. Understanding both classic log files and the modern systemd journal is essential for troubleshooting and auditing system behavior effectively.
 
-# Buscar proceso por nombre y obtener su PID
-ps aux | grep rpcbind | grep -v grep
+This lab helped me connect process management with log analysis, showing how both are used together when diagnosing issues in real environments. In a technical interview, I can clearly explain how to monitor and control processes, adjust priorities, work with signals, and efficiently search through logs using both traditional tools and `journalctl`. These are highly practical skills that demonstrate I can maintain system stability and quickly resolve problems.
 
-# Ejecutar un comando en background
-sleep 3000 &
+---
 
-# Enviar señal SIGHUP a un proceso
-kill -HUP <PID>
+**Key commands to remember:**
 
-# Buscar logs de SSH con journalctl
-journalctl -u ssh.service | grep -i connected
-
-# Buscar archivos en /var/log que contengan "reboot"
-grep -r "reboot" /var/log
-```
+- `ps -eo pid,comm,nice`
+- `nice -n 9 sshd`
+- `lsof -p 1 > files.txt`
+- `journalctl -p err` / `journalctl -p info`
+- `grep -r "reboot" /var/log/`
+- `kill -HUP <PID>`
+- `sleep 3000 &`
