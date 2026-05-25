@@ -18,15 +18,15 @@ tags:
 [[Advanced Bash Scripting]]
 
 ---
-
+![[Lab 1 - Streams.mp3]]
 
 ---
 
-During this laboratory, I strengthened my knowledge of streams and file descriptor redirection in Bash scripting. I learned how to properly manage standard output (stdout) and standard error (stderr) using file descriptors. This practice helped me understand how to redirect each stream separately or combine them, which is essential for writing clean and professional scripts.
+During this lab, I worked extensively with Bash stream redirection and Linux file descriptors, which are fundamental for troubleshooting and operational support in production environments. I practiced separating standard output from standard error in order to improve logging visibility and isolate failures more efficiently. This is especially important when maintaining scripts that may run automatically on servers or within scheduled tasks.
 
-I also worked on practical exercises that involved creating scripts and modifying their output behavior. I practiced sending error messages to stderr instead of stdout, redirecting outputs to different files, and silencing both streams using `/dev/null`. Additionally, I learned the importance of the correct order when using redirections like `2>&1`, which prevents common mistakes in script development.
+I also analyzed different non-zero exit scenarios inside a Git automation script and refactored the error handling logic so that failures were correctly redirected to stderr instead of stdout. From an operational perspective, this improves debugging, monitoring accuracy, and log management, because administrators and monitoring tools can distinguish normal execution from actual failures.
 
-This lab reinforced the Linux philosophy of having full control over how a program communicates with the user and the system. In a technical interview, I can clearly explain the difference between stdout and stderr, how to redirect them effectively, and why these techniques are important for automation and troubleshooting. These skills show that I can write more reliable and maintainable Bash scripts for real production environments.
+One important lesson from this exercise was understanding how Linux processes streams internally and why the order of redirections matters when silencing or capturing outputs. Beyond simply executing commands, I focused on understanding the reasoning behind each redirection technique and how these practices contribute to reliability, maintainability, and troubleshooting efficiency in real Linux server environments.
 
 ---
 
@@ -39,4 +39,3 @@ This lab reinforced the Linux philosophy of having full control over how a progr
 
 ---
 
-¿Quieres que ajuste algo más?
