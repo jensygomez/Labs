@@ -15,19 +15,20 @@ tags:
 | [[23 - Archive, Back Up, Compress]]                       |  15  |    66 %     | `22/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[28 - Git & SSL Certificates]]                           |  10  |    20 %     | `24/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
 
-| 3. Operations Deployment                           - | Taks | **Progres** | **Fecha**  |                             Ciclo                              |
-| :--------------------------------------------------- | :--: | :---------: | :--------: | :------------------------------------------------------------: |
-| [[06 - Scripting, Manage Startup Process]]           |  14  |    35 %     | `24/05/26` | <input type="checkbox" checked><input type="checkbox" checked> |
-| [[09 - Manage Processes and Analyze Log Files]]      |  13  |     7 %     | `16/05/26` |                <input type="checkbox" checked>                 |
-| [[11 - Schedule Tasks]]                              |  12  |     0 %     | `16/05/26` |                <input type="checkbox" checked>                 |
-| [[15 - Manage Software, Repositories]]               |  7   |    14 %     | `16/05/26` |                <input type="checkbox" checked>                 |
-| [[17 - Verify Integrity and Availability]]           |  6   |     0 %     | `16/05/26` |                <input type="checkbox" checked>                 |
-| [[21 - Kernel Runtime Parameters and SELinux]]       |  9   |     0 %     | `16/05/26` |                <input type="checkbox" checked>                 |
-| [[26 - Manage Containers and VMs]]                   |  15  |    40 %     | `17/05/26` |                <input type="checkbox" checked>                 |
+| 3. Operations Deployment                           - | Taks | **Progres** | **Fecha**  |                                             Ciclo                                             |
+| :--------------------------------------------------- | :--: | :---------: | :--------: | :-------------------------------------------------------------------------------------------: |
+| [[06 - Scripting, Manage Startup Process]]           |  14  |    35 %     | `24/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
+| [[09 - Manage Processes and Analyze Log Files]]      |  13  |     7 %     | `16/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[11 - Schedule Tasks]]                              |  12  |     0 %     | `16/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[15 - Manage Software, Repositories]]               |  7   |    14 %     | `16/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[17 - Verify Integrity and Availability]]           |  6   |     0 %     | `16/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[21 - Kernel Runtime Parameters and SELinux]]       |  9   |     0 %     | `16/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[26 - Manage Containers and VMs]]                   |  15  |    40 %     | `17/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+
 
 | 4. Users and Groups                                         - | Taks | **Progres** | **Fecha**  |                             Ciclo                              |
 | :------------------------------------------------------------ | :--: | :---------: | :--------: | :------------------------------------------------------------: |
-| [[03 - Manage User Accounts and Groups]]                      |  13  |    23 %     | `17/05/26` |                <input type="checkbox" checked>                 |
+| [[03 - Manage User Accounts and Groups]]                      |  13  |    23 %     | `17/05/26` | <input type="checkbox" checked><input type="checkbox" checked> |
 | [[06 - Manage System Environment Profiles]]                   |  12  |    33 %     | `17/05/26` | <input type="checkbox" checked><input type="checkbox" checked> |
 | [[09 - Configure User Resource Limits]]                       |  11  |    27 %     | `17/05/26` | <input type="checkbox" checked><input type="checkbox" checked> |
 
