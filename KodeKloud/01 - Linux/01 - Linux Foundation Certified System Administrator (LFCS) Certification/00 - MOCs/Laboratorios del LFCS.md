@@ -19,7 +19,7 @@ tags:
 | :--------------------------------------------------- | :--: | :---------: | :--------: | :-------------------------------------------------------------------------------------------: |
 | [[06 - Scripting, Manage Startup Process]]           |  14  |    35 %     | `24/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[09 - Manage Processes and Analyze Log Files]]      |  13  |    23 %     | `25/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-| [[11 - Schedule Tasks]]                              |  12  |     0 %     | `16/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[11 - Schedule Tasks]]                              |  12  |    25 %     | `25/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
 | [[15 - Manage Software, Repositories]]               |  7   |    14 %     | `16/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
 | [[17 - Verify Integrity and Availability]]           |  6   |     0 %     | `16/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
 | [[21 - Kernel Runtime Parameters and SELinux]]       |  9   |     0 %     | `16/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
