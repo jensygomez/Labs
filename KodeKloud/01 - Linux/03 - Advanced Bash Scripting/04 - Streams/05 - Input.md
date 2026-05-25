@@ -12,7 +12,7 @@ tags:
 
 
 ---
-**Here’s your summary in Advanced B2 English, first person singular:**
+
 
 ---
 
@@ -40,4 +40,4 @@ This technique showed me how powerful and precise file descriptors can be when I
 
 ---
 
-**Nivel de dificultad:** Básico Medio
+
