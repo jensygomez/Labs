@@ -15,10 +15,6 @@ tags:
 | `24/05/2026` | 20 min | 2 0%  |
 [[Laboratorios del LFCS]]
 
----
-
-
-**Here’s your summary in Advanced B2 English, first person singular:**
 
 ---
 

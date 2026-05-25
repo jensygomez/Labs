@@ -14,16 +14,20 @@ tags:
 | [[18 - File Content, Regular Expressions]]                |  17  |    82 %     | `15/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
 | [[23 - Archive, Back Up, Compress]]                       |  15  |    66 %     | `22/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[28 - Git & SSL Certificates]]                           |  10  |    20 %     | `24/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
+|                                                           |      |             |            |                                                                                                                              |
+| totales                                                   |      |             |            |                                                                                                                              |
 
 | 3. Operations Deployment                           - | Taks | **Progres** | **Fecha**  |                                             Ciclo                                             |
 | :--------------------------------------------------- | :--: | :---------: | :--------: | :-------------------------------------------------------------------------------------------: |
 | [[06 - Scripting, Manage Startup Process]]           |  14  |    35 %     | `24/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[09 - Manage Processes and Analyze Log Files]]      |  13  |    23 %     | `25/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-| [[11 - Schedule Tasks]]                              |  12  |    25 %     | `25/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[11 - Schedule Tasks]]                              |  12  |    25 %     | `25/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[15 - Manage Software, Repositories]]               |  7   |    14 %     | `16/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
 | [[17 - Verify Integrity and Availability]]           |  6   |     0 %     | `16/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
 | [[21 - Kernel Runtime Parameters and SELinux]]       |  9   |     0 %     | `16/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
 | [[26 - Manage Containers and VMs]]                   |  15  |    40 %     | `17/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+|                                                      |      |             |            |                                                                                               |
+| TOTALES TAREAS:                                      |  76  |    19 %     |            |                                                                                               |
 
 
 | 4. Users and Groups                                         - | Taks | **Progres** | **Fecha**  |                             Ciclo                              |
