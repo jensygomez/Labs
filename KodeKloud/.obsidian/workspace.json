@@ -194,6 +194,9 @@
   "active": "08aaba8a2c1c0ff7",
   "lastOpenFiles": [
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/09 - Manage Processes and Analyze Log Files.md",
+    "AudiosVideos/Lab - Manage Processes and Analyze Log Files.mp3",
+    "AudiosVideos",
     "DOCKER/02 - Docker Engine/05 - Docker Service Configuration.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/06 - Scripting, Manage Startup Process.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/26 - Manage Containers and VMs.md",
@@ -201,7 +204,6 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/17 - Verify Integrity and Availability.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/15 - Manage Software, Repositories.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/11 - Schedule Tasks.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/09 - Manage Processes and Analyze Log Files.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/06 - Manage System Environment Profiles.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/09 - Configure User Resource Limits.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/03 - Manage User Accounts and Groups.md",
@@ -218,7 +220,6 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/23 - Archive, Back Up, Compress.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/18 - File Content, Regular Expressions.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/12 - File Permissions, Search for Files.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/08 - Files Directories Hard links.md",
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams",
     "01 - Linux/02 - Shell Scripts for Beginners/00 - Menu",
     "01 - Linux/00 - Menu",
@@ -228,8 +229,6 @@
     "01 - Linux",
     "LINUX/00 - qui/Sem título.canvas",
     "LINUX/00 - qui/Sem título.base",
-    "LINUX/00 - qui",
-    "LINUX",
     "Advanced Bash Scripting/01 - Introduction.canvas",
     "ChatGPT Image 19 de abr. de 2026, 07_59_54.png"
   ]

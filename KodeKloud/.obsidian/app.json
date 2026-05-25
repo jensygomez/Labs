@@ -1,5 +1,8 @@
 {
   "promptDelete": false,
   "alwaysUpdateLinks": true,
-  "showLineNumber": false
+  "showLineNumber": false,
+  "newLinkFormat": "shortest",
+  "newFileLocation": "folder",
+  "newFileFolderPath": "AudiosVideos"
 }

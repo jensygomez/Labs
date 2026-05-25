@@ -16,7 +16,7 @@ tags:
 [[Laboratorios del LFCS]]
 
 
-
+![[Lab - Manage Processes and Analyze Log Files.mp3]]
 
 ---
 
