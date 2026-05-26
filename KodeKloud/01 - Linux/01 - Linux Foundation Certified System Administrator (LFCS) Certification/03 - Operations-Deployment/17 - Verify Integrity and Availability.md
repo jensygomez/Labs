@@ -3,25 +3,30 @@ Curso: Prep Course - LFCS Certification
 Modulo: Operations Deployment
 Tema: Lab - Verify Integrity and Availability
 Fecha de Inicio: 2026-04-29
-Dificultad: Intermedio-Baja
+Dificultad: Intermedio-Medio
 Tareas Totales: "6"
 tags:
   - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
-| Fecha          | Tiempo | Éxito | Notas Rápidas |
-| :------------- | :----- | :---- | :------------ |
-| 16 - 05 - 2026 | 30 min | 0 %   |               |
-|                |        |       |               |
+| Fecha      | Tiempo | Éxito | Notas Rápidas |
+| :--------- | :----- | :---- | :------------ |
+| `29/04/26` | 30 min | 0 %   |               |
+| `16/05/26` | 30 min | 0 %   |               |
+| `26/05/26` | 30 min | 66 %  |               |
 
 [[Laboratorios del LFCS]]
 
-### 📝 Resumen
 
-Este laboratorio se centra en la verificación de integridad y disponibilidad de sistemas Linux, habilidades críticas para mantener la salud operacional de servidores en producción. A través de 6 ejercicios prácticos, se trabaja con herramientas de monitoreo de recursos como `df` (espacio en disco), `du` (uso de directorios), `free` (memoria RAM), `uptime` (tiempo de disponibilidad del sistema), `lscpu` (información de CPU), y `xfs_repair`/`xfs_admin` (integridad de filesystems XFS). Cada tarea requiere extraer información específica del sistema y almacenarla en archivos para auditoría y documentación.
+---
 
-El laboratorio simula escenarios reales de troubleshooting: identificar particiones llenas que afectan disponibilidad, verificar integridad de filesystems antes de fallos críticos, monitorear recursos de hardware, y documentar el estado del sistema. Dominar estas herramientas permite detectar proactivamente problemas de capacidad, validar filesystems corruptos, y mantener registros históricos de la salud del sistema—fundamentales para SLAs y compliance en entornos empresariales.
+In this system diagnostics assessment, I moved beyond package management into the operational reality of what it means to maintain a Linux infrastructure. I discovered that monitoring disk utilization isn't simply about running `df` or `du`; it's about understanding the critical difference between filesystem-level metrics and actual directory footprints. When I extracted the percentage of used space on the root partition and the storage consumed by `/bin/`, I recognized these are early-warning signals for capacity planning and system degradation. A partition that creeps toward 90% used can trigger cascading failures in production—from log rotation failures to temporary file creation issues—which is why a competent sysadmin must establish thresholds and automated alerts long before crisis arrives.
 
+Memory and uptime analysis taught me that system resources tell a story about stability and load patterns. By querying total RAM through `free` and system uptime through `uptime`, I learned to read the pulse of an infrastructure. A system that shows high memory usage paired with short uptime might indicate a memory leak or crashed service that was auto-restarted; conversely, high uptime with stable memory suggests a well-tuned environment. These metrics are foundational to capacity planning and incident response—I cannot intelligently scale infrastructure or troubleshoot performance issues without understanding what resources are currently available and how long the system has been running under its current configuration.
+
+The final challenges—identifying CPU topology through `lscpu` and verifying XFS filesystem integrity—reinforced that modern infrastructure requires deep visibility into hardware and storage layers. Checking CPU cores per socket isn't academic; it directly impacts how I tune multi-threaded applications and allocate workloads across sockets to minimize latency. Running `xfs_repair` in read-only mode to detect filesystem corruption without taking systems offline exemplifies the principle that prevention and early detection protect availability far better than reactive repair. This assessment solidified my conviction that a true sysadmin must think systemically—every command reveals interconnected layers, and missing any layer risks cascading failures in production.
+
+---
 ### 💻 Ejemplos de Comandos
 
 bash
