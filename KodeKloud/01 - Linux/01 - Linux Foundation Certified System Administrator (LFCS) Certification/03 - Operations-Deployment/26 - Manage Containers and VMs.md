@@ -18,162 +18,16 @@ tags:
 [[Laboratorios del LFCS]]
 
 ---
-Question 1 of 15
 
-What does this command do?  
-  
+During this technical assessment, I worked through infrastructure provisioning scenarios that deepened my understanding of how modern Linux systems manage compute resources across multiple abstraction layers. Rather than simply knowing container and virtualization commands, I learned to distinguish between ephemeral containerized workloads and persistent virtual machine infrastructure—a critical architectural distinction in production environments. When I created and managed Docker containers with `docker run -d -p 1234:80 --name website`, I understood that containerization trades infrastructure isolation for resource efficiency and rapid deployment cycles. Conversely, when I provisioned VMs using `virsh` and `virt-install`, I recognized that virtual machines provide stronger isolation boundaries at the cost of greater overhead, making them suitable for workloads requiring full operating system separation or legacy application support. This exercise taught me that infrastructure decisions are not about tool familiarity, but about aligning container or VM strategies with specific workload requirements.
 
-```sh
-virsh destroy TestMachine
-```
+The second dimension of this work involved state management and persistence—understanding that infrastructure, unlike code, must survive restarts and unexpected failures. I configured Docker containers with `--restart always` to ensure they recover automatically, and I set VMs to autostart at boot using `sudo virsh autostart`, recognizing that production systems cannot depend on manual intervention. When I modified VM memory using `sudo virsh setmem VM2 80M`, I verified changes were persisted using `sudo virsh dominfo`, learning that infrastructure modifications must be atomic and verifiable, not assumed. I also created VMs from both XML configuration files and cloud images using `virt-install`, understanding that infrastructure-as-code principles apply equally to virtualization—configuration should be declarative, reproducible, and version-controllable. This reflects deeper Linux philosophy: infrastructure must be programmable and recoverable.
 
-   
-  
-**A.** It deletes the virtual machine called TestMachine.  
-  
-  
-**B.** It forces a power off for the virtual machine called TestMachine.  
-  
-  
-**C.** It destroys all data stored in the virtual machine called TestMachine.  
-  
-  
-**D.** It deletes both the virtual machine called TestMachine and the data stored on it.
+The final challenge—spinning up a complete cloud image VM with specific resource allocations and networking—demonstrated that modern Linux administrators orchestrate entire environments, not individual machines. Using `virt-install` with cloud images, I provisioned a fully configured Ubuntu system with precise CPU, memory, and disk specifications in a single declarative command. This showed me that containerization and virtualization are not competing technologies but complementary tools in a layered infrastructure stack: containers for stateless, ephemeral workloads; VMs for persistent, isolated environments; and both managed through the same declarative, scriptable interfaces. A competent Linux infrastructure engineer thinks in terms of resource orchestration, failure recovery, and automation—not individual machine administration.
 
-============
+---
 
-Question 2 of 15
-
-Which of the following commands would you use to set the virtual machine called `VM1` to automatically start up at boot?
-
-===================
-Question 3 of 15
-
-Which of the following commands is used to list all docker containers (including stopped containers) present on a system?
-
-============
-
-Question 4 of 15
-
-Pull `docker.io/library/nginx` image on this system.
-
-===============
-
-Question 5 of 15
-
-Create and run a new Docker container based on the `docker.io/library/nginx` image. Three command line options should be used:  
-  
-
-**A.** The option to detach from this container's input/output (so you're not stuck inside the container once you run your command)  
-  
-  
-**B.** The option to map port `1234` on the host to port `80` on the container  
-  
-  
-**C.** The option to name this new container as `website`
-
-=============
-
-
-Question 6 of 15
-
-Remove the `docker.io/library/nginx` docker image.
-
-=============
-
-Question 7 of 15
-
-Remove all docker containers (including running, stopped containers) from this system.
-
-================
-
-
-Question 8 of 15
-
-Use the image called `httpd` to create and run an `Apache web server`. Bind port `9080` on the host to `port 80` of the container. Set the restart policy so that this container always restarts if it stops unexpectedly or the system reboots. Name the container `webinstance1`.
-
-===============
-
-Question 9 of 15
-
-We have `virsh utility` installed that lets us interact with virtual machines and `qemu-kvm` installed that lets us create and run them.
-
-  
-
-Check if any virtual machine is present on this system (stopped or running). If yes, then save its name in the `/home/bob/vm` file.
-
-================
-Question 10 of 15
-
-In the previous question, you might have noticed that `VM1` is in `shut off` state; start this VM.
-
-==============
-Question 11 of 15
-
-Now, completely remove the VM1 virtual machine.
-
-============
-Question 12 of 15
-
-We have a configuration file `/opt/testmachine2.xml` on this system.
-
-  
-
-Create a virtual machine using this configuration file, and make sure to start it.
-
-================
-
-Question 13 of 15
-
-Right now, when we start up or reboot this system, the virtual machines on it have to be manually started.  
-But we want `VM2` virtual machine to start up automatically at boot.
-
-
-==========
-
-Question 14 of 15
-
-Change the memory size for `VM2`; set its value to `80M`.
-
-  
-
-Make sure the changes are in effect; you can verify the same using `sudo virsh dominfo VM2` command.
-
-
-==========
-
-
-Question 15 of 15
-
-There is a cloud image available in **`/var/lib/libvrt/images/`** folder use that image to spin up the virtual machine with the following details
-
-```text
-Name - kk-ubuntu
-Memory - 1024 
-vcpus - 1 
-disk path - /var/lib/libvirt/images/ubuntu-22.04-minimal-cloudimg-amd64.img
-os-variant - ubuntu22.04 
-graphics -  none 
-network - default
-```
-
-  
-
-Note: It will take some time for the process to be completed.
-
-
-
-
-
-
-
-
-
-
-
-
-
-## 💻 Comandos Clave
+## **💻 Comandos Clave**
 
 ```bash
 # === DOCKER ===
@@ -242,4 +96,3 @@ sudo virt-install \
 ```
 
 ---
-
