@@ -10,7 +10,7 @@ tags:
 | -------------------------------------------- | --- | ----- | ----- | ---------- | --------------------------------------------------------------------------------------------- |
 | [[08 - Files Directories Hard links]]        | 18  | 100 % | 18,00 | `20/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[12 - File Permissions, Search for Files]]  | 16  | 75 %  | 12,00 | `21/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-| [[18 - File Content, Regular Expressions]]   | 17  | 82 %  | 13,94 | `26/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
+| [[18 - File Content, Regular Expressions]]   | 17  | 82 %  | 13,94 | `14/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[23 - Archive, Back Up, Compress]]          | 15  | 66 %  | 9,99  | `22/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[28 - Git & SSL Certificates]]              | 10  | 20 %  | 2,00  | `24/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 |                                              |     |       |       |            |                                                                                               |
@@ -20,15 +20,15 @@ tags:
 
 | 3. Operations Deployment                                | Taks | **Progres** | Peso | **Fecha**  |                                             Ciclo                                             |
 | :------------------------------------------------------ | :--: | :---------: | ---- | :--------: | :-------------------------------------------------------------------------------------------: |
-| [[06 - Scripting, Manage Startup Process and Services]]              |  14  |    35 %     | 4,90 | `24/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
+| [[06 - Scripting, Manage Startup Process and Services]] |  14  |    35 %     | 4,90 | `24/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[09 - Manage Processes and Log Files]]                 |  13  |    23 %     | 2,99 | `25/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[11 - Schedule Tasks]]                                 |  12  |    25 %     | 3,00 | `25/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[15 - Manage Software, Repositories]]                  |  7   |    28 %     | 1,96 | `26/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[17 - Verify Integrity and Availability]]              |  6   |    66 %     | 3,96 | `26/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[21 - Kernel Runtime Parameters and SELinux AppArmor]] |  9   |    11 %     | 0,99 | `26/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-| [[26 - Manage Containers and VMs]]                      |  15  |    40 %     | 6    | `17/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[26 - Manage Containers and VMs]]                      |  15  |    60 %     | 9    | `26/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 |                                                         |      |             |      |            |                                                                                               |
-| TOTALES TAREAS:                                         |  76  |             | 23.8 |            |                                             31 %                                              |
+| TOTALES TAREAS:                                         |  76  |             | 26.8 |            |                                             35 %                                              |
 
 
 | 4. Users and Groups                               - | Taks | **Progres** | Peso | **Fecha**  |                             Ciclo                              |

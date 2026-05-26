@@ -3,7 +3,7 @@ Curso: Advanced Bash Scripting
 Modulo: Refresher
 Tema: Lab 1 - Streams
 Fecha de Inicio: 2026-05-25
-Dificultad:
+Dificultad: Básico Medio
 Tareas Totales: "8"
 tags:
   - Advanced-Bash-Scripting
