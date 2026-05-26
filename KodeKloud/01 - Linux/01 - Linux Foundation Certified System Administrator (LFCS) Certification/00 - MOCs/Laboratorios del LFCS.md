@@ -4,18 +4,19 @@ tags:
 ---
 # 🗺️ Mapa de Control: LFCS
 
-## 🛠️ Roadmap de Laboratorios 
+### 2. Essentials Commands
 
-| 2. Essentials Commands                                  - | Taks | **Progres** | **Fecha**  |                                                            Ciclo                                                             |
-| :-------------------------------------------------------- | :--: | :---------: | :--------: | :--------------------------------------------------------------------------------------------------------------------------: |
-| [[04 - Logging in and System Documentation]]              |  10  |    90 %     | `17/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
-| [[08 - Files Directories Hard links]]                     |  18  |    100 %    | `20/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
-| [[12 - File Permissions, Search for Files]]               |  16  |    75 %     | `21/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
-| [[18 - File Content, Regular Expressions]]                |  17  |    82 %     | `15/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
-| [[23 - Archive, Back Up, Compress]]                       |  15  |    66 %     | `22/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-| [[28 - Git & SSL Certificates]]                           |  10  |    20 %     | `24/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
-|                                                           |      |             |            |                                                                                                                              |
-| totales                                                   |      |             |            |                                                                                                                              |
+| [[04 - Logging in and System Documentation]] | 10  | 90 %  |     | `17/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
+| -------------------------------------------- | --- | ----- | --- | ---------- | --------------------------------------------------------------------------------------------- |
+| [[08 - Files Directories Hard links]]        | 18  | 100 % |     | `20/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
+| [[12 - File Permissions, Search for Files]]  | 16  | 75 %  |     | `21/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
+| [[18 - File Content, Regular Expressions]]   | 17  | 82 %  |     | `15/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
+| [[23 - Archive, Back Up, Compress]]          | 15  | 66 %  |     | `22/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
+| [[28 - Git & SSL Certificates]]              | 10  | 20 %  |     | `24/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
+|                                              |     |       |     |            |                                                                                               |
+| totales                                      |     |       |     |            |                                                                                               |
+
+
 
 | 3. Operations Deployment                           - | Taks | **Progres** | **Fecha**  |                                             Ciclo                                             |
 | :--------------------------------------------------- | :--: | :---------: | :--------: | :-------------------------------------------------------------------------------------------: |
