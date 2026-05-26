@@ -9,21 +9,17 @@ tags:
   - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
-| Fecha          | Tiempo | Éxito | Notas Rápidas |
-| :------------- | :----- | :---- | :------------ |
-| 17 - 05 - 2026 | 40 min | 40 %  |               |
-|                |        |       |               |
+| Fecha      | Tiempo | Éxito | Notas Rápidas |
+| :--------- | :----- | :---- | :------------ |
+| `30/04/26` | 40 min | 0 %   |               |
+| `17/05/26` | 40 min | 40 %  |               |
+| `26/05/26` |        |       |               |
 
 [[Laboratorios del LFCS]]
 
 ---
 
 
-## 📝 Resumen
-
-Este laboratorio cubre la gestión integral de contenedores Docker y máquinas virtuales (VMs) usando libvirt/KVM en sistemas Linux, herramientas fundamentales para un Sysadmin moderno. El lab se divide en dos partes principales: la primera enfocada en Docker donde se practican operaciones como descargar imágenes, crear y ejecutar contenedores con opciones de mapeo de puertos, políticas de reinicio y gestión del ciclo de vida; la segunda parte aborda virtualización con virsh y qemu-kvm, permitiendo crear, configurar, iniciar y gestionar máquinas virtuales, incluyendo la automatización de inicio al boot y la modificación de recursos (memoria, vCPUs). Estas 15 tareas representan el flujo completo de un Sysadmin que debe administrar tanto infraestructura containerizada como basada en máquinas virtuales.
-
-El aprendizaje progresa desde conceptos teóricos (qué hace ciertos comandos) hasta operaciones prácticas avanzadas: primero se valida comprensión de herramientas (virsh destroy, listar contenedores), luego se practican operaciones Docker fundamentales (pull de imágenes, crear contenedores con puertos y políticas de reinicio, eliminar recursos), y finalmente se domina la gestión de VMs (crear desde archivos XML, modificar recursos en tiempo real, establecer autostart al boot, provisionar máquinas desde imágenes cloud). Al completar este lab, tendrás experiencia en los dos paradigmas de virtualización más usados en la nube y data centers modernos.
 
 ## 💻 Comandos Clave
 
@@ -95,4 +91,3 @@ sudo virt-install \
 
 ---
 
-**Inicio Lab:** 2026-04-30 | **Última sesión:** 17-05-2026 (40 min) | **Progreso:** 40%

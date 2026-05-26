@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/26 - Manage Containers and VMs.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Laboratorios del LFCS"
+              "title": "26 - Manage Containers and VMs"
             }
           }
         ]
@@ -194,8 +194,8 @@
   },
   "active": "08aaba8a2c1c0ff7",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/06 - Scripting, Manage Startup Process and Services.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/06 - Scripting, Manage Startup Process and Services.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/15 - Manage Software, Repositories.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/12 - File Permissions, Search for Files.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/17 - Verify Integrity and Availability.md",
