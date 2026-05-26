@@ -1,6 +1,6 @@
 ---
 Curso: Advanced Bash Scripting
-Modulo: Refresher
+Modulo: Streams
 Tema: Lab 1 - Streams
 Fecha de Inicio: 2026-05-25
 Dificultad: Básico Medio

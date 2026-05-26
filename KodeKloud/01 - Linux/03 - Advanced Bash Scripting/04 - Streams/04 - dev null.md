@@ -1,6 +1,6 @@
 ---
 Curso: Advanced Bash Scripting
-Modulo: Refresher
+Modulo: Streams
 Tema: /dev/null
 Fecha: 2026-05-22
 Estado: completado

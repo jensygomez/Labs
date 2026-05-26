@@ -1,7 +1,7 @@
 ---
 Curso: Advanced Bash Scripting
-Modulo: Refresher
-Tema: Streams
+Modulo: Streams
+Tema: Overview
 Fecha: 2026-05-22
 Estado: completado
 Dificultad: Básico Bajo
