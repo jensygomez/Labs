@@ -4,5 +4,6 @@
   "showLineNumber": false,
   "newLinkFormat": "shortest",
   "newFileLocation": "folder",
-  "newFileFolderPath": "AudiosVideos"
+  "newFileFolderPath": "AudiosVideos",
+  "readableLineLength": false
 }
