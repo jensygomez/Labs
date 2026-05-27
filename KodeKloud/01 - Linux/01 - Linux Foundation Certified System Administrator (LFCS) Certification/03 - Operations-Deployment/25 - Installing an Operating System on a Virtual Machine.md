@@ -9,7 +9,6 @@ Dificultad: Básico
 Calificación: N/A
 Time: 8 min
 tags:
-  - "#Linux/LFCS-Certification/Operations-Deployment"
 ---
 
 

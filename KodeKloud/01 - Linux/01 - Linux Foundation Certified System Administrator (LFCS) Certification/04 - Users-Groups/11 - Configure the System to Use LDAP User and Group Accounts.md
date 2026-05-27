@@ -9,7 +9,6 @@ Dificultad: Intermedio-Baja
 Calificación:
 Time: 20 min
 tags:
-  - "#Linux/LFCS-Certification/Users-Groups"
 ---
 ## Problema y Solución
 

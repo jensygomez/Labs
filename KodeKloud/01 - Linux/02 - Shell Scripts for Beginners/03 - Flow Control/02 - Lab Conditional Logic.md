@@ -9,7 +9,6 @@ Dificultad: Básico Medio
 Calificación: 0%
 Time: 15 min
 tags:
-  - Linux/Shell-Scripts-for-Beginners/Flow-Control/Laboratorio
 ---
 ## Resumen
 

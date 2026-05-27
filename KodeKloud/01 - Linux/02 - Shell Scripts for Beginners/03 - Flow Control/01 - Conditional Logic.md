@@ -9,7 +9,6 @@ Dificultad: Básico Medio
 Calificación:
 Time: 12 min
 tags:
-  - Linux/Shell-Scripts-for-Beginners/Flow-Control
 ---
 ### Resumen
 

@@ -5,17 +5,6 @@ Tema: Overview
 Fecha: 2004-05-13
 Estado: completado
 tags:
-  - Linux
-  - Linux/Advanced-Bash-Scripting
-  - Linux/Advanced-Bash-Scripting/Conventions
-  - Linux/Advanced-Bash-Scripting/Conventions/Overview
-  - Linux/Advanced-Bash-Scripting/Conventions/Overview/Time/5-min
-  - Linux/Advanced-Bash-Scripting/Conventions/Overview/Dificultad/Basico-Medio
-  - Linux/Advanced-Bash-Scripting/Conventions/Overview/Bash
-  - Linux/Advanced-Bash-Scripting/Conventions/Overview/Scipting
-  - Linux/Advanced-Bash-Scripting/Conventions/Overview/Conventions
-  - Linux/Advanced-Bash-Scripting/Conventions/Overview/Best-Practices
-  - Linux/Advanced-Bash-Scripting/Conventions/Overview/Code-Style
 ---
 Las convenciones en Bash scripting son el equivalente a un estándar de codificación: establecen reglas consistentes de nomenclatura, indentación, comentarios y estructura que permiten que cualquier miembro del equipo pueda leer y entender el código sin fricciones. Esto es especialmente crítico en entornos empresariales donde múltiples administradores trabajan sobre los mismos scripts, y garantiza que el mantenimiento sea más rápido y los bugs menos frecuentes. El video proporciona sugerencias prácticas sobre cómo aplicar estas convenciones desde el inicio.
 

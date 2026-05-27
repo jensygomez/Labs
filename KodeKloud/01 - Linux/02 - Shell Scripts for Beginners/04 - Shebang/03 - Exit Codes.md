@@ -4,13 +4,6 @@ Modulo: Shebang
 Tema: Exit Codes
 Fecha: 2026-05-11
 tags:
-  - Linux
-  - Linux/Shebang
-  - Linux/Shebang/Exit-Codes
-  - Linux/Shebang/Exit-Codes/Dificultad/Basico-Bajo
-  - Linux/Shebang/Exit-Codes/Time/5min
-  - Linux/Shebang/Exit-Codes/Shell-Scripting
-  - Linux/Shebang/Exit-Codes/Bash
 ---
 ### Resumen
 

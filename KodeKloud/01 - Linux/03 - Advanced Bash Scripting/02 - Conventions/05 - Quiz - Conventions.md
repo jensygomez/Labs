@@ -6,9 +6,6 @@ Fecha de Inicio: 2004-05-14
 Dificultad: Intermedio
 Tareas Totales: "6"
 tags:
-  - Linux
-  - Linux/Advanced-Bash-Scripting
-  - Linux/Advanced-Bash-Scripting/Conventions
 ---
 ---
 ## 📊 Bitácora de Intentos

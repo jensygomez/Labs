@@ -9,11 +9,6 @@ Dificultad: Básico Alto
 Calificación:
 Time: 3 min
 tags:
-  - linux
-  - shell-script
-  - bash
-  - scripting
-  - advanced
 ---
 Este video introduce los conceptos fundamentales del scripting avanzado en Bash, sentando las bases para automatización y desarrollo de herramientas en línea de comandos. Se cubren las distinciones entre shells interactivos y no interactivos, las convenciones de nombres y estructura, así como los conceptos de tipos de comando, streams y expansiones. Estos elementos son esenciales para entender cómo Bash procesa y ejecuta comandos complejos de manera eficiente.
 

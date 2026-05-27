@@ -4,14 +4,6 @@ Modulo: Project - KodeKloud e-commerce application
 Tema: Lab - Project
 Fecha: 2026-05-13
 tags:
-  - Linux
-  - Linux/Project
-  - Linux/Project/Project
-  - Linux/Project/Project/Dificultad/Basico-Medio
-  - Linux/Project/Project/Time/10min
-  - Linux/Project/Project/Apache
-  - Linux/Project/Project/MariaDB
-  - Linux/Project/Project/php
 ---
 Este laboratorio implementa una aplicación e-commerce funcional en un servidor CentOS/Rocky Linux. Se configura un stack LAMP (Linux, Apache, MySQL/MariaDB, PHP) integrando firewall, base de datos con tabla de productos y un servidor web con variables de entorno. El objetivo es practicar la instalación y configuración de servicios críticos en Linux, manejo de permisos de firewall, y conexión entre capas de aplicación.
 

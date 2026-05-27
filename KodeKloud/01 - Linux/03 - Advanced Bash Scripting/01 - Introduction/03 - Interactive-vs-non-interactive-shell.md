@@ -9,11 +9,6 @@ Dificultad: Básico Medio
 Calificación:
 Time: 5 min
 tags:
-  - linux
-  - shell-script
-  - bash
-  - scripting
-  - advanced
 ---
 
 ## Interactive vs Non-Interactive Shell

@@ -9,7 +9,6 @@ Dificultad:
 Calificación:
 Time: 10 min
 tags:
-  - Linux/Shell-Scripts-for-Beginners/Flow-Control
 ---
 
 ## Resumen

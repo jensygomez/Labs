@@ -5,19 +5,6 @@ Tema: Functions
 Fecha: 2004-05-13
 Estado: completado
 tags:
-  - Linux
-  - Linux/Advanced-Bash-Scripting
-  - Linux/Advanced-Bash-Scripting/Conventions
-  - Linux/Advanced-Bash-Scripting/Conventions/Funtions
-  - Linux/Advanced-Bash-Scripting/Conventions/Funtions/Time/5-min
-  - Linux/Advanced-Bash-Scripting/Conventions/Funtions/Dificultad/Basico-Medio
-  - Linux/Advanced-Bash-Scripting/Conventions/Funtions/Bash
-  - Linux/Advanced-Bash-Scripting/Conventions/Funtions/Scipting
-  - Linux/Advanced-Bash-Scripting/Conventions/Funtions/Conventions
-  - Linux/Advanced-Bash-Scripting/Conventions/Funtions/Best-Practices
-  - Linux/Advanced-Bash-Scripting/Conventions/Funtions/Code-Style
-  - Linux/Advanced-Bash-Scripting/Conventions/Funtions/Modularity
-  - Linux/Advanced-Bash-Scripting/Conventions/Funtions/Funtions
 ---
 Las funciones en Bash scripting deben seguir convenciones claras para mantener la legibilidad y reutilización del código. Los nombres de funciones se escriben en minúsculas usando snake_case y deben ser altamente descriptivos, reflejando exactamente qué acción realizan, como `calculate_area()`, `validate_user_input()` o `backup_database()`. La sintaxis requiere paréntesis vacíos seguidos de llaves para delimitar el bloque de código: `nombre_funcion() { ... }`. Esta estructura permite que cualquier administrador que lea el script entienda instantáneamente el propósito de cada función sin necesidad de leer su contenido completo.
 

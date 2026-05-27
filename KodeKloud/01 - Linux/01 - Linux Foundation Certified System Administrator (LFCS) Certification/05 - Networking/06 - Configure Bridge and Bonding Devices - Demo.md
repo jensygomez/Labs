@@ -9,7 +9,6 @@ Dificultad: Básico Medio
 Calificación:
 Time: 20 min
 tags:
-  - "#Linux/LFCS-Certification/Networking"
 ---
 El video demonstró la importancia del directorio `/usr/share/doc/netplan/examples` como referencia para configurar dispositivos de red. El proceso consiste en copiar ejemplos existentes desde este directorio hacia `/etc/netplan`, verificar las interfaces de red disponibles con los comandos apropiados, y luego adaptar la configuración YAML según las necesidades específicas del entorno. Este enfoque reduce errores de sintaxis y acelera el proceso de configuración.
 

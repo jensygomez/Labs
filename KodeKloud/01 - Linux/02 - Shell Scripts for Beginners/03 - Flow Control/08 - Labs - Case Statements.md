@@ -4,10 +4,6 @@ Modulo: Flow Control
 Tema: "Labs: Case Statements"
 Fecha: 2026-05-11
 tags:
-  - Linux
-  - Linux/Shell-Scripts-for-Beginners
-  - Linux/Shell-Scripts-for-Beginners/Flow-Control
-  - Linux/Shell-Scripts-for-Beginners/Flow-Control/Laboratorio
 ---
 ## Resumen
 

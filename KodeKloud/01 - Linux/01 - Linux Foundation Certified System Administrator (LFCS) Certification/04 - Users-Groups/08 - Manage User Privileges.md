@@ -9,7 +9,6 @@ Dificultad: Básico Medio
 Calificación:
 Time: 8 min
 tags:
-  - "#Linux/LFCS-Certification/Users-Groups"
 ---
 
 

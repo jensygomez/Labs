@@ -9,7 +9,6 @@ Dificultad: Intermedio
 Calificación: N/A
 Time: 33 min
 tags:
-  - "#Linux/LFCS-Certification/Operations-Deployment"
 ---
 Los contenedores encapsulan aplicaciones completas permitiendo portabilidad entre diferentes entornos. En este video se cubrió el ciclo completo de trabajo con Docker: búsqueda de imágenes en Docker Hub, descarga con `docker pull` (incluyendo tags específicos de versión), y gestión básica con `docker images` y `docker rmi`. El flujo fundamental es identificar la imagen que necesitas, hacer pull, y luego desplegarla.
 

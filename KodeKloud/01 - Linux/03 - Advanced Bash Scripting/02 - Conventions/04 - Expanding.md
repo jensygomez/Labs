@@ -5,10 +5,6 @@ Tema: Expanding
 Fecha: 2004-05-13
 Estado: completado
 tags:
-  - Linux
-  - Linux/Advanced-Bash-Scripting
-  - Linux/Advanced-Bash-Scripting/Conventions
-  - Linux/Advanced-Bash-Scripting/Conventions/Expanding
 ---
 La expansión de variables en Bash es un concepto fundamental que requiere entender la diferencia entre `$var` y `${var}`. El símbolo `$` indica que Bash debe expandir (sustituir) la variable con su valor. Usar `$var` es suficiente en la mayoría de casos simples, pero `${var}` es más explícito y necesario cuando la variable está adyacente a caracteres que podrían confundir el parser. La convención recomendada es usar siempre `${var}` para mayor claridad y evitar errores sutiles, especialmente cuando se trabaja con rutas, nombres de archivo y URLs que frecuentemente contienen caracteres especiales. El uso de comillas dobles alrededor de la expansión, como `"${var}"`, protege el contenido de word splitting y glob expansion, previniendo comportamientos inesperados.
 

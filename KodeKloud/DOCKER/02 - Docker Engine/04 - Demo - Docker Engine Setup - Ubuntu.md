@@ -1,6 +1,6 @@
-## 🏷️ Tags
 
-#docker #dca #docker-certified-associate #docker-engine #ubuntu #linux #containerization #devops #instalacion #tutorial #sysadmin
+
+
 
 ## 📅 Fecha
 

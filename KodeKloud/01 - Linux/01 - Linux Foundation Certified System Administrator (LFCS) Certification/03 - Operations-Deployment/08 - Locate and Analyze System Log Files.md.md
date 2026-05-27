@@ -2,7 +2,7 @@
 
 # Locate and Analyze System Log Files  
   
-#Linux/LFCS-Certification/Operations-Deployment 
+
   
 ## 📌 Concepto  
   

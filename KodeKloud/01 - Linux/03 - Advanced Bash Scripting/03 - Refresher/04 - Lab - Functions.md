@@ -8,10 +8,6 @@ Type: Laboratorio
 Tareas Totales: "11"
 Dificultad: Básico Bajo
 tags:
-  - Linux
-  - Linux/Advanced-Bash-Scripting
-  - Linux/Advanced-Bash-Scripting/Refresher
-  - Linux/Advanced-Bash-Scripting/Refresher/Laboratorio
 ---
 ---
 ## 📊 Bitácora de Intentos

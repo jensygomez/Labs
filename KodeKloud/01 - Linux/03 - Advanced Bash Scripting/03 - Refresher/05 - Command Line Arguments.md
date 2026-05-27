@@ -7,10 +7,6 @@ Estado: completado
 Type: Video
 Dificultad: Básico Bajo
 tags:
-  - Linux
-  - Linux/Advanced-Bash-Scripting
-  - Linux/Advanced-Bash-Scripting/Refresher
-  - Linux/Advanced-Bash-Scripting/Refresher/Command-Line-Arguments
 ---
 Los argumentos de línea de comandos son valores que se pasan a un script cuando se ejecuta, accesibles mediante variables posicionales como `$1`, `$2`, `$3`, etc., donde `$0` representa el nombre del script mismo. Estos argumentos permiten que los scripts sean flexibles y reutilizables, aceptando diferentes parámetros sin necesidad de modificar el código. El comando `getconf ARG_MAX` permite verificar el número máximo de argumentos que un sistema puede procesar, lo que es útil para entender los límites del entorno.
 

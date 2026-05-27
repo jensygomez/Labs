@@ -4,14 +4,6 @@ Modulo: Shebang
 Tema: Exit Codes
 Fecha: 2026-05-11
 tags:
-  - Linux
-  - Linux/Shebang
-  - Linux/Shebang/Shell-Scripts-for-Beginners
-  - Linux/Shebang/Shell-Scripts-for-Beginners/Funtions
-  - Linux/Shebang/Shell-Scripts-for-Beginners/Funtion/Dificultad/Basico-Medio
-  - Linux/Shebang/Shell-Scripts-for-Beginners/Funtion/Time/10min
-  - Linux/Shebang/Shell-Scripts-for-Beginners/Funtion/Bash
-  - Linux/Shebang/Shell-Scripts-for-Beginners/Funtion/Scripting
 ---
 Las funciones en bash permiten reutilizar bloques de código y hacen los scripts más modulares y mantenibles. Una función se define con la palabra clave `function` seguida del nombre y se coloca **antes** de ser llamada en el script. La estructura básica es `function NOMBRE() { CÓDIGO }`. Son especialmente útiles para tareas repetitivas como instalar paquetes, agregar usuarios, realizar validaciones y ejecutar operaciones complejas.
 

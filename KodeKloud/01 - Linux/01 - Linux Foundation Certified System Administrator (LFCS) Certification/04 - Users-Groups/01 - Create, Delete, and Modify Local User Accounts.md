@@ -9,7 +9,6 @@ Dificultad: Básico
 Calificación: N/A
 Time: 12 min
 tags:
-  - "#Linux/LFCS-Certification/Users-Groups"
 ---
 
 Cada usuario en Linux requiere su propio login para mantener aislamiento de datos, mejorar la seguridad del sistema y permitir al administrador auditar acciones por usuario. El comando `sudo adduser` automatiza la creación: genera el usuario, crea su grupo primario, configura el directorio home y establece el shell por defecto. Con `sudo passwd` se asigna la contraseña. Para eliminar un usuario se usa `sudo deluser`, y toda la información se registra en `/etc/passwd`.

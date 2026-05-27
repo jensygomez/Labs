@@ -9,11 +9,6 @@ Dificultad: Básico
 Calificación: N/A
 Time: 5 min
 tags:
-  - docker-certified-associate
-  - docker-engine
-  - linux
-  - troubleshooting
-  - Containers
 ---
 ### Interactuando con Contenedores en Ejecución:
 

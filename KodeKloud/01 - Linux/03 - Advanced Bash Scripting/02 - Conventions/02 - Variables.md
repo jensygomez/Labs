@@ -5,19 +5,6 @@ Tema: Variables
 Fecha: 2004-05-13
 Estado: completado
 tags:
-  - Linux
-  - Linux/Advanced-Bash-Scripting
-  - Linux/Advanced-Bash-Scripting/Conventions
-  - Linux/Advanced-Bash-Scripting/Conventions/Variables
-  - Linux/Advanced-Bash-Scripting/Conventions/Variables/Time/5-min
-  - Linux/Advanced-Bash-Scripting/Conventions/Variables/Dificultad/Basico-Medio
-  - Linux/Advanced-Bash-Scripting/Conventions/Variables/Bash
-  - Linux/Advanced-Bash-Scripting/Conventions/Variables/Scipting
-  - Linux/Advanced-Bash-Scripting/Conventions/Variables/Conventions
-  - Linux/Advanced-Bash-Scripting/Conventions/Variables/Best-Practices
-  - Linux/Advanced-Bash-Scripting/Conventions/Variables/Code-Style
-  - Linux/Advanced-Bash-Scripting/Conventions/Variables/Best-PracticesLinux/Advanced-Bash-Scripting/Conventions/Variables/Code-Style
-  - Linux/Advanced-Bash-Scripting/Conventions/Variables/Constants
 ---
 Las convenciones para nombrar variables en Bash scripting son fundamentales para escribir código mantenible y legible. La convención más utilizada es emplear snake_case (palabras separadas por guiones bajos) para variables normales, como `variable_unica`, `archivo_entrada` o `contador_total`. Esto contrasta con camelCase usado en otros lenguajes y proporciona claridad inmediata sobre el propósito de cada variable. Además, se menciona el concepto de constantes: variables que no deben modificarse durante la ejecución del script y que generalmente se nombran en mayúsculas como `MAX_INTENTOS` o `RUTA_SISTEMA`. Marcar variables como constantes (usando `readonly`) protege la integridad del script y previene modificaciones accidentales que podrían causar comportamientos inesperados.
 

@@ -9,13 +9,6 @@ Dificultad:
 Calificación:
 Time: 5 min
 tags:
-  - Linux/Advanced-Bash-Scripting
-  - Linux/Advanced-Bash-Scripting/Terminology
-  - Linux/Advanced-Bash-Scripting/Terminology/Posix
-  - Linux/Advanced-Bash-Scripting/Terminology/Bash
-  - Linux/Advanced-Bash-Scripting/Terminology/Scripting
-  - Linux
-  - Linux/Advanced-Bash-Scripting/Introduction
 ---
 
 ## Terminology: Conceptos Fundamentales

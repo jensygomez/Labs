@@ -1,6 +1,6 @@
 # Diagnose and Manage Processes
 
-#Linux/LFCS-Certification/Operations-Deployment
+
 
 
 ## 📌 Concepto

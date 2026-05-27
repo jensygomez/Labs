@@ -4,15 +4,6 @@ Modulo: Shebang
 Tema: "Lab: Exit Codes"
 Fecha: 2026-05-11
 tags:
-  - Linux
-  - Linux/Shebang
-  - Linux/Shebang/Exit-Codes
-  - Linux/Shebang/Exit-Codes/Laboratorio
-  - Linux/Shebang/Exit-Codes/Laboratorio/Dificultad/Basico-Medio
-  - Linux/Shebang/Exit-Codes/Laboratorio/Time/5min
-  - Linux/Shebang/Exit-Codes/Laboratorio/Tareas/4
-  - Linux/Shebang/Exit-Codes/Dificultad/Calificacion/75
-  - Linux/Shebang/Exit-Codes/Bash
 ---
 ### Resumen
 

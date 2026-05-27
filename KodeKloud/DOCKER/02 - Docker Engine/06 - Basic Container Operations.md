@@ -8,11 +8,7 @@ Fecha: 28/04/2026
 Estado: completado
 Dificultad: Básico
 tags:
-  - #Docker
-  - #Operations
-  - #Devops
-  - #Syntax
-  - #Containers
+  
 ---
 
 ## Resumen

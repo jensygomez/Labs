@@ -9,10 +9,6 @@ Dificultad:
 Calificación:
 Time: 20 min
 tags:
-  - Linux
-  - Linux/LFCS-Certification
-  - Linux/LFCS-Certification/Networking
-  - Linux/LFCS-Certification/Networking/Implement-Reverse-Proxies-Load-Balancers
 ---
 
 

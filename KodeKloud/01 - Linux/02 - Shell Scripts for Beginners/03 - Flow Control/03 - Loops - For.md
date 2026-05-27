@@ -9,7 +9,6 @@ Dificultad: Básico Medio
 Calificación:
 Time: 12 min
 tags:
-  - Linux/Shell-Scripts-for-Beginners/Flow-Control
 ---
 El loop `for` es una estructura de control fundamental en bash que permite ejecutar comandos de forma repetitiva sobre una lista de elementos. Su sintaxis básica consiste en definir una variable que iterará sobre cada elemento de la lista, ejecutando el bloque de comandos entre `do` y `done` en cada iteración. Esta herramienta es esencial cuando necesitas automatizar tareas que se repiten múltiples veces.
 

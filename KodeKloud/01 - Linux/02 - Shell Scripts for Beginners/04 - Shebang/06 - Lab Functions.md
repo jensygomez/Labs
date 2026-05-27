@@ -4,15 +4,6 @@ Modulo: Shebang
 Tema: Lab Functions
 Fecha: 2026-05-12
 tags:
-  - Linux
-  - Linux/Shebang
-  - Linux/Shebang/Lab-Functions
-  - Linux/Shebang/Lab-Functions/Laboratorio
-  - Linux/Shebang/Lab-Functions/Laboratorio/Dificultad/Basico-Medio
-  - Linux/Shebang/Lab-Functions/Laboratorio/Time/20min
-  - Linux/Shebang/Lab-Functions/Laboratorio/Tareas/7
-  - Linux/Shebang/Lab-Functions/Dificultad/Calificacion/42-Porciento
-  - Linux/Shebang/Lab-Functions/Bash
 ---
 Este laboratorio práctico se enfoca en dominar la creación y uso de funciones en bash a través de 7 ejercicios progresivos. Los primeros ejercicios trabajan sobre identificar y corregir errores de sintaxis en definiciones de funciones, luego avanza hacia la identificación de código duplicado y su refactorización. Los ejercicios finales requieren extraer bloques de código completos (como secuencias de lanzamiento de cohetes o cálculos matemáticos) y convertirlos en funciones reutilizables, mejorando significativamente la mantenibilidad y legibilidad del código.
 

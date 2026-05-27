@@ -9,7 +9,6 @@ Dificultad: Básico Medio
 Calificación:
 Time: 30 min
 tags:
-  - "#Linux/LFCS-Certification/Networking"
 ---
 
 

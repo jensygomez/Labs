@@ -9,7 +9,6 @@ Dificultad: Intermedio-Alto
 Calificación:
 Time: 30 min
 tags:
-  - "#Linux/LFCS-Certification/Networking"
 ---
 
 ## Resumen

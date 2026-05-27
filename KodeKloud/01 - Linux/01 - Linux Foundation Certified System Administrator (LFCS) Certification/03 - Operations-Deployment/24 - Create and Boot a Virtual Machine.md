@@ -9,7 +9,6 @@ Dificultad: Intermedio
 Calificación: N/A
 Time: 12 min
 tags:
-  - "#Linux/LFCS-Certification/Operations-Deployment"
 ---
 
 ## Creación y Arranque de Máquinas Virtuales

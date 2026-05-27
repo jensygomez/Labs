@@ -9,12 +9,6 @@ Dificultad: Básico Bajo
 Calificación:
 Time: 5 min
 tags:
-  - linux
-  - shell-script
-  - bash
-  - scripting
-  - advanced
-  - sistema-operativo
 ---
 
 

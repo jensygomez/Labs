@@ -9,10 +9,6 @@ Dificultad: Básico Bajo
 Calificación: 60 %
 Time: 6 min
 tags:
-  - Linux
-  - Linux/Shell-Scripts-for-Beginners
-  - Linux/Shell-Scripts-for-Beginners/Arithmetic-Operations
-  - Linux/Shell-Scripts-for-Beginners/Arithmetic-Operations/Laboratorio
 ---
 En este laboratorio se desarrolló un script en bash llamado `calculate-average.sh` que procesa exactamente 3 argumentos de línea de comandos y calcula el promedio entre ellos. El script debe validar que reciba exactamente tres parámetros y manejar correctamente números decimales sin redondear el resultado. Este ejercicio refuerza conceptos fundamentales de scripting como la captura de argumentos mediante `$1`, `$2` y `$3`, la validación de entrada, y la manipulación de aritmética decimal en bash. El desafío principal radica en evitar que bash redondee automáticamente los valores decimales, lo que requiere usar herramientas como `bc` (calculadora de precisión arbitraria) o `awk` para mantener los decimales en el resultado final. Este es un paso importante hacia escribir scripts más robustos que manejen datos numéricos con precisión, una habilidad esencial para un sysadmin que necesita procesar datos y generar reportes. Ejemplo de uso: 
 

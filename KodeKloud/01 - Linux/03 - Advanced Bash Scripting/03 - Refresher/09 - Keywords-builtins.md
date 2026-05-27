@@ -7,10 +7,6 @@ Estado: completado
 Type: Video
 Dificultad: Básico Medio
 tags:
-  - Linux
-  - Linux/Advanced-Bash-Scripting
-  - Linux/Advanced-Bash-Scripting/Refresher
-  - Linux/Advanced-Bash-Scripting/Refresher/Keywords-builtins
 ---
 
 

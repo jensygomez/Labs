@@ -4,13 +4,6 @@ Modulo: Shebang
 Tema: "Lab: Shebang"
 Fecha: 2026-05-11
 tags:
-  - Linux
-  - Linux/Shebang
-  - Linux/Shebang/Shebang
-  - Linux/Shebang/Shebang/Time/10min
-  - Linux/Shebang/Shebang/Dificultad/Basico-Bajo
-  - Linux/Shebang/Shebang/Bash
-  - Linux/Shebang/Shebang/Laboratorio
 ---
 
 ### Resumen

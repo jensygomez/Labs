@@ -6,11 +6,6 @@ Fecha: 2026-05-11
 Dificultad:
 Time: 5 min
 tags:
-  - Linux/Shell-Scripts-for-Beginners/Flow-Control
-  - Linux/Shell-Scripts-for-Beginners/Flow-Control/Basico-Medio
-  - Linux/Shell-Scripts-for-Beginners/Flow-Control/Time-5min
-  - Linux/Shell-Scripts-for-Beginners/Flow-Control/Case-Statement
-  - Linux/Shell-Scripts-for-Beginners/Flow-Control/Conditionals
 ---
 
 

@@ -9,10 +9,6 @@ Dificultad:
 Calificación:
 Time:
 tags:
-  - Linux
-  - Linux/Advanced-Bash-Scripting
-  - Linux/Advanced-Bash-Scripting/Introduction
-  - Linux/Advanced-Bash-Scripting/Introduction/How-To-Take-This-Course
 ---
 
 ## Cómo Aprovechar Este Curso

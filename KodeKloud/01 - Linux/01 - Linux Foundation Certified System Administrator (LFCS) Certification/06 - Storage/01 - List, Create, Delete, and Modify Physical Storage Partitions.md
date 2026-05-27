@@ -9,8 +9,6 @@ Dificultad: Básico Medio
 Calificación:
 Time: 15 min
 tags:
-  - "#Linux/LFCS-Certification/Storage"
-  - Linux
 ---
 
 ## Particionamiento de Discos en Linux

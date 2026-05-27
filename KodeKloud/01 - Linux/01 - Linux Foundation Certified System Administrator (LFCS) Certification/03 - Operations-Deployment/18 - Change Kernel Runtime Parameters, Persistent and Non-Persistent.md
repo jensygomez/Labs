@@ -9,7 +9,6 @@ Dificultad: Intermedio
 Calificación: N/A
 Time: N/A
 tags:
-  - "#Linux/LFCS-Certification/Operations-Deployment"
 ---
 
 ## Resumen
