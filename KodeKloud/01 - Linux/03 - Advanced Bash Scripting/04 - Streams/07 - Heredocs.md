@@ -11,10 +11,7 @@ tags:
 [[Advanced Bash Scripting]]
 
 
----
 
-![[07 - Heredocs.mp3]]
----
 
 
 During this module on Bash input handling, I realized that understanding how to work with heredocs—specifically the `cat<<EOF` syntax—represents something deeper than just knowing a command. It's about recognizing that in production Linux environments, you often need to inject multi-line content without relying on text editors, which is critical when you're deploying infrastructure as code or automating server configurations. This isn't just syntax; it's understanding that a sysadmin must work within constraints—restricted shells, CI/CD pipelines, containerized environments—where you cannot assume a graphical editor is available or even appropriate.

@@ -16,10 +16,6 @@ tags:
 [[Laboratorios del LFCS]]
 
 
-![[Lab - Manage Processes and Analyze Log Files.mp3]]
-
----
-
 In this laboratory, I focused on managing processes and analyzing log files, two critical skills for any Linux administrator. I learned how to view all running processes along with their nice values, change process priority using `nice`, identify PIDs, and send signals such as SIGHUP to services. I also practiced running processes in the background and checking resource usage of specific processes like PID 1. These tasks reinforced the Linux philosophy that the system administrator has full control over what runs on the machine and how resources are allocated.
 
 I also gained practical experience working with system logs. I searched for specific information in traditional log files under `/var/log` and used `journalctl` to filter logs by priority (errors, info, etc.) and content. This included finding the last successful SSH connection IP and searching for reboot records. Understanding both classic log files and the modern systemd journal is essential for troubleshooting and auditing system behavior effectively.

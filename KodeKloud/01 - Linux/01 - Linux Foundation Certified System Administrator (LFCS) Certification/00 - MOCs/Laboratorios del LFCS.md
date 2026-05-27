@@ -31,13 +31,13 @@ tags:
 | TOTALES TAREAS:                                         |  76  |             | 26.8 |            |                                             35 %                                              |
 
 
-| 4. Users and Groups                               - | Taks | **Progres** | Peso  | **Fecha**  |                             Ciclo                              |
-| :-------------------------------------------------- | :--: | :---------: | ----- | :--------: | :------------------------------------------------------------: |
-| [[03 - Manage User Accounts and Groups]]            |  13  |    77 %     | 10.01 | `27/05/26` | <input type="checkbox" checked><input type="checkbox" checked> |
-| [[06 - Manage System Environment Profiles]]         |  12  |    33 %     | 3,96  | `17/05/26` | <input type="checkbox" checked><input type="checkbox" checked> |
-| [[09 - Configure User Resource Limits]]             |  11  |    27 %     | 2,97  | `17/05/26` | <input type="checkbox" checked><input type="checkbox" checked> |
-|                                                     |      |             |       |            |                                                                |
-| Totales                                             |  36  |             | 16.94 |            |                            47,05 %                             |
+| 4. Users and Groups                               - | Taks | **Progres** | Peso  | **Fecha**  |                                             Ciclo                                             |
+| :-------------------------------------------------- | :--: | :---------: | ----- | :--------: | :-------------------------------------------------------------------------------------------: |
+| [[03 - Manage User Accounts and Groups]]            |  13  |    77 %     | 10.01 | `27/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
+| [[06 - Manage System Environment Profiles]]         |  12  |    33 %     | 3,96  | `17/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[09 - Configure User Resource Limits]]             |  11  |    27 %     | 2,97  | `17/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+|                                                     |      |             |       |            |                                                                                               |
+| Totales                                             |  36  |             | 16.94 |            |                                            47,05 %                                            |
 
 | 5. Networking                                  | Taks | **Progres** | Peso  | **Fecha**  |                             Ciclo                              |
 | :--------------------------------------------- | :--: | :---------: | ----- | :--------: | :------------------------------------------------------------: |

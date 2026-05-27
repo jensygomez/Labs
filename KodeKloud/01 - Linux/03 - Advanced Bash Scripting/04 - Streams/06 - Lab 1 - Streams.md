@@ -17,10 +17,6 @@ tags:
 
 [[Advanced Bash Scripting]]
 
----
-![[Lab 1 - Streams.mp3]]
-
----
 
 During this lab, I worked extensively with Bash stream redirection and Linux file descriptors, which are fundamental for troubleshooting and operational support in production environments. I practiced separating standard output from standard error in order to improve logging visibility and isolate failures more efficiently. This is especially important when maintaining scripts that may run automatically on servers or within scheduled tasks.
 
