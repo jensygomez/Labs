@@ -29,10 +29,24 @@
       }
     },
     {
+      "query": "tag:DevOps  ",
+      "color": {
+        "a": 1,
+        "rgb": 1056603
+      }
+    },
+    {
       "query": "",
       "color": {
         "a": 1,
-        "rgb": 5431378
+        "rgb": 5431473
+      }
+    },
+    {
+      "query": "",
+      "color": {
+        "a": 1,
+        "rgb": 5419488
       }
     }
   ],
@@ -47,5 +61,5 @@
   "linkStrength": 1,
   "linkDistance": 250,
   "scale": 0.31214753848498666,
-  "close": true
+  "close": false
 }

@@ -5,7 +5,7 @@ Fecha: 2026-05-27
 Dificultad: Intermedio-Baja
 Completado: true
 tags:
-  - Linux-System-Administration
+  - DevOps
 ---
 [[Menu 100 Days of DevOps]]
 
