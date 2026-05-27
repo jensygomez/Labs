@@ -53,5 +53,8 @@ tags:
 [[08 - Lab 2 - Streams]]
 [[09 - Pipes]]
 [[10 - Pipefail]]
+[[11 - Exit-code]]
+[[12 - Lab 3 - Streams]]
+
 
 

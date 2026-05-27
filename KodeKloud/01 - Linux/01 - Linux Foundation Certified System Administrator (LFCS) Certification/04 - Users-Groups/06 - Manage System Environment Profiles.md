@@ -9,10 +9,12 @@ tags:
   - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
-| Fecha          | Tiempo | Éxito | Notas Rápidas |
-| :------------- | :----- | :---- | :------------ |
-| 20 - 04 - 2026 | 20 min | 33 %  |               |
-| 17 - 05 -2026  | 35 min | 33 %  |               |
+| Fecha        | Tiempo | Éxito | Notas Rápidas |
+| :----------- | :----- | :---- | :------------ |
+| `20/04/2026` | 20 min | 0 %   |               |
+| `17/05/2026` | 35 min | 33 %  |               |
+| `27/05/2026` |        |       |               |
+|              |        |       |               |
 
 [[Laboratorios del LFCS]]
 
