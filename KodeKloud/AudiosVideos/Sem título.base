@@ -1,0 +1,10 @@
+views:
+  - type: cards
+    name: Tabela
+    filters:
+      and:
+        - file.hasTag("Advanced-Bash-Scripting")
+    order:
+      - file.name
+      - Fecha de Inicio
+      - tags

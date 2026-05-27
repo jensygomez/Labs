@@ -9,20 +9,31 @@ tags:
   - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
-| Fecha          | Tiempo | Éxito | Notas Rápidas |
-| :------------- | :----- | :---- | :------------ |
-| 17 - 05 - 2026 | 30 min | 23 %  |               |
-|                |        |       |               |
+| Fecha      | Tiempo | Éxito | Notas Rápidas |
+| :--------- | :----- | :---- | :------------ |
+| `20/04/26` | 30 min | 0 %   |               |
+| `17/05/26` | 30 min | 23 %  |               |
+| `26/05/26` |        |       |               |
 
 [[Laboratorios del LFCS]]
 
 ---
 
-## 📝 Resumen
 
-Este laboratorio es fundamental para cualquier Sysadmin Linux porque abarca la gestión completa del ciclo de vida de usuarios y grupos en un sistema. Cubre desde la creación de cuentas de usuario (normales y del sistema) con configuraciones específicas como UID personalizado y shell de login, hasta la gestión avanzada de grupos (creación, renombramiento, asignación de GID) y control de acceso mediante membresías. Adicionalmente, el lab trata aspectos críticos de seguridad como expiración de cuentas, expiración de contraseñas y políticas de cambio obligatorio de contraseñas. Dominar estas 13 tareas es esencial porque la gestión de usuarios y permisos es uno de los pilares de la seguridad en Linux: un mal manejo puede comprometer la integridad del sistema o dejar accesos innecesarios abiertos.
 
-El flujo del laboratorio progresa lógicamente desde operaciones individuales sobre usuarios (crear, expirar, unexpirar, cambiar shell) hacia gestión de grupos y relaciones usuario-grupo (crear grupos con GID personalizado, renombrar grupos, agregar usuarios a grupos, cambiar grupo primario). La segunda mitad añade complejidad con políticas de expiración temporal y permanente, eliminación de cuentas y políticas de cambio de contraseña. Estos comandos (useradd, usermod, userdel, groupadd, groupmod, groupdel, chage) son herramientas que usarás constantemente en tu rol como Sysadmin, especialmente en ambientes empresariales donde la rotación de personal y cumplimiento de políticas de seguridad son críticos.
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## 💻 Comandos Clave
 
@@ -102,4 +113,3 @@ getent passwd sam
 
 ---
 
-**Inicio Lab:** 2026-04-20 | **Última sesión:** 17-05-2026 | **Estado:** Pendiente de realizar
