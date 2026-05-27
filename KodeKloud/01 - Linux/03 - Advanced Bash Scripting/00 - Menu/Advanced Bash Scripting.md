@@ -51,5 +51,6 @@ tags:
 [[06 - Lab 1 - Streams]]
 [[07 - Heredocs]]
 [[08 - Lab 2 - Streams]]
+[[09 - Pipes]]
 
 
