@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/06 - Manage System Environment Profiles.md",
+                "file": "DevOps/100-Days-DevOps/Day 2 - Temporary User Setup with Expiry.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "06 - Manage System Environment Profiles"
+              "title": "Day 2 - Temporary User Setup with Expiry"
             }
           }
         ]
@@ -204,6 +204,9 @@
   },
   "active": "6d4f659490d73651",
   "lastOpenFiles": [
+    "DevOps/100-Days-DevOps/MOC/Menu 100 Days of DevOps.md",
+    "DevOps/100-Days-DevOps/Day 2 - Temporary User Setup with Expiry.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/06 - Manage System Environment Profiles.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "01 - Linux/03 - Advanced Bash Scripting/00 - Menu/Advanced Bash Scripting.md",
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/11 - Exit-code.md",
@@ -212,12 +215,9 @@
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/09 - Pipes.md",
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/07 - Heredocs.md",
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/08 - Lab 2 - Streams.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/06 - Manage System Environment Profiles.md",
     "01 - Linux/00 - Menu/Linux System Administration.md",
     "DevOps/100-Days-DevOps/Day 17 - Install and Configure PostgreSQL.md",
-    "DevOps/100-Days-DevOps/MOC/Menu 100 Days of DevOps.md",
     "DevOps/DevOps.md",
-    "DevOps/100-Days-DevOps/Day 2 - Temporary User Setup with Expiry.md",
     "DevOps/100-Days-DevOps/Day 1 - Linux User Setup with Non Interactive Shell.md",
     "DevOps",
     "DOCKER/02 - Docker Engine/07 - Interacting with a Running Container.md",
