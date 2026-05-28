@@ -1,6 +1,6 @@
 ---
 Curso: 100 Days of DevOps
-Tema:
+Tema: Day 2 - Temporary User Setup with Expiry
 Fecha de Inicio: 2026-03-27
 Dificultad: Básico Medio
 Completado: true
