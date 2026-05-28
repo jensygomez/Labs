@@ -40,13 +40,13 @@ tags:
 |                                             |      |             |       |            |                                                                                               |
 | Totales                                     |  36  |             | 20.96 |            |                                            58.22 %                                            |
 
-| 5. Networking                                  | Taks | **Progres** | Peso  | **Fecha**  |                             Ciclo                              |
-| :--------------------------------------------- | :--: | :---------: | ----- | :--------: | :------------------------------------------------------------: |
-| [[04 - Configure Networking Start Stop Check]] |  14  |    50 %     | 7.00  | `18/05/26` | <input type="checkbox" checked><input type="checkbox" checked> |
-| [[08 - Packet Filtering]]                      |  10  |    50 %     | 5.00  | `18/05/26` | <input type="checkbox" checked><input type="checkbox" checked> |
-| [[13 - Configure SSH Servers and Clients]]     |  12  |    16 %     | 1.92  | `19/05/26` | <input type="checkbox" checked><input type="checkbox" checked> |
-|                                                |      |             |       |            |                                                                |
-| totales                                        |  36  |             | 13.92 |            |                            38.66 %                             |
+| 5. Networking                                  | Taks | **Progres** | Peso  | **Fecha**  |                                             Ciclo                                             |
+| :--------------------------------------------- | :--: | :---------: | ----- | :--------: | :-------------------------------------------------------------------------------------------: |
+| [[04 - Configure Networking Start Stop Check]] |  14  |    85 %     | 11.90 | `28/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
+| [[08 - Packet Filtering]]                      |  10  |    50 %     | 5.00  | `18/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[13 - Configure SSH Servers and Clients]]     |  12  |    16 %     | 1.92  | `19/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+|                                                |      |             |       |            |                                                                                               |
+| totales                                        |  36  |             | 18.82 |            |                                            52.27 %                                            |
 
 | 6. Storage                                     | Taks | **Progres** | peso  | **Fecha**  |                             Ciclo                              |
 | :--------------------------------------------- | :--: | :---------: | ----- | :--------: | :------------------------------------------------------------: |
