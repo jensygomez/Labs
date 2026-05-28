@@ -36,9 +36,9 @@ tags:
 | :-------------------------------------------------- | :--: | :---------: | ----- | :--------: | :-------------------------------------------------------------------------------------------: |
 | [[03 - Manage User Accounts and Groups]]            |  13  |    77 %     | 10.01 | `27/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[06 - Manage System Environment Profiles]]         |  12  |    50 %     | 6.00  | `28/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-| [[09 - Configure User Resource Limits]]             |  11  |    27 %     | 2,97  | `17/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[09 - Configure User Resource Limits]]             |  11  |    45 %     | 4.95  | `28/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 |                                                     |      |             |       |            |                                                                                               |
-| Totales                                             |  36  |             | 18.98 |            |                                            52.72 %                                            |
+| Totales                                             |  36  |             | 20.96 |            |                                            58.22 %                                            |
 
 | 5. Networking                                  | Taks | **Progres** | Peso  | **Fecha**  |                             Ciclo                              |
 | :--------------------------------------------- | :--: | :---------: | ----- | :--------: | :------------------------------------------------------------: |

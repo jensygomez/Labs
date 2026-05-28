@@ -9,20 +9,109 @@ tags:
   - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
-| Fecha          | Tiempo | Éxito | Notas Rápidas |
-| :------------- | :----- | :---- | :------------ |
-| 20 - 04 - 2026 | 20 min | 27 %  |               |
-| 17 - 05 -2026  | 25 min | 27 %  |               |
+| Fecha        | Tiempo | Éxito | Notas Rápidas |
+| :----------- | :----- | :---- | :------------ |
+| `20/04/2026` | 20 min | 27 %  |               |
+| `1705/2026`  | 25 min | 27 %  |               |
+| `28/05/2026` | 20 min | 45 %  |               |
 
 [[Laboratorios del LFCS]]
 
 ---
+Question 1 of 11
 
-## Resumen
+Which of the following keywords can we use to limit the number of `processes` a user can run?
 
-Este laboratorio se enfoca en la gestión de límites de recursos y privilegios de usuarios en Linux. Se trabajó con el archivo de límites de seguridad (`/etc/security/limits.conf`) para controlar el número máximo de procesos, tamaño de archivos y otros recursos que pueden consumir usuarios específicos o grupos. Se aprendió a establecer tanto límites "hard" (forzados por el kernel) como "soft" (advertencias del sistema) en una sola línea de configuración. Además, se practicó la modificación del archivo `sudoers` para otorgar diferentes niveles de privile­gios, desde ejecución sin contraseña hasta restricción a comandos específicos como `/usr/bin/mount`.
+==============
 
-El laboratorio también cubrió la resolución de problemas cuando las políticas no se aplican correctamente, validando que los usuarios pertenezcan a los grupos configurados y que los cambios en `limits.conf` se hayan guardado apropiadamente. Estos conocimientos son fundamentales para administrar sistemas Linux multiusuario de forma segura, permitiendo que cada usuario tenga acceso controlado a recursos y operaciones administrativas según su rol y responsabilidades.
+Question 2 of 11
+
+Modify the security limits file and make sure that the user called `trinity` can run no more than 30 processes in her session.  
+This should be both a `hard` limit and a `soft` limit, written in a single line.
+
+=============
+Question 3 of 11
+
+Identify all the security limits currently applied in our user's session and save them in the `/home/bob/limits` file.
+
+  
+
+You can use the redirection to save your command's output in a file: `[your-command] > /home/bob/limits`
+
+===========
+
+Question 4 of 11
+
+Modify the `sudoers` file in such a way to allow the user called `trinity` to run any sudo command without needing to provide her password.
+
+===============
+Question 5 of 11
+
+Modify the `sudoers` file again. Remove your previous entry for the user called `trinity` if it still exists.  
+Now add a new entry that allows `trinity` to only run the `/usr/bin/mount` command with sudo.
+
+==========
+
+
+Question 6 of 11
+
+Make changes in security limits file for user `stephen` so that he can create maximum filesize upto `4 MiB`. This should be a `hard` limit.
+
+===========
+
+Question 7 of 11
+
+Set a `soft limit` of `20` processes for everyone in the `salesteam` group.
+
+===================
+Question 8 of 11
+
+Define a policy for all the users in the `salesteam` group to run any sudo command.
+
+===============
+Question 9 of 11
+
+Define a policy so that user `trinity` can run `sudo` commands as the user `sam`.
+
+============
+Question 10 of 11
+
+We applied a `hard` limit of `10` processes for all the users under `developers` group, but somehow the limit isn't working. Look into the issue and fix the same.
+
+===============
+Question 11 of 11
+
+Modify the `sudoers` file again. Remove your previous entry for the user called `trinity` if it still exists.  
+Now add a new entry that allows `trinity` to run all commands with sudo, but only after entering the password.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Comando Ejemplo
 
