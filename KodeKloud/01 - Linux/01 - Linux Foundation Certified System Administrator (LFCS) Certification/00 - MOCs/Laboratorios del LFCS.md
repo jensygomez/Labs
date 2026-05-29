@@ -36,17 +36,17 @@ tags:
 | :------------------------------------------ | :--: | :---------: | ----- | :--------: | :-------------------------------------------------------------------------------------------: |
 | [[03 - Manage User Accounts and Groups]]    |  13  |    77 %     | 10.01 | `27/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[06 - Manage System Environment Profiles]] |  12  |    50 %     | 6.00  | `28/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-| [[09 - Configure User Resource Limits]]     |  11  |    45 %     | 4.95  | `28/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
+| [[09 - Configure User Resource Limits and User Privileges]]     |  11  |    45 %     | 4.95  | `28/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 |                                             |      |             |       |            |                                                                                               |
 | Totales                                     |  36  |             | 20.96 |            |                                            58.22 %                                            |
 
 | 5. Networking                                  | Taks | **Progres** | Peso  | **Fecha**  |                                             Ciclo                                             |
 | :--------------------------------------------- | :--: | :---------: | ----- | :--------: | :-------------------------------------------------------------------------------------------: |
 | [[04 - Configure Networking Start Stop Check]] |  14  |    85 %     | 11.90 | `28/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-| [[08 - Packet Filtering]]                      |  10  |    50 %     | 5.00  | `18/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[08 - Packet Filtering]]                      |  10  |    100 %    | 10.00 | `29/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[13 - Configure SSH Servers and Clients]]     |  12  |    16 %     | 1.92  | `19/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
 |                                                |      |             |       |            |                                                                                               |
-| totales                                        |  36  |             | 18.82 |            |                                            52.27 %                                            |
+| totales                                        |  36  |             | 23.80 |            |                                            66.11 %                                            |
 
 | 6. Storage                                     | Taks | **Progres** | peso  | **Fecha**  |                             Ciclo                              |
 | :--------------------------------------------- | :--: | :---------: | ----- | :--------: | :------------------------------------------------------------: |
