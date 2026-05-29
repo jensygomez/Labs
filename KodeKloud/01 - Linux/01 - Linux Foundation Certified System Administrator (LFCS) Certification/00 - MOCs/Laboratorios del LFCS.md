@@ -44,9 +44,9 @@ tags:
 | :--------------------------------------------- | :--: | :---------: | ----- | :--------: | :-------------------------------------------------------------------------------------------: |
 | [[04 - Configure Networking Start Stop Check]] |  14  |    85 %     | 11.90 | `28/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[08 - Packet Filtering]]                      |  10  |    100 %    | 10.00 | `29/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-| [[13 - Configure SSH Servers and Clients]]     |  12  |    16 %     | 1.92  | `19/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[13 - Configure SSH Servers and Clients]]     |  12  |    50 %     | 6.00  | `19/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 |                                                |      |             |       |            |                                                                                               |
-| totales                                        |  36  |             | 23.80 |            |                                            66.11 %                                            |
+| totales                                        |  36  |             | 27.90 |            |                                            77.50 %                                            |
 
 | 6. Storage                                     | Taks | **Progres** | peso  | **Fecha**  |                             Ciclo                              |
 | :--------------------------------------------- | :--: | :---------: | ----- | :--------: | :------------------------------------------------------------: |
