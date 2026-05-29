@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/12 - Lab 3 - Streams.md",
+                "file": "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/13 - Xargs.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "12 - Lab 3 - Streams"
+              "title": "13 - Xargs"
             }
           }
         ]
@@ -205,6 +205,8 @@
   "active": "6d4f659490d73651",
   "lastOpenFiles": [
     "01 - Linux/03 - Advanced Bash Scripting/00 - Menu/Advanced Bash Scripting.md",
+    "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/13 - Xargs.md",
+    "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/11 - Exit-code.md",
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/12 - Lab 3 - Streams.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/13 - Configure SSH Servers and Clients.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
@@ -215,7 +217,6 @@
     "DevOps/100-Days-DevOps/MOC/Menu 100 Days of DevOps.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/04 - Configure Networking Start Stop Check.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/06 - Manage System Environment Profiles.md",
-    "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/11 - Exit-code.md",
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/10 - Pipefail.md",
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/09 - Pipes.md",
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/07 - Heredocs.md",
@@ -230,7 +231,6 @@
     "DOCKER/02 - Docker Engine/05 - Docker Service Configuration.md",
     "DOCKER/02 - Docker Engine/04 - Demo - Docker Engine Setup - Ubuntu.md",
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/06 - Lab 1 - Streams.md",
-    "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/05 - Input.md",
     "100-Days-DevOps/Seguimiento",
     "100-Days-DevOps/Temas",
     "DevOps/100-Days-DevOps/MOC",
