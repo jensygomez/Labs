@@ -35,13 +35,37 @@ The deeper lesson here is that firewall management is ultimately about _trust bo
 
 Enable firewall and configure port-based access rules using `ufw` (Uncomplicated Firewall):
 
-- `sudo ufw enable` (activate firewall with default deny policy)
-- `sudo ufw allow 22` (permit SSH access)
-- `sudo ufw allow 80` (permit HTTP traffic)
-- `sudo ufw allow 53/tcp` (permit DNS over TCP)
-- `sudo ufw deny 443/tcp` (block HTTPS traffic)
-- `sudo ufw delete 443/tcp` (remove previous deny rule)
-- `sudo ufw allow from 207.45.232.181` (whitelist specific IP address)
+```bash
+# (activate firewall with default deny policy)
+sudo ufw enable
+```
+
+  ```bash
+# (permit SSH access)
+sudo ufw allow 22  
+  ```
+  
+  ```bash
+# (permit HTTP traffic)
+sudo ufw allow 80  
+  ```
+
+```bash
+# (permit DNS over TCP)
+sudo ufw allow 53/tcp
+```
+
+ ```bash
+ # (block HTTPS traffic)
+ sudo ufw deny 443/tcp 
+ ```
+ 
+```bash
+# (remove previous deny rule)
+sudo ufw delete 443/tcp 
+```
+
+sudo ufw allow from 207.45.232.181` (whitelist specific IP address)
 - `sudo ufw allow from 10.11.12.0/24` (whitelist network subnet)
 - `sudo ufw status numbered` (display all rules with line numbers for management)
 - `sudo ufw insert 1 deny from 10.0.0.19`   (reorder rule to correct priority)
