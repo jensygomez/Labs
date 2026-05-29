@@ -61,5 +61,5 @@ tags:
 
 
 285 Tareas
-138.41 Peso
-48.56 % total
+167.42 Peso
+58.74 % total

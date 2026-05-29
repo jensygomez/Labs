@@ -17,134 +17,15 @@ tags:
 
 [[Laboratorios del LFCS]]
 
+
+
+Throughout this lab, I've realized that configuring SSH and Squid isn't about memorizing file paths or syntax—it's about understanding the principle of **secure access gates** that every production system requires. When I disabled password authentication and enabled key-based login, I was implementing a fundamental Linux security doctrine: _never trust the weakest link in your authentication chain_. Each configuration decision—whether restricting SSH to IPv4, disabling root login, or limiting authentication attempts to four—represents a deliberate hardening strategy. This experience taught me that a systems administrator isn't just someone who edits configuration files; they're someone who understands that every parameter exists for a reason rooted in threat modeling. The shift from password-based to key-based authentication isn't a technical preference—it's a philosophical commitment to systems that are defensible by design.
+
+What became clear when managing Squid proxy rules was that access control is fundamentally about **defining trust boundaries at the network perimeter**. When I created ACLs for `localnet` and `vpn`, then crafted `http_access` rules to allow or deny them, I wasn't just applying rules—I was implementing a network's security policy in code. The critical insight was understanding that `http_access allow localnetwork` doesn't blindly permit HTTP; it specifically allows whatever source IPs were defined in that ACL to access the proxy. This distinction matters profoundly: in production, you must know _exactly_ what each rule permits and from _where_. Blocking Facebook or managing external access required me to think like a network architect: _What traffic should flow through this proxy, and what should be stopped?_ This is the mindset that separates a technician from a systems steward.
+
+The deeper realization is that SSH and Squid configuration are microcosms of Linux system hardening philosophy: **least privilege, explicit denial, and immutable audit trails**. By setting `MaxAuthAttempts 4`, I was preventing brute-force attacks. By managing X11 forwarding and AddressFamily settings, I was reducing the attack surface. By blocking specific domains and IP ranges through Squid, I was enforcing network policy at the proxy layer. These aren't isolated technical tasks—they're interconnected security decisions that compound to create resilient infrastructure. A true sysadmin understands that configuration management is risk management, where every line serves a defensive purpose and every change requires justification.
+
 ---
-
-
-Question 1 of 12
-
-In what file can we edit the settings of our `SSH server`?
-
-===============
-
-Question 2 of 12
-
-In a `squid proxy` server, what does this line do?  
-  
-
-```text
-http_access allow localnetwork
-```
-
-  
-  
-
-**A.** It makes it accept connections from the computers in our local network.  
-  
-  
-**B.** It lets computers in the local network use the http protocol, but not the https protocol.  
-  
-  
-**C.** It makes it accept incoming connections from whatever was defined in the ACL named "localnetwork"  
-  
-  
-**D.** It lets computers use the proxy server to access devices in the "localnetwork" ACL.
-
-==========
-
-Question 3 of 12
-
-Edit the configuration of the `SSH server` and disable password logins.
-
-  
-
-Please make sure to restart the `sshd` service after making the required changes.
-
-===========
-
-
-
-Question 4 of 12
-
-Edit the `system-wide` configuration of the `SSH client` and turn on `X11 forwarding`.
-
-=============
-
-Question 5 of 12
-
-Install `squid` proxy server on this system and start its service.
-
-===========
-
-Question 6 of 12
-
-Edit the config file of the `Squid proxy` daemon. Modify it to `deny` access to the IP addresses defined in the ACL called `localnet`.
-
-=================
-Question 7 of 12
-
-Edit the configuration of the `Squid proxy daemon`. Add a `src` type `acl` and name it `vpn`. The IP you should use in this acl is `203.0.110.5`. Now add a new rule that tells the proxy server to `allow` access to the acl named `vpn`.
-
-===============
-
-Question 8 of 12
-
-Edit the configuration of the `SSH server` and configure it to use only `IPv4` IP address family.
-
-=============
-
-
-
-
-Question 9 of 12
-
-Edit the configuration of the `Squid proxy daemon`. Now, add a new rule that allows http access to `external`.
-
-==============
-
-
-Question 10 of 12
-
-Edit the configuration of the `Squid proxy daemon`, and add an `acl and http access rule to block facebook.com`.
-
-==============
-
-Question 11 of 12
-
-Edit the configuration of the `SSH server` and `re-enable password logins`, but `disable` the SSH login for user root.
-
-===========
-
-Question 12 of 12
-
-In the configuration file of the `SSH server`, change the maximum number of authentication attempts permitted per connection to `4`.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## Comandos de ejemplo
 
 ```bash
