@@ -57,6 +57,10 @@ tags:
 [[12 - Lab 3 - Streams]]
 [[13 - Xargs]]
 [[14 - Eval]]
+[[15 - printf]]
+[[16 - Lab 4 - Streams]]
+
+
 
 
 
