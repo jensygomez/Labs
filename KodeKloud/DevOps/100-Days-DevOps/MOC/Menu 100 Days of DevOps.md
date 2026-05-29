@@ -14,5 +14,6 @@
 |                                                         |              |              |
 |                                                         |              |              |
 | [[Day 17 - Install and Configure PostgreSQL]]           | `27/05/2026` |              |
+| [[Day 18 - Install and Configure DB Server]]            | `29/05/2026` |              |
 |                                                         |              |              |
 
