@@ -9,14 +9,14 @@ tags:
   - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
-| Fecha      | Tiempo | Éxito | Notas Rápidas |
-| :--------- | :----- | :---- | :------------ |
-| `15/05/26` | 40 min | 35 %  |               |
-| `24/05/26` | 40 min | 35 %  |               |
+| Fecha        | Tiempo | Éxito   | Notas Rápidas |
+| :----------- | :----- | :------ | :------------ |
+| `15/05/26`   | 40 min | 0 %     |               |
+| `24/05/26`   | 40 min | 35 %    |               |
+| `29/05/2026` | 40 min | 78.57 % |               |
+|              |        |         |               |
 
 [[Laboratorios del LFCS]]
-
-**Here’s your summary in Advanced B2 English, first person singular:**
 
 ---
 
@@ -28,14 +28,85 @@ Overall, this lab helped me understand how to manage the boot process and servic
 
 ---
 
-**Key commands to remember:**
+### 1. Gestión del Apagado y Sistema
 
-- `shutdown -h +120` / `shutdown -c`
-- `systemctl set-default graphical.target`
-- `./script.sh` or `bash script.sh`
-- `systemctl status sshd`
-- `systemctl mask apache2` / `systemctl unmask apache2`
-- `tar -czf archive.tar.gz dir1`
-- `chmod u=x,go= directory`
+Shell
 
----
+```
+# HINT: Control de energía. Invoca la herramienta del sistema para programar un apagado con un temporizador de 2 horas en formato relativo, o aborta el proceso antes de que expire.
+# SINOPSIS: $ sudo [CMD] --flags [TIME_VALUE]
+# SINOPSIS: $ sudo [CMD] -c
+```
+
+### 2. Configuración de la Interfaz Gráfica (Target)
+
+Shell
+
+```
+# HINT: Localización y cambio de estado del init. Busca el archivo por nombre desde la raíz del sistema de archivos. Luego, cambia de forma persistente el objetivo de arranque predeterminado al modo gráfico.
+# SINOPSIS: $ sudo [CMD] [START_PATH] -name [FILENAME]
+# SINOPSIS: $ sudo [CMD] set-default [TARGET_UNIT]
+```
+
+### 3. Automatización y Redirección (`script.sh`)
+
+Shell
+
+```
+# HINT: Permisos y flujos. Otorga flags de ejecución al script. Luego, usa un pipe hacia un binario que actúe como "T" para concatenar una línea de empaquetado (tar) al final de un archivo protegido.
+# SINOPSIS: $ [CMD] +x [FILE]
+# SINOPSIS: $ echo "[TAR_CMD] [FLAGS] [ARGS]" | sudo [CMD] --append [FILE]
+```
+
+### 4. Diagnóstico de SSH y Captura de PID (`script2.sh`)
+
+Shell
+
+```
+# HINT: Estado de daemons y persistencia. Revisa la actividad del servicio, verifica si arrancará automáticamente con el sistema y redirige un string para añadirlo al final de tu script de pruebas sin borrar nada.
+# SINOPSIS: $ sudo [CMD] status [SERVICE]
+# SINOPSIS: $ sudo [CMD] is-enabled [SERVICE]
+# SINOPSIS: $ echo "..." [OPERATOR] [FILE]
+```
+
+### 5. Auditoría de Permisos en Directorios
+
+Shell
+
+```
+# HINT: Inspección de metadatos. Lista de forma exhaustiva (incluyendo ocultos y dueños) un directorio cuyo acceso requiera elevar privilegios debido a restricciones del sistema de archivos.
+# SINOPSIS: $ sudo [CMD] -la [TARGET_DIR]
+```
+
+### 6. Despliegue de Scripts con Permisos Octales (`script10.sh`)
+
+Shell
+
+```
+# HINT: Permisos discretos. Aplica la máscara numérica para que el script sea ejecutable por todos pero modificable solo por el dueño. Luego, ejecútalo invocando su intérprete.
+# SINOPSIS: $ sudo [CMD] [OCTAL_MODE] [FILE]
+# SINOPSIS: $ [INTERPRETER] [FILE]
+```
+
+### 7. Control Avanzado de Servicios (Masking y Restarts)
+
+Shell
+
+```
+# HINT: Ciclo de vida de unidades. Enmascara completamente un servicio para que no pueda ser iniciado, revierte el enmascaramiento y luego reinicia el daemon de sshd para aplicar cambios.
+# SINOPSIS: $ sudo [CMD] mask [SERVICE]
+# SINOPSIS: $ sudo [CMD] unmask [SERVICE]
+# SINOPSIS: $ sudo [CMD] restart [SERVICE]
+```
+
+### 8. Localización de Archivos de Unidad de Systemd (`kkloud`)
+
+Shell
+
+```
+# HINT: ¡Cuidado con los typos del laboratorio! Si sospechas del nombre, usa la herramienta de búsqueda acotando el inicio a la ruta estándar de configuraciones de systemd (en lugar de buscar desde la raíz `/`). Cuando localices el archivo `.service` real, inspecciónalo y edítalo.
+# SINOPSIS: $ sudo [CMD] [SYSTEMD_CONF_DIR] -name "[PATTERN_WITH_WILDCARD]"
+# SINOPSIS: $ sudo [CMD] [FILE_PATH]
+# SINOPSIS: $ sudo [CMD] [FILE_PATH]
+```
+
