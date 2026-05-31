@@ -9,13 +9,13 @@ tags:
   - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
-| Fecha      | Tiempo | Éxito | Peso |
-| :--------- | :----- | :---- | :--- |
-| `29/05/26` | 20 min | 0 %   | 0,00 |
-| `16/05/26` | 20 min | 14 %  | 0,98 |
-| `26/05/26` | 20 min | 28 %  | 1,96 |
-|            |        |       |      |
-|            |        |       |      |
+| Fecha      | Tiempo | Éxito  |
+| :--------- | :----- | :----- |
+| `29/05/26` | 20 min | 0 %    |
+| `16/05/26` | 20 min | 14 %   |
+| `26/05/26` | 20 min | 28 %   |
+| `31/05/26` | 20 min | 71.42% |
+|            |        |        |
 [[Laboratorios del LFCS]]
 
 ---
@@ -32,38 +32,26 @@ The final challenge—configuring additional repositories from Ubuntu Focal and 
 
 
 ```bash
-# Actualizar lista de repositorios (sin instalar actualizaciones)
-apt update
+# Q1: Explicación conceptual de la diferencia entre comandos de actualización de paquetes:
+# apt update   -> Descarga la lista actualizada de paquetes desde los repositorios (actualiza los índices/metadatos localmente). No instala nada.
+# apt upgrade  -> Compara los paquetes instalados con la lista local actualizada y descarga/instala las versiones más recientes de los programas.
 
-# Actualizar paquetes ya instalados
-apt upgrade
+# Q2: Busca e instala el servidor web Apache utilizando el nombre exacto del paquete obtenido de los metadatos.
+sudo apt install --yes apache2
 
-# Buscar paquete con palabras clave
-apt search "apache http server"
+# Q3: Busca a qué paquete pertenece el binario "/bin/ls" mediante dpkg y guarda únicamente el nombre del paquete encontrado en la ruta de bob.
+sudo dpkg --search /bin/ls | cut --delimiter=":" --fields=1 > /home/bob/package.txt
 
-# Instalar paquete
-apt install apache2
+# Q4: Lista los archivos de coreutils, filtra los que están estrictamente en /bin que empiecen con "u", e identifica su ruta absoluta exacta.
+sudo dpkg --listfiles coreutils | grep --extended-regexp "^/bin/u[^/]*$" > /home/bob/name.txt
 
-# Ver información detallada de un paquete
-apt show apache2
+# Q5: Remueve el paquete ziptool e inmediatamente elimina de forma automática todas sus dependencias huérfanas que ya no se necesiten.
+sudo apt remove --yes ziptool && sudo apt autoremove --yes
 
-# Identificar a qué paquete pertenece un archivo
-dpkg -S /bin/ls
+# Q6: Agrega el repositorio de Ubuntu 20.04 (Focal) al final de las fuentes del sistema y actualiza el caché de APT de manera inmediata.
+echo "deb http://us.archive.ubuntu.com/ubuntu/ focal main" | sudo tee --append /etc/apt/sources.list && sudo apt update
 
-# Listar archivos de un paquete
-dpkg -L coreutils | grep /bin
-
-# Desinstalar paquete y sus dependencias no usadas
-apt remove ziptool
-apt autoremove
-
-# Agregar repositorio personalizado
-echo "deb http://us.archive.ubuntu.com/ubuntu/ focal main" | sudo tee /etc/apt/sources.list.d/focal.list
-apt update
-
-# Compilar e instalar desde fuente
-cd tmux
-./configure
-make
-sudo make install
+# Q7: Proceso estándar de compilación e instalación desde el código fuente de tmux.
+# Nota: Primero se genera el script de configuración con autogen, luego se valida el entorno, se compila y se instala en el sistema.
+sudo ./autogen.sh && sudo ./configure && sudo make && sudo make install
 ```
