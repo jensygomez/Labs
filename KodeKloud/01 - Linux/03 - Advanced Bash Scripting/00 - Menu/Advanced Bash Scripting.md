@@ -19,7 +19,7 @@ tags:
 ### 2. Conventions
 
 [[01 - Linux/03 - Advanced Bash Scripting/02 - Conventions/01 - Overview|01 - Overview]]
-[[02 - Variables]]
+[[01 - Linux/03 - Advanced Bash Scripting/02 - Conventions/02 - Variables]]
 [[01 - Linux/03 - Advanced Bash Scripting/02 - Conventions/03 - Functions|03 - Functions]]
 [[04 - Expanding]]
 [[05 - Quiz - Conventions]]                                                         |    67 %
