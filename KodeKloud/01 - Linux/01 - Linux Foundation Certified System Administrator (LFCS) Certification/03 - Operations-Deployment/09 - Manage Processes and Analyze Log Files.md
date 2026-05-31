@@ -9,10 +9,11 @@ tags:
   - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
-| Fecha      | Tiempo | Éxito | Notas Rápidas |
-| :--------- | :----- | :---- | :------------ |
-| `16/05/26` | 35 min | 7 %   |               |
-| `25/05/26` | 40 min | 23 %  |               |
+| Fecha        | Tiempo | Éxito   | Notas Rápidas |
+| :----------- | :----- | :------ | :------------ |
+| `16/05/26`   | 35 min | 7 %     |               |
+| `25/05/26`   | 40 min | 23 %    |               |
+| `31/05/2026` | 40 min | 38.46 % |               |
 [[Laboratorios del LFCS]]
 
 
@@ -26,10 +27,42 @@ This lab helped me connect process management with log analysis, showing how bot
 
 **Key commands to remember:**
 
-- `ps -eo pid,comm,nice`
-- `nice -n 9 sshd`
-- `lsof -p 1 > files.txt`
-- `journalctl -p err` / `journalctl -p info`
-- `grep -r "reboot" /var/log/`
-- `kill -HUP <PID>`
-- `sleep 3000 &`
+```bash
+# Task 1 — Ver procesos del sistema
+ps aux
+
+# Task 2 — Iniciar proceso con prioridad reducida
+sudo nice --adjustment=9 sshd
+
+# Task 3 — Cambiar prioridad de proceso en ejecución
+sudo renice --priority=9 1117
+
+# Task 4 — Listar archivos abiertos por PID 1
+sudo lsof -p 1 > /home/bob/files.txt
+
+# Task 5 — Encontrar PID de rpcbind
+sudo systemctl status rpcbind
+echo "605" > /home/bob/pid.txt
+
+# Task 6 — Encontrar última IP conectada por SSH
+sudo journalctl --unit=ssh.service --no-pager | grep "Accepted" | tail --lines=1
+echo "192.168.92.13" > /home/bob/ip.txt
+
+# Task 7 — Enviar señal SIGHUP al proceso SSH
+sudo kill --signal=SIGHUP 1117
+
+# Task 8 — Buscar string reboot en /var/log/
+sudo grep --recursive --text 'reboot' /var/log/ > /home/bob/reboot.log
+
+# Task 9 — Logs de error con journalctl
+sudo journalctl --priority=err > /home/bob/.priority/priority.log
+
+# Task 10 — Logs info filtrados por letra c
+sudo journalctl --priority=info --grep='^c' > /home/bob/.priority/boot.log
+
+# Task 11 — Ver recursos del proceso PID 1
+sudo ps u 1 > /home/bob/resources.txt
+
+# Task 12 — Correr proceso en background
+sudo sleep 3000 &```
+
