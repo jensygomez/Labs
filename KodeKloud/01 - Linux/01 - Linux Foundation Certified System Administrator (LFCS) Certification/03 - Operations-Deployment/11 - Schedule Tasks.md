@@ -12,8 +12,9 @@ tags:
 | Fecha      | Tiempo | Éxito | Notas Rápidas |
 | :--------- | :----- | :---- | :------------ |
 | `27/04/26` | 25 min | 0 %   |               |
-| `16/05/26` | 25 min | 0%    |               |
+| `16/05/26` | 25 min | 12%   |               |
 | `25/05/26` | 45 min | 25 %  |               |
+| `31/05/26` | 40 min | 41 %  |               |
 |            |        |       |               |
 
 [[Laboratorios del LFCS]]
@@ -36,19 +37,42 @@ In my role as NOC Level 1 at Accenture, I now recognize how these scheduling mec
 ## 🔧 Comandos Principales Utilizados:
 
 ```bash
-# Sintaxis fundamental cron: minuto(0-59) hora(0-23) día_mes(1-31) mes(1-12) día_semana(0-7)
-# Ejemplo Q1: 0 3 15 * * = 3:00 AM del día 15 de cada mes
-crontab -e                                    # Editar crontab del usuario actual
-sudo crontab -u root -e                       # Ver/editar crontab de root como otro usuario
-crontab -l                                    # Listar crontab actual
-sudo crontab -u root -l                       # Listar crontab de root
-cat /var/spool/anacron/*                      # Verificar ejecución anacron (Q3)
-anacron -f                                    # Forzar re-ejecución de todos los jobs anacron (Q4)
-atq                                           # Ver jobs programados en at (Q5)
-at 15:30 20.08.2054                          # Programar job único con at (Q9)
-atrm $(atq | awk '{print $1}')               # Remover todos los jobs at del usuario actual
-# Ejemplos de cron entries finales: 30 21 * * * /usr/bin/touch test_passed (diario 21:30)
-# 0 0 1 * * /usr/bin/touch monthly (1er día mes medianoche) | 0 11 * * 0 /usr/bin/touch weekly (domingos 11 AM)
+# Q1: El comando se ejecutará a las 3:00 AM (--minute=0 --hour=3) el día 15 de cada mes (--day=15), sin importar el mes o el día de la semana.
+# Ejecución: A las 03:00 del día 15 de cada mes.
+
+# Q2: Para ver el crontab del usuario root estando logueado como 'alex' (requiere privilegios de sudo).
+sudo crontab --user=root --list
+
+# Q3: El archivo de log que se debe analizar para verificar si los trabajos de anacron se ejecutaron con éxito es /var/log/syslog (o /var/log/cron en sistemas RedHat/CentOS).
+# Comando para revisarlo: sudo grep "anacron" /var/log/syslog
+
+# Q4: Forzar a anacron a ejecutar todos los trabajos inmediatamente, ignorando las marcas de tiempo de la última ejecución (--force).
+sudo anacron --force
+
+# Q5: Listar los trabajos programados en 'at' para el usuario bob y redirigir/guardar la salida en el archivo de texto especificado.
+sudo atq --user=bob > /home/bob/at_jobs.txt
+
+# Q6: Eliminar todos los trabajos de 'at' del usuario bob (atrm no tiene bandera larga para usuarios, usamos un bucle o comando directo si somos root).
+sudo atrm $(atq --user=bob | cut --fields=1)
+
+# Q7: Añadir la tarea al crontab de root para que corra todos los días a las 21:30 (30 21 * * *).
+sudo crontab --user=root -l 2>/dev/null | { cat; echo "30 21 * * * /usr/bin/touch test_passed"; } | sudo crontab --user=root -
+
+# Q8: Para añadir este trabajo de anacron, se debe agregar la siguiente línea al archivo de configuración de anacron (normalmente en /etc/anacrontab).
+# Línea a añadir: 10	5	db_cleanup	/usr/bin/touch /root/anacron_created_this.
+sudo echo "10 5 db_cleanup /usr/bin/touch /root/anacron_created_this." >> /etc/anacrontab
+
+# Q9: Programar la ejecución del comando usando la utilidad 'at' para las 15:30 del 20 de agosto de 2054 como usuario root.
+echo "/usr/bin/touch atscheduler" | sudo at 15:30 2054-08-20
+
+# Q10: Añadir una tarea cron para root que se ejecute a las 12:00 AM (00:00) el primer día de cada mes (0 0 1 * *).
+sudo crontab --user=root -l 2>/dev/null | { cat; echo "0 0 1 * * /usr/bin/touch monthly"; } | sudo crontab --user=root -
+
+# Q11: Añadir una tarea cron para root que se ejecute a las 11:00 AM todos los domingos (0 11 * * 0).
+sudo crontab --user=root -l 2>/dev/null | { cat; echo "0 11 * * 0 /usr/bin/touch weekly"; } | sudo crontab --user=root -
+
+# Q12: Añadir una tarea cron para el usuario 'bob' para reiniciar nginx los domingos a las 6:00 AM y a las 11:00 PM (0 6,23 * * 0).
+sudo crontab --user=bob -l 2>/dev/null | { cat; echo "0 6,23 * * 0 sudo /usr/bin/systemctl restart nginx"; } | sudo crontab --user=bob -
 ```
 
 ---

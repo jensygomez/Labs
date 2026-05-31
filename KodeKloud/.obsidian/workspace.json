@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/11 - Schedule Tasks.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "11 - Schedule Tasks"
+              "title": "Laboratorios del LFCS"
             }
           }
         ]
@@ -203,6 +203,7 @@
   },
   "active": "6d4f659490d73651",
   "lastOpenFiles": [
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/11 - Schedule Tasks.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/09 - Manage Processes and Analyze Log Files.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/08 - Packet Filtering.md",
@@ -228,7 +229,6 @@
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/09 - Pipes.md",
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/07 - Heredocs.md",
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/08 - Lab 2 - Streams.md",
-    "01 - Linux/00 - Menu/Linux System Administration.md",
     "DevOps",
     "100-Days-DevOps/Seguimiento",
     "100-Days-DevOps/Temas",

@@ -21,14 +21,14 @@ tags:
 | 3. Operations Deployment                                | Taks | **Progres** | Peso  | **Fecha**  |                                                            Ciclo                                                             |
 | :------------------------------------------------------ | :--: | :---------: | ----- | :--------: | :--------------------------------------------------------------------------------------------------------------------------: |
 | [[06 - Scripting, Manage Startup Process and Services]] |  14  |    78 %     | 10.92 | `29/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-| [[09 - Manage Processes and Analyze Log Files]]         |  13  |    38 %     | 4.94  | `25/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-| [[11 - Schedule Tasks]]                                 |  12  |    25 %     | 3,00  | `25/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[09 - Manage Processes and Analyze Log Files]]         |  13  |    38 %     | 4.94  | `31/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
+| [[11 - Schedule Tasks]]                                 |  12  |    41 %     | 4.92  | `31/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[15 - Manage Software, Repositories]]                  |  7   |    28 %     | 1,96  | `26/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
 | [[17 - Verify Integrity and Availability]]              |  6   |    66 %     | 3,96  | `26/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
 | [[21 - Kernel Runtime Parameters and SELinux AppArmor]] |  9   |    11 %     | 0,99  | `26/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
 | [[26 - Manage Containers and VMs]]                      |  15  |    60 %     | 9     | `26/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
 |                                                         |      |             |       |            |                                                                                                                              |
-| TOTALES TAREAS:                                         |  76  |             | 34.77 |            |                                                           45.75 %                                                            |
+| TOTALES TAREAS:                                         |  76  |             | 36.69 |            |                                                           48.27 %                                                            |
 |                                                         |      |             |       |            |                                                                                                                              |
 
 
