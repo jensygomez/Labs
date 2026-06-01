@@ -48,17 +48,17 @@ tags:
 |                                                |      |             |       |            |                                                                                               |
 | totales                                        |  36  |             | 27.90 |            |                                            77.50 %                                            |
 
-| 6. Storage                                     | Taks | **Progres** | peso  | **Fecha**  |                                             Ciclo                                             |
-| :--------------------------------------------- | :--: | :---------: | ----- | :--------: | :-------------------------------------------------------------------------------------------: |
-| [[03 - Manage Partitions and Swap Space]]      |  9   |    88 %     | 7.92  | `19/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-| [[06 - Create Filesystems and Mount Them]]     |  9   |    55 %     | 4.95  | `19/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
-| [[08 - Filesystem Features and Mount Options]] |  5   |    40 %     | 2.00  | `19/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
-| [[10 - Remote File Systems --> NFS]]           |  8   |    25 %     | 2.00  | `20/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
-| [[13 - Manage LVM]]                            |  12  |     66%     | 7.92  | `20/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
-| [[16 - Advanced Permissions]]                  |  8   |    75 %     | 6     | `20/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
-|                                                |      |             |       |            |                                                                                               |
-| Totales                                        |  51  |             | 30.79 |            |                                            60.37 %                                            |
-|                                                |      |             |       |            |                                                                                               |
+| 6. Storage                                         | Taks | **Progres** | peso  | **Fecha**  |                                             Ciclo                                             |
+| :------------------------------------------------- | :--: | :---------: | ----- | :--------: | :-------------------------------------------------------------------------------------------: |
+| [[03 - Manage Partitions and Swap Space]]          |  9   |    89 %     | 8.01  | `01/06/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
+| [[06 - Create Filesystems and Mount Them at Boot]] |  9   |    89 %     | 8.01  | `01/06/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
+| [[08 - Filesystem Features and Mount Options]]     |  5   |    40 %     | 2.00  | `19/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[10 - Remote File Systems --> NFS]]               |  8   |    25 %     | 2.00  | `20/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[13 - Manage LVM]]                                |  12  |     66%     | 7.92  | `20/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[16 - Advanced Permissions]]                      |  8   |    75 %     | 6     | `20/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+|                                                    |      |             |       |            |                                                                                               |
+| Totales                                            |  51  |             | 33.94 |            |                                            66.54 %                                            |
+|                                                    |      |             |       |            |                                                                                               |
 
 
 285 Tareas

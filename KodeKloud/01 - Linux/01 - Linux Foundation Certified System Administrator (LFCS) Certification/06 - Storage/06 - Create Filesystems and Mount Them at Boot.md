@@ -9,17 +9,16 @@ tags:
   - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
-| Fecha          | Tiempo | Éxito | Notas Rápidas |
-| :------------- | :----- | :---- | :------------ |
-| 08 - 05 - 2026 | 20 min | 66 %  |               |
-| 19 - 05 - 2026 | 20 min | 55 %  |               |
+| Fecha        | Tiempo | Éxito | Notas Rápidas |
+| :----------- | :----- | :---- | :------------ |
+| `08/05/2026` | 20 min | 35 %  |               |
+| `19/05/2026` | 20 min | 55 %  |               |
+| `01/06/2026` | 20 min | 89 %  |               |
 
 [[Laboratorios del LFCS]]
 
 ---
 
-
-## Creación de Filesystems y Configuración de Montaje Automático en Boot
 
 Este laboratorio integra la creación de sistemas de archivos con su configuración permanente en `/etc/fstab`, simulando tareas reales de administración de almacenamiento. Las primeras tareas se enfocan en la creación de filesystems específicos: un filesystem XFS con etiqueta "DataDisk" en `/dev/vdd` y un filesystem ext4 con 2048 inodes en `/dev/vde`, demostrando cómo diferentes tipos de filesystems se crean con sintaxis y opciones distintas. Luego se practican operaciones de montaje temporal con `mount` y `umount` en el directorio `/mnt/`, que proporcionan experiencia hands-on sobre cómo los filesystems se hacen accesibles al sistema. Una pregunta conceptual sobre la sintaxis correcta de labels (`-L` mayúscula vs `-l` minúscula) refuerza la importancia de precisión en los comandos.
 
@@ -28,41 +27,28 @@ La segunda mitad del laboratorio requiere configurar montajes automáticos en `/
 ## Comandos Clave Utilizados
 
 ```bash
-# Q1: Archivo para configurar montajes automáticos
-# Respuesta: /etc/fstab
+# Q1: El archivo de configuración que define los montajes automáticos del sistema durante el arranque es: /etc/fstab
 
-# Q2: Opción correcta para label en XFS
-# Respuesta: B. Debe ser -L (mayúscula), no -l (minúscula)
+# Q2: Respuesta correcta: A. La etiqueta "BackupVolume" excede el límite máximo de caracteres permitido para un volumen XFS (máximo 12 bytes/caracteres).
 
-# Q3: Crear XFS con label
-sudo mkfs.xfs -L "DataDisk" /dev/vdd
+# Q3: Crea un sistema de archivos XFS forzando (--force) la escritura y asignándole la etiqueta "DataDisk".
+sudo mkfs.xfs --force -L "DataDisk" /dev/vdd
 
-# Q4: Crear ext4 con número específico de inodes
-sudo mkfs.ext4 -N 2048 /dev/vde
+# Q4: Crea un sistema de archivos ext4 especificando explícitamente el número exacto de nodos-i (inodes) requeridos mediante la opción --number-of-inodes.
+sudo mkfs.ext4 --number-of-inodes=2048 /dev/vde
 
-# Q5: Montar partición temporalmente
+# Q5: Monta el dispositivo de bloques /dev/vdd en el directorio de montaje temporal estándar del sistema /mnt/.
 sudo mount /dev/vdd /mnt/
 
-# Q6: Desmontar filesystem
+# Q6: Desmonta de forma segura el sistema de archivos que se encuentra actualmente activo en el directorio /mnt/.
 sudo umount /mnt/
 
-# Q7: Configurar montaje permanente en fstab
-sudo mkdir -p /test
-sudo vim /etc/fstab
-# Agregar línea (usar UUID):
-# UUID=<uuid-vde>  /test  ext4  defaults  0  2
+# Q7: Crea el directorio /test, extrae el UUID del disco /dev/vde y lo añade limpiamente al archivo /etc/fstab indicando que se revise en el boot (parámetro 2).
+sudo mkdir --parents /test && echo "UUID=$(blkid --value --match-tag UUID /dev/vde) /test ext4 defaults 0 2" | sudo tee --append /etc/fstab
 
-# Verificar fstab sin reiniciar
-sudo mount -a
+# Q8: Registra de forma persistente en el /etc/fstab el dispositivo /dev/vdd para que el sistema operativo lo monte automáticamente como memoria swap al arrancar.
+echo "/dev/vdd none swap defaults 0 0" | sudo tee --append /etc/fstab
 
-# Q8: Configurar swap automático en fstab
-# Agregar línea en /etc/fstab:
-# UUID=<uuid-vdd>  none  swap  defaults  0  0
-
-# Recargar configuración de systemd
-sudo systemctl daemon-reload
-
-# Obtener UUID de particiones
-sudo blkid /dev/vdd
-sudo blkid /dev/vde
+# Q9: Cambia de manera segura la etiqueta (label) de un sistema de archivos XFS existente en /dev/vdd a "SwapFS" usando la herramienta de administración de XFS.
+sudo xfs_admin -L "SwapFS" /dev/vdd
 ```
