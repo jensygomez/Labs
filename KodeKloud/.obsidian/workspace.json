@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/02 - Variables.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/21 - Kernel Runtime Parameters and SELinux AppArmor.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "02 - Variables"
+              "title": "21 - Kernel Runtime Parameters and SELinux AppArmor"
             }
           }
         ]
@@ -203,11 +203,11 @@
   },
   "active": "6d4f659490d73651",
   "lastOpenFiles": [
-    "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/01 - Overview.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/02 - Variables.md",
+    "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/01 - Overview.md",
     "01 - Linux/03 - Advanced Bash Scripting/00 - Menu/Advanced Bash Scripting.md",
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/01 - Overview.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/15 - Manage Software, Repositories & Install Software from Source.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/11 - Schedule Tasks.md",
