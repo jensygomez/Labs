@@ -62,6 +62,9 @@ tags:
 
 ### 5. Expansion - Part One
 [[01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/01 - Overview|01 - Overview]]
+[[01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/02 - Variables|02 - Variables]]
+[[03 - Parameter - Part One]]
+
 
 
 
