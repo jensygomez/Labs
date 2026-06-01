@@ -25,10 +25,10 @@ tags:
 | [[11 - Schedule Tasks]]                                               |  12  |    41 %     | 4.92  | `31/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[15 - Manage Software, Repositories & Install Software from Source]] |  7   |    71 %     | 4.97  | `31/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[17 - Verify Integrity and Availability]]                            |  6   |    66 %     | 3,96  | `26/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
-| [[21 - Kernel Runtime Parameters and SELinux AppArmor]]               |  9   |    11 %     | 0,99  | `26/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[21 - Kernel Runtime Parameters and SELinux AppArmor]]               |  9   |    33 %     | 2.97  | `01/06/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[26 - Manage Containers and VMs]]                                    |  15  |    60 %     | 9     | `26/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
 |                                                                       |      |             |       |            |                                                                                                                              |
-| TOTALES TAREAS:                                                       |  76  |             | 39.70 |            |                                                           52.23 %                                                            |
+| TOTALES TAREAS:                                                       |  76  |             | 41.68 |            |                                                           54.84 %                                                            |
 |                                                                       |      |             |       |            |                                                                                                                              |
 
 

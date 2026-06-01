@@ -14,7 +14,7 @@ tags:
 | `30/04/26` | 30 min | 0 %   |               |
 | `16/05/26` | 40 min | 0 %   |               |
 | `26/05/26` | 20 min | 11 %  |               |
-| `31/05/26` |        |       |               |
+| `31/05/26` | 20 min | 33 %  |               |
 
 [[Laboratorios del LFCS]]
 
@@ -32,39 +32,32 @@ The final challenge—restoring correct SELinux labels across `/var/log` while r
 ## **💻 Comandos Clave**
 
 ```bash
-# Consultar contexto SELinux de un archivo
-ls -lZ /bin/sudo
+# Q1: Encuentra la etiqueta completa de SELinux para el proceso en ejecución sshd y la guarda en el archivo especificado.
+sudo ps --context ax | grep "sshd" | grep --invert-match "grep" | awk '{print $1}' > /home/bob/sshd
 
-# Cambiar contexto SELinux de un archivo
-sudo chcon -t httpd_sys_content_t /var/index.html
+# Q2: Desactiva la carga de nuevos módulos de kernel en tiempo de ejecución configurando el parámetro en 1 (Verdadero).
+sudo sysctl --write kernel.modules_disabled=1
 
-# Listar etiquetas SELinux de un proceso
-ps -eZ | grep sshd
+# Q3: Extrae únicamente el tipo ("type") de SELinux del archivo /bin/sudo (el tercer elemento: user:role:type:level) y lo guarda.
+ls --context /bin/sudo | awk '{print $1}' | cut --delimiter=":" --fields=3 > /home/bob/selabel
 
-# Ver parámetros del kernel actualmente
-sysctl net.ipv6.conf.lo.seg6_enabled
+# Q4: Fuerza al sistema a cargar de forma activa el valor actual del parámetro runtime de red IPv6 indicado.
+sudo sysctl --write net.ipv6.conf.lo.seg6_enabled=1
 
-# Establecer parámetro kernel temporalmente
-sudo sysctl -w vm.swappiness=10
+# Q5: Cambia la agresividad del espacio de intercambio (swappiness) a 10 y lo añade de forma persistente en /etc/sysctl.conf.
+sudo sysctl --write vm.swappiness=10 && echo "vm.swappiness=10" | sudo tee --append /etc/sysctl.conf
 
-# Hacer persistente un parámetro del kernel
-echo "vm.swappiness=10" | sudo tee -a /etc/sysctl.conf
-sudo sysctl -p
+# Q6: Cambia manualmente el contexto/etiqueta de SELinux del archivo HTML apuntando específicamente al tipo de contenido web (--type).
+sudo chcon --type=httpd_sys_content_t /var/index.html
 
-# Deshabilitar carga de módulos kernel
-sudo sysctl -w kernel.modules_disabled=1
+# Q7: Modifica de manera temporal el estado global de SELinux a modo Permisivo (0), donde se permiten las acciones pero se registran las alertas.
+sudo setenforce 0
 
-# Ver modo SELinux actual
-getenforce
+# Q8: Lista los usuarios de SELinux, busca el usuario staff_u y guarda exclusivamente los roles asignados a él en el archivo del usuario bob.
+sudo semanage user --list | grep "staff_u" > /home/bob/serole
 
-# Cambiar SELinux a Permissive (temporal)
-sudo setenforce Permissive
-
-# Restaurar contextos SELinux por defecto
-sudo restorecon -Rv /var/log
-
-# Ver roles SELinux de un usuario
-sudo semanage user -l | grep staff_u
+# Q9: Restaura de forma recursiva (--recursive) las etiquetas por defecto de SELinux del directorio /var/log basándose en las políticas del sistema.
+sudo restorecon --recursive /var/log/
 ```
 
 ---
