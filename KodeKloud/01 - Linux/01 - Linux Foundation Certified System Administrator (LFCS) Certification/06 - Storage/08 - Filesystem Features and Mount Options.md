@@ -9,10 +9,11 @@ tags:
   - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
-| Fecha          | Tiempo | Éxito | Notas Rápidas |
-| :------------- | :----- | :---- | :------------ |
-| 08 - 05 - 2026 | 15 min | 80 %  |               |
-| 19 - 05 - 2026 | 15 min | 40 %  |               |
+| Fecha        | Tiempo | Éxito | Notas Rápidas |
+| :----------- | :----- | :---- | :------------ |
+| `08/05/2026` | 15 min | 20 %  |               |
+| `19/05/2026` | 15 min | 40 %  |               |
+| `01/06/2026` | 20 min | 100 % |               |
 
 [[Laboratorios del LFCS]]
 
@@ -27,34 +28,18 @@ La tarea final requiere configuración permanente en `/etc/fstab`, combinando la
 ## Comandos Clave Utilizados
 
 ```bash
-# Q1: Identificar opciones de montaje de /dev/vda1 y guardar
-findmnt -n /dev/vda1 -o OPTIONS > /root/moptions
-# O alternativa:
-mount | grep "on / " | awk -F'(' '{print $2}' | sed 's/)$//' > /root/moptions
+# Q1: Encuentra todas las opciones de montaje activas para el disco raíz usando findmnt y extrae solo la cadena de opciones para guardarla en /root/moptions.
+sudo findmnt --noheadings --output OPTIONS /dev/vda1 > /root/moptions
 
-# Q2: Desmontar partición
-sudo umount /mnt/
+# Q2: Desmonta de forma segura el dispositivo /dev/vdd1 que se encuentra actualmente asignado al punto de montaje /mnt/.
+sudo umount /dev/vdd1
 
-# Q3: Montar con opciones de seguridad restrictivas
-sudo mount -o ro,noexec,nosuid /dev/vdd1 /mnt
+# Q3: Monta el dispositivo /dev/vdd1 en /mnt/ aplicando restricciones estrictas de solo lectura (--options ro), sin ejecución de binarios (noexec) y omitiendo bits SUID (nosuid).
+sudo mount --options ro,noexec,nosuid /dev/vdd1 /mnt/
 
-# Q4: Remount para cambiar de read-only a read-write
-sudo mount -o remount,rw /mnt
+# Q4: Remonta el sistema de archivos activo en /mnt/ modificando sus parámetros en caliente a modo lectura-escritura (--options remount,rw) sin necesidad de desmontarlo.
+sudo mount --options remount,rw /dev/vdd1 /mnt/
 
-# Verificar que ahora es read-write
-touch /mnt/testfile
-
-# Q5: Configurar montaje permanente en /etc/fstab
-sudo vim /etc/fstab
-# Agregar línea (reemplazar UUID según corresponda):
-# UUID=<uuid-vdd1>  /mnt  ext4  defaults,ro  0  2
-
-# Validar fstab sin reiniciar
-sudo mount -a
-
-# Ver opciones de montaje actual
-findmnt -o TARGET,SOURCE,FSTYPE,OPTIONS /mnt
-
-# Remount con múltiples cambios
-sudo mount -o remount,rw,exec,nosuid /mnt
+# Q5: Registra el montaje persistente de /dev/vdd1 en el archivo /etc/fstab combinando las opciones por defecto y la restricción de solo lectura (defaults,ro).
+echo "/dev/vdd1 /mnt ext4 defaults,ro 0 2" | sudo tee --append /etc/fstab
 ```
