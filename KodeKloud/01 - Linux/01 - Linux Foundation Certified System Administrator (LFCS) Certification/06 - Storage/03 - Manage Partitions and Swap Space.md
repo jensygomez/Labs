@@ -9,10 +9,11 @@ tags:
   - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
-| Fecha          | Tiempo | Éxito | Notas Rápidas |
-| :------------- | :----- | :---- | :------------ |
-| 20 - 04 - 2026 | 20 min | 90 %  |               |
-| 19 - 05 - 2026 | 20 min | 44 %  |               |
+| Fecha        | Tiempo | Éxito | Notas Rápidas |
+| :----------- | :----- | :---- | :------------ |
+| `20/04/2026` | 20 min | 20 %  |               |
+| `19/05/2026` | 20 min | 44 %  |               |
+| `01/06/2026` | 20 min | 88 %  |               |
 
 [[Laboratorios del LFCS]]
 
@@ -30,24 +31,31 @@ La segunda mitad del laboratorio integra conceptos de swap con la manipulación 
 ## Comandos Clave Utilizados
 
 ```bash
-# Q1: Listar dispositivos de bloque (discos y particiones)
-lsblk
+# Q1: Muestra de forma estructurada en árbol todos los dispositivos de bloque (discos y particiones) disponibles en el sistema.
+lsblk --all
 
-# Q3: Identificar partición raíz y guardar en archivo
-df / | grep /dev/ | awk '{print $1}' > /root/part
+# Q2: Prepara y da formato de área de intercambio (swap) de Linux a un dispositivo o partición específica.
+# Ejemplo de uso conceptual: sudo mkswap /dev/sdb1
+sudo mkswap --check /dev/null 2>/dev/null
 
-# Q4: Encontrar swapfile y guardar su ruta
-swapon --show | grep -oP '\/\S+' > /root/swap
+# Q3: Encuentra el dispositivo de bloque donde está montada la raíz (/), extrae solo su nombre corto (ej. vda1) y lo guarda en /root/part.
+lsblk --noheadings --output NAME,MOUNTPOINT | grep -E "/$" | awk '{print $1}' | tr -d '└─├─' > /root/part
 
-# Q5: Crear particiones con cfdisk (interfaz interactiva)
-sudo cfdisk /dev/vdd
+# Q4: Identifica las áreas swap activas en el sistema, extrae la ruta exacta del archivo/partición swapfile y la guarda en /root/swap.
+sudo swapon --show=NAME --noheadings | head -n 1 > /root/swap
 
-# Q2: Formatear partición como swap
-sudo mkswap /dev/vdd2
+# Q5: Crea tres particiones primarias consecutivas en /dev/vdd usando parted (10MB, 21MB y 15MB) con alineación óptima.
+sudo parted --script /dev/vdd mklabel mdos mkpart primary ext4 1MiB 11MiB mkpart primary ext4 11MiB 32MiB mkpart primary ext4 32MiB 47MiB
 
-# Q7: Activar swap
-sudo swapon --verbose /dev/vdd2
+# Q6: Elimina de forma directa y no interactiva la primera partición (la de 10MB creada en el espacio del 1MiB al 11MiB).
+sudo parted --script /dev/vdd rm 1
 
-# Q9: Redimensionar partición (usando cfdisk o parted)
-sudo cfdisk /dev/vdd  # O usar parted para redimensionamiento avanzado
+# Q7: Inicializa la segunda partición (/dev/vdd2) como swap y le indica al Kernel de Linux que la active inmediatamente para su uso.
+sudo mkswap /dev/vdd2 && sudo swapon --verbose /dev/vdd2
+
+# Q8: Desactiva de inmediato el uso de la partición /dev/vdd2 como memoria de intercambio del sistema.
+sudo swapoff --verbose /dev/vdd2
+
+# Q9: Redimensiona la tercera partición (/dev/vdd3) para expandir su tamaño final hasta los 21MB requeridos de forma directa.
+sudo parted --script /dev/vdd resizepart 3 53MiB
 ```
