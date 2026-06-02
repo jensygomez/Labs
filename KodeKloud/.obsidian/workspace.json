@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/03 - Parameter - Part One.md",
+                "file": "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/04 - Parameter - Part Two.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "03 - Parameter - Part One"
+              "title": "04 - Parameter - Part Two"
             }
           }
         ]
@@ -203,12 +203,13 @@
   },
   "active": "6d4f659490d73651",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/03 - Parameter - Part One.md",
+    "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/04 - Parameter - Part Two.md",
+    "01 - Linux/03 - Advanced Bash Scripting/00 - Menu/Advanced Bash Scripting.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/28 - Git & SSL Certificates.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/13 - Manage LVM.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/10 - Remote File Systems --> NFS.md",
-    "01 - Linux/03 - Advanced Bash Scripting/00 - Menu/Advanced Bash Scripting.md",
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/02 - Variables.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/08 - Filesystem Features and Mount Options.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/06 - Create Filesystems and Mount Them at Boot.md",
@@ -229,7 +230,6 @@
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/16 - Lab 4 - Streams.md",
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/15 - printf.md",
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/14 - Eval.md",
-    "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/13 - Xargs.md",
     "DevOps",
     "100-Days-DevOps/Seguimiento",
     "100-Days-DevOps/Temas",
