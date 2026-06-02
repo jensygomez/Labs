@@ -9,10 +9,11 @@ tags:
   - Laboratorios-del-LFCS
 ---
 ## 📊 Bitácora de Intentos
-| Fecha          | Tiempo | Éxito | Notas Rápidas |
-| :------------- | :----- | :---- | :------------ |
-| 09 - 05 - 2026 | 30 min | 66 %  |               |
-| 20 - 05 - 2026 | 45 min | 66 %  |               |
+| Fecha        | Tiempo | Éxito | Notas Rápidas |
+| :----------- | :----- | :---- | :------------ |
+| `09/05/2026` | 30 min | 66 %  |               |
+| `20/05/2026` | 45 min | 66 %  |               |
+| `02/06/2026` | 35 min | 92 %  |               |
 
 [[Laboratorios del LFCS]]
 
@@ -31,8 +32,39 @@ La razón por la que esto importa para una entrevista es que muestra que entiend
 ## Comandos Clave
 
 ```bash
-pvcreate /dev/vdd /dev/vde          # Declarar discos como Physical Volumes
-vgcreate volume1 /dev/vdd           # Crear Volume Group
-vgextend volume1 /dev/vde           # Agregar disco a VG existente
-lvcreate -L 0.5G -n smalldata volume1  # Crear Logical Volume
+# Q1: Instala el suite completo de herramientas de administración de LVM2 en el sistema confirmando de forma automática (--yes).
+sudo apt install --yes lvm2
+
+# Q2: Inicializa los discos físicos de bloque /dev/vdd y /dev/vde para que puedan ser reconocidos y utilizados por LVM como Volúmenes Físicos.
+sudo pvcreate /dev/vdd /dev/vde
+
+# Q3: Extrae de forma automática el tamaño exacto del PV /dev/vde eliminando la unidad de medida (g) y guardando solo el número entero en el archivo.
+sudo pvs --noheadings --options pv_size --units g /dev/vde | awk '{print int($1)}' | sudo tee /root/pvsize
+
+# Q4: Remueve la firma de LVM del dispositivo /dev/vde para regresarlo a su estado de disco estándar.
+sudo pvremove /dev/vde
+
+# Q5: Crea un nuevo Grupo de Volúmenes (VG) llamado "volume1" asignándole como base el almacenamiento del Volumen Físico /dev/vdd.
+sudo vgcreate volume1 /dev/vdd
+
+# Q6: Extiende la capacidad de almacenamiento del grupo "volume1" agregando un segundo Volumen Físico (/dev/vde) a la agrupación.
+sudo pvcreate /dev/vde && sudo vgextend volume1 /dev/vde
+
+# Q7: Reduce el espacio del grupo "volume1" retirando de forma segura el almacenamiento provisto por el disco /dev/vde.
+sudo vgreduce volume1 /dev/vde
+
+# Q8: Obtiene el tamaño total del VG "volume1" formateado con su unidad de medida explícita y guarda el resultado en la ruta de root.
+sudo vgs --noheadings --options vg_size --units m volume1 | awk '{print $1"m"}' | sudo tee /root/volume1
+
+# Q9: Crea un Volumen Lógico (LV) llamado "smalldata" con un tamaño estricto de 0.5 Gigabytes dentro del grupo "volume1".
+sudo lvcreate --size 0.5G --name smalldata volume1
+
+# Q10: Redimensiona de forma absoluta el tamaño del volumen lógico "smalldata" para que su espacio final sea exactamente de 752 Megabytes.
+sudo lvresize --size 752M volume1/smalldata
+
+# Q11: Crea un sistema de archivos XFS de alto rendimiento sobre la ruta de dispositivo absoluta del Volumen Lógico "smalldata".
+sudo mkfs.xfs /dev/volume1/smalldata
+
+# Q12: Elimina definitivamente el Volumen Lógico "smalldata" del sistema liberando el espacio del VG, forzando la confirmación (--force).
+sudo lvremove --force volume1/smalldata
 ```
