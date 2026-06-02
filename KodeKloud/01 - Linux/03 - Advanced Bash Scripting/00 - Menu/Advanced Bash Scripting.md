@@ -65,6 +65,8 @@ tags:
 [[01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/02 - Variables|02 - Variables]]
 [[03 - Parameter - Part One]]
 [[04 - Parameter - Part Two]]
+[[05 - Lab - Parameter]]
+
 
 
 
