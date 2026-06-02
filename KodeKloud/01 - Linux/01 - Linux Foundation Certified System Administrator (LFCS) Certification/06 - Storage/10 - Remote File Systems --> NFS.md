@@ -13,7 +13,7 @@ tags:
 | :----------- | :----- | :---- | :------------ |
 | `09/05/2026` | 15 min | 0 %   |               |
 | `20/05/2026` | 20 min | 25 %  |               |
-| `01/06/2026` |        |       |               |
+| `02/06/2026` | 20 min | 62 %  |               |
 
 [[Laboratorios del LFCS]]
 ---
@@ -26,3 +26,32 @@ El montaje manual `sudo mount -t nfs servidor:/directorio /punto_local` te ense�
 
 ## Troubleshooting y Aplicación Real: 
 Para certificación y entrevistas, debes conectar estos conceptos: el servidor exporta en `/etc/exports`, el cliente monta con `mount -t nfs`, y la persistencia viene de `/etc/fstab`. Troubleshooting rápido: `sudo exportfs -v` verifica qué está exportado, `showmount -e IP` ve las exportaciones desde el cliente, `mount | grep nfs` lista montajes activos. En una entrevista, prepárate para: "En producción usaría NFS para backups centralizados. Exportaría `/var/log` en `ro` para integridad, usaría CIDR restringido para seguridad, y configuraría `fstab` para que sobreviva reinicios." Domina la diferencia `root_squash` vs `no_root_squash` (la más importante: root remoto no es root local por defecto).
+
+
+```bash
+
+# Q1: La ruta del archivo de configuración por defecto para definir los recursos compartidos en un servidor NFS es: /etc/exports
+
+# Q2: Exporta el directorio /home para la subred de clientes 10.0.0.0/24 en modo solo lectura (ro) y aplica los cambios inmediatamente en caliente.
+echo "/home 10.0.0.0/24(ro)" | sudo tee --append /etc/exports && sudo exportfs --reexport --verbose
+
+# Q3: Al inspeccionar el archivo /etc/exports creado en el paso anterior, el rango de red/IP configurado para tener acceso al directorio /home es: 10.0.0.0/24
+
+# Q4: Realiza un montaje manual en caliente del recurso remoto /home del servidor NFS (IP 127.0.0.1) asignándolo al directorio local /mnt.
+sudo mount --types nfs 127.0.0.1:/home /mnt
+
+# Q5: El archivo del sistema que debe modificarse para automatizar el montaje de un recurso NFS (o cualquier sistema de archivos) durante el arranque es: /etc/fstab
+
+# Q6: Configura el montaje persistente del recurso NFS en /etc/fstab para que se monte automáticamente al bootear utilizando los parámetros por defecto.
+echo "127.0.0.1:/home /mnt nfs defaults 0 0" | sudo tee --append /etc/fstab
+
+# Q7: Respuesta: SÍ. Se puede compartir el mismo directorio con diferentes IPs o subredes en una sola línea separándolas por espacios. 
+# Ejemplo conceptual de validación: /compartido 192.168.1.50(rw) 192.168.1.60(ro)
+
+# Q8: Corrige y agrega la configuración multi-cliente en /etc/exports separando los destinos con espacios y usando la opción correcta 'ro' (con la letra 'o', no el número cero).
+# Nota: Primero usamos un comando 'sed' para limpiar la línea errónea '/mnt' del archivo /etc/exports y evitar que bloquee el servicio.
+echo "/home 192.0.0.0/24(ro) 127.0.0.1(rw,no_root_squash)" | sudo tee --append /etc/exports
+
+# Comando de actualización obligatorio: Aplica y reexporta en caliente las nuevas configuraciones de red de NFS de manera detallada (--reexport --verbose).
+sudo exportfs --reexport --verbose
+```

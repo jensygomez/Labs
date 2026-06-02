@@ -53,11 +53,11 @@ tags:
 | [[03 - Manage Partitions and Swap Space]]          |  9   |    89 %     | 8.01  | `01/06/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[06 - Create Filesystems and Mount Them at Boot]] |  9   |    89 %     | 8.01  | `01/06/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[08 - Filesystem Features and Mount Options]]     |  5   |    100 %    | 5.00  | `01/06/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-| [[10 - Remote File Systems --> NFS]]               |  8   |    25 %     | 2.00  | `20/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
+| [[10 - Remote File Systems --> NFS]]               |  8   |    62 %     | 4.96  | `02/06/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[13 - Manage LVM]]                                |  12  |     66%     | 7.92  | `20/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
 | [[16 - Advanced Permissions]]                      |  8   |    75 %     | 6     | `20/05/26` |                <input type="checkbox" checked><input type="checkbox" checked>                 |
 |                                                    |      |             |       |            |                                                                                               |
-| Totales                                            |  51  |             | 36.94 |            |                                            72.43 %                                            |
+| Totales                                            |  51  |             | 39.90 |            |                                            78.23 %                                            |
 |                                                    |      |             |       |            |                                                                                               |
 
 
