@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/05 - Lab - Parameter.md",
+                "file": "01 - Linux/03 - Advanced Bash Scripting/00 - Menu/Advanced Bash Scripting.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "05 - Lab - Parameter"
+              "title": "Advanced Bash Scripting"
             }
           }
         ]
@@ -203,8 +203,9 @@
   },
   "active": "6d4f659490d73651",
   "lastOpenFiles": [
-    "01 - Linux/03 - Advanced Bash Scripting/00 - Menu/Advanced Bash Scripting.md",
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/05 - Lab - Parameter.md",
+    "01 - Linux/03 - Advanced Bash Scripting/06 - Globs",
+    "01 - Linux/03 - Advanced Bash Scripting/00 - Menu/Advanced Bash Scripting.md",
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/04 - Parameter - Part Two.md",
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/03 - Parameter - Part One.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
@@ -229,7 +230,6 @@
     "DevOps/100-Days-DevOps/MOC/Menu 100 Days of DevOps.md",
     "DevOps/100-Days-DevOps/Day 17 - Install and Configure PostgreSQL.md",
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/16 - Lab 4 - Streams.md",
-    "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/15 - printf.md",
     "DevOps",
     "100-Days-DevOps/Seguimiento",
     "100-Days-DevOps/Temas",
@@ -238,7 +238,6 @@
     "DevOps/100-Days-DevOps",
     "AudiosVideos/Sem título.base",
     "AudiosVideos/07 - Heredocs.mp3",
-    "AudiosVideos/Lab 1 - Streams.mp3",
     "LINUX/00 - qui/Sem título.canvas",
     "Advanced Bash Scripting/01 - Introduction.canvas",
     "ChatGPT Image 19 de abr. de 2026, 07_59_54.png"

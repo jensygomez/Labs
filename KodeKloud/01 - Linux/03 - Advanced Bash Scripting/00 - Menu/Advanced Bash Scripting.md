@@ -67,6 +67,8 @@ tags:
 [[04 - Parameter - Part Two]]
 [[05 - Lab - Parameter]]
 
+### 6. Globs
+
 
 
 
