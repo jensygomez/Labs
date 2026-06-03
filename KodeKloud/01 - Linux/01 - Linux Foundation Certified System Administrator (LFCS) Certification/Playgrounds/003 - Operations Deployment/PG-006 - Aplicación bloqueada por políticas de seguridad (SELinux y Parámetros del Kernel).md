@@ -1,0 +1,178 @@
+---
+Curso: Prep Course - LFCS Certification
+Modulo: Operations Deployment
+Playground: PG-006
+Titulo: Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel)
+Fecha de Inicio: 2026-06-03
+Dificultad: 7/10
+Objetivo:
+  - Aprobar LFCS
+  - Pensar como Sysadmin Linux
+Temas:
+  - Services
+  - Logs
+  - Kernel Runtime Parameters
+  - SELinux/AppArmor
+Competencias:
+  - Administrar contextos de archivos SELinux (chcon, semanage fcontext, restorecon)
+  - Analizar logs de auditoría de seguridad (/var/log/audit/audit.log)
+  - Modificar parámetros del Kernel en tiempo de ejecución y de forma persistente (sysctl, sysctl.conf)
+Ticket: |-
+  INC-1006
+
+  El equipo de desarrollo reporta que la nueva aplicación "secure-app" se niega a iniciar. Mencionan que si ejecutan 'setenforce 0', el servicio levanta de inmediato, pero las políticas de seguridad de la empresa exigen que los servidores de producción corran estrictamente en modo Enforcing.
+
+  Investigue los bloqueos en los registros de auditoría, asigne el contexto de SELinux adecuado de manera permanente a la ruta de la aplicación (/custom_data), configure de forma persistente el parámetro de kernel 'vm.max_map_count' en 262144 (requerido por el motor de la app), y deje el servicio operativo en modo seguro.
+Validacion:
+  - Objetivo: SELinux se encuentra activo en modo Enforcing.
+    Peso: 25 %
+  - Objetivo: El directorio /custom_data tiene asignado de forma permanente el contexto correcto (httpd_sys_rw_content_t).
+    Peso: 35 %
+  - Objetivo: El servicio 'secure-app.service' está activo y en ejecución.
+    Peso: 25 %
+  - Objetivo: El parámetro de kernel vm.max_map_count está fijado de forma persistente en 262144.
+    Peso: 15 %
+Calificacion Final:
+Script: |-
+  cat << 'EOF' > /tmp/setup_sh
+  #!/bin/bash
+  set -e
+
+  # 1. Asegurar que las herramientas de SELinux e inspección estén instaladas
+  dnf install -y policycoreutils-python-utils procps-ng 2>/dev/null || true
+
+  # 2. Forzar modo Enforcing en tiempo de ejecución
+  setenforce 1 2>/dev/null || true
+
+  # 3. Crear entorno de la aplicación y el archivo de datos bloqueado por contexto
+  mkdir -p /custom_data
+  cat << 'DATA' > /custom_data/app.conf
+  # Secure App Configuration File
+  DB_CONN=localhost
+  DATA
+  # Cambiar deliberadamente el contexto a uno restrictivo (por ejemplo, el de SSH) para forzar el bloqueo de lectura
+  chcon -t sshd_key_t /custom_data/app.conf
+  chcon -t sshd_key_t /custom_data
+
+  # 4. Crear el binario que simula la lectura del archivo
+  mkdir -p /opt/secure-app
+  cat << 'APP' > /opt/secure-app/secure-binary
+  #!/bin/bash
+  echo "Intentando leer archivo de configuración altamente protegido..."
+  # Si SELinux bloquea, el "cat" fallará con Permission Denied aunque seas root
+  if ! cat /custom_data/app.conf >/dev/null 2>&1; then
+      echo "[$(date +'%T')] CRITICAL: SELinux AVC Denial detectado al leer /custom_data/app.conf" >&2
+      exit 1
+  fi
+  echo "Acceso concedido al archivo de configuración."
+  while true; do sleep 10; done
+  APP
+  chmod 755 /opt/secure-app/secure-binary
+
+  # 5. Crear la unidad del servicio de Systemd
+  cat << 'SER' > /etc/systemd/system/secure-app.service
+  [Unit]
+  Description=Secure Corporative Application Service
+  After=network.target
+
+  [Service]
+  Type=simple
+  ExecStart=/opt/secure-app/secure-binary
+  Restart=no
+
+  [Install]
+  WantedBy=multi-user.target
+  SER
+
+  # 6. Alterar el parámetro de kernel actual para que esté incorrecto
+  sysctl -w vm.max_map_count=65530 >/dev/null 2>&1 || true
+
+  systemctl daemon-reload
+  systemctl stop secure-app.service 2>/dev/null || true
+
+  clear
+  echo -e "\e[1;36m================================================================================\e[0m"
+  echo -e "\e[1;31m 🚀 ESCENARIO PG-006 CONFIGURADO - CONTROL DE ACCESO (SELINUX) ACTIVO\e[0m"
+  echo -e "\e[1;36m================================================================================\e[0m"
+  echo -e "\e[1;33m TICKET DE INCIDENTE: INC-1006\e[0m"
+  echo -e " ------------------------------------------------------------------------------"
+  echo -e " \e[1mAsunto:\e[0m Aplicación falla con SELinux habilitado"
+  echo -e " \e[1mSeveridad:\e[0m Crítica / Cumplimiento de Seguridad"
+  echo -e ""
+  echo -e " \e[1mDescripción:\e[0m"
+  echo -e " La unidad 'secure-app.service' arroja errores de permisos al intentar arrancar"
+  echo -e " si el sistema está protegido. Adicionalmente, requiere un ajuste en sysctl."
+  echo -e " NO altere el modo global de SELinux (debe permanecer Enforcing)."
+  echo -e ""
+  echo -e " \e[1mRequerimientos de Validación (Peso Total: 100%):\e[0m"
+  echo -e "  [ ] Mantener SELinux en modo Enforcing                         --> \e[1;35m25%\e[0m"
+  echo -e "  [ ] Corregir permanentemente el fcontext de /custom_data(/.*)? --> \e[1;35m35%\e[0m"
+  echo -e "  [ ] Servicio 'secure-app.service' activo y en ejecución        --> \e[1;35m25%\e[0m"
+  echo -e "  [ ] Cambiar de forma persistente 'vm.max_map_count=262144'     --> \e[1;35m15%\e[0m"
+  echo -e " ------------------------------------------------------------------------------"
+  echo -e " \e[1;32mMisión:\e[0m Use 'ausearch' o revise '/var/log/audit/audit.log', aplique parches y estabilice.\e[0m"
+  echo -e "\e[1;36m================================================================================\e[0m"
+  echo ""
+  EOF
+  bash /tmp/setup_sh && rm -f /tmp/setup_sh
+tags:
+  - Laboratorios-del-LFCS
+Script Validacion: |-
+  #!/bin/bash
+  PUNTOS=0
+
+  echo "=== EVALUANDO SEGURIDAD Y PARÁMETROS EN TIEMPO DE EJECUCIÓN (SELINUX / SYSCTL) ==="
+
+  # 1. Validar que SELinux siga en Enforcing
+  if getenforce | grep -q "Enforcing"; then
+      echo "✔ [25%] Cumplimiento de seguridad validado: SELinux permanece en modo 'Enforcing'."
+      PUNTOS=$((PUNTOS + 25))
+  else
+      echo "❌ [0%] Error de política: Se ha desactivado o puesto en modo Permissive el control del sistema."
+  fi
+
+  # 2. Validar el contexto permanente en la base de datos de políticas de SELinux
+  # Buscamos que la ruta esté registrada en la política local
+  if semanage fcontext -l | grep -E "/custom_data.*\bhttpd_sys_rw_content_t\b" >/dev/null 2>&1; then
+      # Verificar si además se aplicó al archivo en disco con restorecon
+      if ls -Z /custom_data/app.conf | grep -q "httpd_sys_rw_content_t"; then
+          echo "✔ [35%] Contexto de archivos corregido permanentemente con semanage y restorecon."
+          PUNTOS=$((PUNTOS + 35))
+      else
+          echo "❌ [20%] La política está registrada, pero olvidó aplicar los cambios en disco con 'restorecon'."
+          PUNTOS=$((PUNTOS + 20))
+      fi
+  else
+      echo "❌ [0%] El directorio /custom_data no tiene una regla permanente en semanage fcontext."
+  fi
+
+  # 3. Validar si el servicio está corriendo
+  if systemctl is-active --quiet secure-app.service; then
+      echo "✔ [25%] Servicio 'secure-app.service' desbloqueado y ejecutándose con éxito."
+      PUNTOS=$((PUNTOS + 25))
+  else
+      echo "❌ [0%] El servicio sigue fallando. Revise los registros AVC de auditoría."
+  fi
+
+  # 4. Validar parámetro de kernel en sysctl persistente
+  SYSCTL_LIVE=$(sysctl -n vm.max_map_count)
+  if [ "$SYSCTL_LIVE" -eq 262144 ] 2>/dev/null; then
+      if [ -f /etc/sysctl.conf ] && grep -q "^vm.max_map_count\s*=\s*262144" /etc/sysctl.conf || grep -q "^vm.max_map_count\s*=\s*262144" /etc/sysctl.d/*.conf 2>/dev/null; then
+          echo "✔ [15%] Parámetro 'vm.max_map_count=262144' configurado de forma persistente."
+          PUNTOS=$((PUNTOS + 15))
+      else
+          echo "❌ [10%] El parámetro de kernel está cambiado en caliente, pero no de forma persistente en los archivos de configuración."
+          PUNTOS=$((PUNTOS + 10))
+      fi
+  else
+      echo "❌ [0%] El parámetro 'vm.max_map_count' no coincide con el valor requerido."
+  fi
+
+  echo "============================"
+  echo "CALIFICACIÓN FINAL: $PUNTOS / 100"
+  echo "============================"
+---
+
+[[Laboratorios del LFCS]]
+
+---
