@@ -28,8 +28,10 @@ tags:
 | [[21 - Kernel Runtime Parameters and SELinux AppArmor]]               |  9   |    33 %     | 2.97  | `01/06/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
 | [[26 - Manage Containers and VMs]]                                    |  15  |    60 %     | 9     | `26/05/26` |                <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                 |
 |                                                                       |      |             |       |            |                                                                                                                              |
+| [[PG-001 - db-backup.service no inicia]]                              |  4   |             |       |            |                                                                                                                              |
+| [[PG-002 - Servidor lento - Consumo de CPU Excesivo]]                 |  4   |             |       |            |                                                                                                                              |
+| [[PG-003 - Backup automático no se ejecuta (Systemd Timers)]]         |  4   |             |       |            |                                                                                                                              |
 | TOTALES TAREAS:                                                       |  76  |             | 41.68 |            |                                                           54.84 %                                                            |
-|                                                                       |      |             |       |            |                                                                                                                              |
 
 
 | 4. Users and Groups                                                | Taks | **Progres** | Peso  | **Fecha**  |                                                            Ciclo                                                             |
