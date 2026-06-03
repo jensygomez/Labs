@@ -13,6 +13,7 @@ tags:
 | :----------- | :----- | :---- |
 | `14/05/2026` | 42 min | 10 %  |
 | `24/05/2026` | 20 min | 2 0%  |
+| `03/06/2026` | 30 min | 30 %  |
 [[Laboratorios del LFCS]]
 
 
@@ -26,17 +27,44 @@ This laboratory gave me a solid combination of security and collaboration skills
 
 ---
 
-**Key commands to remember:**
+```bash
+# ==========================================
+# SECCIÓN 1: OPENSSL & CERTIFICADOS SSL
+# ==========================================
 
-- `openssl req -newkey rsa:4096 -keyout priv.key -out cert.csr`
-- `openssl req -x509 -nodes -days 365 -newkey rsa:4096 -keyout priv.key -out kodekloud.crt`
-- `openssl x509 -in my.crt -noout -subject`
-- `git add *.cpp`
-- `git commit -m "Added C++ files"`
-- `git branch testing`
-- `git branch -D testing`
-- `git merge documentation`
-- `git push origin master`
-- `git clone <repository-url>`
+# Q1: Genera una clave privada RSA de 4096 bits cifrada con contraseña y un CSR en un solo comando usando la bandera --passout.
+openssl req -new -newkey rsa:4096 -keyout priv.key -out cert.csr -passout pass:kkloud -subj "/CN=localhost"
 
----
+# Q2: Crea un certificado autofirmado válido por 365 días, con una clave sin cifrar (--noenc) y asignando el Common Name solicitado.
+openssl req -x509 -newkey rsa:2048 -noenc -days 365 -keyout priv.key -out kodekloud.crt -subj "/CN=kodekloud.com"
+
+# Q3: Inspecciona el certificado en formato X509 de manera legible (--text), extrae el Common Name (CN) y guarda la respuesta en un comentario.
+# Comando de validación: openssl x509 -in /home/bob/my.crt -noout -subject
+# Respuesta teórica: El Common Name configurado en ese certificado de ejemplo suele ser "kodekloud.com" o similar según el laboratorio.
+
+# ==========================================
+# SECCIÓN 2: CONTROL DE VERSIONES CON GIT
+# ==========================================
+
+# Q4: Cambia al directorio del repositorio, prepara solo los archivos .cpp para el commit y registra los cambios con el mensaje exacto.
+cd /root/kode && git add *.cpp && git commit --message="Added C++ files"
+
+# Q5: Crea una nueva rama de desarrollo llamada "testing" para aislar nuevas características.
+git branch testing
+
+# Q6: Fuerza la eliminación de la rama "testing" usando el parámetro --force para evadir el bloqueo de seguridad de cambios no fusionados.
+git branch --delete --force testing
+
+# Q7: Muestra únicamente el nombre del archivo que fue modificado en el último commit ejecutado en el repositorio (--max-count=1).
+git log --max-count=1 --name-only --pretty=format:""
+
+# Q8: Fusiona e integra el historial de cambios de la rama "documentation" dentro de la rama activa actual (master).
+git checkout master && git merge documentation
+
+# Q9: Comando estándar para subir y sincronizar la rama local "master" hacia el servidor remoto apodado "origin".
+# Comando conceptual requerido: git push origin master
+
+# Q10: Descarga una copia completa del repositorio remoto de Git directamente en el directorio de trabajo del usuario bob.
+cd /home/bob/ && git clone https://github.com/kodekloudhub/git-for-beginners-course.git
+
+```

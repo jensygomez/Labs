@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/03 - Advanced Bash Scripting/00 - Menu/Advanced Bash Scripting.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/06 - Manage System Environment Profiles.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Advanced Bash Scripting"
+              "title": "06 - Manage System Environment Profiles"
             }
           }
         ]
@@ -203,13 +203,14 @@
   },
   "active": "6d4f659490d73651",
   "lastOpenFiles": [
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/08 - Files Directories Hard links.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/28 - Git & SSL Certificates.md",
+    "01 - Linux/03 - Advanced Bash Scripting/00 - Menu/Advanced Bash Scripting.md",
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/05 - Lab - Parameter.md",
     "01 - Linux/03 - Advanced Bash Scripting/06 - Globs",
-    "01 - Linux/03 - Advanced Bash Scripting/00 - Menu/Advanced Bash Scripting.md",
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/04 - Parameter - Part Two.md",
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/03 - Parameter - Part One.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/28 - Git & SSL Certificates.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/13 - Manage LVM.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/10 - Remote File Systems --> NFS.md",
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/02 - Variables.md",
