@@ -9,6 +9,10 @@
     "verificar": "checkbox",
     "Repetido": "multitext",
     "Repeticion": "number",
-    "Fecha de Inicio": "date"
+    "Fecha de Inicio": "date",
+    "Tareas del Lab": "multitext",
+    "Preparacion to": "multitext",
+    "Objetivo": "multitext",
+    "Competencias": "multitext"
   }
 }

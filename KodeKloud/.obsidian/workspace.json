@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/PG-001.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Laboratorios del LFCS"
+              "title": "PG-001"
             }
           }
         ]
@@ -203,8 +203,19 @@
   },
   "active": "6d4f659490d73651",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/06 - Manage System-Wide Environment Profiles and Template User.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/PG-001 - webcheck.service no inicia.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/PG-001.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/13 - Manage LVM.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/PG-008 - Todoss los equipos.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/PG-007 - El contenedor web no responde.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/PG-006 - La aplicación falla con SELinux habilitado.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/PG-005 - Los usuarios reportan caídas intermitentes.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/PG-004 - La nueva versión no puede instalarse.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/PG-003 - Los respaldos no están ejecutándose.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/PG-002 - Servidor lento y CPU al 100%.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/06 - Manage System-Wide Environment Profiles and Template User.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/08 - Files Directories Hard links.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/28 - Git & SSL Certificates.md",
     "01 - Linux/03 - Advanced Bash Scripting/00 - Menu/Advanced Bash Scripting.md",
@@ -212,7 +223,6 @@
     "01 - Linux/03 - Advanced Bash Scripting/06 - Globs",
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/04 - Parameter - Part Two.md",
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/03 - Parameter - Part One.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/13 - Manage LVM.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/10 - Remote File Systems --> NFS.md",
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/02 - Variables.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/08 - Filesystem Features and Mount Options.md",
@@ -222,15 +232,6 @@
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/01 - Overview.md",
     "01 - Linux/03 - Advanced Bash Scripting/04 - Streams/01 - Overview.md",
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/15 - Manage Software, Repositories & Install Software from Source.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/11 - Schedule Tasks.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/09 - Manage Processes and Analyze Log Files.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/05 - Networking/08 - Packet Filtering.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/09 - Configure User Resource Limits and User Privileges.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/03 - Operations-Deployment/06 - Scripting, Manage Startup Process and Services.md",
-    "DevOps/100-Days-DevOps/Day 18 - Install and Configure DB Server.md",
-    "DevOps/100-Days-DevOps/MOC/Menu 100 Days of DevOps.md",
-    "DevOps/100-Days-DevOps/Day 17 - Install and Configure PostgreSQL.md",
     "DevOps",
     "100-Days-DevOps/Seguimiento",
     "100-Days-DevOps/Temas",
@@ -238,7 +239,6 @@
     "100-Days-DevOps/Days",
     "DevOps/100-Days-DevOps",
     "AudiosVideos/Sem título.base",
-    "AudiosVideos/07 - Heredocs.mp3",
     "LINUX/00 - qui/Sem título.canvas",
     "Advanced Bash Scripting/01 - Introduction.canvas",
     "ChatGPT Image 19 de abr. de 2026, 07_59_54.png"
