@@ -34,7 +34,7 @@ Validacion:
     Peso: 40 %
   - Objetivo: El archivo /etc/app_link.conf es un enlace simbólico (Soft Link) apuntando al archivo maestro.
     Peso: 40 %
-Calificacion Final:
+Calificacion Final: 80 %
 Script: |-
   cat << 'EOF' > /tmp/setup_sh
   #!/bin/bash
@@ -129,3 +129,18 @@ Script Validacion: |-
 
 [[Laboratorios del LFCS]]
 ---
+Here's a summary of what I did in this lab, written in first person, as if I were explaining it to my manager, a friend, or an interviewer — in clear, non-technical English (B2 level):
+
+---
+
+Today I worked on a lab about file structures and links in Linux. The task was to set up a specific file architecture that the database team requires, using both hard links and symbolic links correctly.
+
+First, I created the directory structure and the master configuration file. I used `mkdir -p` to create `/srv/production/app_v1/`, and then I created the file `master.conf` inside it with some configuration text.
+
+Next, I created a **hard link** (permanent link) at `/var/log/app_mirror.conf` that points to the master file. A hard link means both files share the exact same inode on the disk, so they're essentially the same file from the system's perspective. This is important because even if the original file gets renamed or moved, the hard link still works.
+
+Then, I created a **symbolic link** (soft link) at `/etc/app_link.conf` using `ln -s`. A symbolic link is like a shortcut that points to the original file's path. It's different from a hard link because if the original file is deleted, the symbolic link breaks.
+
+In the end, 80 out of 100 points were validated: both links were created correctly (hard link with the same inode, and symbolic link pointing to the master file), but the master file itself didn't pass validation because of how I created it (I accidentally wrote to the directory instead of the file at first, then fixed it with `touch`).
+
+The key takeaway for me was understanding the difference between hard links and symbolic links, and how to use `ln` correctly with and without the `-s` flag. This is useful in real production environments where you need persistent file references that survive renames or moves.
