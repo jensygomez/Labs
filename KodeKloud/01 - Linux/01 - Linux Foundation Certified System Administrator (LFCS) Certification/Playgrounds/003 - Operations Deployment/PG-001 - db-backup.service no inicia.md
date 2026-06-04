@@ -5,6 +5,7 @@ Playground: PG-001
 Titulo: db-backup.service no inicia
 Fecha de Inicio: 2026-06-03
 Dificultad: 2/10
+Level Escalation: L1
 Objetivo:
   - Aprobar LFCS
   - Pensar como Sysadmin Linux
@@ -156,3 +157,14 @@ Script Validacion: |-
 [[Laboratorios del LFCS]]
 
 ---
+I got a ticket saying a db-backup.service was failing to start after deployment. Classic scenario — someone handed off a systemd unit and a binary, and monitoring caught it before anyone noticed in production.
+
+First thing I did was check the user environment and immediately verify the service status with systemctl status. It was dead on arrival. The error was clear once I looked: the unit file had User=root, but the application script itself validates at runtime that it must run as dbadmin — if it doesn't match, it exits with a non-zero code. That mismatch was killing the process before it could even initialize.
+
+I edited the unit file directly, corrected the user directive, and ran daemon-reload — which is non-negotiable any time you touch a unit file, otherwise systemd keeps stale config in memory and you'll waste time wondering why your edits aren't doing anything.
+
+Then I noticed the service started but the log write was still failing. I checked /var/log/dbdata and the directory was owned by root. The process running as dbadmin couldn't write to it. One chown -R dbadmin:dbadmin fixed that. After that, the service came up clean.
+
+Finally I ran systemctl enable to make sure it survives a reboot — because a service that only works until the next restart isn't actually fixed, it's just deferred.
+
+The real skill here wasn't knowing a single command — it was reading the failure in layers: wrong user → permission denied on the log directory → not enabled for boot. Each fix unlocked the next problem. That's the job.
