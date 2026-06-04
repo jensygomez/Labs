@@ -31,7 +31,7 @@ Validacion:
     Peso: 20 %
   - Objetivo: Se ha generado el reporte de diagnóstico solicitado en /root/diagnostic.txt.
     Peso: 20 %
-Calificacion Final:
+Calificacion Final: 50 %
 Script: |-
   cat << 'EOF' > /tmp/setup_sh
   #!/bin/bash
@@ -107,6 +107,7 @@ tags:
   - Laboratorios-del-LFCS
 Script Validacion: |-
   #!/bin/bash
+
   PUNTOS=0
 
   echo "=== EVALUANDO DIAGNÓSTICO DE PROCESOS ==="
@@ -119,13 +120,14 @@ Script Validacion: |-
       echo "❌ [0%] El proceso 'cpu-hog' sigue activo consumiendo recursos."
   fi
 
-  # 2. Validar consumo general de CPU (Uso de usuario bajo)
-  CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1}')
-  if (( $(echo "$CPU_USAGE < 50.0" | bc -l) )); then
-      echo "✔ [30%] Consumo de CPU estabilizado (Carga actual: $CPU_USAGE%)."
+  # 2. Validar consumo general de CPU — sin bc, usando awk para todo
+  CPU_IDLE=$(top -bn2 | grep "Cpu(s)" | tail -1 | awk '{for(i=1;i<=NF;i++) if($i ~ /id,/) print $(i-1)}' | cut -d. -f1)
+  CPU_USAGE=$((100 - CPU_IDLE))
+  if [ "$CPU_IDLE" -gt 50 ]; then
+      echo "✔ [30%] Consumo de CPU estabilizado (Carga actual: ~${CPU_USAGE}%)."
       PUNTOS=$((PUNTOS + 30))
   else
-      echo "❌ [0%] La CPU sigue bajo estrés crítico (Carga actual: $CPU_USAGE%)."
+      echo "❌ [0%] La CPU sigue bajo estrés crítico (Carga actual: ~${CPU_USAGE}%)."
   fi
 
   # 3. Validar que app-worker siga vivo

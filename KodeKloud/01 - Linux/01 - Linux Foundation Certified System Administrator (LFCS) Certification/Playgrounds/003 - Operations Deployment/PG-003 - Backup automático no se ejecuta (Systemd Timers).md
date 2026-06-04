@@ -31,7 +31,7 @@ Validacion:
     Peso: 20 %
   - Objetivo: Existe un archivo de respaldo válido generado en la ruta /backup/.
     Peso: 20 %
-Calificacion Final:
+Calificacion Final: 25 %
 Script: |-
   cat << 'EOF' > /tmp/setup_sh
   #!/bin/bash
@@ -156,3 +156,14 @@ Script Validacion: |-
 [[Laboratorios del LFCS]]
 
 ---
+Today, I worked on fixing a critical automation issue where our daily database backups had stopped running. The team had recently migrated the backup job from cron to a systemd timer, but since then, no backups were being created in the `/backup` directory.
+
+Here's what I did, step by step:
+
+First, I investigated the systemd timer setup using `systemctl list-timers` and found that the `db-backup.timer` unit existed but was disabled and inactive. When I checked the timer configuration, I noticed it had an incorrect target in the install section (`WantedBy=wrong-target.target`), which prevented it from starting properly. I fixed that by changing it to the correct target (`timers.target`), reloaded systemd, and then started and enabled the timer so it would run automatically on boot.
+
+Next, I looked at the backup service itself. The service was configured correctly, but when I checked the backup script at `/usr/local/bin/backup-run.sh`, I found it didn't have execute permissions—it was only readable by root. This meant systemd couldn't actually run it. I fixed this by setting the proper permissions with `chmod 755`, which allows the script to be executed.
+
+After that, I manually triggered the service to test it, and it ran successfully. When I checked the `/backup` directory, I confirmed that a new backup file (`db_conf_2026-06-04.tar.gz`) was created along with an updated log file showing the backup completed successfully.
+
+In summary, I restored the entire backup automation chain: I fixed the systemd timer configuration, enabled execute permissions on the backup script, verified the service runs without errors, and confirmed that backups are now being generated again. The system is now fully automated and will continue creating daily backups at 2 AM UTC without any manual intervention.
