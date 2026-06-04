@@ -5,6 +5,7 @@ Playground: PG-001
 Titulo: Provisión de cuentas de usuario y plantillas corporativas
 Fecha de Inicio: 2026-06-03
 Dificultad: 3/10
+Level Escalation: L1
 Objetivo:
   - Aprobar LFCS
   - Pensar como Sysadmin Linux
@@ -142,3 +143,16 @@ Script Validacion: |-
 
 [[Laboratorios del LFCS]]
 ---
+
+
+HR opened a ticket requesting a new external contractor account with specific security requirements: a static GID, a corporate welcome file in every new home directory, and a hard account expiration date. Straightforward provisioning — but with enough precision requirements to catch you if you're not careful.
+
+I started with the group: groupadd --gid 2500 devs. Static GIDs matter in environments where NFS or shared storage is involved — if the GID drifts between hosts, file ownership breaks silently. Getting that right upfront is the correct order of operations.
+
+Before creating the user, I modified /etc/skel — dropping a WELCOME_CORP.txt there with a simple touch. The key insight is sequencing: skel is only copied at user creation time. If I had created the user first and modified skel after, the file wouldn't have appeared in the home directory. The validation script actually accounts for that mistake and docks partial points.
+
+Then I ran a single useradd with all flags in one shot — UID, primary group, and expiration date together. Verified with chage --list and the output looked right: _Account expires: Dec 31, 2026_.
+
+**The 15% I lost.** The validator doesn't read the human-friendly date — it reads the raw epoch day number from `/etc/shadow` and expects exactly `20819`. My system returned `20818`: one day off, caused by a timezone offset during the epoch calculation inside `useradd --expiredate`. Visually correct, numerically wrong. The fix is to set expirations with `chage -E 2026-12-31` after creation — it handles date conversion more consistently across timezones.
+
+85/100. The provisioning logic was solid. The lesson is that in sysadmin work, "looks right" and "is right" are not the same thing — especially when security controls depend on exact values. I'll use chage for expiration dates going forward.
