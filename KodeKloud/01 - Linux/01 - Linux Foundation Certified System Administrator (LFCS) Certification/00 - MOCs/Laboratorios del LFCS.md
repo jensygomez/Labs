@@ -6,15 +6,20 @@ tags:
 
 ### 2. Essentials Commands
 
-| [[04 - Logging in and System Documentation]] | 10  | 90 %  | 9,00  | `17/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                                |
-| -------------------------------------------- | --- | ----- | ----- | ---------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| [[08 - Files Directories Hard links]]        | 18  | 100 % | 18,00 | `20/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                                |
-| [[12 - File Permissions, Search for Files]]  | 16  | 75 %  | 12,00 | `21/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                                |
-| [[18 - File Content, Regular Expressions]]   | 17  | 82 %  | 13,94 | `14/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                                |
-| [[23 - Archive, Back Up, Compress]]          | 15  | 66 %  | 9,99  | `22/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                                |
-| [[28 - Git & SSL Certificates]]              | 10  | 30 %  | 3,00  | `03/06/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
-|                                              |     |       |       |            |                                                                                                                              |
-| totales                                      | 86  |       | 65,93 |            | 76.66 %                                                                                                                      |
+| 2. Essential Commands                                                   | Taks | Progres | Peso  | Tiempo | Fecha      | ciclo                                                                                                                        |
+| ----------------------------------------------------------------------- | ---- | ------- | ----- | ------ | ---------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| [[04 - Logging in and System Documentation]]                            | 10   | 90 %    | 9,00  |        | `17/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                                |
+| [[08 - Files Directories Hard links]]                                   | 18   | 100 %   | 18,00 |        | `20/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                                |
+| [[12 - File Permissions, Search for Files]]                             | 16   | 75 %    | 12,00 |        | `21/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                                |
+| [[18 - File Content, Regular Expressions]]                              | 17   | 82 %    | 13,94 |        | `14/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                                |
+| [[23 - Archive, Back Up, Compress]]                                     | 15   | 66 %    | 9,99  |        | `22/05/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked>                                |
+| [[28 - Git & SSL Certificates]]                                         | 10   | 30 %    | 3,00  |        | `03/06/26` | <input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked><input type="checkbox" checked> |
+| totales                                                                 | 86   |         | 65,93 |        |            | 76.66 %                                                                                                                      |
+|                                                                         |      |         |       |        |            |                                                                                                                              |
+| [[PG-001 - Estructuras de archivos complejas y consistencia de Inodos]] |      |         |       |        |            |                                                                                                                              |
+|                                                                         |      |         |       |        |            |                                                                                                                              |
+|                                                                         |      |         |       |        |            |                                                                                                                              |
+|                                                                         |      |         |       |        |            |                                                                                                                              |
 
 
 

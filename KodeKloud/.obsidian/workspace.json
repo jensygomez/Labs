@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-001 - Estructuras de archivos complejas y consistencia de Inodos.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Laboratorios del LFCS"
+              "title": "PG-001 - Estructuras de archivos complejas y consistencia de Inodos"
             }
           }
         ]
@@ -203,11 +203,13 @@
   },
   "active": "6d4f659490d73651",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-003 - Backup automático no se ejecuta (Systemd Timers).md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-001 - Estructuras de archivos complejas y consistencia de Inodos.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-001 - db-backup.service no inicia.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-003 - Backup automático no se ejecuta (Systemd Timers).md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-002 - Servidor lento - Consumo de CPU Excesivo.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/PG-001 - Provisión de cuentas de usuario y plantillas corporativas.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-001 - db-backup.service no inicia.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora).md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/PG-003 - Gestión de privilegios y control de acceso (Sudoers, PAM y NSSwitch).md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/PG-002 - Perfiles de entorno del sistema y límites de recursos.md",
@@ -231,14 +233,12 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/04 - Users-Groups/06 - Manage System-Wide Environment Profiles and Template User.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/08 - Files Directories Hard links.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/28 - Git & SSL Certificates.md",
-    "01 - Linux/03 - Advanced Bash Scripting/00 - Menu/Advanced Bash Scripting.md",
     "01 - Linux/03 - Advanced Bash Scripting/06 - Globs",
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One",
     "DevOps",
     "100-Days-DevOps/Seguimiento",
     "100-Days-DevOps/Temas",
     "DevOps/100-Days-DevOps/MOC",
-    "100-Days-DevOps/Days",
     "LINUX/00 - qui/Sem título.canvas",
     "Advanced Bash Scripting/01 - Introduction.canvas",
     "ChatGPT Image 19 de abr. de 2026, 07_59_54.png"
