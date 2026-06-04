@@ -33,7 +33,7 @@ Validacion:
     Peso: 30 %
   - Objetivo: Asignar permisos SUID al ejecutable /usr/local/bin/syswatch.
     Peso: 20 %
-Calificacion Final:
+Calificacion Final: 100 %
 Script: |-
   cat << 'EOF' > /tmp/setup_sh
   #!/bin/bash
@@ -161,3 +161,8 @@ Script Validacion: |-
 
 [[Laboratorios del LFCS]]
 ---
+Hey, I just closed ticket INC-3002. It was about hardening permissions on a shared development directory.
+
+I configured the /srv/shared_dev folder with the correct ownership (root:devs), enabled SGID to ensure proper group inheritance for new files, and activated the Sticky Bit to prevent users from deleting each other’s work. Finally, I applied the SUID bit on the syswatch binary as requested.
+
+It was a straightforward but important task to improve both collaboration and security on the shared environment. Everything validated successfully at 100/100.
