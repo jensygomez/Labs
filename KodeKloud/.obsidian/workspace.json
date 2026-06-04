@@ -11,10 +11,14 @@
             "id": "6d4f659490d73651",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Visualização em gráfico"
+              "type": "markdown",
+              "state": {
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Laboratorios del LFCS"
             }
           }
         ]
@@ -199,7 +203,9 @@
   },
   "active": "6d4f659490d73651",
   "lastOpenFiles": [
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/PG-001 - Provisión de cuentas de usuario y plantillas corporativas.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-008 -Incidente mayor en producción (Simulación de Examen Integrador).md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-007 - Contenedor web inaccesible (Podman, SELinux y Redes).md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel).md",
@@ -227,14 +233,12 @@
     "01 - Linux/03 - Advanced Bash Scripting/06 - Globs",
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/04 - Parameter - Part Two.md",
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One/03 - Parameter - Part One.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/06 - Storage/10 - Remote File Systems --> NFS.md",
     "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One",
     "DevOps",
     "100-Days-DevOps/Seguimiento",
     "100-Days-DevOps/Temas",
     "DevOps/100-Days-DevOps/MOC",
     "100-Days-DevOps/Days",
-    "DevOps/100-Days-DevOps",
     "LINUX/00 - qui/Sem título.canvas",
     "Advanced Bash Scripting/01 - Introduction.canvas",
     "ChatGPT Image 19 de abr. de 2026, 07_59_54.png"
