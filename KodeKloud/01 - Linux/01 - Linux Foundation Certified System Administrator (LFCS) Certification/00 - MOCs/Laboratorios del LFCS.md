@@ -20,7 +20,7 @@ tags:
 | [[PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit)]] |        |         |           |        |            |                                                                                                                              |
 | [[PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex)]]               |        |         |           |        |            |                                                                                                                              |
 | [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection)]]  |        |         |           |        |            |                                                                                                                              |
-|                                                                                                  |        |         |           |        |            |                                                                                                                              |
+| [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS]]       |        |         |           |        |            |                                                                                                                              |
 |                                                                                                  |        |         |           |        |            |                                                                                                                              |
 
 
