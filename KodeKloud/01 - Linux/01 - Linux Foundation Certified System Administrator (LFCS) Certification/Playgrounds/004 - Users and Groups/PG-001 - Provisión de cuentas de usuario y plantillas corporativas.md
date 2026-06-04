@@ -3,7 +3,7 @@ Curso: Prep Course - LFCS Certification
 Modulo: Users and Groups
 Playground: PG-001
 Titulo: Provisión de cuentas de usuario y plantillas corporativas
-Fecha de Inicio: 2026-06-03
+Fecha de Inicio: 2026-06-04
 Dificultad: 3/10
 Level Escalation: L1
 Objetivo:
@@ -35,7 +35,7 @@ Validacion:
     Peso: 35 %
   - Objetivo: La cuenta del consultor tiene la fecha de expiración configurada para el 2026-12-31.
     Peso: 15 %
-Calificacion Final:
+Calificacion Final: 85 %
 Script: |-
   cat << 'EOF' > /tmp/setup_sh
   #!/bin/bash

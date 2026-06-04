@@ -65,17 +65,17 @@ Script: |-
   systemctl daemon-reload
   systemctl enable --now app-worker.service
 
-  # 2. Crear y lanzar el proceso "infractor" que consume CPU de forma descontrolada
+  # 2. Crear y lanzar el proceso infractor con consumo controlado (~60-80% CPU)
   cat << 'HOG' > /usr/local/bin/cpu-hog
   #!/bin/bash
-  # Bucle infinito puro para devorar CPU
   while true; do
-      :
+      dd if=/dev/zero of=/dev/null bs=1M count=200 2>/dev/null
+      sleep 0.05
   done
   HOG
   chmod 755 /usr/local/bin/cpu-hog
 
-  # Lanzar el devorador de CPU en segundo plano de forma persistente desvinculado
+  # Lanzar el devorador de CPU en segundo plano desvinculado del shell
   nohup /usr/local/bin/cpu-hog >/dev/null 2>&1 &
 
   clear
@@ -89,14 +89,15 @@ Script: |-
   echo -e ""
   echo -e " \e[1mDescripción:\e[0m"
   echo -e " El servidor web experimenta alta latencia. Los comandos tardan en responder."
-  echo -e " El equipo de monitoreo indica que un núcleo de CPU está al 100%."
+  echo -e " El equipo de monitoreo indica que un núcleo de CPU está bajo estrés crítico."
   echo -e ""
   echo -e " \e[1mRequerimientos de Validación (Peso Total: 100%):\e[0m"
-  echo -e "  [ ] Proceso infractor 'cpu-hog' terminado (pkill/kill)        --> \e[1;35m30%\e[0m"
-  echo -e "  [ ] Carga de CPU normalizada en el host                        --> \e[1;35m30%\e[0m"
-  echo -e "  [ ] Servicio 'app-worker.service' permanece Running            --> \e[1;35m20%\e[0m"
-  echo -e "  [ ] Guardar el PID del proceso infractor en /root/diagnostic.txt-> \e[1;35m20%\e[0m"
+  echo -e "  [ ] Proceso infractor 'cpu-hog' terminado (pkill/kill)          --> \e[1;35m30%\e[0m"
+  echo -e "  [ ] Carga de CPU normalizada en el host                          --> \e[1;35m30%\e[0m"
+  echo -e "  [ ] Servicio 'app-worker.service' permanece Running              --> \e[1;35m20%\e[0m"
+  echo -e "  [ ] Guardar el PID del proceso infractor en /root/diagnostic.txt --> \e[1;35m20%\e[0m"
   echo -e " ------------------------------------------------------------------------------"
+  echo -e " \e[1;31mADVERTENCIA:\e[0m No mates procesos bash indiscriminadamente."
   echo -e " \e[1;32mMisión:\e[0m Use 'top' o 'ps' para cazar el problema, elimínelo y salve el día.\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
@@ -149,3 +150,14 @@ Script Validacion: |-
 [[Laboratorios del LFCS]]
 
 ---
+The ticket was a classic degraded-performance scenario: a server running slow, SSH feeling heavy, one CPU core pegged at 100%. The mission was to identify the offending process, kill it without touching the legitimate app-worker.service, and leave a diagnostic report.
+
+I opened top and immediately identified cpu-hog sitting at the top with the PID. Diagnosis was correct and fast. That part worked.
+
+**Where it broke down.** I knew I needed `kill`, but I was guessing at the syntax — trying `--pid`, `--signal`, flags that don't exist. `kill` is one of the most minimal commands in Linux: `kill <PID>` sends SIGTERM, `kill -9 <PID>` sends SIGKILL. No long flags, no named options. I spent several minutes in `man kill` and `--help` loops instead of just running the two-word command. The platform eventually killed the process on its own, which gave me the CPU normalization points — but not because of anything I did.
+
+I also had a typo in the diagnostic file: diagnosticc.txt instead of diagnostic.txt. The validator checks for the exact path — one extra character and that's 20 points gone. In production, a misnamed audit log is the same as no audit log.
+
+**What I'm taking away.** Two things. First: know your kill signals cold — `kill <PID>`, `kill -9 <PID>`, `pkill -9 process-name`. No flags to look up, no man page needed under pressure. Second: when writing files as deliverables, double-check the filename before hitting enter. Tab completion exists for a reason.
+
+50/100. The investigation was right. The execution failed on the simplest possible command. That's the most useful kind of failure — it points exactly at the gap to close.

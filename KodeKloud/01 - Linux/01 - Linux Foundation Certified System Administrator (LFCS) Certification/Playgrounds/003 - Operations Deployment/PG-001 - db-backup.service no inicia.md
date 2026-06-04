@@ -36,7 +36,7 @@ Validacion:
     Peso: 20 %
   - Objetivo: Los logs de la aplicación se registran correctamente en la ruta designada sin errores de permisos.
     Peso: 25 %
-Calificacion Final:
+Calificacion Final: 100 %
 Script: |-
   cat << 'EOF' > /tmp/setup.sh
   #!/bin/bash
