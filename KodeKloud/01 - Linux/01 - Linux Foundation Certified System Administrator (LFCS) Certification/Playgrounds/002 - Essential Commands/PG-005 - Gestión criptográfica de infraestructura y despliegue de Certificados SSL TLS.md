@@ -68,7 +68,6 @@ Script: |-
   echo -e "  [ ] Certificado X.509 server.crt válido por 365 días            --> \e[1;35m30%\e[0m"
   echo -e "  [ ] Reporte de fin de validez en /root/cert_expiration.txt       --> \e[1;35m20%\e[0m"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1;32mMisión:\e[0m Utilice 'openssl genrsa', 'openssl req', 'openssl x509' y filtros de texto.\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
   EOF

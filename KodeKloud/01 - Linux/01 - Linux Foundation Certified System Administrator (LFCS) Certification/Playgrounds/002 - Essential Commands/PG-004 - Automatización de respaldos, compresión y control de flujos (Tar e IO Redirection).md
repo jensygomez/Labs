@@ -75,7 +75,6 @@ Script: |-
   echo -e "  [ ] Pipeline /root/extracted_errors.log.gz creado al vuelo       --> \e[1;35m25%\e[0m"
   echo -e "  [ ] /root/backup_status.txt con las dos líneas de estado         --> \e[1;35m20%\e[0m"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1;32mMisión:\e[0m Domine 'tar -j', la bandera '--exclude', los descriptores '1>' y '2>', y tuberías con 'gzip'.\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
   EOF

@@ -98,7 +98,6 @@ Script: |-
   echo -e "  [ ] Script ejecutor cuenta con los permisos necesarios (chmod)--> \e[1;35m20%\e[0m"
   echo -e "  [ ] Existe al menos un respaldo .tar.gz válido en /backup/   --> \e[1;35m20%\e[0m"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1;32mMisión:\e[0m Use 'systemctl list-timers', revise logs y restaure la automatización.\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
   EOF

@@ -98,7 +98,6 @@ Script: |-
   echo -e "  [ ] Guardar el PID del proceso infractor en /root/diagnostic.txt --> \e[1;35m20%\e[0m"
   echo -e " ------------------------------------------------------------------------------"
   echo -e " \e[1;31mADVERTENCIA:\e[0m No mates procesos bash indiscriminadamente."
-  echo -e " \e[1;32mMisión:\e[0m Use 'top' o 'ps' para cazar el problema, elimínelo y salve el día.\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
   EOF

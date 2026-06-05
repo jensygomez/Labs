@@ -75,7 +75,6 @@ Script: |-
   echo -e "  [ ] Sticky Bit activo (protección contra eliminación)          --> \e[1;35m30%\e[0m"
   echo -e "  [ ] SUID activo en /usr/local/bin/syswatch                     --> \e[1;35m20%\e[0m"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1;32mMisión:\e[0m Domine el uso de 'chown', 'chgrp' y las máscaras especiales de 'chmod' (u+s, g+s, +t).\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
   EOF

@@ -64,7 +64,6 @@ Script: |-
   echo -e "  [ ] Enlace persistente (mismo Inodo) en /var/log/app_mirror.conf-> \e[1;35m40%\e[0m"
   echo -e "  [ ] Enlace simbólico en /etc/app_link.conf                      --> \e[1;35m40%\e[0m"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1;32mMisión:\e[0m Use los comandos 'mkdir -p', 'ln' con y sin sus modificadores de tipo de enlace.\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
   EOF

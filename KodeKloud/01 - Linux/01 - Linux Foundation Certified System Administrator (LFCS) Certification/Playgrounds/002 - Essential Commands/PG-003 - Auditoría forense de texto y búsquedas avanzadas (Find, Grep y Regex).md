@@ -104,7 +104,6 @@ Script: |-
   echo -e "  [ ] Filtrar CRITICAL o FATAL (ERE) hacia /root/critical_errors.txt-> \e[1;35m25%\e[0m"
   echo -e "  [ ] Depurar app.conf sin '#' ni líneas vacías en app.conf.clean --> \e[1;35m25%\e[0m"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1;32mMisión:\e[0m Combine 'find -size -mmin/-mtime', 'grep' estándar y 'grep -E' con redirecciones.\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
   EOF

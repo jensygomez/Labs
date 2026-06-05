@@ -74,7 +74,6 @@ Script: |-
   echo -e "  [ ] Rama 'feature-patch' con cleanup.sh confirmado con éxito   --> \e[1;35m30%\e[0m"
   echo -e "  [ ] Git merge completado y visible desde la rama principal      --> \e[1;35m20%\e[0m"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1;32mMisión:\e[0m Use 'git init', 'git config', 'git add', 'git commit', 'git branch/checkout' y 'git merge'.\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
   EOF

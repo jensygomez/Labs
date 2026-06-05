@@ -66,7 +66,6 @@ Script: |-
   echo -e "  [ ] Límite @devs hard nproc 150                                --> \e[1;35m20%\e[0m"
   echo -e "  [ ] Alias global de seguridad para 'rm' configurado             --> \e[1;35m30%\e[0m"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1;32mMisión:\e[0m Trabaje en /etc/profile.d/ y configure los límites en /etc/security/limits.conf\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
   EOF
@@ -90,7 +89,7 @@ Script Validacion: |-
 
   # 2. Validar límites de recursos (limits.conf o en limits.d/)
   LIMITS_FILES="/etc/security/limits.conf /etc/security/limits.d/*.conf"
-  
+
   SOFT_CHECK=$(grep -E -h "^\s*@devs\s+soft\s+nproc\s+100" $LIMITS_FILES 2>/dev/null || true)
   HARD_CHECK=$(grep -E -h "^\s*@devs\s+hard\s+nproc\s+150" $LIMITS_FILES 2>/dev/null || true)
 

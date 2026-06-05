@@ -71,7 +71,6 @@ Script: |-
   echo -e "  [ ] Restricción PAM wheel habilitada en /etc/pam.d/su            --> \e[1;35m25%\e[0m"
   echo -e "  [ ] NSSwitch configurado con 'files sssd' (o ldap) en passwd/group-> \e[1;35m20%\e[0m"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1;32mMisión:\e[0m Utilice visudo, edite las configuraciones de PAM y actualice nsswitch.conf\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
   EOF

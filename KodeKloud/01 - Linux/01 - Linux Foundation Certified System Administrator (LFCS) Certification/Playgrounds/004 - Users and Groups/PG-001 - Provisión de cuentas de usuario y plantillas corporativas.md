@@ -66,7 +66,6 @@ Script: |-
   echo -e "  [ ] Usuario 'consultor1' (UID 2501) con grupo primario 'devs'    --> \e[1;35m35%\e[0m"
   echo -e "  [ ] Fecha de expiración de la cuenta fijada para el 2026-12-31   --> \e[1;35m15%\e[0m"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1;32mMisión:\e[0m Use 'groupadd', 'useradd', modifique /etc/skel y configure los tiempos con 'chage'.\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
   EOF
