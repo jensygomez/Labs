@@ -6,7 +6,7 @@ tags:
 
 
 | Essential Comands                                                                                               |        |              |                                 |
-| --------------------------------------------------------------------------------------------------------------- | ------ | ------------ | ------------------------------- |
+| --------------------------------------------------------------------------------------------------------------- | :----: | :----------: | :-----------------------------: |
 | [[PG-001 - Estructuras de archivos complejas y consistencia de Inodos]]                                         | 20 min | `04/06/2026` |                                 |
 | [[PG-001 - Consistencia de Inodos en Arquitecturas Multidisco (Hard vs Soft Links Avanzado) - V2]]              |        |              |                                 |
 | [[PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit)]]                | 20 min | `04/06/2026` |                                 |
@@ -31,10 +31,12 @@ tags:
 | [[PG-007 - Contenedor web inaccesible (Podman, SELinux y Redes)]]                                               |        |              |                                 |
 | [[PG-008 -Incidente mayor en producción (Simulación de Examen Integrador)]]                                     |        |              |                                 |
 | **Users and Groups**                                                                                            |        |              |                                 |
-| [[PG-001 - Provisión de cuentas de usuario y plantillas corporativas]]                                          | 15 min | `04/06/26`   | <input type="checkbox" checked> |
-| [[PG-002 - Perfiles de entorno del sistema y límites de recursos]]                                              |        |              |                                 |
+| [[PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V1]]                                     | 15 min |  `04/06/26`  | <input type="checkbox" checked> |
+| [[PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V2]]                                     |        |              |                                 |
+| [[PG-002 - Perfiles de entorno del sistema y límites de recursos - V1]]                                              | 20 min | `05/06/2026` | <input type="checkbox" checked> |
 | [[PG-003 - Gestión de privilegios y control de acceso (Sudoers, PAM y NSSwitch)]]                               |        |              |                                 |
 | [[PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora)]]                            |        |              |                                 |
+|                                                                                                                 |        |              |                                 |
 |                                                                                                                 |        |              |                                 |
 |                                                                                                                 |        |              |                                 |
 

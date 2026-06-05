@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Users and Groups
 Playground: PG-001
-Titulo: Provisión de cuentas de usuario y plantillas corporativas
+Titulo: Provisión de cuentas de usuario y plantillas corporativas - V1
 Fecha de Inicio: 2026-06-04
 Dificultad: 3/10
 Level Escalation: L1

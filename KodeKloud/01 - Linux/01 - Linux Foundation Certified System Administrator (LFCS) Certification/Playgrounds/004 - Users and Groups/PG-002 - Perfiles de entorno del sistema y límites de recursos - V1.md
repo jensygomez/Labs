@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Users and Groups
 Playground: PG-002
-Titulo: Perfiles de entorno del sistema y límites de recursos
+Titulo: Perfiles de entorno del sistema y límites de recursos - V1
 Fecha de Inicio: 2026-06-05
 Dificultad: 4/10
 Objetivo:
@@ -32,7 +32,6 @@ Validacion:
     Peso: 20 %
   - Objetivo: Alias global de seguridad 'rm' configurado para todos los usuarios.
     Peso: 30 %
-Calificacion Final:
 Script: |-
   cat << 'EOF' > /tmp/setup_sh
   #!/bin/bash
@@ -122,3 +121,4 @@ Script Validacion: |-
 
 [[Laboratorios del LFCS]]
 ---
+Today I worked on a system hardening and performance tuning ticket on a Linux environment. I configured a global environment variable across all user sessions using the modular profile system, set up a safety alias to prevent accidental file deletions system-wide, and applied resource limits to a specific group to control how many processes they can spin up — both soft and hard caps. Everything was done following production best practices: isolated config files, no direct edits to system base files, clean and auditable changes. The kind of work that keeps systems predictable, secure, and easy to maintain at scale.
