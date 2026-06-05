@@ -3,7 +3,7 @@ Curso: Prep Course - LFCS Certification
 Modulo: Users and Groups
 Playground: PG-002
 Titulo: Perfiles de entorno del sistema y límites de recursos
-Fecha de Inicio: 2026-06-03
+Fecha de Inicio: 2026-06-05
 Dificultad: 4/10
 Objetivo:
   - Aprobar LFCS

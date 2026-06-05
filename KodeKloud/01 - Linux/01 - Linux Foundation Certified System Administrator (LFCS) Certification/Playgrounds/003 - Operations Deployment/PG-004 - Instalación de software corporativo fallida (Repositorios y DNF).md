@@ -155,3 +155,16 @@ Script Validacion: |-
 [[Laboratorios del LFCS]]
 
 ---
+
+## 1. To a Recruiter (Focused on Skills and Problem-Solving)
+
+> I recently handled an incident where a corporate application deployment was failing due to a broken repository after a local migration. I diagnosed the configuration file, redirected the `baseurl` to the local filesystem using the `file://` protocol, and resolved a metadata dependency loop by installing `createrepo_c` with a temporary repository bypass. After discovering the app was an unmanaged binary rather than a standard RPM package, I manually deployed it to the proper `/opt` directory structure, fixed a corrupted `systemd` unit configuration file, and successfully brought the service online with full boot persistence (`enabled`). It was a great exercise in troubleshooting under pressure and managing the entire Linux software lifecycle.
+
+## 2. To your Manager (Focused on Business Value and Results)
+
+> Hi Kaiel, just wanted to update you on INC-1004. The corporate software installation issue has been fully resolved and the ticket is now closed with a 100% validation score. The root cause was an outdated repository URL following our recent local migration. I corrected the `.repo` configuration, re-indexed the local source files to restore package manager metadata stability, and manually deployed the `corp-app` binary to match our corporate directory standards in `/opt`. Finally, I reconfigured and tested the `systemd` service to ensure it's actively running and properly set to persist across system reboots. The application is now fully stable and operational in production.
+
+## 3. To a Friend (Casual, Proud, and Tech-Savvy)
+
+> Man, I just dealt with a classic 'chicken-and-egg' problem on a Linux server today. A corporate app deployment was completely broken because the repository URL was pointing to a dead server after a migration. I had to fix the repo config to look at a local folder, but then `dnf` completely choked because the folder lacked metadata. I couldn't install the tool to fix the metadata because `dnf` was broken! I had to temporarily bypass the repo, install `createrepo`, fix the indexes, and then manually move the app's script to `/opt` because it wasn't an actual RPM. To top it off, the `systemd` service file was messed up, so I had to use `sed` to fix the path, reload the daemon, and enable it for boot. It took some serious troubleshooting, but I got that green 'active (running)' status and a perfect score on the ticket!"
+
