@@ -33,7 +33,8 @@ tags:
 | **Users and Groups**                                                                                            |        |              |                                 |
 | [[PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V1]]                                     | 15 min |  `04/06/26`  | <input type="checkbox" checked> |
 | [[PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V2]]                                     |        |              |                                 |
-| [[PG-002 - Perfiles de entorno del sistema y límites de recursos - V1]]                                              | 20 min | `05/06/2026` | <input type="checkbox" checked> |
+| [[PG-002 - Perfiles de entorno del sistema y límites de recursos - V1]]                                         | 20 min | `05/06/2026` | <input type="checkbox" checked> |
+| [[PG-002 - Perfiles de entorno del sistema y límites de recursos - V2]]                                         |        |              |                                 |
 | [[PG-003 - Gestión de privilegios y control de acceso (Sudoers, PAM y NSSwitch)]]                               |        |              |                                 |
 | [[PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora)]]                            |        |              |                                 |
 |                                                                                                                 |        |              |                                 |

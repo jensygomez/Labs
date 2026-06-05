@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/PG-002 - Perfiles de entorno del sistema y límites de recursos - V1.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "PG-002 - Perfiles de entorno del sistema y límites de recursos - V1"
+              "title": "Laboratorios del LFCS"
             }
           }
         ]
@@ -203,8 +203,9 @@
   },
   "active": "6d4f659490d73651",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V2.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/PG-002 - Perfiles de entorno del sistema y límites de recursos - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/PG-002 - Perfiles de entorno del sistema y límites de recursos - V1.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V1.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-002 - Hardening Multitenant y Mitigación de Escalada de Privilegios (SUID SGID Sticky Bit Avanzado) - V2.md",
@@ -228,7 +229,6 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-007 - Contenedor web inaccesible (Podman, SELinux y Redes).md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel).md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad).md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-007 - Triage de Incidente Mayor y Restauración de Servicios Críticos (Examen Integrador).md",
     "Accenture",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups",
