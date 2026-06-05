@@ -3,7 +3,7 @@ Curso: Prep Course - LFCS Certification
 Modulo: Essential Commands
 Playground: PG-003
 Titulo: Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex)
-Fecha de Inicio: 2026-06-04
+Fecha de Inicio: 2026-06-05
 Dificultad: 6/10
 Objetivo:
   - Aprobar LFCS
@@ -36,7 +36,7 @@ Validacion:
     Peso: 25 %
   - Objetivo: Archivo de configuración limpio de comentarios y líneas vacías en /root/app.conf.clean.
     Peso: 25 %
-Calificacion Final:
+Calificacion Final: 75 %
 Script: |-
   cat << 'EOF' > /tmp/setup_sh
   #!/bin/bash
@@ -83,22 +83,25 @@ Script: |-
 
   debug_mode = false
   CONF
-
   clear
   echo -e "\e[1;36m================================================================================\e[0m"
   echo -e "\e[1;31m 🔍 ESCENARIO CONFIGURADO - ESSENTIAL COMMANDS (PG-003)\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
   echo -e "\e[1;33m TICKET DE INCIDENTE: INC-3003\e[0m"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1mAsunto:\e[0m Auditoría forense de texto y búsquedas avanzadas"
+  echo -e " \e[1mAsunto:\e[0m Sospecha de binario no autorizado y errores críticos"
   echo -e " \e[1mSeveridad:\e[0m Alta / Auditoría de Seguridad"
   echo -e ""
-  echo -e " \e[1mDescripción:\e[0m"
-  echo -e " Use find para aislar el binario oculto reciente. Filtre network.log usando"
-  echo -e " expresiones regulares para extraer logs específicos, y limpie app.conf"
-  echo -e " removiendo líneas vacías y comentarios."
+  echo -e " \e[1mContexto:\e[0m"
+  echo -e " El equipo de Seguridad reporta actividad inusual desde este host y posible"
+  echo -e " despliegue de un binario sin change request asociado en las últimas 24 horas."
   echo -e ""
-  echo -e " \e[1mRequerimientos de Validación (Peso Total: 100%):\e[0m"
+  echo -e " Como \e[1mSysadmin L2/L3\e[0m debes:"
+  echo -e "  - Aislar binarios sospechosos recientes con find para análisis forense."
+  echo -e "  - Analizar network.log con regex para extraer tráfico e incidentes clave."
+  echo -e "  - Generar una versión limpia de app.conf para revisión de Seguridad/Dev."
+  echo -e ""
+  echo -e " \e[1mCriterios de aceptación (Peso Total: 100%):\e[0m"
   echo -e "  [ ] Copiar archivos >5MB modificados en <24h a /root/audit_found/ -> \e[1;35m25%\e[0m"
   echo -e "  [ ] Filtrar IPs '10.' (BRE) hacia /root/internal_ips.txt         --> \e[1;35m25%\e[0m"
   echo -e "  [ ] Filtrar CRITICAL o FATAL (ERE) hacia /root/critical_errors.txt-> \e[1;35m25%\e[0m"
