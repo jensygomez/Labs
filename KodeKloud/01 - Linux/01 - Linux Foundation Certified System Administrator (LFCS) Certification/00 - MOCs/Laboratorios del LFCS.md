@@ -7,25 +7,25 @@ tags:
 
 | Essential Comands                                                                                               |        |              |                                 |
 | --------------------------------------------------------------------------------------------------------------- | :----: | :----------: | :-----------------------------: |
-| [[PG-001 - Estructuras de archivos complejas y consistencia de Inodos]]                                         | 20 min | `04/06/2026` |                                 |
-| [[PG-001 - Consistencia de Inodos en Arquitecturas Multidisco (Hard vs Soft Links Avanzado) - V2]]              |        |              |                                 |
-| [[PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit)]]                | 20 min | `04/06/2026` |                                 |
-| [[PG-002 - Hardening Multitenant y Mitigación de Escalada de Privilegios (SUID SGID Sticky Bit Avanzado) - V2]] |        |              |                                 |
-| [[PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex)]]                              | 40 min | `05/06/2026` |                                 |
-| [[PG-003 - Auditoría Forense de Logs y Búsquedas Avanzadas (Find, Grep y Regex) - V2]]                          |        |              |                                 |
+| [[PG-001 - Estructuras de archivos complejas y consistencia de Inodos - V1]]                                         | 20 min | `04/06/2026` |                                 |
+| [[PG-001 - Estructuras de archivos complejas y consistencia de Inodos - V2]]              |        |              |                                 |
+| [[PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit) - V1]]                | 20 min | `04/06/2026` |                                 |
+| [[PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit) - V2]] |        |              |                                 |
+| [[PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V1]]                              | 40 min | `05/06/2026` |                                 |
+| [[PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V2]]                          |        |              |                                 |
 | [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection)]]                 |        |              |                                 |
 | [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS]]                      |        |              |                                 |
 | [[PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git]]                         |        |              |                                 |
 | [[PG-007 - Triage de Incidente Mayor y Restauración de Servicios Críticos (Examen Integrador)]]                 |        |              |                                 |
 | **Operations Deployments**                                                                                      |        |              |                                 |
-| [[PG-001 - db-backup.service no inicia]]                                                                        | 15 min | `03/05/2026` | <input type="checkbox" checked> |
-| [[PG-001 - data-sync.service falla después del despliegue - V2]]                                                |        |              |                                 |
-| [[PG-002 - Servidor lento - Consumo de CPU Excesivo]]                                                           | 15 min | `03/06/2026` | <input type="checkbox" checked> |
-| [[PG-002 - Alto consumo sostenido de CPU - Proceso runaway - V2]]                                               |        |              |                                 |
-| [[PG-003 - Backup automático no se ejecuta (Systemd Timers)]]                                                   | 30 min | `03/06/2026` | <input type="checkbox" checked> |
-| [[PG-003 - Backup diario crítico no se ejecuta (Systemd Timers) - V2]]                                          |        |              |                                 |
-| [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF)]]                                   | 40 min | `05/06/2026` | <input type="checkbox" checked> |
-| [[PG-004 - Instalación de herramienta corporativa fallida (Repositorios y DNF) - V2]]                           |        |              |                                 |
+| [[PG-001 - db-backup.service no inicia - V1]]                                                                        | 15 min | `03/05/2026` | <input type="checkbox" checked> |
+| [[PG-001 - db-backup.service no inicia - V2]]                                                |        |              |                                 |
+| [[PG-002 - Servidor lento - Consumo de CPU Excesivo - V1]]                                                           | 15 min | `03/06/2026` | <input type="checkbox" checked> |
+| [[PG-002 - Servidor lento - Consumo de CPU Excesivo - V2]]                                               |        |              |                                 |
+| [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V1]]                                                   | 30 min | `03/06/2026` | <input type="checkbox" checked> |
+| [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V2]]                                          |        |              |                                 |
+| [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V1]]                                   | 40 min | `05/06/2026` | <input type="checkbox" checked> |
+| [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V2]]                           |        |              |                                 |
 | [[PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad)]]                                |        |              |                                 |
 | [[PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel)]]                  |        |              |                                 |
 | [[PG-007 - Contenedor web inaccesible (Podman, SELinux y Redes)]]                                               |        |              |                                 |

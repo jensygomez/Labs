@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Operations Deployment
 Playground: PG-002-v2
-Titulo: Alto consumo sostenido de CPU - Proceso runaway
+Titulo: Servidor lento - Consumo de CPU Excesivo - V2
 Fecha de Inicio: 2026-06-05
 Dificultad: 5/10
 Level Escalation: L2/L3
@@ -18,7 +18,6 @@ Competencias:
   - Diagnosticar consumo elevado de CPU con herramientas avanzadas
   - Identificar y detener procesos runaway sin afectar servicios críticos
   - Generar reportes de diagnóstico forense
-
 Ticket: |-
   INC-2567
 
@@ -30,7 +29,6 @@ Ticket: |-
   un reporte de diagnóstico completo para el equipo de SRE.
 
   Nota: No reinicie el servidor ni use comandos que afecten el servicio legítimo.
-
 Validacion:
   - Objetivo: El proceso infractor ha sido detenido correctamente
     Peso: 25 %
@@ -40,7 +38,6 @@ Validacion:
     Peso: 20 %
   - Objetivo: Reporte forense completo generado en /root/cpu_diagnostic_report.txt
     Peso: 30 %
-
 Calificacion Final:
 Script: |-
   cat << 'EOF' > /tmp/setup.sh
@@ -118,7 +115,6 @@ Script: |-
   echo ""
   EOF
   bash /tmp/setup.sh && rm -f /tmp/setup.sh
-
 tags:
   - Laboratorios-del-LFCS
 Script Validacion: |-

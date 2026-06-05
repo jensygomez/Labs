@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Operations Deployment
 Playground: PG-002
-Titulo: Servidor lento - Consumo de CPU Excesivo
+Titulo: Servidor lento - Consumo de CPU Excesivo - V1
 Fecha de Inicio: 2026-06-03
 Dificultad: 3/10
 Objetivo:

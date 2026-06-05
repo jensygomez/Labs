@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Operations Deployment
 Playground: PG-004
-Titulo: Instalación de software corporativo fallida (Repositorios y DNF)
+Titulo: Instalación de software corporativo fallida (Repositorios y DNF) - V1
 Fecha de Inicio: 2026-06-03
 Dificultad: 5/10
 Objetivo:

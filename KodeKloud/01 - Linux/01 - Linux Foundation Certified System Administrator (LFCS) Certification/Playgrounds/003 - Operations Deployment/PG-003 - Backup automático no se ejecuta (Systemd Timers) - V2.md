@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Operations Deployment
 Playground: PG-003-v2
-Titulo: Backup diario crítico no se ejecuta (Systemd Timers)
+Titulo: Backup automático no se ejecuta (Systemd Timers) - V2
 Fecha de Inicio: 2026-06-05
 Dificultad: 6/10
 Level Escalation: L2/L3
@@ -18,7 +18,6 @@ Competencias:
   - Diagnosticar y corregir fallos en cadenas completas de systemd timer + service
   - Gestionar usuarios de servicio y permisos en automatizaciones críticas
   - Verificar ejecución programada y persistencia
-
 Ticket: |-
   INC-3192
 
@@ -30,7 +29,6 @@ Ticket: |-
 
   Por favor, realice un diagnóstico completo, corrija todos los problemas encontrados en la cadena
   (timer, service, script y permisos) y verifique que los backups se generen correctamente.
-
 Validacion:
   - Objetivo: La unidad 'prod-db-backup.timer' está activa, habilitada y correctamente configurada
     Peso: 30 %
@@ -40,7 +38,6 @@ Validacion:
     Peso: 20 %
   - Objetivo: Se genera backup reciente en /var/backups/ y log sin errores de permisos
     Peso: 25 %
-
 Calificacion Final:
 Script: |-
   cat << 'EOF' > /tmp/setup.sh
@@ -123,7 +120,6 @@ Script: |-
   echo ""
   EOF
   bash /tmp/setup.sh && rm -f /tmp/setup.sh
-
 tags:
   - Laboratorios-del-LFCS
 Script Validacion: |-

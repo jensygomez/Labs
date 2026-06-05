@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Operations Deployment
 Playground: PG-004-v2
-Titulo: Instalación de herramienta corporativa fallida (Repositorios y DNF)
+Titulo: Instalación de software corporativo fallida (Repositorios y DNF) - V2
 Fecha de Inicio: 2026-06-05
 Dificultad: 6/10
 Level Escalation: L2/L3
@@ -18,7 +18,6 @@ Competencias:
   - Diagnosticar y reparar repositorios locales y remotos
   - Resolver problemas de metadatos y dependencias
   - Gestionar instalación de paquetes no estándar + servicios asociados
-
 Ticket: |-
   INC-3471
 
@@ -30,7 +29,6 @@ Ticket: |-
 
   Por favor, realice un diagnóstico completo, corrija la configuración de repositorios, instale el paquete
   correctamente y deje el servicio operativo y persistente.
-
 Validacion:
   - Objetivo: Repositorio 'corp-internal.repo' corregido y funcional (con metadatos)
     Peso: 25 %
@@ -40,7 +38,6 @@ Validacion:
     Peso: 25 %
   - Objetivo: Servicio habilitado al arranque + logs sin errores
     Peso: 20 %
-
 Calificacion Final:
 Script: |-
   cat << 'EOF' > /tmp/setup.sh
@@ -116,7 +113,6 @@ Script: |-
   echo ""
   EOF
   bash /tmp/setup.sh && rm -f /tmp/setup.sh
-
 tags:
   - Laboratorios-del-LFCS
 Script Validacion: |-

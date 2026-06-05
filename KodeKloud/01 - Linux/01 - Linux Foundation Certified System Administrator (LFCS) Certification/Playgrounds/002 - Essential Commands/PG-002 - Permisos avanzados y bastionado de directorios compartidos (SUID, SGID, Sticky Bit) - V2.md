@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Essential Commands
 Playground: PG-002
-Titulo: Hardening Multitenant y Mitigación de Escalada de Privilegios (SUID/SGID/Sticky Bit Avanzado)
+Titulo: Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit) - V2
 Fecha de Inicio: 2026-06-05
 Dificultad: 7/10
 Objetivo:

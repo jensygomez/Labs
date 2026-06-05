@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Essential Commands
 Playground: PG-001
-Titulo: Consistencia de Inodos en Arquitecturas Multidisco (Hard vs Soft Links Avanzado)
+Titulo: Estructuras de archivos complejas y consistencia de Inodos - V2
 Fecha de Inicio: 2026-06-05
 Dificultad: 6/10
 Objetivo:

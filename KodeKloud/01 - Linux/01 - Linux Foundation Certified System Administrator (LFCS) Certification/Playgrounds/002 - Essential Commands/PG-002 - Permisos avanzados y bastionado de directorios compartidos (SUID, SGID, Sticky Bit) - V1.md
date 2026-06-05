@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Essential Commands
 Playground: PG-002
-Titulo: Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit)
+Titulo: Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit) - V1
 Fecha de Inicio: 2026-06-04
 Dificultad: 6/10
 Objetivo:

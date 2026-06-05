@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Operations Deployment
 Playground: PG-001
-Titulo: db-backup.service no inicia
+Titulo: db-backup.service no inicia - V1
 Fecha de Inicio: 2026-06-03
 Dificultad: 2/10
 Level Escalation: L1

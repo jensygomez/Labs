@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Essential Commands
 Playground: PG-001
-Titulo: Estructuras de archivos complejas y consistencia de Inodos
+Titulo: Estructuras de archivos complejas y consistencia de Inodos - V1
 Fecha de Inicio: 2026-06-04
 Dificultad: 4/10
 Objetivo:

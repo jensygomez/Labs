@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Essential Commands
 Playground: PG-003-v2
-Titulo: Auditoría Forense de Logs y Búsquedas Avanzadas (Find, Grep y Regex)
+Titulo: Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V2
 Fecha de Inicio: 2026-06-05
 Dificultad: 6/10
 Objetivo:

@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Operations Deployment
 Playground: PG-001-v2
-Titulo: data-sync.service falla después del despliegue
+Titulo: db-backup.service no inicia - V2
 Fecha de Inicio: 2026-06-05
 Dificultad: 4/10
 Level Escalation: L2/L3
@@ -18,7 +18,6 @@ Competencias:
   - Diagnosticar y corregir unidades systemd en entornos productivos
   - Gestionar usuarios de servicio dedicados y permisos estrictos
   - Identificar problemas de configuración en múltiples capas (unidad + script + filesystem)
-
 Ticket: |-
   INC-2789
 
@@ -30,7 +29,6 @@ Ticket: |-
   la ventana de mantenimiento de esta noche.
 
   Por favor, analice los logs, identifique todas las causas de fallo y deje el servicio en estado operativo.
-
 Validacion:
   - Objetivo: El servicio data-sync.service está activo y en ejecución (running)
     Peso: 30 %
@@ -42,7 +40,6 @@ Validacion:
     Peso: 20 %
   - Objetivo: El servicio tiene Restart=always y WorkingDirectory configurado correctamente
     Peso: 15 %
-
 Calificacion Final: 100 %
 Script: |-
   cat << 'EOF' > /tmp/setup.sh
@@ -127,7 +124,6 @@ Script: |-
   echo ""
   EOF
   bash /tmp/setup.sh && rm -f /tmp/setup.sh
-
 tags:
   - Laboratorios-del-LFCS
 Script Validacion: |-
