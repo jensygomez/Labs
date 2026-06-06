@@ -40,7 +40,7 @@ tags:
 | [[PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora)]]                  |        |              |                                 |
 |                                                                                                       |        |              |                                 |
 | **Bash Avanzado**                                                                                     |        |              |                                 |
-| [[PG-BASH-001 - Inventario automático de servidores - V1]]                                            |        |              |                                 |
+| [[PG-BASH-001 - Inventario automático de servidores - V1]]                                            | 50 min | `06/06/2026` | <input type="checkbox" checked> |
 |                                                                                                       |        |              |                                 |
 |                                                                                                       |        |              |                                 |
 |                                                                                                       |        |              |                                 |
@@ -107,4 +107,4 @@ tags:
 285 Tareas
 201.41 Peso
 70.67 % total
-horas Totales 34:30 horas + Playgrounds 4:15 horas
+horas Totales 34:30 horas + Playgrounds 4:55 horas

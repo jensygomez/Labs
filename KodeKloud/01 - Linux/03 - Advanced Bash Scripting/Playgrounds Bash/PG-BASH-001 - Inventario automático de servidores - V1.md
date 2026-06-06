@@ -146,3 +146,10 @@ Script Validacion: |-
 ---
 [[Laboratorios del LFCS]]
 ---
+Today I built a Bash automation script from scratch to inventory a list of servers. I wrote a loop that reads IP addresses from a file, pings each one to check availability, and logs the results to a report file.
+
+For reachable nodes, I connected via SSH to extract the OS name and uptime remotely, then wrote all that data into a structured output file. For unreachable nodes, I logged them as OFFLINE.
+
+Along the way I debugged a subtle issue where SSH was consuming stdin from the while loop, which caused the script to silently skip servers. I fixed it by redirecting SSH's stdin from /dev/null.
+
+I also used bash -x to trace execution line by line, which helped me spot exactly where the script was failing. The final script scored 65 out of 100 on the lab validator.
