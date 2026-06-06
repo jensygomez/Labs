@@ -168,3 +168,9 @@ Script Validacion: |-
 
 [[Laboratorios del LFCS]]
 ---
+In this lab I worked through a real-world PKI scenario rated 7 out of 10 in difficulty. I generated a 2048-bit RSA private key using OpenSSL, then created a Certificate Signing Request with specific corporate metadata — country, organization, and common name — using the `-subj` flag to avoid interactive input, which is essential for automation in production environments.
+
+After that I signed a self-signed X.509 certificate valid for 365 days and extracted the expiration date into an audit report file.
+
+Along the way I debugged a tricky issue where pasting scripts directly into the terminal was corrupting quote characters, causing string comparisons to silently fail. I fixed it by saving the validator to a file and executing it properly with bash.
+
