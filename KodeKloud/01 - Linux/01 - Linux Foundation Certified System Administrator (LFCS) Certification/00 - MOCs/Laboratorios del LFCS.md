@@ -41,8 +41,8 @@ tags:
 |                                                                                                       |        |              |                                 |
 | **Bash Avanzado**                                                                                     |        |              |                                 |
 | [[PG-BASH-001 - Inventario automático de servidores - V1]]                                            | 50 min | `06/06/2026` | <input type="checkbox" checked> |
-|                                                                                                       |        |              |                                 |
-|                                                                                                       |        |              |                                 |
+| [[PG-BASH-001 - Inventario automático de servidores - V2]]                                            |        |              |                                 |
+| [[PG-BASH-002 - Rotación y compresión de logs - V1]]                                                  |        |              |                                 |
 |                                                                                                       |        |              |                                 |
 
 
