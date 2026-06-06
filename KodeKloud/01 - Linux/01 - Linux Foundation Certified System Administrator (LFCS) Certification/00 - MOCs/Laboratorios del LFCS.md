@@ -5,41 +5,42 @@ tags:
 # 🗺️ Mapa de Control: LFCS
 
 
-| Essential Comands                                                                                               |        |              |                                 |
-| --------------------------------------------------------------------------------------------------------------- | :----: | :----------: | :-----------------------------: |
-| [[PG-001 - Estructuras de archivos complejas y consistencia de Inodos - V1]]                                         | 20 min | `04/06/2026` |                                 |
-| [[PG-001 - Estructuras de archivos complejas y consistencia de Inodos - V2]]              |        |              |                                 |
-| [[PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit) - V1]]                | 20 min | `04/06/2026` |                                 |
+| Essential Comands                                                                                     | Tiempo |    Fecha     |           Completado            |
+| ----------------------------------------------------------------------------------------------------- | :----: | :----------: | :-----------------------------: |
+| [[PG-001 - Estructuras de archivos complejas y consistencia de Inodos - V1]]                          | 20 min | `04/06/2026` | <input type="checkbox" checked> |
+| [[PG-001 - Estructuras de archivos complejas y consistencia de Inodos - V2]]                          |        |              |                                 |
+| [[PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit) - V1]] | 20 min | `04/06/2026` | <input type="checkbox" checked> |
 | [[PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit) - V2]] |        |              |                                 |
-| [[PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V1]]                              | 40 min | `05/06/2026` |                                 |
-| [[PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V2]]                          |        |              |                                 |
-| [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection)]]                 |        |              |                                 |
-| [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS]]                      |        |              |                                 |
-| [[PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git]]                         |        |              |                                 |
-| [[PG-007 - Triage de Incidente Mayor y Restauración de Servicios Críticos (Examen Integrador)]]                 |        |              |                                 |
-| **Operations Deployments**                                                                                      |        |              |                                 |
-| [[PG-001 - db-backup.service no inicia - V1]]                                                                        | 15 min | `03/05/2026` | <input type="checkbox" checked> |
-| [[PG-001 - db-backup.service no inicia - V2]]                                                |        |              |                                 |
-| [[PG-002 - Servidor lento - Consumo de CPU Excesivo - V1]]                                                           | 15 min | `03/06/2026` | <input type="checkbox" checked> |
-| [[PG-002 - Servidor lento - Consumo de CPU Excesivo - V2]]                                               |        |              |                                 |
-| [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V1]]                                                   | 30 min | `03/06/2026` | <input type="checkbox" checked> |
-| [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V2]]                                          |        |              |                                 |
-| [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V1]]                                   | 40 min | `05/06/2026` | <input type="checkbox" checked> |
-| [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V2]]                           |        |              |                                 |
-| [[PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad)]]                                |        |              |                                 |
-| [[PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel)]]                  |        |              |                                 |
-| [[PG-007 - Contenedor web inaccesible (Podman, SELinux y Redes)]]                                               |        |              |                                 |
-| [[PG-008 -Incidente mayor en producción (Simulación de Examen Integrador)]]                                     |        |              |                                 |
-| **Users and Groups**                                                                                            |        |              |                                 |
-| [[PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V1]]                                     | 15 min |  `04/06/26`  | <input type="checkbox" checked> |
-| [[PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V2]]                                     |        |              |                                 |
-| [[PG-002 - Perfiles de entorno del sistema y límites de recursos - V1]]                                         | 20 min | `05/06/2026` | <input type="checkbox" checked> |
-| [[PG-002 - Perfiles de entorno del sistema y límites de recursos - V2]]                                         |        |              |                                 |
-| [[PG-003 - Gestión de privilegios y control de acceso (Sudoers, PAM y NSSwitch)]]                               |        |              |                                 |
-| [[PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora)]]                            |        |              |                                 |
-|                                                                                                                 |        |              |                                 |
-|                                                                                                                 |        |              |                                 |
-|                                                                                                                 |        |              |                                 |
+| [[PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V1]]               | 40 min | `05/06/2026` | <input type="checkbox" checked> |
+| [[PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V2]]               |        |              |                                 |
+| [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V1]]  | 40 min | `05/06/2026` | <input type="checkbox" checked> |
+| [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V2]]  |        |              |                                 |
+| [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS]]            |        |              |                                 |
+| [[PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git]]               |        |              |                                 |
+| [[PG-007 - Triage de Incidente Mayor y Restauración de Servicios Críticos (Examen Integrador)]]       |        |              |                                 |
+| **Operations Deployments**                                                                            |        |              |                                 |
+| [[PG-001 - db-backup.service no inicia - V1]]                                                         | 15 min | `03/05/2026` | <input type="checkbox" checked> |
+| [[PG-001 - db-backup.service no inicia - V2]]                                                         |        |              |                                 |
+| [[PG-002 - Servidor lento - Consumo de CPU Excesivo - V1]]                                            | 15 min | `03/06/2026` | <input type="checkbox" checked> |
+| [[PG-002 - Servidor lento - Consumo de CPU Excesivo - V2]]                                            |        |              |                                 |
+| [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V1]]                                    | 30 min | `03/06/2026` | <input type="checkbox" checked> |
+| [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V2]]                                    |        |              |                                 |
+| [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V1]]                    | 40 min | `05/06/2026` | <input type="checkbox" checked> |
+| [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V2]]                    |        |              |                                 |
+| [[PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad)]]                      |        |              |                                 |
+| [[PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel)]]        |        |              |                                 |
+| [[PG-007 - Contenedor web inaccesible (Podman, SELinux y Redes)]]                                     |        |              |                                 |
+| [[PG-008 -Incidente mayor en producción (Simulación de Examen Integrador)]]                           |        |              |                                 |
+| **Users and Groups**                                                                                  |        |              |                                 |
+| [[PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V1]]                           | 15 min |  `04/06/26`  | <input type="checkbox" checked> |
+| [[PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V2]]                           |        |              |                                 |
+| [[PG-002 - Perfiles de entorno del sistema y límites de recursos - V1]]                               | 20 min | `05/06/2026` | <input type="checkbox" checked> |
+| [[PG-002 - Perfiles de entorno del sistema y límites de recursos - V2]]                               |        |              |                                 |
+| [[PG-003 - Gestión de privilegios y control de acceso (Sudoers, PAM y NSSwitch)]]                     |        |              |                                 |
+| [[PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora)]]                  |        |              |                                 |
+|                                                                                                       |        |              |                                 |
+|                                                                                                       |        |              |                                 |
+|                                                                                                       |        |              |                                 |
 
 
 

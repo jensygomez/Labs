@@ -2,9 +2,10 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Essential Commands
 Playground: PG-004
-Titulo: Automatización de respaldos, compresión y control de flujos (Tar e I/O Redirection)
+Titulo: Automatización de respaldos, compresión y control de flujos (Tar e I/O Redirection) - V2
 Fecha de Inicio: 2026-06-04
 Dificultad: 6/10
+Level Escalation: L2/L3
 Objetivo:
   - Registrar flujos operativos y aislar errores del sistema
   - Pensar como Sysadmin Linux Pleno
@@ -167,3 +168,6 @@ Script Validacion: |-
 
 [[Laboratorios del LFCS]]
 ---
+
+
+Today I worked on a storage management ticket involving backup automation, log auditing, and stream control on a Linux system. I created a compressed bzip2 archive of a legacy log directory, using exclusion patterns to filter out temporary files from the backup. I also ran a filesystem audit with `find`, isolating standard output and error streams into separate log files for clean traceability. On top of that, I built a real-time pipeline to extract and compress error output on the fly, without creating intermediate files. Finally, I documented the backup result in a status file using output redirection. All tasks were executed following production standards — modular, auditable, and script-ready.
