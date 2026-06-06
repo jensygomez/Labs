@@ -2,8 +2,8 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Essential Commands
 Playground: PG-005
-Titulo: Gestión criptográfica de infraestructura y despliegue de Certificados SSL/TLS
-Fecha de Inicio: 2026-06-04
+Titulo: Gestión criptográfica de infraestructura y despliegue de Certificados SSL/TLS - V2
+Fecha de Inicio: 2026-06-06
 Dificultad: 7/10
 Objetivo:
   - Aprobar LFCS
@@ -64,7 +64,7 @@ Script: |-
   echo -e ""
   echo -e " \e[1mRequerimientos de Validación (Peso Total: 100%):\e[0m"
   echo -e "  [ ] Llave RSA 2048 bits en /etc/pki/tls/corp_app/server.key    --> \e[1;35m20%\e[0m"
-  echo -e "  [ ] CSR generado con CN=test-app.corp.internal, O, C            --> \e[1;35m30%\e[0m"
+  echo -e "  [ ] CSR generado con CN=test-app.corp.internal, O=Enterprise Group, C=BR --> \e[1;35m30%\e[0m"
   echo -e "  [ ] Certificado X.509 server.crt válido por 365 días            --> \e[1;35m30%\e[0m"
   echo -e "  [ ] Reporte de fin de validez en /root/cert_expiration.txt       --> \e[1;35m20%\e[0m"
   echo -e " ------------------------------------------------------------------------------"
@@ -75,6 +75,10 @@ Script: |-
 tags:
   - Laboratorios-del-LFCS
 Script Validacion: |-
+  #!/bin/bash
+
+
+  cat > /tmp/validador.sh << 'EOF'
   #!/bin/bash
   PUNTOS=0
 
@@ -104,12 +108,18 @@ Script Validacion: |-
 
   # 2. Validar el CSR y sus metadatos obligatorios
   if [ -f "$CSR" ]; then
-      CSR_TEXT=$(openssl req -in "$CSR" -text -noout 2>/dev/null || true)
-      if echo "$CSR_TEXT" | grep -q "C = BR" && echo "$CSR_TEXT" | grep -q "O = Enterprise Group" && echo "$CSR_TEXT" | grep -q "CN = test-app.corp.internal"; then
+      CSR_CN=$(openssl req -in "$CSR" -noout -subject | grep -o "CN=.*" | cut -d= -f2 | tr -d ' ')
+      CSR_O=$(openssl req -in "$CSR" -noout -subject | grep -o "O=.*" | cut -d= -f2 | cut -d',' -f1 | xargs)
+      CSR_C=$(openssl req -in "$CSR" -noout -subject | grep -o "C=.*" | cut -d= -f2 | cut -d',' -f1 | xargs)
+
+      if [ "$CSR_CN" = "test-app.corp.internal" ] && \
+         [ "$CSR_O" = "Enterprise Group" ] && \
+         [ "$CSR_C" = "BR" ]; then
           echo "✔ [30%] Solicitud de Certificado (CSR) validada con los metadatos corporativos requeridos."
           PUNTOS=$((PUNTOS + 30))
       else
           echo "❌ [0%] El CSR existe pero contiene metadatos incorrectos o incompletos."
+          echo "    CN=$CSR_CN | O=$CSR_O | C=$CSR_C"
       fi
   else
       echo "❌ [0%] No se encuentra el archivo de solicitud $CSR."
@@ -118,8 +128,9 @@ Script Validacion: |-
   # 3. Validar el Certificado Autofirmado
   if [ -f "$CRT" ]; then
       if openssl x509 -in "$CRT" -text -noout >/dev/null 2>&1; then
-          # Validar el CN del certificado emitido
-          CRT_CN=$(openssl x509 -in "$CRT" -noout -subject | grep -o "CN = .*" | cut -d= -f2 | xargs)
+          CRT_CN=$(openssl x509 -in "$CRT" -noout -subject -nameopt RFC2253 \
+                   | sed -n 's/.*CN=\([^,]*\).*/\1/p')
+
           if [ "$CRT_CN" = "test-app.corp.internal" ]; then
               echo "✔ [30%] Certificado digital X.509 corporativo verificado con éxito."
               PUNTOS=$((PUNTOS + 30))
@@ -149,6 +160,10 @@ Script Validacion: |-
   echo "============================"
   echo "CALIFICACIÓN FINAL: $PUNTOS / 100"
   echo "============================"
+  EOF
+
+  chmod +x /tmp/validador.sh
+  bash /tmp/validador.sh
 ---
 
 [[Laboratorios del LFCS]]
