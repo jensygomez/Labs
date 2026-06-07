@@ -72,7 +72,7 @@ Script: |-
 
   [Install]
   WantedBy=multi-user.target
-  SERVICE
+  SER
 
   # 3. Cargar configuraciones y forzar el estado inestable
   systemctl daemon-reload
@@ -101,7 +101,6 @@ Script: |-
   echo -e " \e[1;32mMisión:\e[0m Modifique el archivo de la unidad, aplique daemon-reload y devuelva la estabilidad.\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
-  EOF
   bash /tmp/setup_sh && rm -f /tmp/setup_sh
 tags:
   - Laboratorios-del-LFCS
