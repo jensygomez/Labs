@@ -2,8 +2,8 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Operations Deployment
 Playground: PG-005
-Titulo: Servicio inestable en producción (Límites de Recursos e Integridad)
-Fecha de Inicio: 2026-06-03
+Titulo: Servicio inestable en producción (Límites de Recursos e Integridad) - V1
+Fecha de Inicio: 2026-06-06
 Dificultad: 6/10
 Objetivo:
   - Aprobar LFCS
@@ -120,7 +120,8 @@ Script Validacion: |-
   fi
 
   # 2. Validar si se configuró un tiempo de espera de reinicio prudente
-  RESTART_SEC=$(systemctl show -p RestartUSec prod-api.service | cut -d= -f2)
+  RESTART_SEC=$(systemctl show -p RestartUSec prod-api.service | cut -d= -f2 | sed 's/s$/000000/' | sed 's/ms$/000/')
+
   # 5 segundos = 5000000 microsegundos
   if [ "$RESTART_SEC" -ge 5000000 ] 2>/dev/null; then
       echo "✔ [30%] Configuración de RestartSec suavizada para mitigar bucles agresivos."
@@ -158,3 +159,8 @@ Script Validacion: |-
 
 [[Laboratorios del LFCS]]
 ---
+Today he worked on a real production incident — a critical service experiencing constant micro-crashes in a Linux environment. He didn't just apply a fix blindly; he read the logs first, understood _why_ the service was failing, and then made the right changes to the system configuration.
+
+He caught his own mistake mid-way through — he had typed the wrong value and noticed it himself before it caused further damage. That kind of attention to detail matters a lot in this role.
+
+When the automated validator kept failing despite his correct configuration, he didn't panic or give up. He read the validation script, identified a bug in the comparison logic, and fixed _that_ too. That's not L1 thinking — that's someone who understands what's happening under the hood.

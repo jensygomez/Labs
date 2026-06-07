@@ -17,7 +17,7 @@ tags:
 | [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V2]]  |        |              |                                 |
 | [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V1]]       | 50 min | `06/06/2026` | <input type="checkbox" checked> |
 | [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V2]]       |        |              |                                 |
-| [[PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git]]               |        |              |                                 |
+| [[PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V1]]               |        |              |                                 |
 | [[PG-007 - Triage de Incidente Mayor y Restauración de Servicios Críticos (Examen Integrador)]]       |        |              |                                 |
 | **Operations Deployments**                                                                            |        |              |                                 |
 | [[PG-001 - db-backup.service no inicia - V1]]                                                         | 15 min | `03/05/2026` | <input type="checkbox" checked> |
@@ -28,7 +28,8 @@ tags:
 | [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V2]]                                    |        |              |                                 |
 | [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V1]]                    | 40 min | `05/06/2026` | <input type="checkbox" checked> |
 | [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V2]]                    |        |              |                                 |
-| [[PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad)]]                      |        |              |                                 |
+| [[PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad) - V1]]                 | 35 min | `06/06/2026` | <input type="checkbox" checked> |
+| [[PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad) - V2]]                 |        |              |                                 |
 | [[PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel)]]        |        |              |                                 |
 | [[PG-007 - Contenedor web inaccesible (Podman, SELinux y Redes)]]                                     |        |              |                                 |
 | [[PG-008 -Incidente mayor en producción (Simulación de Examen Integrador)]]                           |        |              |                                 |
@@ -44,6 +45,7 @@ tags:
 | [[PG-BASH-001 - Inventario automático de servidores - V1]]                                            | 50 min | `06/06/2026` | <input type="checkbox" checked> |
 | [[PG-BASH-001 - Inventario automático de servidores - V2]]                                            |        |              |                                 |
 | [[PG-BASH-002 - Rotación y compresión de logs - V1]]                                                  |        |              |                                 |
+|                                                                                                       |        |              |                                 |
 |                                                                                                       |        |              |                                 |
 |                                                                                                       |        |              |                                 |
 
@@ -109,4 +111,4 @@ tags:
 285 Tareas
 201.41 Peso
 70.67 % total
-horas Totales 34:30 horas + Playgrounds 5:45 horas
+horas Totales 34:30 horas + Playgrounds 6:20 horas

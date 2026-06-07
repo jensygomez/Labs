@@ -2,8 +2,8 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Essential Commands
 Playground: PG-006
-Titulo: Control de versiones de infraestructura y gestión de ramas locales con Git
-Fecha de Inicio: 2026-06-04
+Titulo: Control de versiones de infraestructura y gestión de ramas locales con Git - V1
+Fecha de Inicio: 2026-06-06
 Dificultad: 6/10
 Objetivo:
   - Aprobar LFCS
@@ -64,15 +64,20 @@ Script: |-
   echo -e " \e[1mSeveridad:\e[0m Normal / Gestión de Configuración (IaC)"
   echo -e ""
   echo -e " \e[1mDescripción:\e[0m"
-  echo -e " Inicialice el repositorio Git en /opt/scripts_core. Gestione el ciclo de vida"
-  echo -e " de los archivos utilizando el área de staging, cree la rama de parche requerida,"
-  echo -e " confirme los cambios y realice la fusión final en la rama de producción."
+  echo -e " Inicialice el repositorio Git en /opt/scripts_core. Configure la identidad"
+  echo -e " con user.name='Sysadmin Pleno' y user.email='admin@corp.internal'."
+  echo -e " Gestione el ciclo de vida de los archivos utilizando el área de staging,"
+  echo -e " cree la rama de parche requerida, confirme los cambios y realice la fusión"
+  echo -e " final en la rama de producción. El archivo cleanup.sh debe crearse en la"
+  echo -e " rama feature-patch con el contenido mínimo de un script bash válido."
   echo -e ""
   echo -e " \e[1mRequerimientos de Validación (Peso Total: 100%):\e[0m"
-  echo -e "  [ ] Git init y configuración de user.name/user.email completos  --> \e[1;35m20%\e[0m"
-  echo -e "  [ ] Commit inicial de monitor.sh registrado en producción       --> \e[1;35m30%\e[0m"
-  echo -e "  [ ] Rama 'feature-patch' con cleanup.sh confirmado con éxito   --> \e[1;35m30%\e[0m"
-  echo -e "  [ ] Git merge completado y visible desde la rama principal      --> \e[1;35m20%\e[0m"
+  echo -e "  [ ] Git init y configuración de user.name='Sysadmin Pleno' y user.email='admin@corp.internal'  --> \e[1;35m20%\e[0m"
+  echo -e "  [ ] Commit inicial de monitor.sh con mensaje exacto:                                           --> \e[1;35m30%\e[0m"
+  echo -e "      'Initial commit con script de monitoreo'"
+  echo -e "  [ ] Rama 'feature-patch' con cleanup.sh commiteado con mensaje exacto:                        --> \e[1;35m30%\e[0m"
+  echo -e "      'Añadido script de limpieza en rama feature'"
+  echo -e "  [ ] Git merge de feature-patch completado en master con ambos archivos presentes               --> \e[1;35m20%\e[0m"
   echo -e " ------------------------------------------------------------------------------"
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
@@ -142,3 +147,6 @@ Script Validacion: |-
 
 [[Laboratorios del LFCS]]
 ---
+Today I worked on a Git-based infrastructure version control scenario, which is a core practice in IaC environments. I initialized a local repository, configured the commit identity, managed the staging area, and handled the full branch lifecycle — from creating a feature branch to merging it back into the production branch.
+
+One thing I want to highlight is that before executing anything, I reviewed both the ticket and the validator script to identify an inconsistency — the ticket didn't specify the exact values for user identity or the commit messages, but the validator had them hardcoded. I flagged that, proposed a corrected version of the ticket, and then proceeded with execution. That kind of critical reading is something I'm actively developing as part of my growth toward an L2/L3 role.
