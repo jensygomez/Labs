@@ -31,7 +31,7 @@ tags:
 | [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V2]]                    |        |              |                                 |
 | [[PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad) - V1]]                 | 35 min | `06/06/2026` | <input type="checkbox" checked> |
 | [[PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad) - V2]]                 |        |              |                                 |
-| [[PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel)]]        |        |              |                                 |
+| [[PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel) - V1]]        |        |              |                                 |
 | [[PG-007 - Contenedor web inaccesible (Podman, SELinux y Redes)]]                                     |        |              |                                 |
 | [[PG-008 -Incidente mayor en producción (Simulación de Examen Integrador)]]                           |        |              |                                 |
 | **Users and Groups**                                                                                  |        |              |                                 |

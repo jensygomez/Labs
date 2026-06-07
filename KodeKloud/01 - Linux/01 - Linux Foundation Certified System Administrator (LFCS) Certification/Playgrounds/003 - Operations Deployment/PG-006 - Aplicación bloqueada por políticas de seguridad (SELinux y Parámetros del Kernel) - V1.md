@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Operations Deployment
 Playground: PG-006
-Titulo: Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel)
+Titulo: Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel) V1
 Fecha de Inicio: 2026-06-03
 Dificultad: 7/10
 Objetivo:
