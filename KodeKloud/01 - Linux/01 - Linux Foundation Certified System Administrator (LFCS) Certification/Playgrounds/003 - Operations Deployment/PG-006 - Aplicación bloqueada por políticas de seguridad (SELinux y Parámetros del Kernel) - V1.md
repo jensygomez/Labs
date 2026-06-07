@@ -3,7 +3,7 @@ Curso: Prep Course - LFCS Certification
 Modulo: Operations Deployment
 Playground: PG-006
 Titulo: Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel) V1
-Fecha de Inicio: 2026-06-03
+Fecha de Inicio: 2026-06-07
 Dificultad: 7/10
 Objetivo:
   - Aprobar LFCS
@@ -35,99 +35,112 @@ Validacion:
 Calificacion Final:
 VM Vagrant: |-
   Vagrant.configure("2") do |config|
-    # Usamos la caja oficial de Rocky Linux 9 para KVM
+
+    # Caja oficial de Rocky Linux 9 para KVM / Libvirt
     config.vm.box = "generic/rocky9"
     
-    # Configuración de recursos para KVM
+    # Configuración de recursos para tu entorno nativo VIRT-MANAGER
     config.vm.provider :libvirt do |libvirt|
-      libvirt.memory = 2048   # 2 GB de RAM
-      libvirt.cpus = 2        # 2 CPUs
+      libvirt.memory = 2048
+      libvirt.cpus = 2
     end
 
-    # Provisioning: Configuración automática para tu laboratorio SELinux
+    # Provisioning artesanal para inyectar fallos reales de nivel L2/L3
     config.vm.provision "shell", inline: <<-SHELL
-      # Instalamos herramientas necesarias
-      dnf install -y policycoreutils-python-utils setroubleshoot procps-ng
-      
-      # Aseguramos que SELinux esté en modo enforcing
+      set -e
+
+      # 1. Instalación de herramientas avanzadas de diagnóstico de seguridad y procesos
+      dnf install -y policycoreutils-python-utils setroubleshoot-server procps-ng psmisc
+
+      # 2. Forzar estado Enforcing estricto
       setenforce 1
       sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
 
       # =========================================================
-      # Configuramos el incidente INC-1006 automáticamente
+      # CONFIGURACIÓN DEL ESCENARIO INFRAESTRUCTURA INC-2006
       # =========================================================
 
-      # --- Escenario 1: Contexto SELinux incorrecto en /custom_data ---
+      # --- Escenario 1: Contexto erróneo en el directorio de la aplicación ---
       mkdir -p /custom_data
-      echo "# Secure App Configuration File" > /custom_data/app.conf
-      echo "DB_CONN=localhost" >> /custom_data/app.conf
-      # Aplicamos el contexto restrictivo incorrecto (sshd_key_t) para que el servicio falle
-      semanage fcontext -a -t sshd_key_t "/custom_data(/.*)?"
+      echo "{"status": "production", "db_pool": 100}" > /custom_data/app.json
+      
+      # Forzamos un contexto restrictivo ajeno (user_home_t) para simular un despliegue mal hecho
+      semanage fcontext -a -t user_home_t "/custom_data(/.*)?"
       restorecon -Rv /custom_data
 
-      # --- Escenario 2: Valor incorrecto de vm.max_map_count (persistente y en caliente) ---
-      # Se escribe el valor incorrecto en el archivo de configuración persistente
-      # El alumno deberá corregirlo tanto en el archivo como en runtime
-      echo "vm.max_map_count=65530" > /etc/sysctl.d/99-secure-app.conf
-      sysctl -w vm.max_map_count=65530
+      # --- Escenario 2: Parámetros de Kernel degradados ---
+      echo "fs.file-max = 100000" > /etc/sysctl.d/99-secure-app.conf
+      echo "vm.max_map_count = 65530" >> /etc/sysctl.d/99-secure-app.conf
+      sysctl --system
+
+      # --- Escenario 3: Deshabilitar Booleano Crítico de SELinux ---
+      # Deshabilitamos httpd_setrlimit, impidiendo que servicios web/customizados alteren sus límites internos
+      setsebool -P httpd_setrlimit off
 
       # =========================================================
-      # Creamos el binario y el servicio
+      # CREACIÓN DEL BINARIO SIMULADO Y UNIDAD SYSTEMD
       # =========================================================
       mkdir -p /opt/secure-app
-      cat << 'APP' > /opt/secure-app/secure-binary
+
+      cat << 'EOF' > /opt/secure-app/secure-binary-v2
   #!/bin/bash
-  echo "Intentando leer archivo de configuración altamente protegido..."
-  if ! cat /custom_data/app.conf >/dev/null 2>&1; then
-      echo "[$(date +'%T')] CRITICAL: SELinux AVC Denial detectado al leer /custom_data/app.conf" >&2
+  LOG_FILE="/var/log/secure-app-boot.log"
+  echo "[$(date)] Iniciando comprobaciones de seguridad V2..." >> $LOG_FILE
+
+  # 1. Verificar lectura de datos bajo SELinux fcontext
+  if ! cat /custom_data/app.json >/dev/null 2>&1; then
+      echo "CRITICAL: Acceso denegado a /custom_data/app.json por restricciones de fcontext." >&2
       exit 1
   fi
-  echo "Acceso concedido al archivo de configuración."
-  while true; do sleep 10; done
-  APP
-      chmod 755 /opt/secure-app/secure-binary
 
-      cat << 'SER' > /etc/systemd/system/secure-app.service
+  # 2. Simulación de cambio de límites (Dará error AVC si httpd_setrlimit está en OFF)
+  if ! ulimit -n 65536 >/dev/null 2>&1; then
+      echo "CRITICAL: Fallo al ajustar descriptores de archivo (ulimit). Bloqueado por Booleano SELinux." >&2
+      logger -p authpriv.err "secure-app: AVC denial por falta de privilegios setrlimit."
+      exit 1
+  fi
+
+  echo "Validaciones correctas. Aplicación V2 en ejecución permanente." >> $LOG_FILE
+  while true; do
+      sleep 5
+  done
+  EOF
+
+      chmod 755 /opt/secure-app/secure-binary-v2
+
+      # Crear unidad Systemd original (SIN la directiva LimitNOFILE exigida)
+      cat << 'EOF' > /etc/systemd/system/secure-app.service
   [Unit]
-  Description=Secure Corporative Application Service
+  Description=Secure Corporative Application Service V2
   After=network.target
 
   [Service]
   Type=simple
-  ExecStart=/opt/secure-app/secure-binary
+  ExecStart=/opt/secure-app/secure-binary-v2
   Restart=no
 
   [Install]
   WantedBy=multi-user.target
-  SER
+  EOF
+
       systemctl daemon-reload
 
-      # =========================================================
-      # Mostrar el ticket INC-1006 en pantalla
-      # =========================================================
+      # Banner decorativo para la terminal del lab
       echo -e "\e[1;36m================================================================================\e[0m"
-      echo -e "\e[1;31m 🚀 ESCENARIO PG-006 CONFIGURADO - CONTROL DE ACCESO (SELINUX) ACTIVO\e[0m"
+      echo -e "\e[1;32m 🚀 ESCENARIO PG-006-V2 CONFIGURADO - NIVEL: SYSADMIN PLENO L2/L3\e[0m"
       echo -e "\e[1;36m================================================================================\e[0m"
-      echo -e "\e[1;33m TICKET DE INCIDENTE: INC-1006\e[0m"
+      echo -e " \e[1mTICKET:\e[0m INC-2006 (URGENTE) - Fallo Multi-capa de Seguridad y Descriptores"
+      echo -e " \e[1mAsunto:\e[0m El servicio 'secure-app' no arranca con SELinux Enforcing y falla por 'Too many open files'"
       echo -e " ------------------------------------------------------------------------------"
-      echo -e " \e[1mAsunto:\e[0m Aplicación falla con SELinux habilitado"
-      echo -e " \e[1mSeveridad:\e[0m Crítica / Cumplimiento de Seguridad"
-      echo -e ""
-      echo -e " \e[1mDescripción:\e[0m"
-      echo -e " La unidad 'secure-app.service' arroja errores de permisos al intentar arrancar"
-      echo -e " si el sistema está protegido. Adicionalmente, requiere un ajuste en sysctl."
-      echo -e " NO altere el modo global de SELinux (debe permanecer Enforcing)."
-      echo -e ""
-      echo -e " \e[1mRequerimientos de Validación (Peso Total: 100%):\e[0m"
-      echo -e "  [ ] Mantener SELinux en modo Enforcing                         --> \e[1;35m25%\e[0m"
-      echo -e "  [ ] Corregir permanentemente el fcontext de /custom_data(/.*)? --> \e[1;35m35%\e[0m"
-      echo -e "  [ ] Servicio 'secure-app.service' activo y en ejecución        --> \e[1;35m25%\e[0m"
-      echo -e "  [ ] Cambiar de forma persistente 'vm.max_map_count=262144'     --> \e[1;35m15%\e[0m"
+      echo -e " \e[1m🔍 Objetivos de solución (sin alterar el modo Enforcing global):\e[0m"
+      echo -e "   \e[1;33m1.\e[0m Corregir el contexto SELinux del directorio \e[1;33m/custom_data\e[0m a \e[1;33mhttpd_sys_rw_content_t\e[0m (persistente)"
+      echo -e "   \e[1;33m2.\e[0m Activar de forma permanente el booleano \e[1;33mhttpd_setrlimit\e[0m (el servicio necesita cambiar ulimit)"
+      echo -e "   \e[1;33m3.\e[0m Ajustar parámetros del kernel \e[1;33mfs.file-max=2097152\e[0m y \e[1;33mvm.max_map_count=262144\e[0m (persistentes)"
+      echo -e "   \e[1;33m4.\e[0m Configurar la unidad systemd con \e[1;33mLimitNOFILE=65536\e[0m y reiniciar el servicio"
       echo -e " ------------------------------------------------------------------------------"
-      echo -e " \e[1;32mMisión:\e[0m Use 'ausearch' o revise '/var/log/audit/audit.log', aplique parches y estabilice.\e[0m"
+      echo -e " \e[1m📋 Herramientas útiles:\e[0m ausearch, audit2why, semanage, restorecon, getsebool, setsebool -P, sysctl, systemctl edit"
+      echo -e " \e[1m📁 Logs:\e[0m journalctl -u secure-app, ausearch -m AVC -ts recent, /var/log/secure-app-boot.log"
       echo -e "\e[1;36m================================================================================\e[0m"
-      echo ""
-      echo "El laboratorio está listo. Tu misión comienza ahora."
     SHELL
   end
 tags:
