@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Operations Deployment
 Playground: PG-007
-Titulo: Contenedor web inaccesible (Podman, SELinux y Redes)
+Titulo: Contenedor web inaccesible (Podman, SELinux y Redes) - V1
 Fecha de Inicio: 2026-06-03
 Dificultad: 8/10
 Objetivo:
@@ -35,9 +35,6 @@ Validacion:
     Peso: 20 %
 Calificacion Final:
 Vagrant: |-
-  # Vagrantfile - PG-007: Contenedor web inaccesible (Podman, SELinux y Redes)
-  # Basado en la estructura de PG-006 para Rocky Linux 9
-
   Vagrant.configure("2") do |config|
     config.vm.box = "generic/rocky9"
 
@@ -71,7 +68,10 @@ Vagrant: |-
       # 2. Descargar imagen base (nginx de Red Hat UBI)
       podman pull registry.access.redhat.com/ubi9/nginx-120:latest >/dev/null 2>&1 || true
 
-      # 3. Crear unidad systemd con error: montaje SIN bandera :Z y puerto mapeado
+      # 3. Crear unidad systemd con errores intencionales:
+      #    - Montaje SIN bandera :Z  (fallo SELinux)
+      #    - Puerto 8080 será bloqueado por firewalld
+      #    NOTA: directorio y comando nginx son correctos para esta imagen
       cat << 'EOF' > /etc/systemd/system/container-webapp.service
   [Unit]
   Description=Podman Container - WebApp Engine
@@ -82,7 +82,7 @@ Vagrant: |-
   Environment=PODMAN_SYSTEMD_UNIT=%n
   Restart=always
   ExecStartPre=-/usr/bin/podman rm -f webapp-container
-  ExecStart=/usr/bin/podman run --name webapp-container -p 8080:8080 -v /opt/web_data:/var/www/html:ro registry.access.redhat.com/ubi9/nginx-120:latest
+  ExecStart=/usr/bin/podman run --name webapp-container -p 8080:8080 -v /opt/web_data:/opt/app-root/src:ro registry.access.redhat.com/ubi9/nginx-120:latest nginx -g 'daemon off;'
   ExecStop=/usr/bin/podman stop -t 10 webapp-container
   ExecStopPost=-/usr/bin/podman rm -f webapp-container
   Type=simple
@@ -91,11 +91,11 @@ Vagrant: |-
   WantedBy=multi-user.target
   EOF
 
-      # 4. Cerrar el puerto 8080 en firewalld (bloquear acceso)
+      # 4. Cerrar el puerto 8080 en firewalld (bloquear acceso externo)
       firewall-cmd --permanent --remove-port=8080/tcp 2>/dev/null || true
       firewall-cmd --reload
 
-      # 5. Recargar systemd e iniciar el servicio (que fallará)
+      # 5. Recargar systemd e intentar iniciar el servicio (fallará por SELinux)
       systemctl daemon-reload
       systemctl start container-webapp.service 2>/dev/null || true
 
@@ -119,7 +119,7 @@ Vagrant: |-
       echo -e "  [ ] Puerto 8080/tcp abierto permanentemente en firewalld      -> \e[1;35m25%\e[0m"
       echo -e "  [ ] 'curl localhost:8080' devuelve HTTP 200                    -> \e[1;35m20%\e[0m"
       echo -e " ------------------------------------------------------------------------------"
-      echo -e " \e[1;32mMisión:\e[0m Inspeccione journalctl, arregle el montaje y abra la red.\e[0m"
+      echo -e " \e[1;32mMisión:\e[0m Inspeccione journalctl, arregle el montaje y abra la red."
       echo -e "\e[1;36m========================================================================\e[0m"
     SHELL
   end
