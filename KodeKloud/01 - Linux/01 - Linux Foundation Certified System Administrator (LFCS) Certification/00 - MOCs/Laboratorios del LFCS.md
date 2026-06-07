@@ -33,7 +33,7 @@ tags:
 | [[PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad) - V2]]                 |        |              |                                 |
 | [[PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel) - V1]]   | 30 min | `07/06/2026` | <input type="checkbox" checked> |
 | [[PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel) - V2]]   |        |              |                                 |
-| [[PG-007 - Contenedor web inaccesible (Podman, SELinux y Redes)]]                                     |        |              |                                 |
+| [[PG-007 - Contenedor web inaccesible (Podman, SELinux y Redes)]]                                     | 40 min | `07/06/2026` | <input type="checkbox" checked> |
 | [[PG-008 -Incidente mayor en producción (Simulación de Examen Integrador)]]                           |        |              |                                 |
 | **Users and Groups**                                                                                  |        |              |                                 |
 | [[PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V1]]                           | 15 min |  `04/06/26`  | <input type="checkbox" checked> |
@@ -113,4 +113,4 @@ tags:
 285 Tareas
 201.41 Peso
 70.67 % total
-horas Totales 34:30 horas + Playgrounds 7:20 horas
+horas Totales 34:30 horas + Playgrounds 8:00 horas

@@ -1,87 +1,88 @@
+# Vagrantfile - PG-007: Contenedor web inaccesible (Podman, SELinux y Redes)
+# Basado en la estructura de PG-006 para Rocky Linux 9
+
 Vagrant.configure("2") do |config|
-  # Usamos la caja oficial de Rocky Linux 9 para KVM
   config.vm.box = "generic/rocky9"
-  
-  # Configuración de recursos para KVM
+
   config.vm.provider :libvirt do |libvirt|
-    libvirt.memory = 2048   # 2 GB de RAM
-    libvirt.cpus = 2        # 2 CPUs
+    libvirt.memory = 2048
+    libvirt.cpus = 2
   end
 
-  # Provisioning: Configuración automática para tu laboratorio SELinux
   config.vm.provision "shell", inline: <<-SHELL
-    # Instalamos herramientas necesarias
-    dnf install -y policycoreutils-python-utils setroubleshoot procps-ng
-    
-    # Aseguramos que SELinux esté en modo enforcing
+    set -e
+
+    # Instalación de paquetes necesarios
+    dnf install -y podman firewalld policycoreutils-python-utils setroubleshoot-server
+
+    # Asegurar SELinux en modo enforcing (persistente)
     setenforce 1
     sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
 
-    # Configuramos el incidente INC-1006 automáticamente
-    mkdir -p /custom_data
-    echo "# Secure App Configuration File" > /custom_data/app.conf
-    echo "DB_CONN=localhost" >> /custom_data/app.conf
+    # Habilitar e iniciar firewalld
+    systemctl enable --now firewalld
 
-    # Aplicamos el contexto restrictivo para que el servicio falle
-    semanage fcontext -a -t sshd_key_t "/custom_data(/.*)?"
-    restorecon -Rv /custom_data
-    
-    # Creamos el binario y el servicio
-    mkdir -p /opt/secure-app
-    cat << 'APP' > /opt/secure-app/secure-binary
-#!/bin/bash
-echo "Intentando leer archivo de configuración altamente protegido..."
-if ! cat /custom_data/app.conf >/dev/null 2>&1; then
-    echo "[$(date +'%T')] CRITICAL: SELinux AVC Denial detectado al leer /custom_data/app.conf" >&2
-    exit 1
-fi
-echo "Acceso concedido al archivo de configuración."
-while true; do sleep 10; done
-APP
-    chmod 755 /opt/secure-app/secure-binary
+    # =========================================================
+    # CONFIGURACIÓN DEL ESCENARIO DE FALLO (INC-1007)
+    # =========================================================
 
-    cat << 'SER' > /etc/systemd/system/secure-app.service
+    # 1. Crear volumen del host con contexto SELinux restrictivo (sshd_key_t)
+    mkdir -p /opt/web_data
+    echo "Funcionando en el nivel 8!" > /opt/web_data/index.html
+    chcon -R -t sshd_key_t /opt/web_data
+
+    # 2. Descargar imagen base (nginx de Red Hat UBI)
+    podman pull registry.access.redhat.com/ubi9/nginx-120:latest >/dev/null 2>&1 || true
+
+    # 3. Crear unidad systemd con error: montaje SIN bandera :Z y puerto mapeado
+    cat << 'EOF' > /etc/systemd/system/container-webapp.service
 [Unit]
-Description=Secure Corporative Application Service
-After=network.target
+Description=Podman Container - WebApp Engine
+Wants=network-online.target
+After=network-online.target
 
 [Service]
+Environment=PODMAN_SYSTEMD_UNIT=%n
+Restart=always
+ExecStartPre=-/usr/bin/podman rm -f webapp-container
+ExecStart=/usr/bin/podman run --name webapp-container -p 8080:8080 -v /opt/web_data:/var/www/html:ro registry.access.redhat.com/ubi9/nginx-120:latest
+ExecStop=/usr/bin/podman stop -t 10 webapp-container
+ExecStopPost=-/usr/bin/podman rm -f webapp-container
 Type=simple
-ExecStart=/opt/secure-app/secure-binary
-Restart=no
 
 [Install]
 WantedBy=multi-user.target
-SER
-    systemctl daemon-reload
+EOF
 
-    # Simular el valor incorrecto de sysctl
-    sysctl -w vm.max_map_count=65530
-	# Mostrar el ticket INC-1006 en pantalla
-    echo -e "\e[1;36m================================================================================\e[0m"
-    echo -e "\e[1;31m 🚀 ESCENARIO PG-006 CONFIGURADO - CONTROL DE ACCESO (SELINUX) ACTIVO\e[0m"
-    echo -e "\e[1;36m================================================================================\e[0m"
-    echo -e "\e[1;33m TICKET DE INCIDENTE: INC-1006\e[0m"
+    # 4. Cerrar el puerto 8080 en firewalld (bloquear acceso)
+    firewall-cmd --permanent --remove-port=8080/tcp 2>/dev/null || true
+    firewall-cmd --reload
+
+    # 5. Recargar systemd e iniciar el servicio (que fallará)
+    systemctl daemon-reload
+    systemctl start container-webapp.service 2>/dev/null || true
+
+    # Mensaje de bienvenida / instrucciones
+    echo -e "\e[1;36m========================================================================\e[0m"
+    echo -e "\e[1;31m 🚀 ESCENARIO PG-007 CONFIGURADO - CRISIS DE CONTENEDORES EN PRODUCCIÓN\e[0m"
+    echo -e "\e[1;36m========================================================================\e[0m"
+    echo -e "\e[1;33m TICKET DE INCIDENTE: INC-1007\e[0m"
     echo -e " ------------------------------------------------------------------------------"
-    echo -e " \e[1mAsunto:\e[0m Aplicación falla con SELinux habilitado"
-    echo -e " \e[1mSeveridad:\e[0m Crítica / Cumplimiento de Seguridad"
+    echo -e " \e[1mAsunto:\e[0m Contenedor web inaccesible (Connection Refused)"
+    echo -e " \e[1mSeveridad:\e[0m Alta / Infraestructura DevOps"
     echo -e ""
     echo -e " \e[1mDescripción:\e[0m"
-    echo -e " La unidad 'secure-app.service' arroja errores de permisos al intentar arrancar"
-    echo -e " si el sistema está protegido. Adicionalmente, requiere un ajuste en sysctl."
-    echo -e " NO altere el modo global de SELinux (debe permanecer Enforcing)."
+    echo -e " El servicio 'container-webapp.service' no puede inicializar el servidor web"
+    echo -e " debido a fallas de políticas AVC de SELinux sobre /opt/web_data."
+    echo -e " Adicionalmente, el tráfico externo no logra alcanzar el puerto 8080."
     echo -e ""
     echo -e " \e[1mRequerimientos de Validación (Peso Total: 100%):\e[0m"
-    echo -e "  [ ] Mantener SELinux en modo Enforcing                         --> \e[1;35m25%\e[0m"
-    echo -e "  [ ] Corregir permanentemente el fcontext de /custom_data(/.*)? --> \e[1;35m35%\e[0m"
-    echo -e "  [ ] Servicio 'secure-app.service' activo y en ejecución        --> \e[1;35m25%\e[0m"
-    echo -e "  [ ] Cambiar de forma persistente 'vm.max_map_count=262144'     --> \e[1;35m15%\e[0m"
+    echo -e "  [ ] Corregir el montaje SELinux con la bandera ':Z' en la unidad -> \e[1;35m30%\e[0m"
+    echo -e "  [ ] Servicio 'container-webapp.service' en estado Running       -> \e[1;35m25%\e[0m"
+    echo -e "  [ ] Puerto 8080/tcp abierto permanentemente en firewalld      -> \e[1;35m25%\e[0m"
+    echo -e "  [ ] 'curl localhost:8080' devuelve HTTP 200                    -> \e[1;35m20%\e[0m"
     echo -e " ------------------------------------------------------------------------------"
-    echo -e " \e[1;32mMisión:\e[0m Use 'ausearch' o revise '/var/log/audit/audit.log', aplique parches y estabilice.\e[0m"
-    echo -e "\e[1;36m================================================================================\e[0m"
-    echo ""
-	
-	
-    echo "El laboratorio está listo. Tu misión comienza ahora."
+    echo -e " \e[1;32mMisión:\e[0m Inspeccione journalctl, arregle el montaje y abra la red.\e[0m"
+    echo -e "\e[1;36m========================================================================\e[0m"
   SHELL
 end
