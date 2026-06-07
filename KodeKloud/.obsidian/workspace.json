@@ -201,8 +201,14 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "fe9da27ba1f1a9a4",
+  "active": "71e502a7760e2595",
   "lastOpenFiles": [
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Vagrant/Vagrantfile",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Vagrant",
+    "01 - Linux/Vagrant/Vagrantfile",
+    "01 - Linux/Vagrant",
+    "Vagrant/Vagrantfile",
+    "Vagrant",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V1.md",
@@ -229,16 +235,10 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit) - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-001 - Estructuras de archivos complejas y consistencia de Inodos - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit) - V1.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V1.md",
     "Accenture",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds",
-    "01 - Linux/03 - Advanced Bash Scripting/06 - Globs",
-    "01 - Linux/03 - Advanced Bash Scripting/05 - Expansions - Part One",
-    "DevOps",
-    "100-Days-DevOps/Seguimiento",
     "LINUX/00 - qui/Sem título.canvas",
     "Advanced Bash Scripting/01 - Introduction.canvas",
     "ChatGPT Image 19 de abr. de 2026, 07_59_54.png"

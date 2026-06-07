@@ -33,33 +33,51 @@ Validacion:
   - Objetivo: El parámetro de kernel vm.max_map_count está fijado de forma persistente en 262144.
     Peso: 15 %
 Calificacion Final:
-Script: |-
-  cat << 'EOF' > /tmp/setup_sh
-  #!/bin/bash
-  set -e
+VM Vagrant: |-
+  Vagrant.configure("2") do |config|
+    # Usamos la caja oficial de Rocky Linux 9 para KVM
+    config.vm.box = "generic/rocky9"
+    
+    # Configuración de recursos para KVM
+    config.vm.provider :libvirt do |libvirt|
+      libvirt.memory = 2048   # 2 GB de RAM
+      libvirt.cpus = 2        # 2 CPUs
+    end
 
-  # 1. Asegurar que las herramientas de SELinux e inspección estén instaladas
-  dnf install -y policycoreutils-python-utils procps-ng 2>/dev/null || true
+    # Provisioning: Configuración automática para tu laboratorio SELinux
+    config.vm.provision "shell", inline: <<-SHELL
+      # Instalamos herramientas necesarias
+      dnf install -y policycoreutils-python-utils setroubleshoot procps-ng
+      
+      # Aseguramos que SELinux esté en modo enforcing
+      setenforce 1
+      sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
 
-  # 2. Forzar modo Enforcing en tiempo de ejecución
-  setenforce 1 2>/dev/null || true
+      # =========================================================
+      # Configuramos el incidente INC-1006 automáticamente
+      # =========================================================
 
-  # 3. Crear entorno de la aplicación y el archivo de datos bloqueado por contexto
-  mkdir -p /custom_data
-  cat << 'DATA' > /custom_data/app.conf
-  # Secure App Configuration File
-  DB_CONN=localhost
-  DATA
-  # Cambiar deliberadamente el contexto a uno restrictivo (por ejemplo, el de SSH) para forzar el bloqueo de lectura
-  chcon -t sshd_key_t /custom_data/app.conf
-  chcon -t sshd_key_t /custom_data
+      # --- Escenario 1: Contexto SELinux incorrecto en /custom_data ---
+      mkdir -p /custom_data
+      echo "# Secure App Configuration File" > /custom_data/app.conf
+      echo "DB_CONN=localhost" >> /custom_data/app.conf
+      # Aplicamos el contexto restrictivo incorrecto (sshd_key_t) para que el servicio falle
+      semanage fcontext -a -t sshd_key_t "/custom_data(/.*)?"
+      restorecon -Rv /custom_data
 
-  # 4. Crear el binario que simula la lectura del archivo
-  mkdir -p /opt/secure-app
-  cat << 'APP' > /opt/secure-app/secure-binary
+      # --- Escenario 2: Valor incorrecto de vm.max_map_count (persistente y en caliente) ---
+      # Se escribe el valor incorrecto en el archivo de configuración persistente
+      # El alumno deberá corregirlo tanto en el archivo como en runtime
+      echo "vm.max_map_count=65530" > /etc/sysctl.d/99-secure-app.conf
+      sysctl -w vm.max_map_count=65530
+
+      # =========================================================
+      # Creamos el binario y el servicio
+      # =========================================================
+      mkdir -p /opt/secure-app
+      cat << 'APP' > /opt/secure-app/secure-binary
   #!/bin/bash
   echo "Intentando leer archivo de configuración altamente protegido..."
-  # Si SELinux bloquea, el "cat" fallará con Permission Denied aunque seas root
   if ! cat /custom_data/app.conf >/dev/null 2>&1; then
       echo "[$(date +'%T')] CRITICAL: SELinux AVC Denial detectado al leer /custom_data/app.conf" >&2
       exit 1
@@ -67,10 +85,9 @@ Script: |-
   echo "Acceso concedido al archivo de configuración."
   while true; do sleep 10; done
   APP
-  chmod 755 /opt/secure-app/secure-binary
+      chmod 755 /opt/secure-app/secure-binary
 
-  # 5. Crear la unidad del servicio de Systemd
-  cat << 'SER' > /etc/systemd/system/secure-app.service
+      cat << 'SER' > /etc/systemd/system/secure-app.service
   [Unit]
   Description=Secure Corporative Application Service
   After=network.target
@@ -83,38 +100,36 @@ Script: |-
   [Install]
   WantedBy=multi-user.target
   SER
+      systemctl daemon-reload
 
-  # 6. Alterar el parámetro de kernel actual para que esté incorrecto
-  sysctl -w vm.max_map_count=65530 >/dev/null 2>&1 || true
-
-  systemctl daemon-reload
-  systemctl stop secure-app.service 2>/dev/null || true
-
-  clear
-  echo -e "\e[1;36m================================================================================\e[0m"
-  echo -e "\e[1;31m 🚀 ESCENARIO PG-006 CONFIGURADO - CONTROL DE ACCESO (SELINUX) ACTIVO\e[0m"
-  echo -e "\e[1;36m================================================================================\e[0m"
-  echo -e "\e[1;33m TICKET DE INCIDENTE: INC-1006\e[0m"
-  echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1mAsunto:\e[0m Aplicación falla con SELinux habilitado"
-  echo -e " \e[1mSeveridad:\e[0m Crítica / Cumplimiento de Seguridad"
-  echo -e ""
-  echo -e " \e[1mDescripción:\e[0m"
-  echo -e " La unidad 'secure-app.service' arroja errores de permisos al intentar arrancar"
-  echo -e " si el sistema está protegido. Adicionalmente, requiere un ajuste en sysctl."
-  echo -e " NO altere el modo global de SELinux (debe permanecer Enforcing)."
-  echo -e ""
-  echo -e " \e[1mRequerimientos de Validación (Peso Total: 100%):\e[0m"
-  echo -e "  [ ] Mantener SELinux en modo Enforcing                         --> \e[1;35m25%\e[0m"
-  echo -e "  [ ] Corregir permanentemente el fcontext de /custom_data(/.*)? --> \e[1;35m35%\e[0m"
-  echo -e "  [ ] Servicio 'secure-app.service' activo y en ejecución        --> \e[1;35m25%\e[0m"
-  echo -e "  [ ] Cambiar de forma persistente 'vm.max_map_count=262144'     --> \e[1;35m15%\e[0m"
-  echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1;32mMisión:\e[0m Use 'ausearch' o revise '/var/log/audit/audit.log', aplique parches y estabilice.\e[0m"
-  echo -e "\e[1;36m================================================================================\e[0m"
-  echo ""
-  EOF
-  bash /tmp/setup_sh && rm -f /tmp/setup_sh
+      # =========================================================
+      # Mostrar el ticket INC-1006 en pantalla
+      # =========================================================
+      echo -e "\e[1;36m================================================================================\e[0m"
+      echo -e "\e[1;31m 🚀 ESCENARIO PG-006 CONFIGURADO - CONTROL DE ACCESO (SELINUX) ACTIVO\e[0m"
+      echo -e "\e[1;36m================================================================================\e[0m"
+      echo -e "\e[1;33m TICKET DE INCIDENTE: INC-1006\e[0m"
+      echo -e " ------------------------------------------------------------------------------"
+      echo -e " \e[1mAsunto:\e[0m Aplicación falla con SELinux habilitado"
+      echo -e " \e[1mSeveridad:\e[0m Crítica / Cumplimiento de Seguridad"
+      echo -e ""
+      echo -e " \e[1mDescripción:\e[0m"
+      echo -e " La unidad 'secure-app.service' arroja errores de permisos al intentar arrancar"
+      echo -e " si el sistema está protegido. Adicionalmente, requiere un ajuste en sysctl."
+      echo -e " NO altere el modo global de SELinux (debe permanecer Enforcing)."
+      echo -e ""
+      echo -e " \e[1mRequerimientos de Validación (Peso Total: 100%):\e[0m"
+      echo -e "  [ ] Mantener SELinux en modo Enforcing                         --> \e[1;35m25%\e[0m"
+      echo -e "  [ ] Corregir permanentemente el fcontext de /custom_data(/.*)? --> \e[1;35m35%\e[0m"
+      echo -e "  [ ] Servicio 'secure-app.service' activo y en ejecución        --> \e[1;35m25%\e[0m"
+      echo -e "  [ ] Cambiar de forma persistente 'vm.max_map_count=262144'     --> \e[1;35m15%\e[0m"
+      echo -e " ------------------------------------------------------------------------------"
+      echo -e " \e[1;32mMisión:\e[0m Use 'ausearch' o revise '/var/log/audit/audit.log', aplique parches y estabilice.\e[0m"
+      echo -e "\e[1;36m================================================================================\e[0m"
+      echo ""
+      echo "El laboratorio está listo. Tu misión comienza ahora."
+    SHELL
+  end
 tags:
   - Laboratorios-del-LFCS
 Script Validacion: |-
@@ -176,3 +191,12 @@ Script Validacion: |-
 [[Laboratorios del LFCS]]
 
 ---
+I recently worked a critical security incident where a corporate application called **secure-app** was failing to start on a production server running Rocky Linux 9.7. The development team had discovered that running `setenforce 0` fixed the issue, but company policy strictly requires all production servers to run SELinux in Enforcing mode, so that workaround was off the table.
+
+My first step was to audit the SELinux context assigned to the application's data directory, `/custom_data`. I found it had been labeled with `sshd_key_t`, a context reserved for SSH private keys — completely wrong for an application directory, and exactly the kind of misconfiguration that SELinux would silently block in Enforcing mode.
+
+I corrected this permanently using `semanage fcontext` to register the proper `httpd_sys_content_t` context in the SELinux policy, then ran `restorecon -Rv` to relabel the existing files immediately. This approach ensures the correct context survives system reboots and full filesystem relabels, unlike `chcon` which is only temporary.
+
+Additionally, the application required the kernel parameter `vm.max_map_count` set to `262144` — above the system default of `65530`. I configured this persistently by creating `/etc/sysctl.d/99-secure-app.conf`, which is automatically loaded by `systemd-sysctl` on every boot, and applied it immediately at runtime without requiring a restart.
+
+With both fixes in place, I restarted the service and confirmed it came up cleanly — `active (running)`, SELinux still in Enforcing mode, no AVC denials. The system is now compliant with security policy and the application is fully operational.
