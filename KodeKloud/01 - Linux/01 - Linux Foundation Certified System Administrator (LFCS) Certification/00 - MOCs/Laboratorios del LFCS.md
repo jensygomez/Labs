@@ -17,7 +17,8 @@ tags:
 | [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V2]]  |        |              |                                 |
 | [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V1]]       | 50 min | `06/06/2026` | <input type="checkbox" checked> |
 | [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V2]]       |        |              |                                 |
-| [[PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V1]]               |        |              |                                 |
+| [[PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V1]]          | 30 min | `06/06/2026` | <input type="checkbox" checked> |
+| [[PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V2]]          |        |              |                                 |
 | [[PG-007 - Triage de Incidente Mayor y Restauración de Servicios Críticos (Examen Integrador)]]       |        |              |                                 |
 | **Operations Deployments**                                                                            |        |              |                                 |
 | [[PG-001 - db-backup.service no inicia - V1]]                                                         | 15 min | `03/05/2026` | <input type="checkbox" checked> |
@@ -45,7 +46,6 @@ tags:
 | [[PG-BASH-001 - Inventario automático de servidores - V1]]                                            | 50 min | `06/06/2026` | <input type="checkbox" checked> |
 | [[PG-BASH-001 - Inventario automático de servidores - V2]]                                            |        |              |                                 |
 | [[PG-BASH-002 - Rotación y compresión de logs - V1]]                                                  |        |              |                                 |
-|                                                                                                       |        |              |                                 |
 |                                                                                                       |        |              |                                 |
 |                                                                                                       |        |              |                                 |
 
@@ -111,4 +111,4 @@ tags:
 285 Tareas
 201.41 Peso
 70.67 % total
-horas Totales 34:30 horas + Playgrounds 6:20 horas
+horas Totales 34:30 horas + Playgrounds 6:50 horas

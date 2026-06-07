@@ -158,3 +158,4 @@ Script Validacion: |-
   echo "CALIFICACIÓN FINAL: $PUNTOS / 100"
   echo "============================"
 ---
+[[Laboratorios del LFCS]]
