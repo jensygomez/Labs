@@ -401,6 +401,7 @@ Infra Base: |-
   bash /tmp/infra_base.sh && rm -f /tmp/infra_base.sh
 Script Break: |-
   cat << 'BREAKOUT' > /tmp/script_break.sh
+
   #!/bin/bash
   # =============================================================================
   # LFCS NETWORKING LABS
@@ -427,7 +428,7 @@ Script Break: |-
   # ==============================================================
   # 1. DETENER SERVICIOS
   # ==============================================================
-  echo "[1] Deteniendo servicios"
+  #echo "[1] Deteniendo servicios"
   sleep 1
   systemctl stop nginx   2>/dev/null || true
   systemctl stop named   2>/dev/null || true
@@ -437,7 +438,7 @@ Script Break: |-
   # ==============================================================
   # 2. HOSTNAME INCORRECTO
   # ==============================================================
-  echo "[2] Cambiando hostname"
+  #echo "[2] Cambiando hostname"
   sleep 1
   echo "broken-host" > /etc/hostname
   hostname broken-host
@@ -445,7 +446,7 @@ Script Break: |-
   # ==============================================================
   # 3. CORROMPER DNS
   # ==============================================================
-  echo "[3] Rompiendo DNS"
+  #echo "[3] Rompiendo DNS"
   sleep 1
   sed -i 's/192.168.100.20/10.0.0.99/'      /var/named/corp.internal.db
   sed -i 's/fd00:dead:beef::20/2001:db8::bad/' /var/named/corp.internal.db
@@ -453,7 +454,7 @@ Script Break: |-
   # ==============================================================
   # 4. SSH EN PUERTO INCORRECTO
   # ==============================================================
-  echo "[4] Cambiando SSH"
+  #echo "[4] Cambiando SSH"
   sleep 1
   sed -i 's/^Port 2222/Port 2223/' /etc/ssh/sshd_config
   systemctl start sshd 2>/dev/null || true
@@ -461,7 +462,7 @@ Script Break: |-
   # ==============================================================
   # 5. DESHABILITAR IPv6 EN web01
   # ==============================================================
-  echo "[5] IPv6"
+  #echo "[5] IPv6"
   sleep 1
   sysctl -w net.ipv6.conf.dummy0.disable_ipv6=1 >/dev/null
 
