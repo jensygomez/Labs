@@ -10,9 +10,13 @@ Objetivo:
   - Pensar como Sysadmin Linux Pleno
 Historia: Recuperación de infraestructura tras migración de red
 Infraestructura: |-
-  admin-client
-  web01
-  dns01
+  Host CentOS Stream 9
+  │
+  ├── Namespace admin-client -->  192.168.100.10
+  │
+  ├── Namespace web01 -->  192.168.100.20
+  │
+  └── Namespace dns01 -->  192.168.100.53
 Temas: |-
   - Configure IPv4 and IPv6 Networking and Hostname Resolution
   - Start, Stop and Check Status of Network Services
