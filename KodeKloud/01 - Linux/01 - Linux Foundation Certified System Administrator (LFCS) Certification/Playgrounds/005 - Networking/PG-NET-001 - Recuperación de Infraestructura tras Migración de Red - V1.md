@@ -50,6 +50,75 @@ Validacion: |-
   Peso: 10 %
 tags:
   - Laboratorios-del-LFCS
+Infra Base: |-
+  #!/bin/bash
+  set -e
+
+  if [ "$EUID" -ne 0 ]; then
+      echo "Ejecutar como root"
+      exit 1
+  fi
+
+  # Limpieza previa
+  for ns in admin-client web01 dns01; do
+      ip netns del $ns 2>/dev/null || true
+  done
+  ip link del corp-br0 2>/dev/null || true
+
+  # Crear namespaces
+  ip netns add admin-client
+  ip netns add web01
+  ip netns add dns01
+
+  # Bridge (con MAC fija opcional)
+  ip link add corp-br0 type bridge
+  ip link set dev corp-br0 address 02:00:00:00:00:01  # opcional
+  ip link set corp-br0 down
+  ip addr replace 192.168.100.1/24 dev corp-br0
+  ip link set corp-br0 up
+
+  # Crear veths con nombres cortos (máx 15 chars)
+  ip link add veth-adm type veth peer name eth0 netns admin-client
+  ip link set veth-adm master corp-br0
+  ip link set veth-adm up
+
+  ip link add veth-web type veth peer name eth0 netns web01
+  ip link set veth-web master corp-br0
+  ip link set veth-web up
+
+  ip link add veth-dns type veth peer name eth0 netns dns01
+  ip link set veth-dns master corp-br0
+  ip link set veth-dns up
+
+  # Configurar IPs
+  ip netns exec admin-client ip addr add 192.168.100.10/24 dev eth0
+  ip netns exec admin-client ip link set lo up
+  ip netns exec admin-client ip link set eth0 up
+  ip netns exec admin-client ip route add default via 192.168.100.1
+
+  ip netns exec web01 ip addr add 192.168.100.20/24 dev eth0
+  ip netns exec web01 ip link set lo up
+  ip netns exec web01 ip link set eth0 up
+  ip netns exec web01 ip route add default via 192.168.100.1
+
+  ip netns exec dns01 ip addr add 192.168.100.53/24 dev eth0
+  ip netns exec dns01 ip link set lo up
+  ip netns exec dns01 ip link set eth0 up
+  ip netns exec dns01 ip route add default via 192.168.100.1
+
+  # Accesos rápidos
+  mkdir -p /tmp/bin
+  for ns in admin-client web01 dns01; do
+      cat > /tmp/bin/ssh-$ns <<EOF
+  #!/bin/bash
+  ip netns exec $ns bash
+  EOF
+      chmod +x /tmp/bin/ssh-$ns
+  done
+  echo 'export PATH=/tmp/bin:$PATH' >> ~/.bashrc
+  export PATH=/tmp/bin:$PATH
+
+  echo "Despliegue exitoso"
 Script:
 Script Validacion:
 ---
