@@ -44,11 +44,13 @@ tags:
 | [[PG-003 - Gestión de privilegios y control de acceso (Sudoers, PAM y NSSwitch)]]                     |        |              |                                 |
 | [[PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora)]]                  |        |              |                                 |
 |                                                                                                       |        |              |                                 |
+| **Networking**                                                                                        |        |              |                                 |
+| [[PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1]]                           | 30 min | `08/06/2026` |                                 |
+|                                                                                                       |        |              |                                 |
 | **Bash Avanzado**                                                                                     |        |              |                                 |
 | [[PG-BASH-001 - Inventario automático de servidores - V1]]                                            | 50 min | `06/06/2026` | <input type="checkbox" checked> |
 | [[PG-BASH-001 - Inventario automático de servidores - V2]]                                            |        |              |                                 |
 | [[PG-BASH-002 - Rotación y compresión de logs - V1]]                                                  |        |              |                                 |
-|                                                                                                       |        |              |                                 |
 |                                                                                                       |        |              |                                 |
 |                                                                                                       |        |              |                                 |
 

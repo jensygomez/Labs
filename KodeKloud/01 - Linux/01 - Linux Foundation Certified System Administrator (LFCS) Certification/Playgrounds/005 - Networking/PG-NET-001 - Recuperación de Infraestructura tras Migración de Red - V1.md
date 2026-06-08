@@ -399,8 +399,147 @@ Infra Base: |-
 
   EOF
   bash /tmp/infra_base.sh && rm -f /tmp/infra_base.sh
-Script Break:
+Script Break: |-
+  cat << 'BREAKOUT' > /tmp/script_break.sh
+  #!/bin/bash
+  # =============================================================================
+  # LFCS NETWORKING LABS
+  # LAB 01 - Recuperación tras migración de red
+  # NIVEL A - Dificultad 5/10 | Guiado | Un problema por tarea
+  # =============================================================================
+
+  set -Eeuo pipefail
+  trap 'echo "ERROR en ${BASH_SOURCE}:${LINENO}:${FUNCNAME:-}"' ERR
+
+  if [ "$EUID" -ne 0 ]; then
+      echo "Ejecutar como root"
+      exit 1
+  fi
+
+  # Verificar que la infra base fue ejecutada
+  if ! systemctl is-active nginx &>/dev/null && ! command -v nginx &>/dev/null; then
+      echo "[ERROR] Ejecuta primero el script infra_base.sh"
+      exit 1
+  fi
+
+  echo "[BREAK] Aplicando fallos controlados - Lab01 Nivel A..."
+
+  # ==============================================================
+  # 1. DETENER SERVICIOS
+  # ==============================================================
+  echo "[1] Deteniendo servicios"
+  sleep 1
+  systemctl stop nginx   2>/dev/null || true
+  systemctl stop named   2>/dev/null || true
+  systemctl stop chronyd 2>/dev/null || true
+  systemctl stop sshd    2>/dev/null || true
+
+  # ==============================================================
+  # 2. HOSTNAME INCORRECTO
+  # ==============================================================
+  echo "[2] Cambiando hostname"
+  sleep 1
+  echo "broken-host" > /etc/hostname
+  hostname broken-host
+
+  # ==============================================================
+  # 3. CORROMPER DNS
+  # ==============================================================
+  echo "[3] Rompiendo DNS"
+  sleep 1
+  sed -i 's/192.168.100.20/10.0.0.99/'      /var/named/corp.internal.db
+  sed -i 's/fd00:dead:beef::20/2001:db8::bad/' /var/named/corp.internal.db
+
+  # ==============================================================
+  # 4. SSH EN PUERTO INCORRECTO
+  # ==============================================================
+  echo "[4] Cambiando SSH"
+  sleep 1
+  sed -i 's/^Port 2222/Port 2223/' /etc/ssh/sshd_config
+  systemctl start sshd 2>/dev/null || true
+
+  # ==============================================================
+  # 5. DESHABILITAR IPv6 EN web01
+  # ==============================================================
+  echo "[5] IPv6"
+  sleep 1
+  sysctl -w net.ipv6.conf.dummy0.disable_ipv6=1 >/dev/null
+
+  # ==============================================================
+  # 6. FIREWALL ULTRARRESTRICTIVO
+  # ==============================================================
+  echo "[6] Firewall"
+  sleep 1
+  iptables -F
+  iptables -P INPUT DROP
+  iptables -P FORWARD DROP
+  iptables -P OUTPUT DROP
+
+  iptables -A INPUT -i lo -j ACCEPT
+  iptables -A OUTPUT -o lo -j ACCEPT
+  iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+  iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+  iptables -A INPUT -p tcp --dport 2222 -j ACCEPT
+  iptables -A OUTPUT -p tcp --sport 2222 -j ACCEPT
+  iptables -A INPUT -p icmp -j ACCEPT
+  iptables -A OUTPUT -p icmp -j ACCEPT
+
+  # ==============================================================
+  # MOSTRAR TICKET
+  # ==============================================================
+  clear
+  echo -e "\e[1;36m================================================================================\e[0m"
+  echo -e "\e[1;32m LFCS NETWORKING LABS | LAB-01 | NIVEL A (5/10)\e[0m"
+  echo -e "\e[1;36m================================================================================\e[0m"
+  echo -e "\e[1;33m TICKET: INC-NET-001\e[0m"
+  echo -e " Asunto:    Migración de red - Servicios críticos no operativos"
+  echo -e " Severidad: Alta"
+  echo -e " Fecha:     $(date '+%Y-%m-%d')"
+  echo -e " --------------------------------------------------------------------------------"
+  echo -e "\e[1;36m CONTEXTO:\e[0m"
+  echo -e ""
+  echo -e "   El equipo de infraestructura migró la red corporativa de 10.0.0.0/24"
+  echo -e "   a 192.168.100.0/24 con soporte IPv6 (fd00:dead:beef::/64)."
+  echo -e "   Al finalizar la ventana de mantenimiento, varios servicios críticos"
+  echo -e "   no responden. El equipo de operaciones necesita restaurarlos antes"
+  echo -e "   de las 08:00 UTC."
+  echo -e ""
+  echo -e " --------------------------------------------------------------------------------"
+  echo -e "\e[1;36m PROBLEMAS DETECTADOS:\e[0m"
+  echo -e ""
+  echo -e "   ✗ nginx detenido — el portal web no responde"
+  echo -e "   ✗ IPv6 deshabilitado en la interfaz web01"
+  echo -e "   ✗ Hostname incorrecto (no es web01.corp.internal)"
+  echo -e "   ✗ DNS resuelve web01 a IP incorrecta (10.0.0.99)"
+  echo -e "   ✗ SSH escucha en puerto 2223 (debe ser 2222)"
+  echo -e "   ✗ Firewall bloquea todo excepto ping"
+  echo -e "   ✗ chronyd detenido — sin sincronización horaria"
+  echo -e ""
+  echo -e " --------------------------------------------------------------------------------"
+  echo -e "\e[1;36m CRITERIOS DE ÉXITO:\e[0m"
+  echo -e ""
+  echo -e "   [ ] curl http://192.168.100.20/         → Portal Corporativo"
+  echo -e "   [ ] curl -6 http://[fd00:dead:beef::20]/ → Portal Corporativo"
+  echo -e "   [ ] hostname                             → web01.corp.internal"
+  echo -e "   [ ] dig web01.corp.internal @192.168.100.53 → 192.168.100.20"
+  echo -e "   [ ] ss -tlnp | grep sshd                → puerto 2222"
+  echo -e "   [ ] systemctl is-active nginx named chronyd sshd → active"
+  echo -e "   [ ] iptables -L INPUT | grep 80          → ACCEPT"
+  echo -e "   [ ] chronyc tracking                     → Reference ID OK"
+  echo -e ""
+  echo -e " --------------------------------------------------------------------------------"
+  echo -e "\e[1;33m NIVEL A - GUIADO:\e[0m"
+  echo -e "   Cada tarea tiene un solo problema. Resolvé en este orden:"
+  echo -e "   1. Hostname  2. IPv6  3. nginx  4. Firewall  5. DNS  6. SSH  7. Chrony"
+  echo -e " --------------------------------------------------------------------------------"
+  echo -e "\e[1;33m TIEMPO ESTIMADO: 30 minutos\e[0m"
+  echo -e "\e[1;36m================================================================================\e[0m"
+  echo ""
+  BREAKOUT
+  chmod +x /tmp/script_break.sh 
+  bash /tmp/script_break.sh
 Script Validacion: |-
+  
   cat << 'EOF' > /tmp/script_break.sh#!/bin/bash
 
   # =============================================================================
