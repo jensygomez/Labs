@@ -308,11 +308,11 @@ Infra Base: |-
   CHRONYCONF
 
   mkdir -p /etc/systemd/system/chronyd.service.d/
-  cat > /etc/systemd/system/chronyd.service.d/override.conf << 'EOF'
+  cat > /etc/systemd/system/chronyd.service.d/override.conf << '_EOF_'
   [Service]
   ExecStart=
   ExecStart=/usr/sbin/chronyd -x $OPTIONS
-  EOF
+  _EOF_
 
   systemctl daemon-reload
   systemctl enable chronyd
@@ -399,172 +399,29 @@ Infra Base: |-
 
   EOF
   bash /tmp/infra_base.sh && rm -f /tmp/infra_base.sh
-Script Break: |-
-  cat << 'EOF' > /tmp/script_break.sh
-  #!/bin/bash
-
-  set -e
-
-  if [ "$EUID" -ne 0 ]; then
-      echo "Ejecutar como root"
-      exit 1
-  fi
-
-  # Verificar que los namespaces existen
-  for ns in admin-client web01 dns01; do
-      if ! ip netns list | grep -q "$ns"; then
-          echo "[ERROR] El namespace $ns no existe. Ejecuta primero lfcs-net-base.sh"
-          exit 1
-      fi
-  done
-
-  echo "[BREAK] Aplicando fallos controlados para el laboratorio..."
-
-  # ============================================
-  # 1. DETENER SERVICIOS (sin systemctl)
-  # ============================================
-  ip netns exec web01 pkill -f nginx 2>/dev/null || true
-  ip netns exec dns01 pkill -f named 2>/dev/null || true
-  ip netns exec web01 pkill -f chronyd 2>/dev/null || true
-
-  # ============================================
-  # 2. CAMBIAR PUERTO SSH
-  # ============================================
-  ip netns exec web01 sed -i 's/^Port 2222/Port 2223/' /etc/ssh/sshd_config 2>/dev/null || true
-  ip netns exec web01 /usr/sbin/sshd 2>/dev/null || true
-
-  # ============================================
-  # 3. HOSTNAME INCORRECTO
-  # ============================================
-  ip netns exec web01 hostname broken-web 2>/dev/null || true
-
-  # ============================================
-  # 4. CORROMPER DNS (cambiar IP de web01)
-  # ============================================
-  ip netns exec dns01 bash -c "
-  if [ -f /var/named/corp.internal.db ]; then
-      sed -i 's/192.168.100.20/10.0.0.99/' /var/named/corp.internal.db
-      sed -i 's/fd00:dead:beef::20/2001:db8::bad/' /var/named/corp.internal.db
-      pkill -HUP named 2>/dev/null || true
-  fi
-  "
-
-  # ============================================
-  # 5. FIREWALL ULTRARRESTRICTIVO (solo ping)
-  # ============================================
-  ip netns exec web01 iptables -F
-  ip netns exec web01 iptables -P INPUT DROP
-  ip netns exec web01 iptables -P FORWARD DROP
-  ip netns exec web01 iptables -P OUTPUT DROP
-  ip netns exec web01 iptables -A INPUT -i lo -j ACCEPT
-  ip netns exec web01 iptables -A OUTPUT -o lo -j ACCEPT
-  ip netns exec web01 iptables -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
-  ip netns exec web01 iptables -A OUTPUT -p icmp --icmp-type echo-reply -j ACCEPT
-
-  # ============================================
-  # 6. DESHABILITAR IPv6 EN EL BRIDGE
-  # ============================================
-  sysctl -w net.ipv6.conf.corp-br0.disable_ipv6=1 >/dev/null
-
-  # ============================================
-  # 7. PÁGINA WEB DE ERROR
-  # ============================================
-  ip netns exec web01 bash -c "echo '503 Servicio no disponible - Mantenimiento' > /usr/share/nginx/html/index.html 2>/dev/null || true"
-
-  # ============================================
-  # 8. MOSTRAR TICKET MEJORADO (con historia)
-  # ============================================
-  clear
-  echo -e "\e[1;36m================================================================================\e[0m"
-  echo -e "\e[1;32m 🔧 LABORATORIO DE RECUPERACIÓN (PG-NET-001) - MODO BREAK\e[0m"
-  echo -e "\e[1;36m================================================================================\e[0m"
-  echo -e "\e[1;33m TICKET DE INCIDENTE: INC-MIGRA-2026\e[0m"
-  echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1mAsunto:\e[0m Migración de red corporativa - Servicios críticos no operativos"
-  echo -e " \e[1mSeveridad:\e[0m Alta"
-  echo -e " \e[1mFecha:\e[0m 2026-06-08"
-  echo -e " ------------------------------------------------------------------------------"
-  echo -e "\e[1;36m 📖 CONTEXTO DEL INCIDENTE:\e[0m"
-  echo -e ""
-  echo -e "   El área de infraestructura realizó una migración planificada de toda la red"
-  echo -e "   corporativa desde el rango 10.0.0.0/24 a 192.168.100.0/24 e implementación"
-  echo -e "   de IPv6 (fd00:dead:beef::/64) por requisitos de crecimiento y compliance."
-  echo -e ""
-  echo -e "   Durante la ventana de mantenimiento (02:00 - 04:00 UTC), se reconfiguraron"
-  echo -e "   los namespaces de red, el bridge y los veths. Sin embargo, al finalizar,"
-  echo -e "   varios servicios críticos no responden según lo esperado:"
-  echo -e ""
-  echo -e "     - El portal web interno (web01) no entrega contenido."
-  echo -e "     - El DNS interno (dns01) resuelve con direcciones antiguas."
-  echo -e "     - El firewall quedó en modo ultra-restrictivo bloqueando accesos."
-  echo -e "     - La sincronización horaria está deshabilitada."
-  echo -e "     - El acceso SSH de administración cambió de puerto."
-  echo -e ""
-  echo -e "   El equipo de operaciones reporta que los desarrolladores no pueden acceder"
-  echo -e "   al portal y los logs del sistema muestran errores de conexión. El directorio"
-  echo -e "   corporativo exige que el 100% de estos servicios estén operativos antes de"
-  echo -e "   las 08:00 UTC. Quedan 90 minutos."
-  echo -e ""
-  echo -e " ------------------------------------------------------------------------------"
-  echo -e "\e[1;36m 🔍 PROBLEMAS DETECTADOS (debes corregir):\e[0m"
-  echo -e ""
-  echo -e "   ✗ El servidor web no responde (nginx detenido)."
-  echo -e "   ✗ IPv6 no funciona (deshabilitado en el bridge)."
-  echo -e "   ✗ El hostname no es web01.corp.internal."
-  echo -e "   ✗ DNS resuelve web01 a IP incorrecta (10.0.0.99 en lugar de 192.168.100.20)."
-  echo -e "   ✗ Servicios named, nginx, chronyd no están activos."
-  echo -e "   ✗ SSH escucha en puerto 2223 (debe ser 2222)."
-  echo -e "   ✗ Firewall bloquea todo excepto ping."
-  echo -e "   ✗ No hay sincronización horaria (chronyd detenido)."
-  echo -e "   ✗ La página web muestra error 503."
-  echo -e ""
-  echo -e " ------------------------------------------------------------------------------"
-  echo -e "\e[1;36m ✅ CRITERIOS DE ÉXITO (validación manual):\e[0m"
-  echo -e ""
-  echo -e "   [ ] web01 responde en IPv4 puerto 80 (curl 192.168.100.20)"
-  echo -e "   [ ] web01 responde en IPv6 (curl -6 http://[fd00:dead:beef::20]/)"
-  echo -e "   [ ] El hostname del namespace web01 es web01.corp.internal"
-  echo -e "   [ ] dig web01.corp.internal @192.168.100.53 → IP 192.168.100.20 y IPv6 correcta"
-  echo -e "   [ ] Servicios nginx, named, sshd, chronyd activos y habilitados"
-  echo -e "   [ ] Acceso SSH desde admin-client: ssh -p 2222 root@192.168.100.20"
-  echo -e "   [ ] Sincronización horaria verificada con chronyc tracking"
-  echo -e "   [ ] Reglas iptables permiten tráfico a puertos 80, 2222, 53 (UDP/TCP), 123 (UDP)"
-  echo -e "   [ ] curl http://web01.corp.internal/ muestra la página corporativa"
-  echo -e ""
-  echo -e " ------------------------------------------------------------------------------"
-  echo -e "\e[1;36m 🛠️ RECURSOS Y ACCESOS:\e[0m"
-  echo -e ""
-  echo -e "   • Acceso a namespaces: ssh-admin, ssh-web01, ssh-dns01"
-  echo -e "   • El bridge y las rutas IPv4/IPv6 ya están configurados."
-  echo -e "   • Herramientas sugeridas: ip, ss, iptables, dig, curl, chronyc, journalctl."
-  echo -e ""
-  echo -e " ------------------------------------------------------------------------------"
-  echo -e "\e[1;33m ⏱️ TIEMPO ESTIMADO DE RESOLUCIÓN: 45 minutos\e[0m"
-  echo -e "\e[1;36m================================================================================\e[0m"
-  echo ""
-  EOF
-  bash /tmp/script_break.sh && rm -f /tmp/script_break.sh
+Script Break:
 Script Validacion: |-
-  #!/bin/bash
-  # Script de validación para laboratorio PG-NET-001 (Recuperación de infraestructura)
+  cat << 'EOF' > /tmp/script_break.sh#!/bin/bash
+
+  # =============================================================================
+  # VALIDACIÓN LABORATORIO 01 - Recuperación tras migración de red
+  # Entorno: infra_base.sh (sin namespaces) + break_lab01.sh aplicado
+  # Ejecutar como root
+  # =============================================================================
 
   PUNTOS=0
   TOTAL=100
 
   echo "================================================================================="
-  echo "=== VALIDANDO RECUPERACIÓN DE INFRAESTRUCTURA - PG-NET-001                     ==="
+  echo "=== VALIDANDO RECUPERACIÓN DE INFRAESTRUCTURA - LAB-01 (Nivel A)             ==="
   echo "================================================================================="
 
-  # Helper: comprobar si un comando dentro de namespace tiene éxito
-  check_ns_cmd() {
-      local ns=$1
-      local cmd=$2
-      ip netns exec "$ns" bash -c "$cmd" &>/dev/null
-  }
+  # Helper: ejecutar comando en el host (sin namespace)
+  # No necesitamos ip netns exec, todo está en el host
 
   # 1. Web responde en IPv4 (10%)
-  echo -n "[10%] Comprobando web en IPv4 (192.168.100.20:80) ... "
-  if check_ns_cmd admin-client "curl -s -o /dev/null -w '%{http_code}' 192.168.100.20 | grep -q '200'"; then
+  echo -n "[10%] Comprobando web en IPv4 (http://192.168.100.20:80/) ... "
+  if curl -s -o /dev/null -w '%{http_code}' http://192.168.100.20/ | grep -q '200'; then
       echo "✔ OK"
       PUNTOS=$((PUNTOS + 10))
   else
@@ -572,17 +429,17 @@ Script Validacion: |-
   fi
 
   # 2. Web responde en IPv6 (10%)
-  echo -n "[10%] Comprobando web en IPv6 (fd00:dead:beef::20:80) ... "
-  if check_ns_cmd admin-client "curl -6 -s -o /dev/null -w '%{http_code}' http://[fd00:dead:beef::20]/ | grep -q '200'"; then
+  echo -n "[10%] Comprobando web en IPv6 (http://[fd00:dead:beef::20]:80/) ... "
+  if curl -6 -s -o /dev/null -w '%{http_code}' http://[fd00:dead:beef::20]/ | grep -q '200'; then
       echo "✔ OK"
       PUNTOS=$((PUNTOS + 10))
   else
-      echo "❌ FALLO (no responde IPv6 o no es código 200)"
+      echo "❌ FALLO (IPv6 no responde o código no es 200)"
   fi
 
   # 3. Hostname correcto (web01.corp.internal) (5%)
-  echo -n "[5%] Hostname del namespace web01 ... "
-  HOSTNAME=$(ip netns exec web01 hostname 2>/dev/null)
+  echo -n "[5%] Hostname del sistema ... "
+  HOSTNAME=$(hostname)
   if [ "$HOSTNAME" = "web01.corp.internal" ]; then
       echo "✔ OK ($HOSTNAME)"
       PUNTOS=$((PUNTOS + 5))
@@ -592,8 +449,8 @@ Script Validacion: |-
 
   # 4. Resolución DNS interna (15%)
   echo -n "[15%] Resolución DNS de web01.corp.internal ... "
-  DNS_IPV4=$(ip netns exec admin-client dig +short web01.corp.internal @192.168.100.53 2>/dev/null | head -1)
-  DNS_IPV6=$(ip netns exec admin-client dig +short AAAA web01.corp.internal @192.168.100.53 2>/dev/null | head -1)
+  DNS_IPV4=$(dig +short web01.corp.internal @192.168.100.53 2>/dev/null | head -1)
+  DNS_IPV6=$(dig +short AAAA web01.corp.internal @192.168.100.53 2>/dev/null | head -1)
   if [ "$DNS_IPV4" = "192.168.100.20" ] && [ "$DNS_IPV6" = "fd00:dead:beef::20" ]; then
       echo "✔ OK (IPv4 $DNS_IPV4, IPv6 $DNS_IPV6)"
       PUNTOS=$((PUNTOS + 15))
@@ -602,22 +459,24 @@ Script Validacion: |-
   fi
 
   # 5. Servicios críticos activos (nginx, named, sshd, chronyd) (10%)
-  echo -n "[10%] Servicios activos en web01 y dns01 ... "
+  echo -n "[10%] Servicios activos en el host ... "
   SERVICIOS_OK=0
-  check_ns_cmd web01 "systemctl is-active nginx --quiet" && SERVICIOS_OK=$((SERVICIOS_OK+1))
-  check_ns_cmd web01 "systemctl is-active sshd --quiet" && SERVICIOS_OK=$((SERVICIOS_OK+1))
-  check_ns_cmd web01 "systemctl is-active chronyd --quiet" && SERVICIOS_OK=$((SERVICIOS_OK+1))
-  check_ns_cmd dns01 "systemctl is-active named --quiet" && SERVICIOS_OK=$((SERVICIOS_OK+1))
+  systemctl is-active nginx --quiet && SERVICIOS_OK=$((SERVICIOS_OK+1))
+  systemctl is-active named --quiet && SERVICIOS_OK=$((SERVICIOS_OK+1))
+  systemctl is-active sshd --quiet && SERVICIOS_OK=$((SERVICIOS_OK+1))
+  systemctl is-active chronyd --quiet && SERVICIOS_OK=$((SERVICIOS_OK+1))
   if [ $SERVICIOS_OK -eq 4 ]; then
-      echo "✔ OK (nginx, sshd, chronyd, named activos)"
+      echo "✔ OK (nginx, named, sshd, chronyd activos)"
       PUNTOS=$((PUNTOS + 10))
   else
       echo "❌ FALLO (solo $SERVICIOS_OK/4 servicios activos)"
   fi
 
   # 6. Acceso SSH en puerto corporativo 2222 (15%)
-  echo -n "[15%] SSH en puerto 2222 desde admin-client a web01 ... "
-  if check_ns_cmd admin-client "timeout 3 ssh -o StrictHostKeyChecking=no -p 2222 root@192.168.100.20 'exit' 2>/dev/null"; then
+  echo -n "[15%] SSH en puerto 2222 (conexión local a web01) ... "
+  # Nota: como todo está en el mismo host, conectamos a 127.0.0.1 o a 192.168.100.20
+  # Asumimos que sshd escucha en 0.0.0.0:2222 (configuración base)
+  if timeout 3 ssh -o StrictHostKeyChecking=no -p 2222 root@127.0.0.1 'exit' 2>/dev/null; then
       echo "✔ OK"
       PUNTOS=$((PUNTOS + 15))
   else
@@ -625,8 +484,8 @@ Script Validacion: |-
   fi
 
   # 7. Sincronización horaria (chronyd) (10%)
-  echo -n "[10%] Sincronización horaria en web01 ... "
-  if check_ns_cmd web01 "chronyc tracking | grep -q 'Leap status.*Normal'"; then
+  echo -n "[10%] Sincronización horaria ... "
+  if chronyc tracking 2>/dev/null | grep -q 'Leap status.*Normal'; then
       echo "✔ OK"
       PUNTOS=$((PUNTOS + 10))
   else
@@ -634,25 +493,25 @@ Script Validacion: |-
   fi
 
   # 8. Firewall cumple política (permite 80,2222,53,123) (15%)
-  echo -n "[15%] Política de firewall en web01 ... "
-  WEB01_FW=$(ip netns exec web01 iptables -S INPUT)
-  if echo "$WEB01_FW" | grep -q -- "--dport 80 -j ACCEPT" && \
-     echo "$WEB01_FW" | grep -q -- "--dport 2222 -j ACCEPT" && \
-     echo "$WEB01_FW" | grep -q -- "--dport 53 -j ACCEPT" && \
-     echo "$WEB01_FW" | grep -q -- "--dport 123 -j ACCEPT"; then
+  echo -n "[15%] Política de firewall (reglas INPUT) ... "
+  FW_RULES=$(iptables -S INPUT)
+  if echo "$FW_RULES" | grep -q -- "--dport 80 -j ACCEPT" && \
+     echo "$FW_RULES" | grep -q -- "--dport 2222 -j ACCEPT" && \
+     echo "$FW_RULES" | grep -q -- "--dport 53 -j ACCEPT" && \
+     echo "$FW_RULES" | grep -q -- "--dport 123 -j ACCEPT"; then
       echo "✔ OK (puertos 80,2222,53,123 permitidos)"
       PUNTOS=$((PUNTOS + 15))
   else
-      echo "❌ FALLO (reglas incompletas o incorrectas)"
+      echo "❌ FALLO (faltan reglas para puertos 80/2222/53/123)"
   fi
 
   # 9. Portal web responde contenido esperado (10%)
   echo -n "[10%] Contenido del portal web ... "
-  if check_ns_cmd admin-client "curl -s http://192.168.100.20/ | grep -qi 'infraestructura'"; then
-      echo "✔ OK (contiene texto esperado)"
+  if curl -s http://192.168.100.20/ | grep -qi "Portal Corporativo"; then
+      echo "✔ OK (contiene 'Portal Corporativo')"
       PUNTOS=$((PUNTOS + 10))
   else
-      echo "❌ FALLO (página no contiene la palabra 'infraestructura' o similar)"
+      echo "❌ FALLO (no se encuentra el texto esperado)"
   fi
 
   # Resultado final
@@ -667,7 +526,8 @@ Script Validacion: |-
   else
       echo "❌ NO APTO - Vuelve a leer el ticket y corrige los problemas básicos."
   fi
-  echo "================================================================================="
+  echo "================================================================================="EOF
+  bash /tmp/script_break.sh && rm -f /tmp/script_break.sh
 ---
 
 [[Laboratorios del LFCS]]
