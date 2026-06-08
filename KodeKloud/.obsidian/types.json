@@ -13,7 +13,8 @@
     "Tareas del Lab": "multitext",
     "Preparacion to": "multitext",
     "Objetivo": "multitext",
-    "Competencias": "multitext",
-    "Tema": "multitext"
+    "Competencias": "text",
+    "Tema": "multitext",
+    "Temas": "text"
   }
 }
