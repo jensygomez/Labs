@@ -17,24 +17,6 @@ Competencias:
   - Implementar empaquetados industriales de alta compresión (XZ) aplicando exclusiones multicapa por patrones y tiempo
   - Gestionar y bifurcar flujos de datos complejos en tiempo real mediante descriptores de archivos estructurados
   - Construir pipelines de telemetría forense utilizando expresiones regulares para la detección de anomalías al vuelo
-Ticket: |-
-  INC-8044 (CRÍTICO) - Automatización de Respaldos de Telemetría e Ingeniería de Flujos ante Auditoría
-
-  El equipo de SRE detectó que el espacio en el volumen de logs compartidos se está agotando. SecOps exige un script automatizado inmediato que realice un respaldo forense de alta compresión (XZ) filtrando únicamente la actividad reciente, capture las métricas de error combinadas y deje un reporte de ejecución inmutable para el sistema de monitoreo.
-
-  Requerimientos Técnicos Obligatorios del Ticket:
-  1. Ingeniería de Respaldos Empresariales (Tar + XZ):
-     - Crear un archivo empaquetado y comprimido usando el algoritmo XZ en la ruta `/backup/critical_legacy.tar.xz`.
-     - Debe respaldar el directorio `/var/log/apps_legacy` completo, pero aplicando dos filtros estrictos: NO debe incluir ningún archivo o ruta que contenga la palabra `cache` y SOLAMENTE debe procesar archivos modificados en las últimas 24 horas (Simulado en laboratorio).
-  2. Auditoría y Bifurcación Estricta de Flujos (I/O Redirection):
-     - Ejecute un rastreo mediante `find` en `/var/log/apps_legacy`.
-     - Redirija los resultados exitosos a `/root/audit_success.log`.
-     - Los errores de permisos denegados o advertencias (stderr) deben ser capturados de forma aislada en `/root/audit_errors.log`.
-  3. Pipeline de Telemetría al Vuelo (RegEx Extendido + Gzip):
-     - Extraiga de forma masiva todas las líneas que contengan las cadenas "ERROR", "CRITICAL" o "FATAL" de todos los archivos `.log` en la ruta raíz de la aplicación.
-     - Utilice un único pipeline directo (sin archivos intermedios) para procesar estas líneas, ordenarlas alfabéticamente de forma única (`sort -u`) y guardarlas comprimidas en `/root/telemetry_signals.log.gz`.
-  4. Reporte Operativo Inmutable:
-     - Genere el archivo `/root/backup_status.txt`. La primera línea debe inyectar la marca de tiempo exacta usando el comando `date` bajo el formato "TIMESTAMP: [fecha]" (sobrescribiendo contenido previo). La segunda línea debe concatenar abajo el mensaje "STATUS: OPERACIÓN COMPILADA CON ÉXITO" sin destruir la primera.
 Validacion:
   - Objetivo: Respaldo /backup/critical_legacy.tar.xz operativo bajo algoritmo XZ y exclusiones de caché validadas.
     Peso: 30 %
@@ -61,7 +43,7 @@ Script: |-
   echo "2026-06-05 CRITICAL Database cluster isolated" > /var/log/apps_legacy/core_service/db.log
   echo "2026-06-05 ERROR Connection timeout" > /var/log/apps_legacy/app1.log
   echo "2026-06-05 INFO Pipeline execution normal" > /var/log/apps_legacy/app2.log
-  
+
   # Archivos que deben ser excluidos por patrón de palabra (cache)
   echo "TEMPORARY CORRUPT DATA" > /var/log/apps_legacy/cache_v2/volatile.log
   echo "METRICS STORAGE" > /var/log/apps_legacy/core_service/app_cache.log
@@ -78,22 +60,64 @@ Script: |-
   echo -e "\e[1;36m================================================================================\e[0m"
   echo -e "\e[1;31m 🔥 ESCENARIO AVANZADO CONFIGURADO - ESSENTIAL COMMANDS (PG-004 v2)\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
-  echo -e "\e[1;33m TICKET DE INCIDENTE: INC-8044\e[0m"
+  echo -e "\e[1;33m TICKET DE INCIDENTE: INC-8044 (CRÍTICO)\e[0m"
   echo -e " ------------------------------------------------------------------------------"
   echo -e " \e[1mAsunto:\e[0m Automatización de Respaldos de Telemetría e Ingeniería de Flujos"
   echo -e " \e[1mSeveridad:\e[0m Crítica / Cumplimiento de Auditoría SRE"
   echo -e ""
-  echo -e " \e[1mDescripción:\e[0m"
-  echo -e " Diseñe el empaquetado XZ aplicando exclusiones por antigüedad y patrón corporativo."
-  echo -e " Aísle de forma forense las salidas de diagnóstico y configure la tubería"
-  echo -e " síncrona con expresiones regulares extendidas."
+  echo -e " \e[1mContexto del Incidente:\e[0m"
+  echo -e "  El equipo de SRE emitió una alerta de capacidad. El volumen compartido"
+  echo -e "  de logs está llegando a su límite y la tendencia no da margen de espera."
+  echo -e "  En paralelo, SecOps tiene una auditoría activa y exige evidencia"
+  echo -e "  procesada antes del cierre de ventana. No hay extensión de plazo."
+  echo -e ""
+  echo -e "  La situación tiene cuatro frentes abiertos simultáneamente."
+  echo -e "  Cada uno es independiente en su ejecución, pero todos convergen"
+  echo -e "  en el mismo objetivo: dejar el entorno respaldado, auditado"
+  echo -e "  y con un reporte inmutable que el sistema de monitoreo pueda consumir."
+  echo -e ""
+  echo -e " \e[1mLo que se necesita resolver — cuatro frentes, sin excepción:\e[0m"
+  echo -e ""
+  echo -e "  \e[1;31m1. Respaldo Empresarial con Filtrado Estricto\e[0m"
+  echo -e "     El directorio '/var/log/apps_legacy' debe ser empaquetado y"
+  echo -e "     comprimido con el algoritmo XZ hacia '/backup/critical_legacy.tar.xz'."
+  echo -e "     Pero no todo entra al respaldo. Dos filtros son obligatorios:"
+  echo -e "     ningún archivo o ruta que contenga la palabra 'cache' debe incluirse,"
+  echo -e "     y únicamente se procesarán archivos modificados en las últimas 24 horas."
+  echo -e "     Un respaldo sin filtros no es un respaldo forense, es ruido comprimido."
+  echo -e ""
+  echo -e "  \e[1;31m2. Bifurcación Forense de Flujos de Diagnóstico\e[0m"
+  echo -e "     Se debe ejecutar un rastreo con 'find' sobre ese mismo directorio."
+  echo -e "     Los resultados exitosos van a '/root/audit_success.log'."
+  echo -e "     Los errores de permisos y advertencias van a '/root/audit_errors.log'."
+  echo -e "     Ambos flujos deben estar completamente aislados entre sí."
+  echo -e "     Mezclar stdout y stderr en un mismo archivo invalida la evidencia."
+  echo -e ""
+  echo -e "  \e[1;31m3. Pipeline de Telemetría sin Archivos Intermedios\e[0m"
+  echo -e "     De todos los archivos '.log' en la ruta raíz de la aplicación,"
+  echo -e "     extraiga masivamente las líneas que contengan 'ERROR', 'CRITICAL'"
+  echo -e "     o 'FATAL'. Todo en un único pipeline directo: sin tocar disco,"
+  echo -e "     sin archivos temporales. Las líneas deben ordenarse de forma única"
+  echo -e "     y el resultado final guardarse comprimido en '/root/telemetry_signals.log.gz'."
+  echo -e "     La eficiencia aquí no es opcional, es parte del requerimiento."
+  echo -e ""
+  echo -e "  \e[1;31m4. Reporte Operativo Inmutable\e[0m"
+  echo -e "     Genere '/root/backup_status.txt' con estructura precisa."
+  echo -e "     Primera línea: la marca de tiempo exacta del sistema bajo el"
+  echo -e "     formato 'TIMESTAMP: [fecha]', sobrescribiendo cualquier contenido previo."
+  echo -e "     Segunda línea: el mensaje 'STATUS: OPERACIÓN COMPILADA CON ÉXITO'"
+  echo -e "     concatenado sin destruir la primera línea."
+  echo -e "     El sistema de monitoreo leerá este archivo. El formato no es sugerencia."
   echo -e ""
   echo -e " \e[1mRequerimientos de Validación:\e[0m"
-  echo -e "  [ ] Backup critical_legacy.tar.xz listo (Filtros: cache / mtime)--> \e[1;35m30%\e[0m"
-  echo -e "  [ ] Aislamiento find (audit_success y audit_errors) activo     --> \e[1;35m25%\e[0m"
-  echo -e "  [ ] Pipeline telemetry_signals.log.gz (RegEx multi-patrón + unique)--> \e[1;35m25%\e[0m"
-  echo -e "  [ ] backup_status.txt estructurado con marcas TIMESTAMP/STATUS--> \e[1;35m20%\e[0m"
+  echo -e "  [ ] Backup critical_legacy.tar.xz listo (filtros: cache + mtime)    --> \e[1;35m30%\e[0m"
+  echo -e "  [ ] Bifurcación find (audit_success / audit_errors) aislada          --> \e[1;35m25%\e[0m"
+  echo -e "  [ ] Pipeline telemetry_signals.log.gz (ERE multi-patrón + unique)    --> \e[1;35m25%\e[0m"
+  echo -e "  [ ] backup_status.txt estructurado con marcas TIMESTAMP / STATUS     --> \e[1;35m20%\e[0m"
   echo -e " ------------------------------------------------------------------------------"
+  echo -e " \e[1;32mNota de Campo:\e[0m Cuatro frentes, una sola ventana de tiempo."
+  echo -e "              Trabaje por capas. Valide cada salida antes de avanzar."
+  echo -e "              SecOps no acepta resultados parciales como evidencia."
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
   EOF
