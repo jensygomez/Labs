@@ -33,104 +33,111 @@ Script: |-
   #!/bin/bash
   set -e
 
-  # 1. LIMPIEZA FORENSE ABSOLUTA Y CREACIÓN DE IDENTIDADES
-  # Creamos las identidades lógicas para simular el entorno corporativo aislado
-  id -u app_owner &>/dev/null || useradd -m -d /srv/app_owner -s /bin/bash app_owner
-  id -u sre_operator &>/dev/null || useradd -m -d /srv/sre_operator -s /bin/bash sre_operator
+  # Parámetros de Red del Playground (Usuario bob / Contraseña caleston123 nativa)
+  USER_NET="bob"
+  NODE_TARGET="node02"
+  NODE_VAULT="node03"
+  SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
 
-  # Limpieza de directorios de trabajo compartidos y privados
-  rm -rf /srv/app_owner/apps_legacy /srv/sre_operator/*
-  mkdir -p /srv/app_owner/apps_legacy/core_service
-  mkdir -p /srv/app_owner/apps_legacy/cache_v2
+  echo -e "\e[1;33m⏳ Desplegando entorno distribuido y trampas de descriptores en el clúster...\e[0m"
 
-  # 2. INYECCIÓN DE ARTEFACTOS CON TRAMPAS DE INGENIERÍA
-  # Archivos válidos para telemetría (Modificados hoy, contienen patrones requeridos)
-  echo "2026-06-05 FATAL Kernel panic in thread 2" > /srv/app_owner/apps_legacy/core_service/kernel.log
-  echo "2026-06-05 CRITICAL Database cluster isolated" > /srv/app_owner/apps_legacy/core_service/db.log
-  echo "2026-06-05 ERROR Connection timeout" > /srv/app_owner/apps_legacy/app1.log
-  echo "2026-06-05 INFO Pipeline execution normal" > /srv/app_owner/apps_legacy/app2.log
+  # 1. Ejecución de aprovisionamiento remoto en node02 (Servidor Afectado)
+  ssh $SSH_OPTS -t ${USER_NET}@${NODE_TARGET} "sudo bash -c '
+      # Creación de identidades lógicas locales en node02
+      id -u app_owner &>/dev/null || useradd -m -d /srv/app_owner -s /bin/bash app_owner
+      id -u sre_operator &>/dev/null || useradd -m -d /srv/sre_operator -s /bin/bash sre_operator
 
-  # TRAMPA DE PATRÓN (Excluir por palabra "cache" en archivo o ruta)
-  echo "TEMPORARY CORRUPT DATA" > /srv/app_owner/apps_legacy/cache_v2/volatile.log
-  echo "METRICS STORAGE" > /srv/app_owner/apps_legacy/core_service/app_cache.log
+      # Limpieza de directorios locales
+      rm -rf /srv/app_owner/apps_legacy /srv/sre_operator/*
+      mkdir -p /srv/app_owner/apps_legacy/core_service
+      mkdir -p /srv/app_owner/apps_legacy/cache_v2
 
-  # TRAMPA DE TIEMPO (Modificado hace 5 días, contiene patrones pero NO debe entrar en el find/tar)
-  echo "2026-06-01 ERROR Old unparsed error" > /srv/app_owner/apps_legacy/core_service/old_legacy.log
-  touch -d "5 days ago" /srv/app_owner/apps_legacy/core_service/old_legacy.log
+      # Inyección de artefactos de telemetría
+      echo \"2026-06-05 FATAL Kernel panic in thread 2\" > /srv/app_owner/apps_legacy/core_service/kernel.log
+      echo \"2026-06-05 CRITICAL Database cluster isolated\" > /srv/app_owner/apps_legacy/core_service/db.log
+      echo \"2026-06-05 ERROR Connection timeout\" > /srv/app_owner/apps_legacy/app1.log
+      echo \"2026-06-05 INFO Pipeline execution normal\" > /srv/app_owner/apps_legacy/app2.log
 
-  # TRAMPA DE DESCRIPTORES (Forzar error de permisos nativo para la redirección de stderr)
-  # Este archivo causará un "Permission Denied" real cuando el operador ejecute su pipeline o find.
-  touch /srv/app_owner/apps_legacy/core_service/secure_vault.log
-  chmod 000 /srv/app_owner/apps_legacy/core_service/secure_vault.log
+      # Trampas de patrón (Excluir \"cache\")
+      echo \"TEMPORARY CORRUPT DATA\" > /srv/app_owner/apps_legacy/cache_v2/volatile.log
+      echo \"METRICS STORAGE\" > /srv/app_owner/apps_legacy/core_service/app_cache.log
 
-  # 3. MATRIZ DE PERMISOS ARTESANAL
-  # El software y logs le pertenecen a la aplicación
-  chown -R app_owner:app_owner /srv/app_owner/apps_legacy
-  chmod 750 /srv/app_owner /srv/app_owner/apps_legacy
-  setfacl -m u:sre_operator:--x /srv/app_owner
-  # Otorgamos al sre_operator permisos de lectura por ACL para simular acceso de auditoría
-  setfacl -R -m u:sre_operator:r-x /srv/app_owner/apps_legacy/
-  setfacl -m u:sre_operator:--- /srv/app_owner/apps_legacy/core_service/secure_vault.log
+      # Trampa de tiempo (Modificado hace 5 días)
+      echo \"2026-06-01 ERROR Old unparsed error\" > /srv/app_owner/apps_legacy/core_service/old_legacy.log
+      touch -d \"5 days ago\" /srv/app_owner/apps_legacy/core_service/old_legacy.log
 
-  # El directorio del operador es estrictamente privado y suyo
-  chown -R sre_operator:sre_operator /srv/sre_operator
-  chmod 700 /srv/sre_operator
+      # Trampa de descriptores (Forzar Permission Denied nativo)
+      touch /srv/app_owner/apps_legacy/core_service/secure_vault.log
+      chmod 000 /srv/app_owner/apps_legacy/core_service/secure_vault.log
+
+      # Matriz de permisos artesanal y ACLs en node02
+      chown -R app_owner:app_owner /srv/app_owner/apps_legacy
+      chmod 750 /srv/app_owner /srv/app_owner/apps_legacy
+      setfacl -m u:sre_operator:--x /srv/app_owner
+      setfacl -R -m u:sre_operator:r-x /srv/app_owner/apps_legacy/
+      setfacl -m u:sre_operator:--- /srv/app_owner/apps_legacy/core_service/secure_vault.log
+
+      chown -R sre_operator:sre_operator /srv/sre_operator
+      chmod 700 /srv/sre_operator
+  '"
+
+  # 2. Limpieza de evidencias previas en la Bóveda (node03)
+  ssh $SSH_OPTS -t ${USER_NET}@${NODE_VAULT} "sudo rm -rf /opt/evidence-vault/* && sudo mkdir -p /opt/evidence-vault/ && sudo chown -R bob:bob /opt/evidence-vault/"
 
   clear
   echo -e "\e[1;36m================================================================================\e[0m"
-  echo -e "\e[1;31m 🔥 ENTORNO AISLADO SRE CONFIGURADO - NIVEL 8/10 (PG-004-v2-SYSADMIN-PLENO)\e[0m"
+  echo -e "\e[1;31m 🔥 ENTORNO DISTRIBUIDO SRE CONFIGURADO - NIVEL 9/10 (PG-004-MN-SYSADMIN)\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
-  echo -e "\e[1;33m TICKET DE INCIDENTE: INC-8044 (SEVERIDAD: CRÍTICA / INFRASTRUCTURE DRILL)\e[0m"
+  echo -e "\e[1;33m TICKET DE INCIDENTE: INC-8044 (SEVERIDAD: CRÍTICA / MULTI-NODE PIPELINES)\e[0m"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1mTu Identidad Operativa:\e[0m Cambie con: \e[1;32msudo su - sre_operator\e[0m"
-  echo -e " \e[1mRuta Base de Datos de Aplicación:\e[0m /srv/app_owner/apps_legacy"
+  echo -e " \e[1mUbicación de Control:\e[0m node01 (Estación Local — Administrador \e[1;32mbob\e[0m)"
+  echo -e " \e[1mNodo de Producción:\e[0m    node02 (Servidor con fallas — Identidad: \e[1;35msre_operator\e[0m)"
+  echo -e " \e[1mNodo Bóveda Destino:\e[0m   node03 (Repositorio Seguro — Ruta: \e[1;35m/opt/evidence-vault/\e[0m)"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1mContexto Técnico del Incidente:\e[0m"
-  echo -e "  El volumen compartido de logs está al límite. SecOps y SRE exigen la"
-  echo -e "  ejecución de cuatro tareas de ingeniería de flujos de datos de manera"
-  echo -e "  simultánea, sin usar privilegios de root para evitar alterar hashes forenses."
+  echo -e " \e[1mContexto Técnico Distribuido del Incidente:\e[0m"
+  echo -e "  El volumen compartido de logs en producción (node02) está al límite."
+  echo -e "  Usted debe operar de manera remota e interceptar/canalizar los flujos de"
+  echo -e "  datos desde su estación de trabajo (node01), garantizando que las"
+  echo -e "  evidencias procesadas queden bajo custodia inmutable exclusivamente en node03."
   echo -e ""
-  echo -e "  El entorno cuenta con restricciones reales a nivel de sistema de archivos."
-  echo -e "  Ciertas rutas generarán errores nativos de entrada/salida y permisos."
-  echo -e "  Su capacidad para manipular descriptores de archivo estándar (stdout/stderr)"
-  echo -e "  y pipelines eficientes será puesta a prueba."
+  echo -e "  No está permitido almacenar datos locales permanentes en node01 ni en node02."
+  echo -e "  Las restricciones de permisos y trampas de descriptores siguen vigentes"
+  echo -e "  de forma nativa en el sistema de archivos de node02."
   echo -e ""
-  echo -e " \e[1mTareas Requeridas — Ejecutar estrictamente como 'sre_operator':\e[0m"
+  echo -e " \e[1mTareas Requeridas — Ejecutar de forma remota bajo privilegios controlados:\e[0m"
   echo -e ""
-  echo -e "  \e[1;31m1. Respaldo Empresarial con Filtrado Estricto\e[0m"
-  echo -e "     Empaquete y comprima el directorio '/srv/app_owner/apps_legacy' usando"
-  echo -e "     el algoritmo XZ hacia '/srv/sre_operator/critical_legacy.tar.xz'."
-  echo -e "     Filtros obligatorios: No incluya ningún archivo o ruta que contenga"
-  echo -e "     la palabra 'cache', y procese únicamente archivos modificados"
-  echo -e "     en las últimas 24 horas. *(Evite arrastrar el archivo de hace 5 días)*."
+  echo -e "  \e[1;31m1. Respaldo Criptográfico con Filtrado de Red\e[0m"
+  echo -e "     Empaquete y comprima el directorio remoto '/srv/app_owner/apps_legacy' de node02"
+  echo -e "     utilizando el algoritmo XZ. El archivo resultante debe ser depositado en"
+  echo -e "     'node03:/opt/evidence-vault/critical_legacy.tar.xz'."
+  echo -e "     Filtros obligatorios: Excluya rutas con la palabra 'cache' y procese"
+  echo -e "     únicamente archivos modificados en las últimas 24 horas."
   echo -e ""
-  echo -e "  \e[1;31m2. Bifurcación Forense de Flujos de Diagnóstico\e[0m"
-  echo -e "     Ejecute un rastreo con 'find' sobre el directorio '/srv/app_owner/apps_legacy'."
-  echo -e "     Los resultados exitosos (rutas encontradas) van a '/srv/sre_operator/audit_success.log'."
-  echo -e "     Los errores de permisos (stderr nativo) van a '/srv/sre_operator/audit_errors.log'."
-  echo -e "     Ambos archivos deben quedar completamente aislados."
+  echo -e "  \e[1;31m2. Bifurcación Forense de Descriptores de Red\e[0m"
+  echo -e "     Ejecute el rastreo con 'find' de las estructuras de '/srv/app_owner/apps_legacy'"
+  echo -e "     dentro de node02. Los flujos deben segregarse en tránsito a través de la red:"
+  echo -e "     Las rutas exitosas van a 'node03:/opt/evidence-vault/audit_success.log'."
+  echo -e "     Los errores de permisos (stderr nativo) van a 'node03:/opt/evidence-vault/audit_errors.log'."
   echo -e ""
-  echo -e "  \e[1;31m3. Pipeline de Telemetría en Memoria Estricto\e[0m"
-  echo -e "     De todos los archivos '.log' válidos en la infraestructura del app_owner,"
-  echo -e "     extraiga de forma masiva las líneas que contengan exactamente 'ERROR',"
-  echo -e "     'CRITICAL' o 'FATAL' mediante un único flujo de pipes ('|')."
-  echo -e "     Requerimiento: No use archivos temporales intermedios. Las líneas deben"
-  echo -e "     ordenarse descartando duplicados y el resultado debe guardarse comprimido"
-  echo -e "     en '/srv/sre_operator/telemetry_signals.log.gz'."
+  echo -e "  \e[1;31m3. Pipeline de Telemetría Distribuido en Memoria\e[0m"
+  echo -e "     Extraiga en masa las líneas que contengan 'ERROR', 'CRITICAL' o 'FATAL' de todos"
+  echo -e "     los archivos '.log' válidos en node02. Conecte las salidas directamente en red"
+  echo -e "     hacia un flujo comprimido en 'node03:/opt/evidence-vault/telemetry_signals.log.gz'."
+  echo -e "     Requerimiento: Cero archivos intermedios o basura en los discos locales."
   echo -e ""
-  echo -e "  \e[1;31m4. Reporte Operativo de Monitoreo\e[0m"
-  echo -e "     Genere el archivo '/srv/sre_operator/backup_status.txt' con la estructura:"
-  echo -e "     Línea 1: La marca de tiempo exacta bajo el formato 'TIMESTAMP: [fecha]'"
-  echo -e "     Línea 2: El mensaje 'STATUS: OPERACIÓN COMPILADA CON ÉXITO' concatenado."
+  echo -e "  \e[1;31m4. Reporte Operativo Centralizado\e[0m"
+  echo -e "     Escriba en 'node03:/opt/evidence-vault/backup_status.txt' la metadata de la operación:"
+  echo -e "     Línea 1: TIMESTAMP: [fecha_actual_sistema]"
+  echo -e "     Línea 2: STATUS: OPERACIÓN MULTI-NODO COMPILADA CON ÉXITO"
   echo -e ""
-  echo -e " \e[1mCriterios de Aceptación (Entregables en /srv/sre_operator/):\e[0m"
-  echo -e "  [ ] critical_legacy.tar.xz generado bajo filtros estrictos            --> \e[1;35m30%\e[0m"
-  echo -e "  [ ] Bifurcación de descriptores (audit_success / audit_errors) lista   --> \e[1;35m25%\e[0m"
-  echo -e "  [ ] Pipeline telemetry_signals.log.gz sin basura ni duplicados         --> \e[1;35m25%\e[0m"
-  echo -e "  [ ] backup_status.txt estructurado de forma inmutable                  --> \e[1;35m20%\e[0m"
+  echo -e " \e[1mCriterios de Aceptación (Entregables validados estrictamente en node03):\e[0m"
+  echo -e "  [ ] critical_legacy.tar.xz localizado en node03 sin datos corruptos --> \e[1;35m30%\e[0m"
+  echo -e "  [ ] Bifurcación remota audit_success y audit_errors aislada en node03 --> \e[1;35m25%\e[0m"
+  echo -e "  [ ] Pipeline telemetry_signals.log.gz en node03 sin duplicados        --> \e[1;35m25%\e[0m"
+  echo -e "  [ ] backup_status.txt estructurado con timestamps inmutables en node03 --> \e[1;35m20%\e[0m"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1;32m🚨 REGLA DE ORO PLENA:\e[0m No modifique los permisos de 'secure_vault.log'."
-  echo -e "                      Un Sysadmin Pleno redirige el flujo de errores, no lo evade."
+  echo -e " \e[1;32m🚨 REGLA DE ORO DE RED:\e[0m Resuelva las tareas simulando la identidad de"
+  echo -e "                        'sre_operator' en node02 (vía sudo/ssh). No altere permisos."
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
   EOF
@@ -140,108 +147,101 @@ tags:
 Script Validacion: |-
   #!/bin/bash
 
-  # ==============================================================================
-  # SCRIPT DE EVALUACIÓN AUTOMÁTICA (PG-004-v2-SYSADMIN-PLENO)
-  # ==============================================================================
 
+  cat > /tmp/validador.sh << 'EOF'
+  #!/bin/bash
   PUNTOS=0
-  TARGET_DIR="/srv/sre_operator"
 
-  echo -e "\e[1;36m=== EVALUANDO AUTOMATIZACIÓN DE FLUJOS SRE Y DESCRIPTORES (8/10) ===\e[0m"
+  NODE_TARGET="node02"
+  NODE_VAULT="node03"
+  USER_NET="bob"
+  VAULT_DIR="/opt/evidence-vault"
+  SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=4"
 
-  # 1. VALIDAR RESPALDO TAR.XZ CON FILTROS
-  if [ -f "$TARGET_DIR/critical_legacy.tar.xz" ]; then
-      # Listar el contenido del tar de forma interna para evaluar qué se empaquetó
-      TAR_CONTENT=$(tar -tf "$TARGET_DIR/critical_legacy.tar.xz")
+  echo -e "\n=== 🕵️ EVALUANDO PIPELINES DISTRIBUIDOS Y CUSTODIA (INC-8044) ==="
+
+  # 1. Validar el paquete .tar.xz en la Bóveda (node03)
+  echo "⏳ Analizando integridad del respaldo remoto en node03..."
+  if ssh $SSH_OPTS ${USER_NET}@${NODE_VAULT} "[ -f $VAULT_DIR/critical_legacy.tar.xz ]" 2>/dev/null; then
+      # Extraer contenido en memoria desde node03 para verificar exclusiones de la trampa "cache"
+      TAR_CONTENT=$(ssh $SSH_OPTS ${USER_NET}@${NODE_VAULT} "tar -tf $VAULT_DIR/critical_legacy.tar.xz" 2>/dev/null || true)
       
-      # Verificaciones internas:
-      # - NO debe contener la palabra cache
-      # - NO debe contener old_legacy.log (filtro de tiempo >24h)
-      # - DEBE contener app1.log o kernel.log
-      HAS_CACHE=$(echo "$TAR_CONTENT" | grep "cache")
-      HAS_OLD=$(echo "$TAR_CONTENT" | grep "old_legacy.log")
-      HAS_VALID=$(echo "$TAR_CONTENT" | grep -E "app1.log|kernel.log" || true)
-      
-      if [ -z "$HAS_CACHE" ] && [ -z "$HAS_OLD" ] && [ -n "$HAS_VALID" ]; then
-          echo -e "✔ \e[1;32m[30%]\e[0m critical_legacy.tar.xz empaquetado correctamente con filtros de mtime y exclusión."
+      if echo "$TAR_CONTENT" | grep -q "kernel.log" && ! echo "$TAR_CONTENT" | grep -E "cache|old_legacy" ; then
+          echo "✔ [30%] critical_legacy.tar.xz validado con filtros de tiempo y exclusión de palabras clave."
           PUNTOS=$((PUNTOS + 30))
       else
-          echo -e "❌ \e[1;31m[0%]\e[0m critical_legacy.tar.xz contiene fallas. O arrastró archivos de cache/viejos o está vacío."
+          echo "❌ [0%] El archivo .tar.xz existe en node03 pero falló los filtros estricto (contiene archivos antiguos o caches)."
       fi
   else
-      echo -e "❌ \e[1;31m[0%]\e[0m No se encontró el respaldo critical_legacy.tar.xz."
+      echo "❌ [0%] No se encuentra el archivo critical_legacy.tar.xz en node03."
   fi
 
-  # 2. VALIDAR BIFURCACIÓN FORENSE (stdout vs stderr nativo)
-  SUCCESS_LOG="$TARGET_DIR/audit_success.log"
-  ERRORS_LOG="$TARGET_DIR/audit_errors.log"
-
-  if [ -f "$SUCCESS_LOG" ] && [ -f "$ERRORS_LOG" ]; then
-      # El archivo de errores DEBE contener el string de "Permission denied" de secure_vault.log
-      # El archivo de éxito NO debe contener mensajes de error.
-      VALID_ERROR=$(grep -i "permission denied" "$ERRORS_LOG" || true)
-      ERRORS_IN_SUCCESS=$(grep -i "permission denied" "$SUCCESS_LOG" || true)
+  # 2. Validar bifurcación forense de descriptores en node03
+  echo "⏳ Auditando segregación de descriptores (stdout/stderr)..."
+  if ssh $SSH_OPTS ${USER_NET}@${NODE_VAULT} "[ -f $VAULT_DIR/audit_success.log ] && [ -f $VAULT_DIR/audit_errors.log ]" 2>/dev/null; then
+      ERRORS_CONTENT=$(ssh $SSH_OPTS ${USER_NET}@${NODE_VAULT} "cat $VAULT_DIR/audit_errors.log" 2>/dev/null || true)
       
-      if [ -n "$VALID_ERROR" ] && [ -z "$ERRORS_IN_SUCCESS" ]; then
-          echo -e "✔ \e[1;32m[25%]\e[0m Bifurcación forense de descriptores exitosa. Flujos stdout y stderr completamente aislados."
+      if echo "$ERRORS_CONTENT" | grep -q "Permission denied"; then
+          echo "✔ [25%] Bifurcación forense de descriptores de flujo verificada con éxito en node03."
           PUNTOS=$((PUNTOS + 25))
       else
-          echo -e "❌ \e[1;31m[0%]\e[0m Error en la bifurcación. El flujo de errores se mezcló con el de éxito o no se capturó."
+          echo "❌ [10%] Los archivos existen, pero los errores de permisos (stderr) no fueron capturados correctamente."
+          PUNTOS=$((PUNTOS + 10))
       fi
   else
-      echo -e "❌ \e[1;31m[0%]\e[0m Faltan archivos de auditoría indispensables (audit_success o audit_errors)."
+      echo "❌ [0%] Faltan los reportes de auditoría segregados (audit_success/audit_errors) en node03."
   fi
 
-  # 3. VALIDAR PIPELINE DE TELEMETRÍA (Compresión al vuelo sin archivos intermedios)
-  TELEMETRY_GZ="$TARGET_DIR/telemetry_signals.log.gz"
-  if [ -f "$TELEMETRY_GZ" ]; then
-      # Descomprimir en memoria para verificar contenido
-      GZ_CONTENT=$(zcat "$TELEMETRY_GZ" 2>/dev/null || true)
+  # 3. Validar pipeline de telemetría in-memory
+  echo "⏳ Verificando agregación de señales de telemetría en node03..."
+  if ssh $SSH_OPTS ${USER_NET}@${NODE_VAULT} "[ -f $VAULT_DIR/telemetry_signals.log.gz ]" 2>/dev/null; then
+      LOGS_CONTENT=$(ssh $SSH_OPTS ${USER_NET}@${NODE_VAULT} "zcat $VAULT_DIR/telemetry_signals.log.gz" 2>/dev/null || true)
       
-      # Chequear patrones requeridos y exclusión de duplicados
-      HAS_FATAL=$(echo "$GZ_CONTENT" | grep "FATAL" || true)
-      HAS_CRITICAL=$(echo "$GZ_CONTENT" | grep "CRITICAL" || true)
-      HAS_INFO=$(echo "$GZ_CONTENT" | grep "INFO" || true)
-      
-      # Verificar ordenamiento único: Si hay duplicados o no está ordenado, fallará
-      TOTAL_LINES=$(echo "$GZ_CONTENT" | wc -l)
-      UNIQUE_LINES=$(echo "$GZ_CONTENT" | sort -u | wc -l)
-      
-      if [ -n "$HAS_FATAL" ] && [ -n "$HAS_CRITICAL" ] && [ -z "$HAS_INFO" ] && [ "$TOTAL_LINES" -eq "$UNIQUE_LINES" ] && [ "$TOTAL_LINES" -gt 0 ]; then
-          echo -e "✔ \e[1;32m[25%]\e[0m Pipeline de telemetría correcto. Filtrado multi-patrón limpio, ordenado y comprimido."
-          PUNTOS=$((PUNTOS + 25))
+      if echo "$LOGS_CONTENT" | grep -q "FATAL" && ! echo "$LOGS_CONTENT" | grep -q "Old unparsed error"; then
+          # Comprobar duplicación
+          DUPS=$(echo "$LOGS_CONTENT" | wc -l)
+          UNIQ=$(echo "$LOGS_CONTENT" | sort -u | wc -l)
+          if [ "$DUPS" -eq "$UNIQ" ]; then
+              echo "✔ [25%] Pipeline de telemetría en red validado sin duplicados ni archivos basura."
+              PUNTOS=$((PUNTOS + 25))
+          else
+              echo "❌ [10%] El archivo existe pero el flujo retiene líneas duplicadas."
+              PUNTOS=$((PUNTOS + 10))
+          fi
       else
-          echo -e "❌ \e[1;31m[0%]\e[0m telemetry_signals.log.gz inválido. Contiene eventos no deseados o líneas duplicadas."
+          echo "❌ [0%] El stream de datos contiene eventos obsoletos o no filtró los patrones requeridos."
       fi
   else
-      echo -e "❌ \e[1;31m[0%]\e[0m No se encontró el archivo de telemetría masiva telemetry_signals.log.gz."
+      echo "❌ [0%] No se encuentra la telemetría unificada telemetry_signals.log.gz en la bóveda."
   fi
 
-  # 4. VALIDAR REPORTE OPERATIVO INMUTABLE
-  STATUS_FILE="$TARGET_DIR/backup_status.txt"
-  if [ -f "$STATUS_FILE" ]; then
-      LINE_COUNT=$(wc -l < "$STATUS_FILE")
-      HAS_TIMESTAMP=$(grep -E "^TIMESTAMP:" "$STATUS_FILE" || true)
-      HAS_STATUS=$(grep -E "^STATUS: OPERACIÓN COMPILADA CON ÉXITO" "$STATUS_FILE" || true)
-      
-      if [ "$LINE_COUNT" -eq 2 ] && [ -n "$HAS_TIMESTAMP" ] && [ -n "$HAS_STATUS" ]; then
-          echo -e "✔ \e[1;32m[20%]\e[0m backup_status.txt estructurado perfectamente acorde a la especificación de monitoreo."
+  # 4. Validar metadata de auditoría corporativa
+  if ssh $SSH_OPTS ${USER_NET}@${NODE_VAULT} "[ -f $VAULT_DIR/backup_status.txt ]" 2>/dev/null; then
+      STATUS_TXT=$(ssh $SSH_OPTS ${USER_NET}@${NODE_VAULT} "cat $VAULT_DIR/backup_status.txt" 2>/dev/null || true)
+      if echo "$STATUS_TXT" | grep -q "TIMESTAMP:" && echo "$STATUS_TXT" | grep -q "STATUS: OPERACIÓN MULTI-NODO COMPILADA CON ÉXITO"; then
+          echo "✔ [20%] Reporte operativo inmutable verificado estructuralmente en node03."
           PUNTOS=$((PUNTOS + 20))
       else
-          echo -e "❌ \e[1;31m[0%]\e[0m backup_status.txt tiene una estructura incorrecta, falta un campo o se destruyeron líneas."
+          echo "❌ [0%] El reporte backup_status.txt no cumple con las líneas y el formato estricto."
       fi
   else
-      echo -e "❌ \e[1;31m[0%]\e[0m No se generó el reporte operativo backup_status.txt."
+      echo "❌ [0%] Falta el informe operativo backup_status.txt en node03."
   fi
 
-  # POSTEO DE RESULTADOS FINAL
-  echo -e "\e[1;36m================================================================================\e[0m"
+  # Resultado global
+  echo -e "\n========================================"
   if [ $PUNTOS -eq 100 ]; then
-      echo -e "  \e[1;32mCALIFICACIÓN FINAL: $PUNTOS / 100 — PIPELINE SRE COMPLETADO EN NIVEL PLENO\e[0m"
+      echo -e "🎉 CALIFICACIÓN FINAL: \e[1;32m$PUNTOS / 100\e[0m"
+      echo -e "Felicidades. Has demostrado habilidades de nivel Ingeniero SRE Pleno/Senior."
   else
-      echo -e "  \e[1;31mCALIFICACIÓN FINAL: $PUNTOS / 100 — REVISE EL MANEJO DE DESCRIPTORES Y PIPES\e[0m"
+      echo -e "❌ CALIFICACIÓN FINAL: \e[1;31m$PUNTOS / 100\e[0m"
+      echo -e "Audite la manipulación remota de flujos de texto o la persistencia en node03."
   fi
-  echo -e "\e[1;36m================================================================================\e[0m"
+  echo "========================================"
+  EOF
+
+  chmod +x /tmp/validador.sh
+  bash /tmp/validador.sh
 ---
 [[Laboratorios del LFCS]]
 
