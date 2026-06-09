@@ -15,18 +15,6 @@ Competencias:
   - Asegurar la colaboración en entornos multitenant mediante herencia forzada de GIDs
   - Implementar contenciones contra la destrucción de datos (Data Deletion/Tampering) en almacenamiento compartido
   - Comprender los riesgos y limitaciones de seguridad del bit SUID en binarios compilados vs scripts interpretados
-Ticket: |-
-  INC-5022 (CRÍTICO) - Brecha de Seguridad y Desconfiguración de Entorno Compartido en CI/CD
-
-  El equipo de Ciberseguridad bloqueó el nodo de compilación 'build-node-01' debido a dos hallazgos graves durante una auditoría en caliente:
-  1. El directorio de integración '/opt/ci_shared/builds' fue configurado erróneamente con permisos laxos. Cuando el pipeline del usuario 'jenkins-agent' genera artefactos, el grupo de ingenieros 'release-ops' no puede modificarlos ni empaquetarlos porque nacen sin la herencia del grupo corporativo.
-  2. Se detectó que ingenieros de otros equipos borraron por error reportes de cobertura que no les pertenecían dentro de ese mismo directorio.
-  3. Requerimiento de Infraestructura: Se necesita que la herramienta nativa de telemetría de rendimiento '/usr/bin/sysperf', que interactúa directamente con descriptores del Kernel protegidos, pueda ser ejecutada por cualquier operador del sistema, pero asegurando que SIEMPRE se ejecute con los privilegios del usuario propietario ('root') para evitar errores de 'Permission Denied'.
-
-  Misión de Hardening:
-  - Corrija la propiedad del directorio a 'root:release-ops'.
-  - Configure los permisos especiales necesarios para forzar la herencia de grupo y blindar el directorio contra borrados cruzados de archivos de terceros.
-  - Asegure que el binario de telemetría adquiera los privilegios de ejecución del propietario de forma nativa en el Kernel.
 Validacion:
   - Objetivo: El directorio /opt/ci_shared/builds pertenece a root:release-ops con permisos de grupo rwxs.
     Peso: 25 %
@@ -34,7 +22,6 @@ Validacion:
     Peso: 35 %
   - Objetivo: El binario compilado /usr/bin/sysperf está configurado correctamente con el bit SUID activo.
     Peso: 40 %
-Calificacion Final:
 Script: |-
   cat << 'EOF' > /tmp/setup_sh
   #!/bin/bash
@@ -77,22 +64,57 @@ Script: |-
   echo -e "\e[1;36m================================================================================\e[0m"
   echo -e "\e[1;31m 🔥 ESCENARIO AVANZADO CONFIGURADO - ESSENTIAL COMMANDS (PG-002 v2)\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
-  echo -e "\e[1;33m TICKET DE INCIDENTE: INC-5022\e[0m"
+  echo -e "\e[1;33m TICKET DE INCIDENTE: INC-5022 (CRÍTICO)\e[0m"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1mAsunto:\e[0m Hardening Multitenant y Mitigación de Escalada de Privilegios"
+  echo -e " \e[1mAsunto:\e[0m Brecha de Seguridad y Desconfiguración de Entorno Compartido en CI/CD"
   echo -e " \e[1mSeveridad:\e[0m Crítica / Bloqueo de Pipeline de Despliegue"
   echo -e ""
-  echo -e " \e[1mDescripción:\e[0m"
-  echo -e " Ajuste el directorio /opt/ci_shared/builds (propietario root:release-ops)."
-  echo -e " Aplique SGID para resolver la herencia y Sticky Bit para mitigar el sabotaje"
-  echo -e " de archivos. Configure el binario de telemetría '/usr/bin/sysperf' con SUID."
+  echo -e " \e[1mContexto del Incidente:\e[0m"
+  echo -e "  Durante una auditoría en caliente, el equipo de Ciberseguridad encontró"
+  echo -e "  dos hallazgos que no podían ignorarse. La situación escaló de inmediato"
+  echo -e "  y el nodo de compilación 'build-node-01' fue bloqueado preventivamente."
+  echo -e "  El pipeline de despliegue está detenido hasta que esto se resuelva."
+  echo -e ""
+  echo -e "  El primer hallazgo tiene que ver con el directorio '/opt/ci_shared/builds'."
+  echo -e "  Fue configurado con permisos incorrectos desde el inicio. Cada vez que"
+  echo -e "  el agente 'jenkins-agent' genera un artefacto, ese archivo nace con el"
+  echo -e "  grupo equivocado. El equipo 'release-ops' no puede modificarlo ni"
+  echo -e "  empaquetarlo. El directorio no hereda el grupo corporativo. Resultado:"
+  echo -e "  el proceso de release está completamente bloqueado."
+  echo -e ""
+  echo -e "  El segundo hallazgo es más delicado. Ingenieros de otros equipos han"
+  echo -e "  estado borrando por error reportes de cobertura que no les pertenecían,"
+  echo -e "  dentro de ese mismo directorio compartido. No hubo intención maliciosa,"
+  echo -e "  pero el daño es real. Sin un control a nivel de permisos del sistema,"
+  echo -e "  esto volverá a ocurrir."
+  echo -e ""
+  echo -e "  Adicionalmente, Infraestructura tiene un requerimiento pendiente."
+  echo -e "  La herramienta de telemetría '/usr/bin/sysperf' interactúa directamente"
+  echo -e "  con descriptores protegidos del Kernel. Cualquier operador del sistema"
+  echo -e "  debe poder ejecutarla, pero siempre con los privilegios del propietario."
+  echo -e "  Sin eso, los operadores reciben 'Permission Denied' y la telemetría falla."
+  echo -e ""
+  echo -e " \e[1mMisión de Hardening — tres frentes, sin margen de error:\e[0m"
+  echo -e ""
+  echo -e "  \e[1;31m1.\e[0m Corrija la propiedad del directorio operativo a 'root:release-ops'."
+  echo -e "     Mientras eso no esté bien, todo lo demás es construir sobre arena."
+  echo -e ""
+  echo -e "  \e[1;31m2.\e[0m Configure los permisos especiales que fuercen la herencia de grupo"
+  echo -e "     en cada archivo creado dentro del directorio, y que impidan que un"
+  echo -e "     usuario elimine archivos que no le pertenecen."
+  echo -e "     Dos bits especiales. Los dos son necesarios. Ninguno es opcional."
+  echo -e ""
+  echo -e "  \e[1;31m3.\e[0m Asegure que el binario de telemetría adquiera los privilegios del"
+  echo -e "     propietario en el momento de ejecución, de forma nativa en el Kernel."
+  echo -e "     Sin wrappers. Sin sudo. El bit correcto en el lugar correcto."
   echo -e ""
   echo -e " \e[1mRequerimientos de Validación:\e[0m"
   echo -e "  [ ] Propietario root:release-ops en /opt/ci_shared/builds     --> \e[1;35m25%\e[0m"
-  echo -e "  [ ] SGID + Sticky Bit combinados en el directorio operativo     --> \e[1;35m35%\e[0m"
+  echo -e "  [ ] SGID + Sticky Bit combinados en el directorio operativo    --> \e[1;35m35%\e[0m"
   echo -e "  [ ] SUID activo en el binario compilado /usr/bin/sysperf       --> \e[1;34m40%\e[0m"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1;32mNota de Campo:\e[0m Note cómo cambia el color del binario en la terminal al activar SUID.\e[0m"
+  echo -e " \e[1;32mNota de Campo:\e[0m Observe cómo cambia el color del binario en la terminal"
+  echo -e "              al momento de activar SUID. El sistema operativo lo marca."
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
   EOF
