@@ -55,8 +55,8 @@ Script: |-
   echo "METRICS STORAGE" > /srv/app_owner/apps_legacy/core_service/app_cache.log
 
   # TRAMPA DE TIEMPO (Modificado hace 5 días, contiene patrones pero NO debe entrar en el find/tar)
+  echo "2026-06-01 ERROR Old unparsed error" > /srv/app_owner/apps_legacy/core_service/old_legacy.log
   touch -d "5 days ago" /srv/app_owner/apps_legacy/core_service/old_legacy.log
-  echo "2026-06-01 ERROR Old unparsed error" >> /srv/app_owner/apps_legacy/core_service/old_legacy.log
 
   # TRAMPA DE DESCRIPTORES (Forzar error de permisos nativo para la redirección de stderr)
   # Este archivo causará un "Permission Denied" real cuando el operador ejecute su pipeline o find.
@@ -67,7 +67,7 @@ Script: |-
   # El software y logs le pertenecen a la aplicación
   chown -R app_owner:app_owner /srv/app_owner/apps_legacy
   chmod 750 /srv/app_owner /srv/app_owner/apps_legacy
-
+  setfacl -m u:sre_operator:--x /srv/app_owner
   # Otorgamos al sre_operator permisos de lectura por ACL para simular acceso de auditoría
   setfacl -R -m u:sre_operator:r-x /srv/app_owner/apps_legacy/
   setfacl -m u:sre_operator:--- /srv/app_owner/apps_legacy/core_service/secure_vault.log
