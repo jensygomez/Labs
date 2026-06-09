@@ -12,7 +12,7 @@ tags:
 | [[PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit) - V1]] |            20 min             |     `04/06/2026`      | <input type="checkbox" checked> |
 | [[PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit) - V2]] |            30 min             |     `09/06/2026`      | <input type="checkbox" checked> |
 | [[PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V1]]               |            40 min             |     `05/06/2026`      | <input type="checkbox" checked> |
-| [[PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V2]]               |                               |                       |                                 |
+| [[PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V2]]               |            40 min             |     `09/06/2026`      | <input type="checkbox" checked> |
 | [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V1]]  |            40 min             |     `05/06/2026`      | <input type="checkbox" checked> |
 | [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V2]]  |                               |                       |                                 |
 | [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V1]]       |            50 min             |     `06/06/2026`      | <input type="checkbox" checked> |
@@ -114,4 +114,4 @@ tags:
 
 
 
-**horas Totales 34:30 horas + Playgrounds 10:40 horas**
+**horas Totales 34:30 horas + Playgrounds 11:20 horas**

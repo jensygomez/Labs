@@ -4,7 +4,7 @@ Modulo: Essential Commands
 Playground: PG-003-v2
 Titulo: Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V2
 Fecha de Inicio: 2026-06-05
-Dificultad: 6/10
+Dificultad: 7/10
 Objetivo:
   - Aprobar LFCS
   - Pensar como Sysadmin Linux Pleno
@@ -17,20 +17,6 @@ Competencias:
   - Dominar búsquedas avanzadas en el sistema de archivos por tamaño y tiempo de modificación
   - Aislar registros específicos en logs masivos mediante patrones condicionales complejos (Grep -E)
   - Filtrar y limpiar archivos de configuración eliminando ruido visual (comentarios y líneas vacías)
-Ticket: |-
-  INC-3147
-
-  El equipo de Respuesta a Incidentes detectó posible exfiltración de datos por parte de un contractor. Sospechan que ocultó archivos grandes en '/var/log/incident_review' y dejó rastros de IPs internas en los logs del sistema.
-
-  Se solicita realizar las siguientes tareas de auditoría de inmediato:
-
-  1. Localizar dentro de '/var/log/incident_review' cualquier archivo **mayor a 8MB** Y modificado **en las últimas 36 horas**. Copiar ese archivo (o archivos) al directorio '/root/forensic_evidence/'.
-
-  2. Buscar en el archivo '/var/log/incident_review/traffic.log' todas las líneas que contengan direcciones IP que comiencen estrictamente con el rango privado '172.16.' (patrón BRE), y guardar el resultado en '/root/internal_traffic.txt'.
-
-  3. Auditar el mismo log y extraer todas las líneas que contengan errores de tipo 'ERROR' o 'SEVERE' usando una sola expresión regular extendida (ERE), guardando el resultado en '/root/severe_errors.txt'.
-
-  4. El archivo de configuración '/var/log/incident_review/service.conf' está lleno de comentarios y líneas en blanco. Genere una copia limpia en '/root/service.conf.clean' eliminando todas las líneas que comiencen con '#' y las completamente vacías.
 Validacion:
   - Objetivo: Archivos pesados y recientes localizados y respaldados en /root/forensic_evidence/.
     Peso: 25 %
@@ -172,7 +158,7 @@ Script Validacion: |-
   PUNTOS=0
   TARGET_DIR="/srv/investigator"
 
-  echo -e "\e[1;36m=== EVALUANDO ENTORNO FORENSE ENDURECIDO (7.5/10) ===\e[0m"
+  echo -e "\e[1;36m=== EVALUANDO ENTORNO FORENSE ENDURECIDO (7/10) ===\e[0m"
 
   # 1. VALIDAR FIND (Filtrado estricto de tamaño y tiempo)
   # Debe existir un solo archivo copiado, y no los otros dos falsos positivos.
@@ -254,3 +240,14 @@ Script Validacion: |-
 
 [[Laboratorios del LFCS]]
 ---
+Recently, I completed a hands-on forensic investigation lab simulating a real incident response scenario. The exercise was designed to challenge both technical precision and analytical thinking under pressure.
+
+The task required me to work as a forensic investigator on a hardened Linux environment. My first challenge was locating a specific file that met two simultaneous conditions — exceeding 8MB in size and having been modified within the last 36 hours. I used `find` with combined `-size` and `-mmin` flags to filter out three decoy files that each satisfied only one of the criteria. Only one file passed both conditions, and that's the one I preserved as evidence.
+
+Next, I performed network traffic analysis using regular expressions. I extracted log entries matching the private IP segment `172.16.x.x` using Basic Regular Expressions in `grep`. The challenge here was precision — the log contained intentional false positives such as process IDs like `172.1601` and public IPs like `172.166.x.x`. I anchored my regex correctly to avoid capturing those, resulting in exactly two clean matches.
+
+For the third task, I used Extended Regular Expressions to filter log lines containing either `ERROR` or `SEVERE` events in a single pattern, using the `|` alternation operator with `grep --extended-regexp`.
+
+Finally, I cleaned a production configuration file using `sed`. I removed blank lines, whitespace-only lines, full comment lines — including indented ones — and inline comments trailing valid parameters. The result was a clean, deployment-ready configuration with no residual noise.
+
+The lab scored 100 out of 100. What I value most from this exercise is not the score itself, but developing the discipline of thinking before executing — reading the environment, anticipating false positives, and building precise commands rather than broad ones. That's the mindset I'm actively building as I transition from NOC operations into Linux system administration.
