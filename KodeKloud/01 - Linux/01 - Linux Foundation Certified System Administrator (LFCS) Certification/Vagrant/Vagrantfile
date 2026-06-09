@@ -1,88 +1,137 @@
-# Vagrantfile - PG-007: Contenedor web inaccesible (Podman, SELinux y Redes)
-# Basado en la estructura de PG-006 para Rocky Linux 9
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
 
 Vagrant.configure("2") do |config|
   config.vm.box = "generic/rocky9"
 
   config.vm.provider :libvirt do |libvirt|
-    libvirt.memory = 2048
-    libvirt.cpus = 2
+    libvirt.memory = 1024
+    libvirt.cpus   = 1
   end
 
-  config.vm.provision "shell", inline: <<-SHELL
-    set -e
+  # ==============================================================
+  # dns01
+  # ==============================================================
+  config.vm.define "dns01" do |dns|
+    dns.vm.hostname = "dns01.corp.internal"
+    dns.vm.network "private_network", ip: "192.168.100.53"
 
-    # Instalación de paquetes necesarios
-    dnf install -y podman firewalld policycoreutils-python-utils setroubleshoot-server
+    dns.vm.provision "shell", inline: <<-SHELL
+      set -e
+      echo "=== Configurando dns01 ==="
+      dnf install -y bind bind-utils chrony net-tools
 
-    # Asegurar SELinux en modo enforcing (persistente)
-    setenforce 1
-    sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
+      tee /var/named/corp.internal.db > /dev/null << 'ENDZONE'
+$TTL 86400
+@   IN  SOA dns01.corp.internal. admin.corp.internal. (2026060801 3600 1800 604800 86400)
+        IN  NS   dns01.corp.internal.
+dns01   IN  A    192.168.100.53
+web01   IN  A    192.168.100.20
+ENDZONE
 
-    # Habilitar e iniciar firewalld
-    systemctl enable --now firewalld
+      tee /var/named/100.168.192.in-addr.arpa.db > /dev/null << 'ENDRZONE'
+$TTL 86400
+@   IN  SOA dns01.corp.internal. admin.corp.internal. (2026060801 3600 1800 604800 86400)
+        IN  NS  dns01.corp.internal.
+20  IN  PTR web01.corp.internal.
+53  IN  PTR dns01.corp.internal.
+ENDRZONE
 
-    # =========================================================
-    # CONFIGURACIÓN DEL ESCENARIO DE FALLO (INC-1007)
-    # =========================================================
+      chown named:named /var/named/*.db
+      chmod 640 /var/named/*.db
 
-    # 1. Crear volumen del host con contexto SELinux restrictivo (sshd_key_t)
-    mkdir -p /opt/web_data
-    echo "Funcionando en el nivel 8!" > /opt/web_data/index.html
-    chcon -R -t sshd_key_t /opt/web_data
+      tee /etc/named.conf > /dev/null << 'ENDNAMED'
+options {
+    listen-on port 53 { 127.0.0.1; 192.168.100.53; };
+    listen-on-v6 { none; };
+    directory "/var/named";
+    allow-query { any; };
+    recursion no;
+};
+zone "corp.internal" { type master; file "corp.internal.db"; };
+zone "100.168.192.in-addr.arpa" { type master; file "100.168.192.in-addr.arpa.db"; };
+ENDNAMED
 
-    # 2. Descargar imagen base (nginx de Red Hat UBI)
-    podman pull registry.access.redhat.com/ubi9/nginx-120:latest >/dev/null 2>&1 || true
+      systemctl enable named --now
+      iptables -A INPUT -p tcp --dport 53 -j ACCEPT
+      iptables -A INPUT -p udp --dport 53 -j ACCEPT
 
-    # 3. Crear unidad systemd con error: montaje SIN bandera :Z y puerto mapeado
-    cat << 'EOF' > /etc/systemd/system/container-webapp.service
-[Unit]
-Description=Podman Container - WebApp Engine
-Wants=network-online.target
-After=network-online.target
+      echo "=== dns01 listo ==="
+    SHELL
+  end
 
-[Service]
-Environment=PODMAN_SYSTEMD_UNIT=%n
-Restart=always
-ExecStartPre=-/usr/bin/podman rm -f webapp-container
-ExecStart=/usr/bin/podman run --name webapp-container -p 8080:8080 -v /opt/web_data:/var/www/html:ro registry.access.redhat.com/ubi9/nginx-120:latest
-ExecStop=/usr/bin/podman stop -t 10 webapp-container
-ExecStopPost=-/usr/bin/podman rm -f webapp-container
-Type=simple
+  # ==============================================================
+  # web01
+  # ==============================================================
+  config.vm.define "web01" do |web|              # <-- esto faltaba
+    web.vm.hostname = "web01.corp.internal"
+    web.vm.network "private_network", ip: "192.168.100.20"
 
-[Install]
-WantedBy=multi-user.target
-EOF
+    web.vm.provision "shell", inline: <<-SHELL
+      set -e
+      echo "=== Configurando web01 ==="
 
-    # 4. Cerrar el puerto 8080 en firewalld (bloquear acceso)
-    firewall-cmd --permanent --remove-port=8080/tcp 2>/dev/null || true
-    firewall-cmd --reload
+      dnf install -y nginx
 
-    # 5. Recargar systemd e iniciar el servicio (que fallará)
-    systemctl daemon-reload
-    systemctl start container-webapp.service 2>/dev/null || true
+      tee /etc/nginx/nginx.conf > /dev/null << 'ENDNGINX'
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log warn;
+pid /run/nginx.pid;
+events { worker_connections 1024; }
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+    sendfile on;
+    keepalive_timeout 65;
+    server {
+        listen 80;
+        server_name _;
+        root /usr/share/nginx/html;
+        index index.html;
+    }
+}
+ENDNGINX
 
-    # Mensaje de bienvenida / instrucciones
-    echo -e "\e[1;36m========================================================================\e[0m"
-    echo -e "\e[1;31m 🚀 ESCENARIO PG-007 CONFIGURADO - CRISIS DE CONTENEDORES EN PRODUCCIÓN\e[0m"
-    echo -e "\e[1;36m========================================================================\e[0m"
-    echo -e "\e[1;33m TICKET DE INCIDENTE: INC-1007\e[0m"
-    echo -e " ------------------------------------------------------------------------------"
-    echo -e " \e[1mAsunto:\e[0m Contenedor web inaccesible (Connection Refused)"
-    echo -e " \e[1mSeveridad:\e[0m Alta / Infraestructura DevOps"
-    echo -e ""
-    echo -e " \e[1mDescripción:\e[0m"
-    echo -e " El servicio 'container-webapp.service' no puede inicializar el servidor web"
-    echo -e " debido a fallas de políticas AVC de SELinux sobre /opt/web_data."
-    echo -e " Adicionalmente, el tráfico externo no logra alcanzar el puerto 8080."
-    echo -e ""
-    echo -e " \e[1mRequerimientos de Validación (Peso Total: 100%):\e[0m"
-    echo -e "  [ ] Corregir el montaje SELinux con la bandera ':Z' en la unidad -> \e[1;35m30%\e[0m"
-    echo -e "  [ ] Servicio 'container-webapp.service' en estado Running       -> \e[1;35m25%\e[0m"
-    echo -e "  [ ] Puerto 8080/tcp abierto permanentemente en firewalld      -> \e[1;35m25%\e[0m"
-    echo -e "  [ ] 'curl localhost:8080' devuelve HTTP 200                    -> \e[1;35m20%\e[0m"
-    echo -e " ------------------------------------------------------------------------------"
-    echo -e " \e[1;32mMisión:\e[0m Inspeccione journalctl, arregle el montaje y abra la red.\e[0m"
-    echo -e "\e[1;36m========================================================================\e[0m"
-  SHELL
+      nginx -t
+      echo "<h1>Web01</h1><p>IP: 192.168.100.20</p>" > /usr/share/nginx/html/index.html
+
+      systemctl enable nginx --now
+
+      firewall-cmd --add-port=80/tcp --permanent 2>/dev/null || true
+      firewall-cmd --reload 2>/dev/null || true
+
+      echo "Esperando dns01..."
+      timeout 30 bash -c 'until nc -z 192.168.100.53 53; do sleep 2; done' || echo "DNS timeout, continuando..."
+
+      echo "nameserver 192.168.100.53" > /etc/resolv.conf
+
+      echo "=== web01 listo ==="
+    SHELL
+  end
+
+  # ==============================================================
+  # admin
+  # ==============================================================
+  config.vm.define "admin" do |admin|
+    admin.vm.hostname = "admin-client"
+    admin.vm.network "private_network", ip: "192.168.100.10"
+
+    admin.vm.provision "shell", inline: <<-SHELL
+      set -e
+      echo "=== Configurando admin-client ==="
+
+      dnf install -y curl bind-utils vim net-tools
+
+      until nc -z 192.168.100.53 53 2>/dev/null; do sleep 2; done
+
+      echo "nameserver 192.168.100.53" > /etc/resolv.conf
+      echo "192.168.100.20 web01.corp.internal web01" >> /etc/hosts
+
+      echo "Prueba de resolución:"
+      dig +short web01.corp.internal
+
+      echo "=== admin-client listo ==="
+    SHELL
+  end
 end
