@@ -3,7 +3,7 @@ Curso: Prep Course - LFCS Certification
 Modulo: Essential Commands
 Playground: PG-002
 Titulo: Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit) - V2
-Fecha de Inicio: 2026-06-05
+Fecha de Inicio: 2026-06-09
 Dificultad: 7/10
 Objetivo:
   - Aprobar LFCS
@@ -187,3 +187,18 @@ Script Validacion: |-
 ---
 [[Laboratorios del LFCS]]
 ---
+
+
+---
+
+Recently, I resolved a critical security incident — INC-5022 — on a CI/CD build node that had been preventively taken offline by the cybersecurity team. The deployment pipeline was completely blocked, so I had to work efficiently and without margin for error.
+
+The first thing I did was correct the ownership of the shared operational directory `/opt/ci_shared/builds`, assigning it to `root:release-ops`. That was the foundation — without it, nothing else would have made sense.
+
+Then I configured two special permission bits on that directory. I applied SGID so that every file created inside automatically inherits the group, which solves the broken artifact ownership issue the release team was facing. I also applied the Sticky Bit to prevent engineers from accidentally deleting files that didn't belong to them — something that had already caused real damage according to the audit findings. The key detail here was getting the base permissions right: my first attempt used `777`, which the CIS Benchmark flagged immediately because it rendered the group control meaningless. I corrected it to `3775`, which enforces least privilege while keeping the special bits fully functional.
+
+Finally, I secured the telemetry binary `/usr/bin/sysperf` by setting the SUID bit. This allows any system operator to execute it while the process runs with the owner's privileges at the kernel level — no wrappers, no sudo, no workarounds.
+
+The audit closed at 100/100. The pipeline was unblocked and the security findings were fully remediated.
+
+This is the kind of work I'm actively building my skills around — understanding not just what a command does, but why the system behaves the way it does at a permissions level.
