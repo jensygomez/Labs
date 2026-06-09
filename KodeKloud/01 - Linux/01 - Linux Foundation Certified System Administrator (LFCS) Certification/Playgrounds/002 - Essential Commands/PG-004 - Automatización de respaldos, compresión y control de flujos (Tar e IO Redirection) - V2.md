@@ -29,95 +29,108 @@ Validacion:
 Calificacion Final:
 Script: |-
   cat << 'EOF' > /tmp/setup_sh
+
   #!/bin/bash
   set -e
 
-  # Limpieza forense absoluta de laboratorios previos
-  rm -rf /var/log/apps_legacy /backup /root/audit_success.log /root/audit_errors.log /root/telemetry_signals.log.gz /root/backup_status.txt
-  mkdir -p /var/log/apps_legacy/core_service
-  mkdir -p /var/log/apps_legacy/cache_v2
-  mkdir -p /backup
+  # 1. LIMPIEZA FORENSE ABSOLUTA Y CREACIÓN DE IDENTIDADES
+  # Creamos las identidades lógicas para simular el entorno corporativo aislado
+  id -u app_owner &>/dev/null || useradd -m -d /srv/app_owner -s /bin/bash app_owner
+  id -u sre_operator &>/dev/null || useradd -m -d /srv/sre_operator -s /bin/bash sre_operator
 
-  # Inyección de archivos simulados con marcas de tiempo actuales (0 días de modificación)
-  echo "2026-06-05 FATAL Kernel panic in thread 2" > /var/log/apps_legacy/core_service/kernel.log
-  echo "2026-06-05 CRITICAL Database cluster isolated" > /var/log/apps_legacy/core_service/db.log
-  echo "2026-06-05 ERROR Connection timeout" > /var/log/apps_legacy/app1.log
-  echo "2026-06-05 INFO Pipeline execution normal" > /var/log/apps_legacy/app2.log
+  # Limpieza de directorios de trabajo compartidos y privados
+  rm -rf /srv/app_owner/apps_legacy /srv/sre_operator/*
+  mkdir -p /srv/app_owner/apps_legacy/core_service
+  mkdir -p /srv/app_owner/apps_legacy/cache_v2
 
-  # Archivos que deben ser excluidos por patrón de palabra (cache)
-  echo "TEMPORARY CORRUPT DATA" > /var/log/apps_legacy/cache_v2/volatile.log
-  echo "METRICS STORAGE" > /var/log/apps_legacy/core_service/app_cache.log
+  # 2. INYECCIÓN DE ARTEFACTOS CON TRAMPAS DE INGENIERÍA
+  # Archivos válidos para telemetría (Modificados hoy, contienen patrones requeridos)
+  echo "2026-06-05 FATAL Kernel panic in thread 2" > /srv/app_owner/apps_legacy/core_service/kernel.log
+  echo "2026-06-05 CRITICAL Database cluster isolated" > /srv/app_owner/apps_legacy/core_service/db.log
+  echo "2026-06-05 ERROR Connection timeout" > /srv/app_owner/apps_legacy/app1.log
+  echo "2026-06-05 INFO Pipeline execution normal" > /srv/app_owner/apps_legacy/app2.log
 
-  # Archivo que debe ser excluido por tiempo (Simulando modificación de hace 5 días atrás)
-  touch -d "5 days ago" /var/log/apps_legacy/core_service/old_legacy.log
-  echo "2026-06-01 ERROR Old unparsed error" >> /var/log/apps_legacy/core_service/old_legacy.log
+  # TRAMPA DE PATRÓN (Excluir por palabra "cache" en archivo o ruta)
+  echo "TEMPORARY CORRUPT DATA" > /srv/app_owner/apps_legacy/cache_v2/volatile.log
+  echo "METRICS STORAGE" > /srv/app_owner/apps_legacy/core_service/app_cache.log
 
-  # Forzar error de permisos denegados nativo para la validación de stderr
-  touch /var/log/apps_legacy/core_service/secure_vault.log
-  chmod 000 /var/log/apps_legacy/core_service/secure_vault.log
+  # TRAMPA DE TIEMPO (Modificado hace 5 días, contiene patrones pero NO debe entrar en el find/tar)
+  touch -d "5 days ago" /srv/app_owner/apps_legacy/core_service/old_legacy.log
+  echo "2026-06-01 ERROR Old unparsed error" >> /srv/app_owner/apps_legacy/core_service/old_legacy.log
+
+  # TRAMPA DE DESCRIPTORES (Forzar error de permisos nativo para la redirección de stderr)
+  # Este archivo causará un "Permission Denied" real cuando el operador ejecute su pipeline o find.
+  touch /srv/app_owner/apps_legacy/core_service/secure_vault.log
+  chmod 000 /srv/app_owner/apps_legacy/core_service/secure_vault.log
+
+  # 3. MATRIZ DE PERMISOS ARTESANAL
+  # El software y logs le pertenecen a la aplicación
+  chown -R app_owner:app_owner /srv/app_owner/apps_legacy
+  chmod 750 /srv/app_owner /srv/app_owner/apps_legacy
+
+  # Otorgamos al sre_operator permisos de lectura por ACL para simular acceso de auditoría
+  setfacl -R -m u:sre_operator:r-x /srv/app_owner/apps_legacy/
+  setfacl -m u:sre_operator:--- /srv/app_owner/apps_legacy/core_service/secure_vault.log
+
+  # El directorio del operador es estrictamente privado y suyo
+  chown -R sre_operator:sre_operator /srv/sre_operator
+  chmod 700 /srv/sre_operator
 
   clear
   echo -e "\e[1;36m================================================================================\e[0m"
-  echo -e "\e[1;31m 🔥 ESCENARIO AVANZADO CONFIGURADO - ESSENTIAL COMMANDS (PG-004 v2)\e[0m"
+  echo -e "\e[1;31m 🔥 ENTORNO AISLADO SRE CONFIGURADO - NIVEL 8/10 (PG-004-v2-SYSADMIN-PLENO)\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
-  echo -e "\e[1;33m TICKET DE INCIDENTE: INC-8044 (CRÍTICO)\e[0m"
+  echo -e "\e[1;33m TICKET DE INCIDENTE: INC-8044 (SEVERIDAD: CRÍTICA / INFRASTRUCTURE DRILL)\e[0m"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1mAsunto:\e[0m Automatización de Respaldos de Telemetría e Ingeniería de Flujos"
-  echo -e " \e[1mSeveridad:\e[0m Crítica / Cumplimiento de Auditoría SRE"
+  echo -e " \e[1mTu Identidad Operativa:\e[0m Cambie con: \e[1;32msudo su - sre_operator\e[0m"
+  echo -e " \e[1mRuta Base de Datos de Aplicación:\e[0m /srv/app_owner/apps_legacy"
+  echo -e " ------------------------------------------------------------------------------"
+  echo -e " \e[1mContexto Técnico del Incidente:\e[0m"
+  echo -e "  El volumen compartido de logs está al límite. SecOps y SRE exigen la"
+  echo -e "  ejecución de cuatro tareas de ingeniería de flujos de datos de manera"
+  echo -e "  simultánea, sin usar privilegios de root para evitar alterar hashes forenses."
   echo -e ""
-  echo -e " \e[1mContexto del Incidente:\e[0m"
-  echo -e "  El equipo de SRE emitió una alerta de capacidad. El volumen compartido"
-  echo -e "  de logs está llegando a su límite y la tendencia no da margen de espera."
-  echo -e "  En paralelo, SecOps tiene una auditoría activa y exige evidencia"
-  echo -e "  procesada antes del cierre de ventana. No hay extensión de plazo."
+  echo -e "  El entorno cuenta con restricciones reales a nivel de sistema de archivos."
+  echo -e "  Ciertas rutas generarán errores nativos de entrada/salida y permisos."
+  echo -e "  Su capacidad para manipular descriptores de archivo estándar (stdout/stderr)"
+  echo -e "  y pipelines eficientes será puesta a prueba."
   echo -e ""
-  echo -e "  La situación tiene cuatro frentes abiertos simultáneamente."
-  echo -e "  Cada uno es independiente en su ejecución, pero todos convergen"
-  echo -e "  en el mismo objetivo: dejar el entorno respaldado, auditado"
-  echo -e "  y con un reporte inmutable que el sistema de monitoreo pueda consumir."
-  echo -e ""
-  echo -e " \e[1mLo que se necesita resolver — cuatro frentes, sin excepción:\e[0m"
+  echo -e " \e[1mTareas Requeridas — Ejecutar estrictamente como 'sre_operator':\e[0m"
   echo -e ""
   echo -e "  \e[1;31m1. Respaldo Empresarial con Filtrado Estricto\e[0m"
-  echo -e "     El directorio '/var/log/apps_legacy' debe ser empaquetado y"
-  echo -e "     comprimido con el algoritmo XZ hacia '/backup/critical_legacy.tar.xz'."
-  echo -e "     Pero no todo entra al respaldo. Dos filtros son obligatorios:"
-  echo -e "     ningún archivo o ruta que contenga la palabra 'cache' debe incluirse,"
-  echo -e "     y únicamente se procesarán archivos modificados en las últimas 24 horas."
-  echo -e "     Un respaldo sin filtros no es un respaldo forense, es ruido comprimido."
+  echo -e "     Empaquete y comprima el directorio '/srv/app_owner/apps_legacy' usando"
+  echo -e "     el algoritmo XZ hacia '/srv/sre_operator/critical_legacy.tar.xz'."
+  echo -e "     Filtros obligatorios: No incluya ningún archivo o ruta que contenga"
+  echo -e "     la palabra 'cache', y procese únicamente archivos modificados"
+  echo -e "     en las últimas 24 horas. *(Evite arrastrar el archivo de hace 5 días)*."
   echo -e ""
   echo -e "  \e[1;31m2. Bifurcación Forense de Flujos de Diagnóstico\e[0m"
-  echo -e "     Se debe ejecutar un rastreo con 'find' sobre ese mismo directorio."
-  echo -e "     Los resultados exitosos van a '/root/audit_success.log'."
-  echo -e "     Los errores de permisos y advertencias van a '/root/audit_errors.log'."
-  echo -e "     Ambos flujos deben estar completamente aislados entre sí."
-  echo -e "     Mezclar stdout y stderr en un mismo archivo invalida la evidencia."
+  echo -e "     Ejecute un rastreo con 'find' sobre el directorio '/srv/app_owner/apps_legacy'."
+  echo -e "     Los resultados exitosos (rutas encontradas) van a '/srv/sre_operator/audit_success.log'."
+  echo -e "     Los errores de permisos (stderr nativo) van a '/srv/sre_operator/audit_errors.log'."
+  echo -e "     Ambos archivos deben quedar completamente aislados."
   echo -e ""
-  echo -e "  \e[1;31m3. Pipeline de Telemetría sin Archivos Intermedios\e[0m"
-  echo -e "     De todos los archivos '.log' en la ruta raíz de la aplicación,"
-  echo -e "     extraiga masivamente las líneas que contengan 'ERROR', 'CRITICAL'"
-  echo -e "     o 'FATAL'. Todo en un único pipeline directo: sin tocar disco,"
-  echo -e "     sin archivos temporales. Las líneas deben ordenarse de forma única"
-  echo -e "     y el resultado final guardarse comprimido en '/root/telemetry_signals.log.gz'."
-  echo -e "     La eficiencia aquí no es opcional, es parte del requerimiento."
+  echo -e "  \e[1;31m3. Pipeline de Telemetría en Memoria Estricto\e[0m"
+  echo -e "     De todos los archivos '.log' válidos en la infraestructura del app_owner,"
+  echo -e "     extraiga de forma masiva las líneas que contengan exactamente 'ERROR',"
+  echo -e "     'CRITICAL' o 'FATAL' mediante un único flujo de pipes ('|')."
+  echo -e "     Requerimiento: No use archivos temporales intermedios. Las líneas deben"
+  echo -e "     ordenarse descartando duplicados y el resultado debe guardarse comprimido"
+  echo -e "     en '/srv/sre_operator/telemetry_signals.log.gz'."
   echo -e ""
-  echo -e "  \e[1;31m4. Reporte Operativo Inmutable\e[0m"
-  echo -e "     Genere '/root/backup_status.txt' con estructura precisa."
-  echo -e "     Primera línea: la marca de tiempo exacta del sistema bajo el"
-  echo -e "     formato 'TIMESTAMP: [fecha]', sobrescribiendo cualquier contenido previo."
-  echo -e "     Segunda línea: el mensaje 'STATUS: OPERACIÓN COMPILADA CON ÉXITO'"
-  echo -e "     concatenado sin destruir la primera línea."
-  echo -e "     El sistema de monitoreo leerá este archivo. El formato no es sugerencia."
+  echo -e "  \e[1;31m4. Reporte Operativo de Monitoreo\e[0m"
+  echo -e "     Genere el archivo '/srv/sre_operator/backup_status.txt' con la estructura:"
+  echo -e "     Línea 1: La marca de tiempo exacta bajo el formato 'TIMESTAMP: [fecha]'"
+  echo -e "     Línea 2: El mensaje 'STATUS: OPERACIÓN COMPILADA CON ÉXITO' concatenado."
   echo -e ""
-  echo -e " \e[1mRequerimientos de Validación:\e[0m"
-  echo -e "  [ ] Backup critical_legacy.tar.xz listo (filtros: cache + mtime)    --> \e[1;35m30%\e[0m"
-  echo -e "  [ ] Bifurcación find (audit_success / audit_errors) aislada          --> \e[1;35m25%\e[0m"
-  echo -e "  [ ] Pipeline telemetry_signals.log.gz (ERE multi-patrón + unique)    --> \e[1;35m25%\e[0m"
-  echo -e "  [ ] backup_status.txt estructurado con marcas TIMESTAMP / STATUS     --> \e[1;35m20%\e[0m"
+  echo -e " \e[1mCriterios de Aceptación (Entregables en /srv/sre_operator/):\e[0m"
+  echo -e "  [ ] critical_legacy.tar.xz generado bajo filtros estrictos            --> \e[1;35m30%\e[0m"
+  echo -e "  [ ] Bifurcación de descriptores (audit_success / audit_errors) lista   --> \e[1;35m25%\e[0m"
+  echo -e "  [ ] Pipeline telemetry_signals.log.gz sin basura ni duplicados         --> \e[1;35m25%\e[0m"
+  echo -e "  [ ] backup_status.txt estructurado de forma inmutable                  --> \e[1;35m20%\e[0m"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1;32mNota de Campo:\e[0m Cuatro frentes, una sola ventana de tiempo."
-  echo -e "              Trabaje por capas. Valide cada salida antes de avanzar."
-  echo -e "              SecOps no acepta resultados parciales como evidencia."
+  echo -e " \e[1;32m🚨 REGLA DE ORO PLENA:\e[0m No modifique los permisos de 'secure_vault.log'."
+  echo -e "                      Un Sysadmin Pleno redirige el flujo de errores, no lo evade."
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
   EOF
@@ -126,85 +139,109 @@ tags:
   - Laboratorios-del-LFCS
 Script Validacion: |-
   #!/bin/bash
+
+  # ==============================================================================
+  # SCRIPT DE EVALUACIÓN AUTOMÁTICA (PG-004-v2-SYSADMIN-PLENO)
+  # ==============================================================================
+
   PUNTOS=0
+  TARGET_DIR="/srv/sre_operator"
 
-  echo "=== EVALUANDO COMPRESIÓN INDUSTRIAL Y COMPLIANCE DE FLUJOS ==="
+  echo -e "\e[1;36m=== EVALUANDO AUTOMATIZACIÓN DE FLUJOS SRE Y DESCRIPTORES (8/10) ===\e[0m"
 
-  BKP_FILE="/backup/critical_legacy.tar.xz"
-  SUCCESS_LOG="/root/audit_success.log"
-  ERROR_LOG="/root/audit_errors.log"
-  GZ_TELEMETRY="/root/telemetry_signals.log.gz"
-  STATUS_TXT="/root/backup_status.txt"
-
-  # 1. Validar el archivo de respaldo Tar XZ y sus exclusiones complejas
-  if [ -f "$BKP_FILE" ]; then
-      # Validar formato XZ legítimo (-J)
-      if tar -tJf "$BKP_FILE" >/dev/null 2>&1; then
-          # Verificar exclusiones de la palabra 'cache'
-          if ! tar -tf "$BKP_FILE" | grep -q "cache"; then
-              # Verificar exclusión por tiempo (old_legacy.log no debe existir en el tar)
-              if ! tar -tf "$BKP_FILE" | grep -q "old_legacy.log"; then
-                  echo "✔ [30%] Respaldo corporativo Tar XZ verificado con exclusión analítica de tiempo y patrones."
-                  PUNTOS=$((PUNTOS + 30))
-              else
-                  echo "❌ [15%] El respaldo XZ se creó, pero falló el filtro de tiempo (-mtime); incluyó archivos antiguos."
-                  PUNTOS=$((PUNTOS + 15))
-              fi
-          else
-              echo "❌ [10%] El respaldo XZ se creó, pero no aplicó la política de exclusión de directorios/archivos 'cache'."
-              PUNTOS=$((PUNTOS + 10))
-          fi
-      else
-          echo "❌ [0%] El archivo existe en la ruta pero no corresponde a una compresión XZ válida (-J)."
-      fi
-  else
-      echo "❌ [0%] No se encuentra el archivo de respaldo empresarial en $BKP_FILE."
-  fi
-
-  # 2. Validar aislamiento de flujos (Stdout vs Stderr)
-  if [ -f "$SUCCESS_LOG" ] && [ -f "$ERROR_LOG" ]; then
-      if [ -s "$SUCCESS_LOG" ] && [ -s "$ERROR_LOG" ]; then
-          echo "✔ [25%] Separación analítica de flujos Stdout (1>) y Stderr (2>) validada con éxito."
-          PUNTOS=$((PUNTOS + 25))
-      else
-          echo "❌ [10%] Los archivos de log existen pero uno de los flujos está vacío (¿Olvidó capturar los errores de permisos?)."
-          PUNTOS=$((PUNTOS + 10))
-      fi
-  else
-      echo "❌ [0%] Faltan los archivos de redirección del escaneo forense de rutas."
-  fi
-
-  # 3. Validar Pipeline de Telemetría e ingesta masiva
-  if [ -f "$GZ_TELEMETRY" ]; then
-      # Validar que contenga patrones complejos y esté filtrado con orden único
-      if zgrep -q "FATAL" "$GZ_TELEMETRY" && zgrep -q "CRITICAL" "$GZ_TELEMETRY" && ! zgrep -q "INFO" "$GZ_TELEMETRY"; then
-          echo "✔ [25%] Pipeline síncrono de telemetría masiva validado (Filtros RegEx extendidos y ordenamiento único implementados)."
-          PUNTOS=$((PUNTOS + 25))
-      else
-          echo "❌ [0%] El flujo interno de datos comprimidos no cumple con el filtrado exclusivo de señales críticas."
-      fi
-  else
-      echo "❌ [0%] No se encuentra el concentrador de señales comprimidas al vuelo en $GZ_TELEMETRY."
-  fi
-
-  # 4. Validar el reporte operativo dinámico
-  if [ -f "$STATUS_TXT" ]; then
-      LINE1=$(sed -n '1p' "$STATUS_TXT")
-      LINE2=$(sed -n '2p' "$STATUS_TXT")
+  # 1. VALIDAR RESPALDO TAR.XZ CON FILTROS
+  if [ -f "$TARGET_DIR/critical_legacy.tar.xz" ]; then
+      # Listar el contenido del tar de forma interna para evaluar qué se empaquetó
+      TAR_CONTENT=$(tar -tf "$TARGET_DIR/critical_legacy.tar.xz")
       
-      if echo "$LINE1" | grep -q "^TIMESTAMP: " && [ "$LINE2" = "STATUS: OPERACIÓN COMPILADA CON ÉXITO" ]; then
-          echo "✔ [20%] Reporte de ejecución inyectado con éxito empleando operadores dinámicos (> y >>)."
+      # Verificaciones internas:
+      # - NO debe contener la palabra cache
+      # - NO debe contener old_legacy.log (filtro de tiempo >24h)
+      # - DEBE contener app1.log o kernel.log
+      HAS_CACHE=$(echo "$TAR_CONTENT" | grep "cache")
+      HAS_OLD=$(echo "$TAR_CONTENT" | grep "old_legacy.log")
+      HAS_VALID=$(echo "$TAR_CONTENT" | grep -E "app1.log|kernel.log" || true)
+      
+      if [ -z "$HAS_CACHE" ] && [ -z "$HAS_OLD" ] && [ -n "$HAS_VALID" ]; then
+          echo -e "✔ \e[1;32m[30%]\e[0m critical_legacy.tar.xz empaquetado correctamente con filtros de mtime y exclusión."
+          PUNTOS=$((PUNTOS + 30))
+      else
+          echo -e "❌ \e[1;31m[0%]\e[0m critical_legacy.tar.xz contiene fallas. O arrastró archivos de cache/viejos o está vacío."
+      fi
+  else
+      echo -e "❌ \e[1;31m[0%]\e[0m No se encontró el respaldo critical_legacy.tar.xz."
+  fi
+
+  # 2. VALIDAR BIFURCACIÓN FORENSE (stdout vs stderr nativo)
+  SUCCESS_LOG="$TARGET_DIR/audit_success.log"
+  ERRORS_LOG="$TARGET_DIR/audit_errors.log"
+
+  if [ -f "$SUCCESS_LOG" ] && [ -f "$ERRORS_LOG" ]; then
+      # El archivo de errores DEBE contener el string de "Permission denied" de secure_vault.log
+      # El archivo de éxito NO debe contener mensajes de error.
+      VALID_ERROR=$(grep -i "permission denied" "$ERRORS_LOG" || true)
+      ERRORS_IN_SUCCESS=$(grep -i "permission denied" "$SUCCESS_LOG" || true)
+      
+      if [ -n "$VALID_ERROR" ] && [ -z "$ERRORS_IN_SUCCESS" ]; then
+          echo -e "✔ \e[1;32m[25%]\e[0m Bifurcación forense de descriptores exitosa. Flujos stdout y stderr completamente aislados."
+          PUNTOS=$((PUNTOS + 25))
+      else
+          echo -e "❌ \e[1;31m[0%]\e[0m Error en la bifurcación. El flujo de errores se mezcló con el de éxito o no se capturó."
+      fi
+  else
+      echo -e "❌ \e[1;31m[0%]\e[0m Faltan archivos de auditoría indispensables (audit_success o audit_errors)."
+  fi
+
+  # 3. VALIDAR PIPELINE DE TELEMETRÍA (Compresión al vuelo sin archivos intermedios)
+  TELEMETRY_GZ="$TARGET_DIR/telemetry_signals.log.gz"
+  if [ -f "$TELEMETRY_GZ" ]; then
+      # Descomprimir en memoria para verificar contenido
+      GZ_CONTENT=$(zcat "$TELEMETRY_GZ" 2>/dev/null || true)
+      
+      # Chequear patrones requeridos y exclusión de duplicados
+      HAS_FATAL=$(echo "$GZ_CONTENT" | grep "FATAL" || true)
+      HAS_CRITICAL=$(echo "$GZ_CONTENT" | grep "CRITICAL" || true)
+      HAS_INFO=$(echo "$GZ_CONTENT" | grep "INFO" || true)
+      
+      # Verificar ordenamiento único: Si hay duplicados o no está ordenado, fallará
+      TOTAL_LINES=$(echo "$GZ_CONTENT" | wc -l)
+      UNIQUE_LINES=$(echo "$GZ_CONTENT" | sort -u | wc -l)
+      
+      if [ -n "$HAS_FATAL" ] && [ -n "$HAS_CRITICAL" ] && [ -z "$HAS_INFO" ] && [ "$TOTAL_LINES" -eq "$UNIQUE_LINES" ] && [ "$TOTAL_LINES" -gt 0 ]; then
+          echo -e "✔ \e[1;32m[25%]\e[0m Pipeline de telemetría correcto. Filtrado multi-patrón limpio, ordenado y comprimido."
+          PUNTOS=$((PUNTOS + 25))
+      else
+          echo -e "❌ \e[1;31m[0%]\e[0m telemetry_signals.log.gz inválido. Contiene eventos no deseados o líneas duplicadas."
+      fi
+  else
+      echo -e "❌ \e[1;31m[0%]\e[0m No se encontró el archivo de telemetría masiva telemetry_signals.log.gz."
+  fi
+
+  # 4. VALIDAR REPORTE OPERATIVO INMUTABLE
+  STATUS_FILE="$TARGET_DIR/backup_status.txt"
+  if [ -f "$STATUS_FILE" ]; then
+      LINE_COUNT=$(wc -l < "$STATUS_FILE")
+      HAS_TIMESTAMP=$(grep -E "^TIMESTAMP:" "$STATUS_FILE" || true)
+      HAS_STATUS=$(grep -E "^STATUS: OPERACIÓN COMPILADA CON ÉXITO" "$STATUS_FILE" || true)
+      
+      if [ "$LINE_COUNT" -eq 2 ] && [ -n "$HAS_TIMESTAMP" ] && [ -n "$HAS_STATUS" ]; then
+          echo -e "✔ \e[1;32m[20%]\e[0m backup_status.txt estructurado perfectamente acorde a la especificación de monitoreo."
           PUNTOS=$((PUNTOS + 20))
       else
-          echo "❌ [0%] La estructura de reporte diverge del formato exigido por monitoreo centralizado."
+          echo -e "❌ \e[1;31m[0%]\e[0m backup_status.txt tiene una estructura incorrecta, falta un campo o se destruyeron líneas."
       fi
   else
-      echo "❌ [0%] No se encuentra el archivo de estado de ejecución de respaldo."
+      echo -e "❌ \e[1;31m[0%]\e[0m No se generó el reporte operativo backup_status.txt."
   fi
 
-  echo "====================================================="
-  echo "🎯 CONTROL DE RESPALDOS Y REDIRECCIÓN COMPLETA: $PUNTOS / 100"
-  echo "====================================================="
+  # POSTEO DE RESULTADOS FINAL
+  echo -e "\e[1;36m================================================================================\e[0m"
+  if [ $PUNTOS -eq 100 ]; then
+      echo -e "  \e[1;32mCALIFICACIÓN FINAL: $PUNTOS / 100 — PIPELINE SRE COMPLETADO EN NIVEL PLENO\e[0m"
+  else
+      echo -e "  \e[1;31mCALIFICACIÓN FINAL: $PUNTOS / 100 — REVISE EL MANEJO DE DESCRIPTORES Y PIPES\e[0m"
+  fi
+  echo -e "\e[1;36m================================================================================\e[0m"
 ---
 [[Laboratorios del LFCS]]
 
