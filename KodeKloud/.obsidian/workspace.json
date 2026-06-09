@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V2.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/PG-003 - Gestión de privilegios y control de acceso (Sudoers, PAM y NSSwitch).md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V2"
+              "title": "PG-003 - Gestión de privilegios y control de acceso (Sudoers, PAM y NSSwitch)"
             }
           }
         ]
@@ -204,10 +204,10 @@
   "active": "fe9da27ba1f1a9a4",
   "lastOpenFiles": [
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V1.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit) - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit) - V1.md",
