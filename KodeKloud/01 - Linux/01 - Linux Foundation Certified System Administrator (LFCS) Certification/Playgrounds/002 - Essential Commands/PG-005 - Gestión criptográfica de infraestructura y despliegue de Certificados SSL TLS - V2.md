@@ -15,20 +15,6 @@ Competencias:
   - Construir solicitudes de firma de certificados (CSR) con metadatos específicos del negocio
   - Autenticar y emitir certificados digitales X.509 válidos con tiempos de vida controlados
   - Auditar metadatos de certificados en producción directo desde la consola
-Ticket: |-
-  INC-3005
-
-  El equipo de seguridad de la información solicita habilitar HTTPS de forma temporal para un servidor de pruebas interno. Debido a políticas de auditoría, se exige generar el material criptográfico localmente en el directorio '/etc/pki/tls/corp_app/'.
-
-  Deberá cumplir estrictamente con los siguientes parámetros técnicos:
-  1. Crear el directorio '/etc/pki/tls/corp_app/' para almacenar el material.
-  2. Generar una llave privada RSA de 2048 bits llamada 'server.key'. No debe utilizar cifrado por contraseña para permitir el inicio automático del servicio web.
-  3. Crear una solicitud de firma de certificado (CSR) llamada 'server.csr' basada en esa llave, utilizando exactamente los siguientes metadatos:
-     - Country Name (C): BR
-     - Organization (O): Enterprise Group
-     - Common Name (CN): test-app.corp.internal
-  4. Emitir un certificado digital autofirmado (X.509) llamado 'server.crt' válido por 365 días a partir de la llave y el CSR generados.
-  5. Use comandos de verificación de OpenSSL para extraer la fecha de expiración del certificado generado y guarde de forma exclusiva esa línea de información en el archivo '/root/cert_expiration.txt'.
 Validacion:
   - Objetivo: Llave privada server.key generada con el tamaño y algoritmo correcto.
     Peso: 20 %
@@ -41,33 +27,65 @@ Validacion:
 Calificacion Final:
 Script: |-
   cat << 'EOF' > /tmp/setup_sh
+
   #!/bin/bash
   set -e
 
-  # Limpieza absoluta de laboratorios criptográficos previos
-  rm -rf /etc/pki/tls/corp_app
-  rm -f /root/cert_expiration.txt
+  # Variables de Red del Clúster
+  USER_NET="bob"
+  NODE_TARGET="node02"
+  NODE_VAULT="node03"
+  SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
+
+  echo -e "\e[1;33m⏳ Orquestando entorno multi-nodo de forma remota desde node01...\e[0m"
+
+  # 1. Limpieza preventiva en el nodo afectado (node02) mediante SSH
+  ssh $SSH_OPTS ${USER_NET}@${NODE_TARGET} "sudo rm -rf /etc/pki/tls/corp_app/ && sudo rm -f /root/cert_expiration.txt" >/dev/null 2>&1 || true
+
+  # 2. Limpieza preventiva en la bóveda de evidencias (node03) mediante SSH
+  ssh $SSH_OPTS ${USER_NET}@${NODE_VAULT} "sudo rm -f /root/cert_expiration.txt" >/dev/null 2>&1 || true
 
   clear
   echo -e "\e[1;36m================================================================================\e[0m"
-  echo -e "\e[1;32m 🚀 ESCENARIO CONFIGURADO - ESSENTIAL COMMANDS (PG-005)\e[0m"
+  echo -e "\e[1;32m 🔐 ESCENARIO CONFIGURADO - CENTRAL DE LOGÍSTICA & AUDITORÍA (PG-005-MN)\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
-  echo -e "\e[1;33m TICKET DE INCIDENTE: INC-3005\e[0m"
+  echo -e "\e[1;33m TICKET DE INCIDENTE: INC-3005 (ENTORNO MULTI-NODO DISTRIBUIDO)\e[0m"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1mAsunto:\e[0m Gestión criptográfica y despliegue de Certificados SSL/TLS"
-  echo -e " \e[1mSeveridad:\e[0m Alta / Infraestructura de Seguridad"
-  echo -e ""
-  echo -e " \e[1mDescripción:\e[0m"
-  echo -e " Genere la estructura de claves y certificados TLS requerida para el entorno"
-  echo -e " interno de pruebas. Asegure la coincidencia exacta de los metadatos corporativos"
-  echo -e " y extraiga el reporte de validez temporal exigido por auditoría."
-  echo -e ""
-  echo -e " \e[1mRequerimientos de Validación (Peso Total: 100%):\e[0m"
-  echo -e "  [ ] Llave RSA 2048 bits en /etc/pki/tls/corp_app/server.key    --> \e[1;35m20%\e[0m"
-  echo -e "  [ ] CSR generado con CN=test-app.corp.internal, O=Enterprise Group, C=BR --> \e[1;35m30%\e[0m"
-  echo -e "  [ ] Certificado X.509 server.crt válido por 365 días            --> \e[1;35m30%\e[0m"
-  echo -e "  [ ] Reporte de fin de validez en /root/cert_expiration.txt       --> \e[1;35m20%\e[0m"
+  echo -e " \e[1mUbicación Actual:\e[0m node01 (Estación de Administración — \e[1;35minvestigator\e[0m)"
+  echo -e " \e[1mObjetivo de Configuración:\e[0m Servidor Interno Isolated (\e[1;35mnode02\e[0m)"
+  echo -e " \e[1mObjetivo de Custodia:\e[0m Bóveda de Seguridad Segura (\e[1;35mnode03\e[0m)"
   echo -e " ------------------------------------------------------------------------------"
+  echo -e ""
+  echo -e " \e[1mContexto del Incidente:\e[0m"
+  echo -e "  El equipo de Seguridad de la Información tiene una ventana de pruebas"
+  echo -e "  activa en \e[1mnode02\e[0m y necesita HTTPS habilitado de forma inmediata."
+  echo -e "  No es un requerimiento permanente, pero el entorno no puede operar"
+  echo -e "  sobre HTTP plano mientras las políticas de auditoría estén vigentes."
+  echo -e ""
+  echo -e "  El requerimiento exige que todo el material criptográfico debe"
+  echo -e "  generarse localmente dentro del directorio \e[1m'/etc/pki/tls/corp_app/'\e[0m"
+  echo -e "  en \e[1mnode02\e[0m. No se aceptan certificados externos."
+  echo -e ""
+  echo -e "  Adicionalmente, el servicio web debe poder iniciar de forma"
+  echo -e "  automática (llave privada sin cifrado por contraseña)."
+  echo -e ""
+  echo -e " \e[1mParámetros Técnicos Operacionales (A ejecutar desde tu consola en node01):\e[0m"
+  echo -e ""
+  echo -e "  \e[1;31m1.\e[0m Cree de forma remota en \e[1mnode02\e[0m el directorio '/etc/pki/tls/corp_app/'."
+  echo -e "  \e[1;31m2.\e[0m Genere en \e[1mnode02\e[0m una llave privada RSA de 2048 bits llamada 'server.key'."
+  echo -e "  \e[1;31m3.\e[0m Genere en \e[1mnode02\e[0m el CSR 'server.csr' con los metadatos exactos obligatorios:"
+  echo -e "       \e[1;33m  C=BR  |  O=Enterprise Group  |  CN=test-app.corp.internal\e[0m"
+  echo -e "  \e[1;31m4.\e[0m Emita en \e[1mnode02\e[0m el certificado digital autofirmado 'server.crt' (X.509, 365 días)."
+  echo -e "  \e[1;31m5.\e[0m Extraiga la línea de expiración de \e[1mnode02\e[0m y envíela de forma directa"
+  echo -e "       al archivo \e[1m/root/cert_expiration.txt\e[0m en \e[1mnode03\e[0m usando pipes o SCP/RSYNC."
+  echo ""
+  echo -e " \e[1mRequerimientos de Validación Remota:\e[0m"
+  echo -e "  [ ] Llave RSA 2048 bits en node02:/etc/pki/tls/corp_app/server.key  --> \e[1;35m20%\e[0m"
+  echo -e "  [ ] CSR estructurado con metadatos de la empresa en node02         --> \e[1;35m25%\e[0m"
+  echo -e "  [ ] Certificado X.509 server.crt activo por 365 días en node02      --> \e[1;35m25%\e[0m"
+  echo -e "  [ ] Reporte de expiración aislado de forma exacta en node03         --> \e[1;35m30%\e[0m"
+  echo -e " ------------------------------------------------------------------------------"
+  echo -e " \e[1;32mCredenciales de Red del Cluster:\e[0m Usuario: \e[1mbob\e[0m | Contraseña: \e[1mcaleston123\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
   EOF
@@ -82,84 +100,102 @@ Script Validacion: |-
   #!/bin/bash
   PUNTOS=0
 
-  echo "=== EVALUANDO INFRAESTRUCTURA DE LLAVES PÚBLICAS Y CERTIFICADOS ==="
+  echo -e "\n=== 🕵️ EVALUANDO INFRAESTRUCTURA DESDE NODE01 (CONTROL CENTRAL) ==="
 
-  KEY="/etc/pki/tls/corp_app/server.key"
-  CSR="/etc/pki/tls/corp_app/server.csr"
-  CRT="/etc/pki/tls/corp_app/server.crt"
-  EXP_TXT="/root/cert_expiration.txt"
+  # Definición de objetivos remotos
+  TARGET_NODE="node02"    # El nodo afectado donde se debió generar el material SSL
+  VAULT_NODE="node03"     # La bóveda donde se debió resguardar el reporte
+  USER="bob"
 
-  # 1. Validar la Llave Privada
-  if [ -f "$KEY" ]; then
-      if openssl rsa -in "$KEY" -check -noout >/dev/null 2>&1; then
-          KEY_SIZE=$(openssl rsa -in "$KEY" -text -noout 2>/dev/null | grep -E "Private-Key:" | awk '{print $2}' | tr -d '()')
-          if [ "$KEY_SIZE" = "2048" ]; then
-              echo "✔ [20%] Llave privada server.key verificada (Algoritmo RSA, tamaño 2048 bits)."
-              PUNTOS=$((PUNTOS + 20))
-          else
-              echo "❌ [0%] La llave existe pero su tamaño es de $KEY_SIZE bits (se esperaba 2048)."
-          fi
-      else
-          echo "❌ [0%] El archivo en $KEY no es una llave privada RSA válida."
-      fi
-  else
-      echo "❌ [0%] No se encuentra la llave privada en la ruta requerida."
-  fi
+  # Rutas de los archivos a evaluar en los nodos remotos
+  KEY_REMOTE="/etc/pki/tls/corp_app/server.key"
+  CSR_REMOTE="/etc/pki/tls/corp_app/server.csr"
+  CRT_REMOTE="/etc/pki/tls/corp_app/server.crt"
+  VAULT_FILE="/root/cert_expiration.txt"
 
-  # 2. Validar el CSR y sus metadatos obligatorios
-  if [ -f "$CSR" ]; then
-      CSR_CN=$(openssl req -in "$CSR" -noout -subject | grep -o "CN=.*" | cut -d= -f2 | tr -d ' ')
-      CSR_O=$(openssl req -in "$CSR" -noout -subject | grep -o "O=.*" | cut -d= -f2 | cut -d',' -f1 | xargs)
-      CSR_C=$(openssl req -in "$CSR" -noout -subject | grep -o "C=.*" | cut -d= -f2 | cut -d',' -f1 | xargs)
+  echo "⏳ Conectando a $TARGET_NODE para auditar el material criptográfico..."
 
-      if [ "$CSR_CN" = "test-app.corp.internal" ] && \
-         [ "$CSR_O" = "Enterprise Group" ] && \
-         [ "$CSR_C" = "BR" ]; then
-          echo "✔ [30%] Solicitud de Certificado (CSR) validada con los metadatos corporativos requeridos."
-          PUNTOS=$((PUNTOS + 30))
-      else
-          echo "❌ [0%] El CSR existe pero contiene metadatos incorrectos o incompletos."
-          echo "    CN=$CSR_CN | O=$CSR_O | C=$CSR_C"
-      fi
-  else
-      echo "❌ [0%] No se encuentra el archivo de solicitud $CSR."
-  fi
-
-  # 3. Validar el Certificado Autofirmado
-  if [ -f "$CRT" ]; then
-      if openssl x509 -in "$CRT" -text -noout >/dev/null 2>&1; then
-          CRT_CN=$(openssl x509 -in "$CRT" -noout -subject -nameopt RFC2253 \
-                   | sed -n 's/.*CN=\([^,]*\).*/\1/p')
-
-          if [ "$CRT_CN" = "test-app.corp.internal" ]; then
-              echo "✔ [30%] Certificado digital X.509 corporativo verificado con éxito."
-              PUNTOS=$((PUNTOS + 30))
-          else
-              echo "❌ [15%] El certificado es válido pero fue emitido para el CN '$CRT_CN' incorrecto."
-              PUNTOS=$((PUNTOS + 15))
-          fi
-      else
-          echo "❌ [0%] El archivo en $CRT no es un certificado estructurado X.509 válido."
-      fi
-  else
-      echo "❌ [0%] Falta generar el certificado final server.crt."
-  fi
-
-  # 4. Validar el reporte de expiración analítico extraído
-  if [ -f "$EXP_TXT" ]; then
-      if grep -q "notAfter=" "$EXP_TXT"; then
-          echo "✔ [20%] Reporte forense de expiración verificado en $EXP_TXT."
+  # ------------------------------------------------------------------------------
+  # 1. Validar la Llave Privada en node02 (remoto)
+  # ------------------------------------------------------------------------------
+  if ssh -o StrictHostKeyChecking=no ${USER}@${TARGET_NODE} "[ -f $KEY_REMOTE ]" 2>/dev/null; then
+      # Extraemos el tamaño de la llave remotamente para verificarlo en node01
+      KEY_SIZE=$(ssh ${USER}@${TARGET_NODE} "openssl rsa -in $KEY_REMOTE -text -noout 2>/dev/null" | grep -E "Private-Key:" | awk '{print $2}' | tr -d '()')
+      
+      if [ "$KEY_SIZE" = "2048" ]; then
+          echo "✔ [20%] Llave privada server.key verificada en $TARGET_NODE (RSA 2048 bits)."
           PUNTOS=$((PUNTOS + 20))
       else
-          echo "❌ [0%] El archivo de expiración existe pero no contiene el formato de fecha 'notAfter=' filtrado."
+          echo "❌ [0%] La llave existe en $TARGET_NODE pero es de $KEY_SIZE bits (se esperaba 2048)."
       fi
   else
-      echo "❌ [0%] No se encuentra el reporte analítico en la ruta especificada."
+      echo "❌ [0%] No se encuentra la llave privada en la ruta requerida de $TARGET_NODE."
   fi
 
-  echo "============================"
-  echo "CALIFICACIÓN FINAL: $PUNTOS / 100"
-  echo "============================"
+  # ------------------------------------------------------------------------------
+  # 2. Validar el CSR en node02 (remoto)
+  # ------------------------------------------------------------------------------
+  if ssh ${USER}@${TARGET_NODE} "[ -f $CSR_REMOTE ]" 2>/dev/null; then
+      CSR_SUBJECT=$(ssh ${USER}@${TARGET_NODE} "openssl req -in $CSR_REMOTE -noout -subject" 2>/dev/null)
+      
+      if echo "$CSR_SUBJECT" | grep -q "CN=test-app.corp.internal" && \
+         echo "$CSR_SUBJECT" | grep -q "O=Enterprise Group" && \
+         echo "$CSR_SUBJECT" | grep -q "C=BR"; then
+          echo "✔ [25%] Solicitud de Certificado (CSR) validada en $TARGET_NODE con metadatos correctos."
+          PUNTOS=$((PUNTOS + 25))
+      else
+          echo "❌ [0%] El CSR en $TARGET_NODE contiene metadatos incorrectos o incompletos."
+      fi
+  else
+      echo "❌ [0%] No se encuentra el archivo CSR en $TARGET_NODE."
+  fi
+
+  # ------------------------------------------------------------------------------
+  # 3. Validar el Certificado Autofirmado en node02 (remoto)
+  # ------------------------------------------------------------------------------
+  if ssh ${USER}@${TARGET_NODE} "[ -f $CRT_REMOTE ]" 2>/dev/null; then
+      CRT_CN=$(ssh ${USER}@${TARGET_NODE} "openssl x509 -in $CRT_REMOTE -noout -subject -nameopt RFC2253" 2>/dev/null | sed -n 's/.*CN=\([^,]*\).*/\1/p')
+      
+      if [ "$CRT_CN" = "test-app.corp.internal" ]; then
+          echo "✔ [25%] Certificado digital X.509 verificado con éxito en $TARGET_NODE."
+          PUNTOS=$((PUNTOS + 25))
+      else
+          echo "❌ [10%] El certificado en $TARGET_NODE existe pero el CN '$CRT_CN' es incorrecto."
+          PUNTOS=$((PUNTOS + 10))
+      fi
+  else
+      echo "❌ [0%] Falta generar el certificado final server.crt en $TARGET_NODE."
+  fi
+
+  # ------------------------------------------------------------------------------
+  # 4. Validar Transferencia a la Bóveda en node03 (remoto)
+  # ------------------------------------------------------------------------------
+  echo "⏳ Conectando a $VAULT_NODE (Bóveda) para verificar el reporte final..."
+  VAULT_CHECK=$(ssh -o StrictHostKeyChecking=no ${USER}@${VAULT_NODE} "cat $VAULT_FILE 2>/dev/null" || true)
+
+  if [ -n "$VAULT_CHECK" ]; then
+      if echo "$VAULT_CHECK" | grep -q "notAfter=Mock" || echo "$VAULT_CHECK" | grep -q "notAfter="; then
+          echo "✔ [30%] Custodia de Evidencias: Reporte localizado de forma exacta en $VAULT_NODE:$VAULT_FILE."
+          PUNTOS=$((PUNTOS + 30))
+      else
+          echo "❌ [0%] El archivo existe en $VAULT_NODE, pero el formato de la fecha de expiración es incorrecto."
+      fi
+  else
+      echo "❌ [0%] Error de transferencia: El reporte analítico no fue encontrado en $VAULT_NODE."
+  fi
+
+  # ------------------------------------------------------------------------------
+  # Calificación Final
+  # ------------------------------------------------------------------------------
+  echo -e "\n========================================"
+  if [ $PUNTOS -eq 100 ]; then
+      echo -e "🎉 CALIFICACIÓN FINAL: \e[1;32m$PUNTOS / 100\e[0m"
+      echo -e "Estrategia multi-nodo ejecutada a la perfección desde node01."
+  else
+      echo -e "❌ CALIFICACIÓN FINAL: \e[1;31m$PUNTOS / 100\e[0m"
+      echo -e "Verifique la ejecución remota de OpenSSL o la transferencia de archivos."
+  fi
+  echo "========================================"
   EOF
 
   chmod +x /tmp/validador.sh
