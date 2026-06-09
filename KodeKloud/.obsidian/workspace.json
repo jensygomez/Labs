@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Networking/PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-001 - Estructuras de archivos complejas y consistencia de Inodos - V2.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1"
+              "title": "PG-001 - Estructuras de archivos complejas y consistencia de Inodos - V2"
             }
           }
         ]
@@ -203,6 +203,9 @@
   },
   "active": "fe9da27ba1f1a9a4",
   "lastOpenFiles": [
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit) - V2.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Networking/PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Vagrant/errores.pdf",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Vagrant/errores",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel) - V1.md",
@@ -210,8 +213,6 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V1.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V2.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Networking/PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-007 - Triage de Incidente Mayor y Restauración de Servicios Críticos (Examen Integrador).md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Networking",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-007 - Contenedor web inaccesible (Podman, SELinux y Redes) - V2.md",
@@ -238,7 +239,6 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/08 - Files Directories Hard links.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/02 - Essential-Commands/04 - Logging in and System Documentation.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V2.md",
-    "Accenture",
     "LINUX/00 - qui/Sem título.canvas",
     "Advanced Bash Scripting/01 - Introduction.canvas",
     "ChatGPT Image 19 de abr. de 2026, 07_59_54.png"
