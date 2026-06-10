@@ -29,7 +29,6 @@ Validacion:
     Peso: 20 %
   - Objetivo: El servicio tiene Restart=always y WorkingDirectory configurado correctamente
     Peso: 15 %
-Calificacion Final: 100 %
 Script: |-
   cat << 'EOF' > /tmp/setup_sh
 
