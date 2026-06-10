@@ -30,6 +30,22 @@ Script: |-
   SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
   SSH="sshpass -p $PASS ssh $SSH_OPTS"
 
+  # ── Instalación de paquetes base en node01 (local) ───────────────────────────
+  echo -e "\e[1;33m⏳ Instalando paquetes necesarios en node01 (local)...\e[0m"
+  sudo apt-get update -qq
+  sudo apt-get install -y -qq acl sshpass xz-utils > /dev/null
+
+  # ── Instalación de ACL y xz-utils en node02 y node03 ─────────────────────────
+  echo -e "\e[1;33m⏳ Instalando ACL y xz-utils en node02...\e[0m"
+  $SSH -t ${USER_NET}@${NODE_TARGET} "sudo bash -c '
+      apt-get update -qq && apt-get install -y -qq acl xz-utils
+  '"
+
+  echo -e "\e[1;33m⏳ Instalando ACL y xz-utils en node03...\e[0m"
+  $SSH -t ${USER_NET}@${NODE_VAULT} "sudo bash -c '
+      apt-get update -qq && apt-get install -y -qq acl xz-utils
+  '"
+
   echo -e "\e[1;33m⏳ Desplegando entorno distribuido y trampas de descriptores en el clúster...\e[0m"
 
   # ── 1. Aprovisionamiento remoto en node02 ───────────────────────────────────
@@ -82,6 +98,8 @@ Script: |-
       mkdir -p /opt/evidence-vault/
       chown -R bob:bob /opt/evidence-vault/
   '"
+
+  clear
 
   clear
   echo -e "\e[1;36m================================================================================\e[0m"
