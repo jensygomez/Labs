@@ -3,7 +3,7 @@ Curso: Prep Course - LFCS Certification
 Modulo: Essential Commands
 Playground: PG-005
 Titulo: Gestión criptográfica de infraestructura y despliegue de Certificados SSL/TLS - V2
-Fecha de Inicio: 2026-06-06
+Fecha de Inicio: 2026-06-10
 Dificultad: 7/10
 Objetivo:
   - Aprobar LFCS
@@ -95,72 +95,87 @@ tags:
 Script Validacion: |-
   #!/bin/bash
 
+  # =============================================================================
+  # VALIDADOR CORREGIDO — TICKET INC-3005
+  # Ejecutar desde: node01
+  # Usa sshpass para evitar prompts de contraseña (entorno de laboratorio)
+  # =============================================================================
 
-  cat > /tmp/validador.sh << 'EOF'
-  #!/bin/bash
   PUNTOS=0
-
-  echo -e "\n=== 🕵️ EVALUANDO INFRAESTRUCTURA DESDE NODE01 (CONTROL CENTRAL) ==="
-
-  # Definición de objetivos remotos
-  TARGET_NODE="node02"    # El nodo afectado donde se debió generar el material SSL
-  VAULT_NODE="node03"     # La bóveda donde se debió resguardar el reporte
   USER="bob"
+  PASS="caleston123"
+  TARGET_NODE="node02"
+  VAULT_NODE="node03"
 
-  # Rutas de los archivos a evaluar en los nodos remotos
   KEY_REMOTE="/etc/pki/tls/corp_app/server.key"
   CSR_REMOTE="/etc/pki/tls/corp_app/server.csr"
   CRT_REMOTE="/etc/pki/tls/corp_app/server.crt"
   VAULT_FILE="/root/cert_expiration.txt"
 
+  # Alias para no repetir sshpass en cada llamada
+  SSH2="sshpass -p $PASS ssh -o StrictHostKeyChecking=no ${USER}@${TARGET_NODE}"
+  SSH3="sshpass -p $PASS ssh -o StrictHostKeyChecking=no ${USER}@${VAULT_NODE}"
+
+  # Verificar que sshpass esté instalado
+  if ! command -v sshpass &>/dev/null; then
+      echo "⚠️  sshpass no está instalado. Instalando..."
+      sudo yum install -y sshpass -q && echo "✔ sshpass instalado." || {
+          echo "❌ No se pudo instalar sshpass. Abortando."
+          exit 1
+      }
+  fi
+
+  echo -e "\n=== 🕵️  EVALUANDO INFRAESTRUCTURA DESDE NODE01 (CONTROL CENTRAL) ==="
   echo "⏳ Conectando a $TARGET_NODE para auditar el material criptográfico..."
 
   # ------------------------------------------------------------------------------
-  # 1. Validar la Llave Privada en node02 (remoto)
+  # 1. Validar la Llave Privada en node02
   # ------------------------------------------------------------------------------
-  if ssh -o StrictHostKeyChecking=no ${USER}@${TARGET_NODE} "[ -f $KEY_REMOTE ]" 2>/dev/null; then
-      # Extraemos el tamaño de la llave remotamente para verificarlo en node01
-      KEY_SIZE=$(ssh ${USER}@${TARGET_NODE} "openssl rsa -in $KEY_REMOTE -text -noout 2>/dev/null" | grep -E "Private-Key:" | awk '{print $2}' | tr -d '()')
-      
+  if $SSH2 "sudo test -f $KEY_REMOTE" 2>/dev/null; then
+      KEY_SIZE=$($SSH2 "sudo openssl rsa -in $KEY_REMOTE -text -noout 2>/dev/null" \
+          | grep -oP '\(\K[0-9]+' | head -1)
+
       if [ "$KEY_SIZE" = "2048" ]; then
-          echo "✔ [20%] Llave privada server.key verificada en $TARGET_NODE (RSA 2048 bits)."
+          echo "✔ [20%] Llave privada server.key verificada en $TARGET_NODE (RSA $KEY_SIZE bits)."
           PUNTOS=$((PUNTOS + 20))
       else
-          echo "❌ [0%] La llave existe en $TARGET_NODE pero es de $KEY_SIZE bits (se esperaba 2048)."
+          echo "❌ [0%] La llave existe en $TARGET_NODE pero es de '$KEY_SIZE' bits (se esperaba 2048)."
       fi
   else
       echo "❌ [0%] No se encuentra la llave privada en la ruta requerida de $TARGET_NODE."
   fi
 
   # ------------------------------------------------------------------------------
-  # 2. Validar el CSR en node02 (remoto)
+  # 2. Validar el CSR en node02
   # ------------------------------------------------------------------------------
-  if ssh ${USER}@${TARGET_NODE} "[ -f $CSR_REMOTE ]" 2>/dev/null; then
-      CSR_SUBJECT=$(ssh ${USER}@${TARGET_NODE} "openssl req -in $CSR_REMOTE -noout -subject" 2>/dev/null)
-      
-      if echo "$CSR_SUBJECT" | grep -q "CN=test-app.corp.internal" && \
-         echo "$CSR_SUBJECT" | grep -q "O=Enterprise Group" && \
-         echo "$CSR_SUBJECT" | grep -q "C=BR"; then
-          echo "✔ [25%] Solicitud de Certificado (CSR) validada en $TARGET_NODE con metadatos correctos."
+  if $SSH2 "sudo test -f $CSR_REMOTE" 2>/dev/null; then
+      CSR_SUBJECT=$($SSH2 "sudo openssl req -in $CSR_REMOTE -noout -subject" 2>/dev/null)
+
+      if echo "$CSR_SUBJECT" | grep -q "CN\s*=\s*test-app.corp.internal" && \
+         echo "$CSR_SUBJECT" | grep -q "O\s*=\s*Enterprise Group" && \
+         echo "$CSR_SUBJECT" | grep -q "C\s*=\s*BR"; then
+          echo "✔ [25%] CSR validado en $TARGET_NODE con metadatos correctos."
           PUNTOS=$((PUNTOS + 25))
       else
           echo "❌ [0%] El CSR en $TARGET_NODE contiene metadatos incorrectos o incompletos."
+          echo "       Subject detectado: $CSR_SUBJECT"
       fi
   else
       echo "❌ [0%] No se encuentra el archivo CSR en $TARGET_NODE."
   fi
 
   # ------------------------------------------------------------------------------
-  # 3. Validar el Certificado Autofirmado en node02 (remoto)
+  # 3. Validar el Certificado Autofirmado en node02
   # ------------------------------------------------------------------------------
-  if ssh ${USER}@${TARGET_NODE} "[ -f $CRT_REMOTE ]" 2>/dev/null; then
-      CRT_CN=$(ssh ${USER}@${TARGET_NODE} "openssl x509 -in $CRT_REMOTE -noout -subject -nameopt RFC2253" 2>/dev/null | sed -n 's/.*CN=\([^,]*\).*/\1/p')
-      
+  if $SSH2 "sudo test -f $CRT_REMOTE" 2>/dev/null; then
+      CRT_CN=$($SSH2 "sudo openssl x509 -in $CRT_REMOTE -noout -subject -nameopt RFC2253" 2>/dev/null \
+          | sed -n 's/.*CN=\([^,]*\).*/\1/p')
+
       if [ "$CRT_CN" = "test-app.corp.internal" ]; then
-          echo "✔ [25%] Certificado digital X.509 verificado con éxito en $TARGET_NODE."
+          echo "✔ [25%] Certificado X.509 verificado en $TARGET_NODE (CN=$CRT_CN)."
           PUNTOS=$((PUNTOS + 25))
       else
-          echo "❌ [10%] El certificado en $TARGET_NODE existe pero el CN '$CRT_CN' es incorrecto."
+          echo "❌ [10%] Certificado existe pero CN '$CRT_CN' es incorrecto."
           PUNTOS=$((PUNTOS + 10))
       fi
   else
@@ -168,20 +183,23 @@ Script Validacion: |-
   fi
 
   # ------------------------------------------------------------------------------
-  # 4. Validar Transferencia a la Bóveda en node03 (remoto)
+  # 4. Validar Transferencia a la Bóveda en node03
   # ------------------------------------------------------------------------------
   echo "⏳ Conectando a $VAULT_NODE (Bóveda) para verificar el reporte final..."
-  VAULT_CHECK=$(ssh -o StrictHostKeyChecking=no ${USER}@${VAULT_NODE} "cat $VAULT_FILE 2>/dev/null" || true)
+
+  VAULT_CHECK=$($SSH3 "sudo cat $VAULT_FILE 2>/dev/null" || true)
 
   if [ -n "$VAULT_CHECK" ]; then
-      if echo "$VAULT_CHECK" | grep -q "notAfter=Mock" || echo "$VAULT_CHECK" | grep -q "notAfter="; then
-          echo "✔ [30%] Custodia de Evidencias: Reporte localizado de forma exacta en $VAULT_NODE:$VAULT_FILE."
+      if echo "$VAULT_CHECK" | grep -qE "^notAfter="; then
+          echo "✔ [30%] Reporte localizado correctamente en $VAULT_NODE:$VAULT_FILE."
+          echo "       Contenido: $VAULT_CHECK"
           PUNTOS=$((PUNTOS + 30))
       else
-          echo "❌ [0%] El archivo existe en $VAULT_NODE, pero el formato de la fecha de expiración es incorrecto."
+          echo "❌ [0%] El archivo existe en $VAULT_NODE pero el formato es incorrecto."
+          echo "       Contenido detectado: $VAULT_CHECK"
       fi
   else
-      echo "❌ [0%] Error de transferencia: El reporte analítico no fue encontrado en $VAULT_NODE."
+      echo "❌ [0%] Reporte no encontrado en $VAULT_NODE:$VAULT_FILE."
   fi
 
   # ------------------------------------------------------------------------------
@@ -192,15 +210,20 @@ Script Validacion: |-
       echo -e "🎉 CALIFICACIÓN FINAL: \e[1;32m$PUNTOS / 100\e[0m"
       echo -e "Estrategia multi-nodo ejecutada a la perfección desde node01."
   else
-      echo -e "❌ CALIFICACIÓN FINAL: \e[1;31m$PUNTOS / 100\e[0m"
+      echo -e "⚠️  CALIFICACIÓN FINAL: \e[1;31m$PUNTOS / 100\e[0m"
       echo -e "Verifique la ejecución remota de OpenSSL o la transferencia de archivos."
   fi
   echo "========================================"
-  EOF
-
-  chmod +x /tmp/validador.sh
-  bash /tmp/validador.sh
 ---
 
 [[Laboratorios del LFCS]]
 ---
+I recently worked a hands-on infrastructure ticket involving a multi-node Linux environment running Rocky Linux. The scenario required me to enable HTTPS on an internal server by generating all cryptographic material locally — no external certificates were accepted.
+
+Working remotely from an admin node via SSH, I created the required directory structure under `/etc/pki/tls/`, then used OpenSSL to generate a 2048-bit RSA private key without a passphrase, which is a deliberate choice to allow the web service to start automatically without manual intervention.
+
+From that key, I generated a Certificate Signing Request with specific organizational metadata — country, organization name, and common name — and then self-signed it to produce a valid X.509 certificate with a 365-day validity period.
+
+The final step required me to extract only the expiration date from the certificate on node02 and deliver it precisely to a separate secure node, node03. I solved a concurrent SSH authentication conflict by breaking the operation into discrete steps: extracting the data locally first, then transferring it via SCP, and finally moving it to the target path using sudo.
+
+Every task was validated remotely before marking it complete. The exercise reinforced my understanding of PKI fundamentals, remote command execution, privilege escalation with sudo over SSH, and multi-hop file transfer strategies in a distributed Linux environment.

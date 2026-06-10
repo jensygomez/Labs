@@ -14,9 +14,9 @@ tags:
 | [[PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V1]]               |            40 min             |     `05/06/2026`      | <input type="checkbox" checked> |
 | [[PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V2]]               |            40 min             |     `09/06/2026`      | <input type="checkbox" checked> |
 | [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V1]]  |            40 min             |     `05/06/2026`      | <input type="checkbox" checked> |
-| [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V2]]  |            20 min             |     `09/06/2026`      |                                 |
+| [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V2]]  |            20 min             |     `09/06/2026`      | <input type="checkbox" checked> |
 | [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V1]]       |            50 min             |     `06/06/2026`      | <input type="checkbox" checked> |
-| [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V2]]       |                               |                       |                                 |
+| [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V2]]       |            50 min             |     `10/06/2026`      | <input type="checkbox" checked> |
 | [[PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V1]]          |            30 min             |     `06/06/2026`      | <input type="checkbox" checked> |
 | [[PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V2]]          |                               |                       |                                 |
 | [[PG-007 - Triage de Incidente Mayor y Restauración de Servicios Críticos (Examen Integrador)]]       |                               |                       |                                 |
@@ -41,7 +41,7 @@ tags:
 | [[PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V2]]                           |                               |                       |                                 |
 | [[PG-002 - Perfiles de entorno del sistema y límites de recursos - V1]]                               |            20 min             |     `05/06/2026`      | <input type="checkbox" checked> |
 | [[PG-002 - Perfiles de entorno del sistema y límites de recursos - V2]]                               |                               |                       |                                 |
-| [[PG-003 - Gestión de privilegios y control de acceso (Sudoers, PAM y NSSwitch)]]                     |                               |                       |                                 |
+| [[PG-003 - Gestión de privilegios y control de acceso (Sudoers, PAM y NSSwitch) - V1]]                |                               |                       |                                 |
 | [[PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora)]]                  |                               |                       |                                 |
 |                                                                                                       |                               |                       |                                 |
 | **Networking**                                                                                        |                               |                       |                                 |
@@ -114,4 +114,4 @@ tags:
 
 
 
-**horas Totales 34:30 horas + Playgrounds 11:40 horas**
+**horas Totales 34:30 horas + Playgrounds 12:40 horas**
