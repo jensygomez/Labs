@@ -17,19 +17,8 @@ Competencias:
   - Implementar empaquetados industriales de alta compresión (XZ) aplicando exclusiones multicapa por patrones y tiempo
   - Gestionar y bifurcar flujos de datos complejos en tiempo real mediante descriptores de archivos estructurados
   - Construir pipelines de telemetría forense utilizando expresiones regulares para la detección de anomalías al vuelo
-Validacion:
-  - Objetivo: Respaldo /backup/critical_legacy.tar.xz operativo bajo algoritmo XZ y exclusiones de caché validadas.
-    Peso: 30 %
-  - Objetivo: Separación quirúrgica de flujos find (audit_success.log y audit_errors.log funcionales).
-    Peso: 25 %
-  - Objetivo: Pipeline forense /root/telemetry_signals.log.gz generado con filtrado RegEx extendido y ordenamiento único.
-    Peso: 25 %
-  - Objetivo: Archivo de estado /root/backup_status.txt estructurado con marcas dinámicas y operadores correctos.
-    Peso: 20 %
-Calificacion Final:
 Script: |-
   cat << 'EOF' > /tmp/setup.sh
-
   #!/bin/bash
   set -e
 
@@ -47,8 +36,9 @@ Script: |-
   $SSH -t ${USER_NET}@${NODE_TARGET} "sudo bash -c '
 
       # Creación de identidades lógicas locales en node02
-      id -u app_owner   &>/dev/null || useradd -m -d /srv/app_owner   -s /bin/bash app_owner
-      id -u sre_operator &>/dev/null || useradd -m -d /srv/sre_operator -s /bin/bash sre_operator
+      id -u app_owner &>/dev/null || useradd -m -d /srv/app_owner -s /bin/bash app_owner
+
+      id -u sre_operator &>/dev/null || { useradd -m -d /srv/sre_operator -s /bin/bash sre_operator; echo "sre_operator:caleston123" | chpasswd; }
 
       # Limpieza de directorios locales
       rm -rf /srv/app_owner/apps_legacy /srv/sre_operator/*
@@ -142,7 +132,17 @@ Script: |-
   echo -e "     Línea 2: STATUS: OPERACIÓN MULTI-NODO COMPILADA CON ÉXITO"
   echo -e ""
   echo -e " \e[1mCriterios de Aceptación (validados en node03):\e[0m"
-  echo -e "  [ ] critical_legacy.tar.xz en node03 sin datos corrupto
+  echo -e "  [ ] critical_legacy.tar.xz en node03 sin datos corruptos         --> \e[1;35m30%\e[0m"
+  echo -e "  [ ] audit_success.log y audit_errors.log aislados en node03      --> \e[1;35m25%\e[0m"
+  echo -e "  [ ] telemetry_signals.log.gz en node03 sin duplicados            --> \e[1;35m25%\e[0m"
+  echo -e "  [ ] backup_status.txt estructurado con timestamp en node03       --> \e[1;35m20%\e[0m"
+  echo -e " ------------------------------------------------------------------------------"
+  echo -e " \e[1;32m🚨 REGLA DE ORO DE RED:\e[0m Opere bajo la identidad 'sre_operator' en node02."
+  echo -e "               No altere permisos ni ACLs del sistema de archivos."
+  echo -e "\e[1;36m================================================================================\e[0m"
+  echo ""
+  EOF
+  bash /tmp/setup.sh && rm -f /tmp/setup.sh
 tags:
   - Laboratorios-del-LFCS
 Script Validacion: |-

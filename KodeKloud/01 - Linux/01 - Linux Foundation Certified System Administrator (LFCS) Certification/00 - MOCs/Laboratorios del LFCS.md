@@ -14,7 +14,7 @@ tags:
 | [[PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V1]]               |            40 min             |     `05/06/2026`      | <input type="checkbox" checked> |
 | [[PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V2]]               |            40 min             |     `09/06/2026`      | <input type="checkbox" checked> |
 | [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V1]]  |            40 min             |     `05/06/2026`      | <input type="checkbox" checked> |
-| [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V2]]  |            20 min             |     `09/06/2026`      | <input type="checkbox" checked> |
+| [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V2]]  |            20 min             |     `09/06/2026`      |                                 |
 | [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V1]]       |            50 min             |     `06/06/2026`      | <input type="checkbox" checked> |
 | [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V2]]       |            50 min             |     `10/06/2026`      | <input type="checkbox" checked> |
 | [[PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V1]]          |            30 min             |     `06/06/2026`      | <input type="checkbox" checked> |
@@ -23,8 +23,8 @@ tags:
 | **Operations Deployments**                                                                            |                               |                       |                                 |
 | [[PG-001 - db-backup.service no inicia - V1]]                                                         |            15 min             |     `03/05/2026`      | <input type="checkbox" checked> |
 | [[PG-001 - db-backup.service no inicia - V2]]                                                         |                               |                       |                                 |
-| [[PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V1]]                                            |            15 min             |     `03/06/2026`      | <input type="checkbox" checked> |
-| [[PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V2]]                                            |                               |                       |                                 |
+| [[PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V1]]                        |            15 min             |     `03/06/2026`      | <input type="checkbox" checked> |
+| [[PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V2]]                        |                               |                       |                                 |
 | [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V1]]                                    |            30 min             |     `03/06/2026`      | <input type="checkbox" checked> |
 | [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V2]]                                    |                               |                       |                                 |
 | [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V1]]                    |            40 min             |     `05/06/2026`      | <input type="checkbox" checked> |
