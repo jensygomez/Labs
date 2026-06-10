@@ -4,7 +4,7 @@ Modulo: Operations Deployment
 Playground: PG-001-v2
 Titulo: db-backup.service no inicia - V2
 Fecha de Inicio: 2026-06-05
-Dificultad: 4/10
+Dificultad: 6/10
 Level Escalation: L2/L3
 Objetivo:
   - Aprobar LFCS

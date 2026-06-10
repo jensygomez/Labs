@@ -23,8 +23,8 @@ tags:
 | **Operations Deployments**                                                                            |                               |                       |                                 |
 | [[PG-001 - db-backup.service no inicia - V1]]                                                         |            15 min             |     `03/05/2026`      | <input type="checkbox" checked> |
 | [[PG-001 - db-backup.service no inicia - V2]]                                                         |                               |                       |                                 |
-| [[PG-002 - Servidor lento - Consumo de CPU Excesivo - V1]]                                            |            15 min             |     `03/06/2026`      | <input type="checkbox" checked> |
-| [[PG-002 - Servidor lento - Consumo de CPU Excesivo - V2]]                                            |                               |                       |                                 |
+| [[PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V1]]                                            |            15 min             |     `03/06/2026`      | <input type="checkbox" checked> |
+| [[PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V2]]                                            |                               |                       |                                 |
 | [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V1]]                                    |            30 min             |     `03/06/2026`      | <input type="checkbox" checked> |
 | [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V2]]                                    |                               |                       |                                 |
 | [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V1]]                    |            40 min             |     `05/06/2026`      | <input type="checkbox" checked> |
