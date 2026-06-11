@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-001 - db-backup.service no inicia - V2.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Laboratorios del LFCS"
+              "title": "PG-001 - db-backup.service no inicia - V2"
             }
           }
         ]
@@ -203,8 +203,8 @@
   },
   "active": "fe9da27ba1f1a9a4",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-001 - db-backup.service no inicia - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-003 - Backup automático no se ejecuta (Systemd Timers) - V2.md",
