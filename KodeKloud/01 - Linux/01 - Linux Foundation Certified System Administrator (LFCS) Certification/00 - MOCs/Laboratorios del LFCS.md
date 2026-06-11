@@ -22,7 +22,7 @@ tags:
 | [[PG-007 - Triage de Incidente Mayor y Restauración de Servicios Críticos (Examen Integrador)]]       |                               |                       |                                 |
 | **Operations Deployments**                                                                            |                               |                       |                                 |
 | [[PG-001 - db-backup.service no inicia - V1]]                                                         |            15 min             |     `03/05/2026`      | <input type="checkbox" checked> |
-| [[PG-001 - db-backup.service no inicia - V2]]                                                         |                               |                       |                                 |
+| [[PG-001 - db-backup.service no inicia - V2]]                                                         |            50 min             |     `11/06/2026`      | <input type="checkbox" checked> |
 | [[PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V1]]                        |            15 min             |     `03/06/2026`      | <input type="checkbox" checked> |
 | [[PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V2]]                        |                               |                       |                                 |
 | [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V1]]                                    |            30 min             |     `03/06/2026`      | <input type="checkbox" checked> |
@@ -114,4 +114,4 @@ tags:
 
 
 
-**horas Totales 34:30 horas + Playgrounds 13:00 horas**
+**horas Totales 34:30 horas + Playgrounds 13:50 horas**

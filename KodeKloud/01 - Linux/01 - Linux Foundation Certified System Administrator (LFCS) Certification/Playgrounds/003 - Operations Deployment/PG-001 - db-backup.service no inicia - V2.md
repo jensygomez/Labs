@@ -283,3 +283,16 @@ Script Validacion: |-
 
 [[Laboratorios del LFCS]]
 ---
+During a production incident, I was assigned a high-priority ticket related to a distributed Linux environment. The issue involved a systemd service called "data-sync" running on a remote server. Monitoring alerts indicated that the service was repeatedly failing, affecting the synchronization of operational data between systems.
+
+My first step was to perform a structured diagnosis instead of immediately restarting the service. I connected remotely to the affected server and reviewed the systemd unit configuration, service logs, file permissions, and runtime directories. While investigating, I discovered several root causes.
+
+The service was configured to run as the root user, but the application script was designed to run only under a dedicated service account called "syncuser". In addition, a required environment variable was missing, the working directory defined by the application did not exist, and the log directory permissions prevented the service account from writing operational logs.
+
+To resolve the issue, I created the required runtime directory structure, assigned the correct ownership to the service account, and corrected the permissions following security best practices without using overly permissive settings. I then modified the systemd unit file to use the correct service account, configured the required environment variable, defined the proper working directory, and enabled automatic restart capabilities to improve service resilience.
+
+After reloading the systemd configuration, I started the service and validated its operational status. I confirmed that the service was running successfully, generating logs correctly, and configured to start automatically after server reboots.
+
+As part of the incident closure process, I also created a backup of the production script and securely transferred it to a centralized backup repository located on a separate server. Finally, I verified the integrity of the copied file and documented the remediation steps.
+
+The incident was fully resolved, all audit controls passed successfully, and the service availability was restored without requiring application code changes. This exercise demonstrated my troubleshooting approach in Linux environments, including systemd administration, permissions management, service recovery, remote operations, and operational validation in a distributed infrastructure.
