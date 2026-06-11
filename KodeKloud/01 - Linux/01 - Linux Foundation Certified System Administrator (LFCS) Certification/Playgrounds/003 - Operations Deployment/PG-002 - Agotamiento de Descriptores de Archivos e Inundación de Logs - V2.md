@@ -3,7 +3,7 @@ Curso: Prep Course - LFCS Certification
 Modulo: Operations Deployment
 Playground: PG-002-v2
 Titulo: Agotamiento de Descriptores de Archivos e Inundación de Logs - V2
-Fecha de Inicio: 2026-06-05
+Fecha de Inicio: 2026-06-11
 Dificultad: 5/10
 Level Escalation: L2/L3
 Objetivo:
@@ -19,12 +19,11 @@ Competencias:
   - Identificar y detener procesos runaway sin afectar servicios críticos
   - Generar reportes de diagnóstico forense
 Script: |-
-  cat << 'EOF' > /tmp/setup.sh
+  cat << 'EOF' > /tmp/setup_fixed.sh
 
   #!/bin/bash
   set -e
 
-  # ── Parámetros del Clúster ──────────────────────────────────────────────────
   USER_NET="bob"
   PASS="caleston123"
   NODE_TARGET="node02"
@@ -32,43 +31,40 @@ Script: |-
   SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
   SSH="sshpass -p $PASS ssh $SSH_OPTS"
 
-  echo -e "\e[1;33m⏳ [node01 → node02] Desplegando fuga de descriptores y saturación de I/O...\e[0m"
-  # ── 0. Instalar dependencias en todos los nodos ─────────────────────────────
-  echo -e "\e[1;33m⏳ Instalando dependencias en el clúster...\e[0m"
+  echo -e "\e[1;33m⏳ [node01 → node02] Desplegando fuga de descriptores...\e[0m"
 
-  # Instalar sshpass localmente en node01
+  # ── 0. Instalar sshpass localmente si falta ─────────────────────────────
   if ! command -v sshpass &>/dev/null; then
-      sudo apt-get install -y sshpass -q >/dev/null 2>&1 || \
-      sudo yum install -y sshpass -q    >/dev/null 2>&1
+      sudo apt-get install -y sshpass -qq || sudo yum install -y sshpass -qq
   fi
 
-  # Instalar sshpass en node02 (usando SSH con contraseña interactiva — solo esta vez)
-  ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 bob@node02 \
-      "echo caleston123 | sudo -S apt-get install -y sshpass -q >/dev/null 2>&1 || \
-       echo caleston123 | sudo -S yum install -y sshpass -q >/dev/null 2>&1; echo ok"
-
-  # Instalar sshpass en node03
-  ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 bob@node03 \
-      "echo caleston123 | sudo -S apt-get install -y sshpass -q >/dev/null 2>&1 || \
-       echo caleston123 | sudo -S yum install -y sshpass -q >/dev/null 2>&1; echo ok"
+  # ── 1. Instalar sshpass en node02 y node03 usando sshpass (sin pedir contraseña) ──
+  for NODE in node02 node03; do
+      $SSH ${USER_NET}@${NODE} "
+          if ! command -v sshpass &>/dev/null; then
+              echo $PASS | sudo -S apt-get install -y sshpass -qq 2>/dev/null || \
+              echo $PASS | sudo -S yum install -y sshpass -qq 2>/dev/null
+          fi
+      " < /dev/null
+  done
 
   echo -e "\e[1;32m✔ Dependencias listas en el clúster.\e[0m"
-  # ── 1. Configuración del escenario en node02 ─────────────────────────────────
-  $SSH ${USER_NET}@${NODE_TARGET} "sudo bash -c '
 
+  # ── 2. Configurar node02 (enviando script completo por stdin) ────────────
+  $SSH ${USER_NET}@${NODE_TARGET} 'sudo bash -s' << 'ENDSSH'
       pkill -9 -f rogue-logger || true
       rm -rf /var/log/ecom-app/ /usr/local/bin/rogue-logger
 
-      cat << \"WORKER\" > /usr/local/bin/ecom-worker
+      cat > /usr/local/bin/ecom-worker << 'WORKER'
   #!/bin/bash
-  echo \"E-commerce Worker started successfully\"
+  echo "E-commerce Worker started successfully"
   while true; do
       sleep 12
   done
   WORKER
       chmod 755 /usr/local/bin/ecom-worker
 
-      cat << \"SERVICE\" > /etc/systemd/system/ecom-worker.service
+      cat > /etc/systemd/system/ecom-worker.service << 'SERVICE'
   [Unit]
   Description=E-commerce Background Worker
   After=network.target
@@ -87,34 +83,32 @@ Script: |-
       systemctl enable --now ecom-worker.service
 
       mkdir -p /var/log/ecom-app
-      cat << \"ROGUE\" > /usr/local/bin/rogue-logger
+      cat > /usr/local/bin/rogue-logger << 'ROGUE'
   #!/bin/bash
   exec 3>>/var/log/ecom-app/rogue_leak.log
   exec 4>>/var/log/ecom-app/rogue_leak_debug.log
   exec 5>>/var/log/ecom-app/rogue_audit.log
 
   while true; do
-      echo \"[\$(date \"+%Y-%m-%d %H:%M:%S\")] [DEBUG] [PID=\$\$] Runaway process loop spilling logs indefinitely\" >&3
-      echo \"[\$(date \"+%Y-%m-%d %H:%M:%S\")] [TRACE] Leak descriptor active on fd 4\" >&4
-      echo \"[\$(date \"+%Y-%m-%d %H:%M:%S\")] [WARN] System resource warning mock\" >&5
+      echo "[$(date "+%Y-%m-%d %H:%M:%S")] [DEBUG] [PID=$$] Runaway process loop spilling logs indefinitely" >&3
+      echo "[$(date "+%Y-%m-%d %H:%M:%S")] [TRACE] Leak descriptor active on fd 4" >&4
+      echo "[$(date "+%Y-%m-%d %H:%M:%S")] [WARN] System resource warning mock" >&5
       sleep 0.02
   done
   ROGUE
       chmod 755 /usr/local/bin/rogue-logger
 
       nohup /usr/local/bin/rogue-logger >/dev/null 2>&1 &
-  '"
+  ENDSSH
 
-  echo -e "\e[1;33m⏳ [node01 → node03] Preparando bóveda de evidencias SRE...\e[0m"
-
-  # ── 2. Preparar bóveda en node03 ─────────────────────────────────────────────
+  # ── 3. Preparar bóveda en node03 ─────────────────────────────────────────
   $SSH ${USER_NET}@${NODE_VAULT} "sudo bash -c '
       rm -rf /opt/sre-vault/*
       mkdir -p /opt/sre-vault/
       chown -R bob:bob /opt/sre-vault/
   '"
 
-  clear
+  # ── 4. Mostrar el ticket (sin clear para que no se borre) ────────────────
   echo -e "\e[1;36m================================================================================\e[0m"
   echo -e "\e[1;33m  TICKET INC-2567  │  Severidad: ALTA  │  Ambiente: CLÚSTER DISTRIBUIDO\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
@@ -161,7 +155,8 @@ Script: |-
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
   EOF
-  bash /tmp/setup.sh && rm -f /tmp/setup.sh
+
+  bash /tmp/setup_fixed.sh && rm -f /tmp/setup_fixed.sh
 tags:
   - Laboratorios-del-LFCS
 Script Validacion: |-
@@ -271,3 +266,6 @@ Script Validacion: |-
 
 [[Laboratorios del LFCS]]
 ---
+In another recent production scenario, I responded to a high-severity incident involving an I/O saturation and file descriptor leak that was causing critical storage degradation on a distributed live cluster. The monitoring systems flagged a rogue logging process on one of our production nodes that was aggressively writing data and keeping file descriptors open without closing them, threatening to exhaust the operating system's file descriptor limits.
+
+My first step was to perform a remote forensic analysis from the administrator workstation. Since high-level tools like `lsof` were unavailable on the target node, I navigated directly through the Linux kernel's native `/proc` file system to audit the process's file descriptors and identify the exact log paths causing the flood. Once the root cause was verified, I executed a surgical termination using targeted process signals to kill the rogue application without affecting a separate, critical business service running on the same machine. Finally, I documented the metrics and recovery steps, transferring a structured forensic report over to our centralized secure vault node. This intervention successfully stopped the storage leak, kept our primary services up and running, and completely stabilized the cluster's infrastructure.

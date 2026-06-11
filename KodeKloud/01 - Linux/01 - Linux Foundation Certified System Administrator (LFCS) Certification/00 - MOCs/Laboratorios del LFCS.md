@@ -24,7 +24,7 @@ tags:
 | [[PG-001 - db-backup.service no inicia - V1]]                                                         |            15 min             |     `03/05/2026`      | <input type="checkbox" checked> |
 | [[PG-001 - db-backup.service no inicia - V2]]                                                         |            50 min             |     `11/06/2026`      | <input type="checkbox" checked> |
 | [[PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V1]]                        |            15 min             |     `03/06/2026`      | <input type="checkbox" checked> |
-| [[PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V2]]                        |                               |                       |                                 |
+| [[PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V2]]                        |            25 min             |     `11/06/2026`      | <input type="checkbox" checked> |
 | [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V1]]                                    |            30 min             |     `03/06/2026`      | <input type="checkbox" checked> |
 | [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V2]]                                    |                               |                       |                                 |
 | [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V1]]                    |            40 min             |     `05/06/2026`      | <input type="checkbox" checked> |
@@ -47,11 +47,13 @@ tags:
 | **Networking**                                                                                        |                               |                       |                                 |
 | [[PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1]]                           |            100 min            |     `08/06/2026`      | <input type="checkbox" checked> |
 |                                                                                                       |                               |                       |                                 |
+| **Docker**                                                                                            |                               |                       |                                 |
+| [[DK-001 - El Contenedor Reincidente Fallo de Persistencia y Entorno]]                                |            20 min             |     `11/06/2026`      | <input type="checkbox" checked> |
+|                                                                                                       |                               |                       |                                 |
 | **Bash Avanzado**                                                                                     |                               |                       |                                 |
 | [[PG-BASH-001 - Inventario automático de servidores - V1]]                                            |            50 min             |     `06/06/2026`      | <input type="checkbox" checked> |
 | [[PG-BASH-001 - Inventario automático de servidores - V2]]                                            |                               |                       |                                 |
 | [[PG-BASH-002 - Rotación y compresión de logs - V1]]                                                  |                               |                       |                                 |
-|                                                                                                       |                               |                       |                                 |
 |                                                                                                       |                               |                       |                                 |
 
 
@@ -114,4 +116,4 @@ tags:
 
 
 
-**horas Totales 34:30 horas + Playgrounds 13:50 horas**
+**horas Totales 34:30 horas + Playgrounds 14:35 horas**

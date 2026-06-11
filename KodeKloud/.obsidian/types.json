@@ -12,7 +12,7 @@
     "Fecha de Inicio": "date",
     "Tareas del Lab": "multitext",
     "Preparacion to": "multitext",
-    "Objetivo": "multitext",
+    "Objetivo": "text",
     "Competencias": "text",
     "Tema": "multitext",
     "Temas": "text"
