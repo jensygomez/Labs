@@ -18,15 +18,6 @@ Competencias:
   - Diagnosticar y corregir fallos en cadenas completas de systemd timer + service
   - Gestionar usuarios de servicio y permisos en automatizaciones críticas
   - Verificar ejecución programada y persistencia
-Validacion:
-  - Objetivo: La unidad 'prod-db-backup.timer' está activa, habilitada y correctamente configurada
-    Peso: 30 %
-  - Objetivo: La unidad 'prod-db-backup.service' se ejecuta sin errores
-    Peso: 25 %
-  - Objetivo: El script de backup tiene permisos correctos y se ejecuta como usuario 'backupuser'
-    Peso: 20 %
-  - Objetivo: Se genera backup reciente en /var/backups/ y log sin errores de permisos
-    Peso: 25 %
 Script: |-
   cat << 'EOF' > /tmp/setup.sh
 

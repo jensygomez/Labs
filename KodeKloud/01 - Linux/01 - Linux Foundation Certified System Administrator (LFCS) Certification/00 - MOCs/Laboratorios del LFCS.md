@@ -26,7 +26,7 @@ tags:
 | [[PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V1]]                        |            15 min             |     `03/06/2026`      | <input type="checkbox" checked> |
 | [[PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V2]]                        |            25 min             |     `11/06/2026`      | <input type="checkbox" checked> |
 | [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V1]]                                    |            30 min             |     `03/06/2026`      | <input type="checkbox" checked> |
-| [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V2]]                                    |                               |                       |                                 |
+| [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V2]]                                    |            15 min             |                       |                                 |
 | [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V1]]                    |            40 min             |     `05/06/2026`      | <input type="checkbox" checked> |
 | [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V2]]                    |                               |                       |                                 |
 | [[PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad) - V1]]                 |            35 min             |     `06/06/2026`      | <input type="checkbox" checked> |

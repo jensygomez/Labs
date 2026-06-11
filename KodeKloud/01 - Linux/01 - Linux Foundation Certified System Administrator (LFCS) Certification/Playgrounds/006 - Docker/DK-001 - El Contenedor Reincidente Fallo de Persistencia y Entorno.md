@@ -114,9 +114,7 @@ Script: |-
   bash /tmp/setup-docker-lab.sh
   rm -f /tmp/setup-docker-lab.sh
 tags:
-  - Laboratorios-Docker-DevOps
-  - Docker-Compose
-  - Permisos-y-Volumenes
+  - Laboratorios-del-LFCS
 Script Validacion: |-
   cat << 'EOF' > /tmp/validador-docker.sh
   #!/bin/bash
@@ -208,9 +206,6 @@ Script Validacion: |-
   bash /tmp/validador-docker.sh
   # No borramos el validador inmediatamente para que el estudiante pueda inspeccionarlo si lo desea
 Titulo de Labs: 1. DK-001-v1 El Contenedor Reincidente Fallo de Persistencia y Entorno2. DK-002-v1 El Microservicio Huérfano Aislamiento y Comunicación de Red. 3. DK-003-v1 La Imagen Fantasma Diagnóstico y Corrección de Dockerfile. 4. DK-004-v1 El Guardián Caído Healthchecks y Auto-Reparación. 5. DK-005-v1 Puertas Abiertas Reverse Proxy y Exposición Segura de Puertos. 6. DK-006-v1 Secretos a la Vista Gestión de Credenciales y env. 7. DK-007-v1 El Disco Lleno Límites de Recursos y Limpieza (Pruning). 8. DK-008-v1 Despliegue Ciego Rollback y Versionado de Imágenes. 9. DK-009-v1 El Cron Job Perdido Tareas Programadas en Contenedores. 10. DK-010-v1 El Examen Final Despliegue Full-Stack con Gobernanza
-
-
-
 ---
 [[Laboratorios del LFCS]]
 
