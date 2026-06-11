@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Storage/Lista de Laboratorios.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Storage/STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Lista de Laboratorios"
+              "title": "STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente"
             }
           }
         ]
@@ -203,9 +203,9 @@
   },
   "active": "fe9da27ba1f1a9a4",
   "lastOpenFiles": [
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Storage/Lista de Laboratorios.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Storage/STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Storage/Lista de Laboratorios.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Networking/NET-001 - El Candado Oxidado – Bloqueo de Acceso SSH y Resolución de Nombres.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Storage 1/Lista de Laboratorios.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Storage 1",
