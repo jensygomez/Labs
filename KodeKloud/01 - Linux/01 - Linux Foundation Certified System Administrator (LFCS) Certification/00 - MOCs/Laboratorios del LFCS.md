@@ -14,7 +14,7 @@ tags:
 | [[PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V1]]               |            40 min             |     `05/06/2026`      | <input type="checkbox" checked> |
 | [[PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V2]]               |            40 min             |     `09/06/2026`      | <input type="checkbox" checked> |
 | [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V1]]  |            40 min             |     `05/06/2026`      | <input type="checkbox" checked> |
-| [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V2]]  |            40 min             |     `09/06/2026`      |                                 |
+| [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V2]]  |            40 min             |     `09/06/2026`      | <input type="checkbox" checked> |
 | [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V1]]       |            50 min             |     `06/06/2026`      | <input type="checkbox" checked> |
 | [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V2]]       |            50 min             |     `10/06/2026`      | <input type="checkbox" checked> |
 | [[PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V1]]          |            30 min             |     `06/06/2026`      | <input type="checkbox" checked> |
@@ -43,12 +43,17 @@ tags:
 | [[PG-002 - Perfiles de entorno del sistema y límites de recursos - V2]]                               |                               |                       |                                 |
 | [[PG-003 - Gestión de privilegios y control de acceso (Sudoers, PAM y NSSwitch) - V1]]                |                               |                       |                                 |
 | [[PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora)]]                  |                               |                       |                                 |
+| [[USR-001 - El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración]]                  |            40 min             |     `11/06/2026`      | <input type="checkbox" checked> |
 |                                                                                                       |                               |                       |                                 |
 | **Networking**                                                                                        |                               |                       |                                 |
+| [[NET-001 - El Candado Oxidado – Bloqueo de Acceso SSH y Resolución de Nombres]]                      |            30 min             |     `11/06/2026`      | <input type="checkbox" checked> |
 | [[PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1]]                           |            100 min            |     `08/06/2026`      | <input type="checkbox" checked> |
 |                                                                                                       |                               |                       |                                 |
 | **Docker**                                                                                            |                               |                       |                                 |
 | [[DK-001 - El Contenedor Reincidente Fallo de Persistencia y Entorno]]                                |            20 min             |     `11/06/2026`      | <input type="checkbox" checked> |
+|                                                                                                       |                               |                       |                                 |
+| **Storage**                                                                                           |                               |                       |                                 |
+| [[STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente]]                 |                               |                       |                                 |
 |                                                                                                       |                               |                       |                                 |
 | **Bash Avanzado**                                                                                     |                               |                       |                                 |
 | [[PG-BASH-001 - Inventario automático de servidores - V1]]                                            |            50 min             |     `06/06/2026`      | <input type="checkbox" checked> |
@@ -116,4 +121,4 @@ tags:
 
 
 
-**horas Totales 34:30 horas + Playgrounds 14:35 horas**
+**horas Totales 34:30 horas + Playgrounds 16:00 horas**
