@@ -18,15 +18,6 @@ Competencias:
   - Diagnosticar consumo elevado de CPU con herramientas avanzadas
   - Identificar y detener procesos runaway sin afectar servicios críticos
   - Generar reportes de diagnóstico forense
-Validacion:
-  - Objetivo: El proceso infractor ha sido detenido correctamente
-    Peso: 25 %
-  - Objetivo: El consumo general de CPU ha bajado significativamente (<40% user)
-    Peso: 25 %
-  - Objetivo: El servicio 'ecom-worker.service' sigue activo y running
-    Peso: 20 %
-  - Objetivo: Reporte forense completo generado en /root/cpu_diagnostic_report.txt
-    Peso: 30 %
 Script: |-
   cat << 'EOF' > /tmp/setup.sh
 
@@ -42,9 +33,28 @@ Script: |-
   SSH="sshpass -p $PASS ssh $SSH_OPTS"
 
   echo -e "\e[1;33m⏳ [node01 → node02] Desplegando fuga de descriptores y saturación de I/O...\e[0m"
+  # ── 0. Instalar dependencias en todos los nodos ─────────────────────────────
+  echo -e "\e[1;33m⏳ Instalando dependencias en el clúster...\e[0m"
 
+  # Instalar sshpass localmente en node01
+  if ! command -v sshpass &>/dev/null; then
+      sudo apt-get install -y sshpass -q >/dev/null 2>&1 || \
+      sudo yum install -y sshpass -q    >/dev/null 2>&1
+  fi
+
+  # Instalar sshpass en node02 (usando SSH con contraseña interactiva — solo esta vez)
+  ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 bob@node02 \
+      "echo caleston123 | sudo -S apt-get install -y sshpass -q >/dev/null 2>&1 || \
+       echo caleston123 | sudo -S yum install -y sshpass -q >/dev/null 2>&1; echo ok"
+
+  # Instalar sshpass en node03
+  ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 bob@node03 \
+      "echo caleston123 | sudo -S apt-get install -y sshpass -q >/dev/null 2>&1 || \
+       echo caleston123 | sudo -S yum install -y sshpass -q >/dev/null 2>&1; echo ok"
+
+  echo -e "\e[1;32m✔ Dependencias listas en el clúster.\e[0m"
   # ── 1. Configuración del escenario en node02 ─────────────────────────────────
-  $SSH -t ${USER_NET}@${NODE_TARGET} "sudo bash -c '
+  $SSH ${USER_NET}@${NODE_TARGET} "sudo bash -c '
 
       pkill -9 -f rogue-logger || true
       rm -rf /var/log/ecom-app/ /usr/local/bin/rogue-logger
@@ -98,7 +108,7 @@ Script: |-
   echo -e "\e[1;33m⏳ [node01 → node03] Preparando bóveda de evidencias SRE...\e[0m"
 
   # ── 2. Preparar bóveda en node03 ─────────────────────────────────────────────
-  $SSH -t ${USER_NET}@${NODE_VAULT} "sudo bash -c '
+  $SSH ${USER_NET}@${NODE_VAULT} "sudo bash -c '
       rm -rf /opt/sre-vault/*
       mkdir -p /opt/sre-vault/
       chown -R bob:bob /opt/sre-vault/
