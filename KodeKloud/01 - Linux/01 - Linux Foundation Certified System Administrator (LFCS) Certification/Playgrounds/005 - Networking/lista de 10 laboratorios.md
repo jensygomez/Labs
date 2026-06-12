@@ -23,11 +23,13 @@ Basándome estrictamente en el temario del módulo de **Networking del LFCS** y 
 #### **3. NET-003: La Interfaz Fantasma – Fallo en el Levantamiento de Interfaces y Enrutamiento**
 *   **Dificultad:** 7/10 | **Nivel:** L2/L3
 *   **Temas LFCS:** Start, Stop, and Check Status of Network Services, IPv4/IPv6 Networking.
+*   **Objetivo**:  Prepararme para aprobar el LFCS, RHCSA, Para Sysadmin Linux Pleno y Devops Enginner. 
 *   **Escenario:** Tras un reinicio simulado de `node02`, la interfaz de red secundaria (usada para comunicación con `node03`) no levanta. Además, falta una ruta estática crítica. Debes diagnosticar la configuración de red (Netplan o `systemd-networkd`), corregir la sintaxis del archivo YAML/config, aplicar los cambios sin reiniciar el servidor completo y verificar la tabla de enrutamiento (`ip route`).
 
 #### **4. NET-004: El Muro Ciego – Reglas de Firewall Bloquean Tráfico Legítimo**
 *   **Dificultad:** 7/10 | **Nivel:** L2/L3
 *   **Temas LFCS:** Configure Packet Filtering (Firewall).
+*   **Objetivo**:  Prepararme para aprobar el LFCS, RHCSA, Para Sysadmin Linux Pleno y Devops Enginner. 
 *   **Escenario:** El equipo de seguridad aplicó reglas de `iptables` (o `nftables`) en `node02` de forma agresiva. Ahora, el tráfico de retorno de las conexiones establecidas se está descartando, y los logs de `node03` muestran "Connection timed out". Debes auditar las reglas, identificar la regla que rompe el estado `ESTABLISHED,RELATED`, corregirla y hacerla persistente.
 
 #### **5. NET-005: El Túnel Torcido – Fallo en Redirección de Puertos (DNAT) y Enmascaramiento (SNAT)**

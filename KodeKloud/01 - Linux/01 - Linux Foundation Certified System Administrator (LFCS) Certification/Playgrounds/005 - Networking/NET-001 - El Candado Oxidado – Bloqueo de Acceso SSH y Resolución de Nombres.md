@@ -7,7 +7,7 @@ Fecha de Inicio: 2026-06-11
 Dificultad: 6/10
 Level Escalation: L2
 Objetivo: Aprobar LFCS,Pensar como Sysadmin Linux Pleno
-Temas: SSH Server & Client Configuration,Hostname Resolution (DNS, /etc/hosts, nsswitch.conf),File Permissions & Ownership (.ssh/),Remote Administration
+Temas: SSH Server & Client ConfigurationHostname Resolution (DNS, /etc/hosts, nsswitch.conf),File Permissions & Ownership (.ssh/),Remote Administration
 Competencias: Diagnosticar y corregir fallos de resolución de nombres en entornos distribuidos,Asegurar el acceso SSH mediante autenticación por clave y permisos estrictos,Administrar servicios críticos (sshd) sin interrumpir la disponibilidad
 Script: |-
   cat << 'EOF' > /tmp/setup-net001.sh

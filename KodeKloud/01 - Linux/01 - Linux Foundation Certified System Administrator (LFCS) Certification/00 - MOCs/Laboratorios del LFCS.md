@@ -47,6 +47,7 @@ tags:
 |                                                                                                       |                               |                       |                                 |
 | **Networking**                                                                                        |                               |                       |                                 |
 | [[NET-001 - El Candado Oxidado – Bloqueo de Acceso SSH y Resolución de Nombres]]                      |            30 min             |     `11/06/2026`      | <input type="checkbox" checked> |
+| [[NET-002 - La Paradoja Temporal – Deriva de Reloj y Fallo de Autenticación en Clúster]]              |                               |                       |                                 |
 | [[PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1]]                           |            100 min            |     `08/06/2026`      | <input type="checkbox" checked> |
 |                                                                                                       |                               |                       |                                 |
 | **Docker**                                                                                            |                               |                       |                                 |
