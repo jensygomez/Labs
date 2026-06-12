@@ -21,6 +21,7 @@ Competencias: |-
 Script: |-
   cat << 'EOF' > /tmp/setup-net002.sh
 
+
   #!/bin/bash
   set -e
 
@@ -30,7 +31,6 @@ Script: |-
   NODE_TARGET="node02"
   NODE_VAULT="node03"
   SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
-  SSH="sshpass -p $PASS ssh $SSH_OPTS"
 
   # ── Detectar usuario actual ─────────────────────────────────────────────────
   CURRENT_USER=$(whoami)
@@ -40,40 +40,79 @@ Script: |-
     USER_HOME="$HOME"
   fi
 
-  # ── 0. Instalar sshpass en los 3 nodos ──────────────────────────────────────
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 1. INSTALAR SSHPASS LOCALMENTE (en node01, donde se ejecuta el script)
+  # ─────────────────────────────────────────────────────────────────────────────
+  echo -e "\e[1;33m⏳ Instalando sshpass en el nodo local (node01)...\e[0m"
   if ! command -v sshpass &>/dev/null; then
-    sudo apt-get update -qq && sudo apt-get install -y sshpass -qq 2>/dev/null || 
-    sudo yum install -y sshpass -qq 2>/dev/null
-  fi
-
-  for NODE in node01 node02 node03; do
-    $SSH ${USER_NET}@${NODE} "
-      if ! command -v sshpass &>/dev/null; then
-        echo $PASS | sudo -S apt-get update -qq && echo $PASS | sudo -S apt-get install -y sshpass -qq 2>/dev/null || 
-        echo $PASS | sudo -S yum install -y sshpass -qq 2>/dev/null
+      # Intentar con apt (Debian/Ubuntu)
+      if command -v apt-get &>/dev/null; then
+          sudo apt-get update -qq
+          sudo apt-get install -y sshpass
+      # Si no, intentar con yum (RHEL/CentOS)
+      elif command -v yum &>/dev/null; then
+          sudo yum install -y sshpass
+      else
+          echo -e "\e[1;31m✗ No se pudo instalar sshpass: no se encontró apt-get ni yum\e[0m"
+          exit 1
       fi
-    " < /dev/null 2>/dev/null || true
-  done
+      
+      # Verificar que la instalación fue exitosa
+      if ! command -v sshpass &>/dev/null; then
+          echo -e "\e[1;31m✗ Falló la instalación de sshpass localmente\e[0m"
+          exit 1
+      fi
+  fi
+  echo -e "\e[1;32m✔ sshpass instalado localmente.\e[0m"
 
-  echo -e "\e[1;32m✔ sshpass instalado en los 3 nodos.\e[0m"
+  # Ahora que sshpass existe localmente, podemos definir SSH
+  SSH="sshpass -p $PASS ssh $SSH_OPTS"
 
-  echo -e "\e[1;33m⏳ [node01] Instalando dependencias (chrony, iptables) en el clúster...\e[0m"
-
-
-  # ── 0. Instalar chrony en los 3 nodos ──────────────────────────────────────
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 2. INSTALAR SSHPASS EN LOS NODOS REMOTOS (usando sshpass ya instalado)
+  # ─────────────────────────────────────────────────────────────────────────────
   for NODE in node01 node02 node03; do
-    $SSH ${USER_NET}@${NODE} "
-      echo $PASS | sudo -S apt-get update -qq && echo $PASS | sudo -S apt-get install -y chrony iptables -qq 2>/dev/null ||
-      echo $PASS | sudo -S yum install -y chrony iptables -qq 2>/dev/null
-    " < /dev/null 2>/dev/null || true
+      echo -e "\e[1;33m⏳ Instalando sshpass en $NODE...\e[0m"
+      $SSH ${USER_NET}@${NODE} "
+          if ! command -v sshpass &>/dev/null; then
+              # Intentar apt
+              if command -v apt-get &>/dev/null; then
+                  echo $PASS | sudo -S apt-get update -qq
+                  echo $PASS | sudo -S apt-get install -y sshpass
+              # Si no, intentar yum
+              elif command -v yum &>/dev/null; then
+                  echo $PASS | sudo -S yum install -y sshpass
+              else
+                  echo 'No se pudo instalar sshpass remotamente'
+                  exit 1
+              fi
+          fi
+      " < /dev/null
+      echo -e "\e[1;32m✔ sshpass instalado en $NODE.\e[0m"
   done
-  echo -e "\e[1;32m✔ Chrony instalado en los 3 nodos.\e[0m"
 
-  # ── 1. Configurar node02 como referencia NTP correcta ───────────────────────
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 3. INSTALAR CHRONY e IPTABLES en los 3 nodos
+  # ─────────────────────────────────────────────────────────────────────────────
+  echo -e "\e[1;33m⏳ Instalando chrony e iptables en los nodos...\e[0m"
+  for NODE in node01 node02 node03; do
+      $SSH ${USER_NET}@${NODE} "
+          echo $PASS | sudo -S apt-get update -qq && echo $PASS | sudo -S apt-get install -y chrony iptables -qq
+          if [ \$? -ne 0 ]; then
+              echo $PASS | sudo -S yum install -y chrony iptables -qq
+          fi
+      " < /dev/null
+  done
+  echo -e "\e[1;32m✔ Dependencias instaladas en todos los nodos.\e[0m"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 4. CONFIGURAR node02 como servidor NTP (referencia correcta)
+  # ─────────────────────────────────────────────────────────────────────────────
   $SSH ${USER_NET}@${NODE_TARGET} "
     echo $PASS | sudo -S bash -c '
       CONF_FILE=\"/etc/chrony/chrony.conf\"
-      if [ ! -d /etc/chrony ]; then CONF_FILE=\"/etc/chrony.conf\"; fi
+      [ -d /etc/chrony ] || CONF_FILE=\"/etc/chrony.conf\"
       cat > \$CONF_FILE << CHRONY
   pool pool.ntp.org iburst
   local stratum 10
@@ -81,25 +120,29 @@ Script: |-
   driftfile /var/lib/chrony/chrony.drift
   logdir /var/log/chrony
   CHRONY
-      # Habilitar e iniciar el servicio (compatible con Ubuntu "chrony" y RHEL "chronyd")
-      systemctl enable --now chrony 2>/dev/null || systemctl enable --now chronyd 2>/dev/null || true
+      systemctl enable --now chrony 2>/dev/null || systemctl enable --now chronyd 2>/dev/null
     '
   " < /dev/null
-  echo -e "\e[1;32m✔ node02 configurado con NTP correcto y servicio activo.\e[0m"
+  echo -e "\e[1;32m✔ node02 configurado como servidor NTP.\e[0m"
 
-  # ── 2. Obtener IP de node03 ─────────────────────────────────────────────────
-  IP_NODE03=$($SSH ${USER_NET}@${NODE_VAULT} 'hostname -i' 2>/dev/null | tr -d '\r' || echo "10.244.29.59")
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 5. OBTENER IP DE node03 (para romper su tiempo)
+  # ─────────────────────────────────────────────────────────────────────────────
+  IP_NODE03=$($SSH ${USER_NET}@${NODE_VAULT} 'hostname -i' 2>/dev/null | tr -d '\r')
+  if [ -z "$IP_NODE03" ]; then
+      IP_NODE03="10.244.29.59"
+  fi
 
-  # ── 3. Romper NTP y Firewall en node03 ──────────────────────────────────────
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 6. ROMPER NTP Y FIREWALL EN node03
+  # ─────────────────────────────────────────────────────────────────────────────
   $SSH ${USER_NET}@${IP_NODE03} "
     echo $PASS | sudo -S bash -c '
-      # Detener y deshabilitar el servicio de tiempo (compatible con ambos nombres)
       systemctl stop chrony 2>/dev/null || systemctl stop chronyd 2>/dev/null || true
       systemctl disable chrony 2>/dev/null || systemctl disable chronyd 2>/dev/null || true
 
-      # Configurar chrony con servidor inexistente (falso)
       CONF_FILE=\"/etc/chrony/chrony.conf\"
-      if [ ! -d /etc/chrony ]; then CONF_FILE=\"/etc/chrony.conf\"; fi
+      [ -d /etc/chrony ] || CONF_FILE=\"/etc/chrony.conf\"
       cat > \$CONF_FILE << CHRONY
   server 192.0.2.1 iburst
   keyfile /etc/chrony/chrony.keys
@@ -107,17 +150,17 @@ Script: |-
   logdir /var/log/chrony
   CHRONY
 
-      # Bloquear puerto 123 UDP (NTP) en INPUT y OUTPUT
       iptables -A OUTPUT -p udp --dport 123 -j DROP
       iptables -A INPUT -p udp --dport 123 -j DROP
 
-      # Intentar derivar el reloj 15 minutos (si el entorno de contenedor lo permite)
-      date -s \"+15 minutes\" 2>/dev/null || echo \"Nota: No se pudo modificar la hora por restricciones del contenedor, pero el servicio está roto.\"
+      date -s \"+15 minutes\" 2>/dev/null || echo \"No se pudo modificar la hora (contenedor)\"
     '
   " < /dev/null
-  echo -e "\e[1;33m⏳ node03 configurado con deriva, servicio NTP caído y firewall bloqueando.\e[0m"
+  echo -e "\e[1;33m⏳ node03: NTP roto, firewall bloqueando puerto 123.\e[0m"
 
-  # ── 4. Mostrar el ticket ────────────────────────────────────────────────────
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 7. MOSTRAR EL TICKET
+  # ─────────────────────────────────────────────────────────────────────────────
   clear
   cat << 'TICKET'
   ================================================================================
