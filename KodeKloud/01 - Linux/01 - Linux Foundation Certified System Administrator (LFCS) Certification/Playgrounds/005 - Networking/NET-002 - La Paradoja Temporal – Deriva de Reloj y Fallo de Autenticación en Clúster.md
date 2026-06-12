@@ -9,7 +9,7 @@ Level Escalation: L2
 Objetivo: |-
   - Aprobar LFCS y RHCSA
   - Pensar como Sysadmin Linux Pleno
-  - Prepararme para Devops Enginner. 
+  - Prepararme para Devops Enginner y Kubernets
 Temas: |-
   - System Time Synchronization (NTP, chronyd)
   - Firewall Management (iptables)
@@ -225,71 +225,66 @@ Script Validacion: |-
   PUNTOS=0
   USER="bob"
   PASS="caleston123"
-  NODE_TARGET="node02"
-  NODE_VAULT="node03"
+  NODE02="node02"
+  NODE03="node03"
   SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=4"
 
-  #── Leer IPs del inventario ─────────────────────────────────────────────────
-  if [ -f /tmp/inventory.txt ]; then
-    IP_NODE02=$(grep node02 /tmp/inventory.txt | awk '{print $1}')
-    IP_NODE03=$(grep node03 /tmp/inventory.txt | awk '{print $1}')
-  else
-    IP_NODE02="10.244.29.17"
-    IP_NODE03="10.244.29.59"
-  fi
-
-  SSH2="sshpass -p $PASS ssh $SSH_OPTS ${USER}@${IP_NODE02}"
-  SSH3="sshpass -p $PASS ssh $SSH_OPTS ${USER}@${IP_NODE03}"
+  SSH2="sshpass -p $PASS ssh $SSH_OPTS ${USER}@${NODE02}"
+  SSH3="sshpass -p $PASS ssh $SSH_OPTS ${USER}@${NODE03}"
 
   echo -e "\n\e[1;36m================================================================================\e[0m"
   echo -e "\e[1;33m  🕵️  AUDITORÍA DE TIEMPO Y NTP — INC-3002 (NET-002-MN)\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
 
-  #── 1. Firewall (20%) ───────────────────────────────────────────────────────
+  echo -e "\n\e[1;37m🔌 Verificando conectividad con los nodos...\e[0m"
+  if ! $SSH2 'exit' 2>/dev/null; then
+    echo -e "\e[1;31m  ❌ No se puede conectar a node02. Abortando.\e[0m"
+    exit 1
+  fi
+  if ! $SSH3 'exit' 2>/dev/null; then
+    echo -e "\e[1;31m  ❌ No se puede conectar a node03. Abortando.\e[0m"
+    exit 1
+  fi
+  echo -e "\e[1;32m  ✔ Conectividad OK — node02 y node03 accesibles.\e[0m"
+
   echo -e "\n\e[1;37m⏳ [1/5] Verificando reglas de firewall en node03...\e[0m"
-  IPTABLES_CHECK=$($SSH3 'echo $PASS | sudo -S iptables -L -n -v 2>/dev/null | grep "dpt:123"' || echo "")
+  IPTABLES_CHECK=$($SSH3 'sudo iptables -L -n -v 2>/dev/null | grep "dpt:123"' || echo "")
   if echo "$IPTABLES_CHECK" | grep -q "DROP"; then
     echo -e "\e[1;31m  ❌ [0%] El puerto 123/UDP sigue bloqueado en node03.\e[0m"
     echo -e "       → Corrección: 'sudo iptables -D OUTPUT -p udp --dport 123 -j DROP'"
-    echo -e "                     'sudo iptables -D INPUT -p udp --dport 123 -j DROP'"
+    echo -e "                     'sudo iptables -D INPUT  -p udp --dport 123 -j DROP'"
   else
     echo -e "\e[1;32m  ✔ [20%] No hay reglas bloqueando NTP (123/UDP) en node03.\e[0m"
     PUNTOS=$((PUNTOS + 20))
   fi
 
-  #── 2. Servicio Chrony/Chronyd (20%) ────────────────────────────────────────
   echo -e "\n\e[1;37m⏳ [2/5] Verificando estado del servicio NTP en node03...\e[0m"
-
-  # Detectar si el servicio se llama "chrony" (Ubuntu/Debian) o "chronyd" (RHEL/CentOS)
-  SERVICE_NAME=$($SSH3 'systemctl list-unit-files | grep -E "^(chrony|chronyd)\.service" | head -1 | awk "{print \$1}" | sed "s/\.service//"' 2>/dev/null || echo "")
-
+  SERVICE_NAME=$($SSH3 'systemctl list-unit-files 2>/dev/null | grep -E "^(chrony|chronyd)\.service" | head -1 | awk "{print \$1}" | sed "s/\.service//"' || echo "")
   if [ -z "$SERVICE_NAME" ]; then
     echo -e "\e[1;31m  ❌ [0%] No se encontró ningún servicio NTP (chrony/chronyd) instalado.\e[0m"
   else
     CHRONY_ACTIVE=$($SSH3 "systemctl is-active ${SERVICE_NAME} 2>/dev/null" || echo "inactive")
     CHRONY_ENABLED=$($SSH3 "systemctl is-enabled ${SERVICE_NAME} 2>/dev/null" || echo "disabled")
-    
     if [ "$CHRONY_ACTIVE" = "active" ] && [ "$CHRONY_ENABLED" = "enabled" ]; then
       echo -e "\e[1;32m  ✔ [20%] ${SERVICE_NAME} está activo y habilitado en node03.\e[0m"
       PUNTOS=$((PUNTOS + 20))
     else
-      echo -e "\e[1;31m  ❌ [0%] ${SERVICE_NAME} no está correctamente configurado en node03.\e[0m"
-      echo -e "       → Estado actual: Activo=\e[1;31m${CHRONY_ACTIVE}\e[0m, Habilitado=\e[1;31m${CHRONY_ENABLED}\e[0m"
+      echo -e "\e[1;31m  ❌ [0%] ${SERVICE_NAME} no está correctamente configurado.\e[0m"
+      echo -e "       → Estado: Activo=\e[1;31m${CHRONY_ACTIVE}\e[0m, Habilitado=\e[1;31m${CHRONY_ENABLED}\e[0m"
     fi
   fi
 
-  #── 3. Configuración de Chrony (20%) ────────────────────────────────────────
   echo -e "\n\e[1;37m⏳ [3/5] Verificando configuración de chrony en node03...\e[0m"
   CHRONY_CONF=$($SSH3 'cat /etc/chrony/chrony.conf 2>/dev/null || cat /etc/chrony.conf 2>/dev/null' || echo "")
-  if echo "$CHRONY_CONF" | grep -qE "^(server|pool).*(ntp.org|node02|pool.ntp)"; then
+  if echo "$CHRONY_CONF" | grep -qE "^(server|pool).*192\.0\.2\."; then
+    echo -e "\e[1;31m  ❌ [0%] chrony apunta a una IP reservada/inválida (192.0.2.x).\e[0m"
+  elif echo "$CHRONY_CONF" | grep -qE "^(server|pool).*(ntp\.org|node02|[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)"; then
     echo -e "\e[1;32m  ✔ [20%] chrony apunta a un servidor NTP válido.\e[0m"
     PUNTOS=$((PUNTOS + 20))
   else
-    echo -e "\e[1;31m  ❌ [0%] La configuración de chrony no tiene servidores NTP válidos.\e[0m"
-    echo -e "       → Verifique /etc/chrony/chrony.conf o /etc/chrony.conf"
+    echo -e "\e[1;31m  ❌ [0%] No se encontraron servidores NTP válidos en la configuración.\e[0m"
   fi
 
-  #── 4. Sincronización del reloj (20%) ───────────────────────────────────────
   echo -e "\n\e[1;37m⏳ [4/5] Verificando sincronización del reloj en node03...\e[0m"
   TIMEDATECTL_OUT=$($SSH3 'timedatectl status 2>/dev/null' || echo "")
   if echo "$TIMEDATECTL_OUT" | grep -q "System clock synchronized: yes"; then
@@ -297,25 +292,21 @@ Script Validacion: |-
     PUNTOS=$((PUNTOS + 20))
   else
     echo -e "\e[1;31m  ❌ [0%] El reloj de node03 NO está sincronizado.\e[0m"
-    echo -e "       → Ejecute 'sudo chronyc makestep' o espere a que chronyd sincronice."
+    echo -e "       → Espere unos segundos y reintente, o ejecute 'sudo chronyc makestep'."
   fi
 
-  #── 5. Diferencia de hora entre nodos (20%) ─────────────────────────────────
   echo -e "\n\e[1;37m⏳ [5/5] Verificando deriva de tiempo entre node02 y node03...\e[0m"
   TIME_NODE02=$($SSH2 'date +%s' 2>/dev/null || echo "0")
   TIME_NODE03=$($SSH3 'date +%s' 2>/dev/null || echo "0")
-  DIFF=$((TIME_NODE03 - TIME_NODE02))
-  if [ "$DIFF" -lt 0 ]; then DIFF=$(( -DIFF )); fi
-
+  DIFF=$(( TIME_NODE03 - TIME_NODE02 ))
+  [ "$DIFF" -lt 0 ] && DIFF=$(( -DIFF ))
   if [ "$DIFF" -le 5 ]; then
-    echo -e "\e[1;32m  ✔ [20%] La diferencia de hora es mínima (${DIFF}s). Clúster sincronizado.\e[0m"
+    echo -e "\e[1;32m  ✔ [20%] Diferencia de hora: ${DIFF}s. Clúster sincronizado.\e[0m"
     PUNTOS=$((PUNTOS + 20))
   else
-    echo -e "\e[1;31m  ❌ [0%] La diferencia de hora es de ${DIFF}s (debe ser <= 5s).\e[0m"
-    echo -e "       → Fuerce la sincronización con 'sudo chronyc makestep'"
+    echo -e "\e[1;31m  ❌ [0%] Diferencia de hora: ${DIFF}s (debe ser <= 5s).\e[0m"
   fi
 
-  #── Resultado Final ─────────────────────────────────────────────────────────
   echo -e "\n\e[1;36m================================================================================\e[0m"
   if [ $PUNTOS -ge 100 ]; then
     echo -e "  🎉 CALIFICACIÓN FINAL: \e[1;32m$PUNTOS / 100\e[0m — ¡Dominio completo de NTP y sincronización!"
@@ -331,3 +322,16 @@ Script Validacion: |-
 ---
 
 [[Laboratorios del LFCS]]
+
+
+
+
+---
+
+I recently worked through a distributed systems incident where node03 in a multi-node cluster was generating 'expired token' and 'invalid certificate' errors in production. The root cause turned out to be two compounding issues: iptables rules that were silently dropping all UDP port 123 traffic — completely blocking NTP communication — and a chrony configuration pointing to a reserved, non-routable IP address from the TEST-NET-1 block.
+
+I approached it methodically. First, I confirmed the time synchronization status with timedatectl, which showed NTP inactive. Then I inspected the firewall rules and identified DROP entries in both INPUT and OUTPUT chains for port 123. I removed both rules using iptables -D, verified the chains were clean, and moved on to the configuration.
+
+After correcting the chrony.conf to point to pool.ntp.org, I enabled and started the chrony service, confirmed it was actively tracking a stratum-2 source with sub-millisecond offset, and validated that both node02 and node03 were showing identical Unix timestamps — zero drift between them.
+
+One thing worth mentioning: the makestep command returned a 500 Failure, which I recognized immediately as a container-level kernel restriction rather than a configuration error — chrony was synchronizing correctly through the normal slewing mechanism. Knowing the difference between environment constraints and actual misconfigurations is something I've developed working in this kind of containerized lab setup.

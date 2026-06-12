@@ -52,14 +52,18 @@ tags:
 |                                                                                                       |                               |                       |                                 |
 | **Docker**                                                                                            |                               |                       |                                 |
 | [[DK-001 - El Contenedor Reincidente Fallo de Persistencia y Entorno]]                                |            20 min             |     `11/06/2026`      | <input type="checkbox" checked> |
+| [[DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red]]                            |            40 min             |     `12/06/2026`      | <input type="checkbox" checked> |
 |                                                                                                       |                               |                       |                                 |
 | **Storage**                                                                                           |                               |                       |                                 |
 | [[STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente]]                 |                               |                       |                                 |
 |                                                                                                       |                               |                       |                                 |
 | **Bash Avanzado**                                                                                     |                               |                       |                                 |
+| [[BS-001 - El Eco Silencioso – Variables y Redirecciones]]                                            |                               |                       |                                 |
 | [[PG-BASH-001 - Inventario automático de servidores - V1]]                                            |            50 min             |     `06/06/2026`      | <input type="checkbox" checked> |
 | [[PG-BASH-001 - Inventario automático de servidores - V2]]                                            |                               |                       |                                 |
 | [[PG-BASH-002 - Rotación y compresión de logs - V1]]                                                  |                               |                       |                                 |
+|                                                                                                       |                               |                       |                                 |
+|                                                                                                       |                               |                       |                                 |
 |                                                                                                       |                               |                       |                                 |
 
 
@@ -122,4 +126,4 @@ tags:
 
 
 
-**horas Totales 34:30 horas + Playgrounds 16:00 horas**
+**horas Totales 34:30 horas + Playgrounds 16:40 horas**

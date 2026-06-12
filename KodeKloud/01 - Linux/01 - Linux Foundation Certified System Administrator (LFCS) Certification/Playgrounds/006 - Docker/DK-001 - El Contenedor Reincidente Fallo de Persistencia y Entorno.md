@@ -4,11 +4,21 @@ Modulo: Containerization & Persistent Data
 Playground: DK-001-v1
 Titulo: El Contenedor Reincidente Fallo de Persistencia y Entorno
 Fecha de Inicio: 2026-06-11
-Dificultad: 4/10
+Dificultad: 5/10
 Level Escalation: L1/L2
-Objetivo: Dominar el diagnóstico básico de contenedores (docker logs, docker inspect, docker compose ps).,Entender la relación entre los permisos de Linux en el Host y los Volúmenes de Docker (UID/GID).,Adoptar la mentalidad DevOps configuración declarativa (docker-compose.yml) y principio de menor privilegio.
-Temas: Docker Compose (sintaxis, variables de entorno, restart policies),Docker Volumes (Bind Mounts),Permisos y Propiedad en Linux (chmod, chown, UID/GID),Diagnóstico de contenedores en estado "Restarting" o "Exited"
-Competencias: Diagnosticar por qué un contenedor entra en bucle de reinicio (CrashLoop).,Resolver conflictos de permisos en volúmenes montados sin recurrir a malas prácticas (ej. chmod 777).,Corregir archivos de configuración declarativa para estabilizar el servicio de forma persistente.
+Objetivo: |2-
+    - Aprobar LFCS y RHCSA
+    - Pensar como Sysadmin Linux Pleno
+    - Prepararme para Devops Enginner y Kubernets
+Temas: |-
+  - Docker Compose (sintaxis, variables de entorno, restart policies)
+  - Docker Volumes (Bind Mounts). 
+  - Permisos y Propiedad en Linux (chmod, chown, UID/GID).
+  - Diagnóstico de contenedores en estado "Restarting" o "Exited".
+Competencias: |-
+  - Diagnosticar por qué un contenedor entra en bucle de reinicio (CrashLoop).
+  - Resolver conflictos de permisos en volúmenes montados sin recurrir a malas prácticas (ej. chmod 777).
+  - Corregir archivos de configuración declarativa para estabilizar el servicio de forma persistente.
 Script: |-
   cat << 'EOF' > /tmp/setup-docker-lab.sh
   #!/bin/bash
@@ -115,6 +125,7 @@ Script: |-
   rm -f /tmp/setup-docker-lab.sh
 tags:
   - Laboratorios-del-LFCS
+  - Docker
 Script Validacion: |-
   cat << 'EOF' > /tmp/validador-docker.sh
   #!/bin/bash
@@ -205,7 +216,6 @@ Script Validacion: |-
   chmod +x /tmp/validador-docker.sh
   bash /tmp/validador-docker.sh
   # No borramos el validador inmediatamente para que el estudiante pueda inspeccionarlo si lo desea
-Titulo de Labs: 1. DK-001-v1 El Contenedor Reincidente Fallo de Persistencia y Entorno2. DK-002-v1 El Microservicio Huérfano Aislamiento y Comunicación de Red. 3. DK-003-v1 La Imagen Fantasma Diagnóstico y Corrección de Dockerfile. 4. DK-004-v1 El Guardián Caído Healthchecks y Auto-Reparación. 5. DK-005-v1 Puertas Abiertas Reverse Proxy y Exposición Segura de Puertos. 6. DK-006-v1 Secretos a la Vista Gestión de Credenciales y env. 7. DK-007-v1 El Disco Lleno Límites de Recursos y Limpieza (Pruning). 8. DK-008-v1 Despliegue Ciego Rollback y Versionado de Imágenes. 9. DK-009-v1 El Cron Job Perdido Tareas Programadas en Contenedores. 10. DK-010-v1 El Examen Final Despliegue Full-Stack con Gobernanza
 ---
 [[Laboratorios del LFCS]]
 
