@@ -17,62 +17,81 @@ Competencias:
   - Asegurar la inmutabilidad de variables globales del sistema operativo mediante directivas de Shell
   - Mitigar ataques de denegación de servicio (DoS) y fugas de memoria mediante contención multifactor en PAM (`nproc` y `as`)
   - Configurar persistencia inmediata de telemetría e historial en entornos multiusuario
-Ticket: |-
-  INC-7022 (CRÍTICO) - Inestabilidad de Memoria y Evasión de Auditoría en Nodo de Staging
-
-  El clúster de compilación reportó un pánico menor debido a que scripts automatizados del grupo '@devs' están spawneando subprocesos de Node.js de forma descontrolada, consumiendo la memoria virtual total asignada al espacio de usuario. Adicionalmente, el equipo de SecOps detectó que algunos consultores limpian deliberadamente su historial de comandos (`history -c`) antes de desloguearse para evadir auditorías.
-
-  Requerimientos Técnicos del Ticket:
-  1. Restricción de Recursos Quirúrgica (PAM):
-     - Bloquear al grupo '@devs' para que no pueda levantar más de 80 procesos simultáneos de forma blanda (soft nproc) y un límite destructivo de 120 (hard nproc).
-     - Añadir un límite estricto de Memoria Virtual Maxima (Address Space / `as`) de 2GB (2097152 KB) por proceso para evitar el desborde del host.
-     - Esta configuración DEBE residir exclusivamente en el archivo `/etc/security/limits.d/50-devs-hardening.conf`.
-  2. Inmutabilidad de Entorno Global:
-     - Configurar de manera modular la variable corporativa `CORP_STAGE="PRODUCTION"`.
-     - Garantizar que ningún usuario intermedio pueda alterar, modificar o hacer `unset` de esta variable durante su sesión.
-  3. Trazabilidad Forense de Terminales:
-     - Configurar de forma global en los perfiles del sistema las directivas necesarias para forzar que el historial de comandos se guarde de forma INMEDIATA en cada pulsación de enter (`history -a`) y elevar la capacidad de retención a 10,000 líneas.
-Validacion:
-  - Objetivo: Archivo /etc/security/limits.d/50-devs-hardening.conf contiene las cuotas de nproc y memoria virtual (as).
-    Peso: 35 %
-  - Objetivo: Script modular de entorno define CORP_STAGE y lo bloquea con atributo readonly.
-    Peso: 35 %
-  - Objetivo: Configuración global de auditoría de historial inyectada de forma correcta en /etc/profile.d/.
-    Peso: 30 %
 Calificacion Final:
 Script: |-
-  cat << 'EOF' > /tmp/setup_sh
+  cat << 'EOF' > /tmp/setup.sh
   #!/bin/bash
   set -e
 
-  # Garantizar la existencia del grupo devs para el entorno aislado
+  # ── 1. PREPARACIÓN REAL DEL ENTORNO RESTRINGIDO ──────────────────────────────
+  echo -e "\e[1;33m⏳ Configurando entorno para el incidente INC-7022...\e[0m"
+
+  # Asegurar el grupo devs
   getent group devs >/dev/null 2>&1 || groupadd -g 2500 devs
 
+  # Crear un usuario de prueba (consultor) asignado a ese grupo para validar después
+  if ! id -u consultor01 >/dev/null 2>&1; then
+      # Se crea con password "Accenture123*" para que puedas testearlo
+      useradd -m -g devs -s /bin/bash -c "Consultor Externo - Dev" consultor01
+      echo "consultor01:Accenture123*" | chpasswd
+      echo "✔ Usuario de prueba 'consultor01' creado (Pass: Accenture123*)."
+  fi
 
+  # Limpieza preventiva de archivos que el estudiante debe crear
+  rm -f /etc/security/limits.d/50-devs-hardening.conf
+  rm -f /etc/profile.d/corp_env.sh
+  rm -f /etc/profile.d/audit_history.sh
 
+  # ── 2. DESPLIEGUE DEL TICKET EN PANTALLA ─────────────────────────────────────
   clear
   echo -e "\e[1;36m================================================================================\e[0m"
   echo -e "\e[1;31m 🔥 ESCENARIO AVANZADO CONFIGURADO - USERS & GROUPS (PG-002 v2)\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
   echo -e "\e[1;33m TICKET DE INCIDENTE: INC-7022\e[0m"
   echo -e " ------------------------------------------------------------------------------"
-  echo -e " \e[1mAsunto:\e[0m Perfiles de entorno del sistema y límites de recursos"
+  echo -e " \e[1mAsunto:\e[0m  Inestabilidad de Memoria y Evasión de Auditoría en Nodo de Staging"
   echo -e " \e[1mSeveridad:\e[0m Crítica / Mitigación de Denegación de Servicio (DoS)"
   echo -e ""
   echo -e " \e[1mDescripción:\e[0m"
-  echo -e " Restrinja el Address Space y procesos simultáneos del grupo '@devs' en limits.d."
-  echo -e " Aplique la variable inmutable CORP_STAGE y configure el vaciado inmediato del"
-  echo -e " historial de comandos para auditoría interna."
+  echo -e " A las 02:17 horas, el sistema de monitoreo del clúster de compilación generó"
+  echo -e " una alerta de pánico menor. La investigación preliminar reveló que scripts"
+  echo -e " automatizados asociados al grupo '@devs' estaban spawneando subprocesos de"
+  echo -e " Node.js de manera descontrolada, agotando progresivamente la memoria virtual"
+  echo -e " asignada al espacio de usuario y comprometiendo la estabilidad del host."
+  echo -e ""
+  echo -e " Mientras el equipo de infraestructura contenía el incidente, SecOps levantó"
+  echo -e " una alerta paralela de igual gravedad: los registros de auditoría mostraban"
+  echo -e " que un subconjunto de consultores estaba ejecutando \e[1mhistory -c\e[0m de forma"
+  echo -e " deliberada antes de cerrar sesión, borrando toda trazabilidad de sus acciones"
+  echo -e " en el nodo. Esta conducta constituye una violación directa a la política de"
+  echo -e " trazabilidad forense corporativa."
+  echo -e ""
+  echo -e " Se le asigna este ticket con carácter de urgencia. Usted deberá implementar"
+  echo -e " tres controles de forma simultánea: restringir quirúrgicamente los recursos"
+  echo -e " del grupo '@devs' mediante PAM limits.d, declarar la variable de entorno"
+  echo -e " corporativa \e[1mCORP_STAGE\e[0m como inmutable a nivel de sistema, y configurar el"
+  echo -e " volcado inmediato del historial de comandos en todos los perfiles globales"
+  echo -e " para garantizar trazabilidad completa de sesión desde este momento en adelante."
+  echo -e ""
+  echo -e " \e[1;31m RESTRICCIONES OPERACIONALES:\e[0m"
+  echo -e " \e[1;31m ►\e[0m La configuración PAM DEBE residir exclusivamente en:"
+  echo -e "   \e[1m/etc/security/limits.d/50-devs-hardening.conf\e[0m"
+  echo -e " \e[1;31m ►\e[0m La variable \e[1mCORP_STAGE\e[0m debe ser declarada de forma modular y"
+  echo -e "   ningún usuario intermedio podrá alterarla ni hacer unset durante su sesión."
   echo -e ""
   echo -e " \e[1mRequerimientos de Validación:\e[0m"
   echo -e "  [ ] Cuotas nproc (80/120) y límite 'as' de 2GB en limits.d      --> \e[1;35m35%\e[0m"
-  echo -e "  [ ] Variable CORP_STAGE inmutable con atributo 'readonly'       --> \e[1;35m35%\e[0m"
-  echo -e "  [ ] Auditoría inmediata de historial (history -a) configurada   --> \e[1;34m30%\e[0m"
+  echo -e "  [ ] Variable CORP_STAGE inmutable con atributo 'readonly'        --> \e[1;35m35%\e[0m"
+  echo -e "  [ ] Auditoría inmediata de historial (history -a) configurada    --> \e[1;34m30%\e[0m"
   echo -e " ------------------------------------------------------------------------------"
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
+  echo -e "\e[1;32m✔ Entorno listo. Entra como root y aplica las directivas de seguridad.\e[0m"
+  echo -e "\e[1;33m💡 Tip de Sysadmin:\e[0m Puedes usar una pestaña paralela para loguearte como"
+  echo -e "   \e[1mconsultor01\e[0m y comprobar si tus bloqueos de memoria y de history funcionan."
+  echo ""
   EOF
-  bash /tmp/setup_sh && rm -f /tmp/setup_sh
+  bash /tmp/setup.sh && rm -f /tmp/setup.sh
 tags:
   - Laboratorios-del-LFCS
 Script Validacion: |-
@@ -135,3 +154,14 @@ Script Validacion: |-
 [[Laboratorios del LFCS]]
 ---
 
+## 🗣️ Resumen en inglés B2 — Tono de entrevista real
+
+---
+
+Recently I dealt with a critical dual-threat incident on a staging node that required me to implement three security controls simultaneously under time pressure.
+
+The first problem was a resource exhaustion scenario. Automated scripts tied to the developers group were spawning uncontrolled Node.js subprocesses, progressively consuming all virtual memory allocated to user space and threatening host stability. I resolved this by writing a dedicated PAM resource limits file under `/etc/security/limits.d/`, where I applied soft and hard process quotas of 80 and 120 concurrent processes respectively, and enforced a hard 2GB virtual address space ceiling using the `as` parameter — which is the correct control for virtual memory on modern Linux kernels, since `rss` has been deprecated and ignored by the kernel for years.
+
+The second problem was a forensic evasion pattern that SecOps flagged in parallel. A subset of external consultants was deliberately running `history -c` before logging out, wiping all command traceability from the node. I addressed this on two fronts. I declared a corporate environment variable `CORP_STAGE` as `readonly` through a dedicated modular script in `/etc/profile.d/`, making it immutable for the entire session — any attempt to overwrite or unset it returns an error at the shell level. I also configured `PROMPT_COMMAND` globally to flush the command history to disk after every single command, so even if someone clears the in-memory buffer, the file on disk already has the complete session record.
+
+Every control was deployed through modular, isolated files — nothing touched monolithic system configs. Each policy is independently auditable and can be rolled back without affecting anything else on the system.

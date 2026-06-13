@@ -38,7 +38,7 @@ tags:
 | [[PG-008 -Incidente mayor en producción (Simulación de Examen Integrador)]]                           |                               |                       |                                 |
 | **Users and Groups**                                                                                  |                               |                       |                                 |
 | [[PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V1]]                           |            15 min             |      `04/06/26`       | <input type="checkbox" checked> |
-| [[PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V2]]                           |                               |                       |                                 |
+| [[PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V2]]                           |            30 min             |     `13/06/2026`      | <input type="checkbox" checked> |
 | [[PG-002 - Perfiles de entorno del sistema y límites de recursos - V1]]                               |            20 min             |     `05/06/2026`      | <input type="checkbox" checked> |
 | [[PG-002 - Perfiles de entorno del sistema y límites de recursos - V2]]                               |                               |                       |                                 |
 | [[PG-003 - Gestión de privilegios y control de acceso (Sudoers, PAM y NSSwitch) - V1]]                |                               |                       |                                 |
@@ -58,11 +58,11 @@ tags:
 | [[STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente]]                 |                               |                       |                                 |
 |                                                                                                       |                               |                       |                                 |
 | **Bash Avanzado**                                                                                     |                               |                       |                                 |
-| [[BS-001 - El Eco Silencioso – Variables y Redirecciones]]                                            |                               |                       |                                 |
+| [[BS-001 - El Eco Silencioso – Variables y Redirecciones]]                                            |            30 min             |     `13/06/2026`      | <input type="checkbox" checked> |
+|                                                                                                       |                               |                       |                                 |
 | [[PG-BASH-001 - Inventario automático de servidores - V1]]                                            |            50 min             |     `06/06/2026`      | <input type="checkbox" checked> |
 | [[PG-BASH-001 - Inventario automático de servidores - V2]]                                            |                               |                       |                                 |
 | [[PG-BASH-002 - Rotación y compresión de logs - V1]]                                                  |                               |                       |                                 |
-|                                                                                                       |                               |                       |                                 |
 |                                                                                                       |                               |                       |                                 |
 |                                                                                                       |                               |                       |                                 |
 
@@ -126,4 +126,7 @@ tags:
 
 
 
-**horas Totales 34:30 horas + Playgrounds 16:40 horas**
+**horas Totales 34:30 horas + Playgrounds 17:40 horas**
+
+
+

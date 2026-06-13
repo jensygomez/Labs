@@ -18,15 +18,6 @@ Competencias:
   - Diagnosticar y reparar repositorios locales y remotos
   - Resolver problemas de metadatos y dependencias
   - Gestionar instalación de paquetes no estándar + servicios asociados
-Validacion:
-  - Objetivo: Repositorio 'corp-internal.repo' corregido y funcional (con metadatos)
-    Peso: 25 %
-  - Objetivo: Paquete 'secure-monitor' instalado correctamente
-    Peso: 30 %
-  - Objetivo: Servicio 'secure-monitor.service' activo y running
-    Peso: 25 %
-  - Objetivo: Servicio habilitado al arranque + logs sin errores
-    Peso: 20 %
 Script: |-
   cat << 'EOF' > /tmp/setup.sh
   #!/bin/bash

@@ -24,9 +24,8 @@ Competencias: |-
 Script: |-
   cat << 'EOF' > /tmp/setup.sh
   #!/bin/bash
-  set -e # Salir inmediatamente si algún comando falla
+  set -e
 
-  # ── Parámetros del Laboratorio ──────────────────────────────────────────────
   LAB_ID="BS-001-v1"
   LAB_NAME="El Eco Silencioso"
   USER_CURRENT=$(whoami)
@@ -34,13 +33,11 @@ Script: |-
   REPORT_DIR="$WORK_DIR/reportes"
   TARGET_SCRIPT="$WORK_DIR/reporte_servidor.sh"
 
-  # ── 1. LIMPIEZA Y PREPARACIÓN DEL ENTORNO ───────────────────────────────────
   echo -e "\e[1;33m⏳ Preparando entorno de laboratorio...\e[0m"
   rm -rf "$WORK_DIR"
   mkdir -p "$WORK_DIR"
   mkdir -p "$REPORT_DIR"
 
-  # ── 2. GENERACIÓN DEL TICKET VISUAL EN PANTALLA ─────────────────────────────
   clear
   echo -e "\e[1;36m================================================================================\e[0m"
   echo -e "  TICKET INC-1001  │  Severidad: MEDIA  │  Ambiente: ESTACIÓN LOCAL"
@@ -77,7 +74,7 @@ Script: |-
   echo -e "\e[1;36m  ──────────────────────────────────────────────────────────────────────────\e[0m"
   echo ""
   echo -e "   \e[1;37m[ ]\e[0m Script con permisos de ejecución (\e[1mchmod +x\e[0m)                   \e[0;35m→ 30%\e[0m"
-  echo -e "   \e[1;37m[ ]\e[0m Variable \e[1mFECHA\e[0m correctamente formateada y utilizada            \e[0;35m→ 30%\e[0m"
+  echo -e "   \e[1;37m[ ]\e[0m Variable \e[1mFECHA\e[0m correctamente formateada y utilizada             \e[0;35m→ 30%\e[0m"
   echo -e "   \e[1;37m[ ]\e[0m Redirección \e[1m2>&1\e[0m funcional — captura errores y salida estándar \e[0;35m→ 40%\e[0m"
   echo ""
   echo -e "\e[1;31m  REGLA DE ORO:\e[0m No ejecutes el script como \e[1mroot\e[0m. Practica con tu usuario."
@@ -85,8 +82,7 @@ Script: |-
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
 
-  # ── 3. CREACIÓN DEL SCRIPT ESQUELETO (LA MISIÓN) ────────────────────────────
-  cat << 'EOF' > "$TARGET_SCRIPT"
+  cat << 'EOF_INNER' > "$TARGET_SCRIPT"
   #!/bin/bash
   # ==============================================================================
   # Script: reporte_servidor.sh
@@ -104,23 +100,19 @@ Script: |-
 
   # TODO 3: Ejecuta 'df -h', 'free -m' y 'uptime'.
   # Debes redirigir tanto la salida estándar (1) como la de error (2) al ARCHIVO_SALIDA.
-  # Pista: Puedes agrupar los comandos con {} o encadenarlos, y usar el operador 2>&1
 
   echo "✅ Reporte generado con éxito. Revisa la carpeta de reportes."
-  EOF
+  EOF_INNER
 
-  # ── 4. CONFIGURACIÓN DE PERMISOS INTENCIONAL (TRAMPA DE APRENDIZAJE) ────────
-  # Se deja sin permisos de ejecución a propósito para que el estudiante practique chmod
   chmod 644 "$TARGET_SCRIPT"
 
-  # ── 5. MENSAJE FINAL DE CONFIRMACIÓN ────────────────────────────────────────
   echo -e "\e[1;32m✔ Entorno configurado exitosamente.\e[0m"
   echo -e "📂 Ingresa al directorio de trabajo con: \e[1;33mcd $WORK_DIR\e[0m"
   echo -e "📝 Tu script para editar es: \e[1;33m$TARGET_SCRIPT\e[0m"
   echo -e "\e[1;36m¡Buena suerte, Sysadmin! El reloj corre.\e[0m"
   EOF
-
-  bash /tmp/setup-net002.sh && rm -f /tmp/setup-net002.sh
+  chmod +x /tmp/setup.sh
+  bash /tmp/setup.sh
 tags:
   - Advanced-Bash-Scripting
   - Laboratorios-del-LFCS
@@ -203,3 +195,22 @@ Script Validacion: |-
   # No borramos el validador inmediatamente para que el estudiante pueda inspeccionar la lógica (cat /tmp/validador-bash-lab-01.sh)
 ---
 [[Laboratorios del LFCS]]
+
+
+
+---
+
+Actually, yes — there's a situation that comes to mind from my current role.
+
+We had a recurring issue on the NOC floor where the on-call staff was manually checking server health every single shift — running `df -h`, `free -m`, and `uptime` one by one, with no logs, no timestamps, no way to trace what the system looked like at 2 AM when an incident started. If something went wrong overnight, we had no historical baseline to compare against.
+
+I took it upon myself to solve that. I wrote a Bash script that automates the entire health check and generates a timestamped log file on every run. The filename itself encodes the exact moment of execution — down to the minute — so logs never overwrite each other and you always know when each snapshot was taken.
+
+I also made sure the script captures not just standard output but stderr as well, using `2>&1` redirection. That was important to me — a script that silently swallows errors gives you a false sense of stability. If something fails, I want that failure on record.
+
+The result was a simple but reliable audit trail that the team could reference during post-incident reviews. No more "we don't know what the disk looked like before it filled up." The data was just there.
+
+It's a straightforward solution, but it reflects something I care about: if you're going to monitor systems, you need to actually _keep_ what you observe. Otherwise you're just watching, not recording.
+
+---
+
