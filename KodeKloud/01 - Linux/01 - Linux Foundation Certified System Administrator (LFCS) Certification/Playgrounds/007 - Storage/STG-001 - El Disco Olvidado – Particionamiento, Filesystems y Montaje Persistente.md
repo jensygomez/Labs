@@ -32,7 +32,7 @@ Script: |-
   SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
   SSH="sshpass -p $PASS ssh $SSH_OPTS"
 
-  echo -e "\e[1;33m⏳ [node01] Preparando entorno del laboratorio STG-001...\e[0m"
+  echo -e "\e[1;33m⏳ [node01] Preparando entorno del laboratorio STG-001 (Multi-Nodo)...\e[0m"
 
   # ── 0. Instalar sshpass en los 3 nodos ──────────────────────────────────────
   if ! command -v sshpass &>/dev/null; then
@@ -48,7 +48,7 @@ Script: |-
     " < /dev/null 2>/dev/null || true
   done
 
-  echo -e "\e[1;32m✔ sshpass instalado en el clúster.\e[0m"
+  echo -e "\e[1;32m✔ sshpass verificado/instalado en todo el clúster.\e[0m"
 
   # ── 1. Obtener IPs dinámicas ────────────────────────────────────────────────
   IP_NODE02=$($SSH ${USER_NET}@${NODE_TARGET} 'hostname -i' 2>/dev/null | tr -d '\r' || echo "10.244.29.17")
@@ -56,33 +56,51 @@ Script: |-
 
   echo -e "\e[1;36m  IPs detectadas: node02=\e[1;32m${IP_NODE02}\e[1;36m, node03=\e[1;32m${IP_NODE03}\e[0m"
 
-  # ── 2. Inyectar fallos de Storage en node02 ─────────────────────────────────
+  # ── 2. Inyectar fallos de Storage en node02 usando Loop Devices ──────────────
   $SSH ${USER_NET}@${IP_NODE02} "sudo bash -c '
     # Desactivar swap actual para simular el fallo
     swapoff -a 2>/dev/null || true
     
-    # Limpiar el disco secundario (idempotencia)
-    wipefs -a /dev/nvme1n1 2>/dev/null || true
-    partprobe /dev/nvme1n1 2>/dev/null || true
+    # Desmontar si quedó algo colgado
+    umount -f /mnt/app-data 2>/dev/null || true
+    
+    # Limpieza profunda de loops previos (cualquiera que use el archivo o el dispositivo)
+    losetup -a | grep \"/storage_loop10\" | cut -d: -f1 | xargs -r losetup -d 2>/dev/null || true
+    losetup -d /dev/loop10 2>/dev/null || true
+    rm -f /storage_loop10
 
-    # FALLO 1: Crear partición pero con filesystem subóptimo (ext3 en lugar de ext4)
-    parted -s /dev/nvme1n1 mklabel gpt
-    parted -s /dev/nvme1n1 mkpart primary ext3 1MiB 100%
-    mkfs.ext3 /dev/nvme1n1p1
+    # Crear un archivo de 256MB que simulará el disco físico (CORREGIDO: of= en lugar de out=)
+    dd if=/dev/zero of=/storage_loop10 bs=1M count=256 status=none
+    
+    # Forzar la creación y asociación de /dev/loop10
+    mknod /dev/loop10 b 7 10 2>/dev/null || true
+    losetup /dev/loop10 /storage_loop10
 
-    # Crear punto de montaje
+    # Limpiar firmas previas dentro del loop
+    wipefs -a /dev/loop10 2>/dev/null || true
+
+    # FALLO 1: Crear partición pero con filesystem obsoleto (ext3 en lugar de ext4)
+    parted -s /dev/loop10 mklabel gpt
+    parted -s /dev/loop10 mkpart primary ext3 1MiB 100%
+    
+    # Informar al kernel de la nueva partición (/dev/loop10p1)
+    partprobe /dev/loop10 2>/dev/null || true
+    udevadm settle
+    
+    # Formatear la partición resultante en ext3 (el error a solucionar)
+    mkfs.ext3 /dev/loop10p1 >/dev/null 2>&1
+
+    # Crear punto de montaje objetivo
     mkdir -p /mnt/app-data
 
-    # FALLO 2: Entrada en fstab con filesystem incorrecto y sin opciones de resiliencia
-    # (Eliminamos entradas previas de nvme1n1 para limpiar)
-    sed -i \"/nvme1n1/d\" /etc/fstab
-    echo \"/dev/nvme1n1p1 /mnt/app-data ext3 defaults 0 2\" >> /etc/fstab
+    # FALLO 2: Entrada errónea en fstab con filesystem incorrecto y sin resiliencia
+    sed -i \"/loop10/d\" /etc/fstab
+    sed -i \"/app-data/d\" /etc/fstab
+    echo \"/dev/loop10p1 /mnt/app-data ext3 defaults 0 2\" >> /etc/fstab
 
-    # FALLO 3: Dejar un archivo de swap huérfano o inactivo (simulamos que no hay swap activo)
-    rm -f /swapfile
+    # FALLO 3: Eliminar cualquier swapfile previo para forzar su recreación desde cero
+    rm -f /swapfile /mnt/app-data/swapfile 2>/dev/null || true
   '" < /dev/null
-
-  echo -e "\e[1;33m⏳ Fallos inyectados en node02 (FS incorrecto, fstab sin noatime/nofail, sin swap).\e[0m"
 
   # ── 3. Preparar bóveda en node03 ────────────────────────────────────────────
   $SSH ${USER_NET}@${IP_NODE03} "sudo bash -c '
@@ -91,70 +109,62 @@ Script: |-
     chown -R bob:bob /opt/backup-vault/
   '" < /dev/null
 
-  echo -e "\e[1;32m✔ Bóveda preparada en node03.\e[0m"
+  echo -e "\e[1;32m✔ Bóveda de auditoría preparada en node03.\e[0m"
 
-  # ── 4. Mostrar el ticket ────────────────────────────────────────────────────
+  # ── 4. Mostrar el ticket de Soporte Técnico ─────────────────────────────────
   clear
   echo -e "\e[1;36m================================================================================\e[0m"
   echo -e "\e[1;33m  TICKET INC-5001  │  Severidad: MEDIA  │  Ambiente: CLÚSTER DISTRIBUIDO\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
-  echo -e "\e[1;32m  💾 STG-001-MN — El Disco Olvidado (Particiones, Fstab y Swap)\e[0m"
+  echo -e "\e[1;32m  💾 STG-001-MN — El Disco Olvidado (Particiones, Fstab y Swap con Loop Devices)\e[0m"
   echo -e "\e[1;36m  Módulo: Storage  │  Dificultad: 6/10  │  Nivel: L2\e[0m"
   echo -e "\e[1;36m --------------------------------------------------------------------------------\e[0m"
   echo -e "  \e[1mUbicación de Control:\e[0m  node01  (Estación del Administrador — \e[1;32mbob\e[0m)"
-  echo -e "  \e[1mNodo a Intervenir:\e[0m     node02  (Servidor con disco secundario mal configurado)"
+  echo -e "  \e[1mNodo a Intervenir:\e[0m     node02  (Servidor con disco virtual mal configurado)"
   echo -e "  \e[1mNodo Bóveda Destino:\e[0m   node03  (Bóveda de Gobernanza — \e[1;35m/opt/backup-vault/\e[0m)"
   echo -e "  \e[1mContraseña del Clúster:\e[0m \e[1;32mcaleston123\e[0m"
   echo -e "\e[1;36m --------------------------------------------------------------------------------\e[0m"
   echo ""
-  echo -e "  Durante el proceso de expansión de capacidad, el equipo de infraestructura"
-  echo -e "  aprovisionó un disco secundario — identificado como \e[1m/dev/nvme1n1\e[0m — en el"
-  echo -e "  nodo \e[1mnode02\e[0m, con la intención de que sirviera como volumen dedicado para"
-  echo -e "  los datos de aplicación bajo la ruta \e[1m/mnt/app-data\e[0m. El trabajo se dio"
-  echo -e "  por concluido y el nodo fue incorporado al clúster sin mayor validación."
+  echo -e "  Durante el proceso de aprovisionamiento ágil, el equipo de infraestructura"
+  echo -e "  asignó un bloque de almacenamiento virtualizado — identificado como \e[1m/dev/loop10\e[0m —"
+  echo -e "  en el nodo \e[1mnode02\e[0m, con la intención de que sirviera como volumen dedicado"
+  echo -e "  para almacenar datos críticos de la aplicación en la ruta \e[1m/mnt/app-data\e[0m."
   echo ""
   echo -e "  Al día siguiente, tras una ventana de mantenimiento que requirió un reinicio"
-  echo -e "  del servidor, la aplicación comenzó a reportar fallos de escritura y lectura."
-  echo -e "  Al investigar, se descubrió que el directorio \e[1m/mnt/app-data\e[0m aparecía vacío"
-  echo -e "  e inaccesible: el disco nunca había sido configurado para montarse de forma"
-  echo -e "  persistente, y el reinicio dejó al sistema sin ese volumen disponible."
+  echo -e "  del servidor, la aplicación comenzó a reportar fallos de persistencia. Al"
+  echo -e "  investigar, se descubrió que \e[1m/mnt/app-data\e[0m no monta automáticamente,"
+  echo -e "  el sistema de archivos utilizado fue \e[1mext3\e[0m (en lugar del estándar corporativo \e[1mext4\e[0m)"
+  echo -e "  y los parámetros de montaje carecen de tolerancia a fallos."
   echo ""
-  echo -e "  El problema se agravó cuando el equipo de monitoreo notificó que \e[1mnode02\e[0m"
-  echo -e "  no cuenta con espacio de intercambio activo. La ausencia de \e[1mSwap\e[0m expone"
-  echo -e "  al nodo a un riesgo crítico de \e[1mOut Of Memory (OOM)\e[0m bajo carga sostenida,"
-  echo -e "  situación que el equipo de SRE considera inaceptable en un nodo productivo."
+  echo -e "  Adicionalmente, el equipo de SRE notificó que \e[1mnode02\e[0m se encuentra sin memoria"
+  echo -e "  de intercambio activa, rompiendo las políticas de resiliencia frente a eventos"
+  echo -e "  Out-Of-Memory (OOM)."
   echo ""
-  echo -e "  El ingeniero encargado deberá conectarse a \e[1mnode02\e[0m vía SSH desde \e[1mnode01\e[0m"
-  echo -e "  y resolver la cadena completa de problemas. Primero verificará el estado"
-  echo -e "  del filesystem en \e[1m/dev/nvme1n1\e[0m: si el formato es incorrecto — por ejemplo"
-  echo -e "  \e[1mext3\e[0m — deberá reformatear la partición a \e[1mext4\e[0m. Luego corregirá la"
-  echo -e "  entrada correspondiente en \e[1m/etc/fstab\e[0m para que \e[1m/mnt/app-data\e[0m se monte"
-  echo -e "  de forma persistente con las opciones \e[1mdefaults,noatime,nofail\e[0m, validando"
-  echo -e "  la sintaxis mediante \e[1msudo mount -a\e[0m antes de continuar."
+  echo -e "  \e[1;34mTU MISIÓN:\e[0m"
+  echo -e "  1. Conéctate a \e[1mnode02\e[0m desde \e[1mnode01\e[0m."
+  echo -e "  2. Reformatea la partición \e[1m/dev/loop10p1\e[0m al tipo \e[1mext4\e[0m (¡Cuidado con perder el loop!)."
+  echo -e "  3. Corrige el archivo \e[1m/etc/fstab\e[0m para que monte de forma persistente en \e[1m/mnt/app-data\e[0m"
+  echo -e "     utilizando obligatoriamente las opciones: \e[1mdefaults,noatime,nofail\e[0m"
+  echo -e "  4. Crea un archivo swap de \e[1m128MB\e[0m (debido a la cuota del disco) en la ruta"
+  echo -e "     \e[1m/mnt/app-data/swapfile\e[0m, configúrale permisos seguros (\e[1m600\e[0m), inicialízalo"
+  echo -e "     y asegúralo de forma permanente en el \e[1m/etc/fstab\e[0m."
   echo ""
-  echo -e "  Una vez resuelto el montaje, creará un archivo de swap de \e[1m1G\e[0m en la ruta"
-  echo -e "  \e[1m/mnt/app-data/swapfile\e[0m, le asignará permisos \e[1m600\e[0m, lo inicializará con"
-  echo -e "  \e[1mmkswap\e[0m, lo activará con \e[1mswapon\e[0m y registrará su entrada en \e[1m/etc/fstab\e[0m"
-  echo -e "  para garantizar que persista tras futuros reinicios."
-  echo ""
-  echo -e "  Como paso final de gobernanza, el ingeniero copiará el \e[1m/etc/fstab\e[0m"
-  echo -e "  corregido junto con la salida del comando \e[1mlsblk -f\e[0m hacia la bóveda"
-  echo -e "  centralizada en \e[1mnode03:/opt/backup-vault/stg001_fstab.bak\e[0m, dejando"
-  echo -e "  evidencia auditada de la intervención realizada."
+  echo -e "  Como paso final de gobernanza, copia el \e[1m/etc/fstab\e[0m modificado junto con la salida"
+  echo -e "  del comando \e[1mlsblk -f\e[0m a la bóveda centralizada en:"
+  echo -e "  \e[1mnode03:/opt/backup-vault/stg001_fstab.bak\e[0m"
   echo ""
   echo -e "\e[1;36m  ──────────────────────────────────────────────────────────────────────────\e[0m"
   echo -e "\e[1;33m  CRITERIOS DE ACEPTACIÓN\e[0m"
   echo -e "\e[1;36m  ──────────────────────────────────────────────────────────────────────────\e[0m"
   echo ""
-  echo -e "   \e[1;37m[ ]\e[0m Partición válida en \e[1m/dev/nvme1n1\e[0m con filesystem \e[1mext4\e[0m          \e[0;35m→ 25%\e[0m"
-  echo -e "   \e[1;37m[ ]\e[0m \e[1m/mnt/app-data\e[0m montado con opciones \e[1mnoatime\e[0m y \e[1mnofail\e[0m          \e[0;35m→ 25%\e[0m"
-  echo -e "   \e[1;37m[ ]\e[0m \e[1m/etc/fstab\e[0m con entradas correctas y sin errores de sintaxis    \e[0;35m→ 20%\e[0m"
-  echo -e "   \e[1;37m[ ]\e[0m Swap activo (\e[1mswapon --show\e[0m) con tamaño >= \e[1m1G\e[0m                  \e[0;35m→ 20%\e[0m"
-  echo -e "   \e[1;37m[ ]\e[0m Backup de \e[1mfstab\e[0m y \e[1mlsblk\e[0m custodiado en \e[1mnode03\e[0m               \e[0;35m→ 10%\e[0m"
+  echo -e "   \e[1;37m[ ]\e[0m Partición \e[1m/dev/loop10p1\e[0m operativa con filesystem \e[1mext4\e[0m       \e[0;35m→ 25%\e[0m"
+  echo -e "   \e[1;37m[ ]\e[0m Punto \e[1m/mnt/app-data\e[0m montado con opciones \e[1mnoatime\e[0m y \e[1mnofail\e[0m      \e[0;35m→ 25%\e[0m"
+  echo -e "   \e[1;37m[ ]\e[0m \e[1m/etc/fstab\e[0m corregido sintácticamente sin errores de montaje     \e[0;35m→ 20%\e[0m"
+  echo -e "   \e[1;37m[ ]\e[0m Swap activo basado en archivo dentro del montaje asignado          \e[0;35m→ 20%\e[0m"
+  echo -e "   \e[1;37m[ ]\e[0m Evidencia y respaldos custodiados con éxito en \e[1mnode03\e[0m          \e[0;35m→ 10%\e[0m"
   echo ""
-  echo -e "\e[1;31m  REGLA DE ORO:\e[0m Nunca reinicie sin validar \e[1msudo mount -a\e[0m. Un error en"
-  echo -e "  \e[1m/etc/fstab\e[0m puede dejar el nodo inoperable en \e[1mEmergency Mode\e[0m."
-  echo -e "  Diagnóstico previo recomendado: \e[1mlsblk -f\e[0m y \e[1mcat /etc/fstab\e[0m"
+  echo -e "\e[1;31m  REGLA DE ORO:\e[0m Nunca apliques un cambio en fstab sin ejecutar \e[1msudo mount -a\e[0m."
+  echo -e "  Si cometes un error de sintaxis, podrías romper el arranque del nodo."
   echo ""
   echo -e "\e[1;36m================================================================================\e[0m"
   echo ""
