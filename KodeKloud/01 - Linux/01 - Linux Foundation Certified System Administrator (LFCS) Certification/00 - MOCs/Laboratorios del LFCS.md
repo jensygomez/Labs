@@ -55,7 +55,7 @@ tags:
 | [[DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red]]                            |            40 min             |     `12/06/2026`      | <input type="checkbox" checked> |
 |                                                                                                       |                               |                       |                                 |
 | **Storage**                                                                                           |                               |                       |                                 |
-| [[STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente]]                 |                               |                       |                                 |
+| [[STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente]]                 |            40 min             |                       |                                 |
 |                                                                                                       |                               |                       |                                 |
 | **Bash Avanzado**                                                                                     |                               |                       |                                 |
 | [[BS-001 - El Eco Silencioso – Variables y Redirecciones]]                                            |            30 min             |     `13/06/2026`      | <input type="checkbox" checked> |

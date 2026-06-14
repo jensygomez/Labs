@@ -20,6 +20,7 @@ Competencias: |-
   - Gestionar espacio de intercambio (Swap) de forma segura.
 Script Vagrant: |-
   # -*- mode: ruby -*-
+
   # vi: set ft=ruby :
 
   Vagrant.configure("2") do |config|
@@ -63,7 +64,7 @@ Script Vagrant: |-
           echo 'bob ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/bob
           chmod 0440 /etc/sudoers.d/bob
           
-          # 3. Instalar herramientas (wipefs ya viene en util-linux)
+          # 3. Instalar herramientas
           export DEBIAN_FRONTEND=noninteractive
           apt-get update -qq
           apt-get install -y -qq sshpass parted nfs-common
@@ -74,50 +75,79 @@ Script Vagrant: |-
           node_config.vm.provision "shell", privileged: false, inline: <<-SHELL
             echo "🎫 Generando Ticket de Incidente para node01..."
             
+            # Guardamos el texto plano intacto
             cat << 'TICKET' > /home/vagrant/TICKET_INC-5001.txt
-  clear
-  echo -e "\\e[1;36m================================================================================\\e[0m"
-  echo -e "\\e[1;33m  TICKET INC-5001  │  Severidad: MEDIA  │  Ambiente: CLÚSTER DISTRIBUIDO\\e[0m"
-  echo -e "\\e[1;36m================================================================================\\e[0m"
-  echo ""
-  echo -e "  Durante el proceso de aprovisionamiento, se asignó un disco secundario"
-  echo -e "  (\\e[1m/dev/vdb\\e[0m) al nodo \\e[1mnode02\\e[0m para almacenar datos críticos en \\e[1m/mnt/app-data\\e[0m."
-  echo ""
-  echo -e "  Tras un reinicio de mantenimiento, la aplicación reportó fallos de escritura."
-  echo -e "  La investigación inicial revela que:"
-  echo -e "  1. El punto de montaje \\e[1m/mnt/app-data\\e[0m no se monta automáticamente."
-  echo -e "  2. El sistema de archivos es \\e[1mext3\\e[0m (violando el estándar corporativo \\e[1mext4\\e[0m)."
-  echo -e "  3. El servidor carece de memoria de intercambio (Swap) activa."
-  echo ""
-  echo -e "  \\e[1;34mTU MISIÓN:\\e[0m"
-  echo -e "  1. Conéctate a \\e[1mnode02\\e[0m desde aquí (usuario: \\e[1mbob\\e[0m, pass: \\e[1mcaleston123\\e[0m)."
-  echo -e "  2. Reformatea la partición \\e[1m/dev/vdb1\\e[0m al tipo \\e[1mext4\\e[0m."
-  echo -e "  3. Corrige \\e[1m/etc/fstab\\e[0m para montar en \\e[1m/mnt/app-data\\e[0m con opciones:"
-  echo -e "     \\e[1mdefaults,noatime,nofail\\e[0m"
-  echo -e "  4. Crea un swapfile de \\e[1m128MB\\e[0m en \\e[1m/mnt/app-data/swapfile\\e[0m,"
-  echo -e "     con permisos \\e[1m600\\e[0m, inicialízalo y asegúralo en \\e[1m/etc/fstab\\e[0m."
-  echo ""
-  echo -e "\\e[1;36m  ──────────────────────────────────────────────────────────────────────────\\e[0m"
-  echo -e "\\e[1;33m  CRITERIOS DE ACEPTACIÓN\\e[0m"
-  echo -e "\\e[1;36m  ──────────────────────────────────────────────────────────────────────────\\e[0m"
-  echo ""
-  echo -e "   \\e[1;37m[ ]\\e[0m Partición \\e[1m/dev/vdb1\\e[0m operativa con filesystem \\e[1mext4\\e[0m       \\e[0;35m→ 25%\\e[0m"
-  echo -e "   \\e[1;37m[ ]\\e[0m Punto \\e[1m/mnt/app-data\\e[0m montado con opciones \\e[1mnoatime\\e[0m y \\e[1mnofail\\e[0m \\e[0;35m→ 25%\\e[0m"
-  echo -e "   \\e[1;37m[ ]\\e[0m \\e[1m/etc/fstab\\e[0m corregido sintácticamente sin errores          \\e[0;35m→ 20%\\e[0m"
-  echo -e "   \\e[1;37m[ ]\\e[0m Swap activo de 128MB con permisos seguros (\\e[1m600\\e[0m)          \\e[0;35m→ 20%\\e[0m"
-  echo -e "   \\e[1;37m[ ]\\e[0m Evidencia copiada a \\e[1mnode03:/opt/backup-vault/\\e[0m            \\e[0;35m→ 10%\\e[0m"
-  echo ""
-  echo -e "\\e[1;31m  ⚠️ REGLA DE ORO:\\e[0m Nunca apliques un cambio en fstab sin ejecutar \\e[1msudo mount -a\\e[0m."
-  echo -e "  Si cometes un error de sintaxis, podrías romper el arranque del nodo."
-  echo ""
-  echo -e "\\e[1;36m================================================================================\\e[0m"
-  echo ""
+  ================================================================================
+    TICKET INC-5001  │  Severidad: MEDIA  │  Ambiente: CLÚSTER DISTRIBUIDO
+  ================================================================================
+    💾 STG-001-MN — El Disco Olvidado (Particiones, Fstab y Swap)
+    Módulo: Storage  │  Dificultad: 6/10  │  Nivel: L2
+  --------------------------------------------------------------------------------
+    Ubicación de Control:  node01  (Estación del Administrador — bob)
+    Nodo a Intervenir:     node02  (Servidor con disco secundario mal configurado)
+    Nodo Bóveda Destino:   node03  (Bóveda de Gobernanza — /opt/backup-vault/)
+    Contraseña del Clúster: caleston123
+  --------------------------------------------------------------------------------
+
+    Durante el proceso de expansión de capacidad del clúster, el equipo de
+    infraestructura aprovisionó un disco secundario — /dev/vdb — en el nodo
+    node02, destinado a servir como volumen de datos de aplicación bajo la
+    ruta /mnt/app-data. El trabajo fue registrado como completado y el nodo
+    fue reintegrado al clúster sin que se realizara una validación post-tarea.
+
+    Al día siguiente, durante una ventana de mantenimiento programada que
+    implicó el reinicio del servidor, la aplicación comenzó a reportar fallos
+    de escritura. Al investigar, se encontró que /mnt/app-data aparecía vacío:
+    el disco nunca fue configurado para montarse de forma persistente, y el
+    reinicio dejó al sistema sin ese volumen disponible. La revisión posterior
+    reveló además que el filesystem de /dev/vdb1 es ext3, en violación directa
+    del estándar corporativo que exige ext4 en todos los volúmenes de datos.
+
+    El problema se agravó cuando el equipo de monitoreo notificó que node02
+    no cuenta con espacio de intercambio activo. La ausencia de Swap expone
+    al nodo a un riesgo crítico de Out Of Memory (OOM) bajo carga sostenida,
+    condición que el equipo de SRE considera inaceptable en producción.
+
+    El ingeniero encargado deberá conectarse a node02 vía SSH desde node01
+    y resolver la cadena completa. Reformateará /dev/vdb1 a ext4, corregirá
+    la entrada en /etc/fstab para montar /mnt/app-data con las opciones
+    defaults,noatime,nofail, y validará la sintaxis con sudo mount -a antes
+    de continuar. Luego creará un archivo de swap de 128MB en la ruta
+    /mnt/app-data/swapfile, le asignará permisos 600, lo inicializará con
+    mkswap, lo activará y lo registrará en /etc/fstab para persistencia.
+    Como cierre de gobernanza, copiará el fstab corregido y la salida de
+    lsblk -f a la bóveda centralizada en node03:/opt/backup-vault/stg001_fstab.bak.
+
+    ──────────────────────────────────────────────────────────────────────────
+    CRITERIOS DE ACEPTACIÓN
+    ──────────────────────────────────────────────────────────────────────────
+
+     [ ] Partición /dev/vdb1 operativa con filesystem ext4                             → 25%
+     [ ] /mnt/app-data montado con opciones noatime y nofail                   → 25%
+     [ ] /etc/fstab corregido sintácticamente sin errores                                → 20%
+     [ ] Swap activo de 128MB con permisos seguros (600)                           → 20%
+     [ ] Evidencia copiada a node03:/opt/backup-vault/stg001_fstab.bak  → 10%
+
+    REGLA DE ORO: Nunca apliques un cambio en fstab sin ejecutar sudo mount -a.
+    Un error de sintaxis puede dejar el nodo inoperable en Emergency Mode.
+    Diagnóstico previo recomendado: lsblk -f  y  cat /etc/fstab
+
+  ================================================================================
   TICKET
 
-            # Hacer que el ticket aparezca al iniciar sesión
-            echo "" >> /home/vagrant/.bashrc
-            echo "# Mostrar ticket de laboratorio al iniciar sesión" >> /home/vagrant/.bashrc
-            echo "cat /home/vagrant/TICKET_INC-5001.txt" >> /home/vagrant/.bashrc
+            # Limpiamos basura de intentos previos en el bashrc
+            sed -i '/TICKET/d' /home/vagrant/.bashrc
+            sed -i '/# Mostrar/d' /home/vagrant/.bashrc
+            sed -i '/cat \/home/d' /home/vagrant/.bashrc
+            sed -i '/clear/d' /home/vagrant/.bashrc
+
+            # Inyectamos de forma segura usando un heredoc limpio
+            cat << 'EOF' >> /home/vagrant/.bashrc
+
+  # Mostrar ticket de laboratorio al iniciar sesión de forma limpia
+  clear
+  cat /home/vagrant/TICKET_INC-5001.txt
+  EOF
           SHELL
         end
 
@@ -137,7 +167,7 @@ Script Vagrant: |-
             mkfs.ext3 ${DISK}1 >/dev/null 2>&1
             
             mkdir -p /mnt/app-data
-            sed -i "/${DISK}/d" /etc/fstab
+            sed -i "\#${DISK}#d" /etc/fstab
             sed -i "/app-data/d" /etc/fstab
             echo "${DISK}1 /mnt/app-data ext3 defaults 0 2" >> /etc/fstab
             rm -f /swapfile /mnt/app-data/swapfile 2>/dev/null || true
