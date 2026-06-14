@@ -23,6 +23,7 @@ Competencias: |-
   - Enviar resultados de diagnóstico a un servidor de backup via pipeline SSH
 Script: |-
   cat << 'EOF' > /tmp/setup.sh
+  cat << 'EOF' > /tmp/setup.sh
   #!/bin/bash
   # =============================================================================
   # EC-001-v1 | El Acceso Perdido – Conectividad y Documentación del Sistema
@@ -51,12 +52,13 @@ Script: |-
   sshpass -p 'caleston123' ssh -o StrictHostKeyChecking=no bob@node02 'bash -s' << 'NODE02_SCRIPT'
   set -e
 
-  # Fallo 1: Eliminar clave pública preexistente y deshabilitar autenticación por contraseña
+  # Fallo 1: Eliminar clave pública preexistente
+  # El proveedor limpió authorized_keys durante el hardening del fin de semana.
+  # La contraseña sigue activa — es la única ventana de acceso disponible para el L2 remoto.
+  # El ingeniero deberá copiar su clave y luego completar el hardening deshabilitando la contraseña.
   mkdir -p ~/.ssh
   > ~/.ssh/authorized_keys
-  sudo sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
-  sudo sed -i 's/^#*PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
-  sudo systemctl restart sshd
+  chmod 600 ~/.ssh/authorized_keys
 
   # Fallo 2: Eliminar paquetes de documentación del sistema
   sudo dnf remove -y man-db info 2>/dev/null || true
@@ -168,10 +170,11 @@ Script: |-
   echo -e " -------------------------------------------------------------------------------"
   echo -e " ${BOLD}Restricciones Operativas:${RESET}"
   echo -e ""
-  echo -e "  ${RED}⚠${RESET}  Durante la fase de recuperación del acceso, la única forma de"
-  echo -e "     autenticarte en node02 es utilizando sshpass con la contraseña"
-  echo -e "     caleston123. Una vez configurada la clave pública, el acceso por"
-  echo -e "     contraseña quedará bloqueado permanentemente en ese servidor."
+  echo -e "  ${RED}⚠${RESET}  El proveedor eliminó todas las claves públicas autorizadas en node02."
+  echo -e "     La autenticación por contraseña sigue activa temporalmente."
+  echo -e "     Usa sshpass con caleston123 para copiar tu clave pública."
+  echo -e "     Como paso final del hardening, deshabilita la autenticación por"
+  echo -e "     contraseña una vez que la clave esté operativa."
   echo -e ""
   echo -e "  ${RED}⚠${RESET}  Todos los resultados de diagnóstico y los archivos de evidencia"
   echo -e "     deben ser enviados directamente a node03 via pipeline. Está"
@@ -181,10 +184,10 @@ Script: |-
   echo -e " ${BOLD}Parámetros Técnicos Obligatorios:${RESET}"
   echo -e ""
   echo -e "  ${RED}1. Restablecer Acceso SSH a node02 con Autenticación por Clave${RESET}"
-  echo -e "     Genera un par de claves SSH en node01 sin passphrase."
   echo -e "     Usa sshpass con caleston123 para ejecutar ssh-copy-id y copiar"
-  echo -e "     la clave pública al servidor node02. Verifica que puedes conectarte"
-  echo -e "     a node02 sin que el sistema solicite contraseña."
+  echo -e "     la clave pública al servidor node02. Verifica acceso sin contraseña."
+  echo -e "     Como paso final, deshabilita PasswordAuthentication en sshd_config"
+  echo -e "     y reinicia sshd para completar el hardening."
   echo -e ""
   echo -e "  ${RED}2. Restaurar la Documentación del Sistema en node02${RESET}"
   echo -e "     Instala los paquetes man-db e info en node02. Verifica que las"
@@ -227,6 +230,10 @@ Script: |-
   echo -e "  - Envía resultados a ${BOLD}node03${RESET} via ${BOLD}pipeline${RESET} (|)"
   echo -e "  - ${RED}NUNCA${RESET} guardes archivos de resultados en ${BOLD}node01${RESET}"
   echo -e "${CYAN}================================================================================${RESET}"
+  EOF
+  chmod +x /tmp/setup.sh
+  bash /tmp/setup.sh
+  rm -f /tmp/setup.sh
   EOF
   chmod +x /tmp/setup.sh
   bash /tmp/setup.sh

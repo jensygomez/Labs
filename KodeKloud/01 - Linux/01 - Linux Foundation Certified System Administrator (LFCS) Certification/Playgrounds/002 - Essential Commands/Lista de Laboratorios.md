@@ -187,11 +187,17 @@ tags:
 ### 🗺️ Ruta de Práctica: Essential Commands (LFCS, RHCSA & DevOps Foundation)
 *Arquitectura base: `node01` (Estación de Administración), `node02` (Servidor con Problemas), `node03` (Backup Empresarial). Regla de Oro: Trabajar SIEMPRE desde node01, conectarse a node02 vía sshpass, enviar resultados a node03 via pipeline (NUNCA guardar en node01).*
 
-#### **1. EC-001: El Acceso Perdido – Conectividad y Documentación del Sistema**
-*   **Dificultad:** 5/10 | **Nivel:** L2
-*   **Temas Essential Commands:** SSH, Console Access, man pages, info, help, /usr/share/doc.
-*   **Objetivo:** Prepararme para aprobar el LFCS, RHCSA, Para Sysadmin Linux Pleno, DevOps Engineer y Sysadmin Kubernetes.
-*   **Escenario:** Desde `node01` necesitas acceder a `node02` vía SSH, pero la autenticación por contraseña fue deshabilitada y no existen claves SSH configuradas. Debes usar `sshpass` para conectarte inicialmente, luego configurar autenticación SSH con claves (generar par de claves en node01, copiar clave pública a node02, deshabilitar autenticación por contraseña). Una vez dentro de node02, descubres que la documentación del sistema fue eliminada. Debes instalar paquetes de documentación (`man-db`, `info`), navegar la jerarquía de man pages (secciones 1, 5, 8), extraer información crítica de `/etc/app-config/settings.conf`, y enviar todos los resultados a `node03` via pipeline para backup empresarial.
+##### **1. EC-001: El Acceso Perdido – Conectividad y Documentación del Sistema**
+
+- **Dificultad:** 5/10 | **Nivel:** L2
+- **Temas Essential Commands:** SSH key-based authentication, sshpass, man pages, info, /usr/share/doc
+- **Certificaciones:** LFCS, RHCSA, Sysadmin Linux Pleno, DevOps Engineer, Sysadmin Kubernetes
+
+**Escenario:**
+
+Un proveedor externo de seguridad ejecutó controles de hardening sobre `node02` durante una ventana de mantenimiento del fin de semana. Al reiniciar operaciones el lunes, el equipo de aplicaciones reportó pérdida total de acceso SSH al servidor. La investigación inicial reveló que el proveedor eliminó todas las claves públicas autorizadas en el servidor como parte del proceso de limpieza, dejando `authorized_keys` vacío. Adicionalmente, el mismo script de hardening removió los paquetes de documentación del sistema, y el archivo de configuración crítica `/etc/app-config/settings.conf` nunca fue respaldado formalmente.
+
+El ticket escala a L2 remoto. Tienes acceso temporal por contraseña vía `sshpass` — ventana que debes aprovechar para restablecer autenticación por clave antes de completar el hardening que el proveedor dejó incompleto. Una vez dentro, debes restaurar la documentación del sistema, verificar las man pages en sus secciones correspondientes, y evacuar la configuración crítica hacia el vault empresarial en `node03` antes del cierre del turno.
 
 #### **2. EC-002: La Estructura Colapsada – Gestión Avanzada de Archivos y Enlaces**
 *   **Dificultad:** 6/10 | **Nivel:** L2
