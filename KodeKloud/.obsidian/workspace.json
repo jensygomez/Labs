@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Storage/Lista de Laboratorios.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Storage/STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Lista de Laboratorios"
+              "title": "STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente"
             }
           }
         ]
@@ -203,8 +203,13 @@
   },
   "active": "fe9da27ba1f1a9a4",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Storage/STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Storage/Lista de Laboratorios.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Storage/STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/vagrantfile",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Vagrant/vagrantfile",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Vagrant/vagrant",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Vagrant",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/vagrant",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/006 - Docker/Lista de Laboratorios Docker.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "01 - Linux/03 - Advanced Bash Scripting/Playgrounds Bash/PG-BASH-001 - Inventario automático de servidores - V2.md",
@@ -232,13 +237,7 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/006 - Docker",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V2.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V1.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Vagrant/errores.pdf",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Vagrant/errores",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Networking",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Vagrant/Vagrantfile",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Vagrant",
-    "01 - Linux/Vagrant/Vagrantfile",
     "LINUX/00 - qui/Sem título.canvas",
     "Advanced Bash Scripting/01 - Introduction.canvas",
     "ChatGPT Image 19 de abr. de 2026, 07_59_54.png"
