@@ -4,6 +4,13 @@ tags:
 ---
 # 🗺️ Mapa de Control: LFCS
 
+| Essential Comands                                                         | Tiempo Total todos los ciclos | **Fecha 1er Intento** | Ciclos |
+| ------------------------------------------------------------------------- | :---------------------------: | :-------------------: | :----: |
+| [[EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema]] |                               |                       |        |
+
+
+
+
 
 | Essential Comands                                                                                     | Tiempo Total todos los ciclos | **Fecha 1er Intento** |             Ciclos              |
 | ----------------------------------------------------------------------------------------------------- | :---------------------------: | :-------------------: | :-----------------------------: |
