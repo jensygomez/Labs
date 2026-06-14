@@ -3,7 +3,7 @@ Curso: Prep Course - LFCS Certification
 Modulo: Essential Commands
 Playground: PG-006
 Titulo: Control de versiones de infraestructura y gestión de ramas locales con Git - V2
-Fecha de Inicio: 2026-06-06
+Fecha de Inicio: 2026-06-14
 Dificultad: 7/10
 Level Escalation: L2/L3
 Objetivo:
@@ -17,15 +17,6 @@ Competencias:
   - Resolver conflictos de merge estructurales en archivos de configuración críticos (IaC)
   - Mitigar interrupciones de tareas concurrentes aislando entornos con comandos forenses (git stash)
   - Establecer líneas base de despliegue inmutables mediante versionamiento semántico con etiquetas (git tag)
-Validacion:
-  - Objetivo: Uso correcto del flujo de aislamiento temporal verificado a través del histórico de stashes o commits secundarios.
-    Peso: 20 %
-  - Objetivo: Registro del commit de urgencia en la rama principal previo a la fusión.
-    Peso: 20 %
-  - Objetivo: Fusión y resolución manual del conflicto confirmadas con el mensaje de commit exacto.
-    Peso: 40 %
-  - Objetivo: Etiqueta de versión inmutable (Tag v2.0.0) registrada correctamente con su metadato anotado.
-    Peso: 20 %
 Script: |-
   cat << 'EOF' > /tmp/setup.sh
 

@@ -18,7 +18,7 @@ tags:
 | [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V1]]       |            50 min             |     `06/06/2026`      | <input type="checkbox" checked> |
 | [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V2]]       |            50 min             |     `10/06/2026`      | <input type="checkbox" checked> |
 | [[PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V1]]          |            30 min             |     `06/06/2026`      | <input type="checkbox" checked> |
-| [[PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V2]]          |                               |                       |                                 |
+| [[PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V2]]          |            10 min             |     `14/06/2026`      | <input type="checkbox" checked> |
 | [[PG-007 - Triage de Incidente Mayor y Restauración de Servicios Críticos (Examen Integrador)]]       |                               |                       |                                 |
 | **Operations Deployments**                                                                            |                               |                       |                                 |
 | [[PG-001 - db-backup.service no inicia - V1]]                                                         |            15 min             |     `03/05/2026`      | <input type="checkbox" checked> |
@@ -55,7 +55,7 @@ tags:
 | [[DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red]]                            |            40 min             |     `12/06/2026`      | <input type="checkbox" checked> |
 |                                                                                                       |                               |                       |                                 |
 | **Storage**                                                                                           |                               |                       |                                 |
-| [[STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente]]                 |            40 min             |                       |                                 |
+| [[STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente]]                 |            40 min             |     `14/06/2026`      | <input type="checkbox" checked> |
 |                                                                                                       |                               |                       |                                 |
 | **Bash Avanzado**                                                                                     |                               |                       |                                 |
 | [[BS-001 - El Eco Silencioso – Variables y Redirecciones]]                                            |            30 min             |     `13/06/2026`      | <input type="checkbox" checked> |
@@ -126,7 +126,7 @@ tags:
 
 
 
-**horas Totales 34:30 horas + Playgrounds 17:40 horas**
+**horas Totales 34:30 horas + Playgrounds 18:20 horas**
 
 
 

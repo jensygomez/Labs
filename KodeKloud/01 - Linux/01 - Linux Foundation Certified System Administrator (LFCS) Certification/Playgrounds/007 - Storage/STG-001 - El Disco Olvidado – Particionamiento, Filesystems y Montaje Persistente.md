@@ -294,7 +294,7 @@ Script Validacion: |-
   echo -e "\e[1;36m================================================================================\e[0m\n"
   EOF
 
-  bash /tmp/validador-stg001.sh && rm -f /tmp/validador-stg001.sh
+  bash /tmp/validador-stg001.sh
 tags:
   - Laboratorios-del-LFCS
 ---
