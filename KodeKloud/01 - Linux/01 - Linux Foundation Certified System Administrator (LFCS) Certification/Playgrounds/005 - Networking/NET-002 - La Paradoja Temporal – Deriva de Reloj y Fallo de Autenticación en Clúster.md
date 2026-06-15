@@ -163,162 +163,135 @@ Script: |-
   # ─────────────────────────────────────────────────────────────────────────────
   clear
   cat << 'TICKET'
-  ================================================================================
-    TICKET INC-3002  │  Severidad: ALTA  │  Ambiente: CLÚSTER DISTRIBUIDO
-  ================================================================================
-    ⏱️  NET-002-MN — La Paradoja Temporal (NTP + Firewall)
-    Módulo: Networking  │  Dificultad: 6/10  │  Nivel: L2
-   ------------------------------------------------------------------------------
-    Ubicación de Control:  node01 (Estación del Administrador — bob)
-    Nodo Afectado:        node03 (Backend/DB con deriva de tiempo)
-    Nodo Referencia:      node02 (Servidor de Aplicaciones — Hora correcta)
-    Contraseña del Clúster: caleston123
-   ------------------------------------------------------------------------------
-   
-    Contexto del Incidente:
-    La aplicación distribuida entre node02 y node03 está fallando con
-    errores de 'Token expirado' y 'Certificado no válido'. El diagnóstico
-    inicial indica que node03 tiene una deriva de tiempo significativa.
-    El servicio NTP está inoperativo y hay sospechas de bloqueo a nivel de red.
-   
-    Parámetros Técnicos Obligatorios:
-   
-    1. Diagnóstico de Tiempo (en node03)
-       Verifique el estado de la sincronización horaria con timedatectl status.
-   
-    2. Corrección de Firewall (en node03)
-       Identifique y elimine las reglas de iptables que estén bloqueando
-       el tráfico NTP (puerto 123/UDP).
-   
-    3. Configuración del Servicio NTP (en node03)
-       Edite /etc/chrony/chrony.conf (o /etc/chrony.conf) para apuntar
-       a un servidor NTP válido (puede usar pool.ntp.org o la IP de node02).
-   
-    4. Persistencia y Sincronización (en node03)
-       Inicie y habilite el servicio (chrony o chronyd) para que arranque 
-       con el sistema. Fuerce una sincronización inmediata.
-   
-    5. Validación Final
-       Verifique que timedatectl muestre 'System clock synchronized: yes'.
-       Confirme que la diferencia de hora entre node02 y node03 es mínima.
-   
-    Criterios de Aceptación:
-    [ ] Firewall de node03 permite tráfico NTP (123/UDP)             --> 20%
-    [ ] Servicio NTP (chrony/chronyd) está activo y habilitado       --> 20%
-    [ ] Configuración apunta a servidor NTP válido                   --> 20%
-    [ ] Reloj de node03 está sincronizado (timedatectl)              --> 20%
-    [ ] Diferencia de hora entre node02 y node03 < 5 segundos        --> 20%
-   ------------------------------------------------------------------------------
-   🚨 REGLA DE ORO: Use 'timedatectl status' para ver el estado general.
-                 Diagnóstico de red: 'sudo iptables -L -n -v' y 'chronyc sources'.
-                 Fuerce la hora con 'sudo chronyc makestep' si la deriva es grande.
-  ================================================================================
+
+  RED='\e[1;31m'
+  GREEN='\e[1;32m'
+  YELLOW='\e[1;33m'
+  CYAN='\e[1;36m'
+  BLUE='\e[1;34m'
+  BOLD='\e[1m'
+  MAGENTA='\e[1;35m'
+  WHITE='\e[1;37m'
+  RESET='\e[0m'
+
+  clear
+
+  echo -e "${CYAN}================================================================================${RESET}"
+  echo -e "${YELLOW}  TICKET INC-3002  │  Severidad: ALTA  │  Ambiente: CLÚSTER DISTRIBUIDO${RESET}"
+  echo -e "${CYAN}================================================================================${RESET}"
+  echo -e "${GREEN}  ⏱️  NET-002-MN — La Paradoja Temporal: NTP y Firewall${RESET}"
+  echo -e "${CYAN}  Módulo: Networking  │  Dificultad: 6/10  │  Nivel: L2${RESET}"
+  echo -e " -------------------------------------------------------------------------------"
+  echo -e " ${BOLD}Arquitectura del Escenario:${RESET}"
+  echo -e "  ${BLUE}[node01]${RESET} → Estación del Administrador     (TU POSICIÓN ACTUAL)"
+  echo -e "  ${GREEN}[node02]${RESET} → Servidor de Aplicaciones       (HORA CORRECTA — REFERENCIA)"
+  echo -e "  ${RED}[node03]${RESET} → Servidor Backend / Base de Datos (AFECTADO — DERIVA DE TIEMPO)"
+  echo -e " -------------------------------------------------------------------------------"
+  echo -e " ${BOLD}Contexto del Incidente:${RESET}"
+  echo -e ""
+  echo -e "  La señora Priya Nair llevaba dos semanas monitoreando de cerca el"
+  echo -e "  comportamiento de la nueva versión del sistema de autenticación que"
+  echo -e "  el equipo de desarrollo había desplegado el mes anterior. Todo había"
+  echo -e "  funcionado correctamente durante las primeras semanas, así que el lunes"
+  echo -e "  por la mañana decidió que ya no era necesario hacer seguimiento diario"
+  echo -e "  y trasladó el monitoreo a revisión semanal. Esa misma tarde, a las"
+  echo -e "  15:43, el equipo de soporte recibió las primeras llamadas."
+  echo -e ""
+  echo -e "  Los usuarios reportaban que el sistema los expulsaba de sus sesiones"
+  echo -e "  sin previo aviso y les mostraba un mensaje que decía 'Token expirado'."
+  echo -e "  Cuando intentaban volver a iniciar sesión, algunos recibían un segundo"
+  echo -e "  error: 'Certificado no válido'. El equipo de soporte de primer nivel"
+  echo -e "  intentó restablecer las sesiones manualmente, pero el problema persistía."
+  echo -e "  En media hora, el volumen de llamadas había triplicado la capacidad"
+  echo -e "  normal del turno de tarde."
+  echo -e ""
+  echo -e "  El ingeniero Vikram Desai, que ese día hacía guardia de segundo nivel,"
+  echo -e "  tomó uno de los casos y comenzó a revisar los logs del sistema de"
+  echo -e "  autenticación en node02. Los tokens se estaban generando correctamente"
+  echo -e "  y los certificados estaban en orden. El problema no estaba en node02."
+  echo -e "  Vikram Desai revisó entonces los logs de node03, el servidor de base de"
+  echo -e "  datos que almacena las sesiones activas, y encontró algo que no esperaba:"
+  echo -e "  los registros de tiempo en node03 estaban desfasados varios minutos"
+  echo -e "  respecto a node02. El sistema de autenticación comparaba los timestamps"
+  echo -e "  de ambos servidores para validar los tokens, y la diferencia era tan"
+  echo -e "  grande que el sistema los interpretaba como expirados antes de tiempo."
+  echo -e ""
+  echo -e "  Vikram Desai intentó revisar el servicio NTP de node03 para entender"
+  echo -e "  cuándo había comenzado la deriva. El servicio no estaba corriendo."
+  echo -e "  Intentó iniciarlo manualmente. El servicio arrancaba pero no lograba"
+  echo -e "  sincronizarse con ningún servidor de tiempo externo. Vikram Desai"
+  echo -e "  revisó las reglas de firewall de node03 y encontró la causa: alguien"
+  echo -e "  había agregado una regla que bloqueaba todo el tráfico saliente por"
+  echo -e "  el puerto 123 UDP, que es precisamente el puerto que utiliza NTP."
+  echo -e "  Nadie en el equipo recordaba haber agregado esa regla. No había"
+  echo -e "  registro en el sistema de cambios. No había ticket asociado."
+  echo -e ""
+  echo -e "  Con ese diagnóstico en mano, Vikram Desai escaló el caso a tu nombre."
+  echo -e "  Te dejó una nota en el sistema que decía: encontré el problema, pero"
+  echo -e "  mi turno termina en diez minutos y tengo que salir. El firewall está"
+  echo -e "  bloqueando NTP en node03, chrony no está sincronizando, y el reloj"
+  echo -e "  lleva horas desfasado. Los usuarios siguen sin poder autenticarse."
+  echo -e "  La señora Priya Nair ya fue notificada y está esperando el cierre."
+  echo -e ""
+  echo -e "  El caso lleva abierto noventa y cuatro minutos."
+  echo -e ""
+  echo -e " -------------------------------------------------------------------------------"
+  echo -e " ${BOLD}Restricciones Operativas:${RESET}"
+  echo -e ""
+  echo -e "  ${RED}⚠${RESET}  No está permitido reiniciar node03 como solución al problema."
+  echo -e "     La sincronización debe lograrse con el servicio en ejecución."
+  echo -e ""
+  echo -e "  ${RED}⚠${RESET}  Cualquier cambio en las reglas de firewall debe ser permanente."
+  echo -e "     No es suficiente con eliminar la regla en memoria; debe persistir"
+  echo -e "     después de un reinicio del sistema."
+  echo -e ""
+  echo -e " -------------------------------------------------------------------------------"
+  echo -e " ${BOLD}Parámetros Técnicos Obligatorios:${RESET}"
+  echo -e ""
+  echo -e "  ${RED}1. Diagnóstico del Estado de Tiempo en node03${RESET}"
+  echo -e "     Verifica el estado actual de la sincronización horaria con"
+  echo -e "     timedatectl status. Compara la hora de node03 contra node02"
+  echo -e "     para cuantificar la magnitud de la deriva antes de intervenir."
+  echo -e ""
+  echo -e "  ${RED}2. Identificar y Eliminar la Regla de Firewall que Bloquea NTP${RESET}"
+  echo -e "     Revisa las reglas activas con sudo iptables -L -n -v e identifica"
+  echo -e "     la regla que bloquea el puerto 123/UDP. Elimínala y asegúrate de"
+  echo -e "     que el cambio persista después de un reinicio del sistema."
+  echo -e ""
+  echo -e "  ${RED}3. Configurar y Apuntar el Servicio NTP a un Servidor Válido${RESET}"
+  echo -e "     Edita /etc/chrony/chrony.conf (o /etc/chrony.conf) para apuntar"
+  echo -e "     a pool.ntp.org o a la IP de node02 como servidor de referencia."
+  echo -e "     Asegúrate de que la configuración sea correcta antes de iniciar."
+  echo -e ""
+  echo -e "  ${RED}4. Iniciar, Habilitar y Forzar Sincronización Inmediata${RESET}"
+  echo -e "     Inicia y habilita el servicio chrony para que arranque con el sistema."
+  echo -e "     Fuerza una sincronización inmediata con sudo chronyc makestep."
+  echo -e "     Verifica con chronyc sources que el servidor de tiempo responde."
+  echo -e ""
+  echo -e "  ${RED}5. Validación Final y Cierre del Incidente${RESET}"
+  echo -e "     Confirma que timedatectl muestre 'System clock synchronized: yes'."
+  echo -e "     Verifica que la diferencia de hora entre node02 y node03 sea"
+  echo -e "     menor a 5 segundos antes de notificar el cierre a la señora Priya Nair."
+  echo -e ""
+  echo -e " ${BOLD}Criterios de Aceptación:${RESET}"
+  echo -e ""
+  echo -e "  [ ] Firewall de node03 permite tráfico NTP (puerto 123/UDP)       --> ${MAGENTA}20%${RESET}"
+  echo -e "  [ ] Servicio chrony activo, habilitado y arranca con el sistema    --> ${MAGENTA}20%${RESET}"
+  echo -e "  [ ] Configuración de chrony apunta a servidor NTP válido           --> ${MAGENTA}20%${RESET}"
+  echo -e "  [ ] Reloj de node03 sincronizado (timedatectl: synchronized: yes)  --> ${MAGENTA}20%${RESET}"
+  echo -e "  [ ] Diferencia de hora entre node02 y node03 menor a 5 segundos   --> ${MAGENTA}20%${RESET}"
+  echo -e " -------------------------------------------------------------------------------"
+  echo -e " ${GREEN}🚨 REGLA DE ORO:${RESET}"
+  echo -e "  - Trabaja SIEMPRE desde ${BOLD}node01${RESET}"
+  echo -e "  - Conéctate a ${BOLD}node03${RESET} vía ${BOLD}sshpass${RESET} para todas las intervenciones"
+  echo -e "  - Usa ${BOLD}node02${RESET} únicamente como referencia de hora"
+  echo -e "  - ${RED}NUNCA${RESET} reinicies node03 como solución al problema"
+  echo -e "${CYAN}================================================================================${RESET}"
   TICKET
   EOF
 
   bash /tmp/setup-net002.sh && rm -f /tmp/setup-net002.sh
 tags: Laboratorios-del-LFCS
-Script Validacion: |-
-  cat << 'EOF' > /tmp/validador-net002.sh
-
-  #!/bin/bash
-  PUNTOS=0
-  USER="bob"
-  PASS="caleston123"
-  NODE02="node02"
-  NODE03="node03"
-  SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=4"
-
-  SSH2="sshpass -p $PASS ssh $SSH_OPTS ${USER}@${NODE02}"
-  SSH3="sshpass -p $PASS ssh $SSH_OPTS ${USER}@${NODE03}"
-
-  echo -e "\n\e[1;36m================================================================================\e[0m"
-  echo -e "\e[1;33m  🕵️  AUDITORÍA DE TIEMPO Y NTP — INC-3002 (NET-002-MN)\e[0m"
-  echo -e "\e[1;36m================================================================================\e[0m"
-
-  echo -e "\n\e[1;37m🔌 Verificando conectividad con los nodos...\e[0m"
-  if ! $SSH2 'exit' 2>/dev/null; then
-    echo -e "\e[1;31m  ❌ No se puede conectar a node02. Abortando.\e[0m"
-    exit 1
-  fi
-  if ! $SSH3 'exit' 2>/dev/null; then
-    echo -e "\e[1;31m  ❌ No se puede conectar a node03. Abortando.\e[0m"
-    exit 1
-  fi
-  echo -e "\e[1;32m  ✔ Conectividad OK — node02 y node03 accesibles.\e[0m"
-
-  echo -e "\n\e[1;37m⏳ [1/5] Verificando reglas de firewall en node03...\e[0m"
-  IPTABLES_CHECK=$($SSH3 'sudo iptables -L -n -v 2>/dev/null | grep "dpt:123"' || echo "")
-  if echo "$IPTABLES_CHECK" | grep -q "DROP"; then
-    echo -e "\e[1;31m  ❌ [0%] El puerto 123/UDP sigue bloqueado en node03.\e[0m"
-    echo -e "       → Corrección: 'sudo iptables -D OUTPUT -p udp --dport 123 -j DROP'"
-    echo -e "                     'sudo iptables -D INPUT  -p udp --dport 123 -j DROP'"
-  else
-    echo -e "\e[1;32m  ✔ [20%] No hay reglas bloqueando NTP (123/UDP) en node03.\e[0m"
-    PUNTOS=$((PUNTOS + 20))
-  fi
-
-  echo -e "\n\e[1;37m⏳ [2/5] Verificando estado del servicio NTP en node03...\e[0m"
-  SERVICE_NAME=$($SSH3 'systemctl list-unit-files 2>/dev/null | grep -E "^(chrony|chronyd)\.service" | head -1 | awk "{print \$1}" | sed "s/\.service//"' || echo "")
-  if [ -z "$SERVICE_NAME" ]; then
-    echo -e "\e[1;31m  ❌ [0%] No se encontró ningún servicio NTP (chrony/chronyd) instalado.\e[0m"
-  else
-    CHRONY_ACTIVE=$($SSH3 "systemctl is-active ${SERVICE_NAME} 2>/dev/null" || echo "inactive")
-    CHRONY_ENABLED=$($SSH3 "systemctl is-enabled ${SERVICE_NAME} 2>/dev/null" || echo "disabled")
-    if [ "$CHRONY_ACTIVE" = "active" ] && [ "$CHRONY_ENABLED" = "enabled" ]; then
-      echo -e "\e[1;32m  ✔ [20%] ${SERVICE_NAME} está activo y habilitado en node03.\e[0m"
-      PUNTOS=$((PUNTOS + 20))
-    else
-      echo -e "\e[1;31m  ❌ [0%] ${SERVICE_NAME} no está correctamente configurado.\e[0m"
-      echo -e "       → Estado: Activo=\e[1;31m${CHRONY_ACTIVE}\e[0m, Habilitado=\e[1;31m${CHRONY_ENABLED}\e[0m"
-    fi
-  fi
-
-  echo -e "\n\e[1;37m⏳ [3/5] Verificando configuración de chrony en node03...\e[0m"
-  CHRONY_CONF=$($SSH3 'cat /etc/chrony/chrony.conf 2>/dev/null || cat /etc/chrony.conf 2>/dev/null' || echo "")
-  if echo "$CHRONY_CONF" | grep -qE "^(server|pool).*192\.0\.2\."; then
-    echo -e "\e[1;31m  ❌ [0%] chrony apunta a una IP reservada/inválida (192.0.2.x).\e[0m"
-  elif echo "$CHRONY_CONF" | grep -qE "^(server|pool).*(ntp\.org|node02|[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)"; then
-    echo -e "\e[1;32m  ✔ [20%] chrony apunta a un servidor NTP válido.\e[0m"
-    PUNTOS=$((PUNTOS + 20))
-  else
-    echo -e "\e[1;31m  ❌ [0%] No se encontraron servidores NTP válidos en la configuración.\e[0m"
-  fi
-
-  echo -e "\n\e[1;37m⏳ [4/5] Verificando sincronización del reloj en node03...\e[0m"
-  TIMEDATECTL_OUT=$($SSH3 'timedatectl status 2>/dev/null' || echo "")
-  if echo "$TIMEDATECTL_OUT" | grep -q "System clock synchronized: yes"; then
-    echo -e "\e[1;32m  ✔ [20%] El reloj de node03 está sincronizado.\e[0m"
-    PUNTOS=$((PUNTOS + 20))
-  else
-    echo -e "\e[1;31m  ❌ [0%] El reloj de node03 NO está sincronizado.\e[0m"
-    echo -e "       → Espere unos segundos y reintente, o ejecute 'sudo chronyc makestep'."
-  fi
-
-  echo -e "\n\e[1;37m⏳ [5/5] Verificando deriva de tiempo entre node02 y node03...\e[0m"
-  TIME_NODE02=$($SSH2 'date +%s' 2>/dev/null || echo "0")
-  TIME_NODE03=$($SSH3 'date +%s' 2>/dev/null || echo "0")
-  DIFF=$(( TIME_NODE03 - TIME_NODE02 ))
-  [ "$DIFF" -lt 0 ] && DIFF=$(( -DIFF ))
-  if [ "$DIFF" -le 5 ]; then
-    echo -e "\e[1;32m  ✔ [20%] Diferencia de hora: ${DIFF}s. Clúster sincronizado.\e[0m"
-    PUNTOS=$((PUNTOS + 20))
-  else
-    echo -e "\e[1;31m  ❌ [0%] Diferencia de hora: ${DIFF}s (debe ser <= 5s).\e[0m"
-  fi
-
-  echo -e "\n\e[1;36m================================================================================\e[0m"
-  if [ $PUNTOS -ge 100 ]; then
-    echo -e "  🎉 CALIFICACIÓN FINAL: \e[1;32m$PUNTOS / 100\e[0m — ¡Dominio completo de NTP y sincronización!"
-  elif [ $PUNTOS -ge 55 ]; then
-    echo -e "  ⚠️  CALIFICACIÓN FINAL: \e[1;33m$PUNTOS / 100\e[0m — Parcialmente resuelto. Revise los puntos ❌."
-  else
-    echo -e "  ❌ CALIFICACIÓN FINAL: \e[1;31m$PUNTOS / 100\e[0m — Revise la configuración de NTP y firewall."
-  fi
-  echo -e "\e[1;36m================================================================================\e[0m\n"
-  EOF
-
-  bash /tmp/validador-net002.sh && rm -f /tmp/validador-net002.sh
 ---
 
 [[Laboratorios del LFCS]]

@@ -3,7 +3,7 @@ Curso: Transición Sysadmin a DevOps - Essential Commands LFCS/RHCSA
 Modulo: Essential Commands (Fundamentos Linux)
 Playground: EC-001-v1
 Titulo: El Acceso Perdido – Conectividad y Documentación del Sistema
-Fecha de Inicio: 2026-06-14
+Fecha de Inicio: 2026-06-15
 Dificultad: 5/10
 Level Escalation: L2
 Objetivo: |-
@@ -22,7 +22,6 @@ Competencias: |-
   - Recuperar documentación del sistema en un servidor con paquetes faltantes
   - Enviar resultados de diagnóstico a un servidor de backup via pipeline SSH
 Script: |-
-  cat << 'EOF' > /tmp/setup.sh
   cat << 'EOF' > /tmp/setup.sh
   #!/bin/bash
   # =============================================================================
@@ -234,10 +233,6 @@ Script: |-
   chmod +x /tmp/setup.sh
   bash /tmp/setup.sh
   rm -f /tmp/setup.sh
-  EOF
-  chmod +x /tmp/setup.sh
-  bash /tmp/setup.sh
-  rm -f /tmp/setup.sh
 tags:
   - Laboratorios-del-LFCS
   - Essential-Commands
@@ -246,3 +241,16 @@ tags:
   - Man-Pages
 ---
 [[Laboratorios del LFCS]]
+
+
+
+
+---
+
+Recently I dealt with a situation that tested my ability to stay calm and methodical under pressure, with a hard deadline and multiple teams waiting on me.
+
+A third-party vendor had applied security hardening to one of our production servers over the weekend without properly coordinating with our internal team. When engineers showed up Tuesday morning, they couldn't get in — password authentication had been disabled and nobody had set up the key-based access that was supposed to replace it. On top of that, the vendor's cleanup script had wiped the system documentation from the server, so engineers couldn't even look up command syntax locally. And to make it worse, a critical application configuration file had never been formally backed up, so if anything went wrong during recovery, we'd have no way to rebuild the original setup.
+
+I was assigned to resolve all three issues before noon. I started by restoring access — I used the temporary password window that was still available to push my SSH public key to the server, verified that keyless authentication was working, and then closed the password access permanently as the vendor originally intended. From there I reinstalled the documentation packages and ran the full restoration process to bring the manual pages back online. Finally, I extracted the critical configuration file and the relevant documentation, generated a cryptographic fingerprint of the key I'd created as an audit trail, and sent all three to the corporate backup vault on a separate server — without storing anything on my own workstation, which was a strict operational requirement.
+
+What I'm most proud of is that I didn't just fix the immediate problem. I completed the hardening the vendor left unfinished, documented everything properly, and delivered all the evidence the team needed to close the incident cleanly. Three teams were unblocked before the deadline."
