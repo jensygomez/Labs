@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/Lista de Laboratorios.md",
+                "file": "TCC/Introduccion.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Lista de Laboratorios"
+              "title": "Introduccion"
             }
           }
         ]
@@ -203,11 +203,14 @@
   },
   "active": "fe9da27ba1f1a9a4",
   "lastOpenFiles": [
+    "TCC/TRACKER DE PROGRESO - TCC KERNEL LINUX.md",
+    "TCC/Introduccion.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/EC-002 - La Estructura Colapsada – Gestión Avanzada de Archivos y Enlaces.md",
+    "TCC",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema - V2.0.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema - V1.0.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/Lista de Laboratorios.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/EC-002 - La Estructura Colapsada – Gestión Avanzada de Archivos y Enlaces.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema - V1.0.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Bash Script/BS-002 - El Portero Lógico – Condicionales y Validaciones.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Bash Script/BS-001 - El Eco Silencioso – Variables y Redirecciones.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Bash Script/Lista de Laboratorios BASH.md",
@@ -232,13 +235,10 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Vagrant/vagrant",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Vagrant",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/vagrant",
-    "01 - Linux/03 - Advanced Bash Scripting/Playgrounds Bash/PG-BASH-001 - Inventario automático de servidores - V2.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/PG-002 - Perfiles de entorno del sistema y límites de recursos - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Bash Script",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Storage 1",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Storage",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/006 - Docker",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Vagrant/errores.pdf",
     "LINUX/00 - qui/Sem título.canvas",
     "Advanced Bash Scripting/01 - Introduction.canvas",
     "ChatGPT Image 19 de abr. de 2026, 07_59_54.png"
