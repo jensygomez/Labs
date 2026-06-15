@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/OD-001-v1 - El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema"
+              "title": "OD-001-v1 - El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro"
             }
           }
         ]
@@ -203,13 +203,15 @@
   },
   "active": "fe9da27ba1f1a9a4",
   "lastOpenFiles": [
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+    "01 - Linux/03 - Advanced Bash Scripting/01 - Introduction/02 - Why learn advanced bash scripting?.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/OD-001-v1 - El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/Lista de Laboratorios Operations deployment.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/Lista de Laboratorios.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Storage/Lista de Laboratorios.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Networking/NET-002 - La Paradoja Temporal – Deriva de Reloj y Fallo de Autenticación en Clúster.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Networking/lista de 10 laboratorios.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/PG-001 - Estructuras de archivos complejas y consistencia de Inodos - V1.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/006 - Docker/DK-001 - El Contenedor Reincidente Fallo de Persistencia y Entorno.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/006 - Docker/Lista de Laboratorios Docker.md",
@@ -234,8 +236,6 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Storage 1",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/USR-001 - El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/Lista de 6 Laboratorios.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V2.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/PG-003 - Backup automático no se ejecuta (Systemd Timers) - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Storage",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/006 - Docker",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Vagrant/errores.pdf",
