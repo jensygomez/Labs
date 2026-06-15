@@ -6,7 +6,9 @@ tags:
 
 | Essential Comands                                                                        | Tiempo Total todos los ciclos | **Fecha 1er Intento** |             Ciclos              |
 | ---------------------------------------------------------------------------------------- | :---------------------------: | :-------------------: | :-----------------------------: |
-| [[EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema]]                |            40 min             |     `14/06/2026`      | <input type="checkbox" checked> |
+| [[EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema - V1.0]]         |            40 min             |     `14/06/2026`      | <input type="checkbox" checked> |
+| [[EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema - V2.0]]         |                               |                       |                                 |
+| [[EC-002 - La Estructura Colapsada – Gestión Avanzada de Archivos y Enlaces]]            |                               |                       |                                 |
 | **Operations Deployments**                                                               |                               |                       |                                 |
 | [[OD-001-v1 - El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro]]         |            30 min             |     `15/06/2026`      | <input type="checkbox" checked> |
 | **Users and Groups**                                                                     |                               |                       |                                 |
@@ -23,6 +25,7 @@ tags:
 | **Docker**                                                                               |                               |                       |                                 |
 | [[DK-001 - El Contenedor Reincidente Fallo de Persistencia y Entorno]]                   |            20 min             |     `11/06/2026`      | <input type="checkbox" checked> |
 | [[DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red]]               |            40 min             |     `12/06/2026`      | <input type="checkbox" checked> |
+|                                                                                          |                               |                       |                                 |
 |                                                                                          |                               |                       |                                 |
 |                                                                                          |                               |                       |                                 |
 

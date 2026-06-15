@@ -239,6 +239,10 @@ tags:
   - Linux-Fundamentals
   - SSH
   - Man-Pages
+Escenario: |-
+  Un proveedor externo de seguridad ejecutó controles de hardening sobre `node02` durante una ventana de mantenimiento del fin de semana. Al reiniciar operaciones el lunes, el equipo de aplicaciones reportó pérdida total de acceso SSH al servidor. La investigación inicial reveló que el proveedor eliminó todas las claves públicas autorizadas en el servidor como parte del proceso de limpieza, dejando `authorized_keys` vacío. Adicionalmente, el mismo script de hardening removió los paquetes de documentación del sistema, y el archivo de configuración crítica `/etc/app-config/settings.conf` nunca fue respaldado formalmente.
+
+  El ticket escala a L2 remoto. Tienes acceso temporal por contraseña vía `sshpass` — ventana que debes aprovechar para restablecer autenticación por clave antes de completar el hardening que el proveedor dejó incompleto. Una vez dentro, debes restaurar la documentación del sistema, verificar las man pages en sus secciones correspondientes, y evacuar la configuración crítica hacia el vault empresarial en `node03` antes del cierre del turno.
 ---
 [[Laboratorios del LFCS]]
 
