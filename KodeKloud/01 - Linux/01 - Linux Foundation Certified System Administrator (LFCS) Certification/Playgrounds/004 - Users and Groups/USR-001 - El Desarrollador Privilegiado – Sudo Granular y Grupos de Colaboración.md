@@ -7,8 +7,9 @@ Fecha de Inicio: 2026-06-11
 Dificultad: 7/10
 Level Escalation: L2
 Objetivo: |-
-  - Aprobar LFCS
-  - Pensar como Sysadmin Linux Pleno / DevOps Engineer
+  - Aprobar LFCS y RHCSA
+  - Pensar como Sysadmin Linux Pleno
+  - Prepararme para DevOps Engineer y Kubernetes
 Temas: |-
   - Local User & Group Management (useradd, groupadd, usermod)
   - Advanced File Permissions (SGID, Ownership)
@@ -153,101 +154,9 @@ Script: |-
   EOF
 
   bash /tmp/setup-usr001.sh && rm -f /tmp/setup-usr001.sh
-Script Validacion: |-
-  cat << 'EOF' > /tmp/validador-usr001.sh
-  #!/bin/bash
-  PUNTOS=0
-  USER="bob"
-  PASS="caleston123"
-  NODE_TARGET="node02"
-  NODE_VAULT="node03"
-  SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=4"
-
-  IP_NODE02=$(sshpass -p $PASS ssh $SSH_OPTS ${USER}@${NODE_TARGET} 'hostname -i' 2>/dev/null | tr -d '\r' || echo "10.244.29.17")
-  IP_NODE03=$(sshpass -p $PASS ssh $SSH_OPTS ${USER}@${NODE_VAULT} 'hostname -i' 2>/dev/null | tr -d '\r' || echo "10.244.29.59")
-
-  SSH2="sshpass -p $PASS ssh $SSH_OPTS ${USER}@${IP_NODE02}"
-  SSH3="sshpass -p $PASS ssh $SSH_OPTS ${USER}@${IP_NODE03}"
-
-  echo -e "\n\e[1;36m================================================================================\e[0m"
-  echo -e "\e[1;33m  🕵️  AUDITORÍA DE USUARIOS Y SUDO — INC-4001 (USR-001-MN)\e[0m"
-  echo -e "\e[1;36m================================================================================\e[0m"
-
-  # 1. Grupo y membresía
-  echo -e "\n\e[1;37m⏳ [1/5] Verificando grupo app-devs y membresía de dev_user...\e[0m"
-  USER_GROUPS=$($SSH2 "id dev_user" 2>/dev/null || echo "")
-  if echo "$USER_GROUPS" | grep -q "app-devs"; then
-    echo -e "\e[1;32m  ✔ [20%] dev_user es miembro del grupo app-devs.\e[0m"
-    PUNTOS=$((PUNTOS + 20))
-  else
-    echo -e "\e[1;31m  ❌ [0%] dev_user no pertenece a app-devs.\e[0m"
-    echo -e "       → Corrección: sudo usermod -aG app-devs dev_user"
-  fi
-
-  # 2. Permisos SGID en /var/log/app
-  echo -e "\n\e[1;37m⏳ [2/5] Verificando permisos y SGID en /var/log/app/...\e[0m"
-  DIR_PERMS=$($SSH2 "stat -c '%a %G' /var/log/app/" 2>/dev/null || echo "000 none")
-  if [ "$DIR_PERMS" = "2750 app-devs" ]; then
-    echo -e "\e[1;32m  ✔ [20%] /var/log/app/ tiene permisos 2750 y grupo app-devs (SGID activo).\e[0m"
-    PUNTOS=$((PUNTOS + 20))
-  else
-    echo -e "\e[1;31m  ❌ [0%] Permisos incorrectos en /var/log/app/.\e[0m"
-    echo -e "       → Actual: \e[1;31m${DIR_PERMS}\e[0m (Se espera: 2750 app-devs)"
-    echo -e "       → Corrección: sudo chown root:app-devs /var/log/app && sudo chmod 2750 /var/log/app"
-  fi
-
-  # 3. Revocación de ALL=(ALL) ALL
-  echo -e "\n\e[1;37m⏳ [3/5] Verificando que se revocaron los privilegios totales...\e[0m"
-  BAD_FILE_EXISTS=$($SSH2 "test -f /etc/sudoers.d/99-dev-user-bad && echo 'YES' || echo 'NO'" 2>/dev/null)
-  SUDO_L_OUTPUT=$($SSH2 "sudo -l -U dev_user" 2>/dev/null || echo "")
-  if [ "$BAD_FILE_EXISTS" = "NO" ] && ! echo "$SUDO_L_OUTPUT" | grep -q "ALL=(ALL) ALL"; then
-    echo -e "\e[1;32m  ✔ [20%] Privilegios ALL=(ALL) ALL revocados correctamente.\e[0m"
-    PUNTOS=$((PUNTOS + 20))
-  else
-    echo -e "\e[1;31m  ❌ [0%] El usuario aún tiene privilegios excesivos o el archivo malo existe.\e[0m"
-    echo -e "       → Corrección: sudo rm -f /etc/sudoers.d/99-dev-user-bad"
-  fi
-
-  # 4. Existencia y sintaxis de la nueva regla con Cmnd_Alias
-  echo -e "\n\e[1;37m⏳ [4/5] Verificando la nueva regla granular con Cmnd_Alias...\e[0m"
-  if $SSH2 "sudo visudo -c -f /etc/sudoers.d/dev_user" &>/dev/null && $SSH2 "sudo grep -q 'Cmnd_Alias' /etc/sudoers.d/dev_user" 2>/dev/null; then
-    echo -e "\e[1;32m  ✔ [20%] Archivo /etc/sudoers.d/dev_user válido y utiliza Cmnd_Alias.\e[0m"
-    PUNTOS=$((PUNTOS + 20))
-  else
-    echo -e "\e[1;31m  ❌ [0%] La regla sudo es inválida o no usa Cmnd_Alias.\e[0m"
-    echo -e "       → Diagnóstico: sudo visudo -c -f /etc/sudoers.d/dev_user"
-  fi
-
-  # 5. Backup en bóveda
-  echo -e "\n\e[1;37m⏳ [5/5] Auditando backup en node03...\e[0m"
-  if $SSH3 "test -f /opt/backup-vault/sudoers_dev_user.bak" 2>/dev/null; then
-    BAK_CONTENT=$($SSH3 "cat /opt/backup-vault/sudoers_dev_user.bak" 2>/dev/null || echo "")
-    if echo "$BAK_CONTENT" | grep -q "Cmnd_Alias"; then
-      echo -e "\e[1;32m  ✔ [20%] Backup custodiado correctamente en node03 con la configuración segura.\e[0m"
-      PUNTOS=$((PUNTOS + 20))
-    else
-      echo -e "\e[1;33m  ⚠️  [5%] Archivo presente en node03, pero no contiene la regla Cmnd_Alias.\e[0m"
-      PUNTOS=$((PUNTOS + 5))
-    fi
-  else
-    echo -e "\e[1;31m  ❌ [0%] No se encontró sudoers_dev_user.bak en node03:/opt/backup-vault/\e[0m"
-  fi
-
-  # Resultado Final
-  echo -e "\n\e[1;36m================================================================================\e[0m"
-  if [ $PUNTOS -ge 100 ]; then
-    echo -e "  🎉 CALIFICACIÓN FINAL: \e[1;32m$PUNTOS / 100\e[0m — ¡Excelente! Dominio de sudo granular y SGID."
-  elif [ $PUNTOS -ge 60 ]; then
-    echo -e "  ⚠️  CALIFICACIÓN FINAL: \e[1;33m$PUNTOS / 100\e[0m — Parcialmente resuelto. Revise los puntos ❌."
-  else
-    echo -e "  ❌ CALIFICACIÓN FINAL: \e[1;31m$PUNTOS / 100\e[0m — Revise la configuración de usuarios y sudoers."
-  fi
-  echo -e "\e[1;36m================================================================================\e[0m\n"
-  EOF
-
-  bash /tmp/validador-usr001.sh && rm -f /tmp/validador-usr001.sh
 tags:
   - Laboratorios-del-LFCS
+Escenario: " Un nuevo desarrollador (`dev_user`) necesita reiniciar *solo* el servicio `nginx` y leer logs en `/var/log/app/`, pero el ticket actual le da acceso `ALL=(ALL) ALL`. Debes crear el grupo `app-devs`, ajustar la propiedad de los directorios con SGID, y escribir una regla `sudoers` específica y segura (usando `Cmnd_Alias`) en `node02`."
 ---
 [[Laboratorios del LFCS]]
 

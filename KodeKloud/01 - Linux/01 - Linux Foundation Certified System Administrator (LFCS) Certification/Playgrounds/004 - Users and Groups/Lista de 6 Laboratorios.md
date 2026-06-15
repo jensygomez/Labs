@@ -15,6 +15,7 @@ Aquí tienes la propuesta de los **6 Laboratorios de Usuarios y Grupos**, diseñ
 #### **1. USR-001: El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración**
 *   **Dificultad:** 7/10 | **Nivel:** L2
 *   **Temas LFCS:** Local User/Group Management, Manage User Privileges.
+* **Objetivo:** Prepararme para aprobar el LFCS, RHCSA, Para Sysadmin Linux Pleno, DevOps Engineer y Sysadmin Kubernetes.
 *   **Enfoque DevOps/K8s:** Principio de menor privilegio (PoLP). En K8s, los procesos no deben correr como root.
 *   **Escenario:** Un nuevo desarrollador (`dev_user`) necesita reiniciar *solo* el servicio `nginx` y leer logs en `/var/log/app/`, pero el ticket actual le da acceso `ALL=(ALL) ALL`. Debes crear el grupo `app-devs`, ajustar la propiedad de los directorios con SGID, y escribir una regla `sudoers` específica y segura (usando `Cmnd_Alias`) en `node02`.
 
@@ -22,6 +23,7 @@ Aquí tienes la propuesta de los **6 Laboratorios de Usuarios y Grupos**, diseñ
 *   **Dificultad:** 7/10 | **Nivel:** L2/L3
 *   **Temas LFCS:** Manage System-Wide Environment Profiles, Manage Template User Environment.
 *   **Enfoque DevOps/K8s:** Estandarización de entornos (Infraestructura como Código a nivel de SO).
+* **Objetivo:** Prepararme para aprobar el LFCS, RHCSA, Para Sysadmin Linux Pleno, DevOps Engineer y Sysadmin Kubernetes.
 *   **Escenario:** Cada vez que se crea un usuario nuevo en `node02`, le faltan variables de entorno críticas (ej. `PATH` personalizado, alias de seguridad, configuración de `umask 027`). El archivo `/etc/skel` fue corrompido y `/etc/profile.d/` tiene un script con errores de sintaxis que rompe el login. Debes reparar la plantilla y los scripts de inicio de sesión globales.
 
 #### **3. USR-003: La Bomba de Tenedores (Fork Bomb) – Límites de Recursos de Usuario**

@@ -146,3 +146,12 @@ Escenario: |-
 ---
 [[Laboratorios del LFCS]]
 
+One of our production servers was flagged as a critical risk during a routine check. A junior team member had accidentally changed the default boot target to `rescue.target`. The server was still responding at that moment, but we knew that the next scheduled maintenance reboot — or any unexpected crash — would have brought it back up with no network and no services. Essentially a brick.
+
+I took ownership of the remediation immediately.
+
+Working remotely from the admin workstation, I connected to the affected server and confirmed the misconfiguration. I corrected the default boot target to `multi-user.target` to restore the expected startup behavior, then performed a controlled reboot to validate the fix under real conditions — not just on paper.
+
+Once the server came back online, I verified that SSH was active and that the system had booted into the correct target. As part of our compliance process, I forwarded the post-recovery state report directly from the production server to our centralized audit repository, using a chained SSH pipeline to ensure no sensitive data touched intermediate systems.
+
+The server was fully recovered before any scheduled reboot occurred. Zero downtime, zero data left on unauthorized systems.

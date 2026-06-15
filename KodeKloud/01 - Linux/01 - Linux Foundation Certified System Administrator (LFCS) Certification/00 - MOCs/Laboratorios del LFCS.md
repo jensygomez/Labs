@@ -8,22 +8,23 @@ tags:
 | ---------------------------------------------------------------------------------------- | :---------------------------: | :-------------------: | :-----------------------------: |
 | [[EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema]]                |            40 min             |     `14/06/2026`      | <input type="checkbox" checked> |
 | **Operations Deployments**                                                               |                               |                       |                                 |
-| [[OD-001-v1 - El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro]]         |                               |                       |                                 |
+| [[OD-001-v1 - El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro]]         |            30 min             |     `15/06/2026`      | <input type="checkbox" checked> |
+| **Users and Groups**                                                                     |                               |                       |                                 |
+| [[USR-001 - El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración]]     |            40 min             |     `11/06/2026`      | <input type="checkbox" checked> |
+| [[USR-002 -El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel)]]    |            40 min             |     `15/06/2026`      | <input type="checkbox" checked> |
 | **Networking**                                                                           |                               |                       |                                 |
 | [[NET-001 - El Candado Oxidado – Bloqueo de Acceso SSH y Resolución de Nombres]]         |            30 min             |     `11/06/2026`      | <input type="checkbox" checked> |
 | [[NET-002 - La Paradoja Temporal – Deriva de Reloj y Fallo de Autenticación en Clúster]] |            60 min             |     `15/06/2026`      | <input type="checkbox" checked> |
-| **Users and Groups**                                                                     |                               |                       |                                 |
-| [[USR-001 - El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración]]     |            40 min             |     `11/06/2026`      | <input type="checkbox" checked> |
-| **Docker**                                                                               |                               |                       |                                 |
-| [[DK-001 - El Contenedor Reincidente Fallo de Persistencia y Entorno]]                   |            20 min             |     `11/06/2026`      | <input type="checkbox" checked> |
-| [[DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red]]               |            40 min             |     `12/06/2026`      | <input type="checkbox" checked> |
 | **Storage**                                                                              |                               |                       |                                 |
 | [[STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente]]    |            40 min             |     `14/06/2026`      | <input type="checkbox" checked> |
 | **Bash Avanzado**                                                                        |                               |                       |                                 |
 | [[BS-001 - El Eco Silencioso – Variables y Redirecciones]]                               |            30 min             |     `13/06/2026`      | <input type="checkbox" checked> |
+| [[BS-002 - El Portero Lógico – Condicionales y Validaciones]]                            |            30 min             |     `15/06/2026`      | <input type="checkbox" checked> |
+| **Docker**                                                                               |                               |                       |                                 |
+| [[DK-001 - El Contenedor Reincidente Fallo de Persistencia y Entorno]]                   |            20 min             |     `11/06/2026`      | <input type="checkbox" checked> |
+| [[DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red]]               |            40 min             |     `12/06/2026`      | <input type="checkbox" checked> |
 |                                                                                          |                               |                       |                                 |
 |                                                                                          |                               |                       |                                 |
-
 
 
 | Essential Comands                                                                                     | Tiempo Total todos los ciclos | **Fecha 1er Intento** |             Ciclos              |
@@ -47,7 +48,7 @@ tags:
 | [[PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V1]]                        |            15 min             |     `03/06/2026`      | <input type="checkbox" checked> |
 | [[PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V2]]                        |            25 min             |     `11/06/2026`      | <input type="checkbox" checked> |
 | [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V1]]                                    |            30 min             |     `03/06/2026`      | <input type="checkbox" checked> |
-| [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V2]]                                    |            15 min             |                       |                                 |
+| [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V2]]                                    |            15 min             |     `10/06/2026`      | <input type="checkbox" checked> |
 | [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V1]]                    |            40 min             |     `05/06/2026`      | <input type="checkbox" checked> |
 | [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V2]]                    |                               |                       |                                 |
 | [[PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad) - V1]]                 |            35 min             |     `06/06/2026`      | <input type="checkbox" checked> |
@@ -66,10 +67,7 @@ tags:
 | [[PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora)]]                  |                               |                       |                                 |
 |                                                                                                       |                               |                       |                                 |
 | **Networking**                                                                                        |                               |                       |                                 |
-| [[PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1]]                           |            100 min            |     `08/06/2026`      | <input type="checkbox" checked> |
-|                                                                                                       |                               |                       |                                 |
-|                                                                                                       |                               |                       |                                 |
-|                                                                                                       |                               |                       |                                 |
+| [[PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1]]                           |                               |                       |                                 |
 | **Bash Avanzado**                                                                                     |                               |                       |                                 |
 | [[PG-BASH-001 - Inventario automático de servidores - V1]]                                            |            50 min             |     `06/06/2026`      | <input type="checkbox" checked> |
 | [[PG-BASH-001 - Inventario automático de servidores - V2]]                                            |                               |                       |                                 |
@@ -137,7 +135,7 @@ tags:
 
 
 
-**horas Totales 34:30 horas + Playgrounds 20:00 horas**
+**horas Totales 34:30 horas + Playgrounds 21:10 horas**
 
 
 
