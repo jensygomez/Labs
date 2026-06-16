@@ -22,3 +22,17 @@ Em segundo lugar, justifica-se a abordagem nativa e artesanal sobre as soluçõe
 
 Por fim, sob a perspectiva do valor estratégico para grandes corporações e consultorias globais de tecnologia, evidencia-se a demanda por profissionais que dominem a arquitetura do sistema de dentro para fora. Ambientes de produção reais frequentemente divergem do planejamento idealizado. Diante de falhas complexas onde ferramentas comerciais e automações falham, o corpo técnico dotado de profundo conhecimento sobre os internos do Kernel possui a competência necessária para realizar diagnósticos cirúrgicos e resoluções em tempo real (_troubleshooting_ avançado). Esse domínio técnico traduz-se diretamente em redução do Tempo Médio de Reparo (MTTR), continuidade dos negócios e preservação dos Acordos de Nível de Serviço (SLA) dos clientes.
 
+### **2. METODOLOGIA**
+
+O presente estudo caracteriza-se como uma pesquisa qualitativa e exploratória, desenvolvida sob a modalidade de revisão bibliográfica estrita, em conformidade com as diretrizes metodológicas institucionais vigentes. A opção por este método justifica-se pela necessidade de analisar e sintetizar o estado da arte referente aos mecanismos internos de isolamento do sistema operacional Linux a partir de literatura técnico-científica consolidada.
+
+O levantamento bibliográfico foi estruturado em três frentes principais de consulta:
+
+1. **Literatura de Referência em Arquitetura de Sistemas:** Utilização da obra fundamental _"How Linux Works"_ de Brian Ward, como base conceitual para o mapeamento do espaço de usuário (_user space_), espaço de kernel (_kernel space_) e o gerenciamento de processos e memória.
+    
+2. **Documentação Técnica Oficial:** Análise dos manuais oficiais do código-fonte do Kernel Linux (_The Linux Kernel Archives_ / kernel.org), especificamente as especificações de subsistemas de _Namespaces_, _Control Groups (Cgroups V1/V2)_ e a API do _Netfilter_.
+    
+3. **Bases de Dados Científicas:** Busca por artigos periódicos e teses acadêmicas indexadas em plataformas como _Google Acadêmico_ e _SciELO_, utilizando termos de busca combinados como _"Linux Kernel Security"_, _"Container Isolation"_ e _"Nftables Architecture"_, delimitados entre os anos de 2020 e 2026.
+    
+
+Os critérios de inclusão definidos priorizaram publicações que abordassem os internos do Kernel sob a perspectiva de arquitetura e segurança determinística. Foram excluídos manuais de ferramentas comerciais proprietárias ou artigos focados exclusivamente em instaladores automatizados abstratos de terceiros. A análise dos dados foi realizada de forma descritiva e comparativa, contrastando os conceitos estruturais da literatura com as boas práticas de endurecimento (_hardening_) de infraestruturas de TI.
