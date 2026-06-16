@@ -46,39 +46,36 @@ Script: |-
 
   echo -e "\e[1;33m⏳ Inyectando vulnerabilidades de permisos en node02...\e[0m"
   $SSH2 "echo caleston123 | sudo -S bash -c '
-      # 1. Preparar grupos necesarios
-      groupadd -f dev-team
-      groupadd -f backup-ops
+      groupadd -f dev-team 2>/dev/null || true
+      groupadd -f backup-ops 2>/dev/null || true
 
-      # 2. Vulnerabilidad A: Directorio compartido sin Sticky Bit
+      # 1. Directorio compartido inseguro (Falta Sticky Bit)
       mkdir -p /tmp/shared-project
       chmod 777 /tmp/shared-project
-      touch /tmp/shared-project/file_userA.txt /tmp/shared-project/file_userB.txt
-      chown root:root /tmp/shared-project/file_userA.txt /tmp/shared-project/file_userB.txt
+      touch /tmp/shared-project/file_userA.txt
 
-      # 3. Vulnerabilidad B: Directorio de proyecto sin herencia de grupo (SGID)
+      # 2. Directorio proyecto sin herencia de grupo (Falta SGID)
       mkdir -p /opt/projects/dev-team
       chown root:dev-team /opt/projects/dev-team
       chmod 755 /opt/projects/dev-team
 
-      # 4. Vulnerabilidad C: Script de backup sin privilegios delegados (necesita SGID/SUID)
+      # 3. Script de backup (CREACIÓN CORREGIDA)
       mkdir -p /opt/scripts
-      printf \"#!/bin/bash\\necho 'Ejecutando backup seguro con privilegios...'\\n\" > /opt/scripts/secure_backup
+      sudo sh -c '"'"'echo -e \"#!/bin/bash\necho [BACKUP] Ejecutando con privilegios del grupo backup-ops\n\" > /opt/scripts/secure_backup'"'"'
       chmod 750 /opt/scripts/secure_backup
       chown root:backup-ops /opt/scripts/secure_backup
 
-      # 5. Vulnerabilidad D: Permisos recursivos incorrectos en logs
+      # 4. Logs expuestos
       mkdir -p /var/log/app-logs
       chmod 777 /var/log/app-logs
-      touch /var/log/app-logs/error.log /var/log/app-logs/access.log
-      chmod 666 /var/log/app-logs/*.log
+      touch /var/log/app-logs/error.log
+      chmod 666 /var/log/app-logs/error.log
 
-      # 6. Vulnerabilidad E: UMASK global inseguro
+      # 5. UMASK peligroso
       echo \"umask 000\" > /etc/profile.d/99-insecure-umask.sh
-      
-      echo \"[EC-003] Escenario de permisos inyectado correctamente.\"
-      exit 0
-  ' || echo -e '\e[1;33m  [!] Advertencia en inyección de node02, continuando...\e[0m'"
+
+      echo \"[EC-003] Escenario inyectado correctamente.\"
+  '" || echo -e '\e[1;33m  [!] Detalle en node02, continuando...\e[0m'
 
   echo -e "\e[1;33m⏳ Preparando bóveda en node03...\e[0m"
   $SSH3 "echo caleston123 | sudo -S bash -c '
@@ -117,29 +114,28 @@ Script: |-
   echo -e "\e[1;36m--------------------------------------------------------------------------------\e[0m"
   echo -e ""
   echo -e " \e[1m1. Protección de Directorio Compartido (/tmp/shared-project)\e[0m"
-  echo -e "    Estado actual: Cualquier usuario puede eliminar o modificar archivos"
-  echo -e "    de otros usuarios dentro de este directorio."
-  echo -e "    Objetivo: Asegurar que los usuarios puedan crear archivos, pero que"
-  echo -e "    solo el propietario del archivo o root puedan eliminarlo o renombrarlo."
+  echo -e "    Estado actual: Permisos 777. Cualquier usuario puede borrar archivos ajenos."
+  echo -e "    Objetivo: Aplicar el bit que protege la propiedad de los archivos dentro de un directorio."
+  echo -e "    \e[1;33mRef. Técnica:\e[0m Octal: 17xx | Simbólico: +t | Ej: \e[1mchmod 1777 /tmp/shared-project\e[0m"
   echo -e ""
   echo -e " \e[1m2. Herencia de Grupo en Proyectos (/opt/projects/dev-team)\e[0m"
-  echo -e "    Estado actual: Los archivos nuevos creados en este directorio no"
-  echo -e "    pertenecen al grupo del proyecto, rompiendo la colaboración."
-  echo -e "    Objetivo: Configurar el directorio para que cualquier archivo o"
-  echo -e "    subdirectorio nuevo herede automáticamente el grupo propietario."
+  echo -e "    Estado actual: Archivos nuevos no heredan el grupo 'dev-team'."
+  echo -e "    Objetivo: Forzar herencia de GID para colaboración segura entre equipos."
+  echo -e "    \e[1;33mRef. Técnica:\e[0m Octal: 27xx | Simbólico: g+s | Ej: \e[1mchmod 2775 /opt/projects/dev-team\e[0m"
   echo -e ""
   echo -e " \e[1m3. Ejecución Privilegiada sin Sudo (/opt/scripts/secure_backup)\e[0m"
-  echo -e "    Estado actual: El operador necesita ejecutar este script, pero las"
-  echo -e "    políticas de seguridad prohíben otorgarle acceso sudo."
-  echo -e "    Objetivo: Configurar el bit especial de ejecución adecuado en el"
-  echo -e "    archivo para que se ejecute con los privilegios de su propietario/grupo."
+  echo -e "    Estado actual: El operador no tiene sudo, pero el script requiere ejecución con credenciales elevadas."
+  echo -e "    Objetivo: Delegar privilegios mediante permisos especiales de ejecución."
+  echo -e "    \e[1;33mRef. Técnica:\e[0m Si ejecuta con permisos del GRUPO propietario → SGID (2xxx)."
+  echo -e "    Si ejecuta con permisos del USUARIO propietario → SUID (4xxx)."
+  echo -e "    Ej: \e[1mchmod 2750 /opt/scripts/secure_backup\e[0m (verifica que el grupo sea backup-ops)"
   echo -e ""
   echo -e " \e[1m4. Corrección Masiva y UMASK (/var/log/app-logs y perfil global)\e[0m"
-  echo -e "    Estado actual: Los logs tienen permisos 777/666. El UMASK global"
-  echo -e "    está configurado en 000, exponiendo archivos nuevos."
-  echo -e "    Objetivo: Identificar y neutralizar el UMASK inseguro. Utilizar"
-  echo -e "    herramientas de búsqueda masiva (find -exec) para corregir los"
-  echo -e "    permisos de /var/log/app-logs a estándares seguros (ej. 750/640)."
+  echo -e "    Estado actual: UMASK 000 global. Logs con permisos 777/666."
+  echo -e "    Objetivo: Neutralizar UMASK 000 y corregir permisos recursivamente."
+  echo -e "    \e[1;33mRef. Técnica:\e[0m Elimina /etc/profile.d/99-insecure-umask.sh. Usa find -exec:"
+  echo -e "    \e[1mfind /var/log/app-logs -type d -exec chmod 750 {} \;\e[0m"
+  echo -e "    \e[1mfind /var/log/app-logs -type f -exec chmod 640 {} \;\e[0m"
   echo -e ""
   echo -e "\e[1;33m PIPELINE DE EVIDENCIA A NODE03\e[0m"
   echo -e "\e[1;36m--------------------------------------------------------------------------------\e[0m"
