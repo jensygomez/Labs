@@ -1,8 +1,8 @@
 ---
 Curso: Transición Sysadmin a DevOps - Operations Deployment LFCS/RHCSA
 Modulo: Operations Deployment (Gestión de Arranque y Ciclo de Vida)
-Playground: OD-001-v1
-Titulo: El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro
+Playground: OD-001
+Titulo: El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro - V1.0
 Fecha de Inicio: 2026-06-15
 Dificultad: 6.5/10
 Level Escalation: L2

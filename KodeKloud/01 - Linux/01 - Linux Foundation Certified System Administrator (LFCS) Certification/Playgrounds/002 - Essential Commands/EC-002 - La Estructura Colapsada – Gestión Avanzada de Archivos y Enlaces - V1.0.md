@@ -229,3 +229,16 @@ Escenario: |-
 ---
 [[Laboratorios del LFCS]]
 ---
+
+
+Recently, I had to respond to a high-severity incident in a production environment where a data migration performed by an external team left the file system in a fragmented and inconsistent state. A critical application depended on specific file paths, but the structure was completely broken.
+
+My first move was reconnaissance — before touching anything, I mapped the existing state of the system remotely via SSH to understand exactly what was there and what was missing. I identified three concrete problems: a target directory that didn't exist yet, a symbolic link pointing to a file that had never existed, and an unverified hard link that needed confirmation.
+
+I tackled them in order of dependency. First, I migrated the legacy application data to the new directory structure using `cp -a` to ensure that original ownership, permissions, and timestamps were fully preserved — because in production, metadata is just as critical as the data itself. Then I corrected the broken symbolic link by removing it and recreating it pointing to the actual file. I also confirmed that the existing hard link was valid by verifying it shared the same inode as the original file.
+
+For the audit phase, I used `find` with `-samefile` to identify every file sharing that inode across the entire data directory, and separately listed all symbolic links with their targets for referential integrity verification.
+
+One constraint that I took seriously was that no result files could be stored on the administration node. Every piece of evidence had to flow directly from the production server to the backup vault on a third node via SSH pipeline — so I built chained SSH commands that streamed the output without ever touching local disk.
+
+The incident was resolved cleanly, all three audit reports landed in the backup vault, and the application's file structure was restored without data loss.
