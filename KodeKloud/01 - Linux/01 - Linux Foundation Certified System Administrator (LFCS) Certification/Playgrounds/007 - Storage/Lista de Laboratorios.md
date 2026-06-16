@@ -4,16 +4,16 @@
 ## 🏗️ Guía Maestra: Estructura Estándar y Flujo de Trabajo
 
 
-| Componente | Configuración Estándar |
-|------------|------------------------|
-| **Proveedor** | `libvirt` (KVM/QEMU) + `vagrant` |
-| **Imagen Base** | `generic/ubuntu2204` (Ubuntu 22.04 LTS Server) |
-| **Recursos por Nodo** | `1 CPU` \| `1024 MB RAM` \| Bus de disco: `VirtIO` |
-| **Red** | `default` de Libvirt (`192.168.122.0/24`). IPs fijas: `node01(.11)`, `node02(.12)`, `node03(.13)` |
-| **Usuario** | `bob` / `caleston123` \| `sudo NOPASSWD` \| Acceso vía `sshpass` desde `node01` |
-| **Almacenamiento** | ✅ **Cero loop devices.** Discos virtuales reales (`/dev/vdb`, `/dev/vdc`...) agregados como archivos `qcow2` thin-provisioned. |
-| **Resolución DNS** | Inyección automática en `/etc/hosts` + red Libvirt `dnsmasq` |
-| **Ciclo de Práctica** | `vagrant up --provider=libvirt` → Resuelve ticket → `vagrant destroy -f` → Siguiente escenario |
+| Componente            | Configuración Estándar                                                                                                         |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Proveedor**         | `libvirt` (KVM/QEMU) + `vagrant`                                                                                               |
+| **Imagen Base**       | `generic/ubuntu2204` (Ubuntu 22.04 LTS Server)                                                                                 |
+| **Recursos por Nodo** | `1 CPU` \| `1024 MB RAM` \| Bus de disco: `VirtIO`                                                                             |
+| **Red**               | `default` de Libvirt (`192.168.122.0/24`). IPs fijas: `node01(.11)`, `node02(.12)`, `node03(.13)`                              |
+| **Usuario**           | `bob` / `caleston123` \| `sudo NOPASSWD` \| Acceso vía `sshpass` desde `node01`                                                |
+| **Almacenamiento**    | ✅ **Cero loop devices.** Discos virtuales reales (`/dev/vdb`, `/dev/vdc`...) agregados como archivos `qcow2` thin-provisioned. |
+| **Resolución DNS**    | Inyección automática en `/etc/hosts` + red Libvirt `dnsmasq`                                                                   |
+| **Ciclo de Práctica** | `vagrant up --provider=libvirt` → Resuelve ticket → `vagrant destroy -f` → Siguiente escenario                                 |
 
 ### 📜 Plantilla de Automatización (Vagrantfile Base)
 ```ruby

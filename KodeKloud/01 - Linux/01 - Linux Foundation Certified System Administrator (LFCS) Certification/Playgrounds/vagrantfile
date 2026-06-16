@@ -6,9 +6,9 @@ Vagrant.configure("2") do |config|
   config.vm.box = "generic/ubuntu2204"
 
   nodes = [
-    { name: "node01", ip: "192.168.122.11", extra_disk: false },
-    { name: "node02", ip: "192.168.122.12", extra_disk: true },
-    { name: "node03", ip: "192.168.122.13", extra_disk: false }
+    { name: "node01", ip: "192.168.122.11", extra_disks: [] },
+    { name: "node02", ip: "192.168.122.12", extra_disks: ['200M', '100M'] }, # STG-002: 2 discos específicos
+    { name: "node03", ip: "192.168.122.13", extra_disks: [] }
   ]
 
   nodes.each do |node|
@@ -21,8 +21,9 @@ Vagrant.configure("2") do |config|
         lv.cpus = 1
         lv.driver = "kvm"
         
-        if node[:extra_disk]
-          lv.storage :file, :size => '1G', :type => 'qcow2'
+        # Crear discos adicionales según la configuración del nodo
+        node[:extra_disks].each do |size|
+          lv.storage :file, :size => size, :type => 'qcow2'
         end
       end
 
@@ -46,7 +47,7 @@ HOSTS
         # 3. Instalar herramientas
         export DEBIAN_FRONTEND=noninteractive
         apt-get update -qq
-        apt-get install -y -qq sshpass parted nfs-common
+        apt-get install -y -qq sshpass parted lvm2
       SHELL
 
       # ── PROVISIONADO ESPECÍFICO: TICKET EN NODE01 ──
@@ -54,78 +55,80 @@ HOSTS
         node_config.vm.provision "shell", privileged: false, inline: <<-SHELL
           echo "🎫 Generando Ticket de Incidente para node01..."
           
-          # Guardamos el texto plano intacto
-          cat << 'TICKET' > /home/vagrant/TICKET_INC-5001.txt
+          cat << 'TICKET' > /home/vagrant/TICKET_STG-002.txt
 ================================================================================
-  TICKET INC-5001  │  Severidad: MEDIA  │  Ambiente: CLÚSTER DISTRIBUIDO
+  TICKET STG-002  │  Severidad: ALTA  │  Ambiente: CLÚSTER DISTRIBUIDO
 ================================================================================
-  💾 STG-001-MN — El Disco Olvidado (Particiones, Fstab y Swap)
-  Módulo: Storage  │  Dificultad: 6/10  │  Nivel: L2
+  💾 STG-002-MN — El Laberinto LVM (Volúmenes que No Montan y VG Fragmentado)
+  Módulo: Storage  │  Dificultad: 7/10  │  Nivel: L2/L3
 --------------------------------------------------------------------------------
   Ubicación de Control:  node01  (Estación del Administrador — bob)
-  Nodo a Intervenir:     node02  (Servidor con disco secundario mal configurado)
+  Nodo a Intervenir:     node02  (Servidor con LVM inconsistente)
   Nodo Bóveda Destino:   node03  (Bóveda de Gobernanza — /opt/backup-vault/)
   Contraseña del Clúster: caleston123
 --------------------------------------------------------------------------------
 
-  Durante el proceso de expansión de capacidad del clúster, el equipo de
-  infraestructura aprovisionó un disco secundario — /dev/vdb — en el nodo
-  node02, destinado a servir como volumen de datos de aplicación bajo la
-  ruta /mnt/app-data. El trabajo fue registrado como completado y el nodo
-  fue reintegrado al clúster sin que se realizara una validación post-tarea.
+  Tras una ventana de mantenimiento fallida, el equipo de infraestructura 
+  reportó que el volumen de datos de la aplicación en node02 (/mnt/app-data) 
+  no está disponible. Una revisión preliminar indica que un intento de 
+  expansión de almacenamiento quedó a medias: el Grupo de Volúmenes (VG) 
+  presenta Physical Extents (PE) libres sin asignar, y el archivo /etc/fstab 
+  contiene una referencia a un UUID que ya no corresponde a la topología 
+  actual del sistema, impidiendo el montaje automático y arriesgando un 
+  fallo de arranque (Emergency Mode).
 
-  Al día siguiente, durante una ventana de mantenimiento programada que
-  implicó el reinicio del servidor, la aplicación comenzó a reportar fallos
-  de escritura. Al investigar, se encontró que /mnt/app-data aparecía vacío:
-  el disco nunca fue configurado para montarse de forma persistente, y el
-  reinicio dejó al sistema sin ese volumen disponible. La revisión posterior
-  reveló además que el filesystem de /dev/vdb1 es ext3, en violación directa
-  del estándar corporativo que exige ext4 en todos los volúmenes de datos.
+  Se requiere que un ingeniero senior tome el control, diagnostique la 
+  topología LVM real, recupere la persistencia del montaje y complete la 
+  expansión del volumen lógico para consumir todo el espacio disponible, 
+  asegurando la integridad del sistema de archivos existente.
 
-  El problema se agravó cuando el equipo de monitoreo notificó que node02
-  no cuenta con espacio de intercambio activo. La ausencia de Swap expone
-  al nodo a un riesgo crítico de Out Of Memory (OOM) bajo carga sostenida,
-  condición que el equipo de SRE considera inaceptable en producción.
+  PROCEDIMIENTO REQUERIDO
+  --------------------------------------------------------------------------------
+  1. Diagnóstico y Saneamiento:
+  - Conectarse a node02 e identificar la topología LVM real y el UUID actual 
+    del filesystem utilizando las herramientas estándar de diagnóstico de bloques.
+  - Saneer el archivo /etc/fstab, eliminando o comentando la entrada obsoleta 
+    que está impidiendo el montaje y generando riesgo de fallo en el arranque.
 
-  El ingeniero encargado deberá conectarse a node02 vía SSH desde node01
-  y resolver la cadena completa. Reformateará /dev/vdb1 a ext4, corregirá
-  la entrada en /etc/fstab para montar /mnt/app-data con las opciones
-  defaults,noatime,nofail, y validará la sintaxis con sudo mount -a antes
-  de continuar. Luego creará un archivo de swap de 128MB en la ruta
-  /mnt/app-data/swapfile, le asignará permisos 600, lo inicializará con
-  mkswap, lo activará y lo registrará en /etc/fstab para persistencia.
-  Como cierre de gobernanza, copiará el fstab corregido y la salida de
-  lsblk -f a la bóveda centralizada en node03:/opt/backup-vault/stg001_fstab.bak.
+  2. Ingeniería del Almacenamiento (LVM):
+  - Identificar el Volumen Lógico (LV) de la aplicación y extenderlo para consumir 
+    el 100% del espacio libre (PE) disponible en su Grupo de Volúmenes (VG).
+  - Redimensionar el sistema de archivos subyacente en caliente (online) para que 
+    el sistema operativo reconozca la nueva capacidad sin interrumpir el servicio 
+    (sin desmontar).
 
-  ──────────────────────────────────────────────────────────────────────────
+  3. Despliegue y Validación de Persistencia:
+  - Registrar el montaje en /etc/fstab utilizando el UUID correcto y aplicando 
+    las opciones de resiliencia corporativas (noatime, nofail).
+  - Validar la sintaxis del fstab obligatoriamente con `sudo mount -a` y verificar 
+    que el punto de montaje esté activo y refleje el tamaño total expandido.
+
+  4. Pipeline de Evidencia a node03:
+  - Destino: /opt/backup-vault/stg002_evidence.txt
+  - Desde node01, enviar mediante un pipeline SSH la salida consolidada de: 
+    'lsblk -f', 'vgs' y 'df -h /mnt/app-data', sin generar archivos temporales 
+    locales en el nodo de control.
+  --------------------------------------------------------------------------------
   CRITERIOS DE ACEPTACIÓN
-  ──────────────────────────────────────────────────────────────────────────
+  --------------------------------------------------------------------------------
+   [ ] Diagnóstico correcto de la topología LVM y UUIDs reales.
+   [ ] /etc/fstab corregido con el UUID válido y opciones de resiliencia.
+   [ ] LV 'lv_apps' extendido al 100% del espacio libre del VG.
+   [ ] Filesystem redimensionado en caliente (sin pérdida de datos).
+   [ ] Evidencia enviada a node03:/opt/backup-vault/stg002_evidence.txt
 
-   [ ] Partición /dev/vdb1 operativa con filesystem ext4                             → 25%
-   [ ] /mnt/app-data montado con opciones noatime y nofail                   → 25%
-   [ ] /etc/fstab corregido sintácticamente sin errores                                → 20%
-   [ ] Swap activo de 128MB con permisos seguros (600)                           → 20%
-   [ ] Evidencia copiada a node03:/opt/backup-vault/stg001_fstab.bak  → 10%
-
-  REGLA DE ORO: Nunca apliques un cambio en fstab sin ejecutar sudo mount -a.
-  Un error de sintaxis puede dejar el nodo inoperable en Emergency Mode.
-  Diagnóstico previo recomendado: lsblk -f  y  cat /etc/fstab
-
+  REGLA DE ORO: Bajo ninguna circunstancia ejecutes 'mkfs' sobre el LV 
+  existente. Se asume que contiene datos de producción. La expansión debe 
+  ser 'online' y la corrección del fstab debe validarse con 'mount -a'.
 ================================================================================
 TICKET
 
-          # Limpiamos basura de intentos previos en el bashrc
+          # Limpiar y mostrar ticket al iniciar sesión
           sed -i '/TICKET/d' /home/vagrant/.bashrc
           sed -i '/# Mostrar/d' /home/vagrant/.bashrc
-          sed -i '/cat \/home/d' /home/vagrant/.bashrc
-          sed -i '/clear/d' /home/vagrant/.bashrc
-
-          # Inyectamos de forma segura usando un heredoc limpio
           cat << 'EOF' >> /home/vagrant/.bashrc
-
-# Mostrar ticket de laboratorio al iniciar sesión de forma limpia
 clear
-cat /home/vagrant/TICKET_INC-5001.txt
+cat /home/vagrant/TICKET_STG-002.txt
 EOF
         SHELL
       end
@@ -133,24 +136,29 @@ EOF
       # ── PROVISIONADO ESPECÍFICO: INYECCIÓN DE FALLOS EN NODE02 ──
       if node[:name] == "node02"
         node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
-          echo "💥 Inyectando fallos STG-001 en #{node[:name]}..."
-          DISK="/dev/vdb"
-          [ ! -b "$DISK" ] && DISK="/dev/sdb"
+          echo "💥 Inyectando fallos STG-002 en #{node[:name]}..."
           
+          # 0. Limpieza de residuos del STG-001 para evitar conflictos
+          umount /mnt/app-data 2>/dev/null || true
+          sed -i '/app-data/d' /etc/fstab
           swapoff -a 2>/dev/null || true
-          wipefs -a $DISK 2>/dev/null || true
-          parted -s $DISK mklabel gpt
-          parted -s $DISK mkpart primary ext3 1MiB 100%
-          partprobe $DISK 2>/dev/null || true
-          udevadm settle
-          mkfs.ext3 ${DISK}1 >/dev/null 2>&1
+          wipefs -a /dev/vdb /dev/vdc 2>/dev/null || true
+
+          # 1. Crear la topología LVM base
+          pvcreate /dev/vdb /dev/vdc
+          vgcreate vg_apps /dev/vdb /dev/vdc
           
+          # 2. Crear LV con solo 150M (dejando ~150M libres para que el alumno extienda)
+          lvcreate -n lv_apps -L 150M vg_apps
+          
+          # 3. Formatear y preparar punto de montaje
+          mkfs.ext4 /dev/vg_apps/lv_apps
           mkdir -p /mnt/app-data
-          sed -i "\#${DISK}#d" /etc/fstab
-          sed -i "/app-data/d" /etc/fstab
-          echo "${DISK}1 /mnt/app-data ext3 defaults 0 2" >> /etc/fstab
-          rm -f /swapfile /mnt/app-data/swapfile 2>/dev/null || true
-          echo "✅ Fallos inyectados correctamente."
+          
+          # 4. LA TRAMPA: Insertar un UUID falso/obsoleto en fstab
+          echo "UUID=00000000-0000-0000-0000-000000000000 /mnt/app-data ext4 defaults 0 0" >> /etc/fstab
+          
+          echo "✅ Fallos STG-002 inyectados correctamente."
         SHELL
       end
       

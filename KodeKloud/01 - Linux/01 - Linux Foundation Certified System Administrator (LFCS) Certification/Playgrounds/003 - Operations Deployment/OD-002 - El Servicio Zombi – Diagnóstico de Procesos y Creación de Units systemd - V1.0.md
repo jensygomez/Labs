@@ -44,28 +44,36 @@ Script: |-
   $SSH3 "echo caleston123 | sudo -S apt-get install -y sshpass -qq 2>/dev/null || true"
 
   echo -e "\e[1;33m⏳ Inyectando escenario de procesos huérfanos en node02...\e[0m"
-  $SSH2 "echo caleston123 | sudo -S bash -c '
+  # NOTA CRÍTICA PARA INCIDENTES FUTUROS:
+  # Cuando inyectes comandos multi-línea vía SSH desde un script heredado (cat << 'EOF'),
+  # NO usares 'bash -c "..."` con comillas dobles escRpadas, porque el escaping se rompe
+  # cuando el script está dentro de un heredoc con comillas simples (OUTEREOF).
+  #
+  # SOLUCIÓN: Usa 'bash << 'INNEREOF' ... INNEREOF' (heredoc por stdin)
+  # - El heredoc se pasa directo a sudo --stdin bash
+  # - Dentro del heredoc, usa comillas simples para evitar escaping
+  # - Esta técnica funciona tanto manualmente como desde scripts
+  #
+  # Ejemplo correcto:
+  #   $SSH2 "echo PASS | sudo --stdin bash << 'INNEREOF'
+  #       comando multi-línea
+  #       más comandos
+  #   INNEREOF"
+  $SSH2 "echo caleston123 | sudo --stdin bash << 'INNEREOF'
       mkdir -p /opt/data-processor
 
-      printf \"#!/bin/bash\nwhile true; do sleep 120; done\n\" > /opt/data-processor/worker.sh
+      printf '#!/bin/bash\nwhile true; do sleep 120; done\n' > /opt/data-processor/worker.sh
       chmod +x /opt/data-processor/worker.sh
 
-      # Limpiar procesos anteriores de forma segura (ignora errores si no hay nada)
       pkill -f worker.sh 2>/dev/null || true
 
-      # FIX: Usar setsid para desconectar cada worker de la sesión SSH actual.
-      # Sin setsid, los procesos en background (&) heredan el file descriptor
-      # de la sesión SSH y la mantienen abierta, congelando el CLI del caller.
-      # setsid crea una nueva sesión de proceso independiente para cada worker.
-      # La redirección </dev/null >/dev/null 2>&1 desconecta stdin/stdout/stderr
-      # para que no quede ningún vínculo con la terminal del SSH.
       setsid /opt/data-processor/worker.sh </dev/null >/dev/null 2>&1 &
       setsid /opt/data-processor/worker.sh </dev/null >/dev/null 2>&1 &
       setsid /opt/data-processor/worker.sh </dev/null >/dev/null 2>&1 &
 
-      echo \"[OD-002] Procesos inyectados correctamente.\"
+      echo '[OD-002] Procesos inyectados correctamente.'
       exit 0
-  '" || echo -e "\e[1;33m  [!] Advertencia: La inyección en node02 tuvo un detalle, pero continuamos.\e[0m"
+  INNEREOF" || echo -e "\e[1;33m  [!] Advertencia: La inyección en node02 tuvo un detalle, pero continuamos.\e[0m"
 
   echo -e "\e[1;33m⏳ Preparando bóveda en node03...\e[0m"
   $SSH3 "echo caleston123 | sudo -S bash -c '
@@ -159,3 +167,15 @@ Escenario: |-
 ---
 [[Laboratorios del LFCS]]
 ---
+
+
+**Tell me about a recent challenge you faced at work.**
+
+
+Recently, I responded to an incident where our monitoring team flagged abnormal memory and CPU consumption on one of our production nodes. When I investigated, I found that a critical data processing application had been running through a legacy approach — basically a shell script launched manually in the background, with no lifecycle management, no centralized logging, and no automatic restart capability. On top of that, the application had crashed and left orphaned processes sitting idle, consuming resources without doing any useful work.
+
+My first step was to identify and safely terminate those orphaned processes using SIGTERM, confirming clean removal before touching anything else. Then I engineered a proper systemd service unit from scratch, defining restart policies and the correct execution path, so the application would be fully supervised by the init system going forward. Once deployed, I reloaded the systemd daemon, enabled the service for automatic startup on boot, and confirmed it reached active running state with its child processes correctly grouped under the service's control group.
+
+To close the incident properly, I captured the service status and process tree as compliance evidence and streamed it directly from the affected node to our secure vault server via SSH pipeline — without staging any intermediate files on the control node, which was an explicit operational constraint.
+
+What I valued most about this incident was that it wasn't just about fixing a crash — it was about replacing a fragile, invisible workaround with something observable, resilient, and auditable. That's the kind of thinking I try to bring to every system I touch.
