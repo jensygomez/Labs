@@ -9,7 +9,7 @@ tags:
 | [[EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema - V1.0]]            |            40 min             |     `14/06/2026`      | <input type="checkbox" checked> |
 | [[EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema - V2.0]]            |                               |                       |                                 |
 | [[EC-002 - La Estructura Colapsada – Gestión Avanzada de Archivos y Enlaces - V1.0]]        |            30 min             |     `16/06/2026`      | <input type="checkbox" checked> |
-| [[EC-003 - El Permiso Prohibido – Control de Acceso y Bits Especiales - V1.0]]              |                               |                       |                                 |
+| [[EC-003 - El Permiso Prohibido – Control de Acceso y Bits Especiales - V1.0]]              |            40 min             |     `16/06/2026`      | <input type="checkbox" checked> |
 | **Operations Deployments**                                                                  |                               |                       |                                 |
 | [[OD-001 - El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro - V1.0]]        |            30 min             |     `15/06/2026`      | <input type="checkbox" checked> |
 | [[OD-002 - El Servicio Zombi – Diagnóstico de Procesos y Creación de Units systemd - V1.0]] |            35 min             |     `16/06/2026`      | <input type="checkbox" checked> |
@@ -30,7 +30,7 @@ tags:
 | [[DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red]]                  |            40 min             |     `12/06/2026`      | <input type="checkbox" checked> |
 |                                                                                             |                               |                       |                                 |
 |                                                                                             |                               |                       |                                 |
-|                                                                                             |        **08:25 horas**        |                       |                                 |
+|                                                                                             |        **09:05 horas**        |                       |                                 |
 |                                                                                             |                               |                       |                                 |
 
 

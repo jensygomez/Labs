@@ -45,7 +45,8 @@ Script: |-
   $SSH3 "echo caleston123 | sudo -S apt-get install -y sshpass -qq 2>/dev/null || true"
 
   echo -e "\e[1;33m⏳ Inyectando vulnerabilidades de permisos en node02...\e[0m"
-  $SSH2 "echo caleston123 | sudo -S bash -c '
+  $SSH2 bash << 'NODE02_INJECT' || echo -e "\e[1;33m  [!] Detalle en node02, continuando...\e[0m"
+  echo caleston123 | sudo -S bash << 'SUDO_INNER'
       groupadd -f dev-team 2>/dev/null || true
       groupadd -f backup-ops 2>/dev/null || true
 
@@ -59,9 +60,12 @@ Script: |-
       chown root:dev-team /opt/projects/dev-team
       chmod 755 /opt/projects/dev-team
 
-      # 3. Script de backup (CREACIÓN CORREGIDA)
+      # 3. Script de backup (Creación robusta sin escapes)
       mkdir -p /opt/scripts
-      sudo sh -c '"'"'echo -e \"#!/bin/bash\necho [BACKUP] Ejecutando con privilegios del grupo backup-ops\n\" > /opt/scripts/secure_backup'"'"'
+      cat > /opt/scripts/secure_backup << 'BACKUP_SCRIPT'
+  #!/bin/bash
+  echo "[BACKUP] Ejecutando con privilegios del grupo backup-ops"
+  BACKUP_SCRIPT
       chmod 750 /opt/scripts/secure_backup
       chown root:backup-ops /opt/scripts/secure_backup
 
@@ -72,10 +76,11 @@ Script: |-
       chmod 666 /var/log/app-logs/error.log
 
       # 5. UMASK peligroso
-      echo \"umask 000\" > /etc/profile.d/99-insecure-umask.sh
+      echo "umask 000" > /etc/profile.d/99-insecure-umask.sh
 
-      echo \"[EC-003] Escenario inyectado correctamente.\"
-  '" || echo -e '\e[1;33m  [!] Detalle en node02, continuando...\e[0m'
+      echo "[EC-003] Escenario inyectado correctamente."
+  SUDO_INNER
+  NODE02_INJECT
 
   echo -e "\e[1;33m⏳ Preparando bóveda en node03...\e[0m"
   $SSH3 "echo caleston123 | sudo -S bash -c '
@@ -110,32 +115,29 @@ Script: |-
   echo -e " \e[1m>\e[0m No se permite materializar archivos de reporte o scripts temporales en node01."
   echo -e " \e[1m>\e[0m La evidencia debe fluir directamente de node02 hacia node03 mediante pipeline."
   echo -e ""
-  echo -e "\e[1;33m PARÁMETROS TÉCNICOS OBLIGATORIOS (TICKET DE REMEDIACIÓN)\e[0m"
+  echo -e "\e[1;33m PARÁMETROS TÉCNICOS OBLIGATORIOS (TICKET DE REMEDIACIÓN - NIVEL L2)\e[0m"
   echo -e "\e[1;36m--------------------------------------------------------------------------------\e[0m"
   echo -e ""
   echo -e " \e[1m1. Protección de Directorio Compartido (/tmp/shared-project)\e[0m"
   echo -e "    Estado actual: Permisos 777. Cualquier usuario puede borrar archivos ajenos."
-  echo -e "    Objetivo: Aplicar el bit que protege la propiedad de los archivos dentro de un directorio."
-  echo -e "    \e[1;33mRef. Técnica:\e[0m Octal: 17xx | Simbólico: +t | Ej: \e[1mchmod 1777 /tmp/shared-project\e[0m"
+  echo -e "    Objetivo: Asegurar que SOLO el propietario de un archivo (o root) pueda eliminarlo dentro de este directorio."
+  echo -e "    \e[1;33mRestricción:\e[0m Investiga y aplica el bit especial correspondiente (Sticky Bit) manteniendo el acceso total actual."
   echo -e ""
   echo -e " \e[1m2. Herencia de Grupo en Proyectos (/opt/projects/dev-team)\e[0m"
-  echo -e "    Estado actual: Archivos nuevos no heredan el grupo 'dev-team'."
-  echo -e "    Objetivo: Forzar herencia de GID para colaboración segura entre equipos."
-  echo -e "    \e[1;33mRef. Técnica:\e[0m Octal: 27xx | Simbólico: g+s | Ej: \e[1mchmod 2775 /opt/projects/dev-team\e[0m"
+  echo -e "    Estado actual: Los archivos nuevos creados por usuarios heredan su grupo primario, rompiendo la colaboración."
+  echo -e "    Objetivo: Configurar el directorio para que CUALQUIER archivo o subdirectorio creado dentro herede automáticamente el grupo 'dev-team'."
+  echo -e "    \e[1;33mRestricción:\e[0m Aplica el bit especial SGID en directorios. Los permisos base para Owner y Group deben ser de lectura/escritura/ejecución, y otros solo lectura/ejecución."
   echo -e ""
   echo -e " \e[1m3. Ejecución Privilegiada sin Sudo (/opt/scripts/secure_backup)\e[0m"
-  echo -e "    Estado actual: El operador no tiene sudo, pero el script requiere ejecución con credenciales elevadas."
-  echo -e "    Objetivo: Delegar privilegios mediante permisos especiales de ejecución."
-  echo -e "    \e[1;33mRef. Técnica:\e[0m Si ejecuta con permisos del GRUPO propietario → SGID (2xxx)."
-  echo -e "    Si ejecuta con permisos del USUARIO propietario → SUID (4xxx)."
-  echo -e "    Ej: \e[1mchmod 2750 /opt/scripts/secure_backup\e[0m (verifica que el grupo sea backup-ops)"
+  echo -e "    Estado actual: El operador no tiene sudo, pero el binario requiere privilegios del grupo 'backup-ops' para correr."
+  echo -e "    Objetivo: Permitir que cualquier miembro del sistema ejecute el script, pero que este corra CON LOS PRIVILEGIOS del GRUPO propietario ('backup-ops'), no del usuario que lo lanza."
+  echo -e "    \e[1;33mRestricción:\e[0m Determina si requieres SUID o SGID. Configura el archivo para que el Owner tenga control total, el Grupo pueda leer/ejecutar con el bit especial activo, y Otros no tengan ningún acceso."
   echo -e ""
-  echo -e " \e[1m4. Corrección Masiva y UMASK (/var/log/app-logs y perfil global)\e[0m"
-  echo -e "    Estado actual: UMASK 000 global. Logs con permisos 777/666."
-  echo -e "    Objetivo: Neutralizar UMASK 000 y corregir permisos recursivamente."
-  echo -e "    \e[1;33mRef. Técnica:\e[0m Elimina /etc/profile.d/99-insecure-umask.sh. Usa find -exec:"
-  echo -e "    \e[1mfind /var/log/app-logs -type d -exec chmod 750 {} \;\e[0m"
-  echo -e "    \e[1mfind /var/log/app-logs -type f -exec chmod 640 {} \;\e[0m"
+  echo -e " \e[1m4. Corrección Masiva y UMASK (/var/log/app-logs)\e[0m"
+  echo -e "    Estado actual: Se detectó una vulnerabilidad global de UMASK (000) y logs expuestos con 777/666."
+  echo -e "    Objetivo 4.1: Localizar y eliminar el archivo de inicialización en /etc/profile.d/ que altera el UMASK del sistema."
+  echo -e "    Objetivo 4.2: Normalizar la estructura de /var/log/app-logs de forma eficiente (un solo comando por tipo de objeto)."
+  echo -e "    \e[1;33mRestricción L2:\e[0m No uses chmod -R. Debes separar directorios (deben quedar en 750) de los archivos (deben quedar en 640) usando herramientas de búsqueda avanzada."
   echo -e ""
   echo -e "\e[1;33m PIPELINE DE EVIDENCIA A NODE03\e[0m"
   echo -e "\e[1;36m--------------------------------------------------------------------------------\e[0m"
@@ -177,3 +179,19 @@ Escenario: |-
 ---
 [[Laboratorios del LFCS]]
 ---
+
+
+
+Tell me about a recent challenge you've faced at work.
+
+Sure. Recently, I was handed a remediation ticket — what we'd call an L2-level task — involving a multi-node Linux environment where several critical permission misconfigurations had been flagged as security vulnerabilities.
+
+The scope covered four areas. First, a shared directory had world-writable permissions with no deletion protection, meaning any user could remove another user's files. I resolved that by applying the Sticky Bit, so only file owners or root can delete within that path. Second, a collaborative project directory wasn't enforcing group ownership on new files, which was breaking team workflows. I configured the SGID bit so any file or subdirectory created inside automatically inherits the correct group.
+
+Third, there was a backup script that needed to run with elevated group privileges, but operators didn't have sudo access. I applied SGID directly to the binary so it executes under the owning group's context regardless of who launches it — no sudo required, no privilege escalation risk.
+
+The fourth issue was the most systemic: someone had deployed a shell initialization file in /etc/profile.d/ that set the system-wide umask to 000, exposing every file created on the system. I tracked down that file, removed it, and then corrected the existing log directory structure using targeted find commands — separately for directories and files — without resorting to a blanket chmod -R, which is considered bad practice in production environments.
+
+Once all four tasks were validated, I piped the audit evidence directly to a secure vault node without leaving any artifacts on the intermediate host — which was an explicit compliance requirement.
+
+The whole exercise reinforced something I really believe in: in Linux systems administration, permissions aren't just a configuration detail. They're your first line of defense, and getting them wrong — even subtly — can have serious security implications.
