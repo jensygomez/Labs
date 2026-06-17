@@ -177,3 +177,10 @@ Escenario: |-
 
 
 ---
+Recently, I was assigned a high-priority incident on one of our production nodes that was experiencing periodic freezes. The root cause turned out to be a service account called `batch-processor` running poorly optimized data processing scripts with virtually no resource constraints — over one million processes available, which created the conditions for a classic fork bomb scenario.
+
+My intervention had to be surgical. I couldn't touch the default system limits or affect root, so I created a dedicated configuration file under `/etc/security/limits.d/` that applied strict hard and soft limits exclusively to that user — fifty processes and one thousand and twenty-four file descriptors. Setting both soft and hard to the same value was a deliberate choice: leaving headroom between them would have allowed the user to escalate back up to the hard limit, which defeats the purpose of the hardening.
+
+One thing I had to be precise about was how PAM applies these limits. They only take effect in login shell sessions, so my validation used `su --login` to simulate a real login — not just a subshell, which would have given me a false positive.
+
+Finally, the operational policy required that no intermediate files be stored on the control node. So I piped the evidence output directly from the affected node to the compliance vault on a third node in a single pipeline — node01 to node02 to node03 — keeping the audit trail clean and the intervention fully traceable.
