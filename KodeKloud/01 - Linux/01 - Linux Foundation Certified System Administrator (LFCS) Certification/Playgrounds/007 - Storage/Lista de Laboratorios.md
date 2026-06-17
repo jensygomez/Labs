@@ -4,55 +4,6 @@
 ## 🏗️ Guía Maestra: Estructura Estándar y Flujo de Trabajo
 
 
-| Componente            | Configuración Estándar                                                                                                         |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| **Proveedor**         | `libvirt` (KVM/QEMU) + `vagrant`                                                                                               |
-| **Imagen Base**       | `generic/ubuntu2204` (Ubuntu 22.04 LTS Server)                                                                                 |
-| **Recursos por Nodo** | `1 CPU` \| `1024 MB RAM` \| Bus de disco: `VirtIO`                                                                             |
-| **Red**               | `default` de Libvirt (`192.168.122.0/24`). IPs fijas: `node01(.11)`, `node02(.12)`, `node03(.13)`                              |
-| **Usuario**           | `bob` / `caleston123` \| `sudo NOPASSWD` \| Acceso vía `sshpass` desde `node01`                                                |
-| **Almacenamiento**    | ✅ **Cero loop devices.** Discos virtuales reales (`/dev/vdb`, `/dev/vdc`...) agregados como archivos `qcow2` thin-provisioned. |
-| **Resolución DNS**    | Inyección automática en `/etc/hosts` + red Libvirt `dnsmasq`                                                                   |
-| **Ciclo de Práctica** | `vagrant up --provider=libvirt` → Resuelve ticket → `vagrant destroy -f` → Siguiente escenario                                 |
-
-### 📜 Plantilla de Automatización (Vagrantfile Base)
-```ruby
-# -*- mode: ruby -*-
-Vagrant.configure("2") do |config|
-  config.vm.box = "generic/ubuntu2204"
-  nodes = [
-    { name: "node01", ip: "192.168.122.11", extra_disk: false },
-    { name: "node02", ip: "192.168.122.12", extra_disk: true },  # ← Ajustar según escenario
-    { name: "node03", ip: "192.168.122.13", extra_disk: false }
-  ]
-  nodes.each do |node|
-    config.vm.define node[:name] do |nc|
-      nc.vm.hostname = node[:name]
-      nc.vm.network "private_network", ip: node[:ip], libvirt__network_name: "default"
-      nc.vm.provider "libvirt" do |lv|
-        lv.memory, lv.cpus, lv.driver = 1024, 1, "kvm"
-        lv.storage :file, :size => '1G', :type => 'qcow2' if node[:extra_disk] # ← Cambiar tamaño
-      end
-      nc.vm.provision "shell", inline: <<-SHELL
-        cat << 'HOSTS' >> /etc/hosts
-192.168.122.11 node01
-192.168.122.12 node02
-192.168.122.13 node03
-HOSTS
-        useradd -m -s /bin/bash bob
-        echo 'bob:caleston123' | chpasswd
-        echo 'bob ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/bob
-        chmod 0440 /etc/sudoers.d/bob
-        export DEBIAN_FRONTEND=noninteractive
-        apt-get update -qq && apt-get install -y -qq sshpass parted nfs-common
-      SHELL
-      # → AQUÍ INYECTAR FALLOS ESPECÍFICOS DEL ESCENARIO EN node02
-      # → AQUÍ GENERAR TICKET EN node01
-    end
-  end
-end
-```
-
 ---
 
 ## 🗺️ Ruta de Práctica: Escenarios Storage

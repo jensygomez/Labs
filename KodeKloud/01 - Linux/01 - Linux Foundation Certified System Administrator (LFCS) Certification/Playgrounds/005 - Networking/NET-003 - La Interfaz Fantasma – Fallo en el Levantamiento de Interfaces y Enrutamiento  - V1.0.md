@@ -21,186 +21,232 @@ Competencias: |-
   - Manipular la tabla de enrutamiento del kernel añadiendo rutas estáticas para alcanzar subredes remotas (ej. redes de pods o almacenamiento).
   - Verificar el estado de la red utilizando herramientas modernas (ip addr, ip route, networkctl) en lugar de las obsoletas (ifconfig, route).
 Script: |-
-  cat << 'EOF' > /tmp/setup-net003.sh
+  # -*- mode: ruby -*-
 
-  #!/bin/bash
-  set -e
+  # vi: set ft=ruby :
 
-  # ── Parámetros del Clúster ──────────────────────────────────────────────────
-  USER_NET="bob"
-  PASS="caleston123"
-  NODE_TARGET="node02"
-  NODE_VAULT="node03"
-  SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
+  Vagrant.configure("2") do |config|
+    config.vm.box = "generic/ubuntu2204"
 
-  # ─────────────────────────────────────────────────────────────────────────────
-  # 1. INSTALAR SSHPASS LOCALMENTE (en node01, donde se ejecuta el script)
-  # ─────────────────────────────────────────────────────────────────────────────
-  echo -e "\e[1;33m⏳ Instalando sshpass en el nodo local (node01)...\e[0m"
-  if ! command -v sshpass &>/dev/null; then
-      if command -v apt-get &>/dev/null; then
-          sudo apt-get update -qq && sudo apt-get install -y sshpass -qq
-      elif command -v yum &>/dev/null; then
-          sudo yum install -y sshpass -qq
-      else
-          echo -e "\e[1;31m✗ No se pudo instalar sshpass: no se encontró apt-get ni yum\e[0m"
-          exit 1
-      fi
-  fi
-  echo -e "\e[1;32m✔ sshpass instalado localmente.\e[0m"
+    nodes = [
+      { name: "node01", ip: "192.168.122.11", extra_disks: [] },
+      { name: "node02", ip: "192.168.122.12", extra_disks: [] },
+      { name: "node03", ip: "192.168.122.13", extra_disks: [] }
+    ]
 
-  SSH="sshpass -p $PASS ssh $SSH_OPTS"
+    nodes.each do |node|
+      config.vm.define node[:name] do |node_config|
+        node_config.vm.hostname = node[:name]
+        
+        # Interfaz principal de gestión (acceso SSH)
+        node_config.vm.network "private_network", ip: node[:ip], libvirt__network_name: "default"
+        
+        # INTERFAZ SECUNDARIA PARA NET-003 (Red aislada del clúster)
+        # Solo node02 y node03 tendrán esta segunda interfaz
+        if node[:name] == "node02" || node[:name] == "node03"
+          node_config.vm.network "private_network", 
+            ip: (node[:name] == "node02" ? "10.99.99.2" : "10.99.99.3"),
+            libvirt__network_name: "cluster-internal",
+            libvirt__dhcp_enabled: false
+        end
 
-  # ─────────────────────────────────────────────────────────────────────────────
-  # 2. INSTALAR SSHPASS EN LOS NODOS REMOTOS
-  # ─────────────────────────────────────────────────────────────────────────────
-  for NODE in node01 node02 node03; do
-      echo -e "\e[1;33m⏳ Instalando sshpass en $NODE...\e[0m"
-      $SSH ${USER_NET}@${NODE} "
-          if ! command -v sshpass &>/dev/null; then
-              if command -v apt-get &>/dev/null; then
-                  echo $PASS | sudo -S apt-get update -qq && echo $PASS | sudo -S apt-get install -y sshpass -qq
-              elif command -v yum &>/dev/null; then
-                  echo $PASS | sudo -S yum install -y sshpass -qq
-              fi
-          fi
-      " < /dev/null
-      echo -e "\e[1;32m✔ sshpass instalado en $NODE.\e[0m"
-  done
+        node_config.vm.provider "libvirt" do |lv|
+          lv.memory = 1024
+          lv.cpus = 1
+          lv.driver = "kvm"
+          
+          node[:extra_disks].each do |size|
+            lv.storage :file, :size => size, :type => 'qcow2'
+          end
+        end
 
-  # ─────────────────────────────────────────────────────────────────────────────
-  # 3. INYECTAR ESCENARIO EN node02 (Interfaz Fantasma y Ruta Faltante)
-  # ─────────────────────────────────────────────────────────────────────────────
-  echo -e "\e[1;33m⏳ Inyectando escenario de red rota en node02...\e[0m"
-  # NOTA CRÍTICA: Usamos 'INNEREOF' con comillas simples para evitar que el shell remoto
-  # expanda las variables antes de pasarlas a sudo. Todo se ejecuta en el bash de sudo.
-  $SSH ${USER_NET}@${NODE_TARGET} "
-    echo $PASS | sudo --stdin bash << 'INNEREOF'
-      # 1. Crear interfaz dummy para simular la secundaria (persistente en esta sesión)
-      ip link add dummy0 type dummy 2>/dev/null || true
-      ip link set dummy0 up
+        # ── PROVISIONADO GENERAL (Todos los nodos) ──
+        node_config.vm.provision "shell", inline: <<-SHELL
+          echo "🔧 Configurando #{node[:name]}..."
+          
+          # 1. Resolver nombres de host localmente
+          cat << 'HOSTS' >> /etc/hosts
+  192.168.122.11 node01
+  192.168.122.12 node02
+  192.168.122.13 node03
+  10.99.99.2 node02-internal
+  10.99.99.3 node03-internal
+  HOSTS
+          
+          # 2. Crear usuario bob y dar permisos
+          useradd -m -s /bin/bash bob
+          echo 'bob:caleston123' | chpasswd
+          echo 'bob ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/bob
+          chmod 0440 /etc/sudoers.d/bob
+          
+          # 3. Instalar herramientas esenciales
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -qq
+          apt-get install -y -qq sshpass net-tools iproute2
+        SHELL
 
-      # 2. Inyectar configuración de red declarativa rota
-      if command -v netplan &>/dev/null; then
-        # ENTORNO UBUNTU/DEBIAN (Netplan)
-        # Error intencional: Falta los dos puntos (:) después de 'addresses'
-        # y no se incluye la directiva de rutas (routes)
-        cat > /etc/netplan/60-secondary.yaml << 'NETPLAN'
+        # ── PROVISIONADO ESPECÍFICO: TICKET EN NODE01 ──
+        if node[:name] == "node01"
+          node_config.vm.provision "shell", privileged: false, inline: <<-SHELL
+            echo "🎫 Generando Ticket de Incidente para node01..."
+            
+            cat << 'TICKET' > /home/vagrant/TICKET_NET-003.txt
+  ================================================================================
+    TICKET NET-003  │  Severidad: ALTA  │  Ambiente: CLÚSTER DISTRIBUIDO
+  ================================================================================
+    🧠 NET-003-MN — La Interfaz Fantasma: Fallo en Levantamiento y Enrutamiento
+    Módulo: Networking  │  Dificultad: 7/10  │  Nivel: L2/L3
+  --------------------------------------------------------------------------------
+    Ubicación de Control:  node01  (Estación del Administrador — bob)
+    Nodo a Intervenir:     node02  (Servidor con interfaz secundaria caída)
+    Nodo Bóveda Destino:   node03  (Bóveda de Gobernanza — /opt/ops-compliance/net-003/)
+    Contraseña del Clúster: caleston123
+  --------------------------------------------------------------------------------
+
+    Tras una actualización de kernel y un reinicio del servicio de red en node02,
+    la interfaz secundaria (ens6, usada para comunicación interna del clúster)
+    no ha levantado. Esto ha dejado al nodo aislado de la red interna y los pods
+    de Kubernetes no pueden comunicarse con los servicios en node03.
+
+    Al revisar los archivos de configuración de red en node02, se sospecha que
+    la migración reciente dejó un error de sintaxis en el archivo de Netplan
+    y que la directiva de enrutamiento estático fue omitida por completo.
+
+    Como Ingeniero de Sistemas L2/L3, su misión es diagnosticar el fallo de
+    configuración, corregir el archivo declarativo, agregar la ruta estática
+    faltante hacia la subred de pods (10.244.0.0/16) y aplicar los cambios
+    en caliente sin reiniciar el servidor.
+
+    ARQUITECTURA DE RED
+    --------------------------------------------------------------------------------
+    Red de Gestión (SSH):     192.168.122.0/24  (eth0/ens5)
+    Red Interna del Clúster:  10.99.99.0/24     (eth1/ens6)
+      - node02-internal: 10.99.99.2
+      - node03-internal: 10.99.99.3
+    Subred de Pods (K8s):     10.244.0.0/16     (Ruta estática requerida)
+
+    PROCEDIMIENTO REQUERIDO
+    --------------------------------------------------------------------------------
+    1. Diagnóstico de Capa 2/3:
+       - Conéctate a node02 y verifica el estado de las interfaces de red.
+       - Identifica cuál interfaz está caída y localiza el archivo de Netplan
+         que está fallando al cargarse.
+
+    2. Ingeniería de Configuración Declarativa:
+       - Edita el archivo de Netplan en /etc/netplan/ que corresponde a la
+         interfaz secundaria.
+       - Corrige el error de sintaxis (pista: revisa la indentación y los
+         dos puntos faltantes en la directiva 'addresses').
+       - Asegura que la interfaz levante con IP estática 10.99.99.2/24.
+
+    3. Enrutamiento Estático Persistente:
+       - Agrega la ruta estática hacia la subred de pods 10.244.0.0/16
+         directamente en el archivo de Netplan (directiva 'routes').
+       - El gateway para esta ruta debe ser 10.99.99.3 (node03-internal).
+
+    4. Aplicación en Caliente y Validación:
+       - Aplica los cambios de Netplan sin reiniciar el sistema.
+       - Verifica que la interfaz secundaria tenga la IP correcta y que
+         la tabla de enrutamiento muestre la ruta hacia 10.244.0.0/16.
+
+    5. Pipeline de Evidencia a node03:
+       - Destino: /opt/ops-compliance/net-003/network_evidence.txt
+       - Desde node01, envía mediante pipeline SSH la salida consolidada de:
+         a) ip addr show (filtrando la interfaz secundaria)
+         b) ip route show 10.244.0.0/16
+       - NO generar archivos temporales locales en node01.
+    --------------------------------------------------------------------------------
+    CRITERIOS DE ACEPTACIÓN
+    --------------------------------------------------------------------------------
+     [ ] Interfaz secundaria UP con IP 10.99.99.2/24 asignada              --> 25%
+     [ ] Archivo de Netplan sin errores de sintaxis y aplicado             --> 25%
+     [ ] Ruta estática a 10.244.0.0/16 vía 10.99.99.3 presente             --> 25%
+     [ ] Evidencia enviada a node03:/opt/ops-compliance/net-003/           --> 25%
+     [ ] CERO archivos de resultados almacenados en node01  (DESCALIFICA)
+
+    REGLA DE ORO: Bajo ninguna circunstancia reinicies node02. Los cambios
+    deben aplicarse en caliente con 'netplan apply'. La evidencia debe fluir
+    por pipeline SSH sin dejar rastros en node01.
+  ================================================================================
+  TICKET
+
+            # Limpiar y mostrar ticket al iniciar sesión
+            sed -i '/TICKET/d' /home/vagrant/.bashrc 2>/dev/null || true
+            sed -i '/# Mostrar/d' /home/vagrant/.bashrc 2>/dev/null || true
+            cat << 'EOF' >> /home/vagrant/.bashrc
+  clear
+  cat /home/vagrant/TICKET_NET-003.txt
+  EOF
+          SHELL
+        end
+
+        # ── PROVISIONADO ESPECÍFICO: INYECCIÓN DE FALLOS EN NODE02 ──
+        if node[:name] == "node02"
+          node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
+            echo "💥 Inyectando escenario de interfaz caída en #{node[:name]}..."
+            
+            # 1. Identificar la interfaz secundaria (será ens6 o eth1 dependiendo de Vagrant)
+            SECONDARY_IF=$(ip -o link show | awk -F': ' '/10.99.99.2/ {print $2}' | cut -d'@' -f1)
+            if [ -z "$SECONDARY_IF" ]; then
+              # Si no tiene IP aún, buscar la segunda interfaz
+              SECONDARY_IF=$(ip -o link show | awk -F': ' 'NR==3 {print $2}' | cut -d'@' -f1)
+            fi
+            echo "Interfaz secundaria detectada: $SECONDARY_IF"
+            
+            # 2. Bajar la interfaz para simular el fallo
+            ip link set $SECONDARY_IF down 2>/dev/null || true
+            ip addr flush dev $SECONDARY_IF 2>/dev/null || true
+            
+            # 3. Inyectar archivo de Netplan ROTO con error de sintaxis
+            # Error intencional: Falta los dos puntos (:) después de 'addresses'
+            # y no se incluye la directiva de rutas (routes)
+            cat > /etc/netplan/60-secondary.yaml << 'NETPLAN'
   network:
     version: 2
     ethernets:
-      dummy0:
+      ens6:
         dhcp4: no
         addresses
-          - 10.99.99.1/24
+          - 10.99.99.2/24
   NETPLAN
-        netplan apply 2>/dev/null || true
-      else
-        # ENTORNO RHEL/CENTOS (systemd-networkd)
-        mkdir -p /etc/systemd/network
-        # Error intencional: Nombre de sección typo ([Networkx]) y falta [Route]
-        cat > /etc/systemd/network/20-dummy0.network << 'NETWORK'
-  [Match]
-  Name=dummy0
+            
+            # Intentar aplicar (fallará por el error de sintaxis)
+            netplan apply 2>/dev/null || echo "Netplan apply falló (esperado por error de sintaxis)"
+            
+            echo "✅ Escenario de interfaz caída y Netplan roto inyectado en node02."
+          SHELL
+        end
+        
+        # ── PROVISIONADO ESPECÍFICO: CONFIGURAR NODE03 COMO GATEWAY DE PODS ──
+        if node[:name] == "node03"
+          node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
+            echo "🔒 Configurando node03 como gateway de la subred de pods..."
+            
+            # Habilitar IP forwarding para que node03 pueda rutear hacia los pods
+            sysctl -w net.ipv4.ip_forward=1
+            echo 'net.ipv4.ip_forward=1' > /etc/sysctl.d/99-pod-routing.conf
+            
+            # Agregar una ruta negra (blackhole) para simular la subred de pods
+            # En un entorno real, aquí estaría el CNI de Kubernetes
+            ip route add blackhole 10.244.0.0/16 2>/dev/null || true
+            
+            echo "✅ node03 configurado como gateway de pods (10.244.0.0/16)."
+          SHELL
+        end
 
-  [Networkx]
-  Address=10.99.99.1/24
-  NETWORK
-        systemctl restart systemd-networkd 2>/dev/null || true
-      fi
-      
-      echo '[NET-003] Escenario de interfaz y enrutamiento inyectado en node02.'
-      exit 0
-  INNEREOF
-  " < /dev/null
-  echo -e "\e[1;32m✔ node02: Interfaz secundaria caída y config declarativa rota.\e[0m"
-
-  # ─────────────────────────────────────────────────────────────────────────────
-  # 4. PREPARAR BÓVEDA EN node03
-  # ─────────────────────────────────────────────────────────────────────────────
-  echo -e "\e[1;33m⏳ Preparando bóveda de evidencia en node03...\e[0m"
-  $SSH ${USER_NET}@${NODE_VAULT} "
-    echo $PASS | sudo --stdin bash << 'INNEREOF'
-      rm -rf /opt/ops-compliance/net-003/
-      mkdir -p /opt/ops-compliance/net-003/
-      chown -R ${USER_NET}:${USER_NET} /opt/ops-compliance/net-003/
-      chmod 750 /opt/ops-compliance/net-003/
-      echo '[NET-003] Bóveda de evidencia en node03 preparada.'
-      exit 0
-  INNEREOF
-  " < /dev/null
-  echo -e "\e[1;32m✔ node03: Bóveda preparada.\e[0m"
-
-  # ─────────────────────────────────────────────────────────────────────────────
-  # 5. MOSTRAR EL TICKET (Nivel Senior / L2-L3)
-  # ─────────────────────────────────────────────────────────────────────────────
-  clear
-  echo -e "\e[1;36m================================================================================\e[0m"
-  echo -e "\e[1;32m  TICKET INC-3003  │  Severidad: ALTA  │  Ambiente: CLÚSTER DISTRIBUIDO\e[0m"
-  echo -e "\e[1;36m================================================================================\e[0m"
-  echo -e "\e[1;33m  NET-003-MN — La Interfaz Fantasma: Enrutamiento y Capa 2\e[0m"
-  echo -e "\e[1;36m  Módulo: Networking  │  Dificultad: 7/10  │  Nivel: L2/L3\e[0m"
-  echo -e "\e[1;36m--------------------------------------------------------------------------------\e[0m"
-  echo -e " \e[1mArquitectura del Escenario:\e[0m"
-  echo -e "  \e[1;34m[node01]\e[0m → Estación del Administrador     (TU POSICIÓN ACTUAL)"
-  echo -e "  \e[1;32m[node02]\e[0m → Servidor de Aplicaciones       (AFECTADO: INTERFAZ Y RUTAS)"
-  echo -e "  \e[1;31m[node03]\e[0m → Servidor Backend / Bóveda      (DESTINO DE EVIDENCIA)"
-  echo -e "\e[1;36m--------------------------------------------------------------------------------\e[0m"
-  echo -e ""
-  echo -e " \e[1mContexto del Incidente:\e[0m"
-  echo -e "  Tras una actualización de kernel y un reinicio del servicio de red en node02,"
-  echo -e "  la interfaz secundaria (simulada como 'dummy0') no ha levantado. Esto ha"
-  echo -e "  dejado aislado al nodo de la red interna del clúster. Además, el equipo de"
-  echo -e "  Kubernetes reporta que los pods no pueden comunicarse con los servicios en"
-  echo -e "  node03 porque falta la ruta estática hacia la subred de pods (10.244.0.0/16)."
-  echo -e ""
-  echo -e "  Al revisar los archivos de configuración declarativa de red en node02, se"
-  echo -e "  sospecha que la migración reciente dejó un error de sintaxis en el archivo"
-  echo -e "  de configuración y que la directiva de enrutamiento fue omitida por completo."
-  echo -e ""
-  echo -e " \e[1;33mRestricciones Operativas:\e[0m"
-  echo -e "  \e[1;31m⚠\e[0m  No está permitido reiniciar el sistema operativo (reboot)."
-  echo -e "     Los cambios deben aplicarse en caliente recargando el servicio de red."
-  echo -e "  \e[1;31m⚠\e[0m  La configuración debe ser persistente en los archivos del sistema"
-  echo -e "     (Netplan o systemd-networkd). No se aceptan soluciones efímeras solo con 'ip'."
-  echo -e "  \e[1;31m⚠\e[0m  CERO archivos intermedios en node01. Todo debe fluir vía pipeline SSH."
-  echo -e ""
-  echo -e " \e[1;33mProcedimiento Requerido:\e[0m"
-  echo -e ""
-  echo -e "  \e[1;31m1. Diagnóstico de Capa 2/3:\e[0m"
-  echo -e "     Identifica la interfaz caída y localiza el archivo de configuración"
-  echo -e "     declarativa que está fallando al cargarse por el servicio de red."
-  echo -e ""
-  echo -e "  \e[1;31m2. Ingeniería de Configuración Declarativa:\e[0m"
-  echo -e "     Corrige el error de sintaxis en el archivo de configuración."
-  echo -e "     Asegura que la interfaz levante con IP estática (10.99.99.1/24)."
-  echo -e ""
-  echo -e "  \e[1;31m3. Enrutamiento Estático Persistente:\e[0m"
-  echo -e "     Integra la ruta estática hacia la subred 10.244.0.0/16 directamente"
-  echo -e "     en el archivo de configuración de red (o mediante el mecanismo de"
-  echo -e "     persistencia de rutas nativo de tu distribución)."
-  echo -e ""
-  echo -e "  \e[1;31m4. Aplicación en Caliente y Validación:\e[0m"
-  echo -e "     Recarga el servicio de red para aplicar los cambios sin reiniciar."
-  echo -e "     Verifica que la interfaz tenga la IP y que la tabla de enrutamiento"
-  echo -e "     contenga la ruta hacia 10.244.0.0/16."
-  echo -e ""
-  echo -e "  \e[1;31m5. Pipeline de Evidencia a node03:\e[0m"
-  echo -e "     Destino: /opt/ops-compliance/net-003/network_evidence.txt"
-  echo -e "     La evidencia debe incluir la salida de 'ip addr show dummy0' y"
-  echo -e "     'ip route show 10.244.0.0/16', enviada directamente desde node02."
-  echo -e ""
-  echo -e " \e[1;33mCriterios de Aceptación:\e[0m"
-  echo -e "  [ ] Interfaz dummy0 UP con IP 10.99.99.1/24 asignada correctamente   --> \e[1;35m25%\e[0m"
-  echo -e "  [ ] Archivo de configuración declarativa sin errores de sintaxis      --> \e[1;35m25%\e[0m"
-  echo -e "  [ ] Ruta estática a 10.244.0.0/16 presente y persistente              --> \e[1;35m25%\e[0m"
-  echo -e "  [ ] Evidencia (network_evidence.txt) presente en la bóveda node03     --> \e[1;35m25%\e[0m"
-  echo -e "  [ ] CERO archivos de resultados almacenados en node01  \e[1;31m(DESCALIFICA)\e[0m"
-  echo -e ""
-  echo -e " \e[1;36m================================================================================\e[0m"
-  EOF
-
-  bash /tmp/setup-net003.sh && rm -f /tmp/setup-net003.sh
+        # ── PROVISIONADO ESPECÍFICO: PREPARAR BÓVEDA EN NODE03 ──
+        if node[:name] == "node03"
+          node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
+            echo "🔒 Preparando bóveda de auditoría en #{node[:name]}..."
+            mkdir -p /opt/ops-compliance/net-003/
+            chown -R bob:bob /opt/ops-compliance/net-003/
+            chmod 750 /opt/ops-compliance/net-003/
+            echo "✅ Bóveda /opt/ops-compliance/net-003/ lista."
+          SHELL
+        end
+      end
+    end
+  end
 tags:
   - Laboratorios-del-LFCS
   - Networking
