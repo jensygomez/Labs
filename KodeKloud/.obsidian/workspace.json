@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/USR-002 -El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/USR-003 - La Bomba de Tenedores (Fork Bomb) – Límites de Recursos de Usuario.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "USR-002 -El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0"
+              "title": "USR-003 - La Bomba de Tenedores (Fork Bomb) – Límites de Recursos de Usuario"
             }
           }
         ]
@@ -203,13 +203,15 @@
   },
   "active": "fe9da27ba1f1a9a4",
   "lastOpenFiles": [
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/OD-003 - Sintonizando el Núcleo – Parámetros del Kernel y Análisis Forense de Logs - V1.0.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/OD-002 - El Servicio Zombi – Diagnóstico de Procesos y Creación de Units systemd - V1.0.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/USR-002 -El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/USR-003 - La Bomba de Tenedores (Fork Bomb) – Límites de Recursos de Usuario.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/Lista de 6 Laboratorios.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Networking/NET-002 - La Paradoja Temporal – Deriva de Reloj y Fallo de Autenticación en Clúster.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/EC-002 - La Estructura Colapsada – Gestión Avanzada de Archivos y Enlaces - V1.0.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/EC-003 - El Permiso Prohibido – Control de Acceso y Bits Especiales - V1.0.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/OD-003 - Sintonizando el Núcleo – Parámetros del Kernel y Análisis Forense de Logs - V1.0.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/OD-002 - El Servicio Zombi – Diagnóstico de Procesos y Creación de Units systemd - V1.0.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Storage/STG-002 - El Laberinto LVM – Volúmenes Lógicos que No Montan y VG Fragmentado - V1.0.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Operations Deployment/Lista de Laboratorios Operations deployment.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Essential Commands/Lista de Laboratorios.md",
@@ -228,8 +230,6 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Bash Script/Lista de Laboratorios BASH.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Networking/lista de 10 laboratorios.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Networking/NET-002 - La Paradoja Temporal – Deriva de Reloj y Fallo de Autenticación en Clúst.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Networking/PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Users and Groups/USR-002 -El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/vagrantfile",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Vagrant/vagrantfile",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Vagrant/vagrant",
