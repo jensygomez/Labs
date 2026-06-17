@@ -4,34 +4,36 @@ tags:
 ---
 # 🗺️ Mapa de Control: LFCS
 
-| Essential Comands                                                                           | Tiempo Total todos los ciclos | **Fecha 1er Intento** |             Ciclos              |
-| ------------------------------------------------------------------------------------------- | :---------------------------: | :-------------------: | :-----------------------------: |
-| [[EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema - V1.0]]            |            40 min             |     `14/06/2026`      | <input type="checkbox" checked> |
-| [[EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema - V2.0]]            |                               |                       |                                 |
-| [[EC-002 - La Estructura Colapsada – Gestión Avanzada de Archivos y Enlaces - V1.0]]        |            30 min             |     `16/06/2026`      | <input type="checkbox" checked> |
-| [[EC-003 - El Permiso Prohibido – Control de Acceso y Bits Especiales - V1.0]]              |            40 min             |     `16/06/2026`      | <input type="checkbox" checked> |
-| **Operations Deployments**                                                                  |                               |                       |                                 |
-| [[OD-001 - El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro - V1.0]]        |            30 min             |     `15/06/2026`      | <input type="checkbox" checked> |
-| [[OD-002 - El Servicio Zombi – Diagnóstico de Procesos y Creación de Units systemd - V1.0]] |            35 min             |     `16/06/2026`      | <input type="checkbox" checked> |
-| **Users and Groups**                                                                        |                               |                       |                                 |
-| [[USR-001 - El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración]]        |            40 min             |     `11/06/2026`      | <input type="checkbox" checked> |
-| [[USR-002 -El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel)]]       |            40 min             |     `15/06/2026`      | <input type="checkbox" checked> |
-| **Networking**                                                                              |                               |                       |                                 |
-| [[NET-001 - El Candado Oxidado – Bloqueo de Acceso SSH y Resolución de Nombres]]            |            30 min             |     `11/06/2026`      | <input type="checkbox" checked> |
-| [[NET-002 - La Paradoja Temporal – Deriva de Reloj y Fallo de Autenticación en Clúster]]    |            60 min             |     `15/06/2026`      | <input type="checkbox" checked> |
-| **Storage**                                                                                 |                               |                       |                                 |
-| [[STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente]]       |            40 min             |     `14/06/2026`      | <input type="checkbox" checked> |
-| [[STG-002 - El Laberinto LVM – Volúmenes Lógicos que No Montan y VG Fragmentado - V1.0]]    |            40 min             |     `16/06/2026`      | <input type="checkbox" checked> |
-| **Bash Avanzado**                                                                           |                               |                       |                                 |
-| [[BS-001 - El Eco Silencioso – Variables y Redirecciones]]                                  |            30 min             |     `13/06/2026`      | <input type="checkbox" checked> |
-| [[BS-002 - El Portero Lógico – Condicionales y Validaciones]]                               |            30 min             |     `15/06/2026`      | <input type="checkbox" checked> |
-| **Docker**                                                                                  |                               |                       |                                 |
-| [[DK-001 - El Contenedor Reincidente Fallo de Persistencia y Entorno]]                      |            20 min             |     `11/06/2026`      | <input type="checkbox" checked> |
-| [[DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red]]                  |            40 min             |     `12/06/2026`      | <input type="checkbox" checked> |
-|                                                                                             |                               |                       |                                 |
-|                                                                                             |                               |                       |                                 |
-|                                                                                             |        **09:05 horas**        |                       |                                 |
-|                                                                                             |                               |                       |                                 |
+| Essential Comands                                                                             | Dificultad | Level Escalation |     Tiempo      | **Fecha 1er Intento** |             Ciclos              |
+| --------------------------------------------------------------------------------------------- | :--------: | :--------------: | :-------------: | :-------------------: | :-----------------------------: |
+| [[EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema - V1.0]]              |            |                  |     40 min      |     `14/06/2026`      | <input type="checkbox" checked> |
+| [[EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema - V2.0]]              |            |                  |                 |                       |                                 |
+| [[EC-002 - La Estructura Colapsada – Gestión Avanzada de Archivos y Enlaces - V1.0]]          |            |                  |     30 min      |     `16/06/2026`      | <input type="checkbox" checked> |
+| [[EC-003 - El Permiso Prohibido – Control de Acceso y Bits Especiales - V1.0]]                |            |                  |     40 min      |     `16/06/2026`      | <input type="checkbox" checked> |
+| **Operations Deployments**                                                                    |            |                  |                 |                       |                                 |
+| [[OD-001 - El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro - V1.0]]          |            |                  |     30 min      |     `15/06/2026`      | <input type="checkbox" checked> |
+| [[OD-002 - El Servicio Zombi – Diagnóstico de Procesos y Creación de Units systemd - V1.0]]   |            |                  |     35 min      |     `16/06/2026`      | <input type="checkbox" checked> |
+| [[OD-003 - Sintonizando el Núcleo – Parámetros del Kernel y Análisis Forense de Logs - V1.0]] |    7.5     |        L3        |                 |                       |                                 |
+| **Users and Groups**                                                                          |            |                  |                 |                       |                                 |
+| [[USR-001 - El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración]]          |            |                  |     40 min      |     `11/06/2026`      | <input type="checkbox" checked> |
+| [[USR-002 -El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel)]]         |            |                  |     40 min      |     `15/06/2026`      | <input type="checkbox" checked> |
+| **Networking**                                                                                |            |                  |                 |                       |                                 |
+| [[NET-001 - El Candado Oxidado – Bloqueo de Acceso SSH y Resolución de Nombres]]              |            |                  |     30 min      |     `11/06/2026`      | <input type="checkbox" checked> |
+| [[NET-002 - La Paradoja Temporal – Deriva de Reloj y Fallo de Autenticación en Clúster]]      |            |                  |     60 min      |     `15/06/2026`      | <input type="checkbox" checked> |
+| **Storage**                                                                                   |            |                  |                 |                       |                                 |
+| [[STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente]]         |            |                  |     40 min      |     `14/06/2026`      | <input type="checkbox" checked> |
+| [[STG-002 - El Laberinto LVM – Volúmenes Lógicos que No Montan y VG Fragmentado - V1.0]]      |            |                  |     40 min      |     `16/06/2026`      | <input type="checkbox" checked> |
+| **Bash Avanzado**                                                                             |            |                  |                 |                       |                                 |
+| [[BS-001 - El Eco Silencioso – Variables y Redirecciones]]                                    |            |                  |     30 min      |     `13/06/2026`      | <input type="checkbox" checked> |
+| [[BS-002 - El Portero Lógico – Condicionales y Validaciones]]                                 |            |                  |     30 min      |     `15/06/2026`      | <input type="checkbox" checked> |
+| **Docker**                                                                                    |            |                  |                 |                       |                                 |
+| [[DK-001 - El Contenedor Reincidente Fallo de Persistencia y Entorno]]                        |            |                  |     20 min      |     `11/06/2026`      | <input type="checkbox" checked> |
+| [[DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red]]                    |            |                  |     40 min      |     `12/06/2026`      | <input type="checkbox" checked> |
+|                                                                                               |            |                  |                 |                       |                                 |
+|                                                                                               |            |                  |                 |                       |                                 |
+|                                                                                               |            |                  | **09:05 horas** |                       |                                 |
+|                                                                                               |            |                  |                 |                       |                                 |
+|                                                                                               |            |                  |                 |                       |                                 |
 
 
 
