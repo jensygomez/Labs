@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Users and Groups
 Playground: USR-002-MN
-Titulo: El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (/etc/skel)
+Titulo: El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (/etc/skel) - V1.0
 Fecha de Inicio: 2026-06-15
 Dificultad: 7/10
 Level Escalation: L2/L3

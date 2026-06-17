@@ -20,127 +20,176 @@ Competencias: |-
   - Modificar parámetros del kernel en tiempo de ejecución (runtime) para aplicar mitigaciones inmediatas sin necesidad de reiniciar el servidor.
   - Persistir configuraciones del kernel de forma segura, modular y estructurada utilizando el directorio /etc/sysctl.d/, evitando la modificación directa y desordenada de /etc/sysctl.conf.
   - Validar los cambios aplicados y enviar la evidencia forense (logs filtrados) junto con la configuración activa a node03 vía pipeline SSH, sin materializar archivos en node01.
-Script: |-
-  cat << 'OUTEREOF' > /tmp/setup_od003.sh
+Script Vagrant: |-
+  # -*- mode: ruby -*-
 
-  #!/bin/bash
-  set -e
+  # vi: set ft=ruby :
 
-  PASS="caleston123"
-  USER_NET="bob"
-  NODE_TARGET="node02"
-  NODE_VAULT="node03"
-  SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=10"
-  SSH2="sshpass -p $PASS ssh $SSH_OPTS ${USER_NET}@${NODE_TARGET}"
-  SSH3="sshpass -p $PASS ssh $SSH_OPTS ${USER_NET}@${NODE_VAULT}"
+  Vagrant.configure("2") do |config|
+    config.vm.box = "generic/ubuntu2204"
 
-  echo -e "\e[1;33m⏳ Verificando sshpass en node01...\e[0m"
-  if ! command -v sshpass &>/dev/null; then
-      echo caleston123 | sudo -S apt-get install -y sshpass -qq
-  fi
+    nodes = [
+      { name: "node01", ip: "192.168.122.11", extra_disks: [] },
+      { name: "node02", ip: "192.168.122.12", extra_disks: [] }, # OD-003: No requiere discos extra, solo tuning de kernel
+      { name: "node03", ip: "192.168.122.13", extra_disks: [] }
+    ]
 
-  echo -e "\e[1;33m⏳ Instalando sshpass en nodos remotos...\e[0m"
-  $SSH2 "echo caleston123 | sudo -S apt-get install -y sshpass -qq 2>/dev/null || true"
-  $SSH3 "echo caleston123 | sudo -S apt-get install -y sshpass -qq 2>/dev/null || true"
+    nodes.each do |node|
+      config.vm.define node[:name] do |node_config|
+        node_config.vm.hostname = node[:name]
+        node_config.vm.network "private_network", ip: node[:ip], libvirt__network_name: "default"
 
-  echo -e "\e[1;33m⏳ Inyectando escenario de inestabilidad de Kernel en node02...\e[0m"
-  # NOTA: Usamos la técnica de heredoc por stdin (INNEREOF) para evitar problemas de escaping 
-  # y garantizar que los comandos multi-línea se ejecuten limpiamente con privilegios de root.
-  $SSH2 "echo caleston123 | sudo --stdin bash << 'INNEREOF'
-      # 1. Establecer un estado inicial del kernel propenso a fallos (simulando mala configuración)
-      sysctl -w vm.panic_on_oom=1
-      sysctl -w vm.swappiness=60
-      sysctl -w net.ipv4.ip_forward=0
+        node_config.vm.provider "libvirt" do |lv|
+          lv.memory = 1024
+          lv.cpus = 1
+          lv.driver = "kvm"
+          
+          # Crear discos adicionales según la configuración del nodo (vacío para OD-003)
+          node[:extra_disks].each do |size|
+            lv.storage :file, :size => size, :type => 'qcow2'
+          end
+        end
 
-      # 2. Inyectar registros forenses realistas en el buffer del kernel (dmesg/journalctl)
-      # Esto simula que el OOM Killer ya ha actuado y hay problemas de red/conexiones.
-      logger -p kern.err -t kernel 'Out of memory: Killed process 14523 (java-worker) total-vm:2048000kB, anon-rss:1500000kB, file-rss:0kB, shmem-rss:0kB'
-      logger -p kern.err -t kernel 'Out of memory: Killed process 14890 (node-app) total-vm:1048000kB, anon-rss:800000kB, file-rss:0kB, shmem-rss:0kB'
-      logger -p kern.warning -t kernel 'nf_conntrack: table full, dropping packet'
-      logger -p kern.warning -t kernel 'TCP: time wait bucket table overflow'
+        # ── PROVISIONADO GENERAL (Todos los nodos) ──
+        node_config.vm.provision "shell", inline: <<-SHELL
+          echo "🔧 Configurando #{node[:name]}..."
+          
+          # 1. Resolver nombres de host localmente
+          cat << 'HOSTS' >> /etc/hosts
+  192.168.122.11 node01
+  192.168.122.12 node02
+  192.168.122.13 node03
+  HOSTS
+          
+          # 2. Crear usuario bob y dar permisos
+          useradd -m -s /bin/bash bob
+          echo 'bob:caleston123' | chpasswd
+          echo 'bob ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/bob
+          chmod 0440 /etc/sudoers.d/bob
+          
+          # 3. Instalar herramientas esenciales para el pipeline y diagnóstico
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -qq
+          apt-get install -y -qq sshpass
+        SHELL
 
-      # 3. Dejar un proceso inofensivo pero visible que el ingeniero podría investigar como 'sospechoso'
-      mkdir -p /opt/suspicious-app
-      printf '#!/bin/bash\nwhile true; do sleep 300; done\n' > /opt/suspicious-app/daemon.sh
-      chmod +x /opt/suspicious-app/daemon.sh
-      setsid /opt/suspicious-app/daemon.sh </dev/null >/dev/null 2>&1 &
+        # ── PROVISIONADO ESPECÍFICO: TICKET EN NODE01 ──
+        if node[:name] == "node01"
+          node_config.vm.provision "shell", privileged: false, inline: <<-SHELL
+            echo "🎫 Generando Ticket de Incidente para node01..."
+            
+            cat << 'TICKET' > /home/vagrant/TICKET_OD-003.txt
+  ================================================================================
+    TICKET OD-003  │  Severidad: ALTA  │  Ambiente: CLÚSTER DISTRIBUIDO
+  ================================================================================
+    🧠 OD-003-MN — Sintonizando el Núcleo: Parámetros del Kernel y Análisis Forense
+    Módulo: Operations Deployment  │  Dificultad: 7.5/10  │  Nivel: L3
+  --------------------------------------------------------------------------------
+    Ubicación de Control:  node01  (Estación del Administrador — bob)
+    Nodo a Intervenir:     node02  (Servidor con inestabilidad de Kernel)
+    Nodo Bóveda Destino:   node03  (Bóveda de Gobernanza — /opt/ops-compliance/od-003/)
+    Contraseña del Clúster: caleston123
+  --------------------------------------------------------------------------------
 
-      echo '[OD-003] Escenario de Kernel y Logs inyectado correctamente en node02.'
-      exit 0
-  INNEREOF" || echo -e "\e[1;33m  [!] Advertencia: La inyección en node02 tuvo un detalle, pero continuamos.\e[0m"
+    El equipo de SRE ha reportado inestabilidad severa en node02: caídas 
+    intermitentes de conectividad de red y la terminación abrupta de procesos 
+    críticos de la aplicación. Se sospecha fuertemente de una configuración 
+    agresiva del Kernel (OOM Killer) y parámetros de red subóptimos para la 
+    carga de trabajo actual.
 
-  echo -e "\e[1;33m⏳ Preparando bóveda de evidencia en node03...\e[0m"
-  $SSH3 "echo caleston123 | sudo -S bash -c '
-      rm -rf /opt/ops-compliance/od-003/
-      mkdir -p /opt/ops-compliance/od-003/
-      chown -R bob:bob /opt/ops-compliance/od-003/
-      chmod 750 /opt/ops-compliance/od-003/
-      exit 0
-  '" || echo -e "\e[1;33m  [!] Advertencia: La preparación de node03 tuvo un detalle, pero continuamos.\e[0m"
+    Como Ingeniero de Sistemas L3, su misión es realizar un análisis forense 
+    de los logs del kernel para confirmar la causa raíz, aplicar una mitigación 
+    inmediata en tiempo de ejecución (runtime) y, finalmente, persistir la 
+    corrección de forma modular y profesional.
 
+    PROCEDIMIENTO REQUERIDO
+    --------------------------------------------------------------------------------
+    1. Análisis Forense de Logs del Kernel:
+    - Conectarse a node02 y utilizar herramientas nativas de diagnóstico 
+      (ej. journalctl -k, dmesg -T) para filtrar y confirmar eventos críticos 
+      (ej. 'Out of memory', 'dropping packet').
+
+    2. Mitigación en Runtime (No Persistente):
+    - Ajustar los parámetros del kernel en tiempo real para estabilizar el nodo 
+      sin reiniciar (ej. vm.panic_on_oom=0, vm.swappiness=10, net.ipv4.ip_forward=1).
+    - Verificar su aplicación inmediata.
+
+    3. Persistencia Modular del Kernel:
+    - Garantizar que los cambios sobrevivan a un reinicio.
+    - CRÍTICO: NO editar directamente /etc/sysctl.conf. Crear un archivo de 
+      configuración nuevo y modular dentro de /etc/sysctl.d/ (ej. 99-od003-tuning.conf) 
+      y aplicar los cambios usando el método adecuado (sysctl --system o sysctl -p).
+
+    4. Pipeline de Evidencia a node03:
+    - Destino: /opt/ops-compliance/od-003/kernel_evidence.txt
+    - Desde node01, enviar mediante un pipeline SSH la salida consolidada de:
+      a) Logs filtrados del kernel (ej. journalctl -k -p err..warning).
+      b) Verificación de los parámetros activos (sysctl <parametro>).
+    - No generar archivos temporales locales en el nodo de control.
+    --------------------------------------------------------------------------------
+    CRITERIOS DE ACEPTACIÓN
+    --------------------------------------------------------------------------------
+     [ ] Logs del kernel analizados y filtrados correctamente.
+     [ ] Parámetros del kernel modificados en runtime con valores seguros.
+     [ ] Configuración persistente creada en /etc/sysctl.d/ (NO en sysctl.conf).
+     [ ] Evidencia enviada a node03:/opt/ops-compliance/od-003/kernel_evidence.txt
+
+    REGLA DE ORO: Bajo ninguna circunstancia modifiques /etc/sysctl.conf 
+    directamente. La persistencia debe ser modular en /etc/sysctl.d/. 
+    La evidencia debe fluir por pipeline SSH sin dejar rastros en node01.
+  ================================================================================
+  TICKET
+
+            # Limpiar y mostrar ticket al iniciar sesión
+            sed -i '/TICKET/d' /home/vagrant/.bashrc 2>/dev/null || true
+            sed -i '/# Mostrar/d' /home/vagrant/.bashrc 2>/dev/null || true
+            cat << 'EOF' >> /home/vagrant/.bashrc
   clear
-  echo -e "\e[1;36m================================================================================\e[0m"
-  echo -e "\e[1;32m OD-003-v1 | Sintonizando el Núcleo | Dificultad: 7.5/10 | L3\e[0m"
-  echo -e "\e[1;36m================================================================================\e[0m"
-  echo -e " Contraseña del cluster: \e[1mcaleston123\e[0m"
-  echo -e " Control: node01  |  Afectado: node02  |  Bóveda: node03:/opt/ops-compliance/od-003/"
-  echo -e "\e[1;36m--------------------------------------------------------------------------------\e[0m"
-  echo -e ""
-  echo -e " El equipo de SRE ha reportado inestabilidad severa en node02: caídas intermitentes"
-  echo -e " de conectividad de red y la terminación abrupta de procesos críticos de la aplicación."
-  echo -e " Se sospecha fuertemente de una configuración agresiva del Kernel (OOM Killer) y"
-  echo -e " parámetros de red subóptimos para la carga de trabajo actual."
-  echo -e ""
-  echo -e " Como Ingeniero de Sistemas L3, su misión es realizar un análisis forense de los"
-  echo -e " logs del kernel para confirmar la causa raíz, aplicar una mitigación inmediata en"
-  echo -e " tiempo de ejecución (runtime) y, finalmente, persistir la corrección de forma"
-  echo -e " modular y profesional."
-  echo -e ""
-  echo -e "\e[1;33m RESTRICCIONES OPERACIONALES\e[0m"
-  echo -e "\e[1;36m--------------------------------------------------------------------------------\e[0m"
-  echo -e " \e[1m>\e[0m Toda la intervención debe realizarse desde node01 vía SSH."
-  echo -e " \e[1m>\e[0m NO se permite materializar archivos de reporte, logs o scripts temporales en node01."
-  echo -e " \e[1m>\e[0m La evidencia debe fluir directamente de node02 hacia node03 mediante pipeline SSH."
-  echo -e ""
-  echo -e "\e[1;33m PARÁMETROS TÉCNICOS OBLIGATORIOS (TICKET DE REMEDIACIÓN - NIVEL L3)\e[0m"
-  echo -e "\e[1;36m--------------------------------------------------------------------------------\e[0m"
-  echo -e ""
-  echo -e " \e[1m1. Análisis Forense de Logs del Kernel\e[0m"
-  echo -e "    Objetivo: Confirmar la hipótesis de OOM Killer o fallos de red."
-  echo -e "    \e[1;33mRestricción:\e[0m Debes utilizar herramientas nativas de diagnóstico de kernel"
-  echo -e "    (ej. journalctl -k, dmesg -T) y filtrar la salida para mostrar únicamente"
-  echo -e "    los eventos críticos (err, warning, o la palabra clave 'Out of memory')."
-  echo -e ""
-  echo -e " \e[1m2. Mitigación en Runtime (No Persistente)\e[0m"
-  echo -e "    Estado actual: vm.panic_on_oom=1 (Peligroso), vm.swappiness=60 (Alto), ip_forward=0."
-  echo -e "    Objetivo: Ajustar los parámetros en tiempo real para estabilizar el nodo sin reiniciar."
-  echo -e "    \e[1;33mRestricción:\e[0m Aplica cambios seguros (ej. vm.panic_on_oom=0, vm.swappiness=10,"
-  echo -e "    net.ipv4.ip_forward=1) y verifica su aplicación inmediata con sysctl."
-  echo -e ""
-  echo -e " \e[1m3. Persistencia Modular del Kernel\e[0m"
-  echo -e "    Objetivo: Garantizar que los cambios sobrevivan a un reinicio."
-  echo -e "    \e[1;33mRestricción CRÍTICA:\e[0m NO edites directamente /etc/sysctl.conf. Debes crear"
-  echo -e "    un archivo de configuración nuevo y modular dentro de /etc/sysctl.d/ (ej."
-  echo -e "    99-od003-tuning.conf) y aplicar los cambios usando el método adecuado."
-  echo -e ""
-  echo -e " \e[1m4. Pipeline de Evidencia a node03\e[0m"
-  echo -e "    Destino: /opt/ops-compliance/od-003/kernel_evidence.txt"
-  echo -e "    Debe contener, en este orden:"
-  echo -e "    a) La salida filtrada de los logs del kernel (ej. journalctl -k -p err..warning)."
-  echo -e "    b) La verificación de que los parámetros persisten y están activos (sysctl <param>). "
-  echo -e ""
-  echo -e "\e[1;33m CRITERIOS DE ACEPTACIÓN\e[0m"
-  echo -e "\e[1;36m--------------------------------------------------------------------------------\e[0m"
-  echo -e "  [ ] Logs del kernel analizados y filtrados correctamente                20%"
-  echo -e "  [ ] Parámetros del kernel modificados en runtime con valores seguros    30%"
-  echo -e "  [ ] Configuración persistente creada en /etc/sysctl.d/ (NO en sysctl.conf) 30%"
-  echo -e "  [ ] Evidencia (kernel_evidence.txt) presente en la bóveda node03        20%"
-  echo -e "  [ ] CERO archivos de resultados almacenados en node01  \e[1;31m(DESCALIFICA)\e[0m"
-  echo -e ""
-  echo -e "\e[1;36m================================================================================\e[0m"
-  OUTEREOF
+  cat /home/vagrant/TICKET_OD-003.txt
+  EOF
+          SHELL
+        end
 
-  bash /tmp/setup_od003.sh && rm -f /tmp/setup_od003.sh
+        # ── PROVISIONADO ESPECÍFICO: INYECCIÓN DE FALLOS EN NODE02 ──
+        if node[:name] == "node02"
+          node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
+            echo "💥 Inyectando escenario de inestabilidad de Kernel en #{node[:name]}..."
+            
+            # 1. Establecer un estado inicial del kernel propenso a fallos (simulando mala configuración)
+            sysctl -w vm.panic_on_oom=1
+            sysctl -w vm.swappiness=60
+            sysctl -w net.ipv4.ip_forward=0
+
+            # 2. Inyectar registros forenses realistas en el buffer del kernel (dmesg/journalctl)
+            # Esto simula que el OOM Killer ya ha actuado y hay problemas de red/conexiones.
+            logger -p kern.err -t kernel 'Out of memory: Killed process 14523 (java-worker) total-vm:2048000kB, anon-rss:1500000kB, file-rss:0kB, shmem-rss:0kB'
+            logger -p kern.err -t kernel 'Out of memory: Killed process 14890 (node-app) total-vm:1048000kB, anon-rss:800000kB, file-rss:0kB, shmem-rss:0kB'
+            logger -p kern.warning -t kernel 'nf_conntrack: table full, dropping packet'
+            logger -p kern.warning -t kernel 'TCP: time wait bucket table overflow'
+
+            # 3. Dejar un proceso inofensivo pero visible que el ingeniero podría investigar como 'sospechoso'
+            mkdir -p /opt/suspicious-app
+            printf '#!/bin/bash\nwhile true; do sleep 300; done\n' > /opt/suspicious-app/daemon.sh
+            chmod +x /opt/suspicious-app/daemon.sh
+            setsid /opt/suspicious-app/daemon.sh </dev/null >/dev/null 2>&1 &
+
+            echo "✅ Escenario de Kernel y Logs inyectado correctamente en node02."
+          SHELL
+        end
+        
+        # ── PROVISIONADO ESPECÍFICO: PREPARAR BÓVEDA EN NODE03 ──
+        if node[:name] == "node03"
+          node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
+            echo "🔒 Preparando bóveda de auditoría en #{node[:name]}..."
+            mkdir -p /opt/ops-compliance/od-003/
+            chown -R bob:bob /opt/ops-compliance/od-003/
+            chmod 750 /opt/ops-compliance/od-003/
+            echo "✅ Bóveda /opt/ops-compliance/od-003/ lista."
+          SHELL
+        end
+      end
+    end
+  end
 tags:
   - LFCS
   - RHCSA
@@ -160,3 +209,14 @@ Escenario: |-
 ---
 [[Laboratorios del LFCS]]
 ---
+Recently, I was assigned a high-severity ticket on a distributed cluster where node02 was experiencing severe instability — intermittent network connectivity drops and abrupt termination of critical application processes. The SRE team suspected aggressive kernel configuration as the root cause.
+
+My first step was forensic analysis. I connected remotely to node02 and used `journalctl` with kernel and priority filters to extract error and warning-level kernel events. This confirmed that `vm.panic_on_oom` was set to `1`, meaning any out-of-memory event was triggering an immediate kernel panic instead of allowing the OOM Killer to handle it gracefully — a critical misconfiguration in a production environment.
+
+Before making any changes, I documented the current values of all three target parameters as a baseline — a habit I follow to ensure traceability and safe rollback if needed.
+
+I then applied runtime mitigations using `sysctl --write` without rebooting the node: I set `vm.panic_on_oom` to `0` to prevent kernel panics, reduced `vm.swappiness` from `60` to `10` to lower memory pressure, and enabled `net.ipv4.ip_forward` for proper packet routing.
+
+For persistence, I deliberately avoided editing `/etc/sysctl.conf` directly. Instead, I created a modular, purpose-named configuration file under `/etc/sysctl.d/` — specifically `99-od003-tuning.conf` — which follows infrastructure best practices by keeping changes isolated, auditable, and easy to roll back independently. I then applied it with `sysctl --system` and verified the file was loaded correctly.
+
+Finally, I built a zero-footprint evidence pipeline: I streamed the consolidated kernel logs and parameter verification directly from node02 into node03's compliance vault via nested SSH, without writing any temporary files on the control node. The entire operation was performed remotely from node01 using `sshpass` for credential handling across the cluster.

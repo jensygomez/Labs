@@ -1,5 +1,4 @@
 # -*- mode: ruby -*-
-
 # vi: set ft=ruby :
 
 Vagrant.configure("2") do |config|
@@ -7,7 +6,7 @@ Vagrant.configure("2") do |config|
 
   nodes = [
     { name: "node01", ip: "192.168.122.11", extra_disks: [] },
-    { name: "node02", ip: "192.168.122.12", extra_disks: ['200M', '100M'] }, # STG-002: 2 discos específicos
+    { name: "node02", ip: "192.168.122.12", extra_disks: [] }, # OD-003: No requiere discos extra, solo tuning de kernel
     { name: "node03", ip: "192.168.122.13", extra_disks: [] }
   ]
 
@@ -21,7 +20,7 @@ Vagrant.configure("2") do |config|
         lv.cpus = 1
         lv.driver = "kvm"
         
-        # Crear discos adicionales según la configuración del nodo
+        # Crear discos adicionales según la configuración del nodo (vacío para OD-003)
         node[:extra_disks].each do |size|
           lv.storage :file, :size => size, :type => 'qcow2'
         end
@@ -44,10 +43,10 @@ HOSTS
         echo 'bob ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/bob
         chmod 0440 /etc/sudoers.d/bob
         
-        # 3. Instalar herramientas
+        # 3. Instalar herramientas esenciales para el pipeline y diagnóstico
         export DEBIAN_FRONTEND=noninteractive
         apt-get update -qq
-        apt-get install -y -qq sshpass parted lvm2
+        apt-get install -y -qq sshpass
       SHELL
 
       # ── PROVISIONADO ESPECÍFICO: TICKET EN NODE01 ──
@@ -55,80 +54,74 @@ HOSTS
         node_config.vm.provision "shell", privileged: false, inline: <<-SHELL
           echo "🎫 Generando Ticket de Incidente para node01..."
           
-          cat << 'TICKET' > /home/vagrant/TICKET_STG-002.txt
+          cat << 'TICKET' > /home/vagrant/TICKET_OD-003.txt
 ================================================================================
-  TICKET STG-002  │  Severidad: ALTA  │  Ambiente: CLÚSTER DISTRIBUIDO
+  TICKET OD-003  │  Severidad: ALTA  │  Ambiente: CLÚSTER DISTRIBUIDO
 ================================================================================
-  💾 STG-002-MN — El Laberinto LVM (Volúmenes que No Montan y VG Fragmentado)
-  Módulo: Storage  │  Dificultad: 7/10  │  Nivel: L2/L3
+  🧠 OD-003-MN — Sintonizando el Núcleo: Parámetros del Kernel y Análisis Forense
+  Módulo: Operations Deployment  │  Dificultad: 7.5/10  │  Nivel: L3
 --------------------------------------------------------------------------------
   Ubicación de Control:  node01  (Estación del Administrador — bob)
-  Nodo a Intervenir:     node02  (Servidor con LVM inconsistente)
-  Nodo Bóveda Destino:   node03  (Bóveda de Gobernanza — /opt/backup-vault/)
+  Nodo a Intervenir:     node02  (Servidor con inestabilidad de Kernel)
+  Nodo Bóveda Destino:   node03  (Bóveda de Gobernanza — /opt/ops-compliance/od-003/)
   Contraseña del Clúster: caleston123
 --------------------------------------------------------------------------------
 
-  Tras una ventana de mantenimiento fallida, el equipo de infraestructura 
-  reportó que el volumen de datos de la aplicación en node02 (/mnt/app-data) 
-  no está disponible. Una revisión preliminar indica que un intento de 
-  expansión de almacenamiento quedó a medias: el Grupo de Volúmenes (VG) 
-  presenta Physical Extents (PE) libres sin asignar, y el archivo /etc/fstab 
-  contiene una referencia a un UUID que ya no corresponde a la topología 
-  actual del sistema, impidiendo el montaje automático y arriesgando un 
-  fallo de arranque (Emergency Mode).
+  El equipo de SRE ha reportado inestabilidad severa en node02: caídas 
+  intermitentes de conectividad de red y la terminación abrupta de procesos 
+  críticos de la aplicación. Se sospecha fuertemente de una configuración 
+  agresiva del Kernel (OOM Killer) y parámetros de red subóptimos para la 
+  carga de trabajo actual.
 
-  Se requiere que un ingeniero senior tome el control, diagnostique la 
-  topología LVM real, recupere la persistencia del montaje y complete la 
-  expansión del volumen lógico para consumir todo el espacio disponible, 
-  asegurando la integridad del sistema de archivos existente.
+  Como Ingeniero de Sistemas L3, su misión es realizar un análisis forense 
+  de los logs del kernel para confirmar la causa raíz, aplicar una mitigación 
+  inmediata en tiempo de ejecución (runtime) y, finalmente, persistir la 
+  corrección de forma modular y profesional.
 
   PROCEDIMIENTO REQUERIDO
   --------------------------------------------------------------------------------
-  1. Diagnóstico y Saneamiento:
-  - Conectarse a node02 e identificar la topología LVM real y el UUID actual 
-    del filesystem utilizando las herramientas estándar de diagnóstico de bloques.
-  - Saneer el archivo /etc/fstab, eliminando o comentando la entrada obsoleta 
-    que está impidiendo el montaje y generando riesgo de fallo en el arranque.
+  1. Análisis Forense de Logs del Kernel:
+  - Conectarse a node02 y utilizar herramientas nativas de diagnóstico 
+    (ej. journalctl -k, dmesg -T) para filtrar y confirmar eventos críticos 
+    (ej. 'Out of memory', 'dropping packet').
 
-  2. Ingeniería del Almacenamiento (LVM):
-  - Identificar el Volumen Lógico (LV) de la aplicación y extenderlo para consumir 
-    el 100% del espacio libre (PE) disponible en su Grupo de Volúmenes (VG).
-  - Redimensionar el sistema de archivos subyacente en caliente (online) para que 
-    el sistema operativo reconozca la nueva capacidad sin interrumpir el servicio 
-    (sin desmontar).
+  2. Mitigación en Runtime (No Persistente):
+  - Ajustar los parámetros del kernel en tiempo real para estabilizar el nodo 
+    sin reiniciar (ej. vm.panic_on_oom=0, vm.swappiness=10, net.ipv4.ip_forward=1).
+  - Verificar su aplicación inmediata.
 
-  3. Despliegue y Validación de Persistencia:
-  - Registrar el montaje en /etc/fstab utilizando el UUID correcto y aplicando 
-    las opciones de resiliencia corporativas (noatime, nofail).
-  - Validar la sintaxis del fstab obligatoriamente con `sudo mount -a` y verificar 
-    que el punto de montaje esté activo y refleje el tamaño total expandido.
+  3. Persistencia Modular del Kernel:
+  - Garantizar que los cambios sobrevivan a un reinicio.
+  - CRÍTICO: NO editar directamente /etc/sysctl.conf. Crear un archivo de 
+    configuración nuevo y modular dentro de /etc/sysctl.d/ (ej. 99-od003-tuning.conf) 
+    y aplicar los cambios usando el método adecuado (sysctl --system o sysctl -p).
 
   4. Pipeline de Evidencia a node03:
-  - Destino: /opt/backup-vault/stg002_evidence.txt
-  - Desde node01, enviar mediante un pipeline SSH la salida consolidada de: 
-    'lsblk -f', 'vgs' y 'df -h /mnt/app-data', sin generar archivos temporales 
-    locales en el nodo de control.
+  - Destino: /opt/ops-compliance/od-003/kernel_evidence.txt
+  - Desde node01, enviar mediante un pipeline SSH la salida consolidada de:
+    a) Logs filtrados del kernel (ej. journalctl -k -p err..warning).
+    b) Verificación de los parámetros activos (sysctl <parametro>).
+  - No generar archivos temporales locales en el nodo de control.
   --------------------------------------------------------------------------------
   CRITERIOS DE ACEPTACIÓN
   --------------------------------------------------------------------------------
-   [ ] Diagnóstico correcto de la topología LVM y UUIDs reales.
-   [ ] /etc/fstab corregido con el UUID válido y opciones de resiliencia.
-   [ ] LV 'lv_apps' extendido al 100% del espacio libre del VG.
-   [ ] Filesystem redimensionado en caliente (sin pérdida de datos).
-   [ ] Evidencia enviada a node03:/opt/backup-vault/stg002_evidence.txt
+   [ ] Logs del kernel analizados y filtrados correctamente.
+   [ ] Parámetros del kernel modificados en runtime con valores seguros.
+   [ ] Configuración persistente creada en /etc/sysctl.d/ (NO en sysctl.conf).
+   [ ] Evidencia enviada a node03:/opt/ops-compliance/od-003/kernel_evidence.txt
 
-  REGLA DE ORO: Bajo ninguna circunstancia ejecutes 'mkfs' sobre el LV 
-  existente. Se asume que contiene datos de producción. La expansión debe 
-  ser 'online' y la corrección del fstab debe validarse con 'mount -a'.
+  REGLA DE ORO: Bajo ninguna circunstancia modifiques /etc/sysctl.conf 
+  directamente. La persistencia debe ser modular en /etc/sysctl.d/. 
+  La evidencia debe fluir por pipeline SSH sin dejar rastros en node01.
 ================================================================================
 TICKET
 
           # Limpiar y mostrar ticket al iniciar sesión
-          sed -i '/TICKET/d' /home/vagrant/.bashrc
-          sed -i '/# Mostrar/d' /home/vagrant/.bashrc
+          sed -i '/TICKET/d' /home/vagrant/.bashrc 2>/dev/null || true
+          sed -i '/# Mostrar/d' /home/vagrant/.bashrc 2>/dev/null || true
           cat << 'EOF' >> /home/vagrant/.bashrc
 clear
-cat /home/vagrant/TICKET_STG-002.txt
+cat /home/vagrant/TICKET_OD-003.txt
 EOF
         SHELL
       end
@@ -136,29 +129,27 @@ EOF
       # ── PROVISIONADO ESPECÍFICO: INYECCIÓN DE FALLOS EN NODE02 ──
       if node[:name] == "node02"
         node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
-          echo "💥 Inyectando fallos STG-002 en #{node[:name]}..."
+          echo "💥 Inyectando escenario de inestabilidad de Kernel en #{node[:name]}..."
           
-          # 0. Limpieza de residuos del STG-001 para evitar conflictos
-          umount /mnt/app-data 2>/dev/null || true
-          sed -i '/app-data/d' /etc/fstab
-          swapoff -a 2>/dev/null || true
-          wipefs -a /dev/vdb /dev/vdc 2>/dev/null || true
+          # 1. Establecer un estado inicial del kernel propenso a fallos (simulando mala configuración)
+          sysctl -w vm.panic_on_oom=1
+          sysctl -w vm.swappiness=60
+          sysctl -w net.ipv4.ip_forward=0
 
-          # 1. Crear la topología LVM base
-          pvcreate /dev/vdb /dev/vdc
-          vgcreate vg_apps /dev/vdb /dev/vdc
-          
-          # 2. Crear LV con solo 150M (dejando ~150M libres para que el alumno extienda)
-          lvcreate -n lv_apps -L 150M vg_apps
-          
-          # 3. Formatear y preparar punto de montaje
-          mkfs.ext4 /dev/vg_apps/lv_apps
-          mkdir -p /mnt/app-data
-          
-          # 4. LA TRAMPA: Insertar un UUID falso/obsoleto en fstab
-          echo "UUID=00000000-0000-0000-0000-000000000000 /mnt/app-data ext4 defaults 0 0" >> /etc/fstab
-          
-          echo "✅ Fallos STG-002 inyectados correctamente."
+          # 2. Inyectar registros forenses realistas en el buffer del kernel (dmesg/journalctl)
+          # Esto simula que el OOM Killer ya ha actuado y hay problemas de red/conexiones.
+          logger -p kern.err -t kernel 'Out of memory: Killed process 14523 (java-worker) total-vm:2048000kB, anon-rss:1500000kB, file-rss:0kB, shmem-rss:0kB'
+          logger -p kern.err -t kernel 'Out of memory: Killed process 14890 (node-app) total-vm:1048000kB, anon-rss:800000kB, file-rss:0kB, shmem-rss:0kB'
+          logger -p kern.warning -t kernel 'nf_conntrack: table full, dropping packet'
+          logger -p kern.warning -t kernel 'TCP: time wait bucket table overflow'
+
+          # 3. Dejar un proceso inofensivo pero visible que el ingeniero podría investigar como 'sospechoso'
+          mkdir -p /opt/suspicious-app
+          printf '#!/bin/bash\nwhile true; do sleep 300; done\n' > /opt/suspicious-app/daemon.sh
+          chmod +x /opt/suspicious-app/daemon.sh
+          setsid /opt/suspicious-app/daemon.sh </dev/null >/dev/null 2>&1 &
+
+          echo "✅ Escenario de Kernel y Logs inyectado correctamente en node02."
         SHELL
       end
       
@@ -166,9 +157,10 @@ EOF
       if node[:name] == "node03"
         node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
           echo "🔒 Preparando bóveda de auditoría en #{node[:name]}..."
-          mkdir -p /opt/backup-vault
-          chown -R bob:bob /opt/backup-vault
-          chmod 755 /opt/backup-vault
+          mkdir -p /opt/ops-compliance/od-003/
+          chown -R bob:bob /opt/ops-compliance/od-003/
+          chmod 750 /opt/ops-compliance/od-003/
+          echo "✅ Bóveda /opt/ops-compliance/od-003/ lista."
         SHELL
       end
     end
