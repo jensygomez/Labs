@@ -26,14 +26,14 @@
 #### **3. STG-003: La Montaña Rusa de I/O – Monitoreo de Performance y Cuellos de Botella**
 - **Dificultad:** 7/10 | **Nivel:** L3
 - **Temas LFCS/RHCSA:** Monitor Storage Performance, Filesystem Mount Options, NFS tuning.
-- **Recursos:** 1 Disco en `node02`: `/dev/vdb` (2 GB, XFS, exportado vía NFS).
+- **Recursos:** 1 Disco en `node02`: `/dev/vdb` (512 MB, XFS, exportado vía NFS).
 - **Objetivo:** Diagnosticar y mitigar problemas de rendimiento de almacenamiento.
 - **Escenario:** Latencia extrema en `node03` al escribir en mount NFS. Uso de `iostat`, `iotop`, `sar -d`, `nfsiostat`. Ajuste de opciones `async,noatime,rsize=32768,wsize=32768` y validación de mejora.
 
 #### **4. STG-004: El Puente Roto – NFS Server/Client y Exportaciones con Restricciones**
-- **Dificultad:** 7/10 | **Nivel:** L2/L3
+- **Dificultad:** 7/10 | **Nivel:** L2
 - **Temas LFCS/RHCSA:** Use Remote Filesystems: NFS, Firewalld.
-- **Recursos:** 1 Volumen LVM en `node02`: `/dev/vg_data/lv_shared` (2 GB).
+- **Recursos:** 1 Volumen LVM en `node02`: `/dev/vg_data/lv_shared` (512 MB).
 - **Objetivo:** Configurar servicios de red de almacenamiento con control de acceso.
 - **Escenario:** `node02` exporta `/srv/shared` a `node03`, pero el cliente recibe `Permission denied`. `root_squash` activo, firewall bloqueando puertos RPC, opciones de mount inseguras. Configuración de `exports` por subred, apertura de puertos y montaje seguro.
 
