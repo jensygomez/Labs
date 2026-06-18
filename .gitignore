@@ -1,10 +1,13 @@
 # Vagrant
 .vagrant/
 
-# SSH keys
+# Obsidian
+.obsidian/workspace.json
+
+# Claves privadas
 private_key
 
-# Virtualización
+# Máquinas virtuales
 *.qcow2
 *.vdi
 *.vmdk
