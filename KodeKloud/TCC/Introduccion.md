@@ -36,3 +36,40 @@ O levantamento bibliográfico foi estruturado em três frentes principais de con
     
 
 Os critérios de inclusão definidos priorizaram publicações que abordassem os internos do Kernel sob a perspectiva de arquitetura e segurança determinística. Foram excluídos manuais de ferramentas comerciais proprietárias ou artigos focados exclusivamente em instaladores automatizados abstratos de terceiros. A análise dos dados foi realizada de forma descritiva e comparativa, contrastando os conceitos estruturais da literatura com as boas práticas de endurecimento (_hardening_) de infraestruturas de TI.
+
+
+### **3. REVISÃO DA LITERATURA**
+
+**3.1 Arquitetura do Kernel e Isolamento Espacial: Namespaces**
+
+Para compreender o isolamento moderno em ambientes de TI, é fundamental analisar a divisão estrutural do sistema operacional. Conforme a literatura clássica de sistemas Linux, o Kernel atua como o gerenciador central de recursos de _hardware_, estabelecendo a fronteira entre o espaço de usuário (_user space_) e o espaço de kernel (_kernel space_). É dentro dessa arquitetura centralizada que os _Namespaces_ operam, funcionando como espaços virtuais que delimitam a visibilidade dos recursos globais do sistema para determinados grupos de processos.
+
+Distintamente da virtualização tradicional por _hipervisores_, que emula um _hardware_ completo e exige a execução de um kernel convidado independente, os _Namespaces_ utilizam uma abordagem nativa e compartilhada. O Kernel Linux permanece único e centralizado, porém, ao instanciar um novo _Namespace_, o sistema operacional cria uma "camada de visibilidade" customizada. Sob a ótica de um processo inserido nesse contexto isolado, o ambiente aparenta possuir vida própria e exclusividade sobre os recursos; no entanto, todos os processos continuam dependendo estritamente do mesmo Kernel hospedeiro para a execução de suas chamadas de sistema (_system calls_).
+
+Essa mecânica de abstração espacial distribui-se em diferentes categorias funcionais no Kernel, dentre as quais destacam-se:
+
+- **PID Namespace (Process ID):** Permite o isolamento da árvore de processos. Um processo dentro desse _Namespace_ pode assumir o identificador PID 1 (operando como o processo ancestral ou _init_ do contêiner), enquanto no espaço global do hospedeiro (_host_) ele possui um PID mapeado com numeração regular alta e sem privilégios administrativos sobre o sistema principal.
+    
+- **NET Namespace (Network):** Fornece o isolamento dos recursos de rede, garantindo que o espaço virtual possua suas próprias tabelas de roteamento, regras de _firewall_ e interfaces de rede exclusivas (como dispositivos virtuais `veth` mapeados como `eth0`), independentes da pilha de rede física do servidor hospedeiro.
+    
+- **MNT Namespace (Mount):** Isola os pontos de montagem do sistema de arquivos. Dessa forma, o processo visualiza apenas o diretório raiz (`/`) que lhe foi explicitamente designado, sendo incapaz de acessar ou modificar arquivos estruturais localizados em outras partições do _host_.
+    
+
+Desse modo, os _Namespaces_ estabelecem a fundação do isolamento espacial no Kernel Linux. Contudo, para que esse isolamento seja seguro e evite a degradação do servidor hospedeiro por consumo excessivo de recursos, a arquitetura do sistema exige um mecanismo complementar de restrição quantitativa, papel desempenhado pelos _Control Groups_.
+
+**3.2 Controle e Restrição de Recursos: Cgroups (Control Groups)**
+
+Enquanto os _Namespaces_ estabelecem as fronteiras de visibilidade e isolamento contextual de um processo, a arquitetura do Kernel Linux exige um mecanismo complementar para o gerenciamento e a restrição quantitativa dos recursos físicos de _hardware_. Essa função é desempenhada pelo subsistema _Control Groups_, amplamente conhecido como _Cgroups_. Na engenharia de infraestrutura, se os _Namespaces_ determinam o que um grupo de processos pode visualizar, os _Cgroups_ delimitam o que esse mesmo grupo pode efetivamente consumir em termos de capacidade computacional.
+
+Estruturalmente, o _Cgroups_ organiza os processos do sistema em uma hierarquia em forma de árvore, onde cada nó (ou grupo) possui parâmetros específicos de alocação de recursos regulados pelo Kernel. De acordo com os conceitos de internos de sistemas descritos na literatura, essa tecnologia atua diretamente sobre os seguintes componentes essenciais:
+
+- **Memória (Memory Controller):** Limita a quantidade de memória RAM e _swap_ que um conjunto de processos pode alocar. Caso um processo sofra uma falha de vazamento de memória (_memory leak_) ou um script descontrolado tente exaurir o servidor hospedeiro, o Kernel intervém impedindo a alocação excedente, salvaguardando a estabilidade global do sistema.
+    
+- **Processamento (CPU Controller):** Distribui fatias de tempo do processador utilizando escalonadores do Kernel (como o _Completely Fair Scheduler_ - CFS). Isso garante que processos secundários não monopolizem os núcleos da CPU, permitindo que serviços críticos mantenham sua taxa de execução prioritária.
+    
+- **Entrada e Saída (BlkIO Controller):** Restringe as taxas de leitura e escrita (_I/O throttling_) em discos rígidos ou unidades de estado sólido (SSD), impedindo que operações massivas de escrita saturem o barramento de armazenamento do servidor.
+    
+
+A evolução dessa arquitetura culminou na transição do modelo clássico _Cgroups V1_ para o modelo unificado _Cgroups V2_. Na versão primária (V1), cada recurso (CPU, memória, rede) possuía uma hierarquia completamente independente, o que gerava inconsistências no gerenciamento de processos complexos. A versão unificada (V2) estabeleceu uma hierarquia única para todos os controladores, otimizando o determinismo do Kernel e mitigando conflitos de concorrência.
+
+Portanto, o controle granular exercido pelos _Cgroups_ impede o fenômeno do "vizinho barulhento" (_noisy neighbor_) em ambientes compartilhados. Ao blindar os recursos de _hardware_, o Kernel garante que serviços essenciais — tais como os mecanismos de auditoria e escrita de _logs_ — operem sem degradação. Todavia, além do isolamento espacial e do controle de recursos, o endurecimento completo da arquitetura exige uma barreira de proteção nativa voltada ao tráfego de rede, elemento viabilizado pelo subsistema _Netfilter_.
