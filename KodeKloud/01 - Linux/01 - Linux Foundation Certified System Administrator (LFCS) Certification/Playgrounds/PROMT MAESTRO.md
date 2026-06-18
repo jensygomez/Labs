@@ -187,26 +187,21 @@ Después de mostrar los bloques de código, muestra exactamente este mensaje de 
 ---
 
 ### [CONFIGURACIÓN] — EDITAR ANTES DE EJECUTAR
-
-```MARKDOWN
-# ─── MÓDULO Y NUMERACIÓN ─────────────────────────────────────────
- - MODULO_CARPETA    : "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/PlaygroundsPlaygrounds/005 - Storage"
- - MODULO_PREFIJO    : "STG"
- - INCIDENTE_NUEVO   : 4           # Número del incidente a crear
- - REFERENCIA_N1     : 3           # Número del incidente anterior (para copiar estructura)
- - NO_SOLAPAR_CON    : 5           # Número del incidente siguiente (null si no existe)
-
-
-# ─── TEMA DEL NUEVO INCIDENTE ────────────────────────────────────
-
-TEMA_SUGERIDO:
-  - Titulo           : "STG-004 - El Puente Roto – NFS Server or Client y Exportaciones con Restricciones - V1.0"
-  - Dificultad       : "7/10"
-  - Nivel            : "L2"
-  - Temas_lfcs_rhcsa : "Use Remote Filesystems: NFS, Firewalld"
-  - Recursos         : "1 Volumen LVM en `node02`: `/dev/vg_data/lv_shared` (512 MB)."
-  - Escenario        : "`node02` exporta `/srv/shared` a `node03`, pero el cliente recibe `Permission denied`. `root_squash` activo, firewall bloqueando puertos RPC, opciones de mount inseguras. Configuración de `exports` por subred, apertura de puertos y montaje seguro."
-```
+	# ─── MÓDULO Y NUMERACIÓN ─────────────────────────────────────────
+	 - MODULO_CARPETA    : "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/PlaygroundsPlaygrounds/005 - Storage"
+	 - MODULO_PREFIJO    : "STG"
+	 - INCIDENTE_NUEVO   : 4           # Número del incidente a crear
+	 - REFERENCIA_N1     : 3           # Número del incidente anterior (para copiar estructura)
+	 - NO_SOLAPAR_CON    : 5           # Número del incidente siguiente (null si no existe)
+	  
+	 # ─── TEMA DEL NUEVO INCIDENTE ────────────────────────────────────
+	 TEMA_SUGERIDO:
+	   - Titulo           : "STG-004 - El Puente Roto – NFS Server or Client y Exportaciones con Restricciones - V1.0"
+	   - Dificultad       : "7/10"
+	   - Nivel            : "L2"
+	   - Temas_lfcs_rhcsa : "Use Remote Filesystems: NFS, Firewalld"
+	   - Recursos         : "1 Volumen LVM en `node02`: `/dev/vg_data/lv_shared` (512 MB)."
+	   - Escenario        : "`node02` exporta `/srv/shared` a `node03`, pero el cliente recibe `Permission denied`. `root_squash` activo, firewall bloqueando puertos RPC, opciones de mount inseguras. Configuración de `exports` por subred, apertura de puertos y montaje seguro."
 
 
 
