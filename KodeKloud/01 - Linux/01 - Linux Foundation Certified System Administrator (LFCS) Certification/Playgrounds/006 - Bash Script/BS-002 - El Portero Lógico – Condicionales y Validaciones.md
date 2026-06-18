@@ -134,6 +134,8 @@ Script: |-
 
   chmod +x /tmp/setup.sh
   bash /tmp/setup.sh
+tags:
+  - Laboratorios-del-LFCS
 ---
 [[Laboratorios del LFCS]]
 ---
