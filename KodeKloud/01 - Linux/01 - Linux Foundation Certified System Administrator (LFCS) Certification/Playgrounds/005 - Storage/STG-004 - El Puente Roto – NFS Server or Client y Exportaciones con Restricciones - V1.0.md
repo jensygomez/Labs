@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Storage
 Entorno: Vagrant (STG-004-MN)
-Titulo: El Puente Roto – NFS Server/Client y Exportaciones con Restricciones - V1.0
+Titulo: El Puente Roto – NFS Server or Client y Exportaciones con Restricciones - V1.0
 Fecha de Inicio: 2026-06-18
 Dificultad: 7/10
 Level Escalation: L2
@@ -330,24 +330,11 @@ Script Vagrant: |-
       end
     end
   end
+tags:
+  - Laboratorios-del-LFCS
 ---
 
 [[Laboratorios del LFCS]]
 
 ---
 
-# STG-004: El Puente Roto – NFS Server/Client y Exportaciones con Restricciones
-
-> **Historia del incidente (narrativa en inglés, B2, estilo STAR)**
-
-**Situation:**
-As part of the LFCS Storage lab series, I was assigned a multi-node Vagrant environment (STG-004-MN) simulating a production infrastructure with three nodes: node01 (control/admin), node02 (NFS server), and node03 (NFS client). The scenario involved a broken NFS bridge where node03 could not mount a shared directory exported from node02.
-
-**Task:**
-My objective was to diagnose and repair the NFS connectivity issue between node02 and node03. The problem manifested as "Permission denied" errors, and I needed to identify whether the root cause was related to NFS export configuration, firewalld rules blocking RPC ports, or subnet mismatch in the exports file. Additionally, I had to document all evidence in a compliance vault on node03.
-
-**Action:**
-I began by inspecting the NFS server configuration on node02 using `exportfs -v`, which revealed that the export was restricted to subnet 192.168.100.0/24 instead of the actual cluster subnet 192.168.122.0/24. Next, I checked firewalld status and discovered it was active but had no rules allowing NFS/RPC ports (111, 2049, 20048). I corrected the exports file to permit the correct subnet, added permanent firewall rules for the required ports using `firewall-cmd`, and reloaded the firewall. On node03, I successfully mounted the NFS share and validated access.
-
-**Result:**
-The NFS bridge was restored: node03 could now mount `/srv/shared` from node02 with proper access controls. All changes were persistent across reboots, and the compliance evidence was securely transmitted to node03:/opt/ops-compliance/stg-004/ without leaving artifacts on node01. This exercise reinforced the importance of subnet matching in NFS exports and the necessity of opening RPC ports in firewalld for NFS functionality.
