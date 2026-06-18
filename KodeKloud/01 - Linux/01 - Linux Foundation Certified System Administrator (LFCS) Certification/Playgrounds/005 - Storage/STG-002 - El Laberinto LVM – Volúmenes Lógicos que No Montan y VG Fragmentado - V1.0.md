@@ -2,7 +2,7 @@
 Curso: Prep Course - LFCS Certification
 Modulo: Storage
 Playground: STG-002-MN
-Titulo: El Laberinto LVM – Volúmenes Lógicos que No Montan y VG Fragmentado
+Titulo: El Laberinto LVM – Volúmenes Lógicos que No Montan y VG Fragmentado - V1.0
 Fecha de Inicio: 2026-06-11
 Dificultad: 7/10
 Level Escalation: L2/L3

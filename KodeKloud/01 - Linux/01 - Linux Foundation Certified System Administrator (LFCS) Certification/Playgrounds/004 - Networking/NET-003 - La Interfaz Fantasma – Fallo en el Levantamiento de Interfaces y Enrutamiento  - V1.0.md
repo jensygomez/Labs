@@ -20,8 +20,9 @@ Competencias: |-
   - Corregir archivos de configuración de red declarativos (YAML en Netplan o .network en systemd-networkd) y aplicarlos en caliente.
   - Manipular la tabla de enrutamiento del kernel añadiendo rutas estáticas para alcanzar subredes remotas (ej. redes de pods o almacenamiento).
   - Verificar el estado de la red utilizando herramientas modernas (ip addr, ip route, networkctl) en lugar de las obsoletas (ifconfig, route).
-Script: |-
+Script Vagrant: |-
   # -*- mode: ruby -*-
+
 
   # vi: set ft=ruby :
 
@@ -39,7 +40,9 @@ Script: |-
         node_config.vm.hostname = node[:name]
         
         # Interfaz principal de gestión (acceso SSH)
-        node_config.vm.network "private_network", ip: node[:ip], libvirt__network_name: "default"
+        # FIX-1: "mgmt" en lugar de "default" para evitar colisión con la NAT
+        # de libvirt (192.168.121.x). Se deshabilita DHCP para respetar IPs estáticas.
+        node_config.vm.network "private_network", ip: node[:ip], libvirt__network_name: "mgmt", libvirt__dhcp_enabled: false
         
         # INTERFAZ SECUNDARIA PARA NET-003 (Red aislada del clúster)
         # Solo node02 y node03 tendrán esta segunda interfaz
@@ -125,18 +128,16 @@ Script: |-
       - node03-internal: 10.99.99.3
     Subred de Pods (K8s):     10.244.0.0/16     (Ruta estática requerida)
 
-    PROCEDIMIENTO REQUERIDO
+   PROCEDIMIENTO REQUERIDO
     --------------------------------------------------------------------------------
     1. Diagnóstico de Capa 2/3:
-       - Conéctate a node02 y verifica el estado de las interfaces de red.
-       - Identifica cuál interfaz está caída y localiza el archivo de Netplan
-         que está fallando al cargarse.
+       - Conéctate a node02 y audita el estado de todas las interfaces de red.
+       - Determina cuál interfaz de clúster no está operativa y por qué
+         el subsistema de red no pudo configurarla al último arranque.
+       - Localiza y examina los archivos de configuración de Netplan activos.
 
     2. Ingeniería de Configuración Declarativa:
-       - Edita el archivo de Netplan en /etc/netplan/ que corresponde a la
-         interfaz secundaria.
-       - Corrige el error de sintaxis (pista: revisa la indentación y los
-         dos puntos faltantes en la directiva 'addresses').
+       - Corrige el archivo de Netplan responsable de la interfaz secundaria.
        - Asegura que la interfaz levante con IP estática 10.99.99.2/24.
 
     3. Enrutamiento Estático Persistente:
@@ -145,17 +146,17 @@ Script: |-
        - El gateway para esta ruta debe ser 10.99.99.3 (node03-internal).
 
     4. Aplicación en Caliente y Validación:
-       - Aplica los cambios de Netplan sin reiniciar el sistema.
-       - Verifica que la interfaz secundaria tenga la IP correcta y que
-         la tabla de enrutamiento muestre la ruta hacia 10.244.0.0/16.
+       - Aplica los cambios sin reiniciar el sistema.
+       - Verifica conectividad de capa 3 hacia node03-internal antes de
+         proceder al pipeline de evidencia.
 
     5. Pipeline de Evidencia a node03:
        - Destino: /opt/ops-compliance/net-003/network_evidence.txt
-       - Desde node01, envía mediante pipeline SSH la salida consolidada de:
-         a) ip addr show (filtrando la interfaz secundaria)
-         b) ip route show 10.244.0.0/16
-       - NO generar archivos temporales locales en node01.
-    --------------------------------------------------------------------------------
+       - Desde node01, construye un pipeline SSH que entregue evidencia
+         suficiente para demostrar:
+           a) Que la interfaz secundaria está UP con la IP correcta
+           b) Que la ruta hacia 10.244.0.0/16 está activa en la tabla
+       - CERO archivos temporales en node01.
     CRITERIOS DE ACEPTACIÓN
     --------------------------------------------------------------------------------
      [ ] Interfaz secundaria UP con IP 10.99.99.2/24 asignada              --> 25%
@@ -185,26 +186,27 @@ Script: |-
           node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
             echo "💥 Inyectando escenario de interfaz caída en #{node[:name]}..."
             
-            # 1. Identificar la interfaz secundaria (será ens6 o eth1 dependiendo de Vagrant)
-            SECONDARY_IF=$(ip -o link show | awk -F': ' '/10.99.99.2/ {print $2}' | cut -d'@' -f1)
+            # FIX-2: Detectar interfaz secundaria por su IP (10.99.99.2) en lugar
+            # de asumir nombre fijo. La IP ya está asignada en este punto del provisionado.
+            SECONDARY_IF=$(ip --oneline address show | awk '/10\.99\.99\.2/ {print $2}')
             if [ -z "$SECONDARY_IF" ]; then
-              # Si no tiene IP aún, buscar la segunda interfaz
-              SECONDARY_IF=$(ip -o link show | awk -F': ' 'NR==3 {print $2}' | cut -d'@' -f1)
+              echo "❌ ERROR: No se pudo detectar la interfaz secundaria con 10.99.99.2"
+              exit 1
             fi
             echo "Interfaz secundaria detectada: $SECONDARY_IF"
             
-            # 2. Bajar la interfaz para simular el fallo
+            # Bajar la interfaz para simular el fallo
             ip link set $SECONDARY_IF down 2>/dev/null || true
             ip addr flush dev $SECONDARY_IF 2>/dev/null || true
             
-            # 3. Inyectar archivo de Netplan ROTO con error de sintaxis
+            # FIX-3: Heredoc SIN comillas para que ${SECONDARY_IF} se expanda.
             # Error intencional: Falta los dos puntos (:) después de 'addresses'
             # y no se incluye la directiva de rutas (routes)
-            cat > /etc/netplan/60-secondary.yaml << 'NETPLAN'
+            cat > /etc/netplan/60-secondary.yaml << NETPLAN
   network:
     version: 2
     ethernets:
-      ens6:
+      ${SECONDARY_IF}:
         dhcp4: no
         addresses
           - 10.99.99.2/24
@@ -265,3 +267,10 @@ Escenario: |-
 [[Laboratorios del LFCS]]
 
 ---
+Recently, I was assigned a high-severity incident in our distributed cluster environment. The secondary network interface on one of our nodes had failed to come up after a kernel update and a network service restart, which completely isolated that node from the internal cluster network and broke pod-to-pod communication.
+
+My first step was to connect remotely to the affected node and audit all network interfaces. I identified that the secondary interface was in a DOWN state with no IP address assigned. I then located the Netplan configuration file responsible for that interface and found two issues: a missing colon in the `addresses` directive that caused a syntax error, and the complete absence of a static route toward the pod subnet.
+
+I corrected both issues directly in the Netplan file — fixing the syntax and adding the static route to `10.244.0.0/16` via the internal gateway — and applied the changes live using `netplan apply`, without restarting the server at any point. I then verified layer 3 connectivity by pinging the gateway node before closing the incident.
+
+Finally, I built an SSH pipeline from the control node to collect interface and routing evidence and deliver it directly to the compliance vault on a third node, without leaving any temporary files behind on the intermediate host. The incident was fully resolved with zero downtime and clean audit evidence.

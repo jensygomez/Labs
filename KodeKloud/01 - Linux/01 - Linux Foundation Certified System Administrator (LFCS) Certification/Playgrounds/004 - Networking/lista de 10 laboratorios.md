@@ -1,10 +1,29 @@
 
-¡Excelente elección! El **Multi-Node Ubuntu Playground** de KodeKloud es el entorno perfecto para simular incidentes de red reales de nivel L2/L3. A diferencia de un solo nodo, aquí la complejidad radica en la **comunicación entre sistemas**, lo que es el núcleo de la infraestructura empresarial y DevOps.
+Aquí va el esqueleto — una guía de referencia para cuando armes el próximo Vagrantfile de laboratorio:
 
-Basándome estrictamente en el temario del módulo de **Networking del LFCS** y elevando la dificultad a niveles **6, 7, 8 y 9**, he diseñado una ruta de 10 laboratorios. Cada uno simula un "Ticket de Incidente" realista donde el fallo no es obvio y requiere diagnóstico con herramientas como `ip`, `ss`, `tcpdump`, `journalctl` y `iptables`/`nftables`.
+---
 
+**CHECKLIST — Vagrantfile para Labs de Incidentes**
 
+**Red**
 
+1. Nunca usar `libvirt__network_name: "default"` para IPs estáticas — colisiona con el DHCP NAT de libvirt. Usar un nombre dedicado (`mgmt`, `lab-net`, etc.)
+2. Siempre agregar `libvirt__dhcp_enabled: false` en redes con IP estática
+3. Si el lab tiene red secundaria, darle también su propio `network_name` aislado
+
+**Detección de interfaces** 4. Nunca hardcodear nombres de interfaz (`ens6`, `eth1`). Ubuntu 22.04 con libvirt los asigna dinámicamente 5. Detectar por IP: `ip --oneline address show | awk '/10\.x\.x\.x/ {print $2}'` 6. Si la detección falla, hacer `exit 1` — no continuar con variable vacía
+
+**Inyección de fallos** 7. El heredoc que usa variables del shell **no** puede tener comillas: `<< NETPLAN` no `<< 'NETPLAN'` 8. El heredoc que es contenido literal (tickets, configs fijas) **sí** lleva comillas: `<< 'TICKET'` 9. Después de inyectar el fallo, siempre intentar aplicarlo para confirmar que falla como se espera
+
+**Dificultad del ticket** 10. L1: el ticket puede revelar qué comando usar y qué buscar 11. L2/L3: el ticket describe el síntoma y el impacto — el ingeniero diagnostica solo 12. No incluir pistas de sintaxis en el procedimiento si el nivel es L2 o superior
+
+**Bóveda de evidencia** 13. Crear el directorio destino en el nodo correcto con `mkdir -p` 14. Asignar ownership al usuario del lab (`chown -R bob:bob`) 15. Permisos `750` — accesible por el usuario, no por otros
+
+**Orden de provisionado** 16. Provisionado general primero (usuarios, hosts, paquetes) — luego el específico por nodo 17. node03 necesita dos bloques separados si tiene roles distintos (gateway + bóveda) 18. El bloque de inyección de fallos va siempre al final del nodo afectado
+
+---
+
+¿Lo exporto como `.md` para que lo tengas de referencia junto a tus labs?
 ---
 
 ### 🗺️ Ruta de Práctica: Networking Avanzado LFCS (Multi-Nodo)
