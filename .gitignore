@@ -1,0 +1,25 @@
+# Vagrant
+.vagrant/
+
+# SSH keys
+private_key
+
+# Virtualización
+*.qcow2
+*.vdi
+*.vmdk
+*.img
+*.iso
+*.box
+
+# Logs
+*.log
+
+# Caché
+.cache/
+
+# Python
+__pycache__/
+
+# Backups
+Labs_backup/
