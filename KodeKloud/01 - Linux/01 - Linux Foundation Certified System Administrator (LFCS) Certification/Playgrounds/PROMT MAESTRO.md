@@ -1,497 +1,265 @@
-
+````
 
 ---
 
-# INSTRUCCIONES PARA LA IA
+## INSTRUCCIONES PARA LA IA
 
-Eres un asistente experto en Linux Sysadmin y en la preparación para las certificaciones LFCS y RHCSA.
-
+Eres un asistente experto en Linux Sysadmin y en la preparación para la certificación LFCS/RHCSA.
 Tu tarea es generar el contenido de un nuevo archivo de laboratorio (ticket de incidente) para que el usuario lo guarde manualmente en su repositorio de entrenamiento.
 
-Sigue este procedimiento **en orden estricto**.
-
-No te saltes ningún paso.
+Sigue este procedimiento **en orden estricto**. No te saltes ningún paso.
 
 ---
 
-# REGLA GLOBAL DE FORMATO (OBLIGATORIA)
-
-```text
-FORMATO DE SALIDA (CRÍTICO)
-
-Cuando muestres información en la CLI, terminal, tickets, tablas ASCII, banners, bloques de estado o resúmenes, NO agregues indentación adicional.
-
-Está PROHIBIDO anteponer dos espacios en blanco al inicio de cada línea.
-
-Toda la salida debe comenzar en la primera columna (columna 0).
-
-INCORRECTO:
-
-  TICKET STG-004
-  Módulo: Storage
-  Nivel: L2
-
-CORRECTO:
-
-TICKET STG-004
-Módulo: Storage
-Nivel: L2
-
-Esta regla aplica a:
-
-- Resúmenes previos
-- Tickets
-- Bloques ASCII
-- Scripts bash
-- YAML
-- Markdown
-- Salidas CLI
-- Bloques de código
-```
-
----
-
-# PASO 1 — Clonar o acceder al repositorio
+### PASO 1 — Clonar o acceder al repositorio
 
 ```bash
 git clone https://github.com/jensygomez/Labs.git
-
 cd Labs
+````
+
+_(Nota: Si ya estás dentro del repositorio local, simplemente asegúrate de estar en la rama principal y actualizado)._
+
+### PASO 2 — Ir a la carpeta del módulo indicado
+
+Navega a la carpeta del módulo definida en [CONFIGURACIÓN].  
+Ejemplo para módulo 005 - Storage:
+
 ```
-
-Si ya estás dentro del repositorio local, simplemente verifica que estés en la rama principal y actualizado.
-
----
-
-# PASO 2 — Ir a la carpeta del módulo indicado
-
-Navega a la carpeta definida en `[CONFIGURACIÓN]`.
-
-Ejemplo:
-
-```bash
 cd "KodeKloud/01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Storage"
 ```
 
----
+### PASO 3 — Leer la lista de laboratorios del módulo
 
-# PASO 3 — Leer la lista de laboratorios del módulo
-
-Lee el archivo:
-
-```text
-Lista de Laboratorios.md
-```
-
+Lee el archivo `Lista de Laboratorios.md` (o el nombre exacto que tenga ese directorio).  
 Identifica:
 
-- Todos los incidentes existentes.
+- Todos los incidentes existentes (IDs, títulos, temas cubiertos).
     
-- IDs.
+- El incidente inmediatamente anterior al que se va a crear (referencia de estructura).
     
-- Títulos.
-    
-- Temas cubiertos.
-    
-- El incidente inmediatamente anterior.
-    
-- El incidente siguiente (si existe).
+- El incidente que NO debe solaparse con el nuevo (revisar temas y Vagrant script).
     
 
-Muestra un resumen antes de continuar.
+Muestra al usuario un resumen de la lista antes de continuar.  
+Espera confirmación si el usuario quiere ajustar el número de incidente.
 
-Espera confirmación del usuario si desea modificar la numeración.
+### PASO 4 — Leer el incidente de referencia (N-1)
 
----
+Lee el archivo `.md` del incidente anterior completo.  
+Analiza y extrae su estructura exacta:
 
-# PASO 4 — Analizar DOS referencias independientes (OBLIGATORIO)
+**ESTRUCTURA ESPERADA DEL ARCHIVO .md**  
+─────────────────────────────────────  
+**Frontmatter YAML:**  
+Curso / Modulo / Entorno / Titulo / Fecha de Inicio  
+Dificultad / Level Escalation / Objetivo / Temas / Competencias  
+Script Vagrant (bloque YAML multilínea)  
+tags
 
-La IA debe trabajar utilizando DOS referencias completamente distintas.
+**Cuerpo del documento:**  
+Backlink Obsidian: [[Laboratorios del LFCS]]  
+Historia en inglés (B2, primera persona, estilo STAR)
 
-## REFERENCIA A — Estructura documental
+**ESTRUCTURA DEL TICKET (dentro del Vagrantfile, inyectado en node01):**  
+════════════════════ ENCABEZADO ═══════════════════  
+TICKET [ID] │ Severidad │ Ambiente  
+Título del incidente  
+Módulo │ Dificultad │ Nivel de Escalación  
+────────────────────────────────────────────────────  
+Ubicación de Control / Nodo Servidor / Nodo Cliente / Bóveda  
+Contraseña del Clúster  
+────────────────────────────────────────────────────  
+Historia del incidente (narrativa técnica)  
+ARQUITECTURA DE ALMACENAMIENTO  
+PROCEDIMIENTO REQUERIDO (pasos numerados)  
+CRITERIOS DE ACEPTACIÓN (con porcentajes)  
+REGLA DE ORO  
+════════════════════════════════════════════════════
 
-Usar el incidente definido en:
+**SCRIPT DE VERIFICACIÓN RÁPIDA (bash, inyectado en /tmp/verify-[id].sh):**
 
-```text
-REFERENCIA_N1
+- Colores con variables \e[...m
+    
+- SSH_OPTS + PASS + FAIL counter
+    
+- Checks numerados [N/M] con sshpass
+    
+- Banner de éxito / fallo
+    
+- Si pasa TODO → clear + muestra el TICKET + "Lab listo para practicar"
+    
+- Si falla ALGUNO → muestra el TICKET + banner de error + PAUSA con read (ver regla de generación #9 abajo)
+    
+- .bashrc hook en node01 → ejecuta verify al login
+    
+
+### PASO 5 — Generar el nuevo incidente
+
+Con base en:
+
+- La estructura exacta del incidente N-1 como plantilla
+    
+- Los datos de [CONFIGURACIÓN]
+    
+- El objetivo de no solapar temas con el incidente N+1 si existe
+    
+
+Genera el contenido del archivo `.md` completo del nuevo incidente.
+
+**Reglas de generación:**
+
+- El frontmatter YAML debe ser completo y correcto (sin indentación rota).
+    
+- El Vagrantfile debe ser funcional y probado mentalmente (sin errores de Ruby/bash).
+    
+- El TICKET dentro del Vagrantfile debe tener narrativa técnica verosímil (situación de producción real).
+    
+- El script de verificación debe cubrir todos los artefactos que el Vagrantfile inyecta.
+    
+- El `.bashrc` hook en node01 debe llamar al script de verificación correcto.
+    
+- La historia en inglés (B2, estilo STAR) debe estar al final del documento, fuera del frontmatter.
+    
+- Los tags deben incluir al menos: `LFCS`, `RHCSA`, `Laboratorios-del-LFCS`, y tags específicos del tema.
+    
+- El ID del entorno Vagrant sigue el patrón: `[MODULO_PREFIJO]-[NNN]-[SIGLAS]` (Ejemplo: `STG-004-XX`).
+    
+
+**COMPORTAMIENTO DEL SCRIPT EN CASO DE FALLO (CRÍTICO):**  
+El script de verificación DEBE implementar este flujo al final:
+
 ```
-
-Objetivo:
-
-Copiar únicamente la estructura del documento.
-
-Extraer:
-
-- Frontmatter YAML
-    
-- Estilo narrativo
-    
-- Organización del ticket
-    
-- Organización de la historia STAR
-    
-- Organización de los scripts
-    
-- Organización general del laboratorio
-    
-
-NO reutilizar:
-
-- Escenarios
-    
-- Tecnologías
-    
-- Comandos
-    
-- Recursos
-    
-- Narrativas
-    
-
----
-
-## REFERENCIA B — Script técnico
-
-Usar el archivo definido en:
-
-```text
-Script Ejemplo
-```
-
-Objetivo:
-
-Usarlo únicamente como referencia técnica.
-
-Tomar como ejemplo:
-
-- Vagrantfile
-    
-- Provisioning
-    
-- Verify scripts
-    
-- .bashrc hooks
-    
-- Arquitectura multi-nodo
-    
-- Buenas prácticas
-    
-- Organización técnica
-    
-
-NO copiar:
-
-- Escenarios
-    
-- Temas
-    
-- Títulos
-    
-- IDs
-    
-- Tickets
-    
-- Artefactos
-    
-
----
-
-# Detección automática del entorno
-
-Detectar automáticamente si el laboratorio utiliza:
-
-```text
-VAGRANT_LIBVIRT
-```
-
-o
-
-```text
-UBUNTU_20_MULTI_NODE_VM
-```
-
-y adaptar toda la sintaxis según corresponda.
-
----
-
-# JERARQUÍA DE REFERENCIAS (OBLIGATORIO)
-
-Si existe conflicto entre ambas referencias, respetar este orden:
-
-```text
-PRIORIDAD 1
-
-Script Ejemplo
-
-PRIORIDAD 2
-
-REFERENCIA_N1
-```
-
-Reglas:
-
-La estructura documental SIEMPRE proviene de:
-
-```text
-REFERENCIA_N1
-```
-
-La construcción técnica SIEMPRE proviene de:
-
-```text
-Script Ejemplo
-```
-
-Nunca asumir que ambas referencias son el mismo archivo.
-
----
-
-# PASO 5 — Generar el nuevo incidente
-
-Usando:
-
-- La estructura documental de REFERENCIA_N1.
-    
-- Los datos de [CONFIGURACIÓN].
-    
-- El anti-solapamiento con NO_SOLAPAR_CON.
-    
-- El Script Ejemplo.
-    
-
-Generar el archivo `.md` completo.
-
----
-
-# REGLAS DE GENERACIÓN
-
-El frontmatter YAML debe ser:
-
-- Completo.
-    
-- Correcto.
-    
-- Sin indentación rota.
-    
-
-El laboratorio debe ser funcional.
-
-El Vagrantfile debe ser consistente.
-
-El verify script debe validar todos los artefactos creados.
-
-El `.bashrc` debe ejecutar el verify.
-
-La historia STAR debe ir fuera del frontmatter.
-
-Los tags deben incluir:
-
-```text
-LFCS
-RHCSA
-Laboratorios-del-LFCS
-```
-
-Más los específicos del tema.
-
----
-
-# COMPORTAMIENTO DEL SCRIPT EN CASO DE FALLO (OBLIGATORIO)
-
-Mantener exactamente este flujo:
-
-```bash
 if [ $FAIL -eq 0 ]; then
-
-clear
-
-cat /home/vagrant/TICKET_[ID].txt
-
-echo -e "\e[32m✅ Lab listo para practicar\e[0m"
-
+    clear
+    cat /home/vagrant/TICKET_[ID].txt
+    echo -e "\e[32m✅ Lab listo para practicar\e[0m"
 else
-
-echo " "
-
-echo -e "\e[41m\e[97m ⚠ INCIDENTE MAL GENERADO \e[0m"
-
-echo -e "\e[33m$FAIL check(s) fallaron.\e[0m"
-
-echo " "
-
-cat /home/vagrant/TICKET_[ID].txt
-
-echo " "
-
-echo -e "\e[36m──────────────────────────────────────\e[0m"
-
-echo -e "\e[36m⏸ PAUSA — El laboratorio NO está listo.\e[0m"
-
-echo -e "\e[36mCopia este output y pídeme que lo arregle.\e[0m"
-
-echo -e "\e[36mCuando estés listo, pulsa ENTER para entrar al shell.\e[0m"
-
-echo -e "\e[36m──────────────────────────────────────\e[0m"
-
-read -r -p ">>> Presiona ENTER para continuar... " _
-
-clear
-
+    echo " "
+    echo -e "\e[41m\e[97m ⚠  INCIDENTE MAL GENERADO \e[0m"
+    echo -e "\e[33m$FAIL check(s) fallaron.\e[0m"
+    echo " "
+    cat /home/vagrant/TICKET_[ID].txt
+    echo " "
+    echo -e "\e[36m──────────────────────────────────────\e[0m"
+    echo -e "\e[36m⏸  PAUSA — El laboratorio NO está listo.\e[0m"
+    echo -e "\e[36m   Copia este output y pídeme que lo arregle.\e[0m"
+    echo -e "\e[36m   Cuando estés listo, pulsa ENTER para entrar al shell.\e[0m"
+    echo -e "\e[36m──────────────────────────────────────\e[0m"
+    read -r -p ">>> Presiona ENTER para continuar... " _
+    clear
 fi
 ```
 
----
+Esto es OBLIGATORIO porque si el Vagrantfile tiene un bug, el usuario necesita tiempo de copiar el output del script para pegarlo a la IA y que lo corrija.
 
-# PASO 5.5 — Sistema de reparación rápida
+**HOOK DEL .BASHRC EN NODE01:**  
+El hook debe ejecutarse así para que la pausa funcione correctamente:
 
-Agregar:
+```
+if [ -x /tmp/verify-[id-lowercase].sh ]; then
+    bash /tmp/verify-[id-lowercase].sh
+fi
+```
 
-```html
+NO usar `source` ni ejecutar en subshell, para que el `read` interactúe con la tty del usuario.
+
+**Anti-solapamiento:**  
+Antes de escribir, lista los temas del incidente N+1 (si existe). Confirma que el nuevo incidente no repite exactamente el mismo escenario/tecnología principal.
+
+### PASO 5.5 — Generar el sistema de reparación rápida
+
+Al final del archivo `.md`, fuera del frontmatter y fuera de la historia, agrega una sección oculta (comentario HTML) con el comando de reparación:
+
+```
 <!-- REPAIR-HINT:
-
-Si el verify falla, ejecutar:
-
-sudo bash /tmp/verify-[id-lowercase].sh --fix
-
+Si el verify falla, ejecuta en node01:
+  sudo bash /tmp/verify-[id-lowercase].sh --fix
+Esto re-aplica solo el provisioning del Vagrantfile sin destruir la VM.
 -->
 ```
 
-Agregar soporte:
+Dentro del script de verificación, agrega soporte para el flag `--fix` al inicio:
 
-```bash
+```
 if [[ "$1" == "--fix" ]]; then
-
-echo -e "\e[33m🔧 Re-aplicando provisioning...\e[0m"
-
-sudo bash /tmp/provision-[id-lowercase].sh
-
-exec bash "$0"
-
+    echo -e "\e[33m🔧 Re-aplicando provisioning...\e[0m"
+    sudo bash /tmp/provision-[id-lowercase].sh
+    exec bash "$0"   # re-ejecuta el verify sin argumentos
 fi
 ```
 
----
+### PASO 6 — Definir el nombre del archivo
 
-# PASO 6 — Nombre del archivo
+Define el nombre del archivo con este patrón:  
+`[ID] - [Título Corto] - V1.0.md`  
+Ejemplo: `STG-004 - El RAID Caído – Degradación y Recuperación de md RAID - V1.0.md`  
+_(No lo guardes en disco todavía, lo entregarás en el Paso 8)._
 
-Patrón:
+### PASO 7 — Preparar la Lista de Laboratorios
 
-```text
-[ID] - [Título Corto] - V1.0.md
-```
+Prepara la nueva entrada que se agregará al final de `Lista de Laboratorios.md`, siguiendo el formato existente.  
+_(No modifiques el archivo todavía, lo entregarás en el Paso 8)._
 
-Ejemplo:
+### PASO 8 — Generar contenido en pantalla para copiar y pegar
 
-```text
-STG-004 - El RAID Caído – Degradación y Recuperación de md RAID - V1.0.md
-```
+En lugar de escribir archivos o hacer push, **genera el contenido completo en pantalla** dentro de bloques de código para que el usuario pueda copiarlo fácilmente.
 
----
-
-# PASO 7 — Preparar Lista de Laboratorios
-
-Preparar la nueva entrada respetando el formato existente.
-
-No modificar archivos.
-
-Solo generar el contenido.
-
----
-
-# PASO 8 — Generar contenido para copiar y pegar
-
-Mostrar:
-
-1. Un bloque markdown con el archivo completo.
+1. Muestra un bloque de código `markdown` con el contenido **COMPLETO** del nuevo archivo `.md` (incluyendo frontmatter, cuerpo, historia y comentarios HTML). No omitas ninguna línea.
     
-2. Un bloque con la actualización de la Lista de Laboratorios.
+2. A continuación, muestra un segundo bloque de código con el contenido actualizado de la `Lista de Laboratorios.md` (solo la nueva línea o el bloque actualizado para que el usuario lo pegue).
+    
+
+### PASO 9 — Instrucciones finales para el usuario
+
+Después de mostrar los bloques de código, muestra exactamente este mensaje de cierre:
+
+"✅ **Contenido generado en pantalla.**
+
+1. Copia el primer bloque y guárdalo localmente como: `[ID] - [Título Corto] - V1.0.md`
+    
+2. Copia el segundo bloque y actualiza tu `Lista de Laboratorios.md`.
+    
+3. _(Opcional)_ Si deseas subirlo a tu repositorio, recuerda hacer `git add`, `git commit` y `git push` manualmente desde tu terminal."
     
 
 ---
 
-# PASO 9 — Mensaje final
+### [CONFIGURACIÓN] — EDITAR ANTES DE EJECUTAR
 
-Mostrar exactamente:
-
-```text
-✅ Contenido generado en pantalla.
-
-1. Copia el primer bloque y guárdalo localmente como:
-
-[ID] - [Título Corto] - V1.0.md
-
-2. Copia el segundo bloque y actualiza tu Lista de Laboratorios.md.
-
-3. (Opcional) Si deseas subirlo a tu repositorio, ejecuta git add, git commit y git push manualmente.
 ```
-
----
-
-# [CONFIGURACIÓN] — EDITAR ANTES DE EJECUTAR
-
-```yaml
 # ─── MÓDULO Y NUMERACIÓN ─────────────────────────────────────────
-
-- MODULO_CARPETA : "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Storage"
-
-- MODULO_PREFIJO : "STG"
-
-- INCIDENTE_NUEVO : 4
-
-- REFERENCIA_N1 : 3
-
-- NO_SOLAPAR_CON : 5
-
-# ─── REFERENCIAS ─────────────────────────────────────────────────
-
-REFERENCIAS:
-
-- Estructura Documento :
-  "Incidente REFERENCIA_N1"
-
-- Script Ejemplo :
-  "/Labs/KodeKloud/01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1.md"
-
-- Tipo Entorno :
-  "AUTO-DETECT"
-
-# Valores permitidos:
-# - AUTO-DETECT
-# - VAGRANT_LIBVIRT
-# - UBUNTU_20_MULTI_NODE_VM
-
-# ─── TEMA DEL NUEVO INCIDENTE ────────────────────────────────────
-
-TEMA_SUGERIDO:
-
-- Titulo : "STG-004 - El Puente Roto – NFS Server or Client y Exportaciones con Restricciones - V1.0"
-
-- Dificultad : "7/10"
-
-- Nivel : "L2"
-
-- Temas_lfcs_rhcsa : "Use Remote Filesystems: NFS, Firewalld"
-
-- Recursos : "1 Volumen LVM en node02: /dev/vg_data/lv_shared (512 MB)."
-
-- Escenario :   "node02 exporta /srv/shared a node03, pero el cliente recibe Permission denied. root_squash activo, firewall bloqueando puertos RPC, opciones de mount inseguras. Configuración de exports por subred, apertura de puertos y montaje seguro."
+ - MODULO_CARPETA    : "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/PlaygroundsPlaygrounds/005 - Storage"
+ - MODULO_PREFIJO    : "STG"
+ - INCIDENTE_NUEVO   : 4           # Número del incidente a crear
+ - REFERENCIA_N1     : 3           # Número del incidente anterior (para copiar estructura)
+ - NO_SOLAPAR_CON    : 5           # Número del incidente siguiente (null si no existe)
+  
+ # ─── TEMA DEL NUEVO INCIDENTE ────────────────────────────────────
+ TEMA_SUGERIDO:
+   - Titulo           : "STG-004 - El Puente Roto – NFS Server or Client y Exportaciones con Restricciones - V1.0"
+   - Dificultad       : "7/10"
+   - Nivel            : "L2"
+   - Temas_lfcs_rhcsa : "Use Remote Filesystems: NFS, Firewalld"
+   - Recursos         : "1 Volumen LVM en `node02`: `/dev/vg_data/lv_shared` (512 MB)."
+   - Escenario        : "`node02` exporta `/srv/shared` a `node03`, pero el cliente recibe `Permission denied`. `root_squash` activo, firewall bloqueando puertos RPC, opciones de mount inseguras. Configuración de `exports` por subred, apertura de puertos y montaje seguro."
+   - Script Ejemplo   : "/Labs/KodeKloud/01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1.md"
 ```
 
----
-
-# REGLA ABSOLUTA
-
-```text
-Hay dos referencias distintas.
-
-REFERENCIA_N1 = cómo debe verse el documento.
-
-Script Ejemplo = cómo debe construirse técnicamente el laboratorio.
-
-Nunca asumir que ambas referencias son el mismo archivo.
-
-La IA debe mantener ambas responsabilidades completamente separadas.
 ```
 
----
+# ─────────────────────────────────────────────────────────────────
 
+### NOTAS PARA LA IA
+- No inventes comandos que no existen en Rocky Linux 9 / Ubuntu 22.04.
+- El Vagrantfile usa libvirt como provider. No uses VirtualBox syntax.
+- Los nodos son: node01 (control/admin), node02 (servidor), node03 (cliente/destino).
+- Usuario de trabajo: `bob` con contraseña `caleston123`, sudoer sin password.
+- Red privada: `192.168.122.x` con `libvirt__network_name: "mgmt-net"`.
+- La bóveda de evidencia siempre vive en node03 bajo `/opt/ops-compliance/[id-lowercase]/`.
+- El ticket siempre se inyecta en node01 como `/home/vagrant/TICKET_[ID].txt`.
+- El verify script siempre va en node01 como `/tmp/verify-[id-lowercase].sh`.
+- El provision script siempre va en node01 como `/tmp/provision-[id-lowercase].sh`.
+- Si el incidente requiere más de un disco extra, agrégalo en el array `extra_disks` del nodo correspondiente.
+- Usa `wipefs` y `umount` con `|| true` para limpiar residuos de incidentes anteriores al inicio del provisioning.
+```
