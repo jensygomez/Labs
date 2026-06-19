@@ -281,3 +281,17 @@ tags:
   - RHCSA
 ---
 [[Laboratorios del LFCS]]
+
+Recently, I worked on a Linux system administration challenge where I had to automate the onboarding process for 50 new employees using Bash scripting.
+
+The objective was to process a CSV file containing employee information and automatically create Linux user accounts for each person.
+
+First, I designed a script to read the file line by line using a `while` loop. Then, I extracted and normalized the employee data, such as first name, last name, and department, converting everything to lowercase to maintain a consistent naming convention.
+
+After that, I generated usernames following the `firstname.lastname` format, verified whether the accounts already existed, and skipped duplicate entries to avoid interrupting the entire batch process.
+
+One of the most interesting parts of the challenge was generating secure random passwords and assigning them automatically to each user account. I also implemented logging with timestamps to keep track of successful and failed operations.
+
+During the implementation, I faced a troubleshooting issue related to a `Broken pipe` error while generating passwords from `/dev/urandom`. I investigated the behavior of the pipeline and learned that `head` was closing the stream before `tr` finished processing, which helped me better understand how Linux pipes work.
+
+This exercise strengthened my Bash scripting skills, especially in automation, user management, loops, conditional statements, logging, and troubleshooting. It also reinforced an important system administration mindset: always validate inputs, automate repetitive tasks, and build scripts that can safely process multiple operations without affecting the entire system.
