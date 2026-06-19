@@ -20,6 +20,8 @@ Antes de generar nada, necesitás estos datos. Si el usuario no los dio todos, p
 - `NO_SOLAPAR_CON`: número del incidente siguiente, si existe (para evitar repetir tema)
 - Tema sugerido: título corto, dificultad (X/10), nivel de escalación (L1/L2/L3), temas LFCS/RHCSA cubiertos, recursos (discos, LVM, etc.), escenario narrativo
 
+**IMPORTANTE — convención de nombres mixta:** algunos módulos (Essential Commands, Operations-Deployment, Users-Groups) tienen archivos de una generación anterior con prefijo `PG-` o `X - PG-` (sin prefijo de módulo). Esos son legacy. Para identificar el último incidente y el siguiente número a usar, **ignorá cualquier archivo que empiece con `PG-` o `X -`** — solo contá y referenciá los que usan el prefijo oficial del módulo actual (`EC-`, `OD-`, `USR-`, `NET-`, `STG-`, `BS-`, `DK-`).
+
 ## PASO 1 — Acceder al repo
 
 ```bash
@@ -37,9 +39,11 @@ Navegá a `MODULO_CARPETA` (ver PASO 0).
 
 Leé `Lista de Laboratorios.md` (o el nombre exacto que tenga ese directorio). Identificá:
 
-- Todos los incidentes existentes (IDs, títulos, temas cubiertos)
-- El incidente `REFERENCIA_N1` (referencia de estructura)
-- El incidente `NO_SOLAPAR_CON` (temas y Vagrant script a no repetir)
+- Todos los incidentes existentes (IDs, títulos, temas cubiertos) — **excluyendo cualquier archivo o entrada con prefijo `PG-` o `X -` (legacy, generación anterior, sin prefijo de módulo)**
+- El incidente `REFERENCIA_N1` (referencia de estructura), tomado solo entre los que usan el prefijo oficial del módulo
+- El incidente `NO_SOLAPAR_CON` (temas y Vagrant script a no repetir), también solo entre los del prefijo oficial
+
+Si al listar archivos del directorio aparecen `PG-00X` o `X - PG-00X`, no los cuentes como parte de la numeración del módulo ni los uses como referencia de estructura — son de una convención anterior y se mantienen sin tocar.
 
 Mostrá al usuario un resumen antes de continuar. Esperá confirmación si quiere ajustar el número de incidente.
 
