@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/006 - Bash Script/BS-003 - La Fábrica de Usuarios – Bucles y Archivos - V1.0.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "BS-003 - La Fábrica de Usuarios – Bucles y Archivos - V1.0"
+              "title": "Laboratorios del LFCS"
             }
           }
         ]
@@ -203,9 +203,9 @@
   },
   "active": "fe9da27ba1f1a9a4",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/006 - Bash Script/Lista de Laboratorios BASH.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/006 - Bash Script/BS-003 - La Fábrica de Usuarios – Bucles y Archivos - V1.0.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/006 - Bash Script/Lista de Laboratorios BASH.md",
     "STG-004 - El Puente Roto – NFS Server or Client y Exportaciones con Restricciones - V1.0.md",
     "crear-estructura.sh",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Storage/Sem título.md",

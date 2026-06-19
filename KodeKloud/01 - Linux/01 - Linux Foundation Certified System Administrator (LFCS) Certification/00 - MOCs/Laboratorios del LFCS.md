@@ -30,16 +30,16 @@ tags:
 | **Bash Avanzado**                                                                                   |            |                  |                 |                       |                                 |
 | [[BS-001 - El Eco Silencioso – Variables y Redirecciones]]                                          |     2      |        L1        |     30 min      |     `13/06/2026`      | <input type="checkbox" checked> |
 | [[BS-002 - El Portero Lógico – Condicionales y Validaciones]]                                       |     3      |        L1        |     30 min      |     `15/06/2026`      | <input type="checkbox" checked> |
+| [[BS-003 - La Fábrica de Usuarios – Bucles y Archivos - V1.0]]                                      |     4      |        L2        |     80 min      |     `19/06/2026`      | <input type="checkbox" checked> |
 | **Docker**                                                                                          |            |                  |                 |                       |                                 |
 | [[DK-001 - El Contenedor Reincidente Fallo de Persistencia y Entorno]]                              |     5      |      L1/L2       |     20 min      |     `11/06/2026`      | <input type="checkbox" checked> |
 | [[DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red]]                          |     6      |        L2        |     40 min      |     `12/06/2026`      | <input type="checkbox" checked> |
 |                                                                                                     |            |                  |                 |                       |                                 |
 |                                                                                                     |            |                  |                 |                       |                                 |
-|                                                                                                     |            |                  | **11:20 horas** |                       |                                 |
+|                                                                                                     |            |                  | **12:40 horas** |                       |                                 |
 |                                                                                                     |            |                  |                 |                       |                                 |
 |                                                                                                     |            |                  |                 |                       |                                 |
 
-             
 
 
 
