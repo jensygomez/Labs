@@ -1,10 +1,4 @@
 
-¡Excelente decisión! Reducir a **20 laboratorios** es una estrategia brillante. Te permite tener una **ruta maestra completa** (desde Bash hasta Kubernetes) sin abrumarte, manteniendo la intensidad y el formato de "escenario de la vida real" que te gusta. 
-
-He integrado todo en un solo plan maestro de 20 laboratorios, dividido en 3 bloques lógicos: **Bash Scripting (la base)**, **Linux Pleno (LFCS/RHCSA)** y **DevOps & Kubernetes (la meta)**.
-
-Aquí tienes tu ruta completa de 20 laboratorios:
-
 ### 🗺️ Ruta Maestra: Del NOC al DevOps Engineer (20 Laboratorios)
 *Arquitectura base: `host-admin` (Tu estación de trabajo/CI-CD), `rhel-node-01` y `rhel-node-02` (Servidores Linux para Sysadmin), `k8s-master` y `k8s-worker` (Clúster de Kubernetes).*
 
