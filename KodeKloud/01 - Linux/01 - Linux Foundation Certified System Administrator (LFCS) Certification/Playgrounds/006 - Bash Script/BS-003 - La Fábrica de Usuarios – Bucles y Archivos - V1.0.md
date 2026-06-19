@@ -218,16 +218,3 @@ tags:
 ---
 [[Laboratorios del LFCS]]
 ---
-While reviewing the onboarding pipeline, I noticed that every time HR hired a batch of employees, the IT team spent hours creating accounts manually — a tedious, error-prone process that delayed new hires from accessing their tools on day one. The CSV file they sent was clean, structured, and perfect for automation, but nobody had written a script to consume it.
-
-I built a Bash script that read the CSV line by line using `while read`, parsing each record with `cut` to extract the name, last name, and department. For every line, the script constructed a username in the format `name.lastname`, verified it didn't already exist, and if it was new, created the account with `useradd -m -G <department>`. A secondary group per department already existed, so the script simply referenced it. Then it generated a random 12-character password using `/dev/urandom` and `tr`, set it with `chpasswd`, and appended a timestamped entry to a log file.
-
-The script was intentionally non-destructive: if a user already existed, it logged a warning and moved on instead of failing. By the time the loop finished, 50 new users had system accounts, correct secondary groups, and initial passwords — all documented in an auditable log. What used to take a full morning now took under a minute, and HR received a clean report they could forward to each employee.
-
----
-
-<!-- REPAIR-HINT:
-Si el verify falla, ejecuta en node01:
-  sudo bash /tmp/verify-bs-003-v1.sh --fix
-Esto re-aplica solo el provisioning del Vagrantfile sin destruir la VM.
--->
