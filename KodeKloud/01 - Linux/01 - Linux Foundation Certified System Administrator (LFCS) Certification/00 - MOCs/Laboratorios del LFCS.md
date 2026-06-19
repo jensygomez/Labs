@@ -7,7 +7,6 @@ tags:
 | Essential Comands                                                                                   | Dificultad | Level Escalation |     Tiempo      | **Fecha 1er Intento** |             Ciclos              |
 | --------------------------------------------------------------------------------------------------- | :--------: | :--------------: | :-------------: | :-------------------: | :-----------------------------: |
 | [[EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema - V1.0]]                    |     5      |        L2        |     40 min      |     `14/06/2026`      | <input type="checkbox" checked> |
-| [[EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema - V2.0]]                    |     7      |        L2        |                 |                       |                                 |
 | [[EC-002 - La Estructura Colapsada – Gestión Avanzada de Archivos y Enlaces - V1.0]]                |     6      |        L2        |     30 min      |     `16/06/2026`      | <input type="checkbox" checked> |
 | [[EC-003 - El Permiso Prohibido – Control de Acceso y Bits Especiales - V1.0]]                      |    6.5     |        L2        |     40 min      |     `16/06/2026`      | <input type="checkbox" checked> |
 | **Operations Deployments**                                                                          |            |                  |                 |                       |                                 |
@@ -34,10 +33,10 @@ tags:
 | **Docker**                                                                                          |            |                  |                 |                       |                                 |
 | [[DK-001 - El Contenedor Reincidente Fallo de Persistencia y Entorno]]                              |     5      |      L1/L2       |     20 min      |     `11/06/2026`      | <input type="checkbox" checked> |
 | [[DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red]]                          |     6      |        L2        |     40 min      |     `12/06/2026`      | <input type="checkbox" checked> |
+| [[DK-003 - La Imagen Fantasma – Diagnóstico y Corrección de Dockerfile - V1.0]]                     |     6      |        l2        |     40 min      |     `19/06/2026`      | <input type="checkbox" checked> |
 |                                                                                                     |            |                  |                 |                       |                                 |
-|                                                                                                     |            |                  |                 |                       |                                 |
-|                                                                                                     |            |                  | **12:40 horas** |                       |                                 |
-|                                                                                                     |            |                  |                 |                       |                                 |
+|                                                                                                     |            |                  |   800 minutos   |                       |                                 |
+|                                                                                                     |            |                  | **13:20 horas** |                       |                                 |
 |                                                                                                     |            |                  |                 |                       |                                 |
 
 

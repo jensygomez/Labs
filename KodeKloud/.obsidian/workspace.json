@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/006 - Bash Script/BS-003 - La Fábrica de Usuarios – Bucles y Archivos - V1.0.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/EC-004 - La Aguja en el Pajar – Búsqueda, Filtrado y Expresiones Regulares - V1.0.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "BS-003 - La Fábrica de Usuarios – Bucles y Archivos - V1.0"
+              "title": "EC-004 - La Aguja en el Pajar – Búsqueda, Filtrado y Expresiones Regulares - V1.0"
             }
           }
         ]
@@ -203,11 +203,16 @@
   },
   "active": "fe9da27ba1f1a9a4",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Docker/Lista de Laboratorios Docker.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/006 - Bash Script/Lista de Laboratorios BASH.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/006 - Bash Script/BS-003 - La Fábrica de Usuarios – Bucles y Archivos - V1.0.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Docker/DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/Lista de Laboratorios.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/EC-004 - La Aguja en el Pajar – Búsqueda, Filtrado y Expresiones Regulares - V1.0.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/EC-003 - El Permiso Prohibido – Control de Acceso y Bits Especiales - V1.0.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Docker/DK-003 - La Imagen Fantasma – Diagnóstico y Corrección de Dockerfile - V1.0.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema - V2.0.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Docker/Lista de Laboratorios Docker.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/006 - Bash Script/BS-003 - La Fábrica de Usuarios – Bucles y Archivos - V1.0.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/006 - Bash Script/Lista de Laboratorios BASH.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Docker/DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red.md",
     "STG-004 - El Puente Roto – NFS Server or Client y Exportaciones con Restricciones - V1.0.md",
     "crear-estructura.sh",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Storage/Sem título.md",
@@ -225,11 +230,6 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/lista de 10 laboratorios.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/NET-003 - La Interfaz Fantasma – Fallo en el Levantamiento de Interfaces y Enrutamiento  - V1.0.md",
     "TCC/Introduccion.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Operations Deployment/OD-003 - Sintonizando el Núcleo – Parámetros del Kernel y Análisis Forense de Logs - V1.0.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/USR-003 - La Bomba de Tenedores (Fork Bomb) – Límites de Recursos de Usuario.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Networking/NET-002 - La Paradoja Temporal – Deriva de Reloj y Fallo de Autenticación en Clúst.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/X - PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora).md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/X - PG-003 - Gestión de privilegios y control de acceso (Sudoers, PAM y NSSwitch) - V1.md",
     "TCC",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/vagrantfile",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Vagrant/vagrantfile",
