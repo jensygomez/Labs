@@ -5,22 +5,19 @@
 
 ## Datos fijos
 - **Formato:** Artigo Científico
-- **Tema actual:** Arquiteturas Orientadas a Microsserviços em Ambientes de
-  Computação em Nuvem: uma Revisão Bibliográfica sobre Desafios de Escalabilidade
-  e Resiliência
-- **Problema:** De que forma a adoção de arquiteturas baseadas em microsserviços
-  contribui para a escalabilidade e a resiliência de infraestruturas em nuvem?
+- **Tema actual:** Arquiteturas Orientadas a Microsserviços em Ambientes de Computação em Nuvem: uma Revisão Bibliográfica sobre Desafios de Escalabilidade e Resiliência
+- **Problema:** De que forma a adoção de arquiteturas baseadas em microsserviços contribui para a escalabilidade e a resiliência de infraestruturas em nuvem?
 
 ## Etapas
 
 | # | Etapa | Estado | Notas |
 |---|---|---|---|
 | 1 | Tema/problema/justificativa/objetivos | 🟡 borrador inicial | Ver CLAUDE.md §2, falta validar con orientador |
-| 2 | Recolección de fuentes (8-15) | ⬜ no iniciado | Meta: 10-12 fuentes reales |
+| 2 | Recolección de fuentes (8-15) | ✅ completo y validado | Meta: 8-15 fuentes reales. Ya se cuentan con 9 fuentes clave de arquitectura e infraestructura. |
 | 3 | Resumo + Palavras-chave | ⬜ no iniciado | Se escribe al final |
-| 4 | Introdução | ⬜ no iniciado | |
-| 5 | Metodologia | ⬜ no iniciado | |
-| 6 | Resultados e Discussões | ⬜ no iniciado | |
+| 4 | Introdução | ✅ completo y validado | Borrador inicial completo en draft.md; estructurado bajo normas ABNT. |
+| 5 | Metodologia | ✅ completo y validado | Protocolo de revisión bibliográfica cualitativa redactado en draft.md. |
+| 6 | Resultados e Discussões | ⬜ no iniciado | Próximo gran paso: cruzar las 9 fuentes en el cuerpo del texto. |
 | 7 | Conclusão | ⬜ no iniciado | |
 | 8 | Referências (lista final ABNT) | ⬜ no iniciado | |
 | 9 | Revisión global ABNT | ⬜ no iniciado | |
@@ -28,18 +25,16 @@
 Leyenda: ⬜ no iniciado · 🟡 en progreso · ✅ completo y validado
 
 ## Conteo actual
-- Páginas del cuerpo textual: 0 (meta: 10-20)
-- Referencias recolectadas: 0 (meta: 8-15)
+- Páginas del cuerpo textual: 2.5 (meta: 10-20)
+- Referencias recolectadas: 9 (meta: 8-15)
+
 
 ## Dudas abiertas / pendientes para próxima sesión
 - Confirmar tema definitivo con orientador (el actual es propuesta inicial)
-- Empezar búsqueda de fuentes en Google Acadêmico / Scielo sobre
-  "arquitetura de microsserviços", "escalabilidade em nuvem", "resiliência
-  de sistemas distribuídos"
+- Buscar de 3 a 5 fuentes adicionales en Google Acadêmico / Scielo focadas em infraestrutura prática (ex: Kubernetes, Service Mesh ou logs/observabilidade em nuvem) para fechar a meta de referências.
 
 ## Historial de sesiones
 *(la skill agrega una entrada nueva al final de cada sesión)*
 
-- **Sesión 0 (setup):** Creado el proyecto, definido tema provisional,
-  formato confirmado como artículo científico, estructura de carpetas y
-  skill `avanzar-tcc` instaladas.
+- **Sesión 0 (setup):** Creado el proyecto, definido tema provisional, formato confirmado como artículo científico, estructura de carpetas y skill `avanzar-tcc` instaladas.
+- **Sesión 1 (Fuentes, Introducción y Metodología):** Se consolidaron las 9 fuentes bibliográficas reales en `bibliografia.md`, completando la Etapa 2. Además, se redactaron los borradores iniciales completos de la `Introdução` y la `Metodologia` dentro de `articulo/draft.md`, estructurados rigurosamente bajo normas ABNT y en 3ª persona. Las etapas 4 y 5 quedan completadas en su fase de borrador.
