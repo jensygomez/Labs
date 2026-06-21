@@ -14,7 +14,7 @@ tags:
 | [[OD-001 - El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro - V1.0]]                |    6.5     |        L2        |     40 min      |     `15/06/2026`      |   <input type="checkbox" checked>   |
 | [[OD-002 - El Servicio Zombi – Diagnóstico de Procesos y Creación de Units systemd - V1.0]]         |     7      |        L2        |     40 min      |     `16/06/2026`      |   <input type="checkbox" checked>   |
 | [[OD-003 - Sintonizando el Núcleo – Parámetros del Kernel y Análisis Forense de Logs - V1.0]]       |    7.5     |        L3        |     40 min      |     `17/06/2026`      |   <input type="checkbox" checked>   |
-| [[OD-004 - Dependencias Huérfanas – Repositorios, Paquetes y Compilación desde Fuente - V1.0]]      |     6      |        L2        |     40 min      |      `21/06/2026      |   <input type="checkbox" checked>   |
+| [[OD-004 - Dependencias Huérfanas – Repositorios, Paquetes y Compilación desde Fuente - V1.0]]      |     6      |        L2        |     40 min      |     `21/06/2026`      |   <input type="checkbox" checked>   |
 | **Users and Groups**                                                                                |            |                  |                 |                       |                                     |
 | [[USR-001 - El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración]]                |     7      |        L2        |     40 min      |     `11/06/2026`      |   <input type="checkbox" checked>   |
 | [[USR-002 -El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0]]        |     7      |      L2/L3       |     40 min      |     `15/06/2026`      |   <input type="checkbox" checked>   |
