@@ -33,7 +33,7 @@ Aquí tienes la propuesta de los **6 Laboratorios de Usuarios y Grupos**, diseñ
 *   **Escenario:** Un script mal optimizado ejecutado por el usuario `batch-processor` en `node02` está consumiendo todos los descriptores de archivo y procesos, congelando el nodo. Debes endurecer `/etc/security/limits.conf` (y/o límites de systemd) para restringir `nproc` y `nofile` *solo* para ese usuario/grupo, sin afectar a `root` ni a otros servicios críticos.
 
 #### **4. USR-004: La Identidad Perdida – Migración a Autenticación Centralizada (LDAP/SSSD)**
-*   **Dificultad:** 9/10 | **Nivel:** L3 (Crítico para Enterprise)
+*   **Dificultad:** 6/10 | **Nivel:** L2
 *   **Temas LFCS:** Configure the System to Use LDAP User and Group Accounts.
 *   **Enfoque DevOps/K8s:** SSO (Single Sign-On) y gestión de identidades en clústeres grandes.
 *   **Escenario:** La empresa está eliminando usuarios locales. Debes configurar `node03` como un servidor OpenLDAP básico (o simular la conexión a uno) y configurar `node02` con `sssd` y `pam` para autenticar usuarios contra LDAP. El reto: asegurar que las reglas de `sudo` también se apliquen a los usuarios LDAP (usando `%ldap_admins`).
