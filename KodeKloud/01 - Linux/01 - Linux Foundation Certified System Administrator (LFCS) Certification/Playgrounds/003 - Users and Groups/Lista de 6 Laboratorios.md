@@ -1,16 +1,9 @@
 
-Para el módulo de **Users and Groups**, y teniendo en cuenta tu objetivo dual de **Sysadmin Linux Pleno (L2/L3)** y **DevOps Engineer / Kubernetes**, te recomiendo encarecidamente diseñar **6 laboratorios**.
 
-### ¿Por qué exactamente 6 laboratorios?
-1. **Evita la repetición:** Crear 11 laboratorios (uno por lección) sería redundante. Temas como "Crear usuarios" y "Crear grupos" se fusionan naturalmente en un escenario de aprovisionamiento real.
-2. **Enfoque en la complejidad (Dificultad 7-9):** Para llegar a nivel L3 y DevOps, no basta con saber el comando `useradd`. Necesitas saber cómo los límites de recursos (`ulimit`), los perfiles de entorno y la autenticación centralizada (LDAP/SSSD) afectan a un clúster de Kubernetes o a una aplicación distribuida.
-3. **Alineación con Kubernetes:** Kubernetes depende totalmente de la seguridad del nodo subyacente. Un DevOps debe saber configurar usuarios de servicio (ej. `kubelet`), limitar recursos a nivel de SO (cgroups/ulimit) y auditar el acceso `sudo`.
-
-Aquí tienes la propuesta de los **6 Laboratorios de Usuarios y Grupos**, diseñados para tu entorno de 3 nodos (`node01`: Admin, `node02`: Target/App, `node03`: Servidor LDAP/Bóveda).
 
 ---
 
-### 🗺️ Ruta de Práctica: Users & Groups Avanzado (L2/L3 + DevOps/K8s)
+### 🗺️ Ruta de Práctica: Users & Groups Avanzado (L2 + DevOps/K8s)
 
 #### **1. USR-001: El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración**
 *   **Dificultad:** 7/10 | **Nivel:** L2
@@ -34,31 +27,53 @@ Aquí tienes la propuesta de los **6 Laboratorios de Usuarios y Grupos**, diseñ
 
 #### **4. USR-004: La Identidad Perdida – Migración a Autenticación Centralizada (LDAP/SSSD)**
 *   **Dificultad:** 6/10 | **Nivel:** L2
-*   **Temas LFCS:** Configure the System to Use LDAP User and Group Accounts.
-*   **Enfoque DevOps/K8s:** SSO (Single Sign-On) y gestión de identidades en clústeres grandes.
-*   **Escenario:** La empresa está eliminando usuarios locales. Debes configurar `node03` como un servidor OpenLDAP básico (o simular la conexión a uno) y configurar `node02` con `sssd` y `pam` para autenticar usuarios contra LDAP. El reto: asegurar que las reglas de `sudo` también se apliquen a los usuarios LDAP (usando `%ldap_admins`).
+*   **Temas LFCS:** Configure SSH Server, Manage User Authentication Methods, SSH Key-Based Authentication.
+*   **Enfoque DevOps/K8s:** Seguridad en acceso a nodos, automatización de despliegues sin contraseñas, principios Zero Trust.
+*   **Escenario:** La política de seguridad de la empresa prohíbe la autenticación SSH por contraseña. Debes:
 
-#### **5. USR-005: La Puerta Trasera Cerrada – Gestión de Acceso a Root y Auditoría**
-*   **Dificultad:** 8/10 | **Nivel:** L3
-*   **Temas LFCS:** Manage Access to Root Account, Manage User Privileges.
-*   **Enfoque DevOps/K8s:** Cumplimiento de normas de seguridad (CIS Benchmarks) y auditoría (compliance).
-*   **Escenario:** Una auditoría de seguridad marcó que el usuario `root` puede iniciar sesión directamente por SSH en `node02`, y no hay registro de quién ejecuta comandos `sudo`. Debes deshabilitar el login directo de `root`, configurar `sudo` para que registre todos los comandos en un archivo de log separado (`/var/log/sudo.log` mediante `rsyslog` o `journald`), y asegurar que solo el grupo `sysadmin` pueda usar `su -`.
+  1. Generar pares de llaves SSH para usuarios específicos en `node01`
+2. Distribuir las llaves públicas a `node02` configurando `~/.ssh/authorized_keys`
+3. Aplicar restricciones avanzadas en `authorized_keys` (limitar desde qué IP pueden conectarse, comandos específicos)
+4. Hardening de `sshd_config` en `node02` (desactivar PasswordAuthentication, PermitRootLogin, etc.)
+5. Configurar acceso sin contraseña para automatización (script de despliegue desde `node01` a `node02`)
+6. Auditoría de llaves instaladas y reporte a `node03`
 
-#### **6. USR-006: El Examen Final – Hardening de un Nodo para Kubernetes (Day-1 Prep)**
-*   **Dificultad:** 9/10 | **Nivel:** L3 (Capstone)
-*   **Temas LFCS:** Integración de todos los temas del módulo.
-*   **Enfoque DevOps/K8s:** Preparación de un "Worker Node" seguro antes de unirse a un clúster.
-*   **Escenario:** Se te entrega `node02` en un estado caótico. Debes prepararlo para ser un nodo de Kubernetes: 
-  1. Crear el usuario de servicio `kubelet` con shell `/sbin/nologin`.
-  2. Configurar `/etc/skel` para que los admins nuevos tengan el `umask` correcto (027).
-  3. Aplicar límites estrictos de `nofile=1048576` y `nproc=4096` para el usuario `kubelet`.
-  4. Asegurar que la autenticación de admins venga vía LDAP (simulado) desde `node03`.
-  5. Generar un reporte de cumplimiento en la bóveda de `node03`.
+#### **5. **Título:** USR-005: SSH Hardening Básico
+**Temas:** Configure SSH Server, Manage Access to Root Account
+**Enfoque:** Primer paso de seguridad de acceso a un nodo. Es la base de cualquier hardening — sin esto, todo lo demás (sudo, auditoría) es inútil porque la puerta de entrada sigue abierta.
+**Escenario:** Una auditoría de seguridad marcó que `root` puede iniciar sesión directamente por SSH en `node02`. Debes deshabilitar `PermitRootLogin`, desactivar `PasswordAuthentication` (forzando autenticación por llave), y reiniciar el servicio `sshd` verificando que la configuración no rompa el acceso actual antes de cerrar la sesión.
 
 ---
 
-### 💡 Por qué esta progresión te hace un mejor DevOps:
-*   **USR-003 (Límites)** te enseña por qué los Pods de Kubernetes se quedan en estado `OOMKilled` o `CrashLoopBackOff` si el nodo no está bien configurado.
-*   **USR-004 (LDAP)** es exactamente lo que se usa en empresas reales para integrar Kubernetes con Active Directory o Keycloak.
-*   **USR-006 (Capstone)** simula una tarea real de un Ingeniero de Plataforma (Platform Engineer): escribir un script de Ansible/Terraform que deje un nodo listo y seguro para K8s.
+**Título:** USR-006: Auditoría de Sudo con rsyslog
+**Temas:** Manage User Privileges, Manage User Authentication Methods
+**Enfoque:** Cumplimiento (compliance). No basta con dar permisos — hay que poder demostrar quién hizo qué y cuándo, algo que cualquier auditoría de seguridad va a pedir.
+**Escenario:** No hay registro de quién ejecuta comandos `sudo` en `node02`. Debes configurar `sudo` para que registre todos los comandos ejecutados en un archivo de log separado (`/var/log/sudo.log`) usando `rsyslog`, y verificar que los logs se generen correctamente al usar comandos privilegiados.
 
+---
+
+**Título:** USR-007: Restricción de `su -` por Grupo
+**Temas:** Manage Access to Root Account, Local User/Group Management
+**Enfoque:** Principio de menor privilegio aplicado a la escalación de privilegios — solo un grupo controlado debería poder volverse root, no cualquier usuario del sistema.
+**Escenario:** Cualquier usuario en `node02` puede ejecutar `su -` e intentar volverse root si conoce la contraseña. Debes crear (o usar) el grupo `sysadmin`, configurar PAM (`/etc/pam.d/su`) para que solo los miembros de ese grupo puedan ejecutar `su -`, y verificar el bloqueo con un usuario fuera del grupo.
+
+---
+
+**Título:** USR-008: Usuario de Servicio sin Login
+**Temas:** Local User/Group Management, Configure User Resource Limits
+**Enfoque:** Cómo se preparan las cuentas de servicio en producción — nunca con shell interactiva, siempre con límites de recursos definidos desde el principio.
+**Escenario:** Necesitas crear el usuario de servicio `kubelet` en `node02`, con shell `/sbin/nologin` (no debe poder iniciar sesión interactiva), y aplicarle límites estrictos de `nofile=1048576` y `nproc=4096` vía `/etc/security/limits.conf` o un drop-in de systemd.
+
+---
+
+**Título:** USR-009: Plantilla de Usuario Estándar (/etc/skel)
+**Temas:** Manage Template User Environment, Manage System-Wide Environment Profiles
+**Enfoque:** Estandarización de entornos — que todo usuario nuevo nazca con la configuración de seguridad correcta, sin depender de que el admin se acuerde de aplicarla a mano cada vez.
+**Escenario:** Los admins nuevos que se crean en `node02` no tienen un `umask` seguro por defecto. Debes configurar `/etc/skel` y los scripts en `/etc/profile.d/` para que cualquier usuario nuevo herede automáticamente `umask 027`, y comprobar el resultado creando un usuario de prueba.
+
+---
+
+**Título:** USR-010: Capstone — Hardening de Nodo para Kubernetes
+**Temas:** Integración de todos los temas anteriores (USR-005 a USR-009)
+**Enfoque:** Preparación real de un "worker node" antes de unirse a un clúster — este es el ticket que mide si ya integraste todo lo anterior sin guía paso a paso.
+**Escenario:** Se te entrega `node02` en estado caótico y debes dejarlo listo como nodo de Kubernetes: SSH hardenizado, sudo con logging, `su -` restringido al grupo `sysadmin`, usuario de servicio `kubelet` con `nologin` y límites de recursos, y `/etc/skel` con `umask 027` para los admins. Al final, debes generar un reporte de cumplimiento y dejarlo en `node03`.

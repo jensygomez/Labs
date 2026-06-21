@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/USR-004 - La Identidad Perdida – Migración a Autenticación Centralizada (LDAP SSSD) -  V1.0.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/Lista de 6 Laboratorios.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "USR-004 - La Identidad Perdida – Migración a Autenticación Centralizada (LDAP SSSD) -  V1.0"
+              "title": "Lista de 6 Laboratorios"
             }
           }
         ]
@@ -204,7 +204,7 @@
   "active": "fe9da27ba1f1a9a4",
   "lastOpenFiles": [
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/USR-004 - La Identidad Perdida – Migración a Autenticación Centralizada (LDAP SSSD) -  V1.0.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/USR-004 - Las Llaves del Reino – Gestión de Acceso SSH y Autenticación por Claves -  V1.0.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/Lista de 6 Laboratorios.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/USR-003 - La Bomba de Tenedores (Fork Bomb) – Límites de Recursos de Usuario.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/USR-002 -El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0.md",

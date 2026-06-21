@@ -19,6 +19,7 @@ tags:
 | [[USR-001 - El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración]]                |     7      |        L2        |     40 min      |     `11/06/2026`      |   <input type="checkbox" checked>   |
 | [[USR-002 -El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0]]        |     7      |      L2/L3       |     40 min      |     `15/06/2026`      |   <input type="checkbox" checked>   |
 | [[USR-003 - La Bomba de Tenedores (Fork Bomb) – Límites de Recursos de Usuario]]                    |     8      |        L3        |     20 min      |     `17/06/2026`      |   <input type="checkbox" checked>   |
+| [[USR-004 - Las Llaves del Reino – Gestión de Acceso SSH y Autenticación por Claves -  V1.0]]       |     6      |        L2        |                 |                       |                                     |
 | **Networking**                                                                                      |            |                  |                 |                       |                                     |
 | [[NET-001 - El Candado Oxidado – Bloqueo de Acceso SSH y Resolución de Nombres]]                    |     6      |        L2        |     30 min      |     `11/06/2026`      |   <input type="checkbox" checked>   |
 | [[NET-002 - La Paradoja Temporal – Deriva de Reloj y Fallo de Autenticación en Clúster]]            |     6      |        L2        |     60 min      |     `15/06/2026`      |   <input type="checkbox" checked>   |
