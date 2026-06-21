@@ -26,7 +26,7 @@ Se mantiene estrictamente tu **Regla de Oro**: Todo se ejecuta desde `node01`, s
 *   **Escenario:** `node02` está sufriendo caídas de red intermitentes y posibles OOM (Out of Memory) kills. Desde `node01`, debes analizar los logs (`journalctl -k` o `/var/log/messages`) para confirmar la causa. Luego, debes ajustar parámetros del kernel de forma no persistente para prueba inmediata (ej. `vm.swappiness`, `net.ipv4.ip_forward`, o `vm.panic_on_oom`) y, una vez validado, hacer el cambio persistente en `/etc/sysctl.d/`. Envía los logs filtrados y la configuración aplicada a `node03`.
 
 #### **4. OD-004: Dependencias Huérfanas – Repositorios, Paquetes y Compilación desde Fuente**
-*   **Dificultad:** 7.0/10 | **Nivel:** L2
+*   **Dificultad:** 6/10 | **Nivel:** L2
 *   **Temas Operations Deployment:** Manage Software with the Package Manager; Configure the Repositories; Install Software by Compiling Source Code; Verify Integrity.
 *   **Objetivo:** Prepararme para aprobar el LFCS, RHCSA, Para Sysadmin Linux Pleno, DevOps Engineer y Sysadmin Kubernetes.
 *   **Escenario:** El repositorio oficial de `node02` está caído o no contiene una versión específica de una herramienta de monitoreo necesaria. Debes configurar un repositorio alternativo (local o espejo), instalar las dependencias de compilación (`gcc`, `make`, etc.), descargar el código fuente, compilarlo e instalarlo (`./configure`, `make`, `make install`). Finalmente, verifica la integridad del binario instalado (ej. con `ldd` o `hash`) y reporta el proceso a `node03`.

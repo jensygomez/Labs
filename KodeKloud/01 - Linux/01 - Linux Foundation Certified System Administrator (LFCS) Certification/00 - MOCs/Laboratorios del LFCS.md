@@ -4,40 +4,41 @@ tags:
 ---
 # 🗺️ Mapa de Control: LFCS
 
-| Essential Comands                                                                                   | Dificultad | Level Escalation |     Tiempo      | **Fecha 1er Intento** |             Ciclos              |
-| --------------------------------------------------------------------------------------------------- | :--------: | :--------------: | :-------------: | :-------------------: | :-----------------------------: |
-| [[EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema - V1.0]]                    |     5      |        L2        |     40 min      |     `14/06/2026`      | <input type="checkbox" checked> |
-| [[EC-002 - La Estructura Colapsada – Gestión Avanzada de Archivos y Enlaces - V1.0]]                |     6      |        L2        |     30 min      |     `16/06/2026`      | <input type="checkbox" checked> |
-| [[EC-003 - El Permiso Prohibido – Control de Acceso y Bits Especiales - V1.0]]                      |    6.5     |        L2        |     40 min      |     `16/06/2026`      | <input type="checkbox" checked> |
-| **Operations Deployments**                                                                          |            |                  |                 |                       |                                 |
-| [[OD-001 - El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro - V1.0]]                |    6.5     |        L2        |     30 min      |     `15/06/2026`      | <input type="checkbox" checked> |
-| [[OD-002 - El Servicio Zombi – Diagnóstico de Procesos y Creación de Units systemd - V1.0]]         |     7      |        L2        |     40 min      |     `16/06/2026`      | <input type="checkbox" checked> |
-| [[OD-003 - Sintonizando el Núcleo – Parámetros del Kernel y Análisis Forense de Logs - V1.0]]       |    7.5     |        L3        |     40 min      |     `17/06/2026`      | <input type="checkbox" checked> |
-| **Users and Groups**                                                                                |            |                  |                 |                       |                                 |
-| [[USR-001 - El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración]]                |     7      |        L2        |     40 min      |     `11/06/2026`      | <input type="checkbox" checked> |
-| [[USR-002 -El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0]]        |     7      |      L2/L3       |     40 min      |     `15/06/2026`      | <input type="checkbox" checked> |
-| [[USR-003 - La Bomba de Tenedores (Fork Bomb) – Límites de Recursos de Usuario]]                    |     8      |        L3        |     20 min      |     `17/06/2026`      | <input type="checkbox" checked> |
-| **Networking**                                                                                      |            |                  |                 |                       |                                 |
-| [[NET-001 - El Candado Oxidado – Bloqueo de Acceso SSH y Resolución de Nombres]]                    |     6      |        L2        |     30 min      |     `11/06/2026`      | <input type="checkbox" checked> |
-| [[NET-002 - La Paradoja Temporal – Deriva de Reloj y Fallo de Autenticación en Clúster]]            |     6      |        L2        |     60 min      |     `15/06/2026`      | <input type="checkbox" checked> |
-| [[NET-003 - La Interfaz Fantasma – Fallo en el Levantamiento de Interfaces y Enrutamiento  - V1.0]] |     7      |      L2/L3       |     30 min      |     `18/06/2026`      | <input type="checkbox" checked> |
-| **Storage**                                                                                         |            |                  |                 |                       |                                 |
-| [[STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente]]               |     6      |        L2        |     40 min      |     `14/06/2026`      | <input type="checkbox" checked> |
-| [[STG-002 - El Laberinto LVM – Volúmenes Lógicos que No Montan y VG Fragmentado - V1.0]]            |     7      |      L2/L3       |     40 min      |     `16/06/2026`      | <input type="checkbox" checked> |
-| [[STG-003 - La Montaña Rusa de IO – Monitoreo de Performance y Cuellos de Botella - V1.0]]          |     7      |        L3        |     40 min      |     `18/06/2026`      | <input type="checkbox" checked> |
-|                                                                                                     |            |                  |                 |                       |                                 |
-| **Bash Avanzado**                                                                                   |            |                  |                 |                       |                                 |
-| [[BS-001 - El Eco Silencioso – Variables y Redirecciones]]                                          |     2      |        L1        |     30 min      |     `13/06/2026`      | <input type="checkbox" checked> |
-| [[BS-002 - El Portero Lógico – Condicionales y Validaciones]]                                       |     3      |        L1        |     30 min      |     `15/06/2026`      | <input type="checkbox" checked> |
-| [[BS-003 - La Fábrica de Usuarios – Bucles y Archivos - V1.0]]                                      |     4      |        L2        |     80 min      |     `19/06/2026`      | <input type="checkbox" checked> |
-| **Docker**                                                                                          |            |                  |                 |                       |                                 |
-| [[DK-001 - El Contenedor Reincidente Fallo de Persistencia y Entorno]]                              |     5      |      L1/L2       |     20 min      |     `11/06/2026`      | <input type="checkbox" checked> |
-| [[DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red]]                          |     6      |        L2        |     40 min      |     `12/06/2026`      | <input type="checkbox" checked> |
-| [[DK-003 - La Imagen Fantasma – Diagnóstico y Corrección de Dockerfile - V1.0]]                     |     6      |        l2        |     40 min      |     `19/06/2026`      | <input type="checkbox" checked> |
-|                                                                                                     |            |                  |                 |                       |                                 |
-|                                                                                                     |            |                  |   800 minutos   |                       |                                 |
-|                                                                                                     |            |                  | **13:20 horas** |                       |                                 |
-|                                                                                                     |            |                  |                 |                       |                                 |
+| Essential Comands                                                                                   | Dificultad | Level Escalation |     Tiempo      | **Fecha 1er Intento** |               Ciclos                |
+| --------------------------------------------------------------------------------------------------- | :--------: | :--------------: | :-------------: | :-------------------: | :---------------------------------: |
+| [[EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema - V1.0]]                    |     5      |        L2        |     40 min      |     `14/06/2026`      |   <input type="checkbox" checked>   |
+| [[EC-002 - La Estructura Colapsada – Gestión Avanzada de Archivos y Enlaces - V1.0]]                |     6      |        L2        |     30 min      |     `16/06/2026`      |   <input type="checkbox" checked>   |
+| [[EC-003 - El Permiso Prohibido – Control de Acceso y Bits Especiales - V1.0]]                      |    6.5     |        L2        |     40 min      |     `16/06/2026`      |   <input type="checkbox" checked>   |
+| [[EC-004 - La Aguja en el Pajar – Búsqueda, Filtrado y Expresiones Regulares - V1.0]]               |     6      |        L2        |     50 min      |     `21/06/2026`      | <input type="checkbox" checked><br> |
+| **Operations Deployments**                                                                          |            |                  |                 |                       |                                     |
+| [[OD-001 - El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro - V1.0]]                |    6.5     |        L2        |     30 min      |     `15/06/2026`      |   <input type="checkbox" checked>   |
+| [[OD-002 - El Servicio Zombi – Diagnóstico de Procesos y Creación de Units systemd - V1.0]]         |     7      |        L2        |     40 min      |     `16/06/2026`      |   <input type="checkbox" checked>   |
+| [[OD-003 - Sintonizando el Núcleo – Parámetros del Kernel y Análisis Forense de Logs - V1.0]]       |    7.5     |        L3        |     40 min      |     `17/06/2026`      |   <input type="checkbox" checked>   |
+| **Users and Groups**                                                                                |            |                  |                 |                       |                                     |
+| [[USR-001 - El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración]]                |     7      |        L2        |     40 min      |     `11/06/2026`      |   <input type="checkbox" checked>   |
+| [[USR-002 -El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0]]        |     7      |      L2/L3       |     40 min      |     `15/06/2026`      |   <input type="checkbox" checked>   |
+| [[USR-003 - La Bomba de Tenedores (Fork Bomb) – Límites de Recursos de Usuario]]                    |     8      |        L3        |     20 min      |     `17/06/2026`      |   <input type="checkbox" checked>   |
+| **Networking**                                                                                      |            |                  |                 |                       |                                     |
+| [[NET-001 - El Candado Oxidado – Bloqueo de Acceso SSH y Resolución de Nombres]]                    |     6      |        L2        |     30 min      |     `11/06/2026`      |   <input type="checkbox" checked>   |
+| [[NET-002 - La Paradoja Temporal – Deriva de Reloj y Fallo de Autenticación en Clúster]]            |     6      |        L2        |     60 min      |     `15/06/2026`      |   <input type="checkbox" checked>   |
+| [[NET-003 - La Interfaz Fantasma – Fallo en el Levantamiento de Interfaces y Enrutamiento  - V1.0]] |     7      |      L2/L3       |     30 min      |     `18/06/2026`      |   <input type="checkbox" checked>   |
+| **Storage**                                                                                         |            |                  |                 |                       |                                     |
+| [[STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente]]               |     6      |        L2        |     40 min      |     `14/06/2026`      |   <input type="checkbox" checked>   |
+| [[STG-002 - El Laberinto LVM – Volúmenes Lógicos que No Montan y VG Fragmentado - V1.0]]            |     7      |      L2/L3       |     40 min      |     `16/06/2026`      |   <input type="checkbox" checked>   |
+| [[STG-003 - La Montaña Rusa de IO – Monitoreo de Performance y Cuellos de Botella - V1.0]]          |     7      |        L3        |     40 min      |     `18/06/2026`      |   <input type="checkbox" checked>   |
+|                                                                                                     |            |                  |                 |                       |                                     |
+| **Bash Avanzado**                                                                                   |            |                  |                 |                       |                                     |
+| [[BS-001 - El Eco Silencioso – Variables y Redirecciones]]                                          |     2      |        L1        |     30 min      |     `13/06/2026`      |   <input type="checkbox" checked>   |
+| [[BS-002 - El Portero Lógico – Condicionales y Validaciones]]                                       |     3      |        L1        |     30 min      |     `15/06/2026`      |   <input type="checkbox" checked>   |
+| [[BS-003 - La Fábrica de Usuarios – Bucles y Archivos - V1.0]]                                      |     4      |        L2        |     80 min      |     `19/06/2026`      |   <input type="checkbox" checked>   |
+| **Docker**                                                                                          |            |                  |                 |                       |                                     |
+| [[DK-001 - El Contenedor Reincidente Fallo de Persistencia y Entorno]]                              |     5      |      L1/L2       |     20 min      |     `11/06/2026`      |   <input type="checkbox" checked>   |
+| [[DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red]]                          |     6      |        L2        |     40 min      |     `12/06/2026`      |   <input type="checkbox" checked>   |
+| [[DK-003 - La Imagen Fantasma – Diagnóstico y Corrección de Dockerfile - V1.0]]                     |     6      |        l2        |     40 min      |     `19/06/2026`      |   <input type="checkbox" checked>   |
+|                                                                                                     |            |                  |                 |                       |                                     |
+|                                                                                                     |            |                  |   850 minutos   |                       |                                     |
+|                                                                                                     |            |                  | **14:10 horas** |                       |                                     |
+|                                                                                                     |            |                  |                 |                       |                                     |
 
 
 

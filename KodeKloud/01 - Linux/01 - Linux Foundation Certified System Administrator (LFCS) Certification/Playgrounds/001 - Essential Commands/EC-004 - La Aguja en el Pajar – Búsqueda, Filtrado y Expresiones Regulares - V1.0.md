@@ -299,3 +299,11 @@ Escenario: |-
 ---
 [[Laboratorios del LFCS]]
 ---
+
+_One recent challenge I faced involved a security incident review on a Linux server, where I had to investigate a suspected compromise within strict operational constraints. I wasn't allowed to create temporary files on the jump host — all the evidence had to flow directly from the target server to a secure storage location through a single pipeline, using only SSH and command-line tools._
+
+_The task had four parts: detecting brute-force login attempts by extracting IP addresses from the authentication logs and filtering the ones with more than three failed attempts, consolidating critical and fatal application errors that included ISO 8601 timestamps, scanning configuration files across the system for hardcoded plaintext passwords, and identifying malformed lines in several configuration files with inconsistent formats, like YAML, conf, env, and properties files._
+
+_What I found most challenging was building precise regular expressions that captured exactly what was needed without false positives — for example, distinguishing between a configuration line that legitimately contains a colon in its value versus one that's actually missing its key-value separator. I also ran into a subtle but important issue: when you nest a remote SSH command inside double quotes, the local shell tries to expand any dollar sign before sending the command, which broke my awk and grep filters until I escaped them properly. It was a good reminder that scripting for remote execution requires extra attention to how the shell parses quotes before anything even reaches the other server._
+
+_In the end, I delivered a complete forensic report combining all four findings, fully respecting the no-intermediate-files constraint by piping everything directly between servers. It reinforced for me how important it is to validate assumptions step by step — testing each piece of a pipeline individually before chaining it all together — rather than trying to build a complex solution in one shot."_
