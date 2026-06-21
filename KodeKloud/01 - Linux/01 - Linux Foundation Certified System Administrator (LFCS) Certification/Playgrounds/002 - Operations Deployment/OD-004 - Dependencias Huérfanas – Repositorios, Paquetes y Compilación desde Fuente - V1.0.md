@@ -322,3 +322,14 @@ Escenario: |-
 ---
 [[Laboratorios del LFCS]]
 ---
+
+
+One challenge I dealt with recently involved a Linux server where a critical monitoring tool needed to be compiled from source, but the package repositories were completely broken — one of the configured sources pointed to a domain that simply didn't exist, so every update attempt failed with a DNS resolution error.
+
+The first thing I did was inspect the repository configuration files instead of guessing, and I confirmed the issue using `apt-cache policy`, which showed there were zero valid package sources available. Once I identified the broken URL, I reconfigured the repository to point to the official Ubuntu mirror, matching the correct distribution codename, and verified it was working before moving forward.
+
+After that, I installed the build toolchain — gcc, make, and the build-essential meta-package — and ran the standard compilation cycle: configure, make, and make install. During compilation, I actually hit a second issue: the Makefile failed with a 'missing separator' error, which I recognized as a classic Makefile formatting problem — the recipe lines were missing tab characters, which make strictly requires instead of regular spaces. I fixed that directly in the file and the build succeeded right after.
+
+Once the binary was installed, I didn't just assume it worked — I verified it properly: confirmed its location with which, checked all its dynamic library dependencies with ldd to make sure nothing was missing, validated the file type and architecture with file, and finally ran it with --version to confirm it executed correctly.
+
+What I took away from that task is the importance of diagnosing root causes methodically instead of jumping straight to fixes, and of validating every step instead of assuming success — especially in compilation workflows, where a small formatting issue like a missing tab can block the entire build.
