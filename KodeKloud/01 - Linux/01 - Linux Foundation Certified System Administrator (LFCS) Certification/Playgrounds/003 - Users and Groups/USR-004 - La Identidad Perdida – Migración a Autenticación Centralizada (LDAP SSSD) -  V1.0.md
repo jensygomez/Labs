@@ -63,8 +63,34 @@ Script: |-
       echo "slapd shared/organization string Example" | debconf-set-selections
       dpkg-reconfigure -f noninteractive slapd
 
-      # Crear estructura LDAP base
-      cat > /tmp/base.ldif << 'BASELDIF'
+      # === PASO CRÍTICO: Asegurar que el servicio LDAP esté activo ===
+      echo -e "\e[1;33m🔄 Verificando y activando servicio slapd...\e[0m"
+      
+      # Verificar estado del servicio
+      if ! systemctl is-active --quiet slapd; then
+          echo "Service slapd no está activo. Iniciando..."
+          systemctl start slapd
+      fi
+      
+      # Esperar un poco para que el servicio se estabilice
+      sleep 3
+      
+      # Verificar que realmente responde
+      if ! ldapsearch -x -H ldap://localhost -b 'dc=example,dc=com' '(objectclass=*)' 2>/dev/null | grep -q "numEntries"; then
+          echo -e "\e[1;31m⚠️  LDAP no responde correctamente. Reintentando...\e[0m"
+          systemctl restart slapd
+          sleep 3
+      fi
+      
+      echo -e "\e[1;32m✅ Servicio slapd activo y respondiendo\e[0m"
+
+      # === PARCHE INTEGRADO: Poblamiento LDAP correcto ===
+      
+      # 1. Verificar si la base existe
+      echo "Verificando base del directorio..."
+      if ! ldapsearch -x -b 'dc=example,dc=com' '(objectclass=organization)' 2>/dev/null | grep -q "numEntries"; then
+          echo "Creando base del directorio..."
+          cat > /tmp/base.ldif << 'BASELDIF'
   dn: dc=example,dc=com
   objectClass: top
   objectClass: dcObject
@@ -80,9 +106,24 @@ Script: |-
   objectClass: organizationalUnit
   ou: groups
   BASELDIF
+          
+          ldapadd -x -D "cn=admin,dc=example,dc=com" -w admin123 -f /tmp/base.ldif
+          echo "✅ Base creada"
+      else
+          echo "✅ Base ya existe"
+      fi
 
-      # Crear usuarios LDAP
-      cat > /tmp/users.ldif << 'USERSLDIF'
+      # 2. Verificar si los usuarios existen
+      echo "Verificando usuarios..."
+      if ! ldapsearch -x -b 'ou=users,dc=example,dc=com' '(uid=alice)' 2>/dev/null | grep -q "numEntries: 1"; then
+          echo "Creando usuarios..."
+          
+          # Generar hashes de contraseñas
+          ALICE_HASH=$(slappasswd -s alice123)
+          BOB_HASH=$(slappasswd -s bob123)
+          CHARLIE_HASH=$(slappasswd -s charlie123)
+          
+          cat > /tmp/users.ldif << USERSLDIF
   dn: uid=alice,ou=users,dc=example,dc=com
   objectClass: inetOrgPerson
   objectClass: posixAccount
@@ -95,7 +136,7 @@ Script: |-
   gidNumber: 10001
   homeDirectory: /home/alice
   loginShell: /bin/bash
-  userPassword: {SSHA}placeholder
+  userPassword: $ALICE_HASH
   gecos: Alice Smith
 
   dn: uid=bob,ou=users,dc=example,dc=com
@@ -110,7 +151,7 @@ Script: |-
   gidNumber: 10002
   homeDirectory: /home/bob
   loginShell: /bin/bash
-  userPassword: {SSHA}placeholder
+  userPassword: $BOB_HASH
   gecos: Bob Johnson
 
   dn: uid=charlie,ou=users,dc=example,dc=com
@@ -125,12 +166,21 @@ Script: |-
   gidNumber: 10001
   homeDirectory: /home/charlie
   loginShell: /bin/bash
-  userPassword: {SSHA}placeholder
+  userPassword: $CHARLIE_HASH
   gecos: Charlie Brown
   USERSLDIF
+          
+          ldapadd -x -D "cn=admin,dc=example,dc=com" -w admin123 -f /tmp/users.ldif
+          echo "✅ Usuarios creados"
+      else
+          echo "✅ Usuarios ya existen"
+      fi
 
-      # Crear grupos LDAP
-      cat > /tmp/groups.ldif << 'GROUPSLDIF'
+      # 3. Verificar si los grupos existen
+      echo "Verificando grupos..."
+      if ! ldapsearch -x -b 'ou=groups,dc=example,dc=com' '(cn=ldap_users)' 2>/dev/null | grep -q "numEntries: 1"; then
+          echo "Creando grupos..."
+          cat > /tmp/groups.ldif << 'GROUPSLDIF'
   dn: cn=ldap_users,ou=groups,dc=example,dc=com
   objectClass: posixGroup
   cn: ldap_users
@@ -144,40 +194,29 @@ Script: |-
   gidNumber: 10002
   memberUid: bob
   GROUPSLDIF
+          
+          ldapadd -x -D "cn=admin,dc=example,dc=com" -w admin123 -f /tmp/groups.ldif
+          echo "✅ Grupos creados"
+      else
+          echo "✅ Grupos ya existen"
+      fi
 
-      # Importar estructura base
-      ldapadd -x -D "cn=admin,dc=example,dc=com" -w admin123 -f /tmp/base.ldif
-      
-      # Importar usuarios
-      ldapadd -x -D "cn=admin,dc=example,dc=com" -w admin123 -f /tmp/users.ldif
-      
-      # Importar grupos
-      ldapadd -x -D "cn=admin,dc=example,dc=com" -w admin123 -f /tmp/groups.ldif
-
-      # Establecer contraseñas para usuarios
-      echo -e "alice123\nalice123" | slappasswd -s alice123 | xargs -I {} ldapmodify -x -D "cn=admin,dc=example,dc=com" -w admin123 << 'MODALICE'
-  dn: uid=alice,ou=users,dc=example,dc=com
-  changetype: modify
-  replace: userPassword
-  userPassword: {}
-  MODALICE
-
-      echo -e "bob123\nbob123" | slappasswd -s bob123 | xargs -I {} ldapmodify -x -D "cn=admin,dc=example,dc=com" -w admin123 << 'MODBOB'
-  dn: uid=bob,ou=users,dc=example,dc=com
-  changetype: modify
-  replace: userPassword
-  userPassword: {}
-  MODBOB
-
-      echo -e "charlie123\ncharlie123" | slappasswd -s charlie123 | xargs -I {} ldapmodify -x -D "cn=admin,dc=example,dc=com" -w admin123 << 'MODCHARLIE'
-  dn: uid=charlie,ou=users,dc=example,dc=com
-  changetype: modify
-  replace: userPassword
-  userPassword: {}
-  MODCHARLIE
-
-      # Limpiar archivos temporales
+      # 4. Limpiar archivos temporales
       rm -f /tmp/base.ldif /tmp/users.ldif /tmp/groups.ldif
+
+      # 5. Verificación final
+      echo ""
+      echo -e "\e[1;32m=== VERIFICACIÓN FINAL LDAP ===\e[0m"
+      echo "Usuarios en el directorio:"
+      ldapsearch -x -b 'ou=users,dc=example,dc=com' '(objectclass=inetOrgPerson)' uid | grep "^uid:"
+
+      echo ""
+      echo "Grupos en el directorio:"
+      ldapsearch -x -b 'ou=groups,dc=example,dc=com' '(objectclass=posixGroup)' cn | grep "^cn:"
+
+      echo ""
+      echo "Membresía de ldap_admins:"
+      ldapsearch -x -b 'cn=ldap_admins,ou=groups,dc=example,dc=com' memberUid | grep "memberUid:"
 
       # Preparar bóveda de evidencia
       mkdir -p /opt/ops-compliance/usr-004
