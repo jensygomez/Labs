@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "edc3df92fdbb943b",
+        "id": "3cb23f776faaae9f",
         "type": "tabs",
         "children": [
           {
-            "id": "fe9da27ba1f1a9a4",
+            "id": "14510f89910b695c",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -201,10 +201,10 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "fe9da27ba1f1a9a4",
+  "active": "14510f89910b695c",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes/Lista de Laboratorios.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/lista de 10 laboratorios.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/Lista de 6 Laboratorios.md",
