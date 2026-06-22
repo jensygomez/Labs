@@ -1,4 +1,8 @@
 
+
+
+
+
 ### K8s-001 - El Pod Fantasma - Namespace Incorrecto
 - Dificultad: 3/10
 - Level escalation: L1

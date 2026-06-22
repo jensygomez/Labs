@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/lista de 10 laboratorios.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes/K8s playground lab context.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "lista de 10 laboratorios"
+              "title": "K8s playground lab context"
             }
           }
         ]
@@ -203,12 +203,15 @@
   },
   "active": "a41f0d172ec229f2",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/USR-004 - Las Llaves del Reino – Gestión de Acceso SSH y Autenticación por Claves -  V1.0.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes/Lista de Laboratorios.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes/K8s playground lab context.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/NET-004 - El Muro Ciego – Reglas de Firewall Bloquean Tráfico Legítimo.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/NET-003 - La Interfaz Fantasma – Fallo en el Levantamiento de Interfaces y Enrutamiento  - V1.0.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/lista de 10 laboratorios.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/USR-004 - Las Llaves del Reino – Gestión de Acceso SSH y Autenticación por Claves -  V1.0.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Docker/DK-001 - El Contenedor Reincidente Fallo de Persistencia y Entorno.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/lista de 10 laboratorios.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/Lista de 6 Laboratorios.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/USR-003 - La Bomba de Tenedores (Fork Bomb) – Límites de Recursos de Usuario.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/USR-002 -El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0.md",
@@ -228,10 +231,7 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/006 - Bash Script/BS-003 - La Fábrica de Usuarios – Bucles y Archivos - V1.0.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/006 - Bash Script/Lista de Laboratorios BASH.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Docker/DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red.md",
-    "STG-004 - El Puente Roto – NFS Server or Client y Exportaciones con Restricciones - V1.0.md",
     "crear-estructura.sh",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Storage/Sem título.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/PROMT MAESTRO.md",
     "TCC",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/vagrantfile",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Vagrant/vagrantfile",
