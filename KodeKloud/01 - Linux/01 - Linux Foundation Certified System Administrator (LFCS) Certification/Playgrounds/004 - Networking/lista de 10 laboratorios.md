@@ -48,7 +48,7 @@ Aquí va el esqueleto — una guía de referencia para cuando armes el próximo 
 *   **Escenario:** Tras un reinicio simulado de `node02`, la interfaz de red secundaria (usada para comunicación con `node03`) no levanta. Además, falta una ruta estática crítica. Debes diagnosticar la configuración de red (Netplan o `systemd-networkd`), corregir la sintaxis del archivo YAML/config, aplicar los cambios sin reiniciar el servidor completo y verificar la tabla de enrutamiento (`ip route`).
 
 #### **4. NET-004: El Muro Ciego – Reglas de Firewall Bloquean Tráfico Legítimo**
-*   **Dificultad:** 7/10 | **Nivel:** L2/L3
+*   **Dificultad:** 6/10 | **Nivel:** L2
 *   **Temas LFCS:** Configure Packet Filtering (Firewall).
 *   **Objetivo**:  Prepararme para aprobar el LFCS, RHCSA, Para Sysadmin Linux Pleno y Devops Enginner. 
 *   **Escenario:** El equipo de seguridad aplicó reglas de `iptables` (o `nftables`) en `node02` de forma agresiva. Ahora, el tráfico de retorno de las conexiones establecidas se está descartando, y los logs de `node03` muestran "Connection timed out". Debes auditar las reglas, identificar la regla que rompe el estado `ESTABLISHED,RELATED`, corregirla y hacerla persistente.
