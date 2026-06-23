@@ -93,18 +93,3 @@ Nivel L1, dificultad 3-5/10. Fallas comunes que un NOC L1 vería escaladas desde
 
 ---
 
-## 4. Integración con el repo `jensygomez/Labs`
-
-**Ubicación sugerida:** `Labs/k8s/INFRA-CONTEXT.md` (este documento) + `Labs/k8s/incidentes/K8S-00X.md` (uno por incidente, mismo formato que los módulos de Essential Commands / Bash Script ya existentes).
-
-**Línea a agregar en `CLAUDE.md` o `SKILL.md` del módulo K8s:**
-
-```
-Antes de generar cualquier incidente K8S-XXX, leer k8s/INFRA-CONTEXT.md
-para usar la topología real (3 nodos, containerd, Canal CNI, v1.36.0)
-en lugar de asumir un entorno genérico de 2 nodos.
-```
-
----
-
-**Última verificación de infraestructura:** 2026-06-22, sesión KodeKloud, cluster recién provisionado (~19 min de uptime al momento de la captura).
