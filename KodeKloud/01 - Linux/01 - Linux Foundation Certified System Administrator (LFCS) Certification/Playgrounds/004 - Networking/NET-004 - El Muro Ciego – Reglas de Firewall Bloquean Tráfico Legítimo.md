@@ -288,3 +288,14 @@ Escenario: |-
 
 ---
 
+_Sure — one challenge I tackled recently involved a network connectivity issue between two servers in a distributed environment. After a security hardening update, internal services stopped responding, and connections were just timing out, with no rejection at all, which made it trickier to diagnose._
+
+_I started by auditing the firewall rules on the affected server using iptables, and I noticed the default policy was set to DROP, but there was no rule allowing established or related traffic. That meant any return traffic from legitimate connections was being silently dropped, which matched the symptoms perfectly._
+
+_Before jumping to a fix, I wanted solid evidence, so I ran a packet capture with tcpdump while generating test traffic from the client side. That confirmed the SYN packets were arriving at the server, but it never replied — no SYN-ACK, no RST, nothing. The packets were being dropped before the TCP stack could even respond._
+
+_I also discovered the actual service was running on a different port than what was documented, which added another layer to the investigation. Once I had that clarity, I inserted the missing ESTABLISHED,RELATED rule and a specific rule to allow new connections from the internal subnet to the correct port, making sure to place them in the right order — before any DROP or LOG rules._
+
+_After validating connectivity was restored, I made the fix persistent so it would survive a service or system restart, and I documented everything with clear evidence — firewall rule counters and a successful connection test — without leaving any temporary files on the control node, since that was a strict requirement._
+
+_What I really took away from that case is the importance of methodical troubleshooting — inspecting the configuration, reproducing the issue, running the right diagnostic command, fixing it surgically, and then verifying and documenting the fix — rather than just applying a quick patch._

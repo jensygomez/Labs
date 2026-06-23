@@ -174,37 +174,36 @@ EOF
           iptables -t mangle -F
           iptables -t mangle -X
 
-          # 2. Configurar políticas por defecto DROP (El "Muro")
-          iptables -P INPUT DROP
-          iptables -P FORWARD DROP
-          iptables -P OUTPUT ACCEPT
-
-          # 3. Permitir tráfico local (loopback) esencial
+          # 2. Mientras la política sigue en ACCEPT (default de Ubuntu/iptables),
+          #    construimos primero las rendijas de salvación. Si invirtiéramos
+          #    este orden, el propio script se cortaría la sesión SSH a sí mismo
+          #    (self-lockout) apenas se ejecute "iptables -P INPUT DROP".
           iptables -A INPUT -i lo -j ACCEPT
           iptables -A OUTPUT -o lo -j ACCEPT
 
-          # 4. PERMITIR SALIDA NUEVA (El administrador puede salir, pero nada entra)
-          # Esto simula que el servidor puede hacer updates, pero no recibe respuestas
-          # a conexiones iniciadas desde fuera si no se define ESTABLISHED.
-          # NOTA: Al no poner ESTABLISHED,RELATED aquí, las respuestas a SYN externos
-          # se pierden si la política de INPUT es DROP y no hay regla específica.
-          
-          # 5. ERROR INTENCIONAL: Se permite SSH solo desde una IP específica que NO es la del cliente
-          # o simplemente se olvida la regla de estado. Aquí simulamos el olvido de ESTABLISHED.
-          # Si node03 intenta conectar, el SYN llega, pero el SYN-ACK de respuesta se genera.
-          # El problema real es que si la política es DROP, necesitamos aceptar ESTABLISHED.
-          
-          # Vamos a simular un escenario donde se intentó ser seguro pero se rompió la stateful inspection.
-          # Se añade una regla para permitir ping (ICMP) solo de origen específico falso, 
-          # pero se OLVIDA la regla maestra de estado.
-          
+          # Canal de management SIEMPRE abierto (red mgmt 192.168.122.0/24).
+          # Esto es lo que te permite seguir entrando por SSH desde node01
+          # como un sysadmin remoto real, sin necesitar consola/virsh.
+          iptables -A INPUT -p tcp -s 192.168.122.0/24 --dport 22 -j ACCEPT
+
+          # 3. ERROR INTENCIONAL (bug pedagógico real del lab):
+          #    Regla de ICMP inútil que no resuelve el problema de fondo.
+          #    Se permite ping solo desde un origen falso que nunca se usará.
           iptables -A INPUT -p icmp --icmp-type echo-request -s 192.168.99.99 -j ACCEPT
           
-          # Se habilita logging para que vean los descartes (opcional pero útil para debug)
+          # Logging de los descartes (útil para debug con journalctl/dmesg)
           iptables -A INPUT -j LOG --log-prefix "IPTABLES-DROP: " --log-level 4
           
-          # Guardar reglas actuales (incorrectas) para que sean persistentes al inicio
-          # Si existe iptables-save, lo usamos. En Ubuntu suele estar con iptables-persistent
+          # 4. RECIÉN AHORA, con la rendija de management ya garantizada,
+          #    cerramos la puerta. Esto es lo que rompe el tráfico de node03
+          #    (red cluster-internal 10.99.99.0/24): sigue faltando la regla
+          #    de estado ESTABLISHED,RELATED para ese tráfico específico.
+          iptables -P FORWARD DROP
+          iptables -P OUTPUT ACCEPT
+          iptables -P INPUT DROP
+
+          # Guardar reglas actuales (incorrectas a propósito) para que sean
+          # persistentes al reiniciar. En Ubuntu suele estar con iptables-persistent
           if command -v netfilter-persistent &> /dev/null; then
              netfilter-persistent save
           elif command -v iptables-save &> /dev/null; then
@@ -219,6 +218,7 @@ EOF
           
           echo "✅ Escenario de firewall 'Muro Ciego' inyectado en node02."
           echo "   - Política INPUT: DROP"
+          echo "   - SSH management (192.168.122.0/24): PERMITIDO"
           echo "   - Regla ESTABLISHED,RELATED: AUSENTE"
           echo "   - Servicio de prueba: Puerto 8080"
         SHELL

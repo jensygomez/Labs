@@ -31,16 +31,16 @@
 - **Escenario:** Latencia extrema en `node03` al escribir en mount NFS. Uso de `iostat`, `iotop`, `sar -d`, `nfsiostat`. Ajuste de opciones `async,noatime,rsize=32768,wsize=32768` y validación de mejora.
 
 #### **4. STG-004: El Puente Roto – NFS Server/Client y Exportaciones con Restricciones**
-- **Dificultad:** 7/10 | **Nivel:** L2
+- **Dificultad:** 6/10 | **Nivel:** L2
 - **Temas LFCS/RHCSA:** Use Remote Filesystems: NFS, Firewalld.
 - **Recursos:** 1 Volumen LVM en `node02`: `/dev/vg_data/lv_shared` (512 MB).
 - **Objetivo:** Configurar servicios de red de almacenamiento con control de acceso.
 - **Escenario:** `node02` exporta `/srv/shared` a `node03`, pero el cliente recibe `Permission denied`. `root_squash` activo, firewall bloqueando puertos RPC, opciones de mount inseguras. Configuración de `exports` por subred, apertura de puertos y montaje seguro.
 
 #### **5. STG-005: Los Permisos Rebeldes – ACLs, SGID y Sticky Bit en Directorios Compartidos**
-- **Dificultad:** 8/10 | **Nivel:** L3
+- **Dificultad:** 6/10 | **Nivel:** L2
 - **Temas LFCS/RHCSA:** Advanced Filesystem Permissions, ACLs.
-- **Recursos:** 1 Disco en `node02`: `/dev/vdb` (1 GB, montado en `/srv/proyectos`).
+- **Recursos:** 1 Disco en `node02`: `/dev/vdb` (512 MB, montado en `/srv/proyectos`).
 - **Objetivo:** Dominar control de acceso granular en Linux.
 - **Escenario:** Directorio `/srv/proyectos` debe permitir colaboración entre `devs` y `ops`, pero solo el dueño puede borrar archivos. Subdirectorio requiere acceso de solo lectura para `auditor`. Implementación de `SGID`, `Sticky Bit`, `setfacl` con `default ACLs` y validación de herencia.
 
