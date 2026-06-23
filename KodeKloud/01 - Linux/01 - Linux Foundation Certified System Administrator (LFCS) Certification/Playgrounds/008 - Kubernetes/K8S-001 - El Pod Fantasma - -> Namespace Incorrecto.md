@@ -231,3 +231,12 @@ Escenario: |-
 [[Laboratorios del LFCS]]
 
 ---
+Recently, I faced a troubleshooting scenario in a Kubernetes environment where a development team reported that a critical application was missing after deployment.
+
+At first, when I executed `kubectl get pods`, no resources were displayed in the default namespace. Instead of assuming the deployment had failed, I started investigating the cluster configuration.
+
+I listed all available namespaces and identified a non-standard namespace called `staging-ns`. After inspecting it, I found that the `web-frontend` application had been deployed successfully and was running correctly.
+
+The root cause was not a technical failure, but a visibility issue. The application was deployed into a different namespace than expected, which prevented it from appearing in the default view.
+
+This experience reinforced the importance of verifying the environment before making changes, understanding Kubernetes namespaces, and following a structured troubleshooting methodology based on: verify, investigate, resolve, and validate.

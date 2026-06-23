@@ -39,10 +39,12 @@ tags:
 | [[DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red]]                          |     6      |        L2        |     40 min      |     `12/06/2026`      |   <input type="checkbox" checked>   |
 | [[DK-003 - La Imagen Fantasma – Diagnóstico y Corrección de Dockerfile - V1.0]]                     |     6      |        l2        |     40 min      |     `19/06/2026`      |   <input type="checkbox" checked>   |
 | **Kubernetes**                                                                                      |            |                  |                 |                       |                                     |
+| [[K8S-001 - El Pod Fantasma - -> Namespace Incorrecto]]                                             |     3      |        L1        |     20 min      |     `23/06/2026`      |   <input type="checkbox" checked>   |
 |                                                                                                     |            |                  |                 |                       |                                     |
-|                                                                                                     |            |                  |   880 minutos   |                       |                                     |
-|                                                                                                     |            |                  | **14:40 horas** |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
+|                                                                                                     |            |                  |                 |                       |                                     |
+|                                                                                                     |            |                  |   900 minutos   |                       |                                     |
+|                                                                                                     |            |                  | **15:00 horas** |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 
 

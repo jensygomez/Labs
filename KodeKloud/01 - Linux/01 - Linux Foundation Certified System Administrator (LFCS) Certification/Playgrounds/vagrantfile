@@ -1,437 +1,246 @@
- │   # -*- mode: ruby -*-                                                                                        │ │
-│ │                                                                                                               │ │
-│ │   # vi: set ft=ruby :                                                                                         │ │
-│ │                                                                                                               │ │
-│ │   Vagrant.configure("2") do |config|                                                                          │ │
-│ │     config.vm.box = "generic/ubuntu2204"                                                                      │ │
-│ │                                                                                                               │ │
-│ │     nodes = [                                                                                                 │ │
-│ │       { name: "node01", ip: "192.168.122.11", extra_disks: [] },                                              │ │
-│ │       { name: "node02", ip: "192.168.122.12", extra_disks: ['512M'] }, # STG-004: 1 disco LVM de 512MB        │ │
-│ │       { name: "node03", ip: "192.168.122.13", extra_disks: [] }                                               │ │
-│ │     ]                                                                                                         │ │
-│ │                                                                                                               │ │
-│ │     nodes.each do |node|                                                                                      │ │
-│ │       config.vm.define node[:name] do |node_config|                                                           │ │
-│ │         node_config.vm.hostname = node[:name]                                                                 │ │
-│ │                                                                                                               │ │
-│ │         # Red de gestión dedicada (no "default")                                                              │ │
-│ │         node_config.vm.network "private_network",                                                             │ │
-│ │           ip: node[:ip],                                                                                      │ │
-│ │           libvirt__network_name: "mgmt-net",                                                                  │ │
-│ │           libvirt__dhcp_enabled: false                                                                        │ │
-│ │                                                                                                               │ │
-│ │         node_config.vm.provider "libvirt" do |lv|                                                             │ │
-│ │           lv.memory = 1024                                                                                    │ │
-│ │           lv.cpus = 1                                                                                         │ │
-│ │           lv.driver = "kvm"                                                                                   │ │
-│ │                                                                                                               │ │
-│ │           # Crear discos adicionales según la configuración del nodo                                          │ │
-│ │           node[:extra_disks].each do |size|                                                                   │ │
-│ │             lv.storage :file, :size => size, :type => 'qcow2'                                                 │ │
-│ │           end                                                                                                 │ │
-│ │         end                                                                                                   │ │
-│ │                                                                                                               │ │
-│ │         # ── PROVISIONADO GENERAL (Todos los nodos) ──                                                        │ │
-│ │         node_config.vm.provision "shell", inline: <<-SHELL                                                    │ │
-│ │           echo "🔧 Configurando #{node[:name]}..."                                                            │ │
-│ │                                                                                                               │ │
-│ │           # 1. Resolver nombres de host localmente                                                            │ │
-│ │           cat << 'HOSTS' >> /etc/hosts                                                                        │ │
-│ │   192.168.122.11 node01                                                                                       │ │
-│ │   192.168.122.12 node02                                                                                       │ │
-│ │   192.168.122.13 node03                                                                                       │ │
-│ │   HOSTS                                                                                                       │ │
-│ │                                                                                                               │ │
-│ │           # 2. Crear usuario bob y dar permisos                                                               │ │
-│ │           useradd -m -s /bin/bash bob                                                                         │ │
-│ │           echo 'bob:caleston123' | chpasswd                                                                   │ │
-│ │           echo 'bob ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/bob                                              │ │
-│ │           chmod 0440 /etc/sudoers.d/bob                                                                       │ │
-│ │                                                                                                               │ │
-│ │           # 3. Instalar herramientas base                                                                     │ │
-│ │           export DEBIAN_FRONTEND=noninteractive                                                               │ │
-│ │           apt-get update -qq                                                                                  │ │
-│ │           apt-get install -y -qq sshpass sysstat nfs-common firewalld                                         │ │
-│ │         SHELL                                                                                                 │ │
-│ │                                                                                                               │ │
-│ │         # ── PROVISIONADO ESPECÍFICO: CONFIGURAR NODE02 COMO SERVIDOR NFS ──                                  │ │
-│ │         if node[:name] == "node02"                                                                            │ │
-│ │           node_config.vm.provision "shell", privileged: true, inline: <<-SHELL                                │ │
-│ │             echo "💾 Configurando node02 como servidor NFS problemático..."                                   │ │
-│ │                                                                                                               │ │
-│ │             # 1. Instalar servidor NFS y LVM                                                                  │ │
-│ │             export DEBIAN_FRONTEND=noninteractive                                                             │ │
-│ │             apt-get install -y -qq nfs-kernel-server lvm2                                                     │ │
-│ │                                                                                                               │ │
-│ │             # 2. Limpiar residuos de incidentes anteriores                                                    │ │
-│ │             umount /srv/shared 2>/dev/null || true                                                            │ │
-│ │             rm -rf /srv/shared                                                                                │ │
-│ │             vgremove -f vg_data 2>/dev/null || true                                                           │ │
-│ │             wipefs -a /dev/vdb 2>/dev/null || true                                                            │ │
-│ │                                                                                                               │ │
-│ │             # 3. Configurar LVM                                                                               │ │
-│ │             pvcreate /dev/vdb                                                                                 │ │
-│ │             vgcreate vg_data /dev/vdb                                                                         │ │
-│ │             lvcreate -L 400M -n lv_shared vg_data                                                             │ │
-│ │                                                                                                               │ │
-│ │             # 4. Formatear y montar                                                                           │ │
-│ │             mkfs.ext4 /dev/vg_data/lv_shared                                                                  │ │
-│ │             mkdir -p /srv/shared                                                                              │ │
-│ │             mount /dev/vg_data/lv_shared /srv/shared                                                          │ │
-│ │                                                                                                               │ │
-│ │             # 5. Persistir en fstab                                                                           │ │
-│ │             echo "/dev/vg_data/lv_shared /srv/shared ext4 defaults 0 0" >> /etc/fstab                         │ │
-│ │                                                                                                               │ │
-│ │             # 6. Crear datos de prueba                                                                        │ │
-│ │             echo "Shared NFS Data - STG-004" > /srv/shared/data.txt                                           │ │
-│ │             mkdir -p /srv/shared/restricted                                                                   │ │
-│ │             echo "Restricted Data" > /srv/shared/restricted/secret.txt                                        │ │
-│ │             chown -R nobody:nogroup /srv/shared                                                               │ │
-│ │             chmod 755 /srv/shared                                                                             │ │
-│ │                                                                                                               │ │
-│ │             # 7. CONFIGURACIÓN PROBLEMÁTICA: Exportación incorrecta (sin subred específica)                   │ │
-│ │             echo "/srv/shared *(rw,sync,no_subtree_check,root_squash)" > /etc/exports                         │ │
-│ │             # TRAMPA: Sin especificar subred, root_squash activo sin control                                  │ │
-│ │                                                                                                               │ │
-│ │             # 8. Iniciar servicio NFS (sin firewall configurado)                                              │ │
-│ │             systemctl enable nfs-kernel-server                                                                │ │
-│ │             systemctl restart nfs-kernel-server                                                               │ │
-│ │                                                                                                               │ │
-│ │             echo "✅ node02 configurado con NFS problemático."                                                 │ │
-│ │           SHELL                                                                                               │ │
-│ │         end                                                                                                   │ │
-│ │                                                                                                               │ │
-│ │         # ── PROVISIONADO ESPECÍFICO: CONFIGURAR NODE03 COMO CLIENTE NFS ──                                   │ │
-│ │         if node[:name] == "node03"                                                                            │ │
-│ │           node_config.vm.provision "shell", privileged: true, inline: <<-SHELL                                │ │
-│ │             echo "💾 Configurando node03 como cliente NFS..."                                                 │ │
-│ │                                                                                                               │ │
-│ │             # 1. Instalar cliente NFS ya instalado en provision general                                       │ │
-│ │                                                                                                               │ │
-│ │             # 2. Crear punto de montaje                                                                       │ │
-│ │             mkdir -p /mnt/shared                                                                              │ │
-│ │                                                                                                               │ │
-│ │             # 3. TRAMPA: Intentar montar sin opciones seguras                                                 │ │
-│ │             echo "⏳ Intentando montar NFS desde node02..."                                                    │ │
-│ │             # Este mount fallará o tendrá problemas de permisos                                               │ │
-│ │                                                                                                               │ │
-│ │             # 4. LA TRAMPA: Persistir en fstab con opciones potencialmente problemáticas                      │ │
-│ │             echo "192.168.122.12:/srv/shared /mnt/shared nfs defaults 0 0" >> /etc/fstab                      │ │
-│ │                                                                                                               │ │
-│ │             echo "✅ node03 preparado como cliente NFS."                                                       │ │
-│ │           SHELL                                                                                               │ │
-│ │         end                                                                                                   │ │
-│ │                                                                                                               │ │
-│ │         # ── PROVISIONADO ESPECÍFICO: FIREWALL EN NODE02 (BLOQUEANDO) ──                                      │ │
-│ │         if node[:name] == "node02"                                                                            │ │
-│ │           node_config.vm.provision "shell", privileged: true, inline: <<-SHELL                                │ │
-│ │             echo "🔥 Configurando firewall restrictivo en node02..."                                          │ │
-│ │                                                                                                               │ │
-│ │             # Habilitar firewall pero sin abrir puertos NFS                                                   │ │
-│ │             systemctl enable firewalld                                                                        │ │
-│ │             systemctl start firewalld                                                                         │ │
-│ │                                                                                                               │ │
-│ │             # Estado por defecto: bloquear todo excepto SSH                                                   │ │
-│ │             firewall-cmd --permanent --add-service=ssh                                                        │ │
-│ │             firewall-cmd --reload                                                                             │ │
-│ │                                                                                                               │ │
-│ │             echo "✅ Firewall activo sin puertos NFS abiertos."                                                │ │
-│ │           SHELL                                                                                               │ │
-│ │         end                                                                                                   │ │
-│ │                                                                                                               │ │
-│ │         # ── PROVISIONADO ESPECÍFICO: PREPARAR BÓVEDA EN NODE03 ──                                            │ │
-│ │         if node[:name] == "node03"                                                                            │ │
-│ │           node_config.vm.provision "shell", privileged: true, inline: <<-SHELL                                │ │
-│ │             echo "🔒 Preparando bóveda de auditoría en #{node[:name]}..."                                     │ │
-│ │             mkdir -p /opt/ops-compliance/stg-004                                                              │ │
-│ │             chown -R bob:bob /opt/ops-compliance/stg-004                                                      │ │
-│ │             chmod 750 /opt/ops-compliance/stg-004                                                             │ │
-│ │             echo "✅ Bóveda /opt/ops-compliance/stg-004 lista."                                                │ │
-│ │           SHELL                                                                                               │ │
-│ │         end                                                                                                   │ │
-│ │                                                                                                               │ │
-│ │         # ── PROVISIONADO ESPECÍFICO: TICKET + VERIFICACIÓN EN NODE01 ──                                      │ │
-│ │         if node[:name] == "node01"                                                                            │ │
-│ │           node_config.vm.provision "shell", privileged: false, inline: <<-SHELL                               │ │
-│ │             echo "🎫 Generando Ticket de Incidente para node01..."                                            │ │
-│ │                                                                                                               │ │
-│ │             cat << 'TICKET' > /home/vagrant/TICKET_STG-004.txt                                                │ │
-│ │   ================================================================================                            │ │
-│ │     TICKET STG-004  │  Severidad: ALTA  │  Ambiente: PRODUCCIÓN                                               │ │
-│ │   ================================================================================                            │ │
-│ │     🔗 STG-004-MN — El Puente Roto (NFS Server/Client y Exportaciones)                                        │ │
-│ │     Módulo: Storage  │  Dificultad: 7/10  │  Nivel: L2                                                        │ │
-│ │   --------------------------------------------------------------------------------                            │ │
-│ │     Ubicación de Control:  node01  (Estación del Administrador — bob)                                         │ │
-│ │     Nodo Servidor NFS:     node02  (Exportación con problemas — /srv/shared)                                  │ │
-│ │     Nodo Cliente NFS:      node03  (Acceso denegado — /mnt/shared)                                            │ │
-│ │     Nodo Bóveda Destino:   node03  (Bóveda de Gobernanza — /opt/ops-compliance/stg-004/)                      │ │
-│ │     Contraseña del Clúster: caleston123                                                                       │ │
-│ │   --------------------------------------------------------------------------------                            │ │
-│ │                                                                                                               │ │
-│ │     El equipo de desarrollo reporta que node03 no puede acceder al share NFS                                  │ │
-│ │     exportado desde node02. El mensaje de error es "Permission denied" al intentar                            │ │
-│ │     montar o acceder a archivos. La aplicación requiere acceso inmediato para                                 │ │
-│ │     continuar con el despliegue.                                                                              │ │
-│ │                                                                                                               │ │
-│ │     Una inspección inicial revela múltiples problemas potenciales:                                            │ │
-│ │     - Exportaciones NFS sin restricciones de subred específicas                                               │ │
-│ │     - Firewall activo en node02 sin puertos RPC/NFS abiertos                                                  │ │
-│ │     - Configuración root_squash sin mapeo de usuarios                                                         │ │
-│ │     - Opciones de montaje inseguras en el cliente                                                             │ │
-│ │                                                                                                               │ │
-│ │     Se requiere que un ingeniero de infraestructura diagnostique y corrija                                    │ │
-│ │     la configuración de exportaciones, abra los puertos necesarios en el firewall,                            │ │
-│ │     verifique los permisos de acceso y asegure el montaje del cliente.                                        │ │
-│ │                                                                                                               │ │
-│ │     ARQUITECTURA DE ALMACENAMIENTO                                                                            │ │
-│ │     --------------------------------------------------------------------------------                          │ │
-│ │     node02:                                                                                                   │ │
-│ │       - /dev/vg_data/lv_shared (400MB, ext4) → montado en /srv/shared                                         │ │
-│ │       - NFS exportando /srv/shared (configuración problemática)                                               │ │
-│ │       - firewalld activo sin puertos NFS                                                                      │ │
-│ │                                                                                                               │ │
-│ │     node03:                                                                                                   │ │
-│ │       - Punto de montaje: /mnt/shared (sin montar)                                                            │ │
-│ │       - Opciones de montaje en fstab: inseguras                                                               │ │
-│ │                                                                                                               │ │
-│ │     PROCEDIMIENTO REQUERIDO                                                                                   │ │
-│ │     --------------------------------------------------------------------------------                          │ │
-│ │     1. Diagnóstico de Exportaciones:                                                                          │ │
-│ │        - En node02, revisar la configuración actual de /etc/exports                                           │ │
-│ │        - Identificar problemas: falta de restricción por subred, root_squash activo                           │ │
-│ │        - Corregir exportación: especificar subred 192.168.122.0/24 con opciones seguras                       │ │
-│ │                                                                                                               │ │
-│ │     2. Configuración de Firewall:                                                                             │ │
-│ │        - En node02, identificar puertos necesarios para NFS (111, 2049, puerto dinámico rpcbind)              │ │
-│ │        - Abrir servicios nfs y rpc-bind en firewalld                                                          │ │
-│ │        - Verificar conectividad desde node03                                                                  │ │
-│ │                                                                                                               │ │
-│ │     3. Verificación de Permisos:                                                                              │ │
-│ │        - En node02, revisar owner/group de /srv/shared y subdirectorios                                       │ │
-│ │        - Configurar nobody:nogroup apropiadamente para root_squash                                            │ │
-│ │        - Validar que el cliente pueda crear/leer archivos con identidad nobody                                │ │
-│ │                                                                                                               │ │
-│ │     4. Configuración Segura del Cliente:                                                                      │ │
-│ │        - En node03, corregir /etc/fstab con opciones seguras: ro,noexec,nosuid,nodev                          │ │
-│ │        - Montar el share NFS exitosamente                                                                     │ │
-│ │        - Validar acceso de lectura y prueba de escritura desde usuario no-root                                │ │
-│ │                                                                                                               │ │
-│ │     5. Pipeline de Evidencia a node03:                                                                        │ │
-│ │        - Destino: /opt/ops-compliance/stg-004/nfs_access_evidence.txt                                         │ │
-│ │        - Desde node01, envía mediante un pipeline SSH la salida consolidada de:                               │ │
-│ │          a) Configuración de exports (cat /etc/exports en node02)                                             │ │
-│ │          b) Estado del firewall (firewall-cmd --list-all en node02)                                           │ │
-│ │          c) Estado del montaje NFS (mount | grep shared en node03)                                            │ │
-│ │          d) Prueba de acceso (ls -la /mnt/shared en node03)                                                   │ │
-│ │        - NO generar archivos temporales locales en node01.                                                    │ │
-│ │     --------------------------------------------------------------------------------                          │ │
-│ │     CRITERIOS DE ACEPTACIÓN                                                                                   │ │
-│ │     --------------------------------------------------------------------------------                          │ │
-│ │      [ ] Exportación NFS restringida a subred 192.168.122.0/24          --> 20%                               │ │
-│ │      [ ] Puertos NFS abiertos en firewalld (nfs, rpc-bind)              --> 20%                               │ │
-│ │      [ ] Permisos correctos para root_squash (nobody:nogroup)           --> 20%                               │ │
-│ │      [ ] Montaje NFS exitoso con opciones seguras en node03             --> 20%                               │ │
-│ │      [ ] Evidencia enviada a node03:/opt/ops-compliance/stg-004/        --> 20%                               │ │
-│ │      [ ] CERO archivos de resultados almacenados en node01  (DESCALIFICA)                                     │ │
-│ │                                                                                                               │ │
-│ │     REGLA DE ORO: NO deshabilites el firewall. NO uses opciones de montaje inseguras                          │ │
-│ │     (noatime, exec, suid). Toda la configuración debe seguir el principio de menor                            │ │
-│ │     privilegio posible.                                                                                       │ │
-│ │   ================================================================================                            │ │
-│ │   TICKET                                                                                                      │ │
-│ │                                                                                                               │ │
-│ │             # ── SCRIPT DE PROVISIONING SEPARADO ──                                                           │ │
-│ │             cat << 'PROVISION' > /tmp/provision-stg004.sh                                                     │ │
-│ │   #!/bin/bash                                                                                                 │ │
-│ │   set -e                                                                                                      │ │
-│ │                                                                                                               │ │
-│ │   echo "🔧 Re-aplicando provisioning STG-004..."                                                              │ │
-│ │                                                                                                               │ │
-│ │   # ─── LIMPIEZA PREVIA ───────────────────────────────────────                                               │ │
-│ │   echo "🧹 Limpiando configuración previa..."                                                                 │ │
-│ │   umount /srv/shared 2>/dev/null || true                                                                      │ │
-│ │   umount /mnt/shared 2>/dev/null || true                                                                      │ │
-│ │   exportfs -ua 2>/dev/null || true                                                                            │ │
-│ │   vgremove -f vg_data 2>/dev/null || true                                                                     │ │
-│ │   wipefs -a /dev/vdb 2>/dev/null || true                                                                      │ │
-│ │   rm -rf /srv/shared /mnt/shared                                                                              │ │
-│ │                                                                                                               │ │
-│ │   # ─── PROVISIONING DEL INCIDENTE ────────────────────────────                                               │ │
-│ │   echo "💾 Configurando node02 como servidor NFS..."                                                          │ │
-│ │                                                                                                               │ │
-│ │   # Instalar paquetes si es necesario                                                                         │ │
-│ │   export DEBIAN_FRONTEND=noninteractive                                                                       │ │
-│ │   apt-get install -y -qq nfs-kernel-server lvm2 firewalld 2>/dev/null || true                                 │ │
-│ │                                                                                                               │ │
-│ │   # Configurar LVM                                                                                            │ │
-│ │   pvcreate /dev/vdb                                                                                           │ │
-│ │   vgcreate vg_data /dev/vdb                                                                                   │ │
-│ │   lvcreate -L 400M -n lv_shared vg_data                                                                       │ │
-│ │                                                                                                               │ │
-│ │   # Formatear y montar                                                                                        │ │
-│ │   mkfs.ext4 /dev/vg_data/lv_shared                                                                            │ │
-│ │   mkdir -p /srv/shared                                                                                        │ │
-│ │   mount /dev/vg_data/lv_shared /srv/shared                                                                    │ │
-│ │                                                                                                               │ │
-│ │   # Persistir                                                                                                 │ │
-│ │   echo "/dev/vg_data/lv_shared /srv/shared ext4 defaults 0 0" >> /etc/fstab                                   │ │
-│ │                                                                                                               │ │
-│ │   # Crear datos                                                                                               │ │
-│ │   echo "Shared NFS Data - STG-004" > /srv/shared/data.txt                                                     │ │
-│ │   mkdir -p /srv/shared/restricted                                                                             │ │
-│ │   echo "Restricted Data" > /srv/shared/restricted/secret.txt                                                  │ │
-│ │   chown -R nobody:nogroup /srv/shared                                                                         │ │
-│ │   chmod 755 /srv/shared                                                                                       │ │
-│ │                                                                                                               │ │
-│ │   # Exportación problemática                                                                                  │ │
-│ │   echo "/srv/shared *(rw,sync,no_subtree_check,root_squash)" > /etc/exports                                   │ │
-│ │                                                                                                               │ │
-│ │   # Firewall restrictivo                                                                                      │ │
-│ │   systemctl enable firewalld 2>/dev/null || true                                                              │ │
-│ │   systemctl start firewalld 2>/dev/null || true                                                               │ │
-│ │   firewall-cmd --permanent --add-service=ssh                                                                  │ │
-│ │   firewall-cmd --reload                                                                                       │ │
-│ │                                                                                                               │ │
-│ │   # Iniciar NFS                                                                                               │ │
-│ │   systemctl enable nfs-kernel-server                                                                          │ │
-│ │   systemctl restart nfs-kernel-server                                                                         │ │
-│ │                                                                                                               │ │
-│ │   echo "✅ Provisioning completado"                                                                            │ │
-│ │   PROVISION                                                                                                   │ │
-│ │                                                                                                               │ │
-│ │             chmod +x /tmp/provision-stg004.sh                                                                 │ │
-│ │                                                                                                               │ │
-│ │             # ── SCRIPT DE VERIFICACIÓN RÁPIDA ──                                                             │ │
-│ │             cat << 'VERIFY' > /tmp/verify-stg004.sh                                                           │ │
-│ │   #!/bin/bash                                                                                                 │ │
-│ │                                                                                                               │ │
-│ │   # Soporte para flag --fix                                                                                   │ │
-│ │   if [[ "$1" == "--fix" ]]; then                                                                              │ │
-│ │       echo -e "\e[33m🔧 Re-aplicando provisioning...\e[0m"                                                    │ │
-│ │       sudo bash /tmp/provision-stg004.sh                                                                      │ │
-│ │       exec bash "$0"                                                                                          │ │
-│ │   fi                                                                                                          │ │
-│ │                                                                                                               │ │
-│ │   RED='\e[1;31m'                                                                                              │ │
-│ │   GREEN='\e[1;32m'                                                                                            │ │
-│ │   YELLOW='\e[1;33m'                                                                                           │ │
-│ │   CYAN='\e[1;36m'                                                                                             │ │
-│ │   RESET='\e[0m'                                                                                               │ │
-│ │                                                                                                               │ │
-│ │   SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"                                                  │ │
-│ │   PASS="caleston123"                                                                                          │ │
-│ │   FAIL=0                                                                                                      │ │
-│ │                                                                                                               │ │
-│ │   echo -e "\${CYAN}╔════════════════════════════════════════════════════════════════╗\${RESET}"               │ │
-│ │   echo -e "\${CYAN}║          VERIFICACIÓN DE ESCENARIO STG-004                    ║\${RESET}"                │ │
-│ │   echo -e "\${CYAN}╚════════════════════════════════════════════════════════════════╝\${RESET}"               │ │
-│ │   echo ""                                                                                                     │ │
-│ │                                                                                                               │ │
-│ │   # [1/8] node02: LVM Volume                                                                                  │ │
-│ │   echo -e "\${YELLOW}[1/8] node02: Volumen LVM /dev/vg_data/lv_shared\${RESET}"                               │ │
-│ │   if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "sudo lvs vg_data/lv_shared &>/dev/null"; then               │ │
-│ │     echo -e "      \${GREEN}✓ Volumen LVM existe\${RESET}"                                                    │ │
-│ │   else                                                                                                        │ │
-│ │     echo -e "      \${RED}✗ Volumen LVM no encontrado\${RESET}"                                               │ │
-│ │     FAIL=1                                                                                                    │ │
-│ │   fi                                                                                                          │ │
-│ │                                                                                                               │ │
-│ │   # [2/8] node02: Filesystem montado                                                                          │ │
-│ │   echo -e "\${YELLOW}[2/8] node02: Filesystem /srv/shared montado\${RESET}"                                   │ │
-│ │   if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "df -h /srv/shared | grep -q shared"; then                   │ │
-│ │     echo -e "      \${GREEN}✓ Filesystem montado\${RESET}"                                                    │ │
-│ │   else                                                                                                        │ │
-│ │     echo -e "      \${RED}✗ Filesystem no montado\${RESET}"                                                   │ │
-│ │     FAIL=1                                                                                                    │ │
-│ │   fi                                                                                                          │ │
-│ │                                                                                                               │ │
-│ │   # [3/8] node02: Exportación NFS configurada                                                                 │ │
-│ │   echo -e "\${YELLOW}[3/8] node02: Exportación NFS con subred\${RESET}"                                       │ │
-│ │   if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "cat /etc/exports | grep -q '192.168.122.0/24'"; then        │ │
-│ │     echo -e "      \${GREEN}✓ Exportación restringida a subred\${RESET}"                                      │ │
-│ │   else                                                                                                        │ │
-│ │     echo -e "      \${RED}✗ Exportación sin restricción de subred\${RESET}"                                   │ │
-│ │     FAIL=1                                                                                                    │ │
-│ │   fi                                                                                                          │ │
-│ │                                                                                                               │ │
-│ │   # [4/8] node02: Firewall puertos NFS                                                                        │ │
-│ │   echo -e "\${YELLOW}[4/8] node02: Puertos NFS en firewall\${RESET}"                                          │ │
-│ │   if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "sudo firewall-cmd --list-services | grep -q nfs"; then      │ │
-│ │     echo -e "      \${GREEN}✓ Servicio nfs abierto\${RESET}"                                                  │ │
-│ │   else                                                                                                        │ │
-│ │     echo -e "      \${RED}✗ Servicio nfs no abierto\${RESET}"                                                 │ │
-│ │     FAIL=1                                                                                                    │ │
-│ │   fi                                                                                                          │ │
-│ │                                                                                                               │ │
-│ │   # [5/8] node02: Permisos nobody                                                                             │ │
-│ │   echo -e "\${YELLOW}[5/8] node02: Permisos nobody:nogroup en /srv/shared\${RESET}"                           │ │
-│ │   if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "ls -ld /srv/shared | grep -q 'nobody nogroup'"; then        │ │
-│ │     echo -e "      \${GREEN}✓ Permisos correctos\${RESET}"                                                    │ │
-│ │   else                                                                                                        │ │
-│ │     echo -e "      \${RED}✗ Permisos incorrectos\${RESET}"                                                    │ │
-│ │     FAIL=1                                                                                                    │ │
-│ │   fi                                                                                                          │ │
-│ │                                                                                                               │ │
-│ │   # [6/8] node03: Montaje NFS exitoso                                                                         │ │
-│ │   echo -e "\${YELLOW}[6/8] node03: Montaje NFS en /mnt/shared\${RESET}"                                       │ │
-│ │   if sshpass -p \$PASS ssh \$SSH_OPTS bob@node03 "mount | grep -q '192.168.122.12:/srv/shared'"; then         │ │
-│ │     echo -e "      \${GREEN}✓ NFS montado exitosamente\${RESET}"                                              │ │
-│ │   else                                                                                                        │ │
-│ │     echo -e "      \${RED}✗ NFS no montado\${RESET}"                                                          │ │
-│ │     FAIL=1                                                                                                    │ │
-│ │   fi                                                                                                          │ │
-│ │                                                                                                               │ │
-│ │   # [7/8] node03: Opciones de montaje seguras                                                                 │ │
-│ │   echo -e "\${YELLOW}[7/8] node03: Opciones de montaje seguras\${RESET}"                                      │ │
-│ │   if sshpass -p \$PASS ssh \$SSH_OPTS bob@node03 "cat /proc/mounts | grep shared | grep -q 'nosuid'"; then    │ │
-│ │     echo -e "      \${GREEN}✓ Opciones seguras aplicadas\${RESET}"                                            │ │
-│ │   else                                                                                                        │ │
-│ │     echo -e "      \${RED}✗ Opciones inseguras\${RESET}"                                                      │ │
-│ │     FAIL=1                                                                                                    │ │
-│ │   fi                                                                                                          │ │
-│ │                                                                                                               │ │
-│ │   # [8/8] node03: Bóveda                                                                                      │ │
-│ │   echo -e "\${YELLOW}[8/8] node03: Bóveda de evidencia\${RESET}"                                              │ │
-│ │   if sshpass -p \$PASS ssh \$SSH_OPTS bob@node03 "[ -d /opt/ops-compliance/stg-004 ]"; then                   │ │
-│ │     echo -e "      \${GREEN}✓ Bóveda creada\${RESET}"                                                         │ │
-│ │   else                                                                                                        │ │
-│ │     echo -e "      \${RED}✗ Bóveda no existe\${RESET}"                                                        │ │
-│ │     FAIL=1                                                                                                    │ │
-│ │   fi                                                                                                          │ │
-│ │                                                                                                               │ │
-│ │   echo ""                                                                                                     │ │
-│ │   if [ \$FAIL -eq 0 ]; then                                                                                   │ │
-│ │       clear                                                                                                   │ │
-│ │       cat /home/vagrant/TICKET_STG-004.txt                                                                    │ │
-│ │       echo -e "\e[32m✅ Lab listo para practicar\e[0m"                                                         │ │
-│ │   else                                                                                                        │ │
-│ │       echo ""                                                                                                 │ │
-│ │       echo -e "\e[41m\e[97m ⚠  INCIDENTE MAL GENERADO \e[0m"                                                  │ │
-│ │       echo -e "\e[33m\$FAIL check(s) fallaron.\e[0m"                                                          │ │
-│ │       echo ""                                                                                                 │ │
-│ │       cat /home/vagrant/TICKET_STG-004.txt                                                                    │ │
-│ │       echo ""                                                                                                 │ │
-│ │       echo -e "\e[36m──────────────────────────────────────\e[0m"                                             │ │
-│ │       echo -e "\e[36m⏸  PAUSA — El laboratorio NO está listo.\e[0m"                                           │ │
-│ │       echo -e "\e[36m   Copia este output y pídeme que lo arregle.\e[0m"                                      │ │
-│ │       echo -e "\e[36m   Cuando estés listo, pulsa ENTER para entrar al shell.\e[0m"                           │ │
-│ │       echo -e "\e[36m──────────────────────────────────────\e[0m"                                             │ │
-│ │       read -r -p ">>> Presiona ENTER para continuar... " _                                                    │ │
-│ │       clear                                                                                                   │ │
-│ │   fi                                                                                                          │ │
-│ │   VERIFY                                                                                                      │ │
-│ │                                                                                                               │ │
-│ │             chmod +x /tmp/verify-stg004.sh                                                                    │ │
-│ │                                                                                                               │ │
-│ │             # ── MOSTRAR TICKET AL INICIAR SESIÓN ──                                                          │ │
-│ │             sed -i '/TICKET/d' /home/vagrant/.bashrc                                                          │ │
-│ │             sed -i '/# Mostrar/d' /home/vagrant/.bashrc                                                       │ │
-│ │             sed -i '/verify-stg004/d' /home/vagrant/.bashrc                                                   │ │
-│ │             cat << 'EOF' >> /home/vagrant/.bashrc                                                             │ │
-│ │   # Ejecutar verificación y mostrar ticket                                                                    │ │
-│ │   if [ -x /tmp/verify-stg004.sh ]; then                                                                       │ │
-│ │       bash /tmp/verify-stg004.sh                                                                              │ │
-│ │   fi                                                                                                          │ │
-│ │   EOF  
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "generic/ubuntu2204"
+
+  nodes = [
+    { name: "node01", ip: "192.168.122.11", extra_disks: [] },
+    { name: "node02", ip: "192.168.122.12", extra_disks: [] },
+    { name: "node03", ip: "192.168.122.13", extra_disks: [] }
+  ]
+
+  nodes.each do |node|
+    config.vm.define node[:name] do |node_config|
+      node_config.vm.hostname = node[:name]
+      
+      # Interfaz principal de gestión (acceso SSH)
+      node_config.vm.network "private_network", ip: node[:ip], libvirt__network_name: "mgmt", libvirt__dhcp_enabled: false
+      
+      # INTERFAZ SECUNDARIA PARA COMUNICACIÓN INTERNA (Usada en NET-003 y necesaria aquí)
+      if node[:name] == "node02" || node[:name] == "node03"
+        node_config.vm.network "private_network", 
+          ip: (node[:name] == "node02" ? "10.99.99.2" : "10.99.99.3"),
+          libvirt__network_name: "cluster-internal",
+          libvirt__dhcp_enabled: false
+      end
+
+      node_config.vm.provider "libvirt" do |lv|
+        lv.memory = 1024
+        lv.cpus = 1
+        lv.driver = "kvm"
+        
+        node[:extra_disks].each do |size|
+          lv.storage :file, :size => size, :type => 'qcow2'
+        end
+      end
+
+      # ── PROVISIONADO GENERAL (Todos los nodos) ──
+      node_config.vm.provision "shell", inline: <<-SHELL
+        echo "🔧 Configurando #{node[:name]}..."
+        
+        # 1. Resolver nombres de host localmente
+        cat << 'HOSTS' >> /etc/hosts
+192.168.122.11 node01
+192.168.122.12 node02
+192.168.122.13 node03
+10.99.99.2 node02-internal
+10.99.99.3 node03-internal
+HOSTS
+        
+        # 2. Crear usuario bob y dar permisos
+        useradd -m -s /bin/bash bob
+        echo 'bob:caleston123' | chpasswd
+        echo 'bob ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/bob
+        chmod 0440 /etc/sudoers.d/bob
+        
+        # 3. Instalar herramientas esenciales
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update -qq
+        apt-get install -y -qq sshpass net-tools iproute2 iptables-persistent
+        # Pre-seed iptables-persistent para que no pida confirmación interactiva
+        echo "iptables-persistent iptables-persistent/autosave_v4 boolean false" | debconf-set-selections
+        echo "iptables-persistent iptables-persistent/autosave_v6 boolean false" | debconf-set-selections
+        
+      SHELL
+
+      # ── PROVISIONADO ESPECÍFICO: TICKET EN NODE01 ──
+      if node[:name] == "node01"
+        node_config.vm.provision "shell", privileged: false, inline: <<-SHELL
+          echo "🎫 Generando Ticket de Incidente para node01..."
+          
+          cat << 'TICKET' > /home/vagrant/TICKET_NET-004.txt
+================================================================================
+  TICKET NET-004  │  Severidad: CRÍTICA  │  Ambiente: CLÚSTER DISTRIBUIDO
+================================================================================
+  🧠 NET-004-MN — El Muro Ciego: Reglas de Firewall Bloquean Tráfico Legítimo
+  Módulo: Networking  │  Dificultad: 6/10  │  Nivel: L2
+--------------------------------------------------------------------------------
+  Ubicación de Control:  node01  (Estación del Administrador — bob)
+  Nodo Afectado:         node02  (Servidor con políticas de firewall restrictivas)
+  Nodo Cliente Prueba:   node03  (Generador de tráfico de validación)
+  Contraseña del Clúster: caleston123
+--------------------------------------------------------------------------------
+
+  REPORTES DE INCIDENTE:
+  El equipo de operaciones reporta que, tras una auditoría de seguridad aplicada
+  ayer por la tarde en node02, los servicios internos han dejado de responder.
+  
+  Específicamente, node03 intenta conectar a servicios en node02 (puertos 80, 22, 
+  o custom apps) y las conexiones se quedan en estado "SYN_SENT" hasta agotar 
+  el tiempo de espera (Connection timed out). No hay rechazo activo (RST), solo 
+  silencio de red.
+
+  El equipo de seguridad confirmó haber aplicado un endurecimiento (hardening) 
+  mediante iptables en node02, estableciendo políticas de caída (DROP) por defecto.
+  Sin embargo, al parecer, la configuración actual impide el retorno del tráfico
+  de conexiones iniciadas externamente o relacionadas con sesiones activas.
+
+  Como Ingeniero de Sistemas L2, su misión es auditar las reglas de filtrado de
+  paquetes en node02, identificar la omisión crítica en la inspección de estados
+  (Connection Tracking), corregir la cadena INPUT/FORWARD para permitir tráfico
+  ESTABLISHED y RELATED, y asegurar la persistencia de la corrección.
+
+  ARQUITECTURA DE RED Y SEGURIDAD
+  --------------------------------------------------------------------------------
+  Red de Gestión (SSH):     192.168.122.0/24
+  Red Interna del Clúster:  10.99.99.0/24
+  Herramientas Requeridas:  iptables, nftables (según distro), tcpdump, ss
+
+  PROCEDIMIENTO REQUERIDO
+  --------------------------------------------------------------------------------
+  1. Auditoría de Estado Actual:
+     - Acceda a node02 y liste las reglas activas de iptables con detalle
+       (contadores de paquetes y bytes).
+     - Identifique la política por defecto y el orden de las reglas en las
+       cadenas INPUT y FORWARD.
+
+  2. Diagnóstico de Flujo:
+     - Determine por qué el tráfico de retorno (ACKs) está siendo descartado.
+     - Confirme la ausencia de la regla de estado "ESTABLISHED,RELATED".
+
+  3. Ingeniería de Corrección:
+     - Inserte la regla adecuada (-m state --state ESTABLISHED,RELATED -j ACCEPT)
+       en la posición correcta (antes de las reglas de DROP o REJECT).
+     - Valide inmediatamente la conectividad desde node03 hacia node02.
+
+  4. Persistencia y Gobernanza:
+     - Asegure que las reglas corregidas sobrevivan a un reinicio del servicio
+       de firewall o del sistema operativo.
+     - Documente la evidencia de la corrección.
+
+  5. Pipeline de Evidencia a node03:
+     - Destino: /opt/ops-compliance/net-004/firewall_evidence.txt
+     - Desde node01, construya un pipeline SSH que entregue evidencia de:
+       a) Las reglas de iptables activas en node02 mostrando contadores en la
+          regla de ESTABLISHED,RELATED (tras generar tráfico).
+       b) Un prueba de conexión exitosa (ej. curl o nc) desde node03 a node02.
+     - CERO archivos temporales en node01.
+
+  CRITERIOS DE ACEPTACIÓN
+  --------------------------------------------------------------------------------
+   [ ] Regla ESTABLISHED,RELATED presente y funcional en node02              --> 30%
+   [ ] Conectividad restaurada entre node03 y node02                         --> 30%
+   [ ] Reglas persistentes configuradas correctamente                        --> 20%
+   [ ] Evidencia enviada a node03:/opt/ops-compliance/net-004/               --> 20%
+   [ ] CERO archivos de resultados almacenados en node01  (DESCALIFICA)
+
+  REGLA DE ORO: No deshabilite el firewall completamente (iptables -F). La solución
+  debe ser quirúrgica: permitir lo legítimo manteniendo la postura de seguridad.
+  La evidencia debe fluir por pipeline SSH sin dejar rastros en node01.
+================================================================================
+TICKET
+
+          # Limpiar y mostrar ticket al iniciar sesión
+          sed -i '/TICKET/d' /home/vagrant/.bashrc 2>/dev/null || true
+          sed -i '/# Mostrar/d' /home/vagrant/.bashrc 2>/dev/null || true
+          cat << 'EOF' >> /home/vagrant/.bashrc
+clear
+cat /home/vagrant/TICKET_NET-004.txt
+EOF
+        SHELL
+      end
+
+      # ── PROVISIONADO ESPECÍFICO: INYECCIÓN DE FALLOS EN NODE02 (FIREWALL) ──
+      if node[:name] == "node02"
+        node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
+          echo "🔥 Inyectando escenario de firewall restrictivo en #{node[:name]}..."
+          
+          # 1. Limpiar reglas existentes para empezar de cero
+          iptables -F
+          iptables -X
+          iptables -t nat -F
+          iptables -t nat -X
+          iptables -t mangle -F
+          iptables -t mangle -X
+
+          # 2. Configurar políticas por defecto DROP (El "Muro")
+          iptables -P INPUT DROP
+          iptables -P FORWARD DROP
+          iptables -P OUTPUT ACCEPT
+
+          # 3. Permitir tráfico local (loopback) esencial
+          iptables -A INPUT -i lo -j ACCEPT
+          iptables -A OUTPUT -o lo -j ACCEPT
+
+          # 4. PERMITIR SALIDA NUEVA (El administrador puede salir, pero nada entra)
+          # Esto simula que el servidor puede hacer updates, pero no recibe respuestas
+          # a conexiones iniciadas desde fuera si no se define ESTABLISHED.
+          # NOTA: Al no poner ESTABLISHED,RELATED aquí, las respuestas a SYN externos
+          # se pierden si la política de INPUT es DROP y no hay regla específica.
+          
+          # 5. ERROR INTENCIONAL: Se permite SSH solo desde una IP específica que NO es la del cliente
+          # o simplemente se olvida la regla de estado. Aquí simulamos el olvido de ESTABLISHED.
+          # Si node03 intenta conectar, el SYN llega, pero el SYN-ACK de respuesta se genera.
+          # El problema real es que si la política es DROP, necesitamos aceptar ESTABLISHED.
+          
+          # Vamos a simular un escenario donde se intentó ser seguro pero se rompió la stateful inspection.
+          # Se añade una regla para permitir ping (ICMP) solo de origen específico falso, 
+          # pero se OLVIDA la regla maestra de estado.
+          
+          iptables -A INPUT -p icmp --icmp-type echo-request -s 192.168.99.99 -j ACCEPT
+          
+          # Se habilita logging para que vean los descartes (opcional pero útil para debug)
+          iptables -A INPUT -j LOG --log-prefix "IPTABLES-DROP: " --log-level 4
+          
+          # Guardar reglas actuales (incorrectas) para que sean persistentes al inicio
+          # Si existe iptables-save, lo usamos. En Ubuntu suele estar con iptables-persistent
+          if command -v netfilter-persistent &> /dev/null; then
+             netfilter-persistent save
+          elif command -v iptables-save &> /dev/null; then
+             iptables-save > /etc/iptables/rules.v4
+          fi
+
+          # Iniciar un servicio simple para probar conectividad (Python HTTP server)
+          # Esto correrá en background. Si el firewall está bien, node03 podrá acceder.
+          cd /var/www/html 2>/dev/null || mkdir -p /var/www/html && cd /var/www/html
+          echo "<h1>Node02 Secure Service</h1>" > index.html
+          nohup python3 -m http.server 8080 --bind 0.0.0.0 > /dev/null 2>&1 &
+          
+          echo "✅ Escenario de firewall 'Muro Ciego' inyectado en node02."
+          echo "   - Política INPUT: DROP"
+          echo "   - Regla ESTABLISHED,RELATED: AUSENTE"
+          echo "   - Servicio de prueba: Puerto 8080"
+        SHELL
+      end
+      
+      # ── PROVISIONADO ESPECÍFICO: PREPARAR NODE03 COMO CLIENTE DE PRUEBA ──
+      if node[:name] == "node03"
+        node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
+          echo "🔍 Configurando node03 como cliente de prueba y bóveda..."
+          
+          # Instalar herramientas de prueba de red
+          apt-get install -y -qq curl telnet netcat-openbsd
+
+          # Preparar bóveda de auditoría
+          mkdir -p /opt/ops-compliance/net-004/
+          chown -R bob:bob /opt/ops-compliance/net-004/
+          chmod 750 /opt/ops-compliance/net-004/
+          
+          echo "✅ node03 listo para generar tráfico y almacenar evidencia."
+        SHELL
+      end
+
+    end
+  end
+end
