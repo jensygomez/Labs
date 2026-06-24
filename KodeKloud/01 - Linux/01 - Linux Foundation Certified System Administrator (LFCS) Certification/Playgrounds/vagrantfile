@@ -1,4 +1,5 @@
 # -*- mode: ruby -*-
+
 # vi: set ft=ruby :
 
 Vagrant.configure("2") do |config|
@@ -6,7 +7,7 @@ Vagrant.configure("2") do |config|
 
   nodes = [
     { name: "node01", ip: "192.168.122.11", extra_disks: [] },
-    { name: "node02", ip: "192.168.122.12", extra_disks: [] },
+    { name: "node02", ip: "192.168.122.12", extra_disks: ['512M'] }, # STG-004: 1 disco de 512MB para LVM
     { name: "node03", ip: "192.168.122.13", extra_disks: [] }
   ]
 
@@ -14,22 +15,18 @@ Vagrant.configure("2") do |config|
     config.vm.define node[:name] do |node_config|
       node_config.vm.hostname = node[:name]
       
-      # Interfaz principal de gestión (acceso SSH)
-      node_config.vm.network "private_network", ip: node[:ip], libvirt__network_name: "mgmt", libvirt__dhcp_enabled: false
-      
-      # INTERFAZ SECUNDARIA PARA COMUNICACIÓN INTERNA (Usada en NET-003 y necesaria aquí)
-      if node[:name] == "node02" || node[:name] == "node03"
-        node_config.vm.network "private_network", 
-          ip: (node[:name] == "node02" ? "10.99.99.2" : "10.99.99.3"),
-          libvirt__network_name: "cluster-internal",
-          libvirt__dhcp_enabled: false
-      end
+      # Red de gestión dedicada (no "default")
+      node_config.vm.network "private_network", 
+        ip: node[:ip], 
+        libvirt__network_name: "mgmt-net",
+        libvirt__dhcp_enabled: false
 
       node_config.vm.provider "libvirt" do |lv|
         lv.memory = 1024
         lv.cpus = 1
         lv.driver = "kvm"
         
+        # Crear discos adicionales según la configuración del nodo
         node[:extra_disks].each do |size|
           lv.storage :file, :size => size, :type => 'qcow2'
         end
@@ -44,8 +41,6 @@ Vagrant.configure("2") do |config|
 192.168.122.11 node01
 192.168.122.12 node02
 192.168.122.13 node03
-10.99.99.2 node02-internal
-10.99.99.3 node03-internal
 HOSTS
         
         # 2. Crear usuario bob y dar permisos
@@ -54,193 +49,343 @@ HOSTS
         echo 'bob ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/bob
         chmod 0440 /etc/sudoers.d/bob
         
-        # 3. Instalar herramientas esenciales
+        # 3. Instalar herramientas base
         export DEBIAN_FRONTEND=noninteractive
         apt-get update -qq
-        apt-get install -y -qq sshpass net-tools iproute2 iptables-persistent
-        # Pre-seed iptables-persistent para que no pida confirmación interactiva
-        echo "iptables-persistent iptables-persistent/autosave_v4 boolean false" | debconf-set-selections
-        echo "iptables-persistent iptables-persistent/autosave_v6 boolean false" | debconf-set-selections
-        
+        apt-get install -y -qq sshpass ufw lvm2
       SHELL
 
-      # ── PROVISIONADO ESPECÍFICO: TICKET EN NODE01 ──
+      # ── PROVISIONADO ESPECÍFICO: CONFIGURAR NODE02 COMO SERVIDOR NFS (CON PROBLEMAS INYECTADOS) ──
+      if node[:name] == "node02"
+        node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
+          echo "💾 Configurando node02 como servidor NFS (con problemas inyectados)..."
+          
+          # 1. Instalar servidor NFS
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get install -y -qq nfs-kernel-server
+          
+          # 2. Limpiar residuos de incidentes anteriores
+          umount /srv/shared 2>/dev/null || true
+          rm -rf /srv/shared /srv/nfs-share
+          wipefs -a /dev/vdb 2>/dev/null || true
+          vgremove -f vg_data 2>/dev/null || true
+          pvremove -f /dev/vdb 2>/dev/null || true
+          
+          # ─────────────────────────────────────────────────────────────
+          # INYECCIÓN DE PROBLEMA #1: LVM mal configurado
+          # ─────────────────────────────────────────────────────────────
+          # NOTA: Usamos la técnica de heredoc por stdin (INNEREOF) para evitar problemas de escaping 
+          # y garantizar que los comandos multi-línea se ejecuten limpiamente con privilegios de root.
+          sudo bash << 'INNEREOF'
+            # Crear PV, VG y LV
+            pvcreate /dev/vdb
+            vgcreate vg_data /dev/vdb
+            lvcreate -L 512M -n lv_shared vg_data
+            
+            # Formatear con XFS y montar
+            mkfs.xfs /dev/vg_data/lv_shared
+            mkdir -p /srv/shared
+            mount /dev/vg_data/lv_shared /srv/shared
+            echo "/dev/vg_data/lv_shared /srv/shared xfs defaults 0 0" >> /etc/fstab
+            
+            # Crear datos de prueba
+            echo "Shared NFS Data - STG-004" > /srv/shared/test.txt
+            mkdir -p /srv/shared/devs
+            chown -R nobody:nogroup /srv/shared
+            chmod 755 /srv/shared
+          INNEREOF
+          
+          # ─────────────────────────────────────────────────────────────
+          # INYECCIÓN DE PROBLEMA #2: /etc/exports MAL CONFIGURADO
+          # ─────────────────────────────────────────────────────────────
+          # Errores inyectados:
+          #   a) IP incorrecta (192.168.122.100 no existe en la red)
+          #   b) Solo permisos de lectura (ro) cuando debería ser rw
+          #   c) root_squash activo (impide operaciones root desde cliente)
+          sudo bash << 'INNEREOF'
+            echo "# Exportación NFS - STG-004 (CONFIGURACIÓN INCORRECTA)" > /etc/exports
+            echo "/srv/shared 192.168.122.100(ro,root_squash,no_subtree_check)" >> /etc/exports
+            exportfs -ra
+          INNEREOF
+          
+          # ─────────────────────────────────────────────────────────────
+          # INYECCIÓN DE PROBLEMA #3: FIREWALL BLOQUEANDO PUERTOS NFS/RPC
+          # ─────────────────────────────────────────────────────────────
+          sudo bash << 'INNEREOF'
+            ufw --force reset > /dev/null 2>&1
+            ufw default deny incoming
+            ufw default allow outgoing
+            ufw allow ssh
+            # BLOQUEO EXPLÍCITO de puertos NFS (para simular el problema)
+            ufw deny 111/tcp    # rpcbind
+            ufw deny 111/udp    # rpcbind
+            ufw deny 2049/tcp   # nfs
+            ufw deny 2049/udp   # nfs
+            ufw --force enable
+          INNEREOF
+          
+          # 3. Reiniciar servicio NFS
+          systemctl enable nfs-kernel-server
+          systemctl restart nfs-kernel-server
+          
+          echo "✅ node02 configurado como servidor NFS con 3 problemas inyectados:"
+          echo "   [1] LVM: vg_data/lv_shared montado en /srv/shared"
+          echo "   [2] /etc/exports: IP incorrecta, solo ro, root_squash activo"
+          echo "   [3] Firewall UFW: bloqueando puertos 111 y 2049"
+        SHELL
+      end
+
+      # ── PROVISIONADO ESPECÍFICO: CONFIGURAR NODE03 COMO CLIENTE NFS ──
+      if node[:name] == "node03"
+        node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
+          echo "💾 Configurando node03 como cliente NFS..."
+          
+          # 1. Instalar cliente NFS
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get install -y -qq nfs-common
+          
+          # 2. Crear punto de montaje (sin montar aún - el alumno debe hacerlo)
+          mkdir -p /mnt/shared
+          
+          # 3. Intento de montaje inicial que FALLARÁ (por los problemas inyectados en node02)
+          echo "⏳ Intentando montar NFS desde node02 (se espera fallo)..."
+          mount -t nfs -o rw,bg,soft,timeo=30 192.168.122.12:/srv/shared /mnt/shared 2>/tmp/mount-error.log || \
+            echo "⚠️  Montaje fallido (esperado) - ver /tmp/mount-error.log"
+          
+          echo "✅ node03 configurado como cliente NFS con montaje fallido."
+        SHELL
+      end
+
+      # ── PROVISIONADO ESPECÍFICO: PREPARAR BÓVEDA EN NODE03 ──
+      if node[:name] == "node03"
+        node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
+          echo "🔒 Preparando bóveda de auditoría en #{node[:name]}..."
+          mkdir -p /opt/ops-compliance/stg-004
+          chown -R bob:bob /opt/ops-compliance/stg-004
+          chmod 750 /opt/ops-compliance/stg-004
+          echo "✅ Bóveda /opt/ops-compliance/stg-004 lista."
+        SHELL
+      end
+
+      # ── PROVISIONADO ESPECÍFICO: TICKET + VERIFICACIÓN EN NODE01 ──
       if node[:name] == "node01"
         node_config.vm.provision "shell", privileged: false, inline: <<-SHELL
           echo "🎫 Generando Ticket de Incidente para node01..."
           
-          cat << 'TICKET' > /home/vagrant/TICKET_NET-004.txt
+          cat << 'TICKET' > /home/vagrant/TICKET_STG-004.txt
 ================================================================================
-  TICKET NET-004  │  Severidad: CRÍTICA  │  Ambiente: CLÚSTER DISTRIBUIDO
+  TICKET STG-004  │  Severidad: ALTA  │  Ambiente: PRODUCCIÓN
 ================================================================================
-  🧠 NET-004-MN — El Muro Ciego: Reglas de Firewall Bloquean Tráfico Legítimo
-  Módulo: Networking  │  Dificultad: 6/10  │  Nivel: L2
+  🔐 STG-004-MN — El Puente Roto (NFS Server/Client y Exportaciones con Restricciones)
+  Módulo: Storage  │  Dificultad: 6/10  │  Nivel: L2
 --------------------------------------------------------------------------------
   Ubicación de Control:  node01  (Estación del Administrador — bob)
-  Nodo Afectado:         node02  (Servidor con políticas de firewall restrictivas)
-  Nodo Cliente Prueba:   node03  (Generador de tráfico de validación)
+  Nodo Servidor NFS:     node02  (Almacenamiento compartido — /srv/shared)
+  Nodo Cliente NFS:      node03  (Montaje fallido — /mnt/shared)
+  Nodo Bóveda Destino:   node03  (Bóveda de Gobernanza — /opt/ops-compliance/stg-004/)
   Contraseña del Clúster: caleston123
 --------------------------------------------------------------------------------
 
-  REPORTES DE INCIDENTE:
-  El equipo de operaciones reporta que, tras una auditoría de seguridad aplicada
-  ayer por la tarde en node02, los servicios internos han dejado de responder.
-  
-  Específicamente, node03 intenta conectar a servicios en node02 (puertos 80, 22, 
-  o custom apps) y las conexiones se quedan en estado "SYN_SENT" hasta agotar 
-  el tiempo de espera (Connection timed out). No hay rechazo activo (RST), solo 
-  silencio de red.
+  El equipo de aplicaciones ha desplegado un nuevo microservicio en node03 que
+  requiere acceso de lectura/escritura a un volumen compartido exportado desde
+  node02 vía NFS. El volumen fue recientemente migrado a LVM (vg_data/lv_shared)
+  y se aplicaron nuevas políticas de seguridad.
 
-  El equipo de seguridad confirmó haber aplicado un endurecimiento (hardening) 
-  mediante iptables en node02, estableciendo políticas de caída (DROP) por defecto.
-  Sin embargo, al parecer, la configuración actual impide el retorno del tráfico
-  de conexiones iniciadas externamente o relacionadas con sesiones activas.
+  Sin embargo, desde el despliegue, el cliente node03 NO puede montar el share
+  y reporta errores de "Permission denied" y timeouts de conexión. El equipo
+  de desarrollo no puede continuar su trabajo hasta que el almacenamiento
+  compartido sea accesible con los permisos correctos.
 
-  Como Ingeniero de Sistemas L2, su misión es auditar las reglas de filtrado de
-  paquetes en node02, identificar la omisión crítica en la inspección de estados
-  (Connection Tracking), corregir la cadena INPUT/FORWARD para permitir tráfico
-  ESTABLISHED y RELATED, y asegurar la persistencia de la corrección.
+  Una revisión preliminar sugiere múltiples capas del problema:
+    - Posibles bloqueos a nivel de firewall en el servidor
+    - Configuración de exportaciones NFS con restricciones incorrectas
+    - Opciones de montaje inseguras o mal configuradas en el cliente
 
-  ARQUITECTURA DE RED Y SEGURIDAD
+  Se requiere que un ingeniero de sistemas diagnostique la causa raíz,
+  corrija los bloqueos de red, ajuste las exportaciones NFS con control
+  de acceso apropiado y configure el montaje seguro en el cliente.
+
+  ARQUITECTURA DE ALMACENAMIENTO
   --------------------------------------------------------------------------------
-  Red de Gestión (SSH):     192.168.122.0/24
-  Red Interna del Clúster:  10.99.99.0/24
-  Herramientas Requeridas:  iptables, nftables (según distro), tcpdump, ss
+  node02:
+    - /dev/vdb → LVM: vg_data/lv_shared (512MB, XFS)
+    - Punto de montaje local: /srv/shared
+    - Servicio: nfs-kernel-server
+    - Firewall: UFW activo
+  
+  node03:
+    - Punto de montaje: /mnt/shared (actualmente no montado)
+    - Servicio: nfs-common instalado
 
   PROCEDIMIENTO REQUERIDO
   --------------------------------------------------------------------------------
-  1. Auditoría de Estado Actual:
-     - Acceda a node02 y liste las reglas activas de iptables con detalle
-       (contadores de paquetes y bytes).
-     - Identifique la política por defecto y el orden de las reglas en las
-       cadenas INPUT y FORWARD.
+  1. Diagnóstico desde node03:
+     - Intenta montar el share NFS y captura el error exacto.
+     - Verifica la conectividad de red hacia node02 (ping, nc, rpcinfo).
+     - Identifica si hay bloqueos a nivel de firewall.
 
-  2. Diagnóstico de Flujo:
-     - Determine por qué el tráfico de retorno (ACKs) está siendo descartado.
-     - Confirme la ausencia de la regla de estado "ESTABLISHED,RELATED".
+  2. Corrección del Firewall en node02:
+     - Conéctate a node02 y revisa las reglas de UFW.
+     - Permite el tráfico NFS/RPC necesario (puertos 111 y 2049 TCP/UDP).
+     - Valida que los puertos queden accesibles desde node03.
 
-  3. Ingeniería de Corrección:
-     - Inserte la regla adecuada (-m state --state ESTABLISHED,RELATED -j ACCEPT)
-       en la posición correcta (antes de las reglas de DROP o REJECT).
-     - Valide inmediatamente la conectividad desde node03 hacia node02.
+  3. Corrección de /etc/exports en node02:
+     - Revisa la configuración actual de exportaciones.
+     - Ajusta para permitir acceso desde la subred 192.168.122.0/24.
+     - Configura permisos rw y las opciones de seguridad apropiadas:
+       * no_root_squash (para permitir operaciones root desde node03)
+       * sync, no_subtree_check
+     - Recarga las exportaciones con exportfs -ra.
 
-  4. Persistencia y Gobernanza:
-     - Asegure que las reglas corregidas sobrevivan a un reinicio del servicio
-       de firewall o del sistema operativo.
-     - Documente la evidencia de la corrección.
+  4. Montaje Seguro en node03:
+     - Monta el share NFS en /mnt/shared con opciones seguras:
+       * rw, hard, intr, nosuid, nodev
+     - Verifica que el montaje funcione correctamente.
+     - Persiste la configuración en /etc/fstab.
 
   5. Pipeline de Evidencia a node03:
-     - Destino: /opt/ops-compliance/net-004/firewall_evidence.txt
-     - Desde node01, construya un pipeline SSH que entregue evidencia de:
-       a) Las reglas de iptables activas en node02 mostrando contadores en la
-          regla de ESTABLISHED,RELATED (tras generar tráfico).
-       b) Un prueba de conexión exitosa (ej. curl o nc) desde node03 a node02.
-     - CERO archivos temporales en node01.
-
+     - Destino: /opt/ops-compliance/stg-004/nfs_evidence.txt
+     - Desde node01, envía mediante un pipeline SSH la salida consolidada de:
+       a) Estado del firewall en node02 (sudo ufw status verbose)
+       b) Exportaciones NFS activas en node02 (sudo exportfs -v)
+       c) Estado del montaje en node03 (mount | grep nfs)
+       d) Prueba de escritura: crear archivo en /mnt/shared desde node03
+     - NO generar archivos temporales locales en node01.
+  --------------------------------------------------------------------------------
   CRITERIOS DE ACEPTACIÓN
   --------------------------------------------------------------------------------
-   [ ] Regla ESTABLISHED,RELATED presente y funcional en node02              --> 30%
-   [ ] Conectividad restaurada entre node03 y node02                         --> 30%
-   [ ] Reglas persistentes configuradas correctamente                        --> 20%
-   [ ] Evidencia enviada a node03:/opt/ops-compliance/net-004/               --> 20%
-   [ ] CERO archivos de resultados almacenados en node01  (DESCALIFICA)
+   [ ] Firewall en node02 permite puertos NFS (111, 2049)              --> 20%
+   [ ] /etc/exports configurado correctamente (subred, rw, no_root_squash) --> 20%
+   [ ] Montaje NFS funcional en node03 con opciones seguras            --> 20%
+   [ ] Configuración persistente en /etc/fstab                         --> 20%
+   [ ] Evidencia enviada a node03:/opt/ops-compliance/stg-004/         --> 20%
+   [ ] CERO archivos de resultados almacenados en node01 (DESCALIFICA)
 
-  REGLA DE ORO: No deshabilite el firewall completamente (iptables -F). La solución
-  debe ser quirúrgica: permitir lo legítimo manteniendo la postura de seguridad.
-  La evidencia debe fluir por pipeline SSH sin dejar rastros en node01.
+  REGLA DE ORO: El volumen LVM vg_data/lv_shared en node02 está correctamente
+  formateado y montado en /srv/shared. NO modifiques la estructura LVM,
+  NO reformatees el disco. Todo el trabajo debe enfocarse en:
+    1. Abrir los puertos necesarios en el firewall
+    2. Corregir las exportaciones NFS
+    3. Configurar el montaje seguro en el cliente
 ================================================================================
 TICKET
 
-          # Limpiar y mostrar ticket al iniciar sesión
-          sed -i '/TICKET/d' /home/vagrant/.bashrc 2>/dev/null || true
-          sed -i '/# Mostrar/d' /home/vagrant/.bashrc 2>/dev/null || true
+          # ── SCRIPT DE VERIFICACIÓN RÁPIDA ──
+          cat << 'VERIFY' > /tmp/verify-stg004.sh
+#!/bin/bash
+
+RED='\e[1;31m'
+GREEN='\e[1;32m'
+YELLOW='\e[1;33m'
+CYAN='\e[1;36m'
+RESET='\e[0m'
+
+SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
+PASS="caleston123"
+FAIL=0
+
+echo -e "\${CYAN}╔════════════════════════════════════════════════════════════════╗\${RESET}"
+echo -e "\${CYAN}║          VERIFICACIÓN DE ESCENARIO STG-004                    ║\${RESET}"
+echo -e "\${CYAN}╚════════════════════════════════════════════════════════════════╝\${RESET}"
+echo ""
+
+# [1/7] node02: LVM configurado
+echo -e "\${YELLOW}[1/7] node02: LVM vg_data/lv_shared\${RESET}"
+if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "sudo lvs vg_data/lv_shared 2>/dev/null | grep -q lv_shared"; then
+  echo -e "      \${GREEN}✓ LV lv_shared existe\${RESET}"
+else
+  echo -e "      \${RED}✗ LV no encontrado\${RESET}"
+  FAIL=1
+fi
+
+# [2/7] node02: Montaje /srv/shared
+echo -e "\${YELLOW}[2/7] node02: Montaje en /srv/shared\${RESET}"
+if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "df -h /srv/shared | grep -q shared"; then
+  echo -e "      \${GREEN}✓ Montado correctamente\${RESET}"
+else
+  echo -e "      \${RED}✗ No montado\${RESET}"
+  FAIL=1
+fi
+
+# [3/7] node02: Servicio NFS activo
+echo -e "\${YELLOW}[3/7] node02: Servicio NFS activo\${RESET}"
+if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "systemctl is-active --quiet nfs-kernel-server"; then
+  echo -e "      \${GREEN}✓ Servicio activo\${RESET}"
+else
+  echo -e "      \${RED}✗ Servicio inactivo\${RESET}"
+  FAIL=1
+fi
+
+# [4/7] node02: Firewall UFW activo
+echo -e "\${YELLOW}[4/7] node02: Firewall UFW activo\${RESET}"
+if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "sudo ufw status | grep -q 'Status: active'"; then
+  echo -e "      \${GREEN}✓ UFW activo\${RESET}"
+else
+  echo -e "      \${RED}✗ UFW inactivo\${RESET}"
+  FAIL=1
+fi
+
+# [5/7] node02: Puertos NFS bloqueados (problema inyectado)
+echo -e "\${YELLOW}[5/7] node02: Puertos NFS bloqueados (problema inyectado)\${RESET}"
+if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "sudo ufw status | grep -E '2049|111' | grep -q 'DENY'"; then
+  echo -e "      \${GREEN}✓ Puertos NFS bloqueados (esperado)\${RESET}"
+else
+  echo -e "      \${RED}✗ Puertos no bloqueados (problema no inyectado)\${RESET}"
+  FAIL=1
+fi
+
+# [6/7] node02: /etc/exports con configuración incorrecta
+echo -e "\${YELLOW}[6/7] node02: /etc/exports con IP incorrecta\${RESET}"
+if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "grep -q '192.168.122.100' /etc/exports"; then
+  echo -e "      \${GREEN}✓ IP incorrecta detectada (problema inyectado)\${RESET}"
+else
+  echo -e "      \${RED}✗ Configuración de exports no coincide\${RESET}"
+  FAIL=1
+fi
+
+# [7/7] node03: Bóveda
+echo -e "\${YELLOW}[7/7] node03: Bóveda de evidencia\${RESET}"
+if sshpass -p \$PASS ssh \$SSH_OPTS bob@node03 "[ -d /opt/ops-compliance/stg-004 ]"; then
+  echo -e "      \${GREEN}✓ Bóveda creada\${RESET}"
+else
+  echo -e "      \${RED}✗ Bóveda no existe\${RESET}"
+  FAIL=1
+fi
+
+echo ""
+if [ \$FAIL -eq 0 ]; then
+  echo -e "\${GREEN}╔════════════════════════════════════════════════════════════════╗\${RESET}"
+  echo -e "\${GREEN}║  ✅ TODAS LAS VERIFICACIONES PASARON - ESCENARIO LISTO         ║\${RESET}"
+  echo -e "\${GREEN}╚════════════════════════════════════════════════════════════════╝\${RESET}"
+  echo ""
+  sleep 2
+  clear
+  cat /home/vagrant/TICKET_STG-004.txt
+else
+  echo -e "\${RED}╔════════════════════════════════════════════════════════════════╗\${RESET}"
+  echo -e "\${RED}║  ⚠️  ALGUNAS VERIFICACIONES FALLARON                           ║\${RESET}"
+  echo -e "\${RED}║  El escenario puede estar incompleto. Revisa los errores.      ║\${RESET}"
+  echo -e "\${RED}╚════════════════════════════════════════════════════════════════╝\${RESET}"
+  echo ""
+  echo -e "\${YELLOW}Mostrando ticket de todas formas...\${RESET}"
+  sleep 3
+  clear
+  cat /home/vagrant/TICKET_STG-004.txt
+fi
+VERIFY
+
+          chmod +x /tmp/verify-stg004.sh
+          
+          # ── MOSTRAR TICKET AL INICIAR SESIÓN ──
+          sed -i '/TICKET/d' /home/vagrant/.bashrc
+          sed -i '/# Mostrar/d' /home/vagrant/.bashrc
+          sed -i '/verify-stg004/d' /home/vagrant/.bashrc
           cat << 'EOF' >> /home/vagrant/.bashrc
-clear
-cat /home/vagrant/TICKET_NET-004.txt
+# Ejecutar verificación y mostrar ticket
+bash /tmp/verify-stg004.sh
 EOF
         SHELL
       end
-
-      # ── PROVISIONADO ESPECÍFICO: INYECCIÓN DE FALLOS EN NODE02 (FIREWALL) ──
-      if node[:name] == "node02"
-        node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
-          echo "🔥 Inyectando escenario de firewall restrictivo en #{node[:name]}..."
-          
-          # 1. Limpiar reglas existentes para empezar de cero
-          iptables -F
-          iptables -X
-          iptables -t nat -F
-          iptables -t nat -X
-          iptables -t mangle -F
-          iptables -t mangle -X
-
-          # 2. Mientras la política sigue en ACCEPT (default de Ubuntu/iptables),
-          #    construimos primero las rendijas de salvación. Si invirtiéramos
-          #    este orden, el propio script se cortaría la sesión SSH a sí mismo
-          #    (self-lockout) apenas se ejecute "iptables -P INPUT DROP".
-          iptables -A INPUT -i lo -j ACCEPT
-          iptables -A OUTPUT -o lo -j ACCEPT
-
-          # Canal de management SIEMPRE abierto (red mgmt 192.168.122.0/24).
-          # Esto es lo que te permite seguir entrando por SSH desde node01
-          # como un sysadmin remoto real, sin necesitar consola/virsh.
-          iptables -A INPUT -p tcp -s 192.168.122.0/24 --dport 22 -j ACCEPT
-
-          # 3. ERROR INTENCIONAL (bug pedagógico real del lab):
-          #    Regla de ICMP inútil que no resuelve el problema de fondo.
-          #    Se permite ping solo desde un origen falso que nunca se usará.
-          iptables -A INPUT -p icmp --icmp-type echo-request -s 192.168.99.99 -j ACCEPT
-          
-          # Logging de los descartes (útil para debug con journalctl/dmesg)
-          iptables -A INPUT -j LOG --log-prefix "IPTABLES-DROP: " --log-level 4
-          
-          # 4. RECIÉN AHORA, con la rendija de management ya garantizada,
-          #    cerramos la puerta. Esto es lo que rompe el tráfico de node03
-          #    (red cluster-internal 10.99.99.0/24): sigue faltando la regla
-          #    de estado ESTABLISHED,RELATED para ese tráfico específico.
-          iptables -P FORWARD DROP
-          iptables -P OUTPUT ACCEPT
-          iptables -P INPUT DROP
-
-          # Guardar reglas actuales (incorrectas a propósito) para que sean
-          # persistentes al reiniciar. En Ubuntu suele estar con iptables-persistent
-          if command -v netfilter-persistent &> /dev/null; then
-             netfilter-persistent save
-          elif command -v iptables-save &> /dev/null; then
-             iptables-save > /etc/iptables/rules.v4
-          fi
-
-          # Iniciar un servicio simple para probar conectividad (Python HTTP server)
-          # Esto correrá en background. Si el firewall está bien, node03 podrá acceder.
-          cd /var/www/html 2>/dev/null || mkdir -p /var/www/html && cd /var/www/html
-          echo "<h1>Node02 Secure Service</h1>" > index.html
-          nohup python3 -m http.server 8080 --bind 0.0.0.0 > /dev/null 2>&1 &
-          
-          echo "✅ Escenario de firewall 'Muro Ciego' inyectado en node02."
-          echo "   - Política INPUT: DROP"
-          echo "   - SSH management (192.168.122.0/24): PERMITIDO"
-          echo "   - Regla ESTABLISHED,RELATED: AUSENTE"
-          echo "   - Servicio de prueba: Puerto 8080"
-        SHELL
-      end
-      
-      # ── PROVISIONADO ESPECÍFICO: PREPARAR NODE03 COMO CLIENTE DE PRUEBA ──
-      if node[:name] == "node03"
-        node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
-          echo "🔍 Configurando node03 como cliente de prueba y bóveda..."
-          
-          # Instalar herramientas de prueba de red
-          apt-get install -y -qq curl telnet netcat-openbsd
-
-          # Preparar bóveda de auditoría
-          mkdir -p /opt/ops-compliance/net-004/
-          chown -R bob:bob /opt/ops-compliance/net-004/
-          chmod 750 /opt/ops-compliance/net-004/
-          
-          echo "✅ node03 listo para generar tráfico y almacenar evidencia."
-        SHELL
-      end
-
     end
   end
 end
