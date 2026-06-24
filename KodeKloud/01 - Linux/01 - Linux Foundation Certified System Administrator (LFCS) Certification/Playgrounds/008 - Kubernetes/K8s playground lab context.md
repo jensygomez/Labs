@@ -72,18 +72,18 @@ kubectl get daemonsets -A
 
 Nivel L1, dificultad 3-5/10. Fallas comunes que un NOC L1 vería escaladas desde Nivel 2/3, sin troubleshooting de control-plane interno.
 
-|ID|Título del ticket|Síntoma reportado (estilo cliente)|Dificultad|Conceptos testeados|Nodo(s) involucrado(s)|
-|---|---|---|---|---|---|
-|K8S-001|Pod en CrashLoopBackOff|"La app de staging no responde, el pod reinicia solo"|3|`kubectl describe pod`, logs, exit codes|node01 o node02|
-|K8S-002|ImagePullBackOff|"El deployment no levanta, dice que no encuentra la imagen"|3|Typo en imagen/tag, `kubectl describe`, events|node01 o node02|
-|K8S-003|Service sin endpoints|"El servicio existe pero no conecta con nada"|4|Selector labels mal configurados (Service vs Pod labels)|node01 o node02|
-|K8S-004|ConfigMap no montado|"La app arranca pero no lee su configuración"|4|`volumeMounts`, `configMapRef`, nombre incorrecto|node01 o node02|
-|K8S-005|Pod en Pending indefinido|"El pod nunca pasa a Running"|4|Resource requests/limits mal calculados vs capacidad del nodo (3 nodos disponibles)|cluster completo|
-|K8S-006|Secret no inyectado|"La app no logra autenticar contra la base de datos"|4|`envFrom secretRef`, secret en namespace equivocado|node01 o node02|
-|K8S-007|Namespace incorrecto|"Desplegué la app pero `kubectl get pods` no la muestra"|3|Namespace default vs explícito, `-n` flag, contexto|node01 o node02|
-|K8S-008|OOMKilled|"La app se cae bajo carga, sin error claro"|5|`kubectl describe` (Reason: OOMKilled), límites de memoria|node01 o node02|
-|K8S-009|NodePort no accesible externamente|"No puedo acceder a la app desde fuera del cluster"|5|Tipo de Service mal elegido (ClusterIP vs NodePort), firewall del nodo|node01 o node02|
-|K8S-010|Readiness probe fallando|"El pod está Running pero el Service no lo enruta"|5|Diferencia Liveness vs Readiness, probe mal configurado|node01 o node02|
+| ID      | Título del ticket                  | Síntoma reportado (estilo cliente)                          | Dificultad | Conceptos testeados                                                                 | Nodo(s) involucrado(s) |
+| ------- | ---------------------------------- | ----------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------- | ---------------------- |
+| K8S-001 | Pod en CrashLoopBackOff            | "La app de staging no responde, el pod reinicia solo"       | 3          | `kubectl describe pod`, logs, exit codes                                            | node01 o node02        |
+| K8S-002 | ImagePullBackOff                   | "El deployment no levanta, dice que no encuentra la imagen" | 3          | Typo en imagen/tag, `kubectl describe`, events                                      | node01 o node02        |
+| K8S-003 | Service sin endpoints              | "El servicio existe pero no conecta con nada"               | 4          | Selector labels mal configurados (Service vs Pod labels)                            | node01 o node02        |
+| K8S-004 | ConfigMap no montado               | "La app arranca pero no lee su configuración"               | 4          | `volumeMounts`, `configMapRef`, nombre incorrecto                                   | node01 o node02        |
+| K8S-005 | Pod en Pending indefinido          | "El pod nunca pasa a Running"                               | 4          | Resource requests/limits mal calculados vs capacidad del nodo (3 nodos disponibles) | cluster completo       |
+| K8S-006 | Secret no inyectado                | "La app no logra autenticar contra la base de datos"        | 4          | `envFrom secretRef`, secret en namespace equivocado                                 | node01 o node02        |
+| K8S-007 | Namespace incorrecto               | "Desplegué la app pero `kubectl get pods` no la muestra"    | 3          | Namespace default vs explícito, `-n` flag, contexto                                 | node01 o node02        |
+| K8S-008 | OOMKilled                          | "La app se cae bajo carga, sin error claro"                 | 5          | `kubectl describe` (Reason: OOMKilled), límites de memoria                          | node01 o node02        |
+| K8S-009 | NodePort no accesible externamente | "No puedo acceder a la app desde fuera del cluster"         | 5          | Tipo de Service mal elegido (ClusterIP vs NodePort), firewall del nodo              | node01 o node02        |
+| K8S-010 | Readiness probe fallando           | "El pod está Running pero el Service no lo enruta"          | 5          | Diferencia Liveness vs Readiness, probe mal configurado                             | node01 o node02        |
 
 ### Progresión lógica recomendada
 
