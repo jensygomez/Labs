@@ -17,7 +17,7 @@
 | 3 | Resumo + Palavras-chave | ⬜ no iniciado | Se escribe al final |
 | 4 | Introdução | ✅ completo y validado | Borrador inicial completo en draft.md; estructurado bajo normas ABNT. |
 | 5 | Metodologia | ✅ completo y validado | Protocolo de revisión bibliográfica cualitativa redactado en draft.md. |
-| 6 | Resultados e Discussões | ⬜ no iniciado | Próximo gran paso: cruzar las 9 fuentes en el cuerpo del texto. |
+| 6 | Resultados e Discussões | ✅ completo | Redação completa cruzando as 9 fontes. ~2200 palavras (~7-8 páginas). Seção 3 com 3 subseções estruturadas. |
 | 7 | Conclusão | ⬜ no iniciado | |
 | 8 | Referências (lista final ABNT) | ⬜ no iniciado | |
 | 9 | Revisión global ABNT | ⬜ no iniciado | |
@@ -25,16 +25,20 @@
 Leyenda: ⬜ no iniciado · 🟡 en progreso · ✅ completo y validado
 
 ## Conteo actual
-- Páginas del cuerpo textual: 2.5 (meta: 10-20)
+- Páginas del cuerpo textual: ~10 (Introdução + Metodologia + Resultados e Discussões)
 - Referencias recolectadas: 9 (meta: 8-15)
 
 
-## Dudas abiertas / pendientes para próxima sesión
-- Confirmar tema definitivo con orientador (el actual es propuesta inicial)
-- Buscar de 3 a 5 fuentes adicionales en Google Acadêmico / Scielo focadas em infraestrutura prática (ex: Kubernetes, Service Mesh ou logs/observabilidade em nuvem) para fechar a meta de referências.
+## Dudas abertas / pendentes para próxima sessão
+- Redigir a Conclusão (Etapa 7)
+- Elaborar lista final de Referências em ABNT (Etapa 8)
+- Validar formatação ABNT global (Etapa 9)
+- Redigir Resumo + Palavras-chave no final
 
 ## Historial de sesiones
 *(la skill agrega una entrada nueva al final de cada sesión)*
+
+- **Sesão 2 (Resultados e Discussões):** Redação completa da Seção 3 cruzando as 9 fontes bibliográficas. Estrutura em 3 subseções alinhadas aos objetivos específicos. ~2200 palavras, ~7-8 páginas. Etapa 6 marcada como completa.
 
 - **Sesión 0 (setup):** Creado el proyecto, definido tema provisional, formato confirmado como artículo científico, estructura de carpetas y skill `avanzar-tcc` instaladas.
 - **Sesión 1 (Fuentes, Introducción y Metodología):** Se consolidaron las 9 fuentes bibliográficas reales en `bibliografia.md`, completando la Etapa 2. Además, se redactaron los borradores iniciales completos de la `Introdução` y la `Metodologia` dentro de `articulo/draft.md`, estructurados rigurosamente bajo normas ABNT y en 3ª persona. Las etapas 4 y 5 quedan completadas en su fase de borrador.
