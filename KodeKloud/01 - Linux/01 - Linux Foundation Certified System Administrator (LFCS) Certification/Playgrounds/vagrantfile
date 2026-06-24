@@ -7,7 +7,7 @@ Vagrant.configure("2") do |config|
 
   nodes = [
     { name: "node01", ip: "192.168.122.11", extra_disks: [] },
-    { name: "node02", ip: "192.168.122.12", extra_disks: ['512M'] }, # STG-004: 1 disco de 512MB para LVM
+    { name: "node02", ip: "192.168.122.12", extra_disks: ['512M'] },
     { name: "node03", ip: "192.168.122.13", extra_disks: [] }
   ]
 
@@ -15,7 +15,6 @@ Vagrant.configure("2") do |config|
     config.vm.define node[:name] do |node_config|
       node_config.vm.hostname = node[:name]
       
-      # Red de gestión dedicada (no "default")
       node_config.vm.network "private_network", 
         ip: node[:ip], 
         libvirt__network_name: "mgmt-net",
@@ -26,151 +25,124 @@ Vagrant.configure("2") do |config|
         lv.cpus = 1
         lv.driver = "kvm"
         
-        # Crear discos adicionales según la configuración del nodo
         node[:extra_disks].each do |size|
           lv.storage :file, :size => size, :type => 'qcow2'
         end
       end
 
-      # ── PROVISIONADO GENERAL (Todos los nodos) ──
+      # ── PROVISIONADO GENERAL ──
       node_config.vm.provision "shell", inline: <<-SHELL
         echo "🔧 Configurando #{node[:name]}..."
         
-        # 1. Resolver nombres de host localmente
         cat << 'HOSTS' >> /etc/hosts
 192.168.122.11 node01
 192.168.122.12 node02
 192.168.122.13 node03
 HOSTS
         
-        # 2. Crear usuario bob y dar permisos
         useradd -m -s /bin/bash bob
         echo 'bob:caleston123' | chpasswd
         echo 'bob ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/bob
         chmod 0440 /etc/sudoers.d/bob
         
-        # 3. Instalar herramientas base
         export DEBIAN_FRONTEND=noninteractive
         apt-get update -qq
         apt-get install -y -qq sshpass ufw lvm2
       SHELL
 
-      # ── PROVISIONADO ESPECÍFICO: CONFIGURAR NODE02 COMO SERVIDOR NFS (CON PROBLEMAS INYECTADOS) ──
+      # ── NODE02: SERVIDOR NFS ──
       if node[:name] == "node02"
         node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
-          echo "💾 Configurando node02 como servidor NFS (con problemas inyectados)..."
+          echo "💾 Configurando node02 como servidor NFS..."
           
-          # 1. Instalar servidor NFS
           export DEBIAN_FRONTEND=noninteractive
-          apt-get install -y -qq nfs-kernel-server
+          apt-get install -y -qq nfs-kernel-server xfsprogs
           
-          # 2. Limpiar residuos de incidentes anteriores
+          # Limpiar residuos
           umount /srv/shared 2>/dev/null || true
           rm -rf /srv/shared /srv/nfs-share
           wipefs -a /dev/vdb 2>/dev/null || true
           vgremove -f vg_data 2>/dev/null || true
           pvremove -f /dev/vdb 2>/dev/null || true
           
-          # ─────────────────────────────────────────────────────────────
-          # INYECCIÓN DE PROBLEMA #1: LVM mal configurado
-          # ─────────────────────────────────────────────────────────────
-          # NOTA: Usamos la técnica de heredoc por stdin (INNEREOF) para evitar problemas de escaping 
-          # y garantizar que los comandos multi-línea se ejecuten limpiamente con privilegios de root.
-          sudo bash << 'INNEREOF'
-            # Crear PV, VG y LV
-            pvcreate /dev/vdb
-            vgcreate vg_data /dev/vdb
-            lvcreate -L 512M -n lv_shared vg_data
-            
-            # Formatear con XFS y montar
-            mkfs.xfs /dev/vg_data/lv_shared
-            mkdir -p /srv/shared
-            mount /dev/vg_data/lv_shared /srv/shared
-            echo "/dev/vg_data/lv_shared /srv/shared xfs defaults 0 0" >> /etc/fstab
-            
-            # Crear datos de prueba
-            echo "Shared NFS Data - STG-004" > /srv/shared/test.txt
-            mkdir -p /srv/shared/devs
-            chown -R nobody:nogroup /srv/shared
-            chmod 755 /srv/shared
-          INNEREOF
+          # Crear LVM directamente (ya somos root)
+          echo "Creando LVM..."
+          pvcreate /dev/vdb
+          vgcreate vg_data /dev/vdb
+          lvcreate -L 400M -n lv_shared vg_data
           
-          # ─────────────────────────────────────────────────────────────
-          # INYECCIÓN DE PROBLEMA #2: /etc/exports MAL CONFIGURADO
-          # ─────────────────────────────────────────────────────────────
-          # Errores inyectados:
-          #   a) IP incorrecta (192.168.122.100 no existe en la red)
-          #   b) Solo permisos de lectura (ro) cuando debería ser rw
-          #   c) root_squash activo (impide operaciones root desde cliente)
-          sudo bash << 'INNEREOF'
-            echo "# Exportación NFS - STG-004 (CONFIGURACIÓN INCORRECTA)" > /etc/exports
-            echo "/srv/shared 192.168.122.100(ro,root_squash,no_subtree_check)" >> /etc/exports
-            exportfs -ra
-          INNEREOF
+          # Formatear y montar
+          echo "Formateando con XFS..."
+          mkfs.xfs /dev/vg_data/lv_shared
+          mkdir -p /srv/shared
+          mount /dev/vg_data/lv_shared /srv/shared
+          echo "/dev/vg_data/lv_shared /srv/shared xfs defaults 0 0" >> /etc/fstab
           
-          # ─────────────────────────────────────────────────────────────
-          # INYECCIÓN DE PROBLEMA #3: FIREWALL BLOQUEANDO PUERTOS NFS/RPC
-          # ─────────────────────────────────────────────────────────────
-          sudo bash << 'INNEREOF'
-            ufw --force reset > /dev/null 2>&1
-            ufw default deny incoming
-            ufw default allow outgoing
-            ufw allow ssh
-            # BLOQUEO EXPLÍCITO de puertos NFS (para simular el problema)
-            ufw deny 111/tcp    # rpcbind
-            ufw deny 111/udp    # rpcbind
-            ufw deny 2049/tcp   # nfs
-            ufw deny 2049/udp   # nfs
-            ufw --force enable
-          INNEREOF
+          # Crear datos de prueba
+          echo "Shared NFS Data - STG-004" > /srv/shared/test.txt
+          mkdir -p /srv/shared/devs
+          chown -R nobody:nogroup /srv/shared
+          chmod 755 /srv/shared
           
-          # 3. Reiniciar servicio NFS
+          # Configurar exports incorrecto
+          echo "Configurando /etc/exports (con errores)..."
+          echo "# Exportación NFS - STG-004 (CONFIGURACIÓN INCORRECTA)" > /etc/exports
+          echo "/srv/shared 192.168.122.100(ro,root_squash,no_subtree_check)" >> /etc/exports
+          exportfs -ra
+          
+          # Configurar firewall con bloqueos
+          echo "Configurando firewall UFW..."
+          ufw --force reset > /dev/null 2>&1
+          ufw default deny incoming
+          ufw default allow outgoing
+          ufw allow ssh
+          ufw deny 111/tcp
+          ufw deny 111/udp
+          ufw deny 2049/tcp
+          ufw deny 2049/udp
+          ufw --force enable
+          
+          # Iniciar NFS
           systemctl enable nfs-kernel-server
           systemctl restart nfs-kernel-server
           
-          echo "✅ node02 configurado como servidor NFS con 3 problemas inyectados:"
-          echo "   [1] LVM: vg_data/lv_shared montado en /srv/shared"
-          echo "   [2] /etc/exports: IP incorrecta, solo ro, root_squash activo"
-          echo "   [3] Firewall UFW: bloqueando puertos 111 y 2049"
+          echo "✅ node02 configurado con 3 problemas inyectados"
         SHELL
       end
 
-      # ── PROVISIONADO ESPECÍFICO: CONFIGURAR NODE03 COMO CLIENTE NFS ──
+      # ── NODE03: CLIENTE NFS ──
       if node[:name] == "node03"
         node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
           echo "💾 Configurando node03 como cliente NFS..."
           
-          # 1. Instalar cliente NFS
           export DEBIAN_FRONTEND=noninteractive
           apt-get install -y -qq nfs-common
           
-          # 2. Crear punto de montaje (sin montar aún - el alumno debe hacerlo)
           mkdir -p /mnt/shared
           
-          # 3. Intento de montaje inicial que FALLARÁ (por los problemas inyectados en node02)
-          echo "⏳ Intentando montar NFS desde node02 (se espera fallo)..."
+          echo "⏳ Intentando montar NFS desde node02..."
           mount -t nfs -o rw,bg,soft,timeo=30 192.168.122.12:/srv/shared /mnt/shared 2>/tmp/mount-error.log || \
-            echo "⚠️  Montaje fallido (esperado) - ver /tmp/mount-error.log"
+            echo "⚠️  Montaje fallido (esperado)"
           
-          echo "✅ node03 configurado como cliente NFS con montaje fallido."
+          echo "✅ node03 configurado como cliente NFS"
         SHELL
       end
 
-      # ── PROVISIONADO ESPECÍFICO: PREPARAR BÓVEDA EN NODE03 ──
+      # ── NODE03: BÓVEDA ──
       if node[:name] == "node03"
         node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
-          echo "🔒 Preparando bóveda de auditoría en #{node[:name]}..."
+          echo "🔒 Preparando bóveda en #{node[:name]}..."
           mkdir -p /opt/ops-compliance/stg-004
           chown -R bob:bob /opt/ops-compliance/stg-004
           chmod 750 /opt/ops-compliance/stg-004
-          echo "✅ Bóveda /opt/ops-compliance/stg-004 lista."
+          echo "✅ Bóveda lista"
         SHELL
       end
 
-      # ── PROVISIONADO ESPECÍFICO: TICKET + VERIFICACIÓN EN NODE01 ──
+      # ── NODE01: TICKET + VERIFICACIÓN ──
       if node[:name] == "node01"
         node_config.vm.provision "shell", privileged: false, inline: <<-SHELL
-          echo "🎫 Generando Ticket de Incidente para node01..."
+          echo "🎫 Generando Ticket en node01..."
           
           cat << 'TICKET' > /home/vagrant/TICKET_STG-004.txt
 ================================================================================
@@ -270,7 +242,7 @@ HOSTS
 ================================================================================
 TICKET
 
-          # ── SCRIPT DE VERIFICACIÓN RÁPIDA ──
+          # ── SCRIPT DE VERIFICACIÓN ──
           cat << 'VERIFY' > /tmp/verify-stg004.sh
 #!/bin/bash
 
@@ -289,7 +261,6 @@ echo -e "\${CYAN}║          VERIFICACIÓN DE ESCENARIO STG-004                
 echo -e "\${CYAN}╚════════════════════════════════════════════════════════════════╝\${RESET}"
 echo ""
 
-# [1/7] node02: LVM configurado
 echo -e "\${YELLOW}[1/7] node02: LVM vg_data/lv_shared\${RESET}"
 if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "sudo lvs vg_data/lv_shared 2>/dev/null | grep -q lv_shared"; then
   echo -e "      \${GREEN}✓ LV lv_shared existe\${RESET}"
@@ -298,7 +269,6 @@ else
   FAIL=1
 fi
 
-# [2/7] node02: Montaje /srv/shared
 echo -e "\${YELLOW}[2/7] node02: Montaje en /srv/shared\${RESET}"
 if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "df -h /srv/shared | grep -q shared"; then
   echo -e "      \${GREEN}✓ Montado correctamente\${RESET}"
@@ -307,7 +277,6 @@ else
   FAIL=1
 fi
 
-# [3/7] node02: Servicio NFS activo
 echo -e "\${YELLOW}[3/7] node02: Servicio NFS activo\${RESET}"
 if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "systemctl is-active --quiet nfs-kernel-server"; then
   echo -e "      \${GREEN}✓ Servicio activo\${RESET}"
@@ -316,7 +285,6 @@ else
   FAIL=1
 fi
 
-# [4/7] node02: Firewall UFW activo
 echo -e "\${YELLOW}[4/7] node02: Firewall UFW activo\${RESET}"
 if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "sudo ufw status | grep -q 'Status: active'"; then
   echo -e "      \${GREEN}✓ UFW activo\${RESET}"
@@ -325,25 +293,22 @@ else
   FAIL=1
 fi
 
-# [5/7] node02: Puertos NFS bloqueados (problema inyectado)
-echo -e "\${YELLOW}[5/7] node02: Puertos NFS bloqueados (problema inyectado)\${RESET}"
+echo -e "\${YELLOW}[5/7] node02: Puertos NFS bloqueados\${RESET}"
 if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "sudo ufw status | grep -E '2049|111' | grep -q 'DENY'"; then
   echo -e "      \${GREEN}✓ Puertos NFS bloqueados (esperado)\${RESET}"
 else
-  echo -e "      \${RED}✗ Puertos no bloqueados (problema no inyectado)\${RESET}"
+  echo -e "      \${RED}✗ Puertos no bloqueados\${RESET}"
   FAIL=1
 fi
 
-# [6/7] node02: /etc/exports con configuración incorrecta
 echo -e "\${YELLOW}[6/7] node02: /etc/exports con IP incorrecta\${RESET}"
 if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "grep -q '192.168.122.100' /etc/exports"; then
-  echo -e "      \${GREEN}✓ IP incorrecta detectada (problema inyectado)\${RESET}"
+  echo -e "      \${GREEN}✓ IP incorrecta detectada\${RESET}"
 else
-  echo -e "      \${RED}✗ Configuración de exports no coincide\${RESET}"
+  echo -e "      \${RED}✗ Configuración no coincide\${RESET}"
   FAIL=1
 fi
 
-# [7/7] node03: Bóveda
 echo -e "\${YELLOW}[7/7] node03: Bóveda de evidencia\${RESET}"
 if sshpass -p \$PASS ssh \$SSH_OPTS bob@node03 "[ -d /opt/ops-compliance/stg-004 ]"; then
   echo -e "      \${GREEN}✓ Bóveda creada\${RESET}"
@@ -357,31 +322,22 @@ if [ \$FAIL -eq 0 ]; then
   echo -e "\${GREEN}╔════════════════════════════════════════════════════════════════╗\${RESET}"
   echo -e "\${GREEN}║  ✅ TODAS LAS VERIFICACIONES PASARON - ESCENARIO LISTO         ║\${RESET}"
   echo -e "\${GREEN}╚════════════════════════════════════════════════════════════════╝\${RESET}"
-  echo ""
-  sleep 2
-  clear
-  cat /home/vagrant/TICKET_STG-004.txt
 else
   echo -e "\${RED}╔════════════════════════════════════════════════════════════════╗\${RESET}"
   echo -e "\${RED}║  ⚠️  ALGUNAS VERIFICACIONES FALLARON                           ║\${RESET}"
-  echo -e "\${RED}║  El escenario puede estar incompleto. Revisa los errores.      ║\${RESET}"
   echo -e "\${RED}╚════════════════════════════════════════════════════════════════╝\${RESET}"
-  echo ""
-  echo -e "\${YELLOW}Mostrando ticket de todas formas...\${RESET}"
-  sleep 3
-  clear
-  cat /home/vagrant/TICKET_STG-004.txt
 fi
+
+echo ""
+echo -e "\${YELLOW}Presiona ENTER para ver el ticket del incidente...\${RESET}"
+read -r
+cat /home/vagrant/TICKET_STG-004.txt
 VERIFY
 
           chmod +x /tmp/verify-stg004.sh
           
-          # ── MOSTRAR TICKET AL INICIAR SESIÓN ──
-          sed -i '/TICKET/d' /home/vagrant/.bashrc
-          sed -i '/# Mostrar/d' /home/vagrant/.bashrc
           sed -i '/verify-stg004/d' /home/vagrant/.bashrc
           cat << 'EOF' >> /home/vagrant/.bashrc
-# Ejecutar verificación y mostrar ticket
 bash /tmp/verify-stg004.sh
 EOF
         SHELL
