@@ -255,3 +255,14 @@ Escenario: |-
     6. Verificar que el pod pasa a estado Running y que la imagen correcta fue descargada.
     7. Documentar el comando exacto de corrección aplicado.
 ---
+[[Laboratorios del LFCS]]
+
+**Tell me about a recent technical challenge you faced:**
+
+Sure. Recently, I worked on a Kubernetes troubleshooting scenario where a backend application wasn't responding after a deployment. When I checked the pods, I found one in `ImagePullBackOff` status, which means Kubernetes couldn't download the container image.
+
+First, I described the pod and checked the events section, where I found the exact error message: the system couldn't find the image because of a typo in the image name — it said `nginxx` instead of `nginx`, with an extra letter. This is a common mistake when a deployment is created quickly without double-checking the image tag.
+
+To fix it, I didn't edit the YAML file manually. Instead, I used the command `kubectl set image` to update the deployment directly, pointing it to the correct image name. After that, I watched the rollout with `kubectl rollout status` and confirmed the new pod reached `Running` state with the correct image.
+
+What I learned from this is the importance of always verifying the exact image name and tag before deploying, and also how useful the `describe pod` and `events` commands are for finding the real cause of a problem quickly, instead of just guessing.

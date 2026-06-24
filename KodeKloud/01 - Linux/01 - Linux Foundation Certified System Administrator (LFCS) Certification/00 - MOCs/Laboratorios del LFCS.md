@@ -40,11 +40,11 @@ tags:
 | [[DK-003 - La Imagen Fantasma – Diagnóstico y Corrección de Dockerfile - V1.0]]                     |     6      |        l2        |     40 min      |     `19/06/2026`      |   <input type="checkbox" checked>   |
 | **Kubernetes**                                                                                      |            |                  |                 |                       |                                     |
 | [[K8S-001 - El Pod Fantasma - -> Namespace Incorrecto]]                                             |     3      |        L1        |     20 min      |     `23/06/2026`      |   <input type="checkbox" checked>   |
+| [[K8S-002 - La Imagen Perdida -> ImagePullBackOff por Typo]]                                        |     3      |        L1        |     20 min      |     `24/06/2026`      |   <input type="checkbox" checked>   |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
-|                                                                                                     |            |                  |                 |                       |                                     |
-|                                                                                                     |            |                  |   900 minutos   |                       |                                     |
-|                                                                                                     |            |                  | **15:00 horas** |                       |                                     |
+|                                                                                                     |            |                  |  1010 minutos   |                       |                                     |
+|                                                                                                     |            |                  | **16:50 horas** |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 
 
