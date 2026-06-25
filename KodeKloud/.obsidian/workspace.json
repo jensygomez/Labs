@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/006 - Bash Script/BS-004 - El Cazador de Logs – Parseo con Grep y Awk.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Docker/DK-003 - La Imagen Fantasma – Diagnóstico y Corrección de Dockerfile.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "BS-004 - El Cazador de Logs – Parseo con Grep y Awk"
+              "title": "DK-003 - La Imagen Fantasma – Diagnóstico y Corrección de Dockerfile"
             }
           }
         ]

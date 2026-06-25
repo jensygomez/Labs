@@ -2,7 +2,7 @@
 Curso: Transición Sysadmin a DevOps - Fundamentos de Docker
 Modulo: Container Optimization & Security
 Playground: DK-003-v1
-Titulo: La Imagen Fantasma – Diagnóstico y Corrección de Dockerfile - V1.0
+Titulo: La Imagen Fantasma – Diagnóstico y Corrección de Dockerfile
 Fecha de Inicio: 2026-06-19
 Dificultad: 6/10
 Level Escalation: L2
