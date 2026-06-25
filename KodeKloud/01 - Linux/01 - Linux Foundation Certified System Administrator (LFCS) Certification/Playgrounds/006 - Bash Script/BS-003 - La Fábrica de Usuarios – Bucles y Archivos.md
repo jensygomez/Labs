@@ -1,8 +1,8 @@
 ---
 Curso: Bash Scripting para Sysadmins
 Modulo: Bucles, Archivos y Manipulación de Datos
-Playground: BS-003-v1
-Titulo: La Fábrica de Usuarios – Bucles y Archivos - V1.0
+Playground: BS-003
+Titulo: La Fábrica de Usuarios – Bucles y Archivos
 Fecha de Inicio: 2026-06-19
 Dificultad: 4/10
 Level Escalation: L2
@@ -281,6 +281,8 @@ tags:
   - RHCSA
 ---
 [[Laboratorios del LFCS]]
+
+
 
 Recently, I worked on a Linux system administration challenge where I had to automate the onboarding process for 50 new employees using Bash scripting.
 

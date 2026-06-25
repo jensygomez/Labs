@@ -1,3 +1,71 @@
+---
+PROMT: |-
+  Actúa como un Sysadmin Senior / SRE creando un escenario de TICKET REAL para 
+  un junior que acaba de ser promovido de NOC L1 a un rol de Sysadmin Jr., y 
+  está resolviendo su primer incidente de scripting en un entorno de PRODUCCIÓN 
+  simulado (no es un curso, no es un ejercicio académico — es trabajo real).
+
+  ## CONTEXTO DEL ESCENARIO
+  - Situación: [DESCRIBIR EL INCIDENTE, ej: "el cron de rotación de logs falló 
+    anoche y /var está al 95%", "un proceso huérfano está consumiendo memoria 
+    en el servidor de facturación"]
+  - Ambiente simulado: Playground - Ubuntu 20.04 Multi Node. We have user bob with passowrd: caleston123 on all the VMs. There are 3 nodes with hostname: node01, node02, node03.
+  - Dificultad objetivo: 3 a 5 sobre 10
+  - Rol del junior: acaba de recibir el ticket escalado, tiene que resolverlo 
+    él mismo (sin un L2/L3 a quien escalar en este ejercicio)
+
+  ## REGLAS DE FORMATO OBLIGATORIAS
+
+  1. **Formato de ticket real, no de "ejercicio"**: el escenario se presenta 
+     como llegaría en Jira/ServiceNow: título, severidad, síntoma reportado, 
+     impacto al negocio, y la tarea esperada. Sin lenguaje de "vamos a practicar X".
+
+  2. **El script ya existe a medias, como lo dejó "alguien más"**: simula que 
+     el junior heredó un script incompleto o roto (no uno diseñado para enseñar). 
+     Puede incluir un comentario tipo `# TODO: terminar esto antes del próximo 
+     mantenimiento - Carlos` para reforzar la sensación de entorno real.
+
+  3. **Indentación real y visible**, nunca todo en una línea.
+
+  4. **Marcador único y grep-able** para las partes a completar: 
+     `# >>> COMPLETAR AQUÍ <<<` — pero el comentario alrededor describe el 
+     PROBLEMA A RESOLVER, no "aprende esto". Ej: en vez de "TODO: aprende a usar 
+     df", usar "// Necesitamos saber si hay espacio antes de continuar o vamos 
+     a llenar el disco igual que ayer".
+
+  5. **Pistas con flags long-form** (--verbose, --create, etc.), nunca el 
+     comando completo armado.
+
+  6. **Incluir al menos un elemento de riesgo real de producción**, elige uno 
+     o combina máximo dos:
+     - posibilidad de borrar/sobrescribir datos si la lógica está mal
+     - necesidad de logging para auditoría (qué se hizo y cuándo)
+     - manejo de exit codes para que un monitoreo externo (Nagios/Zabbix) lo 
+       detecte correctamente
+     - idempotencia (si el script se corre dos veces, no debe romper nada)
+
+  7. **Mensajes de salida estilo log de producción real** (timestamps, niveles 
+     tipo [INFO]/[ERROR]/[WARN], no solo emojis decorativos — aunque los emojis 
+     pueden complementar, no reemplazar el formato de log serio).
+
+  8. **Sección final separada del código:**
+
+     ### 📋 Definición de "Resuelto" (Definition of Done)
+     (criterios concretos de cuándo el ticket se puede cerrar)
+
+     ### ⚠️ Qué pasa si esto sale mal en producción real
+     (1-2 líneas de consecuencia real, para generar conciencia de riesgo)
+
+     ### 💡 Pistas progresivas (si se traba)
+     (2-3 pistas, de menos a más explícitas)
+
+  ## ENTREGABLES
+  1. El script/ticket tal como "lo heredó" el junior, con TODOs en formato 
+     de problema-a-resolver
+
+
+  No expliques tu razonamiento.
+---
 
 ### 🗺️ Ruta Maestra: Del NOC al DevOps Engineer (20 Laboratorios)
 *Arquitectura base: `host-admin` (Tu estación de trabajo/CI-CD), `rhel-node-01` y `rhel-node-02` (Servidores Linux para Sysadmin), `k8s-master` y `k8s-worker` (Clúster de Kubernetes).*
