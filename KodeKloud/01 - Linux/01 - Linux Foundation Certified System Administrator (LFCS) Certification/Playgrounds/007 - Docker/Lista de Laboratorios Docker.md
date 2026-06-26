@@ -24,7 +24,7 @@
 *   **Escenario:** El equipo de desarrollo entregó un `Dockerfile` que genera una imagen de más de 2GB para una aplicación simple de Node.js/Python. La imagen se ejecuta como `root`, expone puertos innecesarios y deja herramientas de compilación (como `gcc` o `make`) en la capa final. Debes refactorizar el `Dockerfile` usando una construcción en múltiples etapas (multi-stage build), añadir un archivo `.dockerignore` y asegurar que el proceso final corra con un usuario no privilegiado (`USER`).
 
 #### **4. DK-004: El Guardián Caído – Healthchecks y Auto-Reparación**
-*   **Dificultad:** 7/10 | **Nivel:** L2/L3
+*   **Dificultad:** 6/10 | **Nivel:** L2
 *   **Temas Docker:** Docker HEALTHCHECK, Restart Policies, Container State.
 *   **Objetivo:** Prepararme para aprobar el LFCS, RHCSA, Para Sysadmin Linux Pleno, DevOps Engineer y Sysadmin Kubernetes.
 *   **Escenario:** Un contenedor de un servidor web aparece como "Up" en `docker ps`, pero la aplicación interna ha entrado en un estado de bloqueo (deadlock) y responde con errores HTTP 500 o timeouts. Docker no se entera y no lo reinicia. Debes implementar una instrucción `HEALTHCHECK` válida en el Dockerfile o compose (ej. `curl -f http://localhost/health || exit 1`) y configurar una política de reinicio (`restart: unless-stopped` o `on-failure`) para que el demonio de Docker recicle el contenedor automáticamente cuando falle la salud.
