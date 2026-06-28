@@ -339,3 +339,13 @@ Escenario: |-
 ---
 [[Laboratorios del LFCS]]
 
+
+Sure, I can tell you about a recent troubleshooting case I worked on in my home lab, where I'm building hands-on Kubernetes skills.
+
+The situation was: a frontend team had just deployed a new version of a web application with three replicas. The pods were running fine — I could curl them directly by IP — but when QA tried to reach the app through the Kubernetes Service, the connection kept timing out. The developer who deployed it insisted everything looked correct.
+
+So I started investigating systematically. First, I checked the Service and confirmed it had zero endpoints, which told me Kubernetes wasn't routing traffic to any pod at all. Then I described the Service to see its selector, and separately checked the actual labels on the running pods. When I compared them side by side, I found a one-letter typo: the Service selector was looking for "web-fronend", but the pods were labeled "web-frontend". Because Kubernetes does exact string matching on selectors, that tiny difference meant the Service couldn't find any matching pod, so it never created an Endpoints object.
+
+I fixed it by patching just the Service selector, without touching the Deployment, since the pods themselves were healthy. After that, I verified the endpoints were populated with all three pod IPs, and confirmed everything worked end-to-end by spinning up a temporary curl pod and hitting the Service through its internal DNS name.
+
+What I took away from this is how a single typo, invisible at first glance, can completely break service discovery in Kubernetes — and how important it is to verify with actual command output at every step, rather than assuming something is correct just because it looks fine on the surface.

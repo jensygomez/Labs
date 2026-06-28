@@ -274,3 +274,16 @@ tags:
 [[Laboratorios del LFCS]]
 
 ---
+**Can you tell me about a recent challenge you faced?**
+
+Sure. Recently, I worked on a production incident where a containerized service was marked as 'Up' in Docker, but the application inside was actually deadlocked — users were getting HTTP 500 errors and timeouts, and there was no automatic recovery. The root cause was that the container had no health monitoring at all: Docker only checks if the main process is alive, not if the application is actually responding correctly.
+
+My first step was to investigate the application code to understand how it exposed its health status, through a `/health` endpoint. Then I implemented a `HEALTHCHECK` instruction in the Dockerfile. One detail I had to troubleshoot was that the base image didn't include `curl` or `wget`, so I built the health check using Python's standard library instead, with proper exception handling, since an HTTP error actually throws an exception rather than just returning a status code.
+
+I also configured a restart policy, `unless-stopped`, in the `docker-compose.yml`. During testing, I caught a small YAML typo I had introduced, which is a good reminder that even one wrong character can silently break a configuration without throwing an error.
+
+The most valuable lesson came afterward: I discovered that Docker's health check and its restart policy are actually two independent mechanisms. The restart policy only reacts when the main process exits — it doesn't automatically restart a container just because it's marked 'unhealthy'. So even with both configured, the container stayed 'Up' and 'unhealthy' instead of restarting. I verified this directly using `docker inspect`, which showed the failing health check log with a growing failure streak.
+
+Rather than rushing to add a workaround, I documented this limitation clearly and discussed the standard production solution — an 'autoheal' sidecar container that watches health status and triggers restarts — as a next step, while keeping the current fix scoped to what was needed.
+
+What I took from this is that monitoring and recovery aren't the same thing, and it's important to verify assumptions with real tools like `docker inspect` instead of assuming a fix works just because it's configured.
