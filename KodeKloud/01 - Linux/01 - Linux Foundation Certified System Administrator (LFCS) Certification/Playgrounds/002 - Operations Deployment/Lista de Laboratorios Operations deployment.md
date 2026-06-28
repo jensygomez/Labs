@@ -32,7 +32,7 @@ Se mantiene estrictamente tu **Regla de Oro**: Todo se ejecuta desde `node01`, s
 *   **Escenario:** El repositorio oficial de `node02` está caído o no contiene una versión específica de una herramienta de monitoreo necesaria. Debes configurar un repositorio alternativo (local o espejo), instalar las dependencias de compilación (`gcc`, `make`, etc.), descargar el código fuente, compilarlo e instalarlo (`./configure`, `make`, `make install`). Finalmente, verifica la integridad del binario instalado (ej. con `ldd` o `hash`) y reporta el proceso a `node03`.
 
 #### **5. OD-005: El Muro Invisible – Contextos SELinux y Políticas MAC**
-*   **Dificultad:** 8.0/10 | **Nivel:** L3
+*   **Dificultad:** 6.0/10 | **Nivel:** L2
 *   **Temas Operations Deployment:** List and Identify SELinux File and Process Contexts; Create and Enforce MAC Using SELinux.
 *   **Objetivo:** Prepararme para aprobar el LFCS, RHCSA, Para Sysadmin Linux Pleno, DevOps Engineer y Sysadmin Kubernetes.
 *   **Escenario:** Un servicio web o de base de datos en `node02` se niega a iniciar o a leer archivos en un directorio no estándar (ej. `/opt/data`), a pesar de que los permisos POSIX (chmod/chown) son correctos. SELinux está en modo `Enforcing`. Está **prohibido** usar `setenforce 0`. Debes usar `audit2allow`, `semanage`, `chcon` o `restorecon` para identificar el contexto incorrecto, definir la política correcta y aplicar la etiqueta de seguridad adecuada para que el servicio funcione de forma segura. Envía el output de `sestatus` y `ls -Z` a `node03`.

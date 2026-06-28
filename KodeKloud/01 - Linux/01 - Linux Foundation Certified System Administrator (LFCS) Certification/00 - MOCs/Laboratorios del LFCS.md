@@ -10,12 +10,12 @@ tags:
 | [[EC-002 - La Estructura Colapsada – Gestión Avanzada de Archivos y Enlaces - V1.0]]                |     6      |        L2        |     30 min      |     `16/06/2026`      |   <input type="checkbox" checked>   |
 | [[EC-003 - El Permiso Prohibido – Control de Acceso y Bits Especiales - V1.0]]                      |    6.5     |        L2        |     40 min      |     `16/06/2026`      |   <input type="checkbox" checked>   |
 | [[EC-004 - La Aguja en el Pajar – Búsqueda, Filtrado y Expresiones Regulares - V1.0]]               |     6      |        L2        |     50 min      |     `21/06/2026`      | <input type="checkbox" checked><br> |
-| [[EC-005 - El Flujo Roto – Redirección I and O y Pipelines Complejos]]                              |     6      |        L2        |                 |                       |                                     |
+| [[EC-005 - El Flujo Roto – Redirección I and O y Pipelines Complejos]]                              |     6      |        L2        |     30 min      |     `28/06/2026`      |   <input type="checkbox" checked>   |
 | **Operations Deployments**                                                                          |            |                  |                 |                       |                                     |
 | [[OD-001 - El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro - V1.0]]                |    6.5     |        L2        |     40 min      |     `15/06/2026`      |   <input type="checkbox" checked>   |
 | [[OD-002 - El Servicio Zombi – Diagnóstico de Procesos y Creación de Units systemd - V1.0]]         |     7      |        L2        |     40 min      |     `16/06/2026`      |   <input type="checkbox" checked>   |
 | [[OD-003 - Sintonizando el Núcleo – Parámetros del Kernel y Análisis Forense de Logs - V1.0]]       |    7.5     |        L3        |     40 min      |     `17/06/2026`      |   <input type="checkbox" checked>   |
-| [[OD-004 - Dependencias Huérfanas – Repositorios, Paquetes y Compilación desde Fuente - V1.0]]      |     6      |        L2        |     40 min      |     `21/06/2026`      |   <input type="checkbox" checked>   |
+| [[OD-004 - Dependencias Huérfanas – Repositorios, Paquetes y Compilación desde Fuente]]      |     6      |        L2        |     40 min      |     `21/06/2026`      |   <input type="checkbox" checked>   |
 | **Users and Groups**                                                                                |            |                  |                 |                       |                                     |
 | [[USR-001 - El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración]]                |     7      |        L2        |     40 min      |     `11/06/2026`      |   <input type="checkbox" checked>   |
 | [[USR-002 -El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0]]        |     7      |      L2/L3       |     40 min      |     `15/06/2026`      |   <input type="checkbox" checked>   |
@@ -49,8 +49,8 @@ tags:
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
-|                                                                                                     |            |                  |  1140 minutos   |                       |                                     |
-|                                                                                                     |            |                  | **19:00 horas** |                       |                                     |
+|                                                                                                     |            |                  |  1190 minutos   |                       |                                     |
+|                                                                                                     |            |                  | **19:50 horas** |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 

@@ -1,7 +1,7 @@
 ---
 Curso: Transición Sysadmin a DevOps - Operations Deployment LFCS/RHCSA
 Modulo: Operations Deployment (Gestión de Software y Compilación)
-Playground: OD-004-v1
+Playground: OD-004
 Titulo: Dependencias Huérfanas – Repositorios, Paquetes y Compilación desde Fuente
 Fecha de Inicio: 2026-06-21
 Dificultad: 6/10

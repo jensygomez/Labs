@@ -275,5 +275,10 @@ Escenario: |-
 
 ---
 
+One challenge I faced recently in my current role involved diagnosing a silent failure in a production-style ETL pipeline. The reports were arriving empty, but nobody understood why, because the standard error output wasn't being captured anywhere — it was just disappearing into the terminal.
 
+I started by separating stdout and stderr explicitly into independent log files, which let me build a consolidated report tagging each line by its source. That's when I noticed something interesting: there were actually two completely different root causes hiding behind the same symptom. Three files were genuinely corrupted, which triggered expected validation errors. But twelve other files were failing for a totally different reason — a permissions issue on the output directory that was silently blocking every single write operation, even for valid files.
 
+After that, I built a real-time monitoring pipeline using tee, so I could watch the process live while simultaneously streaming filtered error and warning lines to a remote compliance server over SSH. Then I moved to batch processing with xargs running four parallel jobs, and finally injected a validation script directly through SSH using a Here Document, without ever creating temporary files on the control node.
+
+What I found most valuable about this exercise was realizing that a validation script can report misleadingly positive numbers, like an eighty percent success rate, while masking a deeper infrastructure problem underneath. It reinforced something I now apply constantly: don't just trust the surface-level metric, always dig into what's actually happening at the file-descriptor and permission level.
