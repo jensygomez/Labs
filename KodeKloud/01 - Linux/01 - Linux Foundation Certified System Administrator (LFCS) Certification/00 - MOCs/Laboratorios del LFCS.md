@@ -45,12 +45,12 @@ tags:
 | [[K8S-001 - El Pod Fantasma - -> Namespace Incorrecto]]                                             |     3      |        L1        |     20 min      |     `23/06/2026`      |   <input type="checkbox" checked>   |
 | [[K8S-002 - La Imagen Perdida -> ImagePullBackOff por Typo]]                                        |     3      |        L1        |     20 min      |     `24/06/2026`      |   <input type="checkbox" checked>   |
 | [[K8S-003 - El Servicio Fantasma --> Service sin Endpoints por Selector Mismatch]]                  |     4      |        L1        |     20 min      |     `26/06/2026`      | <input type="checkbox" checked><br> |
+| [[K8S-004 - La App que No Lee su Configuración --> ConfigMap no montado por nombre incorrecto]]     |     4      |        L1        |     20 min      |     `28/06/2026`      |   <input type="checkbox" checked>   |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |  1140 minutos   |                       |                                     |
 |                                                                                                     |            |                  | **19:00 horas** |                       |                                     |
-|                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 

@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes/K8S-004 - La App que No Lee su Configuración --> ConfigMap no montado por nombre incorrecto.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/EC-005 - El Flujo Roto – Redirección I and O y Pipelines Complejos.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "K8S-004 - La App que No Lee su Configuración --> ConfigMap no montado por nombre incorrecto"
+              "title": "EC-005 - El Flujo Roto – Redirección I and O y Pipelines Complejos"
             }
           }
         ]
@@ -203,10 +203,10 @@
   },
   "active": "56ed188fdf2f56d1",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes/K8S-003 - El Servicio Fantasma --> Service sin Endpoints por Selector Mismatch.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes/K8S-004 - La App que No Lee su Configuración --> ConfigMap no montado por nombre incorrecto.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes/K8s playground lab context.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes/K8S-004 - La App que No Lee su Configuración --> ConfigMap no montado por nombre incorrecto.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes/K8S-003 - El Servicio Fantasma --> Service sin Endpoints por Selector Mismatch.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes/K8s playground lab context.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/EC-005 - El Flujo Roto – Redirección I and O y Pipelines Complejos.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/EC-004 - La Aguja en el Pajar – Búsqueda, Filtrado y Expresiones Regulares - V1.0.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/Lista de Laboratorios.md",

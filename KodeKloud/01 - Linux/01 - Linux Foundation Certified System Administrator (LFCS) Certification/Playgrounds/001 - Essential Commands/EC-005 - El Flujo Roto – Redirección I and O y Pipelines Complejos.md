@@ -3,7 +3,7 @@ Curso: Transición Sysadmin a DevOps - Essential Commands LFCS/RHCSA
 Modulo: Essential Commands (Redirección I/O y Pipelines Complejos)
 Playground: EC-005
 Titulo: El Flujo Roto – Redirección I/O y Pipelines Complejos
-Fecha de Inicio: 2026-06-26
+Fecha de Inicio: 2026-06-28
 Dificultad: 6/10
 Level Escalation: L2
 Objetivo: |-

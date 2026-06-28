@@ -355,3 +355,14 @@ Escenario: |-
 ---
 [[Laboratorios del LFCS]]
 ---
+
+
+One challenge I faced recently in my current role involved a Kubernetes application that seemed healthy on the surface — the pod was running, ready, with zero restarts — but it was actually misbehaving silently. 
+
+The app was using hardcoded default values instead of reading its configuration. When I dug into it with `kubectl describe pod`, I noticed something interesting: the file-based configuration, mounted as a volume, was working perfectly, but the environment variables coming from a ConfigMap reference were completely missing. 
+
+That mismatch was the key clue. After comparing the ConfigMap name in the Deployment manifest against the actual ConfigMaps in the namespace, I found a one-character typo — an extra 's' — in the `configMapRef.name` field. What made this tricky to catch was that the reference was marked as optional, so Kubernetes never raised an error or changed the pod's status; it just quietly skipped injecting those variables. 
+
+Once I identified the typo, I edited the Deployment to point to the correct ConfigMap name, without touching the working volume mount. After the rollout completed, I verified the new pods picked up all the expected environment variables. 
+
+This experience reinforced for me how important it is to look beyond pod status indicators like 'Running' and 'Ready' — they don't always mean the application is actually configured correctly.
