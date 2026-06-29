@@ -407,3 +407,22 @@ Escenario: |-
 ---
 [[Laboratorios del LFCS]]
 ---
+
+
+### Tell me about a recent challenge you faced
+
+
+
+_"Sure — a recent challenge I faced involved a production web service that was returning a 403 Forbidden error, even though the file permissions were completely correct — owner, group, and chmod were all properly configured. At first glance, it looked like a permissions issue, but it wasn't._
+
+_I started by checking the SELinux status, and I confirmed the system was running in enforcing mode. Since the company policy strictly prohibits disabling SELinux as a workaround, I had to actually understand and fix the real problem instead of just bypassing it._
+
+_Using `ls -Z`, I found that the web directory had the wrong security context — it was labeled as `default_t` instead of the type Apache expects, `httpd_sys_content_t`. Then I confirmed it by searching the audit log with `ausearch`, where I found AVC denial entries showing the httpd process being blocked from accessing that exact file due to a context mismatch._
+
+_Once I had clear evidence of the root cause, I applied a persistent fix using `semanage fcontext` to define the correct context for that path, and then `restorecon` to actually relabel the files. After that, the service started responding with a 200 status code immediately._
+
+_Finally, I documented the entire diagnostic and remediation process — SELinux status, the incorrect context, the audit log evidence, and the commands applied — and sent it directly to a compliance server through an SSH pipeline, without generating any temporary files on the source machine, which was a strict requirement for audit purposes._
+
+_What I really took away from this is that in security-hardened environments, you can't just disable the protection mechanism when something doesn't work — you need to understand exactly why it's blocking access and apply a targeted, persistent solution._
+
+

@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Operations Deployment/OD-005 - El Muro Invisible – Contextos SELinux y Políticas MAC.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "OD-005 - El Muro Invisible – Contextos SELinux y Políticas MAC"
+              "title": "Laboratorios del LFCS"
             }
           }
         ]
@@ -203,8 +203,8 @@
   },
   "active": "56ed188fdf2f56d1",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Operations Deployment/OD-005 - El Muro Invisible – Contextos SELinux y Políticas MAC.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/NET-004 - El Muro Ciego – Reglas de Firewall Bloquean Tráfico Legítimo.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Vagrantfile",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Storage/STG-004 - El Puente Roto – NFS Server and Client y Exportaciones con Restricciones.md",
