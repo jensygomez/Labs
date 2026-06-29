@@ -15,7 +15,8 @@ tags:
 | [[OD-001 - El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro - V1.0]]                |    6.5     |        L2        |     40 min      |     `15/06/2026`      |   <input type="checkbox" checked>   |
 | [[OD-002 - El Servicio Zombi – Diagnóstico de Procesos y Creación de Units systemd - V1.0]]         |     7      |        L2        |     40 min      |     `16/06/2026`      |   <input type="checkbox" checked>   |
 | [[OD-003 - Sintonizando el Núcleo – Parámetros del Kernel y Análisis Forense de Logs - V1.0]]       |    7.5     |        L3        |     40 min      |     `17/06/2026`      |   <input type="checkbox" checked>   |
-| [[OD-004 - Dependencias Huérfanas – Repositorios, Paquetes y Compilación desde Fuente]]      |     6      |        L2        |     40 min      |     `21/06/2026`      |   <input type="checkbox" checked>   |
+| [[OD-004 - Dependencias Huérfanas – Repositorios, Paquetes y Compilación desde Fuente]]             |     6      |        L2        |     40 min      |     `21/06/2026`      |   <input type="checkbox" checked>   |
+| [[OD-005 - El Muro Invisible – Contextos SELinux y Políticas MAC]]                                  |     6      |        L2        |                 |                       |                                     |
 | **Users and Groups**                                                                                |            |                  |                 |                       |                                     |
 | [[USR-001 - El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración]]                |     7      |        L2        |     40 min      |     `11/06/2026`      |   <input type="checkbox" checked>   |
 | [[USR-002 -El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0]]        |     7      |      L2/L3       |     40 min      |     `15/06/2026`      |   <input type="checkbox" checked>   |
@@ -90,19 +91,19 @@ tags:
 | [[PG-007 - Contenedor web inaccesible (Podman, SELinux y Redes) - V2]]                                |                               |                       |                                 |
 | [[PG-008 -Incidente mayor en producción (Simulación de Examen Integrador)]]                           |                               |                       |                                 |
 | **Users and Groups**                                                                                  |                               |                       |                                 |
-| [[X - PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V1]]                           |            15 min             |      `04/06/26`       | <input type="checkbox" checked> |
-| [[X - PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V2]]                           |            30 min             |     `13/06/2026`      | <input type="checkbox" checked> |
-| [[X - PG-002 - Perfiles de entorno del sistema y límites de recursos - V1]]                               |            20 min             |     `05/06/2026`      | <input type="checkbox" checked> |
-| [[X - PG-002 - Perfiles de entorno del sistema y límites de recursos - V2]]                               |                               |                       |                                 |
-| [[X - PG-003 - Gestión de privilegios y control de acceso (Sudoers, PAM y NSSwitch) - V1]]                |                               |                       |                                 |
-| [[X - PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora)]]                  |                               |                       |                                 |
+| [[X - PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V1]]                       |            15 min             |      `04/06/26`       | <input type="checkbox" checked> |
+| [[X - PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V2]]                       |            30 min             |     `13/06/2026`      | <input type="checkbox" checked> |
+| [[X - PG-002 - Perfiles de entorno del sistema y límites de recursos - V1]]                           |            20 min             |     `05/06/2026`      | <input type="checkbox" checked> |
+| [[X - PG-002 - Perfiles de entorno del sistema y límites de recursos - V2]]                           |                               |                       |                                 |
+| [[X - PG-003 - Gestión de privilegios y control de acceso (Sudoers, PAM y NSSwitch) - V1]]            |                               |                       |                                 |
+| [[X - PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora)]]              |                               |                       |                                 |
 | **Networking**                                                                                        |                               |                       |                                 |
 | [[PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1]]                           |                               |                       |                                 |
 | **Bash Avanzado**                                                                                     |                               |                       |                                 |
 | [[PG-BASH-001 - Inventario automático de servidores - V1]]                                            |            50 min             |     `06/06/2026`      | <input type="checkbox" checked> |
 | [[PG-BASH-001 - Inventario automático de servidores - V2]]                                            |                               |                       |                                 |
 | [[PG-BASH-002 - Rotación y compresión de logs - V1]]                                                  |                               |                       |                                 |
-|                                                                                                       |                               |                       |                                 |
+|                                                                                                       |          810 minutos          |                       |                                 |
 |                                                                                                       |        **13:30 Horas**        |                       |                                 |
 |                                                                                                       |                               |                       |                                 |
 

@@ -38,11 +38,13 @@ Competencias: |-
     a node03 mediante pipelines SSH, sin crear archivos intermedios en node01.
 Script Vagrant: |-
   # -*- mode: ruby -*-
+
   # vi: set ft=ruby :
 
   Vagrant.configure("2") do |config|
-    # Usamos Rocky Linux 9 que tiene SELinux nativo
-    config.vm.box = "rockylinux/9"
+    # ✅ Usamos AlmaLinux 9 (100% compatible con RHEL y SELinux)
+    # Es el mismo tipo de box que funciona en NET-004 pero para RHEL
+    config.vm.box = "almalinux/9"
 
     nodes = [
       { name: "node01", ip: "192.168.122.21" },
@@ -53,72 +55,80 @@ Script Vagrant: |-
     nodes.each do |node|
       config.vm.define node[:name] do |node_config|
         node_config.vm.hostname = node[:name]
-        
-        node_config.vm.network "private_network", 
-          ip: node[:ip], 
-          libvirt__network_name: "mgmt-net",
+
+        # Red de gestión (SSH y comunicación entre nodos)
+        node_config.vm.network "private_network",
+          ip: node[:ip],
+          libvirt__network_name: "mgmt",
           libvirt__dhcp_enabled: false
 
         node_config.vm.provider "libvirt" do |lv|
           lv.memory = 1024
           lv.cpus = 1
           lv.driver = "kvm"
+          # Forzamos arquitectura por si acaso
+          lv.machine_arch = "x86_64"
         end
 
-        # ── PROVISIONADO GENERAL ──
+        # ── PROVISIONADO GENERAL (todos los nodos) ──
         node_config.vm.provision "shell", inline: <<-SHELL
           echo "🔧 Configurando #{node[:name]}..."
-          
+
+          # Limpiar /etc/hosts para evitar duplicados
+          for host in node01 node02 node03; do
+            sed -i "/$host/d" /etc/hosts
+          done
           cat << 'HOSTS' >> /etc/hosts
   192.168.122.21 node01
   192.168.122.22 node02
   192.168.122.23 node03
   HOSTS
-          
-          useradd -m -s /bin/bash bob
+
+          # Crear usuario bob
+          useradd -m -s /bin/bash bob 2>/dev/null || true
           echo 'bob:caleston123' | chpasswd
           echo 'bob ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/bob
+          echo 'Defaults:bob !requiretty' >> /etc/sudoers.d/bob
           chmod 0440 /etc/sudoers.d/bob
-          
-          dnf install -y sshpass
+
+          # Instalar herramientas básicas (dnf para RHEL/Alma)
+          dnf install -y sshpass curl
         SHELL
 
-        # ── NODE02: SERVIDOR WEB CON SELINUX ──
+        # ── NODE02: SERVIDOR WEB CON SELINUX (BUG INYECTADO) ──
         if node[:name] == "node02"
           node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
             echo "🌐 Configurando node02 como servidor web con SELinux..."
-            
-            # Instalar httpd y herramientas SELinux
-            dnf install -y httpd policycoreutils-python-utils setroubleshoot-server
-            
-            # Asegurar que SELinux está en modo Enforcing
+
+            # Instalar servicios y herramientas SELinux
+            dnf install -y httpd policycoreutils-python-utils setroubleshoot-server curl firewalld
+
+            # Asegurar SELinux en enforcing
             setenforce 1
             sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
-            
-            # Crear directorio no estándar para contenido web
+
+            # Crear directorio web no estándar
             mkdir -p /opt/webdata
-            cd /opt/webdata
-            
-            # Crear contenido web de prueba
-            cat << 'HTML' > index.html
+
+            # Contenido web de prueba
+            cat << 'HTML' > /opt/webdata/index.html
   <!DOCTYPE html>
   <html>
   <head><title>OD-005 - SELinux Test</title></head>
   <body>
-  <h1>¡Funciona! SELinux está correctamente configurado.</h1>
+  <h1>Funciona! SELinux esta correctamente configurado.</h1>
   <p>Si ves esto, el contexto de seguridad es correcto.</p>
   </body>
   </html>
   HTML
-            
-            # Configurar permisos POSIX CORRECTOS (para que NO sea el problema)
+
+            # Permisos POSIX correctos (para que NO sea el problema)
             chown -R apache:apache /opt/webdata
             chmod -R 755 /opt/webdata
-            
-            # ⚠️ INYECCIÓN DEL BUG: NO cambiar el contexto SELinux
-            # El directorio tendrá contexto default_t en lugar de httpd_sys_content_t
-            # Esto hace que httpd no pueda leer los archivos aunque los permisos POSIX sean correctos
-            
+
+            # 🔴 INYECCIÓN DEL BUG: Contexto SELinux incorrecto
+            chcon -Rt default_t /opt/webdata
+
             # Configurar httpd para usar el directorio no estándar
             cat << 'HTTPD_CONF' > /etc/httpd/conf.d/custom-webdata.conf
   <VirtualHost *:80>
@@ -130,15 +140,17 @@ Script Vagrant: |-
       </Directory>
   </VirtualHost>
   HTTPD_CONF
-            
-            # Iniciar httpd
+
+            # Iniciar servicios
             systemctl enable httpd
             systemctl start httpd
-            
-            # Configurar firewall para permitir HTTP
+
+            # Firewall: abrir puerto 80
+            systemctl enable firewalld
+            systemctl start firewalld
             firewall-cmd --permanent --add-service=http
             firewall-cmd --reload
-            
+
             echo "✅ node02 configurado con SELinux Enforcing y bug inyectado"
           SHELL
         end
@@ -148,17 +160,18 @@ Script Vagrant: |-
           node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
             echo "🔒 Preparando bóveda en #{node[:name]}..."
             mkdir -p /opt/ops-compliance/od-005
-            chown -R bob:bob /opt/ops-compliance/od-005
-            chmod 750 /opt/ops-compliance/od-005
-            echo "✅ Bóveda lista"
+            chown -R bob:bob /opt/ops-compliance
+            chmod -R 755 /opt/ops-compliance
+            echo "✅ Bóveda lista en /opt/ops-compliance/od-005/"
           SHELL
         end
 
-        # ── NODE01: TICKET + VERIFICACIÓN ──
+        # ── NODE01: TICKET + SCRIPT DE VERIFICACIÓN ──
         if node[:name] == "node01"
           node_config.vm.provision "shell", privileged: false, inline: <<-SHELL
-            echo "🎫 Generando Ticket en node01..."
-            
+            echo "🎫 Generando Ticket y script de verificación en node01..."
+
+            # --- CREAR EL TICKET ---
             cat << 'TICKET' > /home/vagrant/TICKET_OD-005.txt
   ================================================================================
     TICKET OD-005  │  Severidad: ALTA  │  Ambiente: PRODUCCIÓN
@@ -186,7 +199,7 @@ Script Vagrant: |-
     2. Diagnosticar por qué httpd no puede servir contenido desde /opt/webdata/
        a pesar de que los permisos POSIX son correctos
     3. Identificar el contexto de seguridad incorrecto usando 'ls -Z'
-    4. Revisar las denegaciones en /var/log/audit/audit.log con 'ausearch' o 'grep denied'
+    4. Revisar las denegaciones en /var/log/audit/audit.log
     5. Aplicar una solución SEGURA y PERSISTENTE usando:
        - semanage fcontext -a -t httpd_sys_content_t "/opt/webdata(/.*)?"
        - restorecon -Rv /opt/webdata/
@@ -200,7 +213,7 @@ Script Vagrant: |-
       - SELinux: Enforcing
       - Directorio web: /opt/webdata (contexto INCORRECTO)
       - Firewall: firewalld activo, puerto 80 abierto
-    
+
     node03:
       - Bóveda: /opt/ops-compliance/od-005/
 
@@ -233,7 +246,7 @@ Script Vagrant: |-
        - Desde node01, envía mediante pipeline SSH la salida consolidada de:
          a) Estado de SELinux en node02 (sudo sestatus)
          b) Contexto de archivos en /opt/webdata (ls -Z /opt/webdata/)
-         c) Denegaciones encontradas en audit.log (sudo ausearch -m AVC -ts recent)
+         c) Denegaciones encontradas en audit.log
          d) Comandos aplicados (semanage, restorecon)
          e) Prueba final: curl http://node02/ desde node01
        - NO generar archivos temporales locales en node01
@@ -247,7 +260,7 @@ Script Vagrant: |-
      [ ] Aplicar restorecon y verificar contexto corregido                  --> 20%
      [ ] Verificar que curl http://node02/ responde correctamente           --> 10%
      [ ] Evidencia enviada a node03:/opt/ops-compliance/od-005/             --> 10%
-     [ ] CERO archivos de resultados almacenados en node01 (DESCALIFICA)    --> 0% (descalifica)
+     [ ] CERO archivos de resultados almacenados en node01 (DESCALIFICA)
 
     REGLA DE ORO: Está PROHIBIDO usar 'setenforce 0'. Debes resolver el problema
     de forma SEGURA usando las herramientas adecuadas de SELinux.
@@ -258,7 +271,6 @@ Script Vagrant: |-
     ls -Z /opt/webdata/                                   # Ver contextos
     sudo ausearch -m AVC -ts recent                       # Buscar denegaciones
     sudo grep denied /var/log/audit/audit.log             # Alternativa
-    sudo semanage fcontext -l | grep webdata              # Ver reglas definidas
     sudo semanage fcontext -a -t httpd_sys_content_t "/opt/webdata(/.*)?"
     sudo restorecon -Rv /opt/webdata/                     # Aplicar contextos
     matchpathcon /opt/webdata                             # Contexto esperado
@@ -266,7 +278,7 @@ Script Vagrant: |-
   ================================================================================
   TICKET
 
-            # ── SCRIPT DE VERIFICACIÓN ──
+            # --- CREAR EL SCRIPT DE VERIFICACIÓN ---
             cat << 'VERIFY' > /tmp/verify-od005.sh
   #!/bin/bash
 
@@ -286,7 +298,7 @@ Script Vagrant: |-
   echo ""
 
   echo -e "\${YELLOW}[1/6] node02: SELinux Enforcing\${RESET}"
-  if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "sudo sestatus | grep -q 'Current mode:.*enforcing'"; then
+  if sshpass -p \$PASS ssh -t \$SSH_OPTS bob@node02 "sudo sestatus | grep -q 'Current mode:.*enforcing'" 2>/dev/null; then
     echo -e "      \${GREEN}✓ SELinux en modo Enforcing\${RESET}"
   else
     echo -e "      \${RED}✗ SELinux no está en modo Enforcing\${RESET}"
@@ -294,7 +306,7 @@ Script Vagrant: |-
   fi
 
   echo -e "\${YELLOW}[2/6] node02: httpd instalado y activo\${RESET}"
-  if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "systemctl is-active --quiet httpd"; then
+  if sshpass -p \$PASS ssh -t \$SSH_OPTS bob@node02 "sudo systemctl is-active --quiet httpd" 2>/dev/null; then
     echo -e "      \${GREEN}✓ httpd activo\${RESET}"
   else
     echo -e "      \${RED}✗ httpd inactivo\${RESET}"
@@ -302,7 +314,7 @@ Script Vagrant: |-
   fi
 
   echo -e "\${YELLOW}[3/6] node02: Directorio /opt/webdata existe\${RESET}"
-  if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "[ -d /opt/webdata ]"; then
+  if sshpass -p \$PASS ssh -t \$SSH_OPTS bob@node02 "[ -d /opt/webdata ]" 2>/dev/null; then
     echo -e "      \${GREEN}✓ Directorio existe\${RESET}"
   else
     echo -e "      \${RED}✗ Directorio no existe\${RESET}"
@@ -310,7 +322,7 @@ Script Vagrant: |-
   fi
 
   echo -e "\${YELLOW}[4/6] node02: Contexto SELinux INCORRECTO (bug inyectado)\${RESET}"
-  CONTEXT=\$(sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "ls -Z /opt/webdata/ | head -1 | awk '{print \\\$1}'")
+  CONTEXT=\$(sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "ls -Z /opt/webdata/ 2>/dev/null | head -1 | awk '{print \\\$1}'" 2>/dev/null)
   if [[ "\$CONTEXT" != *"httpd_sys_content_t"* ]]; then
     echo -e "      \${GREEN}✓ Contexto incorrecto detectado: \$CONTEXT (bug activo)\${RESET}"
   else
@@ -328,7 +340,7 @@ Script Vagrant: |-
   fi
 
   echo -e "\${YELLOW}[6/6] node03: Bóveda de evidencia\${RESET}"
-  if sshpass -p \$PASS ssh \$SSH_OPTS bob@node03 "[ -d /opt/ops-compliance/od-005 ]"; then
+  if sshpass -p \$PASS ssh \$SSH_OPTS bob@node03 "[ -d /opt/ops-compliance/od-005 ]" 2>/dev/null; then
     echo -e "      \${GREEN}✓ Bóveda creada\${RESET}"
   else
     echo -e "      \${RED}✗ Bóveda no existe\${RESET}"
@@ -353,11 +365,13 @@ Script Vagrant: |-
   VERIFY
 
             chmod +x /tmp/verify-od005.sh
-            
-            sed -i '/verify-od005/d' /home/vagrant/.bashrc
-            cat << 'EOF' >> /home/vagrant/.bashrc
-  bash /tmp/verify-od005.sh
-  EOF
+
+            # --- AÑADIR AL .bashrc PARA EJECUCIÓN AUTOMÁTICA ---
+            sed -i '/verify-od005/d' /home/vagrant/.bashrc 2>/dev/null || true
+            echo 'bash /tmp/verify-od005.sh' >> /home/vagrant/.bashrc
+
+            echo "✅ Ticket y script de verificación creados."
+            echo "🚀 Al hacer 'vagrant ssh node01' se ejecutará automáticamente."
           SHELL
         end
       end
