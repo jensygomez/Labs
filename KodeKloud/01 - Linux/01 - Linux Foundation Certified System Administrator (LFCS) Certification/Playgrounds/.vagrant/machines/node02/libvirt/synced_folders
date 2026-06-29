@@ -1,1 +1,0 @@
-{"rsync":{"/vagrant":{"type":"rsync","guestpath":"/vagrant","hostpath":"/home/jensyg/Labs/KodeKloud/01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds","disabled":false,"__vagrantfile":true,"owner":"vagrant","group":"vagrant"}}}
