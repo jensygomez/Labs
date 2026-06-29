@@ -39,13 +39,16 @@ Script Vagrant: |-
     nodes.each do |node|
       config.vm.define node[:name] do |node_config|
         node_config.vm.hostname = node[:name]
-        
+
         # Interfaz principal de gestión (acceso SSH)
-        node_config.vm.network "private_network", ip: node[:ip], libvirt__network_name: "mgmt", libvirt__dhcp_enabled: false
-        
-        # INTERFAZ SECUNDARIA PARA COMUNICACIÓN INTERNA (red aislada)
+        node_config.vm.network "private_network",
+          ip: node[:ip],
+          libvirt__network_name: "mgmt",
+          libvirt__dhcp_enabled: false
+
+        # Interfaz secundaria para comunicación interna (red aislada)
         if node[:name] == "node02" || node[:name] == "node03"
-          node_config.vm.network "private_network", 
+          node_config.vm.network "private_network",
             ip: (node[:name] == "node02" ? "10.99.99.2" : "10.99.99.3"),
             libvirt__network_name: "cluster-internal",
             libvirt__dhcp_enabled: false
@@ -56,14 +59,14 @@ Script Vagrant: |-
           lv.cpus = 1
           lv.driver = "kvm"
           node[:extra_disks].each do |size|
-            lv.storage :file, :size => size, :type => 'qcow2'
+            lv.storage :file, size: size, type: "qcow2"
           end
         end
 
         # ── PROVISIONADO GENERAL (Todos los nodos) ──
         node_config.vm.provision "shell", inline: <<-SHELL
           echo "🔧 Configurando #{node[:name]}..."
-          
+
           # 1. Resolver nombres de host localmente
           cat << 'HOSTS' >> /etc/hosts
   192.168.122.11 node01
@@ -72,18 +75,17 @@ Script Vagrant: |-
   10.99.99.2 node02-internal
   10.99.99.3 node03-internal
   HOSTS
-          
+
           # 2. Crear usuario bob y dar permisos
           useradd -m -s /bin/bash bob
           echo 'bob:caleston123' | chpasswd
           echo 'bob ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/bob
           chmod 0440 /etc/sudoers.d/bob
-          
+
           # 3. Instalar herramientas esenciales
           export DEBIAN_FRONTEND=noninteractive
           apt-get update -qq
           apt-get install -y -qq sshpass net-tools iproute2 iptables-persistent
-          # Pre-seed iptables-persistent para que no pida confirmación interactiva
           echo "iptables-persistent iptables-persistent/autosave_v4 boolean false" | debconf-set-selections
           echo "iptables-persistent iptables-persistent/autosave_v6 boolean false" | debconf-set-selections
         SHELL
@@ -92,7 +94,7 @@ Script Vagrant: |-
         if node[:name] == "node01"
           node_config.vm.provision "shell", privileged: false, inline: <<-SHELL
             echo "🎫 Generando Ticket de Incidente para node01..."
-            
+
             cat << 'TICKET' > /home/vagrant/TICKET_NET-005.txt
   ================================================================================
     TICKET NET-005  │  Severidad: CRÍTICA  │  Ambiente: RED SEGMENTADA
@@ -195,13 +197,11 @@ Script Vagrant: |-
   echo "🔍 Verificando estado del escenario NET-005..."
   echo "================================================================"
 
-  # Colores
   RED='\033[0;31m'
   GREEN='\033[0;32m'
   YELLOW='\033[1;33m'
   NC='\033[0m'
 
-  # Función para ejecutar comandos remotos con sshpass (usuario bob)
   remote_exec() {
       local node="$1"
       local cmd="$2"
@@ -227,10 +227,9 @@ Script Vagrant: |-
   echo ""
   echo "🖥️  Verificando estado de node02 (Router/Gateway)..."
 
-  # ip_forward
   IP_FORWARD=$(remote_exec "node02" "sysctl -n net.ipv4.ip_forward")
   if [ -z "$IP_FORWARD" ]; then
-      echo -e "${RED}✗${NC} No se pudo obtener ip_forward (¿falló SSH?)"
+      echo -e "${RED}✗${NC} No se pudo obtener ip_forward"
   else
       if [ "$IP_FORWARD" = "0" ]; then
           echo -e "${GREEN}✓${NC} ip_forward = 0 (DESHABILITADO como esperado)"
@@ -239,10 +238,9 @@ Script Vagrant: |-
       fi
   fi
 
-  # Tabla NAT (contar reglas DNAT/MASQUERADE/SNAT)
   NAT_RULES=$(remote_exec "node02" "iptables -t nat -L -n | grep -E '(DNAT|MASQUERADE|SNAT)' | wc -l")
   if [ -z "$NAT_RULES" ]; then
-      echo -e "${RED}✗${NC} No se pudo obtener reglas NAT (¿falló SSH?)"
+      echo -e "${RED}✗${NC} No se pudo obtener reglas NAT"
   else
       if [ "$NAT_RULES" -eq 0 ]; then
           echo -e "${GREEN}✓${NC} Tabla NAT vacía (sin reglas DNAT/SNAT)"
@@ -254,10 +252,9 @@ Script Vagrant: |-
   echo ""
   echo "🗄️  Verificando estado de node03 (Servidor Aislado)..."
 
-  # PostgreSQL activo
   PG_STATUS=$(remote_exec "node03" "systemctl is-active postgresql")
   if [ -z "$PG_STATUS" ]; then
-      echo -e "${RED}✗${NC} No se pudo obtener estado de PostgreSQL (¿falló SSH?)"
+      echo -e "${RED}✗${NC} No se pudo obtener estado de PostgreSQL"
   else
       if [ "$PG_STATUS" = "active" ]; then
           echo -e "${GREEN}✓${NC} PostgreSQL activo en node03"
@@ -266,7 +263,6 @@ Script Vagrant: |-
       fi
   fi
 
-  # Puerto 5432 escuchando
   PORT_CHECK=$(remote_exec "node03" "ss -tlnp | grep ':5432' | wc -l")
   if [ -z "$PORT_CHECK" ]; then
       echo -e "${RED}✗${NC} No se pudo verificar puerto 5432"
@@ -278,7 +274,6 @@ Script Vagrant: |-
       fi
   fi
 
-  # Gateway por defecto en node03
   GATEWAY=$(remote_exec "node03" "ip route show default | wc -l")
   if [ -z "$GATEWAY" ]; then
       echo -e "${RED}✗${NC} No se pudo verificar gateway"
@@ -290,7 +285,6 @@ Script Vagrant: |-
       fi
   fi
 
-  # Salida a internet desde node03
   INTERNET_CHECK=$(remote_exec "node03" "timeout 2 ping -c 1 8.8.8.8 > /dev/null 2>&1; echo \$?")
   if [ -z "$INTERNET_CHECK" ]; then
       echo -e "${RED}✗${NC} No se pudo verificar salida a internet"
@@ -304,8 +298,6 @@ Script Vagrant: |-
 
   echo ""
   echo "🔌 Verificando el problema de DNAT..."
-
-  # Intentar conectar a node02:8080 (debe fallar)
   timeout 3 bash -c "echo > /dev/tcp/node02/8080" 2>/dev/null
   if [ $? -ne 0 ]; then
       echo -e "${GREEN}✓${NC} Puerto 8080 en node02 NO redirige a node03 (fallo esperado)"
@@ -346,20 +338,16 @@ Script Vagrant: |-
           SHELL
         end
 
-        # ── PROVISIONADO ESPECÍFICO: INYECCIÓN DE FALLOS EN NODE02 (ROUTER) ──
+        # ── PROVISIONADO ESPECÍFICO: INYECCIÓN DE FALLOS EN NODE02 ──
         if node[:name] == "node02"
           node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
             echo "🧩 Inyectando escenario 'Túnel Torcido' en #{node[:name]}..."
-
             bash << 'INNEREOF'
               set -e
-
-              # 1. Deshabilitar ip_forward
               sysctl -w net.ipv4.ip_forward=0
               sed -i 's/^net.ipv4.ip_forward.*/# net.ipv4.ip_forward=0/' /etc/sysctl.conf 2>/dev/null || true
               rm -f /etc/sysctl.d/99-ipforward.conf 2>/dev/null || true
 
-              # 2. Limpiar tablas NAT y FILTER (dejando SSH abierto)
               iptables -t nat -F
               iptables -t nat -X
               iptables -F
@@ -369,54 +357,77 @@ Script Vagrant: |-
               iptables -P OUTPUT ACCEPT
               iptables -A INPUT -p tcp -s 192.168.122.0/24 --dport 22 -j ACCEPT
 
-              # 3. Persistir el estado roto
               if command -v netfilter-persistent &> /dev/null; then
                  netfilter-persistent save
               elif command -v iptables-save &> /dev/null; then
                  iptables-save > /etc/iptables/rules.v4
               fi
-
-              echo "✅ Escenario 'Túnel Torcido' inyectado en node02."
-              echo "   - ip_forward = 0 (DESHABILITADO)"
-              echo "   - Tabla NAT: VACÍA (sin DNAT ni SNAT)"
-              echo "   - node03 depende de node02 para salir a internet"
+              echo "✅ Escenario inyectado en node02."
             INNEREOF
           SHELL
         end
-        
-        # ── PROVISIONADO ESPECÍFICO: PREPARAR NODE03 (SERVIDOR AISLADO) ──
+
+        # ── PROVISIONADO ESPECÍFICO: NODE03 (SERVIDOR AISLADO + SIN GATEWAY) ──
         if node[:name] == "node03"
           node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
             echo "🗄️  Configurando node03 como servidor aislado con PostgreSQL..."
-
             bash << 'INNEREOF'
               set -e
               export DEBIAN_FRONTEND=noninteractive
 
-              # 1. Instalar PostgreSQL
               apt-get update -qq
               apt-get install -y -qq postgresql postgresql-client curl netcat-openbsd iproute2
 
-              # 2. Configurar PostgreSQL para escuchar en todas las interfaces
               PG_HBA=$(find /etc/postgresql -name pg_hba.conf 2>/dev/null | head -n1)
               PG_CONF=$(find /etc/postgresql -name postgresql.conf 2>/dev/null | head -n1)
-
               if [ -n "$PG_CONF" ]; then
                 sed -i "s/^#*listen_addresses.*/listen_addresses = '*'/" "$PG_CONF"
               fi
-
               if [ -n "$PG_HBA" ]; then
                 echo "host    all    all    10.99.99.0/24    trust" >> "$PG_HBA"
                 echo "host    all    all    192.168.122.0/24 trust" >> "$PG_HBA"
               fi
-
               systemctl enable postgresql
               systemctl restart postgresql
 
-              # 3. EL ERROR PEDAGÓGICO: node03 NO tiene gateway por defecto.
+              # ── ELIMINAR GATEWAY POR DEFECTO (persistente) ──
+              # 1. Eliminar ruta actual de TODAS las interfaces
+              ip route del default via 192.168.121.1 dev eth0 2>/dev/null || true
               ip route del default 2>/dev/null || true
 
-              # 4. Preparar bóveda de auditoría
+              # 2. Configurar Netplan para la interfaz mgmt (la que tiene 192.168.122.13) SIN gateway
+              MGMT_IFACE=$(ip -o -4 addr show | grep 192.168.122.13 | awk '{print $2}')
+              if [ -n "$MGMT_IFACE" ]; then
+                cat << EOF > /etc/netplan/99-custom.yaml
+  network:
+    version: 2
+    ethernets:
+      $MGMT_IFACE:
+        dhcp4: false
+        addresses: [192.168.122.13/24]
+        # sin gateway4
+  EOF
+              fi
+
+              # 3. Neutralizar DHCP de eth0 (para que no añada ruta por defecto)
+              PHANTOM_IFACE="eth0"
+              cat << EOF > /etc/netplan/98-no-default-route.yaml
+  network:
+    version: 2
+    ethernets:
+      $PHANTOM_IFACE:
+        dhcp4: true
+        dhcp4-overrides:
+          use-routes: false
+  EOF
+
+              netplan apply
+
+              # 4. Asegurar que no quede ruta por defecto tras netplan
+              ip route del default via 192.168.121.1 dev eth0 2>/dev/null || true
+              ip route del default 2>/dev/null || true
+
+              # Crear bóveda de auditoría
               mkdir -p /opt/ops-compliance/net-005/
               chown -R bob:bob /opt/ops-compliance/net-005/
               chmod 750 /opt/ops-compliance/net-005/
@@ -428,7 +439,6 @@ Script Vagrant: |-
             INNEREOF
           SHELL
         end
-
       end
     end
   end
