@@ -243,3 +243,10 @@ Escenario: |-
 [[Laboratorios del LFCS]]
 ---
 
+Recently, I worked on a security remediation ticket where our internal audit team found that one of our production servers was allowing direct root login via SSH and also accepted password authentication — which violated our security policy and created a real risk of brute-force attacks.
+
+I was responsible for hardening the SSH daemon: I audited the current configuration, both in the config file and the effective settings loaded by the daemon, created a backup before touching anything, then disabled root login, password authentication, and challenge-response authentication. I validated the syntax before restarting the service, and the restart went fine — sshd came back up clean.
+
+But here's the real lesson from that day: I lost SSH access to the server right after the restart. The reason was simple — I never kept a persistent, already-authenticated session open as a safety net before disabling password auth. Each of my commands opened and closed its own connection, so once password authentication was off, there was no existing key-based session still alive to fall back on if something went wrong.
+
+It was a great hands-on reminder that as an administrator, access is never automatic — it depends entirely on having a recovery path active _before_ you change anything that controls that same access. Now I always make sure to keep a live session open, or have an out-of-band recovery method ready, before applying any change to authentication settings.

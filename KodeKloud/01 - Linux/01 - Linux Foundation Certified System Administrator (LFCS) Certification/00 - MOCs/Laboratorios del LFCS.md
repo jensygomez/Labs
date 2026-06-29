@@ -22,6 +22,7 @@ tags:
 | [[USR-002 -El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0]]        |     7      |      L2/L3       |     40 min      |     `15/06/2026`      |   <input type="checkbox" checked>   |
 | [[USR-003 - La Bomba de Tenedores (Fork Bomb) – Límites de Recursos de Usuario]]                    |     8      |        L3        |     20 min      |     `17/06/2026`      |   <input type="checkbox" checked>   |
 | [[USR-004 - Las Llaves del Reino – Gestión de Acceso SSH y Autenticación por Claves -  V1.0]]       |     6      |        L2        |     30 min      |     `22/06/2026`      |   <input type="checkbox" checked>   |
+| [[USR-005 - Cerrando la Puerta Grande – SSH Hardening Básico en node02]]                            |     6      |        L2        |     30 min      |     `29/06/2026`      |   <input type="checkbox" checked>   |
 | **Networking**                                                                                      |            |                  |                 |                       |                                     |
 | [[NET-001 - El Candado Oxidado – Bloqueo de Acceso SSH y Resolución de Nombres]]                    |     6      |        L2        |     30 min      |     `11/06/2026`      |   <input type="checkbox" checked>   |
 | [[NET-002 - La Paradoja Temporal – Deriva de Reloj y Fallo de Autenticación en Clúster]]            |     6      |        L2        |     60 min      |     `15/06/2026`      |   <input type="checkbox" checked>   |
@@ -50,8 +51,8 @@ tags:
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
-|                                                                                                     |            |                  |  1220 minutos   |                       |                                     |
-|                                                                                                     |            |                  | **20:20 horas** |                       |                                     |
+|                                                                                                     |            |                  |  1250 minutos   |                       |                                     |
+|                                                                                                     |            |                  | **20:50 horas** |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 
