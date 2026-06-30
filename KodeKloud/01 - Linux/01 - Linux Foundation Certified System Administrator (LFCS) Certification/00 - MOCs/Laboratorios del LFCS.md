@@ -28,6 +28,7 @@ tags:
 | [[NET-002 - La Paradoja Temporal – Deriva de Reloj y Fallo de Autenticación en Clúster]]            |     6      |        L2        |     60 min      |     `15/06/2026`      |   <input type="checkbox" checked>   |
 | [[NET-003 - La Interfaz Fantasma – Fallo en el Levantamiento de Interfaces y Enrutamiento  - V1.0]] |     7      |      L2/L3       |     30 min      |     `18/06/2026`      |   <input type="checkbox" checked>   |
 | [[NET-004 - El Muro Ciego – Reglas de Firewall Bloquean Tráfico Legítimo]]                          |     6      |        L2        |     40 min      |     `23/06/2026`      |   <input type="checkbox" checked>   |
+| [[NET-005  - El Túnel Torcido – Fallo en Redirección de Puertos (DNAT) y Enmascaramiento (SNAT)]]   |     6      |        L2        |                 |                       |                                     |
 | **Storage**                                                                                         |            |                  |                 |                       |                                     |
 | [[STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente]]               |     6      |        L2        |     40 min      |     `14/06/2026`      |   <input type="checkbox" checked>   |
 | [[STG-002 - El Laberinto LVM – Volúmenes Lógicos que No Montan y VG Fragmentado - V1.0]]            |     7      |      L2/L3       |     40 min      |     `16/06/2026`      |   <input type="checkbox" checked>   |
