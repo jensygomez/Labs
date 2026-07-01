@@ -40,7 +40,7 @@ tags:
 | [[BS-002 - El Portero Lógico – Condicionales y Validaciones]]                                       |     3      |        L1        |     30 min      |     `15/06/2026`      |   <input type="checkbox" checked>   |
 | [[BS-003 - La Fábrica de Usuarios – Bucles y Archivos]]                                             |     4      |        L2        |     80 min      |     `19/06/2026`      |   <input type="checkbox" checked>   |
 | [[BS-004 - El Cazador de Logs – Parseo con Grep y Awk]]                                             |     3      |        L1        |     30 min      |     `25/06/2026`      |   <input type="checkbox" checked>   |
-| [[BS-005 - El Guardián del Cron – Automatización y Manejo de Errores]]                              |     4      |        L1        |                 |                       |                                     |
+| [[BS-005 - El Guardián del Cron – Automatización y Manejo de Errores]]                              |     4      |        L1        |     40 min      |     `01/07/2026`      |   <input type="checkbox" checked>   |
 | **Docker**                                                                                          |            |                  |                 |                       |                                     |
 | [[DK-001 - El Contenedor Reincidente Fallo de Persistencia y Entorno]]                              |     5      |      L1/L2       |     20 min      |     `11/06/2026`      |   <input type="checkbox" checked>   |
 | [[DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red]]                          |     6      |        L2        |     40 min      |     `12/06/2026`      |   <input type="checkbox" checked>   |
@@ -54,8 +54,8 @@ tags:
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
-|                                                                                                     |            |                  |  1340 minutos   |                       |                                     |
-|                                                                                                     |            |                  | **22:20 horas** |                       |                                     |
+|                                                                                                     |            |                  |  1380 minutos   |                       |                                     |
+|                                                                                                     |            |                  | **23:00 horas** |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 

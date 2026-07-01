@@ -407,3 +407,16 @@ tags:
 [[Laboratorios del LFCS]]
 
 ---
+
+
+_Recently, I worked on a ticket that came in as a SEV-2 incident — a production database backup script had been failing silently for three days, and nobody noticed until a client reported data inconsistencies._
+
+_My task was to harden an incomplete bash script left by a senior engineer. I implemented strict error handling using `set -e` and `set -o pipefail` to ensure the script would abort immediately on any failure, including failures inside pipelines — which is exactly the gap that caused the silent failures in the first place._
+
+_I built a structured logging function using `tee --append` to write timestamped entries simultaneously to the terminal and a log file, following the format `[YYYY-MM-DD HH:MM:SS] [LEVEL] message` required for audit trails._
+
+_I also configured a `trap` on the `ERR` signal to catch runtime errors and report the exact line number and exit code — which proved itself during testing when it correctly caught a missing `crontab` binary in the environment and logged the precise failure point._
+
+_Finally, I used `gzip --stdout` to compress the SQL dump without modifying the source file, and the script was scheduled via cron to run daily at 02:00 AM._
+
+_The key lesson was understanding why single quotes matter in a trap definition — with double quotes, `$LINENO` gets evaluated at definition time, not at the moment of failure, which would make the error reporting useless._
