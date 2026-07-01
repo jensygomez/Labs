@@ -34,6 +34,7 @@ tags:
 | [[STG-002 - El Laberinto LVM – Volúmenes Lógicos que No Montan y VG Fragmentado - V1.0]]            |     7      |      L2/L3       |     40 min      |     `16/06/2026`      |   <input type="checkbox" checked>   |
 | [[STG-003 - La Montaña Rusa de IO – Monitoreo de Performance y Cuellos de Botella - V1.0]]          |     7      |        L3        |     40 min      |     `18/06/2026`      |   <input type="checkbox" checked>   |
 | [[STG-004 - El Puente Roto – NFS Server and Client y Exportaciones con Restricciones]]              |     6      |        L2        |     40 min      |     `24/06/2026`      |   <input type="checkbox" checked>   |
+| [[STG-005 - Los Permisos Rebeldes – ACLs, SGID y Sticky Bit en Directorios Compartidos]]            |     6      |        L2        |     40 min      |     `01/07/2026`      |   <input type="checkbox" checked>   |
 | **Bash Avanzado**                                                                                   |            |                  |                 |                       |                                     |
 | [[BS-001 - El Eco Silencioso – Variables y Redirecciones]]                                          |     2      |        L1        |     30 min      |     `13/06/2026`      |   <input type="checkbox" checked>   |
 | [[BS-002 - El Portero Lógico – Condicionales y Validaciones]]                                       |     3      |        L1        |     30 min      |     `15/06/2026`      |   <input type="checkbox" checked>   |
@@ -52,8 +53,8 @@ tags:
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
-|                                                                                                     |            |                  |  1300 minutos   |                       |                                     |
-|                                                                                                     |            |                  | **21:40 horas** |                       |                                     |
+|                                                                                                     |            |                  |  1340 minutos   |                       |                                     |
+|                                                                                                     |            |                  | **22:20 horas** |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 
