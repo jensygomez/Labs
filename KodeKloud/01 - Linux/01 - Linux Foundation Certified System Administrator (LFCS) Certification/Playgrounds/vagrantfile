@@ -1,5 +1,4 @@
 # -*- mode: ruby -*-
-
 # vi: set ft=ruby :
 
 Vagrant.configure("2") do |config|
@@ -7,411 +6,369 @@ Vagrant.configure("2") do |config|
 
   nodes = [
     { name: "node01", ip: "192.168.122.11", extra_disks: [] },
-    { name: "node02", ip: "192.168.122.12", extra_disks: [] },
+    { name: "node02", ip: "192.168.122.12", extra_disks: ['512M'] },
     { name: "node03", ip: "192.168.122.13", extra_disks: [] }
   ]
 
   nodes.each do |node|
     config.vm.define node[:name] do |node_config|
       node_config.vm.hostname = node[:name]
-
-      # Interfaz principal de gestión (acceso SSH)
-      node_config.vm.network "private_network",
-        ip: node[:ip],
-        libvirt__network_name: "mgmt",
+      
+      node_config.vm.network "private_network", 
+        ip: node[:ip], 
+        libvirt__network_name: "mgmt-net",
         libvirt__dhcp_enabled: false
-
-      # Interfaz secundaria para comunicación interna (red aislada)
-      if node[:name] == "node02" || node[:name] == "node03"
-        node_config.vm.network "private_network",
-          ip: (node[:name] == "node02" ? "10.99.99.2" : "10.99.99.3"),
-          libvirt__network_name: "cluster-internal",
-          libvirt__dhcp_enabled: false
-      end
 
       node_config.vm.provider "libvirt" do |lv|
         lv.memory = 1024
         lv.cpus = 1
         lv.driver = "kvm"
+        
         node[:extra_disks].each do |size|
-          lv.storage :file, size: size, type: "qcow2"
+          lv.storage :file, :size => size, :type => 'qcow2'
         end
       end
 
-      # ── PROVISIONADO GENERAL (Todos los nodos) ──
+      # ── PROVISIONADO GENERAL ──
       node_config.vm.provision "shell", inline: <<-SHELL
         echo "🔧 Configurando #{node[:name]}..."
-
-        # 1. Resolver nombres de host localmente
+        
         cat << 'HOSTS' >> /etc/hosts
 192.168.122.11 node01
 192.168.122.12 node02
 192.168.122.13 node03
-10.99.99.2 node02-internal
-10.99.99.3 node03-internal
 HOSTS
-
-        # 2. Crear usuario bob y dar permisos
+        
         useradd -m -s /bin/bash bob
         echo 'bob:caleston123' | chpasswd
         echo 'bob ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/bob
         chmod 0440 /etc/sudoers.d/bob
-
-        # 3. Instalar herramientas esenciales
+        
         export DEBIAN_FRONTEND=noninteractive
         apt-get update -qq
-        apt-get install -y -qq sshpass net-tools iproute2 iptables-persistent
-        echo "iptables-persistent iptables-persistent/autosave_v4 boolean false" | debconf-set-selections
-        echo "iptables-persistent iptables-persistent/autosave_v6 boolean false" | debconf-set-selections
+        apt-get install -y -qq sshpass acl
       SHELL
 
-      # ── PROVISIONADO ESPECÍFICO: TICKET EN NODE01 ──
+      # ── NODE02: SERVIDOR CON DIRECTORIO COMPARTIDO ──
+      if node[:name] == "node02"
+        node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
+          echo "💾 Configurando node02 con directorio compartido..."
+          
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get install -y -qq xfsprogs
+          
+          # Crear usuarios y grupos
+          echo "Creando usuarios y grupos..."
+          groupadd -f devs
+          groupadd -f ops
+          useradd -m -s /bin/bash -G devs alice 2>/dev/null || true
+          useradd -m -s /bin/bash -G devs charlie 2>/dev/null || true
+          useradd -m -s /bin/bash -G ops dave 2>/dev/null || true
+          useradd -m -s /bin/bash auditor 2>/dev/null || true
+          
+          echo 'alice:caleston123' | chpasswd
+          echo 'charlie:caleston123' | chpasswd
+          echo 'dave:caleston123' | chpasswd
+          echo 'auditor:caleston123' | chpasswd
+          
+          # Limpiar residuos
+          umount /srv/proyectos 2>/dev/null || true
+          rm -rf /srv/proyectos
+          wipefs -a /dev/vdb 2>/dev/null || true
+          
+          # Formatear y montar directamente (sin LVM para simplificar)
+          echo "Formateando con XFS..."
+          mkfs.xfs -f /dev/vdb
+          mkdir -p /srv/proyectos
+          mount /dev/vdb /srv/proyectos
+          echo "/dev/vdb /srv/proyectos xfs defaults 0 0" >> /etc/fstab
+          
+          # INYECCIÓN DE PROBLEMAS
+          echo "Inyectando problemas de configuración..."
+          
+          cat << 'INNEREOF' | bash
+#!/bin/bash
+set -e
+
+# Problema 1: Directorio sin SGID (debería tenerlo para herencia de grupo)
+echo "Problema 1: Directorio sin SGID..."
+chown root:devs /srv/proyectos
+chmod 0770 /srv/proyectos  # Sin SGID (debería ser 2770)
+
+# Problema 2: Sin Sticky Bit (debería tenerlo para proteger archivos)
+# Ya está sin sticky bit con 0770 (debería ser 3770 con SGID+Sticky)
+
+# Problema 3: Crear subdirectorio de auditoría sin ACLs correctas
+mkdir -p /srv/proyectos/auditoria
+chown root:devs /srv/proyectos/auditoria
+chmod 0770 /srv/proyectos/auditoria
+
+# Problema 4: Sin Default ACLs (archivos nuevos no heredan permisos)
+# No configuramos default ACLs intencionalmente
+
+# Problema 5: ACLs mal configuradas para grupo ops
+# Damos permisos incorrectos (solo lectura cuando debería ser rwx)
+setfacl -m g:ops:r /srv/proyectos  # Incorrecto: solo lectura
+
+# Crear archivos de prueba con permisos incorrectos
+su - alice -c "touch /srv/proyectos/proyecto1.txt"
+su - charlie -c "touch /srv/proyectos/proyecto2.txt"
+
+echo "✅ Problemas inyectados correctamente"
+INNEREOF
+          
+          echo "✅ node02 configurado con 5 problemas inyectados"
+        SHELL
+      end
+
+      # ── NODE03: BÓVEDA ──
+      if node[:name] == "node03"
+        node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
+          echo "🔒 Preparando bóveda en #{node[:name]}..."
+          mkdir -p /opt/ops-compliance/stg-005
+          chown -R bob:bob /opt/ops-compliance/stg-005
+          chmod 750 /opt/ops-compliance/stg-005
+          echo "✅ Bóveda lista"
+        SHELL
+      end
+
+      # ── NODE01: TICKET + VERIFICACIÓN ──
       if node[:name] == "node01"
         node_config.vm.provision "shell", privileged: false, inline: <<-SHELL
-          echo "🎫 Generando Ticket de Incidente para node01..."
-
-          cat << 'TICKET' > /home/vagrant/TICKET_NET-005.txt
+          echo "🎫 Generando Ticket en node01..."
+          
+          cat << 'TICKET' > /home/vagrant/TICKET_STG-005.txt
 ================================================================================
-  TICKET NET-005  │  Severidad: CRÍTICA  │  Ambiente: RED SEGMENTADA
+  TICKET STG-005  │  Severidad: MEDIA  │  Ambiente: PRODUCCIÓN
 ================================================================================
-  🧠 NET-005-MN — El Túnel Torcido: Fallo en DNAT y SNAT (Masquerade)
-  Módulo: Networking  │  Dificultad: 6/10  │  Nivel: L2
+  🔐 STG-005-MN — Los Permisos Rebeldes (ACLs, SGID y Sticky Bit)
+  Módulo: Storage  │  Dificultad: 6/10  │  Nivel: L2
 --------------------------------------------------------------------------------
   Ubicación de Control:  node01  (Estación del Administrador — bob)
-  Nodo Router/Gateway:   node02  (Doble homing: mgmt + cluster-internal)
-  Nodo Aislado:          node03  (Red interna, sin salida directa a internet)
+  Nodo Servidor:         node02  (Directorio compartido — /srv/proyectos)
+  Nodo Bóveda Destino:   node03  (Bóveda de Gobernanza — /opt/ops-compliance/stg-005/)
   Contraseña del Clúster: caleston123
 --------------------------------------------------------------------------------
-  REPORTE DE INCIDENTE:
-  El equipo de desarrollo desplegó una base de datos PostgreSQL en node03
-  (puerto 5432) dentro de la red interna del clúster (10.99.99.0/24). Por
-  política de seguridad, node03 NO tiene IP pública ni salida directa a
-  internet. Se requiere que:
 
-    (a) El tráfico externo que llegue al puerto 8080 de node02 sea redirigido
-        de forma transparente al puerto 5432 de node03 (port forwarding / DNAT).
-    (b) node03 tenga salida a internet a través de node02 para descargar
-        actualizaciones de paquetes (SNAT / Masquerade).
+  El equipo de desarrollo trabaja en un directorio compartido /srv/proyectos
+  en node02 donde los grupos devs y ops necesitan colaborar. Sin embargo,
+  han surgido múltiples problemas de permisos que están afectando la
+  productividad y seguridad:
 
-  Sin embargo, tras la migración, los desarrolladores reportan dos fallos:
-    - Las conexiones al puerto 8080 de node02 son rechazadas (connection refused).
-    - node03 no puede hacer ping a 8.8.8.8 ni resolver DNS.
+  PROBLEMAS REPORTADOS:
+  
+  1. Los archivos creados por miembros del grupo devs NO heredan el grupo
+     devs automáticamente. Cada usuario tiene que cambiar manualmente el
+     grupo después de crear archivos, lo que rompe el flujo de trabajo.
 
-  Como Ingeniero de Sistemas L2, su misión es diagnosticar y corregir la
-  cadena completa de NAT: habilitar el reenvío IP, configurar DNAT en
-  PREROUTING, SNAT/Masquerade en POSTROUTING, y asegurar que node03 tenga
-  gateway correcto apuntando a node02.
+  2. Usuarios del grupo ops pueden ELIMINAR archivos creados por otros
+     usuarios, causando pérdida accidental de trabajo. Se requiere que
+     solo el dueño de un archivo pueda eliminarlo.
 
-  ARQUITECTURA DE RED
+  3. El grupo ops tiene permisos INSUFICIENTES en el directorio principal.
+     Actualmente solo pueden leer, pero necesitan poder crear y modificar
+     archivos para colaborar efectivamente.
+
+  4. Los archivos nuevos creados en /srv/proyectos NO heredan los permisos
+     correctos automáticamente. Cada archivo nuevo requiere configuración
+     manual de ACLs, lo cual es propenso a errores.
+
+  5. El departamento de auditoría (usuario auditor) necesita acceso de
+     SOLO LECTURA al subdirectorio /srv/proyectos/auditoria para cumplir
+     con requisitos de compliance, pero actualmente no tiene ningún acceso.
+
+  ARQUITECTURA DE ALMACENAMIENTO
   --------------------------------------------------------------------------------
-  Red de Gestión (SSH):      192.168.122.0/24
-  Red Interna del Clúster:   10.99.99.0/24
-  Interfaz mgmt node02:      192.168.122.12
-  Interfaz interna node02:   10.99.99.2   <-- Gateway esperado para node03
-  Interfaz interna node03:   10.99.99.3   <-- Sin IP pública
-  Servicio destino:          PostgreSQL en node03:5432
-  Puerto expuesto:           node02:8080  --> node03:5432
-  Herramientas Requeridas:   iptables, sysctl, ip route, tcpdump, ss, nc
+  node02:
+    - /dev/vdb → Montado en /srv/proyectos (512MB, XFS)
+    - Grupos: devs (alice, charlie), ops (dave)
+    - Usuario especial: auditor
+    - Subdirectorio crítico: /srv/proyectos/auditoria
+
+  USUARIOS DE PRUEBA
+  --------------------------------------------------------------------------------
+  alice (grupo devs)    - Contraseña: caleston123
+  charlie (grupo devs)  - Contraseña: caleston123
+  dave (grupo ops)      - Contraseña: caleston123
+  auditor               - Contraseña: caleston123
 
   PROCEDIMIENTO REQUERIDO
   --------------------------------------------------------------------------------
-  1. Diagnóstico Inicial:
-     - Verificar el estado de ip_forward en node02 (sysctl net.ipv4.ip_forward).
-     - Verificar la tabla de enrutamiento de node03 (ip route show).
-     - Inspeccionar la tabla NAT de node02 (iptables -t nat -L -n -v).
+  1. Diagnóstico en node02:
+     - Conéctate a node02 y verifica el estado actual de /srv/proyectos.
+     - Revisa permisos con: ls -ld /srv/proyectos
+     - Verifica ACLs con: getfacl /srv/proyectos
+     - Identifica los problemas de SGID, Sticky Bit y ACLs.
 
-  2. Habilitar Reenvío IP (IP Forwarding):
-     - Activar net.ipv4.ip_forward=1 en node02 de forma temporal y persistente.
+  2. Configurar SGID en /srv/proyectos:
+     - Aplica el bit SGID para que todos los archivos nuevos hereden
+       automáticamente el grupo devs.
+     - Comando: chmod g+s /srv/proyectos
+     - Valida que el bit SGID esté activo (debe mostrar 's' en permisos de grupo).
 
-  3. Configurar DNAT (Port Forwarding):
-     - En node02, cadena PREROUTING de la tabla nat, redirigir tcp/8080
-       hacia 10.99.99.3:5432.
+  3. Implementar Sticky Bit en /srv/proyectos:
+     - Aplica el Sticky Bit para que solo el dueño de un archivo pueda
+       eliminarlo, protegiendo contra eliminación accidental.
+     - Comando: chmod +t /srv/proyectos
+     - Valida que el Sticky Bit esté activo (debe mostrar 't' en permisos de otros).
 
-  4. Configurar SNAT / Masquerade:
-     - En node02, cadena POSTROUTING de la tabla nat, enmascarar el tráfico
-       saliente desde 10.99.99.0/24 a través de la interfaz de gestión
-       (o la interfaz de salida hacia internet).
+  4. Corregir ACLs para grupo ops:
+     - El grupo ops necesita permisos completos (rwx) para colaborar.
+     - Comando: setfacl -m g:ops:rwx /srv/proyectos
+     - Valida con: getfacl /srv/proyectos
 
-  5. Corregir Enrutamiento en node03:
-     - Asegurar que node03 tenga una ruta por defecto apuntando a 10.99.99.2
-       (node02-internal), de forma persistente.
+  5. Configurar Default ACLs para herencia automática:
+     - Configura Default ACLs para que archivos y subdirectorios nuevos
+       hereden automáticamente los permisos correctos.
+     - Comandos:
+       * setfacl -d -m g:devs:rwx /srv/proyectos
+       * setfacl -d -m g:ops:rwx /srv/proyectos
+       * setfacl -d -m o::--- /srv/proyectos
+     - Valida que las Default ACLs estén configuradas.
 
-  6. Persistencia:
-     - Asegurar que ip_forward, reglas iptables y rutas sobrevivan al reinicio.
+  6. Configurar acceso para usuario auditor:
+     - Crea el subdirectorio /srv/proyectos/auditoria si no existe.
+     - Configura ACLs para otorgar acceso de solo lectura (r-x) al
+       usuario auditor en este subdirectorio.
+     - Comandos:
+       * mkdir -p /srv/proyectos/auditoria
+       * setfacl -m u:auditor:r-x /srv/proyectos/auditoria
+       * setfacl -d -m u:auditor:r-x /srv/proyectos/auditoria
+     - Valida con: getfacl /srv/proyectos/auditoria
 
-  7. Pipeline de Evidencia a node03:
-     - Destino: /opt/ops-compliance/net-005/nat_evidence.txt
-     - Desde node01, construya un pipeline SSH que entregue evidencia de:
-       a) Salida de `iptables -t nat -L -n -v` en node02 mostrando las reglas
-          DNAT y MASQUERADE activas.
-       b) Salida de `sysctl net.ipv4.ip_forward` en node02 (debe ser = 1).
-       c) Prueba de DNAT: conexión exitosa desde node01 a node02:8080 que
-          llegue al PostgreSQL de node03 (p.ej. nc -zv node02 8080 o similar).
-       d) Prueba de SNAT: ping exitoso desde node03 hacia 8.8.8.8.
-     - CERO archivos temporales en node01.
+  7. Validación y Pruebas:
+     - Como alice: crea un archivo en /srv/proyectos y verifica que
+       herede el grupo devs automáticamente.
+     - Como dave: crea un archivo y verifica que puedas escribir.
+     - Como charlie: intenta eliminar el archivo de dave (debe fallar).
+     - Como auditor: verifica que puedas leer en /srv/proyectos/auditoria
+       pero no escribir.
 
+  8. Pipeline de Evidencia a node03:
+     - Destino: /opt/ops-compliance/stg-005/permissions_evidence.txt
+     - Desde node01, envía mediante un pipeline SSH la salida consolidada de:
+       a) Permisos del directorio principal (ls -ld /srv/proyectos)
+       b) ACLs completas del directorio principal (getfacl /srv/proyectos)
+       c) ACLs del subdirectorio auditoria (getfacl /srv/proyectos/auditoria)
+       d) Prueba de herencia: crear archivo como alice y verificar grupo
+     - NO generar archivos temporales locales en node01.
+  --------------------------------------------------------------------------------
   CRITERIOS DE ACEPTACIÓN
   --------------------------------------------------------------------------------
-   [ ] ip_forward = 1 en node02 (persistente)                            --> 15%
-   [ ] Regla DNAT funcional: node02:8080 → node03:5432                   --> 25%
-   [ ] Regla SNAT/MASQUERADE funcional para 10.99.99.0/24                --> 25%
-   [ ] node03 con gateway correcto y salida a internet (ping 8.8.8.8)    --> 15%
-   [ ] Evidencia enviada a node03:/opt/ops-compliance/net-005/           --> 15%
-   [ ] CERO archivos de resultados almacenados en node01  (DESCALIFICA)  -->  5%
+   [ ] SGID activo en /srv/proyectos (archivos heredan grupo devs)     --> 15%
+   [ ] Sticky Bit activo (solo dueño puede eliminar archivos)          --> 15%
+   [ ] ACLs correctas para grupo ops (rwx)                             --> 15%
+   [ ] Default ACLs configuradas para herencia automática              --> 15%
+   [ ] Acceso de auditor configurado (r-x en auditoria)                --> 15%
+   [ ] Validación exitosa con usuarios de prueba                       --> 10%
+   [ ] Evidencia enviada a node03:/opt/ops-compliance/stg-005/         --> 15%
+   [ ] CERO archivos de resultados almacenados en node01 (DESCALIFICA)
 
-  REGLA DE ORO: No deshabilite el firewall completamente. La solución debe
-  ser quirúrgica sobre la tabla NAT. La evidencia debe fluir por pipeline SSH
-  sin dejar rastros en node01.
+  REGLA DE ORO: El disco /dev/vdb en node02 está correctamente formateado
+  y montado en /srv/proyectos. NO reformatees el disco. Todo el trabajo
+  debe enfocarse en configurar correctamente los permisos avanzados,
+  ACLs y bits especiales.
 ================================================================================
 TICKET
 
-          # ── SCRIPT DE VERIFICACIÓN CORREGIDO ──
-          cat << 'VERIFY' > /home/vagrant/verify_scenario.sh
+          # ── SCRIPT DE VERIFICACIÓN ──
+          cat << 'VERIFY' > /tmp/verify-stg005.sh
 #!/bin/bash
 
-echo "🔍 Verificando estado del escenario NET-005..."
-echo "================================================================"
+RED='\e[1;31m'
+GREEN='\e[1;32m'
+YELLOW='\e[1;33m'
+CYAN='\e[1;36m'
+RESET='\e[0m'
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
+PASS="caleston123"
+FAIL=0
 
-remote_exec() {
-    local node="$1"
-    local cmd="$2"
-    sshpass -p 'caleston123' ssh -o StrictHostKeyChecking=no -o ConnectTimeout=2 bob@"$node" "$cmd" 2>/dev/null
-}
-
-check_status() {
-    if [ $1 -eq 0 ]; then
-        echo -e "${GREEN}✓${NC} $2"
-    else
-        echo -e "${RED}✗${NC} $2"
-    fi
-}
-
+echo -e "\${CYAN}╔════════════════════════════════════════════════════════════════╗\${RESET}"
+echo -e "\${CYAN}║          VERIFICACIÓN DE ESCENARIO STG-005                    ║\${RESET}"
+echo -e "\${CYAN}╚════════════════════════════════════════════════════════════════╝\${RESET}"
 echo ""
-echo "📡 Verificando conectividad básica..."
-ping -c 1 -W 1 192.168.122.12 > /dev/null 2>&1
-check_status $? "node02 (mgmt) accesible"
 
-ping -c 1 -W 1 192.168.122.13 > /dev/null 2>&1
-check_status $? "node03 (mgmt) accesible"
-
-echo ""
-echo "🖥️  Verificando estado de node02 (Router/Gateway)..."
-
-IP_FORWARD=$(remote_exec "node02" "sysctl -n net.ipv4.ip_forward")
-if [ -z "$IP_FORWARD" ]; then
-    echo -e "${RED}✗${NC} No se pudo obtener ip_forward"
+echo -e "\${YELLOW}[1/7] node02: Disco montado en /srv/proyectos\${RESET}"
+if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "df -h /srv/proyectos | grep -q vdb"; then
+  echo -e "      \${GREEN}✓ Disco montado correctamente\${RESET}"
 else
-    if [ "$IP_FORWARD" = "0" ]; then
-        echo -e "${GREEN}✓${NC} ip_forward = 0 (DESHABILITADO como esperado)"
-    else
-        echo -e "${RED}✗${NC} ip_forward = $IP_FORWARD (debería ser 0)"
-    fi
+  echo -e "      \${RED}✗ Disco no montado\${RESET}"
+  FAIL=1
 fi
 
-NAT_RULES=$(remote_exec "node02" "iptables -t nat -L -n | grep -E '(DNAT|MASQUERADE|SNAT)' | wc -l")
-if [ -z "$NAT_RULES" ]; then
-    echo -e "${RED}✗${NC} No se pudo obtener reglas NAT"
+echo -e "\${YELLOW}[2/7] node02: Grupos devs y ops creados\${RESET}"
+if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "getent group devs | grep -q devs && getent group ops | grep -q ops"; then
+  echo -e "      \${GREEN}✓ Grupos existen\${RESET}"
 else
-    if [ "$NAT_RULES" -eq 0 ]; then
-        echo -e "${GREEN}✓${NC} Tabla NAT vacía (sin reglas DNAT/SNAT)"
-    else
-        echo -e "${RED}✗${NC} Tabla NAT tiene $NAT_RULES reglas (debería estar vacía)"
-    fi
+  echo -e "      \${RED}✗ Grupos no encontrados\${RESET}"
+  FAIL=1
 fi
 
-echo ""
-echo "🗄️  Verificando estado de node03 (Servidor Aislado)..."
-
-PG_STATUS=$(remote_exec "node03" "systemctl is-active postgresql")
-if [ -z "$PG_STATUS" ]; then
-    echo -e "${RED}✗${NC} No se pudo obtener estado de PostgreSQL"
+echo -e "\${YELLOW}[3/7] node02: Usuarios alice, charlie, dave, auditor\${RESET}"
+if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "id alice &>/dev/null && id charlie &>/dev/null && id dave &>/dev/null && id auditor &>/dev/null"; then
+  echo -e "      \${GREEN}✓ Usuarios creados\${RESET}"
 else
-    if [ "$PG_STATUS" = "active" ]; then
-        echo -e "${GREEN}✓${NC} PostgreSQL activo en node03"
-    else
-        echo -e "${RED}✗${NC} PostgreSQL no está activo (estado: $PG_STATUS)"
-    fi
+  echo -e "      \${RED}✗ Usuarios no encontrados\${RESET}"
+  FAIL=1
 fi
 
-PORT_CHECK=$(remote_exec "node03" "ss -tlnp | grep ':5432' | wc -l")
-if [ -z "$PORT_CHECK" ]; then
-    echo -e "${RED}✗${NC} No se pudo verificar puerto 5432"
+echo -e "\${YELLOW}[4/7] node02: Directorio /srv/proyectos existe\${RESET}"
+if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "[ -d /srv/proyectos ]"; then
+  echo -e "      \${GREEN}✓ Directorio existe\${RESET}"
 else
-    if [ "$PORT_CHECK" -gt 0 ]; then
-        echo -e "${GREEN}✓${NC} Puerto 5432 escuchando en node03"
-    else
-        echo -e "${RED}✗${NC} Puerto 5432 NO está escuchando"
-    fi
+  echo -e "      \${RED}✗ Directorio no existe\${RESET}"
+  FAIL=1
 fi
 
-GATEWAY=$(remote_exec "node03" "ip route show default | wc -l")
-if [ -z "$GATEWAY" ]; then
-    echo -e "${RED}✗${NC} No se pudo verificar gateway"
+echo -e "\${YELLOW}[5/7] node02: Sin SGID (problema inyectado)\${RESET}"
+if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "stat -c %a /srv/proyectos | grep -q '770'"; then
+  echo -e "      \${GREEN}✓ SGID no configurado (esperado)\${RESET}"
 else
-    if [ "$GATEWAY" -eq 0 ]; then
-        echo -e "${GREEN}✓${NC} node03 SIN gateway por defecto (aislado)"
-    else
-        echo -e "${RED}✗${NC} node03 tiene gateway configurado (debería estar aislado)"
-    fi
+  echo -e "      \${RED}✗ Permisos inesperados\${RESET}"
+  FAIL=1
 fi
 
-INTERNET_CHECK=$(remote_exec "node03" "timeout 2 ping -c 1 8.8.8.8 > /dev/null 2>&1; echo \$?")
-if [ -z "$INTERNET_CHECK" ]; then
-    echo -e "${RED}✗${NC} No se pudo verificar salida a internet"
+echo -e "\${YELLOW}[6/7] node02: ACLs incorrectas para grupo ops\${RESET}"
+if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "getfacl /srv/proyectos 2>/dev/null | grep 'group:ops:r--' | grep -v default | grep -q r"; then
+  echo -e "      \${GREEN}✓ ACLs incorrectas detectadas (esperado)\${RESET}"
 else
-    if [ "$INTERNET_CHECK" != "0" ]; then
-        echo -e "${GREEN}✓${NC} node03 NO tiene salida a internet (como esperado)"
-    else
-        echo -e "${RED}✗${NC} node03 SÍ puede salir a internet (no debería)"
-    fi
+  echo -e "      \${RED}✗ ACLs no coinciden\${RESET}"
+  FAIL=1
+fi
+
+echo -e "\${YELLOW}[7/7] node03: Bóveda de evidencia\${RESET}"
+if sshpass -p \$PASS ssh \$SSH_OPTS bob@node03 "[ -d /opt/ops-compliance/stg-005 ]"; then
+  echo -e "      \${GREEN}✓ Bóveda creada\${RESET}"
+else
+  echo -e "      \${RED}✗ Bóveda no existe\${RESET}"
+  FAIL=1
 fi
 
 echo ""
-echo "🔌 Verificando el problema de DNAT..."
-timeout 3 bash -c "echo > /dev/tcp/node02/8080" 2>/dev/null
-if [ $? -ne 0 ]; then
-    echo -e "${GREEN}✓${NC} Puerto 8080 en node02 NO redirige a node03 (fallo esperado)"
+if [ \$FAIL -eq 0 ]; then
+  echo -e "\${GREEN}╔════════════════════════════════════════════════════════════════╗\${RESET}"
+  echo -e "\${GREEN}║  ✅ TODAS LAS VERIFICACIONES PASARON - ESCENARIO LISTO         ║\${RESET}"
+  echo -e "\${GREEN}╚════════════════════════════════════════════════════════════════╝\${RESET}"
 else
-    echo -e "${YELLOW}!${NC} Puerto 8080 en node02 responde (DNAT podría estar funcionando)"
+  echo -e "\${RED}╔════════════════════════════════════════════════════════════════╗\${RESET}"
+  echo -e "\${RED}║  ⚠️  ALGUNAS VERIFICACIONES FALLARON                           ║\${RESET}"
+  echo -e "\${RED}╚════════════════════════════════════════════════════════════════╝\${RESET}"
 fi
 
 echo ""
-echo "================================================================"
-echo -e "${GREEN}✅ Escenario NET-005 verificado y listo para resolver${NC}"
-echo ""
-echo "Resumen del estado:"
-echo "  • node02: ip_forward=0, tabla NAT vacía"
-echo "  • node03: PostgreSQL en 5432, sin gateway, aislado"
-echo "  • Problema: DNAT 8080→5432 no funciona, node03 sin internet"
-echo ""
-echo "Tu misión: Configurar NAT completo para que:"
-echo "  1) node02:8080 redirija a node03:5432 (DNAT)"
-echo "  2) node03 tenga salida a internet via node02 (SNAT/Masquerade)"
-echo "================================================================"
+echo -e "\${YELLOW}Presiona ENTER para ver el ticket del incidente...\${RESET}"
+read -r
+cat /home/vagrant/TICKET_STG-005.txt
 VERIFY
 
-          chmod +x /home/vagrant/verify_scenario.sh
-          chown vagrant:vagrant /home/vagrant/verify_scenario.sh
-
-          # Mostrar ticket y verificación al hacer login
-          sed -i '/TICKET/d' /home/vagrant/.bashrc 2>/dev/null || true
-          sed -i '/# Mostrar/d' /home/vagrant/.bashrc 2>/dev/null || true
-          sed -i '/verify_scenario/d' /home/vagrant/.bashrc 2>/dev/null || true
+          chmod +x /tmp/verify-stg005.sh
+          
+          sed -i '/verify-stg005/d' /home/vagrant/.bashrc
           cat << 'EOF' >> /home/vagrant/.bashrc
-clear
-cat /home/vagrant/TICKET_NET-005.txt
-echo ""
-echo "Ejecutando verificación automática del escenario..."
-echo ""
-/home/vagrant/verify_scenario.sh
+bash /tmp/verify-stg005.sh
 EOF
-        SHELL
-      end
-
-      # ── PROVISIONADO ESPECÍFICO: INYECCIÓN DE FALLOS EN NODE02 ──
-      if node[:name] == "node02"
-        node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
-          echo "🧩 Inyectando escenario 'Túnel Torcido' en #{node[:name]}..."
-          bash << 'INNEREOF'
-            set -e
-            sysctl -w net.ipv4.ip_forward=0
-            sed -i 's/^net.ipv4.ip_forward.*/# net.ipv4.ip_forward=0/' /etc/sysctl.conf 2>/dev/null || true
-            rm -f /etc/sysctl.d/99-ipforward.conf 2>/dev/null || true
-
-            iptables -t nat -F
-            iptables -t nat -X
-            iptables -F
-            iptables -X
-            iptables -P INPUT ACCEPT
-            iptables -P FORWARD ACCEPT
-            iptables -P OUTPUT ACCEPT
-            iptables -A INPUT -p tcp -s 192.168.122.0/24 --dport 22 -j ACCEPT
-
-            if command -v netfilter-persistent &> /dev/null; then
-               netfilter-persistent save
-            elif command -v iptables-save &> /dev/null; then
-               iptables-save > /etc/iptables/rules.v4
-            fi
-            echo "✅ Escenario inyectado en node02."
-          INNEREOF
-        SHELL
-      end
-
-      # ── PROVISIONADO ESPECÍFICO: NODE03 (SERVIDOR AISLADO + SIN GATEWAY) ──
-      if node[:name] == "node03"
-        node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
-          echo "🗄️  Configurando node03 como servidor aislado con PostgreSQL..."
-          bash << 'INNEREOF'
-            set -e
-            export DEBIAN_FRONTEND=noninteractive
-
-            apt-get update -qq
-            apt-get install -y -qq postgresql postgresql-client curl netcat-openbsd iproute2
-
-            PG_HBA=$(find /etc/postgresql -name pg_hba.conf 2>/dev/null | head -n1)
-            PG_CONF=$(find /etc/postgresql -name postgresql.conf 2>/dev/null | head -n1)
-            if [ -n "$PG_CONF" ]; then
-              sed -i "s/^#*listen_addresses.*/listen_addresses = '*'/" "$PG_CONF"
-            fi
-            if [ -n "$PG_HBA" ]; then
-              echo "host    all    all    10.99.99.0/24    trust" >> "$PG_HBA"
-              echo "host    all    all    192.168.122.0/24 trust" >> "$PG_HBA"
-            fi
-            systemctl enable postgresql
-            systemctl restart postgresql
-
-            # ── ELIMINAR GATEWAY POR DEFECTO (persistente) ──
-            # 1. Eliminar ruta actual de TODAS las interfaces
-            ip route del default via 192.168.121.1 dev eth0 2>/dev/null || true
-            ip route del default 2>/dev/null || true
-
-            # 2. Configurar Netplan para la interfaz mgmt (la que tiene 192.168.122.13) SIN gateway
-            MGMT_IFACE=$(ip -o -4 addr show | grep 192.168.122.13 | awk '{print $2}')
-            if [ -n "$MGMT_IFACE" ]; then
-              cat << EOF > /etc/netplan/99-custom.yaml
-network:
-  version: 2
-  ethernets:
-    $MGMT_IFACE:
-      dhcp4: false
-      addresses: [192.168.122.13/24]
-      # sin gateway4
-EOF
-            fi
-
-            # 3. Neutralizar DHCP de eth0 (para que no añada ruta por defecto)
-            PHANTOM_IFACE="eth0"
-            cat << EOF > /etc/netplan/98-no-default-route.yaml
-network:
-  version: 2
-  ethernets:
-    $PHANTOM_IFACE:
-      dhcp4: true
-      dhcp4-overrides:
-        use-routes: false
-EOF
-
-            netplan apply
-
-            # 4. Asegurar que no quede ruta por defecto tras netplan
-            ip route del default via 192.168.121.1 dev eth0 2>/dev/null || true
-            ip route del default 2>/dev/null || true
-
-            # Crear bóveda de auditoría
-            mkdir -p /opt/ops-compliance/net-005/
-            chown -R bob:bob /opt/ops-compliance/net-005/
-            chmod 750 /opt/ops-compliance/net-005/
-
-            echo "✅ node03 listo:"
-            echo "   - PostgreSQL escuchando en 0.0.0.0:5432"
-            echo "   - SIN gateway por defecto (aislado de internet)"
-            echo "   - Bóveda de evidencia: /opt/ops-compliance/net-005/"
-          INNEREOF
         SHELL
       end
     end

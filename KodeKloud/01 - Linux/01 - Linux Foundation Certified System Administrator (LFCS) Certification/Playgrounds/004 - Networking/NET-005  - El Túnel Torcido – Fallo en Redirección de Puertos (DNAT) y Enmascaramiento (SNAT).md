@@ -468,3 +468,15 @@ Escenario: |-
 [[Laboratorios del LFCS]]
 
 ---
+
+_Sure, I can walk you through a recent technical challenge I solved on my own lab environment, where I'm actively training to become a Linux Sysadmin._
+
+_I had a critical networking ticket where a development team had deployed a PostgreSQL database on an isolated internal node, with no direct internet access for security reasons. I needed to make two things work: external traffic hitting a gateway server on port 8080 had to be transparently redirected to PostgreSQL on port 5432 on the internal node, and that internal node also needed outbound internet access through the gateway to download updates._
+
+_I started with a structured diagnosis: I checked IP forwarding status, the NAT table, and the routing table, and found three separate root causes — forwarding was disabled at the kernel level, there were no NAT rules at all, and the internal node was missing its default route entirely._
+
+_I fixed each layer step by step: I enabled IP forwarding and made it persistent, configured a DNAT rule to redirect the incoming port to the internal service, and set up source NAT so the internal node could reach the internet. When I tested the port forwarding, the connection just hung instead of failing cleanly, so I used tcpdump to capture the traffic in real time. That's how I discovered a hairpin NAT issue — the destination address was being translated correctly, but the source address wasn't, which broke the TCP handshake. I added a second, more specific masquerade rule to fix that asymmetric routing problem._
+
+_Once everything was working, I made all the changes persistent across reboots, and finally built an SSH pipeline to stream the diagnostic evidence directly to a compliance node, without leaving any temporary files behind on the control machine — which matters in real environments where you want to minimize where sensitive data lives._
+
+_What I valued most about this challenge was the troubleshooting methodology: not just applying a known fix, but using packet-level analysis to find a root cause that wasn't obvious at first glance."_
