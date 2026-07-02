@@ -11,7 +11,7 @@ tags:
 | [[EC-003 - El Permiso Prohibido – Control de Acceso y Bits Especiales]]                             |    6.5     |        L2        |     40 min      |     `16/06/2026`      |   <input type="checkbox" checked>   |
 | [[EC-004 - La Aguja en el Pajar – Búsqueda, Filtrado y Expresiones Regulares]]                      |     6      |        L2        |     50 min      |     `21/06/2026`      | <input type="checkbox" checked><br> |
 | [[EC-005 - El Flujo Roto – Redirección I and O y Pipelines Complejos]]                              |     6      |        L2        |     30 min      |     `28/06/2026`      |   <input type="checkbox" checked>   |
-| [[EC-006 - El Respaldo Olvidado – Compresión, Archivado y Transferencia Remota]]                    |     6      |        L2        |                 |                       |                                     |
+| [[EC-006 - El Respaldo Olvidado – Compresión, Archivado y Transferencia Remota]]                    |     6      |        L2        |     40 min      |     `02/07/2026`      |   <input type="checkbox" checked>   |
 | **Operations Deployments**                                                                          |            |                  |                 |                       |                                     |
 | [[OD-001 - El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro - V1.0]]                |    6.5     |        L2        |     40 min      |     `15/06/2026`      |   <input type="checkbox" checked>   |
 | [[OD-002 - El Servicio Zombi – Diagnóstico de Procesos y Creación de Units systemd - V1.0]]         |     7      |        L2        |     40 min      |     `16/06/2026`      |   <input type="checkbox" checked>   |

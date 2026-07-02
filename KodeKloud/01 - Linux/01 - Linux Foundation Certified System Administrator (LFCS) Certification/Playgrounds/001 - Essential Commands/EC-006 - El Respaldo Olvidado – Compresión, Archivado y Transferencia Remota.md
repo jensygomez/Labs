@@ -204,3 +204,10 @@ Escenario: |-
 ---
 [[Laboratorios del LFCS]]
 
+Sure — one recent technical challenge I worked on was optimizing a backup strategy that was causing storage and performance issues on one of our servers. The team was using manual tar scripts that generated huge, single backup files, which filled up local disk space and took a long time to transfer.
+
+First, I benchmarked three different compression algorithms — gzip, bzip2, and xz — to see which one gave the best size reduction without sacrificing too much time. I found that xz actually cut the backup size by more than half compared to gzip, which was a really useful data point for choosing the right tool for the job.
+
+Then I moved on to implementing an incremental backup strategy using tar's snapshot feature. Instead of doing a full backup every time, I set up an initial full backup and then configured incremental backups that only capture files that changed since the last run. I tested this by modifying a log file and confirming that the incremental backup only picked up that one changed file, not the entire directory — which is exactly the behavior you want for efficiency.
+
+It was a good exercise in thinking about storage optimization and network efficiency, not just getting a backup to work, but making it scalable

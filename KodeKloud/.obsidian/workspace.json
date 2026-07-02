@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/EC-006 - El Respaldo Olvidado – Compresión, Archivado y Transferencia Remota.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "EC-006 - El Respaldo Olvidado – Compresión, Archivado y Transferencia Remota"
+              "title": "Laboratorios del LFCS"
             }
           }
         ]
@@ -203,9 +203,9 @@
   },
   "active": "56ed188fdf2f56d1",
   "lastOpenFiles": [
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/EC-006 - El Respaldo Olvidado – Compresión, Archivado y Transferencia Remota.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/EC-005 - El Flujo Roto – Redirección I and O y Pipelines Complejos.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/EC-004 - La Aguja en el Pajar – Búsqueda, Filtrado y Expresiones Regulares.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/EC-006 - El Respaldo Olvidado – Compresión, Archivado y Transferencia Remota.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/Lista de Laboratorios.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/EC-003 - El Permiso Prohibido – Control de Acceso y Bits Especiales.md",
