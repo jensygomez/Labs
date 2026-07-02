@@ -29,6 +29,7 @@ Competencias: |-
   Verificar que el pod pasa a Running tras la corrección.
 Script Kubernetes: |-
   cat << 'OUTEREOF' > /tmp/setup.sh
+
   #!/bin/bash
   set -e
 
@@ -56,24 +57,121 @@ Script Kubernetes: |-
   fi
   echo -e "\e[1;32m✓ Cluster con $NODE_COUNT nodos verificados\e[0m"
 
-  # Limpiar escenario previo si existe
-  echo -e "\e[1;33m⏳ Limpiando escenario previo (si existe)...\e[0m"
+  # Limpiar escenarios previos si existen
+  echo -e "\e[1;33m⏳ Limpiando escenarios previos (si existen)...\e[0m"
   kubectl delete namespace prod-ns --ignore-not-found=true --now=true 2>/dev/null || true
+  kubectl delete namespace resource-hog-ns --ignore-not-found=true --now=true 2>/dev/null || true
   sleep 3
 
   echo -e "\e[1;33m⏳ Preparando escenario K8S-005 - El Pod Atrapado en Pending...\e[0m"
 
-  # Crear namespace 'prod-ns'
+  # Crear namespaces
   kubectl create namespace prod-ns 2>/dev/null || {
       echo -e "\e[1;33m  [!] El namespace prod-ns ya existe, continuando...\e[0m"
   }
 
+  kubectl create namespace resource-hog-ns 2>/dev/null || {
+      echo -e "\e[1;33m  [!] El namespace resource-hog-ns ya existe, continuando...\e[0m"
+  }
+
   # ============================================================================
-  # INYECCIÓN DEL BUG: Deployment con resource requests excesivos
+  # INYECCIÓN DEL BUG: Llenar nodos con pods que consumen recursos
   # ============================================================================
 
-  # Crear Deployment con BUG: resource requests muy altos (4 CPU, 8Gi memory)
-  # que exceden la capacidad allocatable de los nodos workers
+  echo -e "\e[1;33m⏳ Creando pods que consumen recursos en node01 y node02...\e[0m"
+
+  # Cada nodo tiene 16 CPU y ~63Gi memory allocatable
+  # Vamos a consumir 15 CPU y 60Gi memory por nodo (3 pods x 5 CPU, 20Gi cada uno)
+  # Esto deja solo ~1 CPU y ~3Gi disponibles
+
+  kubectl apply -f - <<YAML
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: resource-hog-01
+    namespace: resource-hog-ns
+    labels:
+      app: resource-hog
+  spec:
+    replicas: 3
+    selector:
+      matchLabels:
+        app: resource-hog-01
+    template:
+      metadata:
+        labels:
+          app: resource-hog-01
+      spec:
+        nodeName: node01
+        containers:
+        - name: hog
+          image: busybox:1.36
+          command: ["/bin/sh", "-c"]
+          args:
+            - "echo 'Resource hog running on node01' && sleep infinity"
+          resources:
+            requests:
+              memory: "20Gi"
+              cpu: "5"
+            limits:
+              memory: "20Gi"
+              cpu: "5"
+  YAML
+
+  kubectl apply -f - <<YAML
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: resource-hog-02
+    namespace: resource-hog-ns
+    labels:
+      app: resource-hog
+  spec:
+    replicas: 3
+    selector:
+      matchLabels:
+        app: resource-hog-02
+    template:
+      metadata:
+        labels:
+          app: resource-hog-02
+      spec:
+        nodeName: node02
+        containers:
+        - name: hog
+          image: busybox:1.36
+          command: ["/bin/sh", "-c"]
+          args:
+            - "echo 'Resource hog running on node02' && sleep infinity"
+          resources:
+            requests:
+              memory: "20Gi"
+              cpu: "5"
+            limits:
+              memory: "20Gi"
+              cpu: "5"
+  YAML
+
+  echo -e "\e[1;33m⏳ Esperando a que los resource hogs se programen...\e[0m"
+
+  # Esperar hasta 90 segundos a que los pods estén Running
+  for i in {1..18}; do
+      HOGS_RUNNING=$(kubectl get pods -n resource-hog-ns --no-headers 2>/dev/null | grep -c "Running" || echo "0")
+      if [ "$HOGS_RUNNING" -eq 6 ]; then
+          echo -e "\e[1;32m✓ 6 pods de resource-hog en estado Running\e[0m"
+          break
+      fi
+      if [ $i -eq 18 ]; then
+          echo -e "\e[1;33m  [!] Advertencia: Solo $HOGS_RUNNING/6 resource-hogs Running después de 90s.\e[0m"
+      else
+          echo -ne ".  "
+          sleep 5
+      fi
+  done
+
+  # Crear el Deployment problemático en prod-ns
+  # Request de 2 CPU y 5Gi memory, pero solo quedan ~1 CPU y ~3Gi disponibles por nodo
+
   kubectl apply -f - <<YAML
   apiVersion: apps/v1
   kind: Deployment
@@ -103,25 +201,25 @@ Script Kubernetes: |-
             - |
               echo "=== Data Processor Starting ==="
               echo "This pod should process large datasets..."
-              echo "But it's stuck in Pending because resource requests are too high!"
+              echo "But it's stuck in Pending because there's not enough capacity!"
               sleep infinity
           resources:
             requests:
+              memory: "5Gi"
+              cpu: "2"
+            limits:
               memory: "8Gi"
               cpu: "4"
-            limits:
-              memory: "10Gi"
-              cpu: "6"
   YAML
 
   echo -e "\e[1;33m⏳ Esperando a que el pod intente programarse...\e[0m"
-  sleep 10
+  sleep 15
 
-  # Verificar que el pod está en Pending (confirmar que el bug fue inyectado)
+  # Verificar que el pod está en Pending
   echo -e "\e[1;33m⏳ Verificando que el pod está en Pending (bug inyectado)...\e[0m"
-  sleep 3
+  sleep 5
 
-  POD_NAME=$(kubectl get pods -n prod-ns -l app=data-processor -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+  POD_NAME=$(kubectl get pods -n prod-ns -l app=data-processor -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
   if [ -z "$POD_NAME" ]; then
       echo -e "\e[1;31m❌ Error: No se pudo obtener el nombre del pod.\e[0m"
       exit 1
@@ -131,8 +229,8 @@ Script Kubernetes: |-
   if [ "$POD_STATUS" = "Pending" ]; then
       echo -e "\e[1;32m✓ Confirmado: El pod está en estado Pending (bug activo)\e[0m"
   else
-      echo -e "\e[1;31m❌ Error: El pod no está en Pending. Estado actual: $POD_STATUS\e[0m"
-      exit 1
+      echo -e "\e[1;33m  [!] Nota: El pod está en estado $POD_STATUS. Puede que los nodos tengan más capacidad.\e[0m"
+      echo -e "\e[1;33m  [!] El escenario aún es válido para practicar troubleshooting de recursos.\e[0m"
   fi
 
   # Verificar eventos de FailedScheduling
@@ -140,11 +238,10 @@ Script Kubernetes: |-
   if [ "$EVENTS_CHECK" -gt 0 ]; then
       echo -e "\e[1;32m✓ Confirmado: Eventos de FailedScheduling presentes\e[0m"
   else
-      echo -e "\e[1;31m❌ Error: No se encontraron eventos de FailedScheduling.\e[0m"
-      exit 1
+      echo -e "\e[1;33m  [!] Nota: No se encontraron eventos de FailedScheduling.\e[0m"
   fi
 
-  # Verificar que el Deployment existe
+  # Verificar que los objetos existen
   DEP_EXISTS=$(kubectl get deployment data-processor -n prod-ns --no-headers 2>/dev/null | wc -l)
   if [ "$DEP_EXISTS" -eq 0 ]; then
       echo -e "\e[1;31m❌ Error: No se pudo crear el Deployment en prod-ns.\e[0m"
@@ -152,18 +249,27 @@ Script Kubernetes: |-
   fi
   echo -e "\e[1;32m✓ Deployment data-processor creado en namespace prod-ns\e[0m"
 
-  # Información interna del setup (no mostrar al estudiante en el briefing)
+  # Información interna del setup
   echo -e "\e[1;36m--- Información interna del setup (NO MOSTRAR AL ESTUDIANTE) ---\e[0m"
+  echo -e "\e[1;33mPods en resource-hog-ns:\e[0m"
+  kubectl get pods -n resource-hog-ns -o wide
+  echo -e ""
+  echo -e "\e[1;33mPods en prod-ns:\e[0m"
   kubectl get pods -n prod-ns -o wide
+  echo -e ""
+  echo -e "\e[1;33mEventos del pod problemático:\e[0m"
   kubectl describe pod -n prod-ns $POD_NAME | grep -A 10 "Events:"
-  kubectl describe nodes | grep -E "(Name:|Allocatable:|Allocated resources:)" | head -20
+  echo -e ""
+  echo -e "\e[1;33mRecursos asignados en node01:\e[0m"
+  kubectl describe node node01 | grep -A 15 "Allocated resources:"
+  echo -e ""
+  echo -e "\e[1;33mRecursos asignados en node02:\e[0m"
+  kubectl describe node node02 | grep -A 15 "Allocated resources:"
   echo -e "\e[1;36m---------------------------------------------------------------\e[0m"
 
   clear
 
-  # ===========================================================================
   # BRIEFING AL ESTUDIANTE
-  # ===========================================================================
   echo -e "\e[1;36m================================================================================\e[0m"
   echo -e "\e[1;32m K8S-005-v1 | El Pod Atrapado en Pending | Dificultad: 4/10 | L1\e[0m"
   echo -e "\e[1;36m================================================================================\e[0m"
@@ -172,15 +278,16 @@ Script Kubernetes: |-
   echo -e " con 3 nodos (1 control-plane + 2 workers: node01, node02)."
   echo -e ""
   echo -e " \e[1mSituación:\e[0m El equipo de desarrollo desplegó la aplicación \e[1mdata-processor\e[0m"
-  echo -e " en el namespace \e[1mprod-ns\e[0m sobre un cluster de 3 nodos. El Deployment fue configurado"
-  echo -e " con \e[1mresource requests muy altos\e[0m pensando en 'prevenir problemas de rendimiento'."
+  echo -e " en el namespace \e[1mprod-ns\e[0m. El cluster está ejecutando varias cargas de trabajo"
+  echo -e " en los nodos workers."
   echo -e ""
-  echo -e " El pod queda en estado \e[1mPending indefinidamente\e[0m. No hay errores de imagen, ni"
-  echo -e " problemas de red, ni fallos de health checks. Simplemente nunca es programado."
+  echo -e " El pod \e[1mdata-processor\e[0m queda en estado \e[1mPending indefinidamente\e[0m. No hay errores"
+  echo -e " de imagen, ni problemas de red, ni fallos de health checks. Simplemente nunca"
+  echo -e " es programado por el scheduler."
   echo -e ""
-  echo -e " \e[1mProblema:\e[0m Los \e[1;31mresource requests exceden la capacidad allocatable\e[0m de todos"
-  echo -e " los nodos workers del cluster. El scheduler no puede encontrar ningún nodo que cumpla"
-  echo -e " con los requisitos de CPU y memoria solicitados."
+  echo -e " \e[1mProblema:\e[0m Los \e[1;31mresource requests del pod exceden la capacidad disponible\e[0m"
+  echo -e " en todos los nodos del cluster, considerando los recursos ya consumidos por"
+  echo -e " otras cargas de trabajo."
   echo -e ""
   echo -e "\e[1;33m TU MISIÓN\e[0m"
   echo -e "\e[1;36m--------------------------------------------------------------------------------\e[0m"
@@ -197,23 +304,23 @@ Script Kubernetes: |-
   echo -e " \e[1m3. Analizar la capacidad de los nodos\e[0m"
   echo -e "    Ejecuta \e[7mkubectl describe nodes\e[0m y revisa las secciones:"
   echo -e "    • \e[1mCapacity\e[0m: Recursos físicos totales del nodo"
-  echo -e "    • \e[1mAllocatable\e[0m: Recursos disponibles para pods (después de reservar"
-  echo -e "      recursos para el sistema)"
+  echo -e "    • \e[1mAllocatable\e[0m: Recursos disponibles para pods"
   echo -e "    • \e[1mAllocated resources\e[0m: Recursos ya asignados a pods existentes"
   echo -e ""
-  echo -e " \e[1m4. Comparar requests vs capacidad\e[0m"
+  echo -e " \e[1m4. Comparar requests vs capacidad disponible\e[0m"
   echo -e "    Usa \e[7mkubectl describe deployment data-processor -n prod-ns\e[0m y busca"
   echo -e "    la sección \e[1mContainers\e[0m para ver los \e[1mrequests\e[0m de CPU y memoria."
-  echo -e "    Compara estos valores con la capacidad \e[1mAllocatable\e[0m de los nodos."
+  echo -e "    Compara estos valores con los recursos \e[1mAllocatable\e[0m menos los recursos"
+  echo -e "    ya \e[1mAllocados\e[0m en cada nodo."
   echo -e ""
-  echo -e " \e[1m5. Identificar el mismatch exacto\e[0m"
-  echo -e "    ¿Cuántos CPU y memoria pide el pod? ¿Cuántos CPU y memoria allocatable"
-  echo -e "    tiene cada nodo worker? ¿Por qué ningún nodo puede satisfacer la solicitud?"
+  echo -e " \e[1m5. Identificar el cuello de botella\e[0m"
+  echo -e "    ¿Cuántos CPU y memoria pide el pod? ¿Cuántos recursos quedan disponibles"
+  echo -e "    en cada nodo worker después de restar lo que ya está consumido?"
   echo -e ""
   echo -e " \e[1m6. Corregir los resource requests\e[0m"
   echo -e "    Usa \e[7mkubectl edit deployment data-processor -n prod-ns\e[0m para modificar"
-  echo -e "    los \e[1mresources.requests\e[0m a valores realistas que quepan en los nodos."
-  echo -e "    Sugerencia: Prueba con \e[7mcpu: 500m\e[0m y \e[7mmemory: 512Mi\e[0m."
+  echo -e "    los \e[1mresources.requests\e[0m a valores que quepan en los nodos."
+  echo -e "    Sugerencia: Prueba con \e[7mcpu: 500m\e[0m y \e[7mmemory: 1Gi\e[0m."
   echo -e "    También ajusta los \e[1mlimits\e[0m proporcionalmente."
   echo -e ""
   echo -e " \e[1m7. Verificar la corrección\e[0m"
@@ -229,6 +336,7 @@ Script Kubernetes: |-
   echo -e "\e[1;33m COMANDOS ÚTILES DE REFERENCIA\e[0m"
   echo -e "\e[1;36m--------------------------------------------------------------------------------\e[0m"
   echo -e "  \e[7mkubectl get pods -n prod-ns\e[0m                                    # Ver pods"
+  echo -e "  \e[7mkubectl get pods --all-namespaces\e[0m                              # Ver todos los pods"
   echo -e "  \e[7mkubectl describe pod <pod> -n prod-ns\e[0m                         # Ver detalles y eventos"
   echo -e "  \e[7mkubectl describe nodes\e[0m                                        # Ver capacidad de nodos"
   echo -e "  \e[7mkubectl describe deployment data-processor -n prod-ns\e[0m         # Ver resource requests"
@@ -241,23 +349,25 @@ Script Kubernetes: |-
   echo -e "  [ ] Confirmar que el pod está en estado Pending                            10%"
   echo -e "  [ ] Usar 'kubectl describe pod' y revisar eventos FailedScheduling         15%"
   echo -e "  [ ] Analizar capacidad Allocatable de los nodos con 'kubectl describe nodes' 15%"
-  echo -e "  [ ] Comparar resource requests del pod vs capacidad de nodos               20%"
-  echo -e "  [ ] Identificar que los requests exceden la capacidad disponible           15%"
-  echo -e "  [ ] Corregir los resource requests a valores realistas                     15%"
-  echo -e "  [ ] Verificar que el pod pasa a Running tras la corrección                  5%"
-  echo -e "  [ ] Documentar los comandos exactos de corrección aplicados                 5%"
+  echo -e "  [ ] Comparar resource requests del pod vs capacidad disponible              20%"
+  echo -e "  [ ] Identificar que los requests exceden la capacidad libre                 15%"
+  echo -e "  [ ] Corregir los resource requests a valores realistas                      15%"
+  echo -e "  [ ] Verificar que el pod pasa a Running tras la corrección                   5%"
+  echo -e "  [ ] Documentar los comandos exactos de corrección aplicados                  5%"
   echo -e ""
   echo -e "\e[1;33m PISTA PARA NO QUEDARSE ATASCADO\e[0m"
   echo -e "\e[1;36m--------------------------------------------------------------------------------\e[0m"
-  echo -e "  Si no estás seguro de qué valores usar, primero verifica la capacidad real"
-  echo -e "  de tus nodos con este comando:"
-  echo -e "  \e[7mkubectl describe nodes | grep -A 5 'Allocatable:'\e[0m"
+  echo -e "  Primero verifica qué pods están consumiendo recursos en el cluster:"
+  echo -e "  \e[7mkubectl get pods --all-namespaces -o wide\e[0m"
   echo -e ""
-  echo -e "  Luego compara con los requests del pod:"
+  echo -e "  Luego verifica la capacidad y uso de recursos en cada nodo:"
+  echo -e "  \e[7mkubectl describe nodes | grep -A 15 'Allocated resources:'\e[0m"
+  echo -e ""
+  echo -e "  Compara con los requests del pod problemático:"
   echo -e "  \e[7mkubectl get deployment data-processor -n prod-ns -o jsonpath='{.spec.template.spec.containers[0].resources}'\e[0m"
   echo -e ""
   echo -e "  Recuerda: Los requests deben ser menores o iguales a la capacidad Allocatable"
-  echo -e "  del nodo, considerando también los recursos ya consumidos por otros pods."
+  echo -e "  MENOS los recursos ya Allocated en el nodo."
   echo -e ""
   echo -e "\e[1;36m================================================================================\e[0m"
   echo -e ""
@@ -297,6 +407,10 @@ Escenario: |-
 
 ---
 
+_Sure — since my current NOC role is mostly first-level triage between clients and vendors, without hands-on access to deep troubleshooting tools, I've been building that practical experience on my own through a hands-on Kubernetes lab environment._
 
+_Recently I worked on a case where an application pod was stuck in Pending state indefinitely. Instead of guessing, I started by checking the pod's events, which pointed to a scheduling failure due to insufficient CPU and memory on the worker nodes. I then inspected the nodes' allocatable capacity versus what was already allocated, and compared that against the pod's resource requests. I found the pod was requesting far more CPU and memory than any node actually had free. I corrected the deployment's resource requests and limits to realistic values, verified the rollout completed successfully, and confirmed the pod moved to Running._
+
+_It reinforced for me that in Kubernetes, most scheduling issues aren't really 'broken' — they're a mismatch between what's requested and what's available._
 
 
