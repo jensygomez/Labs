@@ -18,6 +18,7 @@ tags:
 | [[OD-003 - Sintonizando el Núcleo – Parámetros del Kernel y Análisis Forense de Logs - V1.0]]       |    7.5     |        L3        |     40 min      |     `17/06/2026`      |   <input type="checkbox" checked>   |
 | [[OD-004 - Dependencias Huérfanas – Repositorios, Paquetes y Compilación desde Fuente]]             |     6      |        L2        |     40 min      |     `21/06/2026`      |   <input type="checkbox" checked>   |
 | [[OD-005 - El Muro Invisible – Contextos SELinux y Políticas MAC]]                                  |     6      |        L2        |     30 min      |     `29/06/2026`      |   <input type="checkbox" checked>   |
+| [[OD-006 - La Tarea Desbocada – Programación de Tareas y Control de Ejecución]]                     |     6      |        L2        |                 |                       |                                     |
 | **Users and Groups**                                                                                |            |                  |                 |                       |                                     |
 | [[USR-001 - El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración]]                |     7      |        L2        |     40 min      |     `11/06/2026`      |   <input type="checkbox" checked>   |
 | [[USR-002 -El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0]]        |     7      |      L2/L3       |     40 min      |     `15/06/2026`      |   <input type="checkbox" checked>   |
@@ -57,8 +58,8 @@ tags:
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
-|                                                                                                     |            |                  |  1410 minutos   |                       |                                     |
-|                                                                                                     |            |                  | **23:30 horas** |                       |                                     |
+|                                                                                                     |            |                  |  1450 minutos   |                       |                                     |
+|                                                                                                     |            |                  | **24:10 horas** |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 
