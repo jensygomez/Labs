@@ -50,6 +50,7 @@ tags:
 | [[DK-003 - La Imagen Fantasma – Diagnóstico y Corrección de Dockerfile]]                            |     6      |        L2        |     40 min      |     `19/06/2026`      |   <input type="checkbox" checked>   |
 | [[DK-004 - El Guardián Caído – Healthchecks y Auto-Reparación]]                                     |     6      |        L2        |     40 min      |     `26/06/2026`      |   <input type="checkbox" checked>   |
 | [[DK-005 - Puertas Abiertas – Reverse Proxy y Exposición Segura de Puertos]]                        |     6      |        L2        |     30 min      |     `02/07/2026`      |   <input type="checkbox" checked>   |
+| [[Lab - Docker Images]]                                                                             |     3      |        L1        |     40 min      |     `03/07/2026`      |   <input type="checkbox" checked>   |
 | **Kubernetes**                                                                                      |            |                  |                 |                       |                                     |
 | [[K8S-001 - El Pod Fantasma - -> Namespace Incorrecto]]                                             |     3      |        L1        |     20 min      |     `23/06/2026`      |   <input type="checkbox" checked>   |
 | [[K8S-002 - La Imagen Perdida -> ImagePullBackOff por Typo]]                                        |     3      |        L1        |     20 min      |     `24/06/2026`      |   <input type="checkbox" checked>   |
@@ -59,8 +60,8 @@ tags:
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
-|                                                                                                     |            |                  |  1510 minutos   |                       |                                     |
-|                                                                                                     |            |                  | **25:10 horas** |                       |                                     |
+|                                                                                                     |            |                  |  1550 minutos   |                       |                                     |
+|                                                                                                     |            |                  | **25:50 horas** |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 
