@@ -4,8 +4,11 @@ tags:
 ---
 # 🗺️ Mapa de Control: LFCS
 
-| Essential Comands                                                                                   | Dificultad | Level Escalation |     Tiempo      | **Fecha 1er Intento** |               Ciclos                |
+| **MOCKS**                                                                                           | Dificultad | Level Escalation |     Tiempo      | **Fecha 1er Intento** |               Ciclos                |
 | --------------------------------------------------------------------------------------------------- | :--------: | :--------------: | :-------------: | :-------------------: | :---------------------------------: |
+| [[# LFCS Mock Exam 1]]                                                                              |     6      |        L2        |     100 min     |     `06/07/2026`      |   <input type="checkbox" checked>   |
+|                                                                                                     |            |                  |                 |                       |                                     |
+| **Essential Comands**                                                                               |            |                  |                 |                       |                                     |
 | [[EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema]]                           |     5      |        L2        |     40 min      |     `14/06/2026`      |   <input type="checkbox" checked>   |
 | [[EC-002 - La Estructura Colapsada – Gestión Avanzada de Archivos y Enlaces]]                       |     6      |        L2        |     30 min      |     `16/06/2026`      |   <input type="checkbox" checked>   |
 | [[EC-003 - El Permiso Prohibido – Control de Acceso y Bits Especiales]]                             |    6.5     |        L2        |     40 min      |     `16/06/2026`      |   <input type="checkbox" checked>   |
@@ -59,10 +62,8 @@ tags:
 | [[K8S-005 - El Pod Atrapado en Pending - Resource Requests Exceden Capacidad del Nodo]]             |     4      |        L1        |     20 min      |     `02/07/2026`      |   <input type="checkbox" checked>   |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
-|                                                                                                     |            |                  |                 |                       |                                     |
-|                                                                                                     |            |                  |  1550 minutos   |                       |                                     |
-|                                                                                                     |            |                  | **25:50 horas** |                       |                                     |
-|                                                                                                     |            |                  |                 |                       |                                     |
+|                                                                                                     |            |                  |  1650 minutos   |                       |                                     |
+|                                                                                                     |            |                  | **27:30 horas** |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 
 
