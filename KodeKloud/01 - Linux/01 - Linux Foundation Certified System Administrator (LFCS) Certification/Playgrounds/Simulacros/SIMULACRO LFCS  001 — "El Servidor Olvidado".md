@@ -1,4 +1,19 @@
 ---
+Titulo: TICKET SIMULACRO-001 - El Servidor Olvidado
+Severidad: MEDIA
+Ambiente: Produccion
+Modulo: LFCS Complete
+Dificultad: 3/10
+Nivel: L2
+Fecha de Inicio: 2026-07-07
+Escenario: |-
+  Un servidor de aplicaciones en node02 fue encontrado sin documentación y con 
+  múltiples problemas de configuración. El equipo anterior dejó el servidor en 
+  un estado inconsistente y necesitas realizar tareas de diagnóstico y 
+  configuración básica antes de ponerlo en producción.
+
+  Tu misión es completar las 4 tareas siguientes en el orden que prefieras, 
+  respetando los tiempos máximos y enviando la evidencia a node03.
 Script Vagrant: |-
   # -- mode: ruby --
   # vi: set ft=ruby :
@@ -375,7 +390,7 @@ Script Vagrant: |-
     end
   end
 ---
-[[LFCS Mock Exam 1]]
+[[Laboratorios del LFCS]]
 
 ---
 
