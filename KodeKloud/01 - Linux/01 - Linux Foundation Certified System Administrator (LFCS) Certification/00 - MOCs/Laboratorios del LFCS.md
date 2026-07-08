@@ -9,7 +9,7 @@ tags:
 | [[# LFCS Mock Exam 1]]                                                                              |     6      |        L2        |     100 min     |     `06/07/2026`      |   <input type="checkbox" checked>   |
 | [[SIMULACRO LFCS  001 — "El Servidor Olvidado"]]                                                    |     3      |        L2        |     30 min      |     `07/07/2026`      |   <input type="checkbox" checked>   |
 | [[SIMULACRO LFCS 002 — "La Red Silenciosa"]]                                                        |     3      |        L2        |     30 min      |     `07/07/2026`      |   <input type="checkbox" checked>   |
-| [[SIMULACRO LFCS 003 — "La Auditoría de Seguridad"]]                                                |     3      |        L2        |                 |                       |                                     |
+| [[SIMULACRO LFCS 003 — "La Auditoría de Seguridad"]]                                                |     3      |        L2        |     50 min      |     `08/07/2026`      |   <input type="checkbox" checked>   |
 | **Essential Comands**                                                                               |            |                  |                 |                       |                                     |
 | [[EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema]]                           |     5      |        L2        |     40 min      |     `14/06/2026`      |   <input type="checkbox" checked>   |
 | [[EC-002 - La Estructura Colapsada – Gestión Avanzada de Archivos y Enlaces]]                       |     6      |        L2        |     30 min      |     `16/06/2026`      |   <input type="checkbox" checked>   |
@@ -64,8 +64,8 @@ tags:
 | [[K8S-005 - El Pod Atrapado en Pending - Resource Requests Exceden Capacidad del Nodo]]             |     4      |        L1        |     20 min      |     `02/07/2026`      |   <input type="checkbox" checked>   |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
-|                                                                                                     |            |                  |  17100 minutos  |                       |                                     |
-|                                                                                                     |            |                  | **28:30 horas** |                       |                                     |
+|                                                                                                     |            |                  |  17150 minutos  |                       |                                     |
+|                                                                                                     |            |                  | **29:20 horas** |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 

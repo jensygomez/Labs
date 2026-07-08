@@ -439,7 +439,7 @@ Script Vagrant: |-
   fi
 
   echo -e "${YELLOW}[6/10] node02: Parámetro sysctl actual (debe ser 0)${RESET}"
-  CURRENT=$(sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "sysctl -n net.ipv4.ip_forward" 2>/dev/null)
+  CURRENT=$(sshpass -p $PASS ssh $SSH_OPTS bob@node02 "sysctl -n net.ipv4.ip_forward" 2>/dev/null)
   if [ "$CURRENT" = "0" ]; then
     echo -e "      ${GREEN}✓ Parámetro actual es 0 (bug inyectado)${RESET}"
   else
