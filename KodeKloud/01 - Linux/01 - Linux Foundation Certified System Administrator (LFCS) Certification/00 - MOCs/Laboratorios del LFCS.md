@@ -64,10 +64,10 @@ tags:
 | [[K8S-004 - La App que No Lee su Configuración --> ConfigMap no montado por nombre incorrecto]]     |     4      |        L1        |     20 min      |     `28/06/2026`      |   <input type="checkbox" checked>   |
 | [[K8S-005 - El Pod Atrapado en Pending - Resource Requests Exceden Capacidad del Nodo]]             |     4      |        L1        |     20 min      |     `02/07/2026`      |   <input type="checkbox" checked>   |
 |                                                                                                     |            |                  |                 |                       |                                     |
+| Ansible                                                                                             |            |                  |     20 min      |     `08/07/2026`      | <input type="checkbox" checked><br> |
 |                                                                                                     |            |                  |                 |                       |                                     |
-|                                                                                                     |            |                  |  17150 minutos  |                       |                                     |
-|                                                                                                     |            |                  | **29:20 horas** |                       |                                     |
-|                                                                                                     |            |                  |                 |                       |                                     |
+|                                                                                                     |            |                  |  17170 minutos  |                       |                                     |
+|                                                                                                     |            |                  | **29:40 horas** |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 
