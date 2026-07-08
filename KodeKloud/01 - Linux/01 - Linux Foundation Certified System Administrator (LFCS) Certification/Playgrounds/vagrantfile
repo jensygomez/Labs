@@ -1,4 +1,5 @@
 # -- mode: ruby --
+
 # vi: set ft=ruby :
 
 Vagrant.configure("2") do |config|
@@ -6,7 +7,7 @@ Vagrant.configure("2") do |config|
   
   nodes = [
     { name: "node01", ip: "192.168.122.11", extra_disks: [] },
-    { name: "node02", ip: "192.168.122.12", extra_disks: ['1G'] },
+    { name: "node02", ip: "192.168.122.12", extra_disks: [] },
     { name: "node03", ip: "192.168.122.13", extra_disks: [] }
   ]
   
@@ -23,9 +24,6 @@ Vagrant.configure("2") do |config|
         lv.memory = 1024
         lv.cpus = 1
         lv.driver = "kvm"
-        node[:extra_disks].each do |size|
-          lv.storage :file, :size => size, :type => 'qcow2'
-        end
       end
       
       # ── PROVISIONADO GENERAL (todos los nodos) ──
@@ -52,7 +50,7 @@ HOSTS
         # Instalar herramientas básicas
         export DEBIAN_FRONTEND=noninteractive
         apt-get update -qq
-        apt-get install -y -qq sshpass
+        apt-get install -y -qq sshpass curl
       SHELL
       
       # ── NODE02: SERVIDOR CON PROBLEMAS ──
@@ -62,46 +60,34 @@ HOSTS
           
           # Instalar servicios básicos
           export DEBIAN_FRONTEND=noninteractive
-          apt-get install -y -qq nginx cron
-          
-          # Crear grupo developers
-          groupadd -f developers
-          
-          # Crear usuarios
-          useradd -m -s /bin/bash -G developers alice 2>/dev/null || true
-          useradd -m -s /bin/bash -G developers charlie 2>/dev/null || true
-          echo 'alice:caleston123' | chpasswd
-          echo 'charlie:caleston123' | chpasswd
+          apt-get install -y -qq htop nmap net-tools
           
           # Crear directorio de logs de aplicación
           mkdir -p /var/log/myapp
           chown root:root /var/log/myapp
           chmod 755 /var/log/myapp
           
-          # Crear archivos de log con errores
-          cat << 'LOG1' > /var/log/myapp/app.log
-2026-07-01 10:15:23 INFO Application started
-2026-07-01 10:16:45 ERROR Database connection failed
-2026-07-01 10:17:02 WARNING High memory usage
-2026-07-01 10:18:30 ERROR Timeout on API call
-2026-07-01 10:19:15 INFO Request processed
-2026-07-01 10:20:00 ERROR File not found: /data/config.yml
-2026-07-01 10:21:45 INFO User login successful
-2026-07-01 10:22:10 ERROR Permission denied: /var/www/html
-LOG1
+          # Crear archivos de log con diferentes permisos
+          touch /var/log/myapp/app.log
+          touch /var/log/myapp/error.log
+          touch /var/log/myapp/debug.log
+          chmod 644 /var/log/myapp/app.log
+          chmod 600 /var/log/myapp/error.log
+          chmod 644 /var/log/myapp/debug.log
           
-          # Crear archivos de configuración dispersos
+          # Crear algunos archivos con permisos especiales
+          touch /var/log/myapp/secure.conf
+          chmod 600 /var/log/myapp/secure.conf
+          
+          # Crear archivos dispersos
           mkdir -p /opt/configs
           echo "db_host=localhost" > /opt/configs/db.conf
           echo "api_key=secret123" > /opt/configs/api.conf
           echo "log_level=INFO" > /opt/configs/app.conf
           
-          # Asegurar que nginx esté corriendo
-          systemctl enable nginx
-          systemctl start nginx
-          
-          # Preparar disco para montar (formateado pero no montado)
-          mkfs.ext4 -F /dev/vdb 2>/dev/null || true
+          # Crear usuario para cron
+          useradd -m -s /bin/bash appuser 2>/dev/null || true
+          echo 'appuser:caleston123' | chpasswd
           
           echo "✅ node02 configurado con problemas"
         SHELL
@@ -111,10 +97,10 @@ LOG1
       if node[:name] == "node03"
         node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
           echo "🔒 Preparando bóveda en #{node[:name]}..."
-          mkdir -p /opt/ops-compliance/simulacro-001
+          mkdir -p /opt/ops-compliance/simulacro-002
           chown -R bob:bob /opt/ops-compliance
           chmod -R 755 /opt/ops-compliance
-          echo "✅ Bóveda lista en /opt/ops-compliance/simulacro-001/"
+          echo "✅ Bóveda lista en /opt/ops-compliance/simulacro-002/"
         SHELL
       end
       
@@ -124,101 +110,88 @@ LOG1
           echo "🎫 Generando Ticket y script de verificación en node01..."
           
           # --- CREAR EL TICKET ---
-          cat << 'TICKET' > /home/vagrant/TICKET_SIMULACRO-001.txt
+          cat << 'TICKET' > /home/vagrant/TICKET_SIMULACRO-002.txt
 ================================================================================
-TICKET SIMULACRO-001  │  Severidad: MEDIA  │  Ambiente: PRODUCCIÓN
-🔐 SIMULACRO-001 — El Servidor Olvidado
+TICKET SIMULACRO-002  │  Severidad: MEDIA  │  Ambiente: PRODUCCIÓN
+🔐 SIMULACRO-002 — La Red Silenciosa
 Módulo: LFCS Complete  │  Dificultad: 3/10  │  Nivel: L2
 Ubicación de Control:  node01  (Estación del Administrador — bob)
 Nodo Servidor:         node02  (Servidor de aplicaciones — Ubuntu 22.04)
-Nodo Bóveda Destino:   node03  (Bóveda de Gobernanza — /opt/ops-compliance/simulacro-001/)
+Nodo Bóveda Destino:   node03  (Bóveda de Gobernanza — /opt/ops-compliance/simulacro-002/)
 Contraseña del Clúster: caleston123
 
-Un servidor de aplicaciones en node02 fue encontrado sin documentación y con 
-múltiples problemas de configuración. El equipo anterior dejó el servidor en 
-un estado inconsistente y necesitas realizar tareas de diagnóstico y 
-configuración básica antes de ponerlo en producción.
+Un servidor de aplicaciones en node02 necesita configuración de red, tareas 
+programadas, instalación de paquetes adicionales y auditoría de archivos. 
+El equipo anterior dejó el servidor sin documentar y necesitas realizar 
+tareas básicas de administración antes de ponerlo en producción.
 
 Tu misión es completar las 4 tareas siguientes en el orden que prefieras, 
 respetando los tiempos máximos y enviando la evidencia a node03.
 
 ================================================================================
-TAREA 1 — Essential Commands (peso 3 puntos)
+TAREA 1 — Networking (peso 3 puntos)
 ================================================================================
-El equipo de desarrollo necesita un reporte de todos los errores encontrados 
-en los logs de la aplicación.
+El equipo de operaciones necesita verificar la configuración de red de node02.
 
 Conéctate a node02 y:
-1. Busca todas las líneas que contengan la palabra "ERROR" (case-sensitive) 
-   en el archivo /var/log/myapp/app.log
-2. Cuenta cuántas líneas coinciden
-3. Guarda SOLO el número en /opt/error-count.txt en node02
+1. Identifica la dirección IP de la interfaz de red principal (no localhost)
+2. Verifica que node02 puede hacer ping a node03
+3. Guarda la dirección IP en /opt/network-info.txt en node02
 
 CRITERIOS:
-  [ ] El archivo /opt/error-count.txt existe y contiene solo un número     --> 50%
-  [ ] El número es correcto (debe ser 4)                                   --> 50%
+  [ ] El archivo /opt/network-info.txt existe y contiene una IP válida      --> 50%
+  [ ] La IP corresponde a node02 (192.168.122.12)                          --> 50%
 
 TIEMPO MÁXIMO: 10 minutos
 
 ================================================================================
-TAREA 2 — User and Group Management (peso 4 puntos)
+TAREA 2 — Service Configuration (peso 4 puntos)
 ================================================================================
-Se requiere crear un nuevo usuario para el departamento de QA.
+Se requiere configurar una tarea programada para el usuario appuser.
 
 En node02:
-1. Crea un grupo llamado "qa"
-2. Crea un usuario llamado "tester" con:
-   - Shell: /bin/bash
-   - Grupo primario: qa
-   - Grupos secundarios: developers
-   - Contraseña: caleston123
-3. Verifica que el usuario exista y pertenezca a los grupos correctos
+1. Crea un cron job para el usuario appuser que ejecute el comando 
+   'echo "Backup completed" >> /tmp/backup.log' todos los días a las 2:30 AM
+2. Verifica que el cron job fue creado correctamente
 
 CRITERIOS:
-  [ ] El grupo "qa" existe                                                 --> 25%
-  [ ] El usuario "tester" existe                                           --> 25%
-  [ ] tester tiene shell /bin/bash                                         --> 25%
-  [ ] tester pertenece a qa (primario) y developers (secundario)           --> 25%
+  [ ] El cron job existe para el usuario appuser                           --> 60%
+  [ ] El cron job está configurado para ejecutarse a las 2:30 AM diarios   --> 40%
 
 TIEMPO MÁXIMO: 10 minutos
 
 ================================================================================
-TAREA 3 — Operation of Running Systems (peso 4 puntos)
+TAREA 3 — Package Management (peso 4 puntos)
 ================================================================================
-El servicio nginx no está configurado para iniciar automáticamente después 
-de un reinicio.
+El equipo de desarrollo necesita instalar herramientas de diagnóstico.
 
 En node02:
-1. Verifica el estado actual del servicio nginx
-2. Configura nginx para que inicie automáticamente en el arranque
-3. Asegúrate de que nginx esté corriendo en este momento
-4. Verifica que el servicio responda correctamente con curl
+1. Instala el paquete 'iftop' (herramienta de monitoreo de red)
+2. Verifica que el paquete fue instalado correctamente
+3. Guarda la versión instalada en /opt/package-info.txt en node02
 
 CRITERIOS:
-  [ ] nginx está habilitado para iniciar en el arranque                    --> 40%
-  [ ] nginx está activo (running)                                          --> 30%
-  [ ] curl http://localhost devuelve código 200                            --> 30%
+  [ ] El paquete iftop está instalado                                      --> 50%
+  [ ] El archivo /opt/package-info.txt contiene información de versión     --> 50%
 
 TIEMPO MÁXIMO: 10 minutos
 
 ================================================================================
-TAREA 4 — Storage Management (peso 5 puntos)
+TAREA 4 — Essential Commands (peso 5 puntos)
 ================================================================================
-Hay un disco adicional /dev/vdb en node02 que necesita ser utilizado para 
-almacenamiento de datos.
+El equipo de seguridad necesita auditar archivos con permisos sensibles.
 
 En node02:
-1. El disco /dev/vdb ya está formateado como ext4
-2. Crea el directorio /data
-3. Monta /dev/vdb en /data
-4. Configura /etc/fstab para que el montaje sea persistente
-5. Verifica que el montaje funcione correctamente
+1. Busca todos los archivos en /var/log/myapp/ que tengan permisos 600 
+   (solo el propietario puede leer y escribir)
+2. Cuenta cuántos archivos coinciden
+3. Guarda la lista completa de estos archivos (ruta completa) en 
+   /opt/secure-files.txt en node02
 
 CRITERIOS:
-  [ ] El directorio /data existe                                           --> 20%
-  [ ] /dev/vdb está montado en /data                                       --> 30%
-  [ ] La entrada en /etc/fstab es correcta                                 --> 30%
-  [ ] El montaje es persistente (sobrevive a mount -a)                     --> 20%
+  [ ] El archivo /opt/secure-files.txt existe                              --> 30%
+  [ ] Contiene la lista de archivos con permisos 600                       --> 40%
+  [ ] La lista es correcta (debe incluir error.log y secure.conf)          --> 30%
 
 TIEMPO MÁXIMO: 15 minutos
 
@@ -228,19 +201,18 @@ PIPELINE DE EVIDENCIA A NODE03
 Una vez completadas las 4 tareas, debes enviar TODA la evidencia a node03 
 mediante pipeline SSH (sin crear archivos temporales en node01).
 
-Destino: /opt/ops-compliance/simulacro-001/evidence.txt
+Destino: /opt/ops-compliance/simulacro-002/evidence.txt
 
 La evidencia debe incluir:
-a) Contenido de /opt/error-count.txt en node02
-b) Salida de 'id tester' en node02
-c) Salida de 'systemctl is-enabled nginx' en node02
-d) Salida de 'mount | grep vdb' en node02
-e) Contenido de la línea de /etc/fstab relacionada con vdb
+a) Contenido de /opt/network-info.txt en node02
+b) Salida de 'sudo crontab -u appuser -l' en node02
+c) Contenido de /opt/package-info.txt en node02
+d) Contenido de /opt/secure-files.txt en node02
 
 NO crear archivos temporales en node01. Todo debe ir vía pipeline SSH.
 
 CRITERIOS:
-  [ ] Evidencia enviada a node03:/opt/ops-compliance/simulacro-001/        --> 100%
+  [ ] Evidencia enviada a node03:/opt/ops-compliance/simulacro-002/        --> 100%
   [ ] CERO archivos de resultados almacenados en node01 (DESCALIFICA)
 
 ================================================================================
@@ -262,7 +234,7 @@ TIEMPO TOTAL MÁXIMO: 45 minutos
 TICKET
 
           # --- CREAR EL SCRIPT DE VERIFICACIÓN ---
-          cat << 'VERIFY' > /tmp/verify-simulacro001.sh
+          cat << 'VERIFY' > /tmp/verify-simulacro002.sh
 #!/bin/bash
 RED='\e[1;31m'
 GREEN='\e[1;32m'
@@ -274,71 +246,55 @@ PASS="caleston123"
 FAIL=0
 
 echo -e "${CYAN}╔════════════════════════════════════════════════════════════════╗${RESET}"
-echo -e "${CYAN}║          VERIFICACIÓN DE ESCENARIO SIMULACRO-001              ║${RESET}"
+echo -e "${CYAN}║          VERIFICACIÓN DE ESCENARIO SIMULACRO-002              ║${RESET}"
 echo -e "${CYAN}╚════════════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
-echo -e "${YELLOW}[1/8] node02: nginx instalado y activo${RESET}"
-if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "sudo systemctl is-active --quiet nginx" 2>/dev/null; then
-  echo -e "      ${GREEN}✓ nginx activo${RESET}"
+echo -e "${YELLOW}[1/6] node02: Herramientas básicas instaladas${RESET}"
+if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "which htop nmap >/dev/null 2>&1" 2>/dev/null; then
+  echo -e "      ${GREEN}✓ Herramientas instaladas${RESET}"
 else
-  echo -e "      ${RED}✗ nginx inactivo${RESET}"
+  echo -e "      ${RED}✗ Herramientas no encontradas${RESET}"
   FAIL=1
 fi
 
-echo -e "${YELLOW}[2/8] node02: Grupo developers existe${RESET}"
-if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "getent group developers | grep -q developers" 2>/dev/null; then
-  echo -e "      ${GREEN}✓ Grupo developers existe${RESET}"
+echo -e "${YELLOW}[2/6] node02: Directorio de logs existe${RESET}"
+if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "[ -d /var/log/myapp ]" 2>/dev/null; then
+  echo -e "      ${GREEN}✓ Directorio de logs existe${RESET}"
 else
-  echo -e "      ${RED}✗ Grupo developers no encontrado${RESET}"
+  echo -e "      ${RED}✗ Directorio de logs no encontrado${RESET}"
   FAIL=1
 fi
 
-echo -e "${YELLOW}[3/8] node02: Usuarios alice y charlie existen${RESET}"
-if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "id alice >/dev/null 2>&1 && id charlie >/dev/null 2>&1" 2>/dev/null; then
-  echo -e "      ${GREEN}✓ Usuarios existen${RESET}"
+echo -e "${YELLOW}[3/6] node02: Archivos de log con permisos específicos${RESET}"
+if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "[ -f /var/log/myapp/error.log ] && [ -f /var/log/myapp/secure.conf ]" 2>/dev/null; then
+  echo -e "      ${GREEN}✓ Archivos de log existen${RESET}"
 else
-  echo -e "      ${RED}✗ Usuarios no encontrados${RESET}"
+  echo -e "      ${RED}✗ Archivos de log no encontrados${RESET}"
   FAIL=1
 fi
 
-echo -e "${YELLOW}[4/8] node02: Archivo de log existe${RESET}"
-if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "[ -f /var/log/myapp/app.log ]" 2>/dev/null; then
-  echo -e "      ${GREEN}✓ Archivo de log existe${RESET}"
+echo -e "${YELLOW}[4/6] node02: Usuario appuser existe${RESET}"
+if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "id appuser >/dev/null 2>&1" 2>/dev/null; then
+  echo -e "      ${GREEN}✓ Usuario appuser existe${RESET}"
 else
-  echo -e "      ${RED}✗ Archivo de log no encontrado${RESET}"
+  echo -e "      ${RED}✗ Usuario appuser no encontrado${RESET}"
   FAIL=1
 fi
 
-echo -e "${YELLOW}[5/8] node02: Disco /dev/vdb formateado${RESET}"
-if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "sudo blkid /dev/vdb | grep -q ext4" 2>/dev/null; then
-  echo -e "      ${GREEN}✓ Disco formateado como ext4${RESET}"
+echo -e "${YELLOW}[5/6] node02: Conectividad con node03${RESET}"
+if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "ping -c 1 node03 >/dev/null 2>&1" 2>/dev/null; then
+  echo -e "      ${GREEN}✓ Conectividad con node03${RESET}"
 else
-  echo -e "      ${RED}✗ Disco no formateado${RESET}"
+  echo -e "      ${RED}✗ Sin conectividad con node03${RESET}"
   FAIL=1
 fi
 
-echo -e "${YELLOW}[6/8] node02: Disco NO montado aún (bug inyectado)${RESET}"
-if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "mount | grep -q vdb" 2>/dev/null; then
-  echo -e "      ${RED}✗ Disco ya está montado (bug no inyectado)${RESET}"
-  FAIL=1
-else
-  echo -e "      ${GREEN}✓ Disco no montado (esperado)${RESET}"
-fi
-
-echo -e "${YELLOW}[7/8] node03: Bóveda de evidencia${RESET}"
-if sshpass -p $PASS ssh -t $SSH_OPTS bob@node03 "[ -d /opt/ops-compliance/simulacro-001 ]" 2>/dev/null; then
+echo -e "${YELLOW}[6/6] node03: Bóveda de evidencia${RESET}"
+if sshpass -p $PASS ssh -t $SSH_OPTS bob@node03 "[ -d /opt/ops-compliance/simulacro-002 ]" 2>/dev/null; then
   echo -e "      ${GREEN}✓ Bóveda creada${RESET}"
 else
   echo -e "      ${RED}✗ Bóveda no existe${RESET}"
-  FAIL=1
-fi
-
-echo -e "${YELLOW}[8/8] node01: Sin archivos de resultados (regla de oro)${RESET}"
-if [ ! -f /home/vagrant/error-count.txt ] && [ ! -f /tmp/evidence.txt ]; then
-  echo -e "      ${GREEN}✓ No hay archivos temporales en node01${RESET}"
-else
-  echo -e "      ${RED}✗ Archivos temporales detectados en node01${RESET}"
   FAIL=1
 fi
 
@@ -356,14 +312,14 @@ fi
 echo ""
 echo -e "${YELLOW}Presiona ENTER para ver el ticket del incidente...${RESET}"
 read -r
-cat /home/vagrant/TICKET_SIMULACRO-001.txt
+cat /home/vagrant/TICKET_SIMULACRO-002.txt
 VERIFY
 
-          chmod +x /tmp/verify-simulacro001.sh
+          chmod +x /tmp/verify-simulacro002.sh
           
           # --- AÑADIR AL .bashrc PARA EJECUCIÓN AUTOMÁTICA ---
-          sed -i '/verify-simulacro001/d' /home/vagrant/.bashrc 2>/dev/null || true
-          echo 'bash /tmp/verify-simulacro001.sh' >> /home/vagrant/.bashrc
+          sed -i '/verify-simulacro002/d' /home/vagrant/.bashrc 2>/dev/null || true
+          echo 'bash /tmp/verify-simulacro002.sh' >> /home/vagrant/.bashrc
           
           echo "✅ Ticket y script de verificación creados."
           echo "🚀 Al hacer 'vagrant ssh node01' se ejecutará automáticamente."
