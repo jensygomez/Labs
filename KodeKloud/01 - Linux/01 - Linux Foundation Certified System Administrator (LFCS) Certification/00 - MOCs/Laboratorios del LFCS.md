@@ -10,6 +10,7 @@ tags:
 | [[SIMULACRO LFCS  001 — "El Servidor Olvidado"]]                                                    |     3      |        L2        |     30 min      |     `07/07/2026`      |   <input type="checkbox" checked>   |
 | [[SIMULACRO LFCS 002 — "La Red Silenciosa"]]                                                        |     3      |        L2        |     30 min      |     `07/07/2026`      |   <input type="checkbox" checked>   |
 | [[SIMULACRO LFCS 003 — "La Auditoría de Seguridad"]]                                                |     3      |        L2        |     50 min      |     `08/07/2026`      |   <input type="checkbox" checked>   |
+| [[SIMULACRO LFCS 004 — "Refuerzo y Consolidación"]]                                                 |     3      |        L2        |                 |                       |                                     |
 | **Essential Comands**                                                                               |            |                  |                 |                       |                                     |
 | [[EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema]]                           |     5      |        L2        |     40 min      |     `14/06/2026`      |   <input type="checkbox" checked>   |
 | [[EC-002 - La Estructura Colapsada – Gestión Avanzada de Archivos y Enlaces]]                       |     6      |        L2        |     30 min      |     `16/06/2026`      |   <input type="checkbox" checked>   |
@@ -66,6 +67,7 @@ tags:
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |  17150 minutos  |                       |                                     |
 |                                                                                                     |            |                  | **29:20 horas** |                       |                                     |
+|                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 |                                                                                                     |            |                  |                 |                       |                                     |
 
