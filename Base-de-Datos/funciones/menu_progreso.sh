@@ -91,15 +91,15 @@ ver_estado_curso() {
 _navegar_a_contenido() {
     local id_curso id_modulo id_contenido
 
-    clear; titulo "NAVEGAR"
+    { clear; titulo "NAVEGAR"; } >&2
     id_curso=$(seleccionar_o_crear cursos nombre_curso id_curso "Curso")
     [ -z "$id_curso" ] && return 1
 
-    clear; titulo "NAVEGAR"
+    { clear; titulo "NAVEGAR"; } >&2
     id_modulo=$(seleccionar_o_crear modulos nombre_modulo id_modulo "Módulo" id_curso "$id_curso")
     [ -z "$id_modulo" ] && return 1
 
-    clear; titulo "NAVEGAR"
+    { clear; titulo "NAVEGAR"; } >&2
     echo -e "${C_AZUL}--- Selecciona un Contenido ---${C_RESET}" >&2
     db_query "SELECT id_contenido, titulo, estado FROM contenidos WHERE id_modulo=$id_modulo;" >&2
     separador >&2
@@ -208,13 +208,14 @@ ver_detalle_contenido() {
         case "$sel" in
             q) unset mapa_id; return ;;
             a)
-                local resultado id_propiedad tipo_dato nombre_prop valor valor_safe
+                local resultado id_propiedad tipo_dato nombre_prop valor_previo valor valor_safe
                 resultado=$(seleccionar_o_crear_propiedad)
                 [ -z "$resultado" ] && continue
                 id_propiedad="${resultado%%|*}"
                 tipo_dato="${resultado##*|}"
                 nombre_prop=$(db_exec "SELECT nombre_propiedad FROM propiedades_catalogo WHERE id_propiedad=$id_propiedad;")
-                valor=$(pedir_valor_tipado "$tipo_dato" "$nombre_prop")
+                valor_previo=$(db_exec "SELECT valor FROM contenido_propiedades WHERE id_contenido=$id_contenido AND id_propiedad=$id_propiedad;")
+                valor=$(pedir_valor_tipado "$tipo_dato" "$nombre_prop" "$valor_previo")
                 valor_safe=$(escapar_sql "$valor")
                 db_exec "INSERT INTO contenido_propiedades (id_contenido, id_propiedad, valor)
                                      VALUES ($id_contenido, $id_propiedad, '$valor_safe')

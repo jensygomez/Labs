@@ -168,10 +168,20 @@ pedir_valor_tipado() {
             done
             ;;
         tags)
-            local v
-            preguntar v "$etiqueta (separados por coma, ej: netplan,dnat,vagrant): "
-            # Normaliza espacios alrededor de comas
-            v=$(echo "$v" | sed 's/ *, */,/g; s/^,//; s/,$//')
+            local v nuevas
+            if [ -n "$valor_actual" ]; then
+                info_msg "Tags actuales: $valor_actual" >&2
+                preguntar nuevas "$etiqueta - agregar tags (separados por coma, se suman a las existentes, ENTER para dejar igual): "
+                if [ -z "$nuevas" ]; then
+                    echo "$valor_actual"
+                    return 0
+                fi
+                v="${valor_actual},${nuevas}"
+            else
+                preguntar v "$etiqueta (separados por coma, ej: netplan,dnat,vagrant): "
+            fi
+            # Normaliza espacios, quita vacíos y duplicados, conserva el orden de aparición
+            v=$(echo "$v" | tr ',' '\n' | sed 's/^[ \t]*//; s/[ \t]*$//' | grep -v '^$' | awk '!seen[$0]++' | paste -sd, -)
             echo "$v"
             return 0
             ;;

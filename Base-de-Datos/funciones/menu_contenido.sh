@@ -89,8 +89,11 @@ agregar_nuevo_contenido() {
         local nombre_prop
         nombre_prop=$(db_exec "SELECT nombre_propiedad FROM propiedades_catalogo WHERE id_propiedad=$id_propiedad;")
 
+        local valor_previo
+        valor_previo=$(db_exec "SELECT valor FROM contenido_propiedades WHERE id_contenido=$id_contenido AND id_propiedad=$id_propiedad;")
+
         local valor
-        valor=$(pedir_valor_tipado "$tipo_dato" "$nombre_prop")
+        valor=$(pedir_valor_tipado "$tipo_dato" "$nombre_prop" "$valor_previo")
         local valor_safe
         valor_safe=$(escapar_sql "$valor")
 
