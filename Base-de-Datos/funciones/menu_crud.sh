@@ -70,21 +70,72 @@ mostrar_menu_crud() {
                 ;;
                 
             3)
-                clear
-                echo "--- Registrar Módulo en un Curso ---"
-                echo "Cursos disponibles:"
-                sqlite3 "$DB_NAME" -column -header "SELECT id_curso, nombre_curso FROM cursos;"
-                echo "-----------------------------------------"
-                read -p "ID del Curso (o 'q' para salir): " v_id_curso
-                
-                if [ "$v_id_curso" = "q" ] || [ -z "$v_id_curso" ]; then continue; fi
-                
-                read -p "Nombre del Módulo: " v_modulo
-                if [ -z "$v_modulo" ] || [ "$v_modulo" = "q" ]; then continue; fi
-                
-                sqlite3 "$DB_NAME" "INSERT INTO modulos (id_curso, nombre_modulo) VALUES ($v_id_curso, '$v_modulo');"
-                echo "¡Módulo agregado!"
-                read -p "Presiona ENTER para continuar..."
+                while true; do
+                    clear
+                    echo "========================================="
+                    echo "        REGISTRAR NUEVO MÓDULO           "
+                    echo "========================================="
+                    # Listar cursos disponibles para saber a cuál asociarlo
+                    echo "Cursos disponibles:"
+                    sqlite3 "$DB_NAME" -column -header "SELECT id_curso, nombre_curso FROM cursos;"
+                    echo "-----------------------------------------"
+                    echo "(Escribe 'q' para regresar al menú CRUD)"
+                    read -p "ID del Curso base: " v_id_curso
+                    
+                    if [ "$v_id_curso" = "q" ] || [ -z "$v_id_curso" ]; then
+                        break # Sale del menú de módulos y vuelve al CRUD
+                    fi
+                    
+                    # Validar que el curso exista y obtener su nombre
+                    curso_nombre=$(sqlite3 "$DB_NAME" "SELECT nombre_curso FROM cursos WHERE id_curso='$v_id_curso';")
+                    if [ -z "$curso_nombre" ]; then
+                        echo "Error: ID de Curso no válido."
+                        sleep 2; continue
+                    fi
+                    
+                    # BUCLE INTERNO: Para quedarse dentro del mismo curso agregando múltiples módulos
+                    while true; do
+                        clear
+                        echo "========================================="
+                        echo " CURSO SELECCIONADO: $curso_nombre"
+                        echo "========================================="
+                        echo "Módulos ya registrados en este curso:"
+                        echo "-----------------------------------------"
+                        
+                        # Mostrar módulos actuales de este curso
+                        mod_check=$(sqlite3 "$DB_NAME" "SELECT count(*) FROM modulos WHERE id_curso=$v_id_curso;")
+                        if [ "$mod_check" -eq 0 ]; then
+                            echo "[ No hay módulos registrados aún ]"
+                        else
+                            sqlite3 "$DB_NAME" -column -header "SELECT id_modulo, nombre_modulo FROM modulos WHERE id_curso=$v_id_curso;"
+                        fi
+                        echo "========================================="
+                        
+                        read -p "Nombre del Nuevo Módulo (ej. Step 1 - Basics o 'q' para cambiar de curso): " v_modulo
+                        if [ -z "$v_modulo" ]; then
+                            continue
+                        elif [ "$v_modulo" = "q" ]; then
+                            break # Sale del bucle interno para poder elegir otro curso
+                        fi
+                        
+                        # Guardar el módulo en la base de datos
+                        sqlite3 "$DB_NAME" "INSERT INTO modulos (id_curso, nombre_modulo) VALUES ($v_id_curso, '$v_modulo');"
+                        echo "-----------------------------------------"
+                        echo "¡Módulo '$v_modulo' agregado con éxito!"
+                        echo "-----------------------------------------"
+                        
+                        # Menú de decisión posterior en formato de lista vertical
+                        echo "¿Qué deseas hacer ahora?"
+                        echo "1) Agregar otro módulo a este mismo curso ($curso_nombre)"
+                        echo "2) Volver a la lista de cursos / Cambiar de curso"
+                        echo "-----------------------------------------"
+                        read -p "Selecciona una opción [1-2]: " v_sig_mod_accion
+                        
+                        if [ "$v_sig_mod_accion" != "1" ]; then
+                            break # Sale del bucle interno
+                        fi
+                    done
+                done
                 ;;
                 
             4)
