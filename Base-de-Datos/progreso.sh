@@ -1,34 +1,41 @@
 #!/bin/bash
+# =========================================================
+# progreso.sh - Sistema de Seguimiento de Estudio
+# =========================================================
 
-# Cambiar al directorio del script para evitar fallos de rutas relativas
 cd "$(dirname "$0")"
 
-# Importar módulos y lógica secundaria
+source ./funciones/colores.sh
+source ./funciones/common.sh
 source ./funciones/db_init.sh
+source ./funciones/menu_contenido.sh
 source ./funciones/menu_progreso.sh
-source ./funciones/menu_crud.sh
+source ./funciones/menu_modificar.sh
+source ./funciones/menu_propiedades.sh
 source ./funciones/menu_schema.sh
 
-# Asegurar que la base de datos exista y tenga la estructura inicial
 inicializar_db
 
 while true; do
     clear
-    echo "========================================="
-    echo "    SISTEMA DE SEGUIMIENTO DE ESTUDIO    "
-    echo "========================================="
-    echo "1) Mi Progreso (Rutas y Avances)"
-    echo "2) Gestión de Contenido (Agregar/Editar/Borrar)"
-    echo "3) Configuración Avanzada (Evolución de DB)"
-    echo "4) Salir del Sistema"
-    echo "========================================="
-    read -p "Selecciona una opción [1-4]: " opcion
+    titulo "    SISTEMA DE SEGUIMIENTO DE ESTUDIO    "
+    echo "1) Agregar Nuevo (Video/Lectura/Lab/Simulacro...)"
+    echo "2) Mi Progreso (Rutas y Avances)"
+    echo "3) Modificar / Eliminar"
+    echo "4) Gestión de Propiedades (catálogo)"
+    echo "5) Configuración Avanzada (Schema)"
+    echo "6) Salir del Sistema"
+    separador
+    opcion=""
+    preguntar opcion "Selecciona una opción [1-6]: "
 
     case $opcion in
-        1) mostrar_menu_progreso ;;
-        2) mostrar_menu_crud ;;
-        3) mostrar_menu_schema ;;
-        4) echo "¡Buen entrenamiento! Sigue dándole duro a los laboratorios."; exit 0 ;;
-        *) echo "Opción no válida, intenta de nuevo."; sleep 1 ;;
+        1) agregar_nuevo_contenido ;;
+        2) mostrar_menu_progreso ;;
+        3) mostrar_menu_modificar ;;
+        4) mostrar_menu_propiedades ;;
+        5) mostrar_menu_schema ;;
+        6) exito "¡Buen entrenamiento! Sigue dándole duro a los laboratorios."; exit 0 ;;
+        *) error_msg "Opción no válida, intenta de nuevo."; sleep 1 ;;
     esac
 done
