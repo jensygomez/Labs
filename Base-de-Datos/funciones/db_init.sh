@@ -3,7 +3,6 @@
 DB_NAME="progreso.db"
 
 inicializar_db() {
-    # Habilitar soporte de llaves foráneas en SQLite y crear tablas si no existen
     sqlite3 "$DB_NAME" << 'SQL'
     PRAGMA foreign_keys = ON;
 
@@ -17,7 +16,6 @@ inicializar_db() {
         nombre_curso TEXT NOT NULL UNIQUE
     );
 
-    -- Tabla intermedia: Un curso puede pertenecer a múltiples paths
     CREATE TABLE IF NOT EXISTS path_cursos (
         id_path INTEGER,
         id_curso INTEGER,
@@ -38,8 +36,17 @@ inicializar_db() {
         id_modulo INTEGER,
         tipo TEXT CHECK(tipo IN ('Video', 'Lectura', 'Laboratorio')),
         titulo TEXT NOT NULL,
-        estado TEXT DEFAULT 'Pendiente' CHECK(estado IN ('Pendiente', 'En Progreso', 'Completado')),
         FOREIGN KEY (id_modulo) REFERENCES modulos(id_modulo) ON DELETE CASCADE
+    );
+
+    -- NUEVA TABLA: Esquema Vivo (Key-Value) para propiedades ilimitadas por laboratorio
+    CREATE TABLE IF NOT EXISTS propiedades_dinamicas (
+        id_propiedad INTEGER PRIMARY KEY AUTOINCREMENT,
+        id_contenido INTEGER,
+        clave TEXT NOT NULL,
+        valor TEXT NOT NULL,
+        FOREIGN KEY (id_contenido) REFERENCES contenidos(id_contenido) ON DELETE CASCADE,
+        UNIQUE(id_contenido, clave) -- Evita que se duplique la misma propiedad en un mismo contenido
     );
 SQL
 }
