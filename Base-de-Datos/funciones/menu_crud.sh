@@ -88,28 +88,88 @@ mostrar_menu_crud() {
                 ;;
                 
             4)
-                clear
-                echo "--- Registrar Contenido ---"
-                sqlite3 "$DB_NAME" -column -header "SELECT m.id_modulo, c.nombre_curso, m.nombre_modulo FROM modulos m JOIN cursos c ON m.id_curso = c.id_curso;"
-                echo "-----------------------------------------"
-                read -p "ID del Módulo (o 'q' para salir): " v_id_modulo
-                if [ "$v_id_modulo" = "q" ] || [ -z "$v_id_modulo" ]; then continue; fi
-                
-                echo "Tipo: 1) Video  2) Lectura  3) Laboratorio"
-                read -p "Selecciona [1-3]: " v_tipo_opt
-                case $v_tipo_opt in
-                    1) v_tipo="Video" ;;
-                    2) v_tipo="Lectura" ;;
-                    3) v_tipo="Laboratorio" ;;
-                    *) echo "Cancelado"; sleep 1; continue ;;
-                esac
-                
-                read -p "Título del Contenido: " v_titulo
-                if [ -z "$v_titulo" ]; then continue; fi
-                
-                sqlite3 "$DB_NAME" "INSERT INTO contenidos (id_modulo, tipo, titulo) VALUES ($v_id_modulo, '$v_tipo', '$v_titulo');"
-                echo "¡Contenido registrado!"
-                read -p "Presiona ENTER para continuar..."
+                while true; do
+                    clear
+                    echo "========================================="
+                    echo "         REGISTRAR NUEVO CONTENIDO       "
+                    echo "========================================="
+                    # Mostrar módulos disponibles
+                    sqlite3 "$DB_NAME" -column -header "SELECT m.id_modulo, c.nombre_curso, m.nombre_modulo FROM modulos m JOIN cursos c ON m.id_curso = c.id_curso;"
+                    echo "-----------------------------------------"
+                    echo "(Escribe 'q' para regresar al menú CRUD)"
+                    read -p "ID del Módulo base: " v_id_modulo
+                    
+                    if [ "$v_id_modulo" = "q" ] || [ -z "$v_id_modulo" ]; then
+                        break # Rompe el bucle principal de contenido y vuelve al menú CRUD
+                    fi
+
+                    # Validar que el módulo exista y obtener su nombre
+                    mod_nombre=$(sqlite3 "$DB_NAME" "SELECT nombre_modulo FROM modulos WHERE id_modulo='$v_id_modulo';")
+                    if [ -z "$mod_nombre" ]; then
+                        echo "Error: ID de Módulo no válido."
+                        sleep 2; continue
+                    fi
+
+                    # BUCLE INTERNO: Para quedarse dentro del mismo módulo si el usuario quiere
+                    while true; do
+                        clear
+                        echo "========================================="
+                        echo " MÓDULO SELECCIONADO: $mod_nombre"
+                        echo "========================================="
+                        echo "Contenido ya registrado en este módulo:"
+                        echo "-----------------------------------------"
+                        
+                        # 1. Mostrar contenido existente para no repetir
+                        con_check=$(sqlite3 "$DB_NAME" "SELECT count(*) FROM contenidos WHERE id_modulo=$v_id_modulo;")
+                        if [ "$con_check" -eq 0 ]; then
+                            echo "[ No hay contenido registrado aún ]"
+                        else
+                            sqlite3 "$DB_NAME" -column -header "SELECT tipo, titulo, estado FROM contenidos WHERE id_modulo=$v_id_modulo;"
+                        fi
+                        echo "========================================="
+                        
+                        # 2. Selección de Tipo de Contenido en formato de lista (vertical)
+                        echo "Selecciona el Tipo de Contenido:"
+                        echo "1) Video"
+                        echo "2) Lectura"
+                        echo "3) Laboratorio"
+                        echo "4) Volver a cambiar de Módulo"
+                        echo "-----------------------------------------"
+                        read -p "Selecciona una opción [1-4]: " v_tipo_opt
+                        
+                        case $v_tipo_opt in
+                            1) v_tipo="Video" ;;
+                            2) v_tipo="Lectura" ;;
+                            3) v_tipo="Laboratorio" ;;
+                            4) break ;; # Sale del bucle interno, permitiendo elegir otro módulo
+                            *) echo "Opción no válida"; sleep 1; continue ;;
+                        esac
+                        
+                        echo "-----------------------------------------"
+                        read -p "Título del Contenido (ej. El Candado Oxidado o Lesson 01): " v_titulo
+                        if [ -z "$v_titulo" ] || [ "$v_titulo" = "q" ]; then
+                            echo "Inserción cancelada."
+                            sleep 1; continue
+                        fi
+                        
+                        # 3. Guardar en la Base de Datos
+                        sqlite3 "$DB_NAME" "INSERT INTO contenidos (id_modulo, tipo, titulo) VALUES ($v_id_modulo, '$v_tipo', '$v_titulo');"
+                        echo "-----------------------------------------"
+                        echo "¡'$v_titulo' ($v_tipo) guardado con éxito!"
+                        echo "-----------------------------------------"
+                        
+                        # 4. Menú de decisión posterior en lista vertical
+                        echo "¿Qué deseas hacer ahora?"
+                        echo "1) Agregar más contenido a este mismo módulo ($mod_nombre)"
+                        echo "2) Volver a la lista de módulos / Salir"
+                        echo "-----------------------------------------"
+                        read -p "Selecciona una opción [1-2]: " v_sig_accion
+                        
+                        if [ "$v_sig_accion" != "1" ]; then
+                            break # Rompe el bucle de inserción continua y vuelve a la lista de módulos
+                        fi
+                    done
+                done
                 ;;
 
             5)
