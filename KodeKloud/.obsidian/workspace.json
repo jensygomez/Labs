@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 004 — \"Refuerzo y Consolidación\".md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "SIMULACRO LFCS 004 — \"Refuerzo y Consolidación\""
+              "title": "Laboratorios del LFCS"
             }
           }
         ]
@@ -203,15 +203,25 @@
   },
   "active": "56ed188fdf2f56d1",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
+    "mi-progreso/progreso.db-journal",
+    "mi-progreso/funciones/menu_crud.sh~",
+    "mi-progreso/progreso.db",
+    "mi-progreso/funciones/menu_schema.sh",
+    "mi-progreso/funciones/menu_progreso.sh",
+    "mi-progreso/funciones/menu_crud.sh",
+    "mi-progreso/funciones/db_init.sh",
+    "mi-progreso/progreso.sh",
+    "mi-progreso/funciones",
+    "mi-progreso",
+    "setup.sh",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 004 — \"Refuerzo y Consolidación\".md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 003 — \"La Auditoría de Seguridad\".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/006 - Bash Script/Lab - awk.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 002 — \"La Red Silenciosa\".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS  001 — \"El Servidor Olvidado\".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/LFCS Mock Exam 1.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/PROMT.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Docker/DK-003 - La Imagen Fantasma – Diagnóstico y Corrección de Dockerfile.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Operations Deployment/OD-005 - El Muro Invisible – Contextos SELinux y Políticas MAC.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Docker/Lab - Docker Images.md",
@@ -229,17 +239,7 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes/K8s playground lab context.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Docker/DK-005 - Puertas Abiertas – Reverse Proxy y Exposición Segura de Puertos.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Docker/DK-004 - El Guardián Caído – Healthchecks y Auto-Reparación.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Docker/Lista de Laboratorios Docker.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Vagrantfile",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes/setup_k8s001.sh",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes",
     "TCC/Discilinas POS.jpeg",
-    "crear-estructura.sh",
-    "TCC",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/vagrantfile",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Vagrant/vagrantfile",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Vagrant/vagrant",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Vagrant",
     "LINUX/00 - qui/Sem título.canvas",
     "Advanced Bash Scripting/01 - Introduction.canvas",
     "ChatGPT Image 19 de abr. de 2026, 07_59_54.png"
