@@ -154,10 +154,11 @@ seleccionar_o_crear() {
             case "$tabla" in
                 cursos)
                     # Los tags de un curso se heredan a todos sus módulos y lecciones
-                    local tags_nuevos
+                    local tags_nuevos siguiente_orden_curso
                     preguntar tags_nuevos "Tags para este curso (separados por coma, se heredan a módulos y lecciones; opcional): "
                     tags_nuevos=$(normalizar_tags "$tags_nuevos")
-                    db_exec "INSERT OR IGNORE INTO cursos (nombre_curso, tags) VALUES ('$nuevo_safe', '$tags_nuevos');"
+                    siguiente_orden_curso=$(db_scalar "SELECT COALESCE(MAX(orden),0)+1 FROM cursos;")
+                    db_exec "INSERT OR IGNORE INTO cursos (nombre_curso, tags, orden) VALUES ('$nuevo_safe', '$tags_nuevos', $siguiente_orden_curso);"
                     nuevo_id=$(db_scalar "SELECT id_curso FROM cursos WHERE nombre_curso='$nuevo_safe';")
                     ;;
                 modulos)

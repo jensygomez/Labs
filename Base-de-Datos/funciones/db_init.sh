@@ -20,7 +20,8 @@ inicializar_db() {
     CREATE TABLE IF NOT EXISTS cursos (
         id_curso INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre_curso TEXT NOT NULL UNIQUE,
-        tags TEXT DEFAULT ''
+        tags TEXT DEFAULT '',
+        orden INTEGER DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS path_cursos (

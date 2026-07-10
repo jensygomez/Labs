@@ -11,9 +11,10 @@ mostrar_menu_modificar() {
         echo "2) Curso"
         echo "3) Módulo"
         echo "4) Contenido"
-        echo "5) Reordenar Módulos"
-        echo "6) Reordenar Contenidos"
-        echo "7) Volver al Menú Principal"
+        echo "5) Reordenar Cursos"
+        echo "6) Reordenar Módulos"
+        echo "7) Reordenar Contenidos"
+        echo "8) Volver al Menú Principal"
         separador
         local opt
         preguntar opt "Selecciona una opción: "
@@ -22,9 +23,10 @@ mostrar_menu_modificar() {
             2) _modificar_generico cursos nombre_curso id_curso "Curso" ;;
             3) _modificar_modulo ;;
             4) _modificar_contenido ;;
-            5) _reordenar_modulos ;;
-            6) _reordenar_contenidos ;;
-            7) return ;;
+            5) _reordenar_cursos ;;
+            6) _reordenar_modulos ;;
+            7) _reordenar_contenidos ;;
+            8) return ;;
             *) error_msg "Opción inválida"; sleep 1 ;;
         esac
     done
@@ -139,13 +141,13 @@ _modificar_contenido() {
 # =========================================================
 _reordenar_generico() {
     local tabla="$1" columna="$2" id_columna="$3" etiqueta="$4"
-    local col_filtro="$5" val_filtro="$6"
+    local col_filtro="$5" val_filtro="$6" titulo_plural="$7"
     local where=""
     [ -n "$col_filtro" ] && where="WHERE $col_filtro=$val_filtro"
 
     while true; do
         clear
-        titulo "REORDENAR ${etiqueta}S"
+        titulo "REORDENAR ${titulo_plural:-$etiqueta}"
         local filas
         filas=$(db_row "SELECT ROW_NUMBER() OVER (ORDER BY orden, $id_columna), $id_columna, orden, $columna FROM $tabla $where;")
         declare -A mapa_id mapa_orden
@@ -200,13 +202,19 @@ _reordenar_generico() {
     done
 }
 
+_reordenar_cursos() {
+    clear
+    titulo "REORDENAR CURSOS"
+    _reordenar_generico cursos nombre_curso id_curso "Curso" "" "" "CURSOS"
+}
+
 _reordenar_modulos() {
     clear
     titulo "REORDENAR MÓDULOS"
     local id_curso
     id_curso=$(seleccionar_o_crear cursos nombre_curso id_curso "Curso")
     if [ -z "$id_curso" ]; then return; fi
-    _reordenar_generico modulos nombre_modulo id_modulo "Módulo" id_curso "$id_curso"
+    _reordenar_generico modulos nombre_modulo id_modulo "Módulo" id_curso "$id_curso" "MÓDULOS"
 }
 
 _reordenar_contenidos() {
@@ -220,5 +228,5 @@ _reordenar_contenidos() {
     local id_modulo
     id_modulo=$(seleccionar_o_crear modulos nombre_modulo id_modulo "Módulo" id_curso "$id_curso" "orden")
     if [ -z "$id_modulo" ]; then return; fi
-    _reordenar_generico contenidos titulo id_contenido "Contenido" id_modulo "$id_modulo"
+    _reordenar_generico contenidos titulo id_contenido "Contenido" id_modulo "$id_modulo" "CONTENIDOS"
 }
