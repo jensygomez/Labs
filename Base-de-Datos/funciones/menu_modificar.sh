@@ -20,7 +20,7 @@ mostrar_menu_modificar() {
         preguntar opt "Selecciona una opción: "
         case $opt in
             1) _modificar_generico paths nombre_path id_path "Path" ;;
-            2) _modificar_generico cursos nombre_curso id_curso "Curso" ;;
+            2) _modificar_curso ;;
             3) _modificar_modulo ;;
             4) _modificar_contenido ;;
             5) _reordenar_cursos ;;
@@ -69,11 +69,40 @@ _modificar_generico() {
     pausa
 }
 
+_modificar_curso() {
+    clear
+    titulo "MODIFICAR / ELIMINAR CURSO"
+    local id_curso
+    id_curso=$(seleccionar_o_crear cursos nombre_curso id_curso "Curso" "" "" "orden")
+    if [ -z "$id_curso" ]; then return; fi
+
+    echo "1) Cambiar nombre"
+    echo "2) Eliminar (borrado en cascada de todo lo asociado)"
+    local accion
+    preguntar accion "Selecciona [1-2]: "
+
+    if [ "$accion" = "1" ]; then
+        local nuevo_nombre nuevo_safe
+        preguntar nuevo_nombre "Nuevo nombre: "
+        if [ -n "$nuevo_nombre" ]; then
+            nuevo_safe=$(escapar_sql "$nuevo_nombre")
+            db_exec "UPDATE cursos SET nombre_curso='$nuevo_safe' WHERE id_curso=$id_curso;"
+            exito "Actualizado con éxito."
+        fi
+    elif [ "$accion" = "2" ]; then
+        if confirmar "¿Seguro que quieres eliminar este Curso y TODO lo asociado?"; then
+            db_exec "PRAGMA foreign_keys = ON; DELETE FROM cursos WHERE id_curso=$id_curso;"
+            exito "Curso eliminado."
+        fi
+    fi
+    pausa
+}
+
 _modificar_modulo() {
     clear
     titulo "MODIFICAR / ELIMINAR MÓDULO"
     local id_curso
-    id_curso=$(seleccionar_o_crear cursos nombre_curso id_curso "Curso")
+    id_curso=$(seleccionar_o_crear cursos nombre_curso id_curso "Curso" "" "" "orden")
     if [ -z "$id_curso" ]; then return; fi
 
     clear
@@ -212,7 +241,7 @@ _reordenar_modulos() {
     clear
     titulo "REORDENAR MÓDULOS"
     local id_curso
-    id_curso=$(seleccionar_o_crear cursos nombre_curso id_curso "Curso")
+    id_curso=$(seleccionar_o_crear cursos nombre_curso id_curso "Curso" "" "" "orden")
     if [ -z "$id_curso" ]; then return; fi
     _reordenar_generico modulos nombre_modulo id_modulo "Módulo" id_curso "$id_curso" "MÓDULOS"
 }
@@ -221,7 +250,7 @@ _reordenar_contenidos() {
     clear
     titulo "REORDENAR CONTENIDOS"
     local id_curso
-    id_curso=$(seleccionar_o_crear cursos nombre_curso id_curso "Curso")
+    id_curso=$(seleccionar_o_crear cursos nombre_curso id_curso "Curso" "" "" "orden")
     if [ -z "$id_curso" ]; then return; fi
     clear
     titulo "REORDENAR CONTENIDOS"

@@ -51,7 +51,7 @@ ver_estado_curso() {
     clear
     titulo "VER ESTADO DE UN CURSO"
     local id_curso
-    id_curso=$(seleccionar_o_crear cursos nombre_curso id_curso "Curso")
+    id_curso=$(seleccionar_o_crear cursos nombre_curso id_curso "Curso" "" "" "orden")
     if [ -z "$id_curso" ]; then return; fi
 
     local nombre_curso
@@ -92,7 +92,7 @@ _navegar_a_contenido() {
     local id_curso id_modulo id_contenido
 
     { clear; titulo "NAVEGAR"; } >&2
-    id_curso=$(seleccionar_o_crear cursos nombre_curso id_curso "Curso")
+    id_curso=$(seleccionar_o_crear cursos nombre_curso id_curso "Curso" "" "" "orden")
     [ -z "$id_curso" ] && return 1
 
     { clear; titulo "NAVEGAR"; } >&2

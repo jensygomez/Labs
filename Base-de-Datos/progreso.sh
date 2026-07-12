@@ -8,6 +8,7 @@ cd "$(dirname "$0")"
 source ./funciones/colores.sh
 source ./funciones/common.sh
 source ./funciones/db_init.sh
+source ./funciones/dashboard.sh
 source ./funciones/menu_contenido.sh
 source ./funciones/menu_progreso.sh
 source ./funciones/menu_modificar.sh
@@ -19,6 +20,7 @@ inicializar_db
 while true; do
     clear
     titulo "    SISTEMA DE SEGUIMIENTO DE ESTUDIO    "
+    mostrar_dashboard_resumen
     echo "1) Agregar Nuevo (Video/Lectura/Lab/Simulacro...)"
     echo "2) Mi Progreso (Rutas y Avances)"
     echo "3) Modificar / Eliminar"

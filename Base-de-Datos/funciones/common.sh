@@ -189,7 +189,7 @@ seleccionar_o_crear() {
             return 0
         else
             if [ -n "$orden_columna" ]; then
-                if [ -n "${mapa_num[$sel]}" ]; then
+                if [ -n "$sel" ] && [ -n "${mapa_num[$sel]}" ]; then
                     local id_real="${mapa_num[$sel]}"
                     unset mapa_num
                     echo "$id_real"

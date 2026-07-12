@@ -18,7 +18,7 @@ agregar_nuevo_contenido() {
     clear
     titulo "AGREGAR NUEVO CONTENIDO"
     local id_curso
-    id_curso=$(seleccionar_o_crear cursos nombre_curso id_curso "Curso")
+    id_curso=$(seleccionar_o_crear cursos nombre_curso id_curso "Curso" "" "" "orden")
     if [ -z "$id_curso" ]; then advertencia "Cancelado."; pausa; return; fi
 
     # Asegurar el vínculo curso <-> path (idempotente, no duplica)
