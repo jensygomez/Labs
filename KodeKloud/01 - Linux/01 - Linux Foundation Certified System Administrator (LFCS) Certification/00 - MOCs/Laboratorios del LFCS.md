@@ -75,47 +75,41 @@ tags:
 
 
 
-| Essential Comands                                                                                    | Tiempo Total todos los ciclos | **Fecha 1er Intento** |             Ciclos              |
-| ---------------------------------------------------------------------------------------------------- | :---------------------------: | :-------------------: | :-----------------------------: |
-| [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V1]] |            40 min             |     `05/06/2026`      | <input type="checkbox" checked> |
-| [[PG-004 - Automatización de respaldos, compresión y control de flujos (Tar e IO Redirection) - V2]] |            40 min             |     `09/06/2026`      | <input type="checkbox" checked> |
-| [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V1]]      |            50 min             |     `06/06/2026`      | <input type="checkbox" checked> |
-| [[PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V2]]      |            50 min             |     `10/06/2026`      | <input type="checkbox" checked> |
-| [[PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V1]]         |            30 min             |     `06/06/2026`      | <input type="checkbox" checked> |
-| [[PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V2]]         |            10 min             |     `14/06/2026`      | <input type="checkbox" checked> |
-| [[PG-007 - Triage de Incidente Mayor y Restauración de Servicios Críticos (Examen Integrador)]]      |                               |                       |                                 |
-| **Operations Deployments**                                                                           |                               |                       |                                 |
-| [[PG-001 - db-backup.service no inicia - V1]]                                                        |            15 min             |     `03/05/2026`      | <input type="checkbox" checked> |
-| [[PG-001 - db-backup.service no inicia - V2]]                                                        |            50 min             |     `11/06/2026`      | <input type="checkbox" checked> |
-| [[PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V1]]                       |            15 min             |     `03/06/2026`      | <input type="checkbox" checked> |
-| [[PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V2]]                       |            25 min             |     `11/06/2026`      | <input type="checkbox" checked> |
-| [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V1]]                                   |            30 min             |     `03/06/2026`      | <input type="checkbox" checked> |
-| [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V2]]                                   |            15 min             |     `10/06/2026`      | <input type="checkbox" checked> |
-| [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V1]]                   |            40 min             |     `05/06/2026`      | <input type="checkbox" checked> |
-| [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V2]]                   |                               |                       |                                 |
-| [[PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad) - V1]]                |            35 min             |     `06/06/2026`      | <input type="checkbox" checked> |
-| [[PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad) - V2]]                |                               |                       |                                 |
-| [[PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel) - V1]]  |            30 min             |     `07/06/2026`      | <input type="checkbox" checked> |
-| [[PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel) - V2]]  |                               |                       |                                 |
-| [[PG-007 - Contenedor web inaccesible (Podman, SELinux y Redes) - V1]]                               |            40 min             |     `07/06/2026`      | <input type="checkbox" checked> |
-| [[PG-007 - Contenedor web inaccesible (Podman, SELinux y Redes) - V2]]                               |                               |                       |                                 |
-| [[PG-008 -Incidente mayor en producción (Simulación de Examen Integrador)]]                          |                               |                       |                                 |
-| **Users and Groups**                                                                                 |                               |                       |                                 |
-| [[X - PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V1]]                      |            15 min             |      `04/06/26`       | <input type="checkbox" checked> |
-| [[X - PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V2]]                      |            30 min             |     `13/06/2026`      | <input type="checkbox" checked> |
-| [[X - PG-002 - Perfiles de entorno del sistema y límites de recursos - V1]]                          |            20 min             |     `05/06/2026`      | <input type="checkbox" checked> |
-| [[X - PG-002 - Perfiles de entorno del sistema y límites de recursos - V2]]                          |                               |                       |                                 |
-| [[X - PG-003 - Gestión de privilegios y control de acceso (Sudoers, PAM y NSSwitch) - V1]]           |                               |                       |                                 |
-| [[X - PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora)]]             |                               |                       |                                 |
-| **Networking**                                                                                       |                               |                       |                                 |
-| [[PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1]]                          |                               |                       |                                 |
-| **Bash Avanzado**                                                                                    |                               |                       |                                 |
-| [[PG-BASH-001 - Inventario automático de servidores - V1]]                                           |            50 min             |     `06/06/2026`      | <input type="checkbox" checked> |
-| [[PG-BASH-001 - Inventario automático de servidores - V2]]                                           |                               |                       |                                 |
-| [[PG-BASH-002 - Rotación y compresión de logs - V1]]                                                 |                               |                       |                                 |
-|                                                                                                      |          810 minutos          |                       |                                 |
-|                                                                                                      |        **13:30 Horas**        |                       |                                 |
-|                                                                                                      |                               |                       |                                 |
+| Essential Comands                                                                                   | Tiempo Total todos los ciclos | **Fecha 1er Intento** |             Ciclos              |
+| --------------------------------------------------------------------------------------------------- | :---------------------------: | :-------------------: | :-----------------------------: |
+| [[PG-007 - Triage de Incidente Mayor y Restauración de Servicios Críticos (Examen Integrador)]]     |                               |                       |                                 |
+| **Operations Deployments**                                                                          |                               |                       |                                 |
+| [[PG-001 - db-backup.service no inicia - V1]]                                                       |            15 min             |     `03/05/2026`      | <input type="checkbox" checked> |
+| [[PG-001 - db-backup.service no inicia - V2]]                                                       |            50 min             |     `11/06/2026`      | <input type="checkbox" checked> |
+| [[PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V1]]                      |            15 min             |     `03/06/2026`      | <input type="checkbox" checked> |
+| [[PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V2]]                      |            25 min             |     `11/06/2026`      | <input type="checkbox" checked> |
+| [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V1]]                                  |            30 min             |     `03/06/2026`      | <input type="checkbox" checked> |
+| [[PG-003 - Backup automático no se ejecuta (Systemd Timers) - V2]]                                  |            15 min             |     `10/06/2026`      | <input type="checkbox" checked> |
+| [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V1]]                  |            40 min             |     `05/06/2026`      | <input type="checkbox" checked> |
+| [[PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V2]]                  |                               |                       |                                 |
+| [[PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad) - V1]]               |            35 min             |     `06/06/2026`      | <input type="checkbox" checked> |
+| [[PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad) - V2]]               |                               |                       |                                 |
+| [[PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel) - V1]] |            30 min             |     `07/06/2026`      | <input type="checkbox" checked> |
+| [[PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel) - V2]] |                               |                       |                                 |
+| [[PG-007 - Contenedor web inaccesible (Podman, SELinux y Redes) - V1]]                              |            40 min             |     `07/06/2026`      | <input type="checkbox" checked> |
+| [[PG-007 - Contenedor web inaccesible (Podman, SELinux y Redes) - V2]]                              |                               |                       |                                 |
+| [[PG-008 -Incidente mayor en producción (Simulación de Examen Integrador)]]                         |                               |                       |                                 |
+| **Users and Groups**                                                                                |                               |                       |                                 |
+| [[X - PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V1]]                     |            15 min             |      `04/06/26`       | <input type="checkbox" checked> |
+| [[X - PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V2]]                     |            30 min             |     `13/06/2026`      | <input type="checkbox" checked> |
+| [[X - PG-002 - Perfiles de entorno del sistema y límites de recursos - V1]]                         |            20 min             |     `05/06/2026`      | <input type="checkbox" checked> |
+| [[X - PG-002 - Perfiles de entorno del sistema y límites de recursos - V2]]                         |                               |                       |                                 |
+| [[X - PG-003 - Gestión de privilegios y control de acceso (Sudoers, PAM y NSSwitch) - V1]]          |                               |                       |                                 |
+| [[X - PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora)]]            |                               |                       |                                 |
+| **Networking**                                                                                      |                               |                       |                                 |
+| [[PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1]]                         |                               |                       |                                 |
+| **Bash Avanzado**                                                                                   |                               |                       |                                 |
+| [[PG-BASH-001 - Inventario automático de servidores - V1]]                                          |            50 min             |     `06/06/2026`      | <input type="checkbox" checked> |
+| [[PG-BASH-001 - Inventario automático de servidores - V2]]                                          |                               |                       |                                 |
+| [[PG-BASH-002 - Rotación y compresión de logs - V1]]                                                |                               |                       |                                 |
+|                                                                                                     |          810 minutos          |                       |                                 |
+|                                                                                                     |        **13:30 Horas**        |                       |                                 |
+|                                                                                                     |                               |                       |                                 |
 
 
 
