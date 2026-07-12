@@ -77,9 +77,6 @@ tags:
 
 | Essential Comands                                                                                     | Tiempo Total todos los ciclos | **Fecha 1er Intento** |             Ciclos              |
 | ----------------------------------------------------------------------------------------------------- | :---------------------------: | :-------------------: | :-----------------------------: |
-| [[PG-001 - Estructuras de archivos complejas y consistencia de Inodos - V1]]                          |            20 min             |     `04/06/2026`      | <input type="checkbox" checked> |
-| [[PG-001 - Estructuras de archivos complejas y consistencia de Inodos - V2]]                          |            30 min             |     `09/06/2026`      | <input type="checkbox" checked> |
-| [[PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit) - V1]] |            20 min             |     `04/06/2026`      | <input type="checkbox" checked> |
 | [[PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit) - V2]] |            30 min             |     `09/06/2026`      | <input type="checkbox" checked> |
 | [[PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V1]]               |            40 min             |     `05/06/2026`      | <input type="checkbox" checked> |
 | [[PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V2]]               |            40 min             |     `09/06/2026`      | <input type="checkbox" checked> |
