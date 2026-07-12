@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes/K8S-002 - La Imagen Perdida -> ImagePullBackOff por Typo.md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "K8S-002 - La Imagen Perdida -> ImagePullBackOff por Typo"
+              "title": "Laboratorios del LFCS"
             }
           }
         ]
@@ -203,6 +203,8 @@
   },
   "active": "56ed188fdf2f56d1",
   "lastOpenFiles": [
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/LFCS Certification.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes/K8S-002 - La Imagen Perdida -> ImagePullBackOff por Typo.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/00 - MOCs/Laboratorios del LFCS.md",
     "mi-progreso/progreso.db-journal",
     "mi-progreso/funciones/menu_crud.sh~",
@@ -237,7 +239,6 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes/K8S-004 - La App que No Lee su Configuración --> ConfigMap no montado por nombre incorrecto.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/008 - Kubernetes/K8s playground lab context.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Docker/DK-005 - Puertas Abiertas – Reverse Proxy y Exposición Segura de Puertos.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/007 - Docker/DK-004 - El Guardián Caído – Healthchecks y Auto-Reparación.md",
     "TCC/Discilinas POS.jpeg",
     "LINUX/00 - qui/Sem título.canvas",
     "Advanced Bash Scripting/01 - Introduction.canvas",
