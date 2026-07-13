@@ -1,83 +1,57 @@
 Module,Title,Difficulty,Level,Duration,Date
-Essential Commands,Lab: EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema,5,L2,40,2026-06-30
-Essential Commands,Lab: EC-002 - La Estructura Colapsada – Gestión Avanzada de Archivos y Enlaces,6,L2,40,2026-06-30
-Essential Commands,Lab: EC-003 - El Permiso Prohibido – Control de Acceso y Bits Especiales,6,L2,40,2026-06-30
-Essential Commands,Lab: EC-004 - La Aguja en el Pajar – Búsqueda Filtrado y Expresiones Regulares,6,L2,40,2026-06-30
-Essential Commands,Lab: EC-005 - El Flujo Roto – Redirección I and O y Pipelines Complejos,6,L2,40,2026-06-30
-Essential Commands,Lab: EC-006 - El Respaldo Olvidado – Compresión Archivado y Transferencia Remota,6,L2,40,2026-06-30
-Essential Commands,Lab: PG-001 - Estructuras de archivos complejas y consistencia de Inodos - V1,5,L2,40,2026-06-30
-Essential Commands,Lab: PG-001 - Estructuras de archivos complejas y consistencia de Inodos - V2,6,L2,50,2026-06-30
-Essential Commands,Lab: PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID SGID Sticky Bit) - V1,5,L2,40,2026-06-30
-Essential Commands,Lab: PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID SGID Sticky Bit) - V2,6,L2,50,2026-06-30
-Essential Commands,Lab: PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find Grep y Regex) - V1,5,L2,40,2026-06-30
-Essential Commands,Lab: PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find Grep y Regex) - V2,6,L2,50,2026-06-30
-Essential Commands,Lab: PG-004 - Automatización de respaldos compresión y control de flujos (Tar e IO Redirection) - V1,5,L2,40,2026-06-30
-Essential Commands,Lab: PG-004 - Automatización de respaldos compresión y control de flujos (Tar e IO Redirection) - V2,6,L2,50,2026-06-30
-Essential Commands,Lab: PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V1,6,L2,50,2026-06-30
-Essential Commands,Lab: PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V2,7,L2,60,2026-06-30
-Essential Commands,Lab: PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V1,5,L2,40,2026-06-30
-Essential Commands,Lab: PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V2,6,L2,50,2026-06-30
-Essential Commands,Lab: PG-007 - Triage de Incidente Mayor y Restauración de Servicios Críticos (Examen Integrador),7,L2,60,2026-06-30
-Operations Deployment,Lab: OD-001 - El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro - V1.0,6,L2,40,2026-06-30
-Operations Deployment,Lab: OD-002 - El Servicio Zombi – Diagnóstico de Procesos y Creación de Units systemd - V1.0,7,L2,40,2026-06-30
-Operations Deployment,Lab: OD-003 - Sintonizando el Núcleo – Parámetros del Kernel y Análisis Forense de Logs - V1.0,7,L2,40,2026-06-30
-Operations Deployment,Lab: OD-004 - Dependencias Huérfanas – Repositorios Paquetes y Compilación desde Fuente,6,L2,40,2026-06-30
-Operations Deployment,Lab: OD-005 - El Muro Invisible – Contextos SELinux y Políticas MAC,6,L2,40,2026-06-30
-Operations Deployment,Lab: PG-001 - db-backup.service no inicia - V1,5,L2,40,2026-06-30
-Operations Deployment,Lab: PG-001 - db-backup.service no inicia - V2,6,L2,50,2026-06-30
-Operations Deployment,Lab: PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V1,5,L2,40,2026-06-30
-Operations Deployment,Lab: PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V2,5,L2,40,2026-06-30
-Operations Deployment,Lab: PG-003 - Backup automático no se ejecuta (Systemd Timers) - V1,5,L2,40,2026-06-30
-Operations Deployment,Lab: PG-003 - Backup automático no se ejecuta (Systemd Timers) - V2,5,L2,40,2026-06-30
-Operations Deployment,Lab: PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V1,6,L2,40,2026-06-30
-Operations Deployment,Lab: PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V2,6,L2,50,2026-06-30
-Operations Deployment,Lab: PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad) - V1,6,L2,40,2026-06-30
-Operations Deployment,Lab: PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad) - V2,6,L2,50,2026-06-30
-Operations Deployment,Lab: PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel) - V1,6,L2,40,2026-06-30
-Operations Deployment,Lab: PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel) - V2,6,L2,50,2026-06-30
-Operations Deployment,Lab: PG-007 - Contenedor web inaccesible (Podman SELinux y Redes) - V1,6,L2,40,2026-06-30
-Operations Deployment,Lab: PG-007 - Contenedor web inaccesible (Podman SELinux y Redes) - V2,6,L2,50,2026-06-30
-Operations Deployment,Lab: PG-008 - Incidente mayor en producción (Simulación de Examen Integrador),7,L2,60,2026-06-30
-Users and Groups,Lab: PG-001 - Provisión de cuentas de usuario y plantillas corporativas,5,L2,40,2026-06-30
-Users and Groups,Lab: PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V1,5,L2,40,2026-06-30
-Users and Groups,Lab: PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V2,6,L2,50,2026-06-30
-Users and Groups,Lab: PG-002 - Perfiles de entorno del sistema y límites de recursos - V1,5,L2,40,2026-06-30
-Users and Groups,Lab: PG-002 - Perfiles de entorno del sistema y límites de recursos - V2,6,L2,50,2026-06-30
-Users and Groups,Lab: PG-003 - Gestión de privilegios y control de acceso (Sudoers PAM y NSSwitch),6,L2,40,2026-06-30
-Users and Groups,Lab: PG-003 - Gestión de privilegios y control de acceso (Sudoers PAM y NSSwitch) - V1,6,L2,50,2026-06-30
-Users and Groups,Lab: PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora),6,L2,50,2026-06-30
-Users and Groups,Lab: USR-001 - El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración,7,L2,40,2026-06-30
-Users and Groups,Lab: USR-002 - El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0,7,L2,40,2026-06-30
-Users and Groups,Lab: USR-003 - La Bomba de Tenedores (Fork Bomb) – Límites de Recursos de Usuario,8,L2,40,2026-06-30
-Users and Groups,Lab: USR-004 - Las Llaves del Reino – Gestión de Acceso SSH y Autenticación por Claves - V1.0,6,L2,40,2026-06-30
-Users and Groups,Lab: USR-005 - Cerrando la Puerta Grande – SSH Hardening Básico en node02,6,L2,40,2026-06-30
-Networking,Lab: NET-001 - El Candado Oxidado – Bloqueo de Acceso SSH y Resolución de Nombres,6,L2,40,2026-06-30
-Networking,Lab: NET-002 - La Paradoja Temporal – Deriva de Reloj y Fallo de Autenticación en Clúster,6,L2,60,2026-06-30
-Networking,Lab: NET-003 - La Interfaz Fantasma – Fallo en el Levantamiento de Interfaces y Enrutamiento - V1.0,7,L2,40,2026-06-30
-Networking,Lab: NET-004 - El Muro Ciego – Reglas de Firewall Bloquean Tráfico Legítimo,6,L2,40,2026-06-30
-Networking,Lab: NET-005 - El Túnel Torcido – Fallo en Redirección de Puertos (DNAT) y Enmascaramiento (SNAT),6,L2,50,2026-06-30
-Networking,Lab: PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1,5,L2,40,2026-06-30
-Storage,Lab: STG-001 - El Disco Olvidado – Particionamiento Filesystems y Montaje Persistente,6,L2,40,2026-06-30
-Storage,Lab: STG-002 - El Laberinto LVM – Volúmenes Lógicos que No Montan y VG Fragmentado - V1.0,7,L2,40,2026-06-30
-Storage,Lab: STG-003 - La Montaña Rusa de IO – Monitoreo de Performance y Cuellos de Botella - V1.0,7,L2,40,2026-06-30
-Storage,Lab: STG-004 - El Puente Roto – NFS Server and Client y Exportaciones con Restricciones,6,L2,40,2026-06-30
-Storage,Lab: STG-005 - Los Permisos Rebeldes – ACLs SGID y Sticky Bit en Directorios Compartidos,6,L2,40,2026-06-30
-Bash Script,Lab: BS-001 - El Eco Silencioso – Variables y Redirecciones,2,L2,40,2026-06-30
-Bash Script,Lab: BS-002 - El Portero Lógico – Condicionales y Validaciones,3,L2,40,2026-06-30
-Bash Script,Lab: BS-003 - La Fábrica de Usuarios – Bucles y Archivos,4,L2,80,2026-06-30
-Bash Script,Lab: BS-004 - El Cazador de Logs – Parseo con Grep y Awk,3,L2,40,2026-06-30
-Bash Script,Lab: BS-005 - El Guardián del Cron – Automatización y Manejo de Errores,4,L2,40,2026-06-30
-Docker,Lab: DK-001 - El Contenedor Reincidente Fallo de Persistencia y Entorno,5,L2,40,2026-06-30
-Docker,Lab: DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red,6,L2,40,2026-06-30
-Docker,Lab: DK-003 - La Imagen Fantasma – Diagnóstico y Corrección de Dockerfile,6,L2,40,2026-06-30
-Docker,Lab: DK-004 - El Guardián Caído – Healthchecks y Auto-Reparación,6,L2,40,2026-06-30
-Docker,Lab: DK-005 - Puertas Abiertas – Reverse Proxy y Exposición Segura de Puertos,6,L2,40,2026-06-30
-Kubernetes,Lab: K8S-001 - El Pod Fantasma - Namespace Incorrecto,3,L2,40,2026-06-30
-Kubernetes,Lab: K8S-002 - La Imagen Perdida - ImagePullBackOff por Typo,3,L2,40,2026-06-30
-Kubernetes,Lab: K8S-003 - El Servicio Fantasma - Service sin Endpoints por Selector Mismatch,4,L2,40,2026-06-30
-Kubernetes,Lab: K8S-004 - La App que No Lee su Configuración - ConfigMap no montado por nombre incorrecto,4,L2,40,2026-06-30
-Kubernetes,Lab: K8S-005 - El Pod Atrapado en Pending - Resource Requests Exceden Capacidad del Nodo,4,L2,40,2026-06-30
-Simulacros,Lab: SIMULACRO LFCS 001 - El Servidor Olvidado,3,L2,40,2026-06-30
-Simulacros,Lab: SIMULACRO LFCS 002 - La Red Silenciosa,3,L2,40,2026-06-30
-Simulacros,Lab: SIMULACRO LFCS 003 - La Auditoría de Seguridad,3,L2,50,2026-06-30
-Simulacros,Lab: SIMULACRO LFCS 004 - Refuerzo y Consolidación,6,L2,50,2026-06-30
+Introduction,Introduction,1,L1,3,2026-07-13
+Introduction,How to Reach Out to KodeKloud and Engage with the Community,1,L1,3,2026-07-13
+Kubernetes Overview,Containers Overview,2,L1,14,2026-07-13
+Kubernetes Overview,Container Orchestration,2,L1,4,2026-07-13
+Kubernetes Overview,Kubernetes Architecture,3,L1,7,2026-07-13
+Kubernetes Overview,Docker-vs-ContainerD,2,L1,14,2026-07-13
+Kubernetes Overview,A Note on Docker Deprecation,1,L1,3,2026-07-13
+Kubernetes Overview,Lab: Familiarize with Lab Environment,3,L1,20,2026-07-13
+Kubernetes Overview,A Quick Reminder,1,L1,2,2026-07-13
+Kubernetes Concepts,Kubernetes Setup - Introduction and Minikube,2,L1,5,2026-07-13
+Kubernetes Concepts,Demo - Minikube-Setup,3,L1,16,2026-07-13
+Kubernetes Concepts,Pods,3,L1,10,2026-07-13
+Kubernetes Concepts,Demo - Pods,3,L1,5,2026-07-13
+Kubernetes Concepts,A note about creating Pods,2,L1,3,2026-07-13
+YAML Introduction,Introduction to YAML,2,L1,8,2026-07-13
+YAML Introduction,Lab: YAML,3,L1,20,2026-07-13
+Kubernetes Concepts - Pods ReplicaSets Deployments,Pods with YAML,3,L1,7,2026-07-13
+Kubernetes Concepts - Pods ReplicaSets Deployments,Demo - Pods with YAML,3,L1,7,2026-07-13
+Kubernetes Concepts - Pods ReplicaSets Deployments,Demo - YAML - Tips,3,L1,18,2026-07-13
+Kubernetes Concepts - Pods ReplicaSets Deployments,Lab: Pods with YAML,4,L1,20,2026-07-13
+Kubernetes Concepts - Pods ReplicaSets Deployments,Lab Solution,3,L1,12,2026-07-13
+Kubernetes Concepts - Pods ReplicaSets Deployments,Replication Controllers and ReplicaSets,3,L1,17,2026-07-13
+Kubernetes Concepts - Pods ReplicaSets Deployments,Demo - ReplicaSets,3,L1,14,2026-07-13
+Kubernetes Concepts - Pods ReplicaSets Deployments,Lab: Replica Sets,4,L1,20,2026-07-13
+Kubernetes Concepts - Pods ReplicaSets Deployments,Lab Solution,3,L1,15,2026-07-13
+Kubernetes Concepts - Pods ReplicaSets Deployments,Deployments,3,L1,5,2026-07-13
+Kubernetes Concepts - Pods ReplicaSets Deployments,Demo: Deployments,3,L1,5,2026-07-13
+Kubernetes Concepts - Pods ReplicaSets Deployments,Lab: Deployments,4,L1,20,2026-07-13
+Kubernetes Concepts - Pods ReplicaSets Deployments,Lab Solution,3,L1,8,2026-07-13
+Kubernetes Concepts - Pods ReplicaSets Deployments,Deployments - Update and Rollback,3,L1,7,2026-07-13
+Kubernetes Concepts - Pods ReplicaSets Deployments,Demo - Deployments - Update and Rollback,3,L1,15,2026-07-13
+Kubernetes Concepts - Pods ReplicaSets Deployments,Lab: Practice Test Rolling Updates and Rollbacks,4,L1,20,2026-07-13
+Kubernetes Concepts - Pods ReplicaSets Deployments,Lab Solution,3,L1,10,2026-07-13
+Networking in Kubernetes,Basics of Networking in Kubernetes,3,L1,6,2026-07-13
+Services,Services - NodePort,3,L1,14,2026-07-13
+Services,Demo - Services,3,L1,5,2026-07-13
+Services,Services - ClusterIP,3,L1,4,2026-07-13
+Services,Services - Load balancer,3,L1,4,2026-07-13
+Services,Lab: Services,4,L1,20,2026-07-13
+Services,Lab Solution,3,L1,10,2026-07-13
+Microservices Architecture,Microservices Architecture,3,L1,8,2026-07-13
+Microservices Architecture,Deploying voting app on Kubernetes,4,L1,9,2026-07-13
+Microservices Architecture,Demo - Deploying voting app on Kubernetes,4,L1,21,2026-07-13
+Microservices Architecture,Demo - Deploying voting app on Kubernetes with Deployments,4,L1,11,2026-07-13
+Microservices Architecture,A Note for the Previous Demo,2,L1,3,2026-07-13
+Kubernetes on the Cloud,Section Introduction,2,L1,4,2026-07-13
+Kubernetes on the Cloud,Kubernetes on GCP (GKE),4,L1,9,2026-07-13
+Kubernetes on the Cloud,Kubernetes on AWS (EKS),4,L1,10,2026-07-13
+Kubernetes on the Cloud,Kubernetes on Azure (AKS),4,L1,7,2026-07-13
+Conclusion,Conclusion,1,L1,2,2026-07-13
+Appendix,Kubernetes Setup - Kubeadm,3,L1,3,2026-07-13
+Appendix,Demo - Setting Up Virtual Machines on Windows,3,L1,6,2026-07-13
+Appendix,Demo - Setting Up Virtual Machines on Mac,3,L1,25,2026-07-13
+Appendix,Demo - Kubeadm - Configuring Cluster With Kubeadm,4,L1,20,2026-07-13
+Appendix,References,1,L1,2,2026-07-13
+Appendix,Kubernetes Update and Project Videos - Your Essential Guide,2,L1,3,2026-07-13
