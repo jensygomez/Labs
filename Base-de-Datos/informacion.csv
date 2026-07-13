@@ -1,64 +1,75 @@
-Title,Difficulty,Level,Duration,Date
-LFCS Mock Exam 1,6,L2,100,2026-07-06
-SIMULACRO LFCS 001 - El Servidor Olvidado,3,L2,30,2026-07-07
-SIMULACRO LFCS 002 - La Red Silenciosa,3,L2,30,2026-07-07
-SIMULACRO LFCS 003 - La Auditoría de Seguridad,3,L2,50,2026-07-08
-EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema,5,L2,40,2026-06-14
-EC-002 - La Estructura Colapsada – Gestión Avanzada de Archivos y Enlaces,6,L2,30,2026-06-16
-EC-003 - El Permiso Prohibido – Control de Acceso y Bits Especiales,6,L2,40,2026-06-16
-EC-004 - La Aguja en el Pajar – Búsqueda Filtrado y Expresiones Regulares,6,L2,50,2026-06-21
-EC-005 - El Flujo Roto – Redirección I and O y Pipelines Complejos,6,L2,30,2026-06-28
-EC-006 - El Respaldo Olvidado – Compresión Archivado y Transferencia Remota,6,L2,40,2026-07-02
-OD-001 - El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro - V1.0,6,L2,40,2026-06-15
-OD-002 - El Servicio Zombi – Diagnóstico de Procesos y Creación de Units systemd - V1.0,7,L2,40,2026-06-16
-OD-003 - Sintonizando el Núcleo – Parámetros del Kernel y Análisis Forense de Logs - V1.0,7,L3,40,2026-06-17
-OD-004 - Dependencias Huérfanas – Repositorios Paquetes y Compilación desde Fuente,6,L2,40,2026-06-21
-OD-005 - El Muro Invisible – Contextos SELinux y Políticas MAC,6,L2,30,2026-06-29
-USR-001 - El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración,7,L2,40,2026-06-11
-USR-002 - El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0,7,L2,40,2026-06-15
-USR-003 - La Bomba de Tenedores (Fork Bomb) – Límites de Recursos de Usuario,8,L3,20,2026-06-17
-USR-004 - Las Llaves del Reino – Gestión de Acceso SSH y Autenticación por Claves - V1.0,6,L2,30,2026-06-22
-USR-005 - Cerrando la Puerta Grande – SSH Hardening Básico en node02,6,L2,30,2026-06-29
-NET-001 - El Candado Oxidado – Bloqueo de Acceso SSH y Resolución de Nombres,6,L2,30,2026-06-11
-NET-002 - La Paradoja Temporal – Deriva de Reloj y Fallo de Autenticación en Clúster,6,L2,60,2026-06-15
-NET-003 - La Interfaz Fantasma – Fallo en el Levantamiento de Interfaces y Enrutamiento - V1.0,7,L2,30,2026-06-18
-NET-004 - El Muro Ciego – Reglas de Firewall Bloquean Tráfico Legítimo,6,L2,40,2026-06-23
-NET-005 - El Túnel Torcido – Fallo en Redirección de Puertos (DNAT) y Enmascaramiento (SNAT),6,L2,50,2026-06-30
-STG-001 - El Disco Olvidado – Particionamiento Filesystems y Montaje Persistente,6,L2,40,2026-06-14
-STG-002 - El Laberinto LVM – Volúmenes Lógicos que No Montan y VG Fragmentado - V1.0,7,L2,40,2026-06-16
-STG-003 - La Montaña Rusa de IO – Monitoreo de Performance y Cuellos de Botella - V1.0,7,L3,40,2026-06-18
-STG-004 - El Puente Roto – NFS Server and Client y Exportaciones con Restricciones,6,L2,40,2026-06-24
-STG-005 - Los Permisos Rebeldes – ACLs SGID y Sticky Bit en Directorios Compartidos,6,L2,40,2026-07-01
-BS-001 - El Eco Silencioso – Variables y Redirecciones,2,L1,30,2026-06-13
-BS-002 - El Portero Lógico – Condicionales y Validaciones,3,L1,30,2026-06-15
-BS-003 - La Fábrica de Usuarios – Bucles y Archivos,4,L2,80,2026-06-19
-BS-004 - El Cazador de Logs – Parseo con Grep y Awk,3,L1,30,2026-06-25
-BS-005 - El Guardián del Cron – Automatización y Manejo de Errores,4,L1,40,2026-07-01
-DK-001 - El Contenedor Reincidente Fallo de Persistencia y Entorno,5,L1,20,2026-06-11
-DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red,6,L2,40,2026-06-12
-DK-003 - La Imagen Fantasma – Diagnóstico y Corrección de Dockerfile,6,L2,40,2026-06-19
-DK-004 - El Guardián Caído – Healthchecks y Auto-Reparación,6,L2,40,2026-06-26
-DK-005 - Puertas Abiertas – Reverse Proxy y Exposición Segura de Puertos,6,L2,30,2026-07-02
-K8S-001 - El Pod Fantasma -> Namespace Incorrecto,3,L1,20,2026-06-23
-K8S-002 - La Imagen Perdida -> ImagePullBackOff por Typo,3,L1,20,2026-06-24
-K8S-003 - El Servicio Fantasma --> Service sin Endpoints por Selector Mismatch,4,L1,20,2026-06-26
-K8S-004 - La App que No Lee su Configuración --> ConfigMap no montado por nombre incorrecto,4,L1,20,2026-06-28
-K8S-005 - El Pod Atrapado en Pending - Resource Requests Exceden Capacidad del Nodo,4,L1,20,2026-07-02
-PG-001 - db-backup.service no inicia - V1,5,L1,15,2026-05-03
-PG-001 - db-backup.service no inicia - V2,6,L2,50,2026-06-11
-PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V1,5,L1,15,2026-06-03
-PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V2,5,L2,25,2026-06-11
-PG-003 - Backup automático no se ejecuta (Systemd Timers) - V1,5,L2,30,2026-06-03
-PG-003 - Backup automático no se ejecuta (Systemd Timers) - V2,5,L1,15,2026-06-10
-PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V1,6,L2,40,2026-06-05
-PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad) - V1,6,L2,40,2026-06-06
-PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel) - V1,6,L2,30,2026-06-07
-PG-007 - Contenedor web inaccesible (Podman SELinux y Redes) - V1,6,L2,40,2026-06-07
-PG-001 - Provisión de cuentas de usuario y plantillas corporativas,5,L1,15,2026-06-04
-PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V2,6,L2,30,2026-06-13
-PG-002 - Perfiles de entorno del sistema y límites de recursos - V1,5,L1,20,2026-06-05
-PG-002 - Perfiles de entorno del sistema y límites de recursos - V2,6,L2,30,2026-06-06
-PG-003 - Gestión de privilegios y control de acceso (Sudoers PAM y NSSwitch),6,L2,30,2026-06-06
-PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora),6,L2,30,2026-06-07
-PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1,5,L2,20,2026-06-05
-PG-BASH-001 - Inventario automático de servidores - V1,6,L2,50,2026-06-06
+Module,Title,Difficulty,Level,Duration,Date
+Introduction,Course Introduction,2,L1,11,2026-07-13
+Introduction,Important Note to Learners,1,L1,2,2026-07-13
+Introduction,WAR! (story),2,L1,2,2026-07-13
+Introduction,Bobs first day at work,2,L1,13,2026-07-13
+Introduction,How to Reach Out to KodeKloud and Engage with the Community,1,L1,3,2026-07-13
+Working with Shell - I,Introduction to Shell,2,L1,8,2026-07-13
+Working with Shell - I,Multiple Choice Quiz - Introduction to Shell,1,L1,5,2026-07-13
+Working with Shell - I,Basic Linux Commands,3,L1,17,2026-07-13
+Working with Shell - I,Command-line Help,2,L1,2,2026-07-13
+Working with Shell - I,Lab Introduction,1,L1,3,2026-07-13
+Working with Shell - I,Lab: Working with the Shell,3,L1,20,2026-07-13
+Working with Shell - I,Bash Shell,3,L1,10,2026-07-13
+Working with Shell - I,Lab: Linux Bash Prompt,3,L1,20,2026-07-13
+Working with Shell - I,Download Presentation Deck,1,L1,2,2026-07-13
+Linux Core Concepts,Bobs first team meeting,2,L1,11,2026-07-13
+Linux Core Concepts,Linux Kernel,3,L1,10,2026-07-13
+Linux Core Concepts,Working with Hardware,3,L1,11,2026-07-13
+Linux Core Concepts,Lab: Linux Kernel,4,L1,20,2026-07-13
+Linux Core Concepts,Linux Boot Sequence,3,L1,5,2026-07-13
+Linux Core Concepts,Runlevels,2,L1,4,2026-07-13
+Linux Core Concepts,Article: Runlevels,2,L1,5,2026-07-13
+Linux Core Concepts,File Types,2,L1,5,2026-07-13
+Linux Core Concepts,Filesystem Hierarchy,2,L1,4,2026-07-13
+Linux Core Concepts,Lab: Linux kernel Modules Boot and Filetypes,4,L1,20,2026-07-13
+Package Management,Package Management Introduction,2,L1,8,2026-07-13
+Package Management,RPM and YUM,3,L1,9,2026-07-13
+Package Management,Lab: YUM and RPM,4,L1,20,2026-07-13
+Package Management,DPKG and APT,3,L1,5,2026-07-13
+Package Management,APT vs APT-GET,2,L1,2,2026-07-13
+Package Management,Lab - DPKG and APT,4,L1,20,2026-07-13
+Working with Shell - II,Behind Schedule!,2,L1,4,2026-07-13
+Working with Shell - II,File Compression and Archival,3,L1,4,2026-07-13
+Working with Shell - II,Searching for Files and Patterns,3,L1,7,2026-07-13
+Working with Shell - II,IO Redirection,3,L1,5,2026-07-13
+Working with Shell - II,Lab: Working with Shell II,4,L1,20,2026-07-13
+Working with Shell - II,VI Editor,3,L1,9,2026-07-13
+Working with Shell - II,Lab - VI Editor,4,L1,20,2026-07-13
+Networking,The network Issue,2,L1,5,2026-07-13
+Networking,DNS,3,L1,18,2026-07-13
+Networking,Lab: DNS,4,L1,20,2026-07-13
+Networking,Networking Basics,3,L1,8,2026-07-13
+Networking,Lab: Network basics,4,L1,20,2026-07-13
+Networking,Troubleshooting,3,L1,6,2026-07-13
+Security and File Permissions,Security Incident,2,L1,2,2026-07-13
+Security and File Permissions,Linux Accounts,3,L1,10,2026-07-13
+Security and File Permissions,Access Control Files,3,L1,6,2026-07-13
+Security and File Permissions,User Management,3,L1,4,2026-07-13
+Security and File Permissions,Lab: Account Management,4,L1,20,2026-07-13
+Security and File Permissions,File Permissions and Ownership,3,L1,8,2026-07-13
+Security and File Permissions,Lab: Permissions and Ownership,4,L1,20,2026-07-13
+Security and File Permissions,SSH and SCP,3,L1,8,2026-07-13
+Security and File Permissions,Lab: SSH and SCP,4,L1,20,2026-07-13
+Security and File Permissions,IPTABLES Introduction,3,L1,8,2026-07-13
+Security and File Permissions,IPTABLES - Securing the Environment,4,L1,10,2026-07-13
+Security and File Permissions,Lab - IPTABLES,5,L1,20,2026-07-13
+Security and File Permissions,Cronjobs,3,L1,5,2026-07-13
+Security and File Permissions,Lab: Cronjob,4,L1,20,2026-07-13
+Service management with SYSTEMD,Working Overtime,2,L1,2,2026-07-13
+Service management with SYSTEMD,Creating a SYSTEMD Service,3,L1,8,2026-07-13
+Service management with SYSTEMD,SYSTEMD Tools,3,L1,7,2026-07-13
+Service management with SYSTEMD,Lab: systemd services,4,L1,20,2026-07-13
+Storage in Linux,Where is my storage?,2,L1,5,2026-07-13
+Storage in Linux,Disk Partitions,3,L1,10,2026-07-13
+Storage in Linux,Lab - Partitions,4,L1,20,2026-07-13
+Storage in Linux,File Systems in Linux,3,L1,5,2026-07-13
+Storage in Linux,Lab - Filesystems,4,L1,20,2026-07-13
+Storage in Linux,DAS NAS and SAN,3,L1,6,2026-07-13
+Storage in Linux,NFS Filesystem,3,L1,4,2026-07-13
+Storage in Linux,LVM,4,L1,7,2026-07-13
+Storage in Linux,Lab: LVM,5,L1,20,2026-07-13
+Storage in Linux,Project Status Meeting (story),2,L1,2,2026-07-13
+The Client Demonstration,Client Demonstration in Jeopardy! (story),2,L1,5,2026-07-13
+The Client Demonstration,Lab - Final Troubleshooting Scenario,5,L1,20,2026-07-13
+The Client Demonstration,Finale,2,L1,4,2026-07-13
