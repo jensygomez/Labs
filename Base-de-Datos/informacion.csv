@@ -1,99 +1,55 @@
 Module,Title,Difficulty,Level,Duration,Date
-Introduction,Course Introduction,1,L2,2,2026-07-13
-Introduction,Why learn advanced bash scripting?,2,L2,4,2026-07-13
-Introduction,Interactive-vs-non-interactive-shell,2,L2,3,2026-07-13
-Introduction,Shell scripting vs Bash scripting,2,L2,2,2026-07-13
-Introduction,Terminology,2,L2,3,2026-07-13
-Introduction,How to take this course,1,L2,2,2026-07-13
-Introduction,How to Reach Out to KodeKloud and Engage with the Community,1,L2,3,2026-07-13
-Conventions,Overview,2,L2,4,2026-07-13
-Conventions,Variables,2,L2,3,2026-07-13
-Conventions,Functions,2,L2,2,2026-07-13
-Conventions,Expanding,2,L2,5,2026-07-13
-Conventions,Lab - Conventions,3,L2,20,2026-07-13
-Conventions,Course Resource- Advanced Bash Scripting,1,L2,2,2026-07-13
-Refresher,Overview,2,L2,4,2026-07-13
-Refresher,Scriptflow,3,L2,13,2026-07-13
-Refresher,Functions,3,L2,7,2026-07-13
-Refresher,Lab - Functions,4,L2,20,2026-07-13
-Refresher,Command Line Arguments,3,L2,5,2026-07-13
-Refresher,Lab - CLI,4,L2,20,2026-07-13
-Refresher,pid,3,L2,11,2026-07-13
-Refresher,Built-in Commands,3,L2,8,2026-07-13
-Refresher,Keywords-builtins,3,L2,6,2026-07-13
-Refresher,Lab - Builtin,4,L2,20,2026-07-13
-Refresher,Guard clause,3,L2,5,2026-07-13
-Refresher,Shebang,3,L2,11,2026-07-13
-Refresher,Lab - Refresher,4,L2,20,2026-07-13
-Streams,Overview,2,L2,3,2026-07-13
-Streams,Stdout/stderr,3,L2,8,2026-07-13
-Streams,File descriptors,3,L2,4,2026-07-13
-Streams,/dev/null,3,L2,7,2026-07-13
-Streams,Input,3,L2,12,2026-07-13
-Streams,Lab 1 - Streams,4,L2,20,2026-07-13
-Streams,Heredocs,3,L2,7,2026-07-13
-Streams,Lab 2 - Streams,4,L2,20,2026-07-13
-Streams,Pipes,3,L2,5,2026-07-13
-Streams,Pipefail,3,L2,6,2026-07-13
-Streams,Exit-code,2,L2,2,2026-07-13
-Streams,Lab 3 - Streams,4,L2,20,2026-07-13
-Streams,Xargs,3,L2,4,2026-07-13
-Streams,Eval,3,L2,4,2026-07-13
-Streams,printf,3,L2,5,2026-07-13
-Streams,Lab 4 - Streams,4,L2,20,2026-07-13
-Expansions - Part One,Overview,2,L2,3,2026-07-13
-Expansions - Part One,Variables,3,L2,8,2026-07-13
-Expansions - Part One,Parameter - Part One,3,L2,7,2026-07-13
-Expansions - Part One,Parameter - Part Two,3,L2,9,2026-07-13
-Expansions - Part One,Lab - Parameter,4,L2,20,2026-07-13
-Globs,Overview,2,L2,2,2026-07-13
-Globs,Globs - Question Mark,3,L2,7,2026-07-13
-Globs,Star,2,L2,3,2026-07-13
-Globs,Escape,3,L2,5,2026-07-13
-Globs,Mixed,4,L2,16,2026-07-13
-Globs,Square,3,L2,10,2026-07-13
-Globs,Lab - Globs,4,L2,20,2026-07-13
-Expansions - Part Two,Brace,3,L2,10,2026-07-13
-Expansions - Part Two,Command Substitution,3,L2,9,2026-07-13
-Expansions - Part Two,Subshells,4,L2,13,2026-07-13
-Expansions - Part Two,Lab - Expansions,4,L2,20,2026-07-13
-Special Shell Variables,Overview,2,L2,3,2026-07-13
-Special Shell Variables,Notes,1,L2,2,2026-07-13
-Special Shell Variables,Special shell - Question mark,4,L2,16,2026-07-13
-Special Shell Variables,Hashtag,3,L2,10,2026-07-13
-Special Shell Variables,ifs,3,L2,8,2026-07-13
-Special Shell Variables,Args,3,L2,11,2026-07-13
-Special Shell Variables,pid,3,L2,10,2026-07-13
-Special Shell Variables,Zero,3,L2,12,2026-07-13
-Special Shell Variables,Lab - Special shell,4,L2,20,2026-07-13
-Special Shell Variables,Underscore,2,L2,3,2026-07-13
-Special Shell Variables,Dash,2,L2,4,2026-07-13
-Arrays,Declare,3,L2,6,2026-07-13
-Arrays,Arrays,3,L2,7,2026-07-13
-Arrays,Insert,3,L2,7,2026-07-13
-Arrays,Remove,2,L2,3,2026-07-13
-Arrays,Sort,3,L2,6,2026-07-13
-Arrays,Associative,3,L2,10,2026-07-13
-Arrays,Arrays demo,4,L2,14,2026-07-13
-Arrays,Lab - Arrays,4,L2,20,2026-07-13
-Good Practices applied,Strict Mode,3,L2,9,2026-07-13
-Good Practices applied,no-op Commands,3,L2,5,2026-07-13
-Good Practices applied,Comments,2,L2,2,2026-07-13
-Good Practices applied,Lab - Good Practices applied,4,L2,20,2026-07-13
-Good Practices applied,Logging,3,L2,4,2026-07-13
-awk,Introduction to awk,3,L2,11,2026-07-13
-awk,awk -print,3,L2,8,2026-07-13
-awk,Built-in Variables,3,L2,10,2026-07-13
-awk,Option -F,3,L2,8,2026-07-13
-awk,Employees.txt,2,L2,2,2026-07-13
-awk,Option -v,3,L2,9,2026-07-13
-awk,Option Files,3,L2,9,2026-07-13
-awk,Bash-Hybrid,3,L2,10,2026-07-13
-awk,Lab - awk,4,L2,20,2026-07-13
-sed,Introduction,2,L2,5,2026-07-13
-sed,sed - print,3,L2,10,2026-07-13
-sed,Delete,3,L2,6,2026-07-13
-sed,Find,3,L2,9,2026-07-13
-sed,Substitute,3,L2,10,2026-07-13
-sed,Lab - sed,4,L2,20,2026-07-13
-sed,Lab - awk+sed,5,L2,20,2026-07-13
+Introduction,Introduction,1,L1,2,2026-07-13
+Introduction,Why Docker,1,L1,13,2026-07-13
+Introduction,What are Containers?,1,L1,2,2026-07-13
+Introduction,How Docker Works,2,L1,3,2026-07-13
+Introduction,Containers vs VMs,2,L1,3,2026-07-13
+Introduction,Images and Registries,2,L1,2,2026-07-13
+Introduction,Docker and Devops,1,L1,2,2026-07-13
+Introduction,Getting started with Docker,2,L1,4,2026-07-13
+Introduction,Demo: Setup and Install Docker,2,L1,5,2026-07-13
+Introduction,A Quick Reminder,1,L1,2,2026-07-13
+Introduction,How to Reach Out to KodeKloud and Engage with the Community,1,L1,3,2026-07-13
+Docker Commands,Basic Docker Commands,2,L1,8,2026-07-13
+Docker Commands,Demo: Docker Commands - Part 1,2,L1,4,2026-07-13
+Docker Commands,Demo: Docker Commands - Part 2,2,L1,3,2026-07-13
+Docker Commands,Demo: Docker Commands - Part 3,2,L1,3,2026-07-13
+Docker Commands,Lab: Basic Docker Commands,3,L1,20,2026-07-13
+Docker Run Commands,Image Tags,2,L1,3,2026-07-13
+Docker Run Commands,Interactive Mode,2,L1,3,2026-07-13
+Docker Run Commands,Port Mapping,2,L1,2,2026-07-13
+Docker Run Commands,Volumes and Bind Mounts,2,L1,2,2026-07-13
+Docker Run Commands,Inspect and Logs,2,L1,1,2026-07-13
+Docker Run Commands,Lab: Docker Run Commands,3,L1,20,2026-07-13
+Docker Images,Docker Images,3,L1,6,2026-07-13
+Docker Images,Demo: Creating a new Docker Image,3,L1,6,2026-07-13
+Docker Images,Problems With Traditional Docker Builds,3,L1,7,2026-07-13
+Docker Images,Modern Builds With Buildkit,3,L1,6,2026-07-13
+Docker Images,Docker Init,2,L1,4,2026-07-13
+Docker Images,Lab: Docker Images,3,L1,20,2026-07-13
+Docker Images,Commands vs Entrypoint,3,L1,6,2026-07-13
+Docker Images,Lab: Command and Entrypoint,3,L1,20,2026-07-13
+Docker Images,Environment Variables,2,L1,2,2026-07-13
+Docker Images,Lab: Environment Variables,3,L1,20,2026-07-13
+Docker Compose,Docker Compose,3,L1,10,2026-07-13
+Docker Compose,Demo: Example Voting Application,3,L1,8,2026-07-13
+Docker Compose,Demo: Example Voting Application with Docker Compose,3,L1,8,2026-07-13
+Docker Compose,Lab: Docker Compose,4,L1,20,2026-07-13
+Docker Compose,References,1,L1,2,2026-07-13
+Docker Engine Storage,Docker Engine,3,L1,4,2026-07-13
+Docker Engine Storage,namespaces,3,L1,2,2026-07-13
+Docker Engine Storage,cgroups,3,L1,1,2026-07-13
+Docker Engine Storage,Docker Storage,3,L1,9,2026-07-13
+Docker Engine Storage,Lab: Docker Storage,4,L1,20,2026-07-13
+Docker Networking,Docker Networking,3,L1,5,2026-07-13
+Docker Networking,Lab: Docker Networking,4,L1,20,2026-07-13
+Docker Registry,Docker Registry,3,L1,6,2026-07-13
+Docker Registry,Lab: Docker Registry,4,L1,20,2026-07-13
+Docker on Mac and Windows,Docker on Mac,2,L1,3,2026-07-13
+Docker on Mac and Windows,Docker on Windows,2,L1,7,2026-07-13
+Container Orchestration,Container Orchestration,3,L1,4,2026-07-13
+Container Orchestration,Docker Swarm,3,L1,4,2026-07-13
+Container Orchestration,Kubernetes Introduction,4,L1,7,2026-07-13
+Conclusion,Bonus Lecture: Introduction to YAML,3,L1,7,2026-07-13
+Conclusion,Lab: YAML,3,L1,20,2026-07-13
+Conclusion,Conclusion,1,L1,2,2026-07-13
