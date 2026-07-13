@@ -1,35 +1,99 @@
 Module,Title,Difficulty,Level,Duration,Date
-Course Introduction,Course Introduction,1,L1,4,2026-07-13
-Course Introduction,How to Reach Out to KodeKloud and Engage with the Community,1,L1,3,2026-07-13
-Shell Script Introduction,Download Course Resources,1,L1,2,2026-07-13
-Shell Script Introduction,Project Introduction,2,L1,3,2026-07-13
-Shell Script Introduction,Lab: Project Introduction,3,L1,20,2026-07-13
-Shell Script Introduction,Creating your first shell script,2,L1,7,2026-07-13
-Shell Script Introduction,Lab: Creating your first shell script,3,L1,20,2026-07-13
-Shell Script Introduction,Variables,2,L1,4,2026-07-13
-Shell Script Introduction,Lab: Variables,3,L1,20,2026-07-13
-Shell Script Introduction,Command Line Arguments,2,L1,4,2026-07-13
-Shell Script Introduction,Read Inputs,2,L1,4,2026-07-13
-Shell Script Introduction,Lab: Command line arguments and inputs,3,L1,20,2026-07-13
-Shell Script Introduction,Arithmetic Operations,2,L1,4,2026-07-13
-Shell Script Introduction,Lab: Arithmetic Operations,3,L1,20,2026-07-13
-Flow Control,Conditional Logic,3,L1,9,2026-07-13
-Flow Control,Lab: Conditional Logic,3,L1,20,2026-07-13
-Flow Control,Loops - For,3,L1,8,2026-07-13
-Flow Control,Lab: For Loops,3,L1,20,2026-07-13
-Flow Control,Loops - While,3,L1,6,2026-07-13
-Flow Control,Lab: While Loops,3,L1,20,2026-07-13
-Flow Control,Case Statements,2,L1,3,2026-07-13
-Flow Control,Lab: Case Statements,3,L1,20,2026-07-13
-Shebang,Shebang,2,L1,4,2026-07-13
-Shebang,Lab: Shebang,3,L1,20,2026-07-13
-Shebang,Exit Codes,2,L1,4,2026-07-13
-Shebang,Lab: Exit Codes,3,L1,20,2026-07-13
-Shebang,Functions,3,L1,7,2026-07-13
-Shebang,Lab: Functions,3,L1,20,2026-07-13
-Shebang,Tips and Tricks - ShellCheck and IDE,2,L1,3,2026-07-13
-Project - E-Commerce Application,Project - KodeKloud e-commerce application,2,L1,6,2026-07-13
-Project - E-Commerce Application,Demo - KodeKloud e-commerce application,2,L1,12,2026-07-13
-Project - E-Commerce Application,Lab - Project,4,L1,20,2026-07-13
-Project - E-Commerce Application,Solution Project - ECommerce Application,4,L1,35,2026-07-13
-Conclusion,Conclusion,1,L1,1,2026-07-13
+Introduction,Course Introduction,1,L2,2,2026-07-13
+Introduction,Why learn advanced bash scripting?,2,L2,4,2026-07-13
+Introduction,Interactive-vs-non-interactive-shell,2,L2,3,2026-07-13
+Introduction,Shell scripting vs Bash scripting,2,L2,2,2026-07-13
+Introduction,Terminology,2,L2,3,2026-07-13
+Introduction,How to take this course,1,L2,2,2026-07-13
+Introduction,How to Reach Out to KodeKloud and Engage with the Community,1,L2,3,2026-07-13
+Conventions,Overview,2,L2,4,2026-07-13
+Conventions,Variables,2,L2,3,2026-07-13
+Conventions,Functions,2,L2,2,2026-07-13
+Conventions,Expanding,2,L2,5,2026-07-13
+Conventions,Lab - Conventions,3,L2,20,2026-07-13
+Conventions,Course Resource- Advanced Bash Scripting,1,L2,2,2026-07-13
+Refresher,Overview,2,L2,4,2026-07-13
+Refresher,Scriptflow,3,L2,13,2026-07-13
+Refresher,Functions,3,L2,7,2026-07-13
+Refresher,Lab - Functions,4,L2,20,2026-07-13
+Refresher,Command Line Arguments,3,L2,5,2026-07-13
+Refresher,Lab - CLI,4,L2,20,2026-07-13
+Refresher,pid,3,L2,11,2026-07-13
+Refresher,Built-in Commands,3,L2,8,2026-07-13
+Refresher,Keywords-builtins,3,L2,6,2026-07-13
+Refresher,Lab - Builtin,4,L2,20,2026-07-13
+Refresher,Guard clause,3,L2,5,2026-07-13
+Refresher,Shebang,3,L2,11,2026-07-13
+Refresher,Lab - Refresher,4,L2,20,2026-07-13
+Streams,Overview,2,L2,3,2026-07-13
+Streams,Stdout/stderr,3,L2,8,2026-07-13
+Streams,File descriptors,3,L2,4,2026-07-13
+Streams,/dev/null,3,L2,7,2026-07-13
+Streams,Input,3,L2,12,2026-07-13
+Streams,Lab 1 - Streams,4,L2,20,2026-07-13
+Streams,Heredocs,3,L2,7,2026-07-13
+Streams,Lab 2 - Streams,4,L2,20,2026-07-13
+Streams,Pipes,3,L2,5,2026-07-13
+Streams,Pipefail,3,L2,6,2026-07-13
+Streams,Exit-code,2,L2,2,2026-07-13
+Streams,Lab 3 - Streams,4,L2,20,2026-07-13
+Streams,Xargs,3,L2,4,2026-07-13
+Streams,Eval,3,L2,4,2026-07-13
+Streams,printf,3,L2,5,2026-07-13
+Streams,Lab 4 - Streams,4,L2,20,2026-07-13
+Expansions - Part One,Overview,2,L2,3,2026-07-13
+Expansions - Part One,Variables,3,L2,8,2026-07-13
+Expansions - Part One,Parameter - Part One,3,L2,7,2026-07-13
+Expansions - Part One,Parameter - Part Two,3,L2,9,2026-07-13
+Expansions - Part One,Lab - Parameter,4,L2,20,2026-07-13
+Globs,Overview,2,L2,2,2026-07-13
+Globs,Globs - Question Mark,3,L2,7,2026-07-13
+Globs,Star,2,L2,3,2026-07-13
+Globs,Escape,3,L2,5,2026-07-13
+Globs,Mixed,4,L2,16,2026-07-13
+Globs,Square,3,L2,10,2026-07-13
+Globs,Lab - Globs,4,L2,20,2026-07-13
+Expansions - Part Two,Brace,3,L2,10,2026-07-13
+Expansions - Part Two,Command Substitution,3,L2,9,2026-07-13
+Expansions - Part Two,Subshells,4,L2,13,2026-07-13
+Expansions - Part Two,Lab - Expansions,4,L2,20,2026-07-13
+Special Shell Variables,Overview,2,L2,3,2026-07-13
+Special Shell Variables,Notes,1,L2,2,2026-07-13
+Special Shell Variables,Special shell - Question mark,4,L2,16,2026-07-13
+Special Shell Variables,Hashtag,3,L2,10,2026-07-13
+Special Shell Variables,ifs,3,L2,8,2026-07-13
+Special Shell Variables,Args,3,L2,11,2026-07-13
+Special Shell Variables,pid,3,L2,10,2026-07-13
+Special Shell Variables,Zero,3,L2,12,2026-07-13
+Special Shell Variables,Lab - Special shell,4,L2,20,2026-07-13
+Special Shell Variables,Underscore,2,L2,3,2026-07-13
+Special Shell Variables,Dash,2,L2,4,2026-07-13
+Arrays,Declare,3,L2,6,2026-07-13
+Arrays,Arrays,3,L2,7,2026-07-13
+Arrays,Insert,3,L2,7,2026-07-13
+Arrays,Remove,2,L2,3,2026-07-13
+Arrays,Sort,3,L2,6,2026-07-13
+Arrays,Associative,3,L2,10,2026-07-13
+Arrays,Arrays demo,4,L2,14,2026-07-13
+Arrays,Lab - Arrays,4,L2,20,2026-07-13
+Good Practices applied,Strict Mode,3,L2,9,2026-07-13
+Good Practices applied,no-op Commands,3,L2,5,2026-07-13
+Good Practices applied,Comments,2,L2,2,2026-07-13
+Good Practices applied,Lab - Good Practices applied,4,L2,20,2026-07-13
+Good Practices applied,Logging,3,L2,4,2026-07-13
+awk,Introduction to awk,3,L2,11,2026-07-13
+awk,awk -print,3,L2,8,2026-07-13
+awk,Built-in Variables,3,L2,10,2026-07-13
+awk,Option -F,3,L2,8,2026-07-13
+awk,Employees.txt,2,L2,2,2026-07-13
+awk,Option -v,3,L2,9,2026-07-13
+awk,Option Files,3,L2,9,2026-07-13
+awk,Bash-Hybrid,3,L2,10,2026-07-13
+awk,Lab - awk,4,L2,20,2026-07-13
+sed,Introduction,2,L2,5,2026-07-13
+sed,sed - print,3,L2,10,2026-07-13
+sed,Delete,3,L2,6,2026-07-13
+sed,Find,3,L2,9,2026-07-13
+sed,Substitute,3,L2,10,2026-07-13
+sed,Lab - sed,4,L2,20,2026-07-13
+sed,Lab - awk+sed,5,L2,20,2026-07-13
