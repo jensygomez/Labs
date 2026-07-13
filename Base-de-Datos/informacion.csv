@@ -1,83 +1,83 @@
 Module,Title,Difficulty,Level,Duration,Date
-Essential Commands,EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema,5,L2,40,2026-06-30
-Essential Commands,EC-002 - La Estructura Colapsada – Gestión Avanzada de Archivos y Enlaces,6,L2,40,2026-06-30
-Essential Commands,EC-003 - El Permiso Prohibido – Control de Acceso y Bits Especiales,6,L2,40,2026-06-30
-Essential Commands,EC-004 - La Aguja en el Pajar – Búsqueda Filtrado y Expresiones Regulares,6,L2,40,2026-06-30
-Essential Commands,EC-005 - El Flujo Roto – Redirección I and O y Pipelines Complejos,6,L2,40,2026-06-30
-Essential Commands,EC-006 - El Respaldo Olvidado – Compresión Archivado y Transferencia Remota,6,L2,40,2026-06-30
-Essential Commands,PG-001 - Estructuras de archivos complejas y consistencia de Inodos - V1,5,L2,40,2026-06-30
-Essential Commands,PG-001 - Estructuras de archivos complejas y consistencia de Inodos - V2,6,L2,50,2026-06-30
-Essential Commands,PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID SGID Sticky Bit) - V1,5,L2,40,2026-06-30
-Essential Commands,PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID SGID Sticky Bit) - V2,6,L2,50,2026-06-30
-Essential Commands,PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find Grep y Regex) - V1,5,L2,40,2026-06-30
-Essential Commands,PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find Grep y Regex) - V2,6,L2,50,2026-06-30
-Essential Commands,PG-004 - Automatización de respaldos compresión y control de flujos (Tar e IO Redirection) - V1,5,L2,40,2026-06-30
-Essential Commands,PG-004 - Automatización de respaldos compresión y control de flujos (Tar e IO Redirection) - V2,6,L2,50,2026-06-30
-Essential Commands,PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V1,6,L2,50,2026-06-30
-Essential Commands,PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V2,7,L2,60,2026-06-30
-Essential Commands,PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V1,5,L2,40,2026-06-30
-Essential Commands,PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V2,6,L2,50,2026-06-30
-Essential Commands,PG-007 - Triage de Incidente Mayor y Restauración de Servicios Críticos (Examen Integrador),7,L2,60,2026-06-30
-Operations Deployment,OD-001 - El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro - V1.0,6,L2,40,2026-06-30
-Operations Deployment,OD-002 - El Servicio Zombi – Diagnóstico de Procesos y Creación de Units systemd - V1.0,7,L2,40,2026-06-30
-Operations Deployment,OD-003 - Sintonizando el Núcleo – Parámetros del Kernel y Análisis Forense de Logs - V1.0,7,L2,40,2026-06-30
-Operations Deployment,OD-004 - Dependencias Huérfanas – Repositorios Paquetes y Compilación desde Fuente,6,L2,40,2026-06-30
-Operations Deployment,OD-005 - El Muro Invisible – Contextos SELinux y Políticas MAC,6,L2,40,2026-06-30
-Operations Deployment,PG-001 - db-backup.service no inicia - V1,5,L2,40,2026-06-30
-Operations Deployment,PG-001 - db-backup.service no inicia - V2,6,L2,50,2026-06-30
-Operations Deployment,PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V1,5,L2,40,2026-06-30
-Operations Deployment,PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V2,5,L2,40,2026-06-30
-Operations Deployment,PG-003 - Backup automático no se ejecuta (Systemd Timers) - V1,5,L2,40,2026-06-30
-Operations Deployment,PG-003 - Backup automático no se ejecuta (Systemd Timers) - V2,5,L2,40,2026-06-30
-Operations Deployment,PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V1,6,L2,40,2026-06-30
-Operations Deployment,PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V2,6,L2,50,2026-06-30
-Operations Deployment,PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad) - V1,6,L2,40,2026-06-30
-Operations Deployment,PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad) - V2,6,L2,50,2026-06-30
-Operations Deployment,PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel) - V1,6,L2,40,2026-06-30
-Operations Deployment,PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel) - V2,6,L2,50,2026-06-30
-Operations Deployment,PG-007 - Contenedor web inaccesible (Podman SELinux y Redes) - V1,6,L2,40,2026-06-30
-Operations Deployment,PG-007 - Contenedor web inaccesible (Podman SELinux y Redes) - V2,6,L2,50,2026-06-30
-Operations Deployment,PG-008 - Incidente mayor en producción (Simulación de Examen Integrador),7,L2,60,2026-06-30
-Users and Groups,PG-001 - Provisión de cuentas de usuario y plantillas corporativas,5,L2,40,2026-06-30
-Users and Groups,PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V1,5,L2,40,2026-06-30
-Users and Groups,PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V2,6,L2,50,2026-06-30
-Users and Groups,PG-002 - Perfiles de entorno del sistema y límites de recursos - V1,5,L2,40,2026-06-30
-Users and Groups,PG-002 - Perfiles de entorno del sistema y límites de recursos - V2,6,L2,50,2026-06-30
-Users and Groups,PG-003 - Gestión de privilegios y control de acceso (Sudoers PAM y NSSwitch),6,L2,40,2026-06-30
-Users and Groups,PG-003 - Gestión de privilegios y control de acceso (Sudoers PAM y NSSwitch) - V1,6,L2,50,2026-06-30
-Users and Groups,PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora),6,L2,50,2026-06-30
-Users and Groups,USR-001 - El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración,7,L2,40,2026-06-30
-Users and Groups,USR-002 - El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0,7,L2,40,2026-06-30
-Users and Groups,USR-003 - La Bomba de Tenedores (Fork Bomb) – Límites de Recursos de Usuario,8,L2,40,2026-06-30
-Users and Groups,USR-004 - Las Llaves del Reino – Gestión de Acceso SSH y Autenticación por Claves - V1.0,6,L2,40,2026-06-30
-Users and Groups,USR-005 - Cerrando la Puerta Grande – SSH Hardening Básico en node02,6,L2,40,2026-06-30
-Networking,NET-001 - El Candado Oxidado – Bloqueo de Acceso SSH y Resolución de Nombres,6,L2,40,2026-06-30
-Networking,NET-002 - La Paradoja Temporal – Deriva de Reloj y Fallo de Autenticación en Clúster,6,L2,60,2026-06-30
-Networking,NET-003 - La Interfaz Fantasma – Fallo en el Levantamiento de Interfaces y Enrutamiento - V1.0,7,L2,40,2026-06-30
-Networking,NET-004 - El Muro Ciego – Reglas de Firewall Bloquean Tráfico Legítimo,6,L2,40,2026-06-30
-Networking,NET-005 - El Túnel Torcido – Fallo en Redirección de Puertos (DNAT) y Enmascaramiento (SNAT),6,L2,50,2026-06-30
-Networking,PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1,5,L2,40,2026-06-30
-Storage,STG-001 - El Disco Olvidado – Particionamiento Filesystems y Montaje Persistente,6,L2,40,2026-06-30
-Storage,STG-002 - El Laberinto LVM – Volúmenes Lógicos que No Montan y VG Fragmentado - V1.0,7,L2,40,2026-06-30
-Storage,STG-003 - La Montaña Rusa de IO – Monitoreo de Performance y Cuellos de Botella - V1.0,7,L2,40,2026-06-30
-Storage,STG-004 - El Puente Roto – NFS Server and Client y Exportaciones con Restricciones,6,L2,40,2026-06-30
-Storage,STG-005 - Los Permisos Rebeldes – ACLs SGID y Sticky Bit en Directorios Compartidos,6,L2,40,2026-06-30
-Bash Script,BS-001 - El Eco Silencioso – Variables y Redirecciones,2,L2,40,2026-06-30
-Bash Script,BS-002 - El Portero Lógico – Condicionales y Validaciones,3,L2,40,2026-06-30
-Bash Script,BS-003 - La Fábrica de Usuarios – Bucles y Archivos,4,L2,80,2026-06-30
-Bash Script,BS-004 - El Cazador de Logs – Parseo con Grep y Awk,3,L2,40,2026-06-30
-Bash Script,BS-005 - El Guardián del Cron – Automatización y Manejo de Errores,4,L2,40,2026-06-30
-Docker,DK-001 - El Contenedor Reincidente Fallo de Persistencia y Entorno,5,L2,40,2026-06-30
-Docker,DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red,6,L2,40,2026-06-30
-Docker,DK-003 - La Imagen Fantasma – Diagnóstico y Corrección de Dockerfile,6,L2,40,2026-06-30
-Docker,DK-004 - El Guardián Caído – Healthchecks y Auto-Reparación,6,L2,40,2026-06-30
-Docker,DK-005 - Puertas Abiertas – Reverse Proxy y Exposición Segura de Puertos,6,L2,40,2026-06-30
-Kubernetes,K8S-001 - El Pod Fantasma - Namespace Incorrecto,3,L2,40,2026-06-30
-Kubernetes,K8S-002 - La Imagen Perdida - ImagePullBackOff por Typo,3,L2,40,2026-06-30
-Kubernetes,K8S-003 - El Servicio Fantasma - Service sin Endpoints por Selector Mismatch,4,L2,40,2026-06-30
-Kubernetes,K8S-004 - La App que No Lee su Configuración - ConfigMap no montado por nombre incorrecto,4,L2,40,2026-06-30
-Kubernetes,K8S-005 - El Pod Atrapado en Pending - Resource Requests Exceden Capacidad del Nodo,4,L2,40,2026-06-30
-Simulacros,SIMULACRO LFCS 001 - El Servidor Olvidado,3,L2,40,2026-06-30
-Simulacros,SIMULACRO LFCS 002 - La Red Silenciosa,3,L2,40,2026-06-30
-Simulacros,SIMULACRO LFCS 003 - La Auditoría de Seguridad,3,L2,50,2026-06-30
-Simulacros,SIMULACRO LFCS 004 - Refuerzo y Consolidación,6,L2,50,2026-06-30
+Essential Commands,Lab: EC-001 - El Acceso Perdido – Conectividad y Documentación del Sistema,5,L2,40,2026-06-30
+Essential Commands,Lab: EC-002 - La Estructura Colapsada – Gestión Avanzada de Archivos y Enlaces,6,L2,40,2026-06-30
+Essential Commands,Lab: EC-003 - El Permiso Prohibido – Control de Acceso y Bits Especiales,6,L2,40,2026-06-30
+Essential Commands,Lab: EC-004 - La Aguja en el Pajar – Búsqueda Filtrado y Expresiones Regulares,6,L2,40,2026-06-30
+Essential Commands,Lab: EC-005 - El Flujo Roto – Redirección I and O y Pipelines Complejos,6,L2,40,2026-06-30
+Essential Commands,Lab: EC-006 - El Respaldo Olvidado – Compresión Archivado y Transferencia Remota,6,L2,40,2026-06-30
+Essential Commands,Lab: PG-001 - Estructuras de archivos complejas y consistencia de Inodos - V1,5,L2,40,2026-06-30
+Essential Commands,Lab: PG-001 - Estructuras de archivos complejas y consistencia de Inodos - V2,6,L2,50,2026-06-30
+Essential Commands,Lab: PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID SGID Sticky Bit) - V1,5,L2,40,2026-06-30
+Essential Commands,Lab: PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID SGID Sticky Bit) - V2,6,L2,50,2026-06-30
+Essential Commands,Lab: PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find Grep y Regex) - V1,5,L2,40,2026-06-30
+Essential Commands,Lab: PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find Grep y Regex) - V2,6,L2,50,2026-06-30
+Essential Commands,Lab: PG-004 - Automatización de respaldos compresión y control de flujos (Tar e IO Redirection) - V1,5,L2,40,2026-06-30
+Essential Commands,Lab: PG-004 - Automatización de respaldos compresión y control de flujos (Tar e IO Redirection) - V2,6,L2,50,2026-06-30
+Essential Commands,Lab: PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V1,6,L2,50,2026-06-30
+Essential Commands,Lab: PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V2,7,L2,60,2026-06-30
+Essential Commands,Lab: PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V1,5,L2,40,2026-06-30
+Essential Commands,Lab: PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V2,6,L2,50,2026-06-30
+Essential Commands,Lab: PG-007 - Triage de Incidente Mayor y Restauración de Servicios Críticos (Examen Integrador),7,L2,60,2026-06-30
+Operations Deployment,Lab: OD-001 - El Arranque Fantasma – Recuperación de Targets y Reinicio Seguro - V1.0,6,L2,40,2026-06-30
+Operations Deployment,Lab: OD-002 - El Servicio Zombi – Diagnóstico de Procesos y Creación de Units systemd - V1.0,7,L2,40,2026-06-30
+Operations Deployment,Lab: OD-003 - Sintonizando el Núcleo – Parámetros del Kernel y Análisis Forense de Logs - V1.0,7,L2,40,2026-06-30
+Operations Deployment,Lab: OD-004 - Dependencias Huérfanas – Repositorios Paquetes y Compilación desde Fuente,6,L2,40,2026-06-30
+Operations Deployment,Lab: OD-005 - El Muro Invisible – Contextos SELinux y Políticas MAC,6,L2,40,2026-06-30
+Operations Deployment,Lab: PG-001 - db-backup.service no inicia - V1,5,L2,40,2026-06-30
+Operations Deployment,Lab: PG-001 - db-backup.service no inicia - V2,6,L2,50,2026-06-30
+Operations Deployment,Lab: PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V1,5,L2,40,2026-06-30
+Operations Deployment,Lab: PG-002 - Agotamiento de Descriptores de Archivos e Inundación de Logs - V2,5,L2,40,2026-06-30
+Operations Deployment,Lab: PG-003 - Backup automático no se ejecuta (Systemd Timers) - V1,5,L2,40,2026-06-30
+Operations Deployment,Lab: PG-003 - Backup automático no se ejecuta (Systemd Timers) - V2,5,L2,40,2026-06-30
+Operations Deployment,Lab: PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V1,6,L2,40,2026-06-30
+Operations Deployment,Lab: PG-004 - Instalación de software corporativo fallida (Repositorios y DNF) - V2,6,L2,50,2026-06-30
+Operations Deployment,Lab: PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad) - V1,6,L2,40,2026-06-30
+Operations Deployment,Lab: PG-005 - Servicio inestable en producción (Límites de Recursos e Integridad) - V2,6,L2,50,2026-06-30
+Operations Deployment,Lab: PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel) - V1,6,L2,40,2026-06-30
+Operations Deployment,Lab: PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel) - V2,6,L2,50,2026-06-30
+Operations Deployment,Lab: PG-007 - Contenedor web inaccesible (Podman SELinux y Redes) - V1,6,L2,40,2026-06-30
+Operations Deployment,Lab: PG-007 - Contenedor web inaccesible (Podman SELinux y Redes) - V2,6,L2,50,2026-06-30
+Operations Deployment,Lab: PG-008 - Incidente mayor en producción (Simulación de Examen Integrador),7,L2,60,2026-06-30
+Users and Groups,Lab: PG-001 - Provisión de cuentas de usuario y plantillas corporativas,5,L2,40,2026-06-30
+Users and Groups,Lab: PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V1,5,L2,40,2026-06-30
+Users and Groups,Lab: PG-001 - Provisión de cuentas de usuario y plantillas corporativas - V2,6,L2,50,2026-06-30
+Users and Groups,Lab: PG-002 - Perfiles de entorno del sistema y límites de recursos - V1,5,L2,40,2026-06-30
+Users and Groups,Lab: PG-002 - Perfiles de entorno del sistema y límites de recursos - V2,6,L2,50,2026-06-30
+Users and Groups,Lab: PG-003 - Gestión de privilegios y control de acceso (Sudoers PAM y NSSwitch),6,L2,40,2026-06-30
+Users and Groups,Lab: PG-003 - Gestión de privilegios y control de acceso (Sudoers PAM y NSSwitch) - V1,6,L2,50,2026-06-30
+Users and Groups,Lab: PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora),6,L2,50,2026-06-30
+Users and Groups,Lab: USR-001 - El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración,7,L2,40,2026-06-30
+Users and Groups,Lab: USR-002 - El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0,7,L2,40,2026-06-30
+Users and Groups,Lab: USR-003 - La Bomba de Tenedores (Fork Bomb) – Límites de Recursos de Usuario,8,L2,40,2026-06-30
+Users and Groups,Lab: USR-004 - Las Llaves del Reino – Gestión de Acceso SSH y Autenticación por Claves - V1.0,6,L2,40,2026-06-30
+Users and Groups,Lab: USR-005 - Cerrando la Puerta Grande – SSH Hardening Básico en node02,6,L2,40,2026-06-30
+Networking,Lab: NET-001 - El Candado Oxidado – Bloqueo de Acceso SSH y Resolución de Nombres,6,L2,40,2026-06-30
+Networking,Lab: NET-002 - La Paradoja Temporal – Deriva de Reloj y Fallo de Autenticación en Clúster,6,L2,60,2026-06-30
+Networking,Lab: NET-003 - La Interfaz Fantasma – Fallo en el Levantamiento de Interfaces y Enrutamiento - V1.0,7,L2,40,2026-06-30
+Networking,Lab: NET-004 - El Muro Ciego – Reglas de Firewall Bloquean Tráfico Legítimo,6,L2,40,2026-06-30
+Networking,Lab: NET-005 - El Túnel Torcido – Fallo en Redirección de Puertos (DNAT) y Enmascaramiento (SNAT),6,L2,50,2026-06-30
+Networking,Lab: PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1,5,L2,40,2026-06-30
+Storage,Lab: STG-001 - El Disco Olvidado – Particionamiento Filesystems y Montaje Persistente,6,L2,40,2026-06-30
+Storage,Lab: STG-002 - El Laberinto LVM – Volúmenes Lógicos que No Montan y VG Fragmentado - V1.0,7,L2,40,2026-06-30
+Storage,Lab: STG-003 - La Montaña Rusa de IO – Monitoreo de Performance y Cuellos de Botella - V1.0,7,L2,40,2026-06-30
+Storage,Lab: STG-004 - El Puente Roto – NFS Server and Client y Exportaciones con Restricciones,6,L2,40,2026-06-30
+Storage,Lab: STG-005 - Los Permisos Rebeldes – ACLs SGID y Sticky Bit en Directorios Compartidos,6,L2,40,2026-06-30
+Bash Script,Lab: BS-001 - El Eco Silencioso – Variables y Redirecciones,2,L2,40,2026-06-30
+Bash Script,Lab: BS-002 - El Portero Lógico – Condicionales y Validaciones,3,L2,40,2026-06-30
+Bash Script,Lab: BS-003 - La Fábrica de Usuarios – Bucles y Archivos,4,L2,80,2026-06-30
+Bash Script,Lab: BS-004 - El Cazador de Logs – Parseo con Grep y Awk,3,L2,40,2026-06-30
+Bash Script,Lab: BS-005 - El Guardián del Cron – Automatización y Manejo de Errores,4,L2,40,2026-06-30
+Docker,Lab: DK-001 - El Contenedor Reincidente Fallo de Persistencia y Entorno,5,L2,40,2026-06-30
+Docker,Lab: DK-002 - El Microservicio Huérfano – Aislamiento y Comunicación de Red,6,L2,40,2026-06-30
+Docker,Lab: DK-003 - La Imagen Fantasma – Diagnóstico y Corrección de Dockerfile,6,L2,40,2026-06-30
+Docker,Lab: DK-004 - El Guardián Caído – Healthchecks y Auto-Reparación,6,L2,40,2026-06-30
+Docker,Lab: DK-005 - Puertas Abiertas – Reverse Proxy y Exposición Segura de Puertos,6,L2,40,2026-06-30
+Kubernetes,Lab: K8S-001 - El Pod Fantasma - Namespace Incorrecto,3,L2,40,2026-06-30
+Kubernetes,Lab: K8S-002 - La Imagen Perdida - ImagePullBackOff por Typo,3,L2,40,2026-06-30
+Kubernetes,Lab: K8S-003 - El Servicio Fantasma - Service sin Endpoints por Selector Mismatch,4,L2,40,2026-06-30
+Kubernetes,Lab: K8S-004 - La App que No Lee su Configuración - ConfigMap no montado por nombre incorrecto,4,L2,40,2026-06-30
+Kubernetes,Lab: K8S-005 - El Pod Atrapado en Pending - Resource Requests Exceden Capacidad del Nodo,4,L2,40,2026-06-30
+Simulacros,Lab: SIMULACRO LFCS 001 - El Servidor Olvidado,3,L2,40,2026-06-30
+Simulacros,Lab: SIMULACRO LFCS 002 - La Red Silenciosa,3,L2,40,2026-06-30
+Simulacros,Lab: SIMULACRO LFCS 003 - La Auditoría de Seguridad,3,L2,50,2026-06-30
+Simulacros,Lab: SIMULACRO LFCS 004 - Refuerzo y Consolidación,6,L2,50,2026-06-30
