@@ -1,75 +1,75 @@
 Module,Title,Difficulty,Level,Duration,Date
-Introduction,Course Introduction,2,L1,11,2026-07-13
-Introduction,Important Note to Learners,1,L1,2,2026-07-13
-Introduction,WAR! (story),2,L1,2,2026-07-13
-Introduction,Bobs first day at work,2,L1,13,2026-07-13
-Introduction,How to Reach Out to KodeKloud and Engage with the Community,1,L1,3,2026-07-13
-Working with Shell - I,Introduction to Shell,2,L1,8,2026-07-13
-Working with Shell - I,Multiple Choice Quiz - Introduction to Shell,1,L1,5,2026-07-13
-Working with Shell - I,Basic Linux Commands,3,L1,17,2026-07-13
-Working with Shell - I,Command-line Help,2,L1,2,2026-07-13
-Working with Shell - I,Lab Introduction,1,L1,3,2026-07-13
-Working with Shell - I,Lab: Working with the Shell,3,L1,20,2026-07-13
-Working with Shell - I,Bash Shell,3,L1,10,2026-07-13
-Working with Shell - I,Lab: Linux Bash Prompt,3,L1,20,2026-07-13
-Working with Shell - I,Download Presentation Deck,1,L1,2,2026-07-13
-Linux Core Concepts,Bobs first team meeting,2,L1,11,2026-07-13
-Linux Core Concepts,Linux Kernel,3,L1,10,2026-07-13
-Linux Core Concepts,Working with Hardware,3,L1,11,2026-07-13
-Linux Core Concepts,Lab: Linux Kernel,4,L1,20,2026-07-13
-Linux Core Concepts,Linux Boot Sequence,3,L1,5,2026-07-13
-Linux Core Concepts,Runlevels,2,L1,4,2026-07-13
-Linux Core Concepts,Article: Runlevels,2,L1,5,2026-07-13
-Linux Core Concepts,File Types,2,L1,5,2026-07-13
-Linux Core Concepts,Filesystem Hierarchy,2,L1,4,2026-07-13
-Linux Core Concepts,Lab: Linux kernel Modules Boot and Filetypes,4,L1,20,2026-07-13
-Package Management,Package Management Introduction,2,L1,8,2026-07-13
-Package Management,RPM and YUM,3,L1,9,2026-07-13
-Package Management,Lab: YUM and RPM,4,L1,20,2026-07-13
-Package Management,DPKG and APT,3,L1,5,2026-07-13
-Package Management,APT vs APT-GET,2,L1,2,2026-07-13
-Package Management,Lab - DPKG and APT,4,L1,20,2026-07-13
-Working with Shell - II,Behind Schedule!,2,L1,4,2026-07-13
-Working with Shell - II,File Compression and Archival,3,L1,4,2026-07-13
-Working with Shell - II,Searching for Files and Patterns,3,L1,7,2026-07-13
-Working with Shell - II,IO Redirection,3,L1,5,2026-07-13
-Working with Shell - II,Lab: Working with Shell II,4,L1,20,2026-07-13
-Working with Shell - II,VI Editor,3,L1,9,2026-07-13
-Working with Shell - II,Lab - VI Editor,4,L1,20,2026-07-13
-Networking,The network Issue,2,L1,5,2026-07-13
-Networking,DNS,3,L1,18,2026-07-13
-Networking,Lab: DNS,4,L1,20,2026-07-13
-Networking,Networking Basics,3,L1,8,2026-07-13
-Networking,Lab: Network basics,4,L1,20,2026-07-13
-Networking,Troubleshooting,3,L1,6,2026-07-13
-Security and File Permissions,Security Incident,2,L1,2,2026-07-13
-Security and File Permissions,Linux Accounts,3,L1,10,2026-07-13
-Security and File Permissions,Access Control Files,3,L1,6,2026-07-13
-Security and File Permissions,User Management,3,L1,4,2026-07-13
-Security and File Permissions,Lab: Account Management,4,L1,20,2026-07-13
-Security and File Permissions,File Permissions and Ownership,3,L1,8,2026-07-13
-Security and File Permissions,Lab: Permissions and Ownership,4,L1,20,2026-07-13
-Security and File Permissions,SSH and SCP,3,L1,8,2026-07-13
-Security and File Permissions,Lab: SSH and SCP,4,L1,20,2026-07-13
-Security and File Permissions,IPTABLES Introduction,3,L1,8,2026-07-13
-Security and File Permissions,IPTABLES - Securing the Environment,4,L1,10,2026-07-13
-Security and File Permissions,Lab - IPTABLES,5,L1,20,2026-07-13
-Security and File Permissions,Cronjobs,3,L1,5,2026-07-13
-Security and File Permissions,Lab: Cronjob,4,L1,20,2026-07-13
-Service management with SYSTEMD,Working Overtime,2,L1,2,2026-07-13
-Service management with SYSTEMD,Creating a SYSTEMD Service,3,L1,8,2026-07-13
-Service management with SYSTEMD,SYSTEMD Tools,3,L1,7,2026-07-13
-Service management with SYSTEMD,Lab: systemd services,4,L1,20,2026-07-13
-Storage in Linux,Where is my storage?,2,L1,5,2026-07-13
-Storage in Linux,Disk Partitions,3,L1,10,2026-07-13
-Storage in Linux,Lab - Partitions,4,L1,20,2026-07-13
-Storage in Linux,File Systems in Linux,3,L1,5,2026-07-13
-Storage in Linux,Lab - Filesystems,4,L1,20,2026-07-13
-Storage in Linux,DAS NAS and SAN,3,L1,6,2026-07-13
-Storage in Linux,NFS Filesystem,3,L1,4,2026-07-13
-Storage in Linux,LVM,4,L1,7,2026-07-13
-Storage in Linux,Lab: LVM,5,L1,20,2026-07-13
-Storage in Linux,Project Status Meeting (story),2,L1,2,2026-07-13
-The Client Demonstration,Client Demonstration in Jeopardy! (story),2,L1,5,2026-07-13
-The Client Demonstration,Lab - Final Troubleshooting Scenario,5,L1,20,2026-07-13
-The Client Demonstration,Finale,2,L1,4,2026-07-13
+Introduction,Course Introduction,2,L1,11,2026-04-11
+Introduction,Important Note to Learners,1,L1,2,2026-04-11
+Introduction,WAR! (story),2,L1,2,2026-04-11
+Introduction,Bobs first day at work,2,L1,13,2026-04-11
+Introduction,How to Reach Out to KodeKloud and Engage with the Community,1,L1,3,2026-04-11
+Working with Shell - I,Introduction to Shell,2,L1,8,2026-04-11
+Working with Shell - I,Lab - Multiple Choice Introduction to Shell,1,L1,5,2026-04-11
+Working with Shell - I,Basic Linux Commands,3,L1,17,2026-04-11
+Working with Shell - I,Command-line Help,2,L1,2,2026-04-11
+Working with Shell - I,Lab Introduction,1,L1,3,2026-04-11
+Working with Shell - I,Lab: Working with the Shell,3,L1,20,2026-04-11
+Working with Shell - I,Bash Shell,3,L1,10,2026-04-11
+Working with Shell - I,Lab: Linux Bash Prompt,3,L1,20,2026-04-11
+Working with Shell - I,Download Presentation Deck,1,L1,2,2026-04-11
+Linux Core Concepts,Bobs first team meeting,2,L1,11,2026-04-11
+Linux Core Concepts,Linux Kernel,3,L1,10,2026-04-11
+Linux Core Concepts,Working with Hardware,3,L1,11,2026-04-11
+Linux Core Concepts,Lab: Linux Kernel,4,L1,20,2026-04-11
+Linux Core Concepts,Linux Boot Sequence,3,L1,5,2026-04-11
+Linux Core Concepts,Runlevels,2,L1,4,2026-04-11
+Linux Core Concepts,Article: Runlevels,2,L1,5,2026-04-11
+Linux Core Concepts,File Types,2,L1,5,2026-04-11
+Linux Core Concepts,Filesystem Hierarchy,2,L1,4,2026-04-11
+Linux Core Concepts,Lab: Linux kernel Modules Boot and Filetypes,4,L1,20,2026-04-11
+Package Management,Package Management Introduction,2,L1,8,2026-04-11
+Package Management,RPM and YUM,3,L1,9,2026-04-11
+Package Management,Lab: YUM and RPM,4,L1,20,2026-04-11
+Package Management,DPKG and APT,3,L1,5,2026-04-11
+Package Management,APT vs APT-GET,2,L1,2,2026-04-11
+Package Management,Lab - DPKG and APT,4,L1,20,2026-04-11
+Working with Shell - II,Behind Schedule!,2,L1,4,2026-04-11
+Working with Shell - II,File Compression and Archival,3,L1,4,2026-04-11
+Working with Shell - II,Searching for Files and Patterns,3,L1,7,2026-04-11
+Working with Shell - II,IO Redirection,3,L1,5,2026-04-11
+Working with Shell - II,Lab: Working with Shell II,4,L1,20,2026-04-11
+Working with Shell - II,VI Editor,3,L1,9,2026-04-11
+Working with Shell - II,Lab - VI Editor,4,L1,20,2026-04-11
+Networking,The network Issue,2,L1,5,2026-04-11
+Networking,DNS,3,L1,18,2026-04-11
+Networking,Lab: DNS,4,L1,20,2026-04-11
+Networking,Networking Basics,3,L1,8,2026-04-11
+Networking,Lab: Network basics,4,L1,20,2026-04-11
+Networking,Troubleshooting,3,L1,6,2026-04-11
+Security and File Permissions,Security Incident,2,L1,2,2026-04-11
+Security and File Permissions,Linux Accounts,3,L1,10,2026-04-11
+Security and File Permissions,Access Control Files,3,L1,6,2026-04-11
+Security and File Permissions,User Management,3,L1,4,2026-04-11
+Security and File Permissions,Lab: Account Management,4,L1,20,2026-04-11
+Security and File Permissions,File Permissions and Ownership,3,L1,8,2026-04-11
+Security and File Permissions,Lab: Permissions and Ownership,4,L1,20,2026-04-11
+Security and File Permissions,SSH and SCP,3,L1,8,2026-04-11
+Security and File Permissions,Lab: SSH and SCP,4,L1,20,2026-04-11
+Security and File Permissions,IPTABLES Introduction,3,L1,8,2026-04-11
+Security and File Permissions,IPTABLES - Securing the Environment,4,L1,10,2026-04-11
+Security and File Permissions,Lab - IPTABLES,5,L1,20,2026-04-11
+Security and File Permissions,Cronjobs,3,L1,5,2026-04-11
+Security and File Permissions,Lab: Cronjob,4,L1,20,2026-04-11
+Service management with SYSTEMD,Working Overtime,2,L1,2,2026-04-11
+Service management with SYSTEMD,Creating a SYSTEMD Service,3,L1,8,2026-04-11
+Service management with SYSTEMD,SYSTEMD Tools,3,L1,7,2026-04-11
+Service management with SYSTEMD,Lab: systemd services,4,L1,20,2026-04-11
+Storage in Linux,Where is my storage?,2,L1,5,2026-04-11
+Storage in Linux,Disk Partitions,3,L1,10,2026-04-11
+Storage in Linux,Lab - Partitions,4,L1,20,2026-04-11
+Storage in Linux,File Systems in Linux,3,L1,5,2026-04-11
+Storage in Linux,Lab - Filesystems,4,L1,20,2026-04-11
+Storage in Linux,DAS NAS and SAN,3,L1,6,2026-04-11
+Storage in Linux,NFS Filesystem,3,L1,4,2026-04-11
+Storage in Linux,LVM,4,L1,7,2026-04-11
+Storage in Linux,Lab: LVM,5,L1,20,2026-04-11
+Storage in Linux,Project Status Meeting (story),2,L1,2,2026-04-11
+The Client Demonstration,Client Demonstration in Jeopardy! (story),2,L1,5,2026-04-11
+The Client Demonstration,Lab - Final Troubleshooting Scenario,5,L1,20,2026-04-11
+The Client Demonstration,Finale,2,L1,4,2026-04-11
