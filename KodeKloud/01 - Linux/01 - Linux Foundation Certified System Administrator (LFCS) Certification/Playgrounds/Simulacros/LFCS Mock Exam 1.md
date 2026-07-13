@@ -1,3 +1,0 @@
-
-
-[[Laboratorios del LFCS]]
