@@ -190,7 +190,7 @@ while IFS= read -r line; do
         
         # Verificar si este módulo ya fue procesado en esta ejecución
         # IMPORTANTE: Antes de crear/obtener, verificar si tiene contenidos
-        local ya_existe_en_db=$(db_scalar "SELECT id_modulo FROM modulos WHERE id_curso=$id_curso AND nombre_modulo='$(escapar_sql "$nombre_modulo")';")
+        ya_existe_en_db=$(db_scalar "SELECT id_modulo FROM modulos WHERE id_curso=$id_curso AND nombre_modulo='$(escapar_sql "$nombre_modulo")';")
         
         id_modulo_actual=$(obtener_o_crear_modulo "$nombre_modulo")
         
