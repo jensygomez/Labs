@@ -1,75 +1,107 @@
 Module,Title,Difficulty,Level,Duration,Date
-Introduction,Course Introduction,2,L1,11,2026-04-11
-Introduction,Important Note to Learners,1,L1,2,2026-04-11
-Introduction,WAR! (story),2,L1,2,2026-04-11
-Introduction,Bobs first day at work,2,L1,13,2026-04-11
-Introduction,How to Reach Out to KodeKloud and Engage with the Community,1,L1,3,2026-04-11
-Working with Shell - I,Introduction to Shell,2,L1,8,2026-04-11
-Working with Shell - I,Lab - Multiple Choice Introduction to Shell,1,L1,5,2026-04-11
-Working with Shell - I,Basic Linux Commands,3,L1,17,2026-04-11
-Working with Shell - I,Command-line Help,2,L1,2,2026-04-11
-Working with Shell - I,Lab Introduction,1,L1,3,2026-04-11
-Working with Shell - I,Lab: Working with the Shell,3,L1,20,2026-04-11
-Working with Shell - I,Bash Shell,3,L1,10,2026-04-11
-Working with Shell - I,Lab: Linux Bash Prompt,3,L1,20,2026-04-11
-Working with Shell - I,Download Presentation Deck,1,L1,2,2026-04-11
-Linux Core Concepts,Bobs first team meeting,2,L1,11,2026-04-11
-Linux Core Concepts,Linux Kernel,3,L1,10,2026-04-11
-Linux Core Concepts,Working with Hardware,3,L1,11,2026-04-11
-Linux Core Concepts,Lab: Linux Kernel,4,L1,20,2026-04-11
-Linux Core Concepts,Linux Boot Sequence,3,L1,5,2026-04-11
-Linux Core Concepts,Runlevels,2,L1,4,2026-04-11
-Linux Core Concepts,Article: Runlevels,2,L1,5,2026-04-11
-Linux Core Concepts,File Types,2,L1,5,2026-04-11
-Linux Core Concepts,Filesystem Hierarchy,2,L1,4,2026-04-11
-Linux Core Concepts,Lab: Linux kernel Modules Boot and Filetypes,4,L1,20,2026-04-11
-Package Management,Package Management Introduction,2,L1,8,2026-04-11
-Package Management,RPM and YUM,3,L1,9,2026-04-11
-Package Management,Lab: YUM and RPM,4,L1,20,2026-04-11
-Package Management,DPKG and APT,3,L1,5,2026-04-11
-Package Management,APT vs APT-GET,2,L1,2,2026-04-11
-Package Management,Lab - DPKG and APT,4,L1,20,2026-04-11
-Working with Shell - II,Behind Schedule!,2,L1,4,2026-04-11
-Working with Shell - II,File Compression and Archival,3,L1,4,2026-04-11
-Working with Shell - II,Searching for Files and Patterns,3,L1,7,2026-04-11
-Working with Shell - II,IO Redirection,3,L1,5,2026-04-11
-Working with Shell - II,Lab: Working with Shell II,4,L1,20,2026-04-11
-Working with Shell - II,VI Editor,3,L1,9,2026-04-11
-Working with Shell - II,Lab - VI Editor,4,L1,20,2026-04-11
-Networking,The network Issue,2,L1,5,2026-04-11
-Networking,DNS,3,L1,18,2026-04-11
-Networking,Lab: DNS,4,L1,20,2026-04-11
-Networking,Networking Basics,3,L1,8,2026-04-11
-Networking,Lab: Network basics,4,L1,20,2026-04-11
-Networking,Troubleshooting,3,L1,6,2026-04-11
-Security and File Permissions,Security Incident,2,L1,2,2026-04-11
-Security and File Permissions,Linux Accounts,3,L1,10,2026-04-11
-Security and File Permissions,Access Control Files,3,L1,6,2026-04-11
-Security and File Permissions,User Management,3,L1,4,2026-04-11
-Security and File Permissions,Lab: Account Management,4,L1,20,2026-04-11
-Security and File Permissions,File Permissions and Ownership,3,L1,8,2026-04-11
-Security and File Permissions,Lab: Permissions and Ownership,4,L1,20,2026-04-11
-Security and File Permissions,SSH and SCP,3,L1,8,2026-04-11
-Security and File Permissions,Lab: SSH and SCP,4,L1,20,2026-04-11
-Security and File Permissions,IPTABLES Introduction,3,L1,8,2026-04-11
-Security and File Permissions,IPTABLES - Securing the Environment,4,L1,10,2026-04-11
-Security and File Permissions,Lab - IPTABLES,5,L1,20,2026-04-11
-Security and File Permissions,Cronjobs,3,L1,5,2026-04-11
-Security and File Permissions,Lab: Cronjob,4,L1,20,2026-04-11
-Service management with SYSTEMD,Working Overtime,2,L1,2,2026-04-11
-Service management with SYSTEMD,Creating a SYSTEMD Service,3,L1,8,2026-04-11
-Service management with SYSTEMD,SYSTEMD Tools,3,L1,7,2026-04-11
-Service management with SYSTEMD,Lab: systemd services,4,L1,20,2026-04-11
-Storage in Linux,Where is my storage?,2,L1,5,2026-04-11
-Storage in Linux,Disk Partitions,3,L1,10,2026-04-11
-Storage in Linux,Lab - Partitions,4,L1,20,2026-04-11
-Storage in Linux,File Systems in Linux,3,L1,5,2026-04-11
-Storage in Linux,Lab - Filesystems,4,L1,20,2026-04-11
-Storage in Linux,DAS NAS and SAN,3,L1,6,2026-04-11
-Storage in Linux,NFS Filesystem,3,L1,4,2026-04-11
-Storage in Linux,LVM,4,L1,7,2026-04-11
-Storage in Linux,Lab: LVM,5,L1,20,2026-04-11
-Storage in Linux,Project Status Meeting (story),2,L1,2,2026-04-11
-The Client Demonstration,Client Demonstration in Jeopardy! (story),2,L1,5,2026-04-11
-The Client Demonstration,Lab - Final Troubleshooting Scenario,5,L1,20,2026-04-11
-The Client Demonstration,Finale,2,L1,4,2026-04-11
+Introduction,Course Introduction,1,L2,4,2026-06-30
+Introduction,Course Structure,1,L2,2,2026-06-30
+Introduction,Prerequisites Exam Objectives and Details,1,L2,2,2026-06-30
+Introduction,Discount and Certification Details,1,L2,2,2026-06-30
+Introduction,LFCS Command Cheat Sheet,1,L2,2,2026-06-30
+Introduction,How to Reach Out to KodeKloud and Engage with the Community,1,L2,3,2026-06-30
+Essential Commands,Log in to Local and Remote Graphical and Text Mode Consoles,3,L2,8,2026-06-30
+Essential Commands,Log in to Local and Remote Graphical and Text Mode Consoles Demo,3,L2,3,2026-06-30
+Essential Commands,Read and Use System Documentation,3,L2,9,2026-06-30
+Essential Commands,Lab - Logging in and System Documentation,4,L2,30,2026-06-30
+Essential Commands,Create Delete Copy and Move Files and Directories,3,L2,12,2026-06-30
+Essential Commands,Create and Manage Hard Links,3,L2,8,2026-06-30
+Essential Commands,Create and Manage Soft Links,3,L2,4,2026-06-30
+Essential Commands,Lab - Files Directories Hard and Soft Links,4,L2,45,2026-06-30
+Essential Commands,List Set and Change Standard File Permissions,4,L2,14,2026-06-30
+Essential Commands,SUID SGID and Sticky Bit,4,L2,8,2026-06-30
+Essential Commands,Search for Files,3,L2,13,2026-06-30
+Essential Commands,Lab - File Permissions Search for Files,4,L2,70,2026-06-30
+Essential Commands,Compare and Manipulate File Content,3,L2,10,2026-06-30
+Essential Commands,Pagers and VI,3,L2,6,2026-06-30
+Essential Commands,Search File Using Grep,3,L2,6,2026-06-30
+Essential Commands,Analyze Text Using Basic Regular Expressions,4,L2,8,2026-06-30
+Essential Commands,Extended Regular Expressions,4,L2,11,2026-06-30
+Essential Commands,Lab - File Content Regular Expressions,4,L2,80,2026-06-30
+Essential Commands,Archive Back Up Compress Unpack and Uncompress Files,3,L2,6,2026-06-30
+Essential Commands,Compress and Uncompress Files,3,L2,4,2026-06-30
+Essential Commands,Back Up Files to a Remote System,3,L2,4,2026-06-30
+Essential Commands,Use Input-Output Redirection,4,L2,13,2026-06-30
+Essential Commands,Lab - Archive Back Up Compress IO Redirection,4,L2,140,2026-06-30
+Essential Commands,Work With SSL Certificates,4,L2,18,2026-06-30
+Essential Commands,Git - Basic Operations,3,L2,9,2026-06-30
+Essential Commands,Git - Staging and Committing Changes,3,L2,10,2026-06-30
+Essential Commands,Git - Branches and Remote Repositories,4,L2,19,2026-06-30
+Essential Commands,Lab - Git and SSL Certificates,5,L2,100,2026-06-30
+Essential Commands,Course Resources,1,L2,2,2026-06-30
+Operations Deployment,Boot Reboot and Shutdown a System Safely,3,L2,4,2026-06-30
+Operations Deployment,Boot or Change System Into Different Operating Modes,3,L2,4,2026-06-30
+Operations Deployment,Use Scripting to Automate System Maintenance Tasks,4,L2,12,2026-06-30
+Operations Deployment,Manage Startup Process and Services,4,L2,12,2026-06-30
+Operations Deployment,Create systemd Services,5,L2,16,2026-06-30
+Operations Deployment,Lab - Scripting Manage Startup Process and Services,5,L2,120,2026-06-30
+Operations Deployment,Diagnose and Manage Processes,5,L2,22,2026-06-30
+Operations Deployment,Locate and Analyze System Log Files,4,L2,11,2026-06-30
+Operations Deployment,Lab - Manage Processes and Analyze Log Files,5,L2,130,2026-06-30
+Operations Deployment,Schedule Tasks to Run at a Set Date and Time,4,L2,14,2026-06-30
+Operations Deployment,Lab - Schedule Tasks,5,L2,150,2026-06-30
+Operations Deployment,Manage Software with the Package Manager,3,L2,6,2026-06-30
+Operations Deployment,Configure the Repositories of Package Manager,4,L2,10,2026-06-30
+Operations Deployment,Install Software by Compiling Source Code,4,L2,7,2026-06-30
+Operations Deployment,Lab - Manage Software Repositories and Install Software from Source,5,L2,90,2026-06-30
+Operations Deployment,Verify Integrity and Availability of Resources and Processes,4,L2,11,2026-06-30
+Operations Deployment,Lab - Verify Integrity and Availability of Resources and Key Processes,5,L2,100,2026-06-30
+Operations Deployment,Change Kernel Runtime Parameters Persistent and Non-Persistent,5,L2,6,2026-06-30
+Operations Deployment,List and Identify SELinux File and Process Contexts,5,L2,10,2026-06-30
+Operations Deployment,Create and Enforce MAC Using SELinux,6,L2,28,2026-06-30
+Operations Deployment,Lab - Kernel Runtime Parameters and SELinux/AppArmor,6,L2,120,2026-06-30
+Operations Deployment,Create and Manage Containers,5,L2,24,2026-06-30
+Operations Deployment,Manage and Configure Virtual Machines,4,L2,9,2026-06-30
+Operations Deployment,Create and Boot a Virtual Machine,4,L2,11,2026-06-30
+Operations Deployment,Installing an Operating System on a Virtual Machine,4,L2,5,2026-06-30
+Operations Deployment,Lab - Manage Containers and VMs,5,L2,120,2026-06-30
+Users and Groups,Create Delete and Modify Local User Accounts,3,L2,9,2026-06-30
+Users and Groups,Create Delete and Modify Local Groups and Group Memberships,3,L2,6,2026-06-30
+Users and Groups,Lab - Manage User Accounts and Groups,4,L2,100,2026-06-30
+Users and Groups,Manage System-Wide Environment Profiles,3,L2,4,2026-06-30
+Users and Groups,Manage Template User Environment,3,L2,2,2026-06-30
+Users and Groups,Lab - Manage System-Wide Environment Profiles and Template User Environments,4,L2,140,2026-06-30
+Users and Groups,Configure User Resource Limits,4,L2,7,2026-06-30
+Users and Groups,Manage User Privileges,4,L2,6,2026-06-30
+Users and Groups,Lab - Configure User Resource Limits and User Privileges,4,L2,70,2026-06-30
+Users and Groups,Manage Access to Root Account,3,L2,3,2026-06-30
+Users and Groups,Configure the System to Use LDAP User and Group Accounts,4,L2,14,2026-06-30
+Networking,Configure IPv4 and IPv6 Networking and Hostname Resolution - Theory,4,L2,7,2026-06-30
+Networking,Configure IPv4 and IPv6 Networking and Hostname Resolution - Demo,5,L2,23,2026-06-30
+Networking,Start Stop and Check Status of Network Services,4,L2,6,2026-06-30
+Networking,Lab - Configure Networking Start/Stop/Check Status of Network Services,5,L2,110,2026-06-30
+Networking,Configure Bridge and Bonding Devices - Theory,4,L2,8,2026-06-30
+Networking,Configure Bridge and Bonding Devices - Demo,5,L2,15,2026-06-30
+Networking,Configure Packet Filtering (Firewall),5,L2,22,2026-06-30
+Networking,Lab - Packet Filtering,6,L2,60,2026-06-30
+Networking,Port Redirection and Network Address Translation (NAT),5,L2,21,2026-06-30
+Networking,Implement Reverse Proxies and Load Balancers,5,L2,15,2026-06-30
+Networking,Set and Synchronize System Time Using Time Servers,4,L2,7,2026-06-30
+Networking,Configure SSH Servers and Clients,5,L2,19,2026-06-30
+Networking,Lab - Configure SSH Servers and Clients,5,L2,140,2026-06-30
+Storage,List Create Delete and Modify Physical Storage Partitions,4,L2,11,2026-06-30
+Storage,Configure and Manage Swap Space,4,L2,6,2026-06-30
+Storage,Lab - Manage Partitions and Swap Space,5,L2,70,2026-06-30
+Storage,Create and Configure File Systems,4,L2,10,2026-06-30
+Storage,Configure Systems to Mount Filesystems at or During Boot,4,L2,8,2026-06-30
+Storage,Lab - Create Filesystems and Mount Them at Boot,5,L2,70,2026-06-30
+Storage,Filesystem and Mount Options,4,L2,6,2026-06-30
+Storage,Lab - Filesystem Features and Mount Options,5,L2,60,2026-06-30
+Storage,Use Remote Filesystems: NFS,4,L2,13,2026-06-30
+Storage,Lab - Remote File Systems: NFS,5,L2,70,2026-06-30
+Storage,Use Network Block Devices: NBD,4,L2,12,2026-06-30
+Storage,Manage and Configure LVM Storage,5,L2,11,2026-06-30
+Storage,Lab - Manage LVM,5,L2,120,2026-06-30
+Storage,Monitor Storage Performance,4,L2,16,2026-06-30
+Storage,Create Manage and Diagnose Advanced Filesystem Permissions,5,L2,12,2026-06-30
+Storage,Lab - Advanced Permissions,5,L2,50,2026-06-30
+Conclusion,Conclusion,1,L2,3,2026-06-30
+Mock Exams,Lab - LFCS Mock Exam 1,7,L2,100,2026-06-30
+Mock Exams,Lab - LFCS Mock Exam 2,7,L2,100,2026-06-30
+Mock Exams,Lab - LFCS Mock Exam 3,7,L2,100,2026-06-30
+Mock Exams,Lab - LFCS Mock Exam 4,7,L2,100,2026-06-30
