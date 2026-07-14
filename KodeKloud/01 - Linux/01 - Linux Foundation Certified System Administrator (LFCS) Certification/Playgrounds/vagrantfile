@@ -1,5 +1,4 @@
 # -- mode: ruby --
-
 # vi: set ft=ruby :
 
 Vagrant.configure("2") do |config|
@@ -7,7 +6,7 @@ Vagrant.configure("2") do |config|
   
   nodes = [
     { name: "node01", ip: "192.168.122.11", extra_disks: [] },
-    { name: "node02", ip: "192.168.122.12", extra_disks: ['1G'] },
+    { name: "node02", ip: "192.168.122.12", extra_disks: ['1G', '512M'] },
     { name: "node03", ip: "192.168.122.13", extra_disks: [] }
   ]
   
@@ -56,77 +55,59 @@ HOSTS
         apt-get install -y -qq sshpass curl
       SHELL
       
-      # ── NODE02: SERVIDOR A AUDITAR ──
+      # ── NODE02: SERVIDOR CON INCIDENTES VARIADOS ──
       if node[:name] == "node02"
         node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
-          echo "🖥️ Configurando node02 para refuerzo..."
+          echo "🖥️ Configurando node02 con incidentes variados..."
           
           export DEBIAN_FRONTEND=noninteractive
-          apt-get install -y -qq nginx htop net-tools lsof
+          apt-get install -y -qq nginx vim tree
           
-          # ── Crear estructura de archivos para auditoría ──
-          mkdir -p /var/log/audit-app
-          mkdir -p /opt/reports
-          mkdir -p /opt/backups
+          # ── TAREA 1: Essential Commands (sed/awk) ──
+          mkdir -p /opt/data
+          cat << 'CSV' > /opt/data/users.csv
+id,name,department,salary
+1,John,Engineering,75000
+2,Jane,Marketing,65000
+3,Bob,Engineering,80000
+4,Alice,Sales,60000
+5,Charlie,Engineering,72000
+6,Diana,Marketing,68000
+7,Eve,Sales,62000
+CSV
           
-          # Crear archivos de diferentes tamaños y fechas (para sort avanzado)
-          for i in 1 2 3 4 5 6 7; do
-            dd if=/dev/urandom of=/opt/reports/data_$i.dat bs=1K count=$((i * 50)) 2>/dev/null
-            touch -d "2025-0$i-15" /opt/reports/data_$i.dat 2>/dev/null || touch -d "2025-$i-15" /opt/reports/data_$i.dat
+          # ── TAREA 2: User/Group (modificar usuario existente) ──
+          useradd -m -s /bin/bash contractor 2>/dev/null || true
+          echo 'contractor:temp123' | chpasswd
+          groupadd -f tempworkers
+          
+          # ── TAREA 3: Operation of Running Systems (journalctl) ──
+          # Generar algunos logs de sistema
+          logger "System startup completed"
+          logger "Service nginx started"
+          logger "User bob logged in"
+          logger "Disk space warning: 85% used"
+          logger "Backup job completed successfully"
+          
+          # ── TAREA 4: Storage (verificar filesystem) ──
+          mkfs.ext4 -F /dev/vdb 2>/dev/null || true
+          
+          # ── TAREA 5: Networking (hosts file) ──
+          # Dejar /etc/hosts sin entry para appserver.internal
+          
+          # ── TAREA 6: Service Configuration (SSH config) ──
+          # SSH ya está instalado, solo necesitamos configurarlo
+          
+          # ── TAREA 7: Package Management (buscar paquetes) ──
+          # apt ya está disponible
+          
+          # ── TAREA 8: Essential Commands (tar) ──
+          mkdir -p /opt/logs
+          for i in 1 2 3 4 5; do
+            echo "Log entry $i - $(date)" > /opt/logs/app_$i.log
           done
           
-          # Crear archivos con diferentes permisos
-          touch /opt/reports/secret.txt
-          touch /opt/reports/public.txt
-          touch /opt/reports/internal.txt
-          chmod 600 /opt/reports/secret.txt
-          chmod 644 /opt/reports/public.txt
-          chmod 640 /opt/reports/internal.txt
-          
-          # ── Logs de aplicación ──
-          cat << 'LOG' > /var/log/audit-app/access.log
-2026-07-01 10:00:00 INFO User admin logged in
-2026-07-01 10:05:23 WARNING Failed login attempt from 192.168.1.100
-2026-07-01 10:10:45 ERROR Database connection timeout
-2026-07-01 10:15:12 INFO Backup completed successfully
-2026-07-01 10:20:33 WARNING Disk usage above 80%
-2026-07-01 10:25:01 ERROR Permission denied: /etc/shadow
-2026-07-01 10:30:18 INFO Service restarted
-2026-07-01 10:35:44 ERROR Connection refused on port 5432
-2026-07-01 10:40:09 WARNING Memory usage critical
-2026-07-01 10:45:22 INFO Audit completed
-LOG
-          
-          # ── Usuarios y grupos ──
-          groupadd -f developers
-          groupadd -f testers
-          
-          useradd -m -s /bin/bash -G developers dev1 2>/dev/null || true
-          useradd -m -s /bin/bash -G testers test1 2>/dev/null || true
-          echo 'dev1:caleston123' | chpasswd
-          echo 'test1:caleston123' | chpasswd
-          
-          # ── Configurar sysctl con valor incorrecto (REFUERZO) ──
-          echo "vm.swappiness = 60" > /etc/sysctl.d/99-refuerzo.conf
-          sysctl -p /etc/sysctl.d/99-refuerzo.conf >/dev/null
-          
-          # ── Preparar disco para swap (REFUERZO) ──
-          # NO formatear, dejarlo vacío para que el usuario decida
-          
-          # ── Cron job mal configurado ──
-          cat << 'CRON' > /tmp/bad-cron
-* * * * * echo "Cleanup running" >> /var/log/cleanup.log
-CRON
-          crontab -u test1 /tmp/bad-cron
-          
-          # ── Instalar paquetes adicionales ──
-          apt-get install -y -qq tree wget
-          
-          # Asegurar nginx corriendo
-          systemctl enable nginx >/dev/null 2>&1
-          systemctl start nginx >/dev/null 2>&1
-          
-          echo "✅ node02 configurado para refuerzo"
+          echo "✅ node02 configurado con incidentes variados"
         SHELL
       end
       
@@ -134,10 +115,10 @@ CRON
       if node[:name] == "node03"
         node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
           echo "🔒 Preparando bóveda en #{node[:name]}..."
-          mkdir -p /opt/ops-compliance/simulacro-004
+          mkdir -p /opt/ops-compliance/simulacro-005
           chown -R bob:bob /opt/ops-compliance
           chmod -R 755 /opt/ops-compliance
-          echo "✅ Bóveda lista en /opt/ops-compliance/simulacro-004/"
+          echo "✅ Bóveda lista en /opt/ops-compliance/simulacro-005/"
         SHELL
       end
       
@@ -147,187 +128,162 @@ CRON
           echo "🎫 Generando Ticket y script de verificación en node01..."
           
           # --- CREAR EL TICKET ---
-          cat << 'TICKET' > /home/vagrant/TICKET_SIMULACRO-004.txt
+          cat << 'TICKET' > /home/vagrant/TICKET_SIMULACRO-005.txt
 ================================================================================
-TICKET SIMULACRO-004  │  Severidad: MEDIA  │  Ambiente: PRODUCCIÓN
-🔐 SIMULACRO-004 — Refuerzo y Consolidación
+TICKET SIMULACRO-005  │  Severidad: MEDIA  │  Ambiente: PRODUCCIÓN
+🔐 SIMULACRO-005 — Incidentes Variados
 Módulo: LFCS Complete  │  Dificultad: 3/10  │  Nivel: L2
 Ubicación de Control:  node01  (Estación del Administrador — bob)
-Nodo Servidor:         node02  (Servidor a auditar — Ubuntu 22.04)
-Nodo Bóveda Destino:   node03  (Bóveda de Gobernanza — /opt/ops-compliance/simulacro-004/)
+Nodo Servidor:         node02  (Servidor con incidentes — Ubuntu 22.04)
+Nodo Bóveda Destino:   node03  (Bóveda de Gobernanza — /opt/ops-compliance/simulacro-005/)
 Contraseña del Clúster: caleston123
 
-Un servidor en node02 requiere auditoría completa con énfasis en áreas críticas:
-configuración del kernel, gestión de swap, análisis avanzado de archivos y 
-monitoreo de puertos. Este simulacro está diseñado para reforzar conceptos 
-que presentaron dificultades en auditorías anteriores.
-
-Tu misión es completar las 8 tareas siguientes en el orden que prefieras, 
+Un servidor en node02 presenta múltiples incidentes independientes que requieren
+atención inmediata. Cada tarea aborda un problema diferente y no están relacionadas
+entre sí. Tu misión es completar las 8 tareas siguientes en el orden que prefieras,
 respetando los tiempos máximos y enviando la evidencia a node03.
 
 ================================================================================
-TAREA 1 — Essential Commands: Análisis Avanzado de Archivos (peso 4 puntos)
+TAREA 1 — Essential Commands: Extracción de Datos CSV (peso 3 puntos)
 ================================================================================
-El equipo de seguridad necesita un reporte detallado de archivos grandes.
+El equipo de RRHH necesita un reporte de empleados del departamento de Engineering.
 
 En node02:
-1. Busca todos los archivos en /opt/reports/ que tengan un tamaño mayor 
-   a 150 kilobytes
-2. Para cada archivo encontrado, muestra: ruta completa, tamaño en formato 
-   legible (KB/MB), y fecha de modificación
-3. Ordena la lista por tamaño de MAYOR a MENOR
-4. Guarda el resultado en /opt/file-analysis.txt
-
-PISTA: Necesitas combinar find con ls y sort por una columna específica.
+1. El archivo /opt/data/users.csv contiene datos de empleados en formato CSV
+2. Extrae solo las líneas donde el departamento sea "Engineering"
+3. De esas líneas, extrae solo el nombre y el salario (columnas 2 y 4)
+4. Ordena el resultado por salario de mayor a menor
+5. Guarda el resultado en /opt/engineering-report.txt
 
 CRITERIOS:
-  [ ] El archivo /opt/file-analysis.txt existe                                --> 25%
-  [ ] Contiene solo archivos mayores a 150K                                   --> 25%
-  [ ] Muestra ruta, tamaño legible y fecha                                    --> 25%
-  [ ] La lista está ordenada por tamaño (mayor a menor)                       --> 25%
+  [ ] El archivo /opt/engineering-report.txt existe                                --> 30%
+  [ ] Contiene solo empleados de Engineering                                       --> 30%
+  [ ] Muestra nombre y salario (no otras columnas)                                 --> 20%
+  [ ] Está ordenado por salario descendente                                        --> 20%
 
 TIEMPO MÁXIMO: 12 minutos
 
 ================================================================================
-TAREA 2 — Essential Commands: Auditoría de Permisos (peso 3 puntos)
+TAREA 2 — User and Group Management: Modificar Usuario Existente (peso 4 puntos)
 ================================================================================
-El equipo de compliance necesita auditar archivos con permisos restrictivos.
+Un usuario temporal necesita ser reconfigurado para trabajar con el equipo.
 
 En node02:
-1. Busca todos los archivos en /opt/reports/ que tengan permisos EXACTOS 600
-   (solo el propietario puede leer y escribir)
-2. Cuenta cuántos archivos cumplen esta condición
-3. Guarda SOLO el número en /opt/secure-count.txt
+1. El usuario "contractor" ya existe con shell /bin/bash
+2. Cámbiale el shell a /bin/sh
+3. Agrégalo al grupo "tempworkers" como grupo secundario
+4. Establece su contraseña a "caleston123"
+5. Verifica los cambios
 
 CRITERIOS:
-  [ ] El archivo /opt/secure-count.txt existe                                 --> 30%
-  [ ] Contiene solo un número                                                 --> 30%
-  [ ] El número es correcto (debe ser 1)                                      --> 40%
+  [ ] El shell del usuario contractor es /bin/sh                                   --> 40%
+  [ ] contractor pertenece al grupo tempworkers                                    --> 30%
+  [ ] La contraseña está establecida                                               --> 30%
+
+TIEMPO MÁXIMO: 10 minutos
+
+================================================================================
+TAREA 3 — Operation of Running Systems: Análisis de Logs (peso 4 puntos)
+================================================================================
+El equipo de operaciones necesita identificar mensajes específicos en los logs.
+
+En node02:
+1. Busca en el journal del sistema todos los mensajes que contengan la palabra
+   "warning" (case-insensitive)
+2. Cuenta cuántos mensajes coinciden
+3. Guarda SOLO el número en /opt/warning-count.txt
+
+CRITERIOS:
+  [ ] El archivo /opt/warning-count.txt existe                                     --> 30%
+  [ ] Contiene solo un número                                                      --> 30%
+  [ ] El número es correcto (debe ser al menos 1)                                  --> 40%
+
+TIEMPO MÁXIMO: 10 minutos
+
+================================================================================
+TAREA 4 — Storage Management: Verificación de Filesystem (peso 3 puntos)
+================================================================================
+Se necesita verificar el tipo de filesystem de un disco.
+
+En node02:
+1. El disco /dev/vdb existe y está formateado
+2. Identifica qué tipo de filesystem tiene (ext4, xfs, etc.)
+3. Guarda el tipo de filesystem en /opt/filesystem-type.txt
+
+CRITERIOS:
+  [ ] El archivo /opt/filesystem-type.txt existe                                   --> 40%
+  [ ] Contiene el tipo correcto de filesystem (ext4)                               --> 60%
 
 TIEMPO MÁXIMO: 8 minutos
 
 ================================================================================
-TAREA 3 — User and Group Management: Auditoría de Usuarios (peso 3 puntos)
+TAREA 5 — Networking: Configuración de Hosts (peso 3 puntos)
 ================================================================================
-Se requiere verificar la configuración de usuarios del sistema.
+Se requiere agregar una entrada al archivo de hosts para resolución local.
 
 En node02:
-1. Lista todos los usuarios que pertenecen al grupo "developers"
-2. Lista todos los usuarios que pertenecen al grupo "testers"
-3. Guarda esta información en /opt/user-audit.txt con el formato:
-   Grupo developers: [lista de usuarios]
-   Grupo testers: [lista de usuarios]
+1. Agrega una entrada en /etc/hosts para que "appserver.internal" resuelva a
+   la dirección IP 10.0.0.50
+2. Verifica que la entrada fue agregada correctamente
 
 CRITERIOS:
-  [ ] El archivo /opt/user-audit.txt existe                                   --> 25%
-  [ ] Lista correctamente los usuarios del grupo developers                   --> 37.5%
-  [ ] Lista correctamente los usuarios del grupo testers                      --> 37.5%
+  [ ] La entrada existe en /etc/hosts                                              --> 50%
+  [ ] appserver.internal resuelve a 10.0.0.50                                      --> 50%
+
+TIEMPO MÁXIMO: 8 minutos
+
+================================================================================
+TAREA 6 — Service Configuration: Configuración SSH (peso 4 puntos)
+================================================================================
+Se requiere deshabilitar el login root por SSH por seguridad.
+
+En node02:
+1. Modifica la configuración de SSH para que el usuario root NO pueda hacer login
+2. Asegúrate de que la directiva sea "PermitRootLogin no"
+3. NO reinicies el servicio SSH (solo configura)
+
+CRITERIOS:
+  [ ] La directiva PermitRootLogin existe en sshd_config                           --> 40%
+  [ ] El valor es "no"                                                             --> 60%
 
 TIEMPO MÁXIMO: 10 minutos
 
 ================================================================================
-TAREA 4 — Operation of Running Systems: Parámetro del Kernel (peso 5 puntos)
+TAREA 7 — Package Management: Búsqueda de Paquetes (peso 3 puntos)
 ================================================================================
-El equipo de operaciones requiere optimizar el uso de swap del sistema.
+El equipo necesita saber si ciertos paquetes están disponibles.
 
 En node02:
-1. Modifica el parámetro del kernel vm.swappiness para que tenga valor 10
-   (reducir el uso de swap)
-2. Asegúrate de que el cambio sea persistente (sobreviva a reinicios)
-3. Aplica el cambio inmediatamente sin reiniciar
-4. Verifica que el valor actual sea 10
-
-PISTA: Usa sysctl con la opción --load para aplicar cambios desde un archivo.
+1. Busca si el paquete "git" está instalado en el sistema
+2. Busca si el paquete "python3" está instalado en el sistema
+3. Guarda el resultado en /opt/package-check.txt con el formato:
+   git: [instalado/no instalado]
+   python3: [instalado/no instalado]
 
 CRITERIOS:
-  [ ] El archivo de configuración persistente existe en /etc/sysctl.d/        --> 30%
-  [ ] Contiene vm.swappiness = 10                                             --> 25%
-  [ ] El valor actual del kernel es 10 (verificar con sysctl)                 --> 25%
-  [ ] El cambio es inmediato (no requiere reinicio)                           --> 20%
+  [ ] El archivo /opt/package-check.txt existe                                     --> 30%
+  [ ] Indica correctamente el estado de git                                        --> 35%
+  [ ] Indica correctamente el estado de python3                                    --> 35%
+
+TIEMPO MÁXIMO: 10 minutos
+
+================================================================================
+TAREA 8 — Essential Commands: Compresión de Archivos (peso 5 puntos)
+================================================================================
+Se requiere crear un backup comprimido de los logs de la aplicación.
+
+En node02:
+1. El directorio /opt/logs/ contiene múltiples archivos .log
+2. Crea un archivo comprimido llamado /opt/logs-backup.tar.gz que contenga
+   todos los archivos del directorio /opt/logs/
+3. Verifica que el archivo fue creado correctamente
+
+CRITERIOS:
+  [ ] El archivo /opt/logs-backup.tar.gz existe                                    --> 40%
+  [ ] Es un archivo tar.gz válido                                                  --> 30%
+  [ ] Contiene los archivos de /opt/logs/                                          --> 30%
 
 TIEMPO MÁXIMO: 12 minutos
-
-================================================================================
-TAREA 5 — Storage Management: Configuración de Swap (peso 5 puntos)
-================================================================================
-El servidor necesita memoria swap adicional para manejar cargas pico.
-
-En node02:
-1. El disco /dev/vdb está disponible pero NO formateado
-2. Configura /dev/vdb como área de swap (NO lo montes como filesystem)
-3. Activa la swap (swapon)
-4. Configura /etc/fstab para que la swap sea persistente
-
-PISTA: El orden correcto es: mkswap → swapon → fstab (NO montes primero)
-
-CRITERIOS:
-  [ ] /dev/vdb está configurado como swap (NO como filesystem)                --> 30%
-  [ ] La swap está activa (verificar con swapon --show)                       --> 30%
-  [ ] La entrada en /etc/fstab es correcta                                    --> 25%
-  [ ] La swap es persistente (sobrevive a reboot)                             --> 15%
-
-TIEMPO MÁXIMO: 15 minutos
-
-================================================================================
-TAREA 6 — Networking: Auditoría de Puertos con Procesos (peso 3 puntos)
-================================================================================
-El equipo de seguridad necesita verificar qué puertos están escuchando y 
-qué procesos los están usando.
-
-En node02:
-1. Lista todos los puertos TCP que están en estado LISTEN
-2. Filtra solo los que están en el puerto 80 (nginx)
-3. La información DEBE incluir: protocolo, puerto, Y el nombre del proceso
-4. Guarda la información en /opt/port-audit.txt
-
-PISTA: Para ver el nombre del proceso necesitas privilegios elevados.
-
-CRITERIOS:
-  [ ] El archivo /opt/port-audit.txt existe                                   --> 30%
-  [ ] Contiene información del puerto 80 en estado LISTEN                     --> 30%
-  [ ] La información incluye el proceso (nginx)                               --> 40%
-
-TIEMPO MÁXIMO: 10 minutos
-
-================================================================================
-TAREA 7 — Service Configuration: Corrección de Cron Job (peso 3 puntos)
-================================================================================
-El cron job del usuario test1 está mal configurado y ejecutándose cada 
-minuto, causando sobrecarga.
-
-En node02:
-1. Revisa el cron job actual del usuario test1
-2. Modifícalo para que se ejecute solo una vez al día a las 4:30 AM
-3. Verifica que el cambio se aplicó correctamente
-
-CRITERIOS:
-  [ ] El cron job existe para test1                                           --> 30%
-  [ ] Está configurado para ejecutarse a las 4:30 AM diarios                  --> 40%
-  [ ] El comando sigue siendo el mismo (echo "Cleanup running" ...)           --> 30%
-
-TIEMPO MÁXIMO: 10 minutos
-
-================================================================================
-TAREA 8 — Package Management: Auditoría de Paquetes (peso 3 puntos)
-================================================================================
-El equipo de compliance necesita verificar qué paquetes están instalados.
-
-En node02:
-1. Verifica si el paquete "nginx" está instalado
-2. Verifica si el paquete "apache2" está instalado
-3. Verifica si el paquete "wget" está instalado
-4. Guarda el resultado en /opt/package-audit.txt con el formato:
-   nginx: [instalado/no instalado]
-   apache2: [instalado/no instalado]
-   wget: [instalado/no instalado]
-
-CRITERIOS:
-  [ ] El archivo /opt/package-audit.txt existe                                --> 25%
-  [ ] Indica correctamente que nginx está instalado                           --> 25%
-  [ ] Indica correctamente que apache2 NO está instalado                      --> 25%
-  [ ] Indica correctamente que wget está instalado                            --> 25%
-
-TIEMPO MÁXIMO: 10 minutos
 
 ================================================================================
 PIPELINE DE EVIDENCIA A NODE03
@@ -335,35 +291,35 @@ PIPELINE DE EVIDENCIA A NODE03
 Una vez completadas las 8 tareas, debes enviar TODA la evidencia a node03 
 mediante pipeline SSH (sin crear archivos temporales en node01).
 
-Destino: /opt/ops-compliance/simulacro-004/evidence.txt
+Destino: /opt/ops-compliance/simulacro-005/evidence.txt
 
 La evidencia debe incluir:
-a) Contenido de /opt/file-analysis.txt en node02
-b) Contenido de /opt/secure-count.txt en node02
-c) Contenido de /opt/user-audit.txt en node02
-d) Salida de 'sysctl vm.swappiness' en node02
-e) Salida de 'swapon --show' en node02
-f) Contenido de /opt/port-audit.txt en node02
-g) Salida de 'sudo crontab -u test1 -l' en node02
-h) Contenido de /opt/package-audit.txt en node02
+a) Contenido de /opt/engineering-report.txt en node02
+b) Salida de 'id contractor' en node02
+c) Contenido de /opt/warning-count.txt en node02
+d) Contenido de /opt/filesystem-type.txt en node02
+e) Línea agregada en /etc/hosts de node02 (grep appserver.internal /etc/hosts)
+f) Línea de PermitRootLogin en sshd_config de node02
+g) Contenido de /opt/package-check.txt en node02
+h) Salida de 'ls -lh /opt/logs-backup.tar.gz' en node02
 
 NO crear archivos temporales en node01. Todo debe ir vía pipeline SSH.
 
 CRITERIOS:
-  [ ] Evidencia enviada a node03:/opt/ops-compliance/simulacro-004/          --> 100%
+  [ ] Evidencia enviada a node03:/opt/ops-compliance/simulacro-005/               --> 100%
   [ ] CERO archivos de resultados almacenados en node01 (DESCALIFICA)
 
 ================================================================================
 RESUMEN DE PUNTUACIÓN
 ================================================================================
-Tarea 1: 4 puntos (Essential Commands - Análisis avanzado)
-Tarea 2: 3 puntos (Essential Commands - Permisos)
-Tarea 3: 3 puntos (User/Group Management)
-Tarea 4: 5 puntos (Operation of Running Systems - sysctl)
-Tarea 5: 5 puntos (Storage Management - swap)
-Tarea 6: 3 puntos (Networking - puertos con procesos)
-Tarea 7: 3 puntos (Service Configuration - cron)
-Tarea 8: 3 puntos (Package Management)
+Tarea 1: 3 puntos (Essential Commands - CSV)
+Tarea 2: 4 puntos (User/Group Management)
+Tarea 3: 4 puntos (Operation of Running Systems)
+Tarea 4: 3 puntos (Storage Management)
+Tarea 5: 3 puntos (Networking)
+Tarea 6: 4 puntos (Service Configuration)
+Tarea 7: 3 puntos (Package Management)
+Tarea 8: 5 puntos (Essential Commands - tar)
 Evidencia: incluido en las tareas
 TOTAL: 29 puntos
 MÍNIMO PARA APROBAR (67%): 20 puntos
@@ -376,7 +332,7 @@ TIEMPO TOTAL MÁXIMO: 90 minutos
 TICKET
 
           # --- CREAR EL SCRIPT DE VERIFICACIÓN ---
-          cat << 'VERIFY' > /tmp/verify-simulacro004.sh
+          cat << 'VERIFY' > /tmp/verify-simulacro005.sh
 #!/bin/bash
 RED='\e[1;31m'
 GREEN='\e[1;32m'
@@ -388,85 +344,68 @@ PASS="caleston123"
 FAIL=0
 
 echo -e "${CYAN}╔════════════════════════════════════════════════════════════════╗${RESET}"
-echo -e "${CYAN}║          VERIFICACIÓN DE ESCENARIO SIMULACRO-004              ║${RESET}"
+echo -e "${CYAN}║          VERIFICACIÓN DE ESCENARIO SIMULACRO-005              ║${RESET}"
 echo -e "${CYAN}╚════════════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
-echo -e "${YELLOW}[1/10] node02: Estructura de archivos creada${RESET}"
-if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "[ -d /opt/reports ] && [ -d /var/log/audit-app ]" 2>/dev/null; then
-  echo -e "      ${GREEN}✓ Estructura creada${RESET}"
+echo -e "${YELLOW}[1/8] node02: Archivo CSV existe${RESET}"
+if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "[ -f /opt/data/users.csv ]" 2>/dev/null; then
+  echo -e "      ${GREEN}✓ Archivo CSV existe${RESET}"
 else
-  echo -e "      ${RED}✗ Estructura no encontrada${RESET}"
+  echo -e "      ${RED}✗ Archivo CSV no encontrado${RESET}"
   FAIL=1
 fi
 
-echo -e "${YELLOW}[2/10] node02: Archivos con diferentes tamaños${RESET}"
-if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "ls /opt/reports/*.dat >/dev/null 2>&1" 2>/dev/null; then
-  echo -e "      ${GREEN}✓ Archivos de reportes existen${RESET}"
+echo -e "${YELLOW}[2/8] node02: Usuario contractor existe${RESET}"
+if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "id contractor >/dev/null 2>&1" 2>/dev/null; then
+  echo -e "      ${GREEN}✓ Usuario contractor existe${RESET}"
 else
-  echo -e "      ${RED}✗ Archivos no encontrados${RESET}"
+  echo -e "      ${RED}✗ Usuario contractor no encontrado${RESET}"
   FAIL=1
 fi
 
-echo -e "${YELLOW}[3/10] node02: Grupos developers y testers${RESET}"
-if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "getent group developers >/dev/null 2>&1 && getent group testers >/dev/null 2>&1" 2>/dev/null; then
-  echo -e "      ${GREEN}✓ Grupos existen${RESET}"
+echo -e "${YELLOW}[3/8] node02: Grupo tempworkers existe${RESET}"
+if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "getent group tempworkers >/dev/null 2>&1" 2>/dev/null; then
+  echo -e "      ${GREEN}✓ Grupo tempworkers existe${RESET}"
 else
-  echo -e "      ${RED}✗ Grupos no encontrados${RESET}"
+  echo -e "      ${RED}✗ Grupo tempworkers no encontrado${RESET}"
   FAIL=1
 fi
 
-echo -e "${YELLOW}[4/10] node02: Usuarios dev1 y test1${RESET}"
-if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "id dev1 >/dev/null 2>&1 && id test1 >/dev/null 2>&1" 2>/dev/null; then
-  echo -e "      ${GREEN}✓ Usuarios existen${RESET}"
+echo -e "${YELLOW}[4/8] node02: Disco /dev/vdb formateado${RESET}"
+if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "sudo blkid /dev/vdb | grep -q ext4" 2>/dev/null; then
+  echo -e "      ${GREEN}✓ Disco formateado como ext4${RESET}"
 else
-  echo -e "      ${RED}✗ Usuarios no encontrados${RESET}"
+  echo -e "      ${RED}✗ Disco no formateado${RESET}"
   FAIL=1
 fi
 
-echo -e "${YELLOW}[5/10] node02: Parámetro sysctl actual (debe ser 60)${RESET}"
-CURRENT=$(sshpass -p $PASS ssh $SSH_OPTS bob@node02 "sysctl -n vm.swappiness" 2>/dev/null | tr -d '\r')
-if [ "$CURRENT" = "60" ]; then
-  echo -e "      ${GREEN}✓ Parámetro actual es 60 (bug inyectado)${RESET}"
+echo -e "${YELLOW}[5/8] node02: Directorio /opt/logs existe${RESET}"
+if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "[ -d /opt/logs ] && ls /opt/logs/*.log >/dev/null 2>&1" 2>/dev/null; then
+  echo -e "      ${GREEN}✓ Directorio de logs existe${RESET}"
 else
-  echo -e "      ${RED}✗ Parámetro ya es $CURRENT (bug no inyectado)${RESET}"
+  echo -e "      ${RED}✗ Directorio de logs no encontrado${RESET}"
   FAIL=1
 fi
 
-echo -e "${YELLOW}[6/10] node02: Disco /dev/vdb disponible (sin formatear)${RESET}"
-if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "sudo blkid /dev/vdb 2>/dev/null | grep -q ."; then
-  echo -e "      ${RED}✗ Disco ya está formateado (bug no inyectado)${RESET}"
-  FAIL=1
+echo -e "${YELLOW}[6/8] node02: nginx instalado${RESET}"
+if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "which nginx >/dev/null 2>&1" 2>/dev/null; then
+  echo -e "      ${GREEN}✓ nginx instalado${RESET}"
 else
-  echo -e "      ${GREEN}✓ Disco disponible sin formatear${RESET}"
-fi
-
-echo -e "${YELLOW}[7/10] node02: nginx instalado y activo${RESET}"
-if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "sudo systemctl is-active --quiet nginx" 2>/dev/null; then
-  echo -e "      ${GREEN}✓ nginx activo${RESET}"
-else
-  echo -e "      ${RED}✗ nginx inactivo${RESET}"
+  echo -e "      ${RED}✗ nginx no instalado${RESET}"
   FAIL=1
 fi
 
-echo -e "${YELLOW}[8/10] node02: Cron job mal configurado (bug inyectado)${RESET}"
-if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "sudo crontab -u test1 -l | grep -q '^\* \* \* \* \*'" 2>/dev/null; then
-  echo -e "      ${GREEN}✓ Cron job ejecutándose cada minuto (bug activo)${RESET}"
+echo -e "${YELLOW}[7/8] node02: SSH config existe${RESET}"
+if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "[ -f /etc/ssh/sshd_config ]" 2>/dev/null; then
+  echo -e "      ${GREEN}✓ SSH config existe${RESET}"
 else
-  echo -e "      ${RED}✗ Cron job no coincide con el bug esperado${RESET}"
+  echo -e "      ${RED}✗ SSH config no encontrado${RESET}"
   FAIL=1
 fi
 
-echo -e "${YELLOW}[9/10] node02: Paquetes wget y tree instalados${RESET}"
-if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "which wget tree >/dev/null 2>&1" 2>/dev/null; then
-  echo -e "      ${GREEN}✓ Paquetes instalados${RESET}"
-else
-  echo -e "      ${RED}✗ Paquetes no encontrados${RESET}"
-  FAIL=1
-fi
-
-echo -e "${YELLOW}[10/10] node03: Bóveda de evidencia${RESET}"
-if sshpass -p $PASS ssh -t $SSH_OPTS bob@node03 "[ -d /opt/ops-compliance/simulacro-004 ]" 2>/dev/null; then
+echo -e "${YELLOW}[8/8] node03: Bóveda de evidencia${RESET}"
+if sshpass -p $PASS ssh -t $SSH_OPTS bob@node03 "[ -d /opt/ops-compliance/simulacro-005 ]" 2>/dev/null; then
   echo -e "      ${GREEN}✓ Bóveda creada${RESET}"
 else
   echo -e "      ${RED}✗ Bóveda no existe${RESET}"
@@ -487,14 +426,14 @@ fi
 echo ""
 echo -e "${YELLOW}Presiona ENTER para ver el ticket del incidente...${RESET}"
 read -r
-cat /home/vagrant/TICKET_SIMULACRO-004.txt
+cat /home/vagrant/TICKET_SIMULACRO-005.txt
 VERIFY
 
-          chmod +x /tmp/verify-simulacro004.sh
+          chmod +x /tmp/verify-simulacro005.sh
           
           # --- AÑADIR AL .bashrc PARA EJECUCIÓN AUTOMÁTICA ---
-          sed -i '/verify-simulacro004/d' /home/vagrant/.bashrc 2>/dev/null || true
-          echo 'bash /tmp/verify-simulacro004.sh' >> /home/vagrant/.bashrc
+          sed -i '/verify-simulacro005/d' /home/vagrant/.bashrc 2>/dev/null || true
+          echo 'bash /tmp/verify-simulacro005.sh' >> /home/vagrant/.bashrc
           
           echo "✅ Ticket y script de verificación creados."
           echo "🚀 Al hacer 'vagrant ssh node01' se ejecutará automáticamente."
