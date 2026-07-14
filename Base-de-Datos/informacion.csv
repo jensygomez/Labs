@@ -1,45 +1,87 @@
 Module,Title,Difficulty,Level,Duration,Date
-Introduction,Introduction,1,L1,3,2026-07-14
-Introduction,Ansible Introduction,1,L1,4,2026-07-14
-Introduction,A Quick Reminder,1,L1,2,2026-07-14
-Introduction,Article: How to Reach Out to KodeKloud and Engage with the Community,1,L1,3,2026-07-14
-Configuration and Basic Concepts,Introduction to Ansible Configuration Files,2,L1,10,2026-07-14
-Configuration and Basic Concepts,Understanding YAML,2,L1,9,2026-07-14
-Configuration and Basic Concepts,Lab: YAML,3,L1,20,2026-07-14
-Configuration and Basic Concepts,Article: Download Course Resources,1,L1,2,2026-07-14
-Configuration and Basic Concepts,Article: Notes available at KodeKloud Notes,1,L1,2,2026-07-14
-Ansible Inventory,Ansible Inventory,2,L1,5,2026-07-14
-Ansible Inventory,Inventory Formats,2,L1,2,2026-07-14
-Ansible Inventory,Lab: Inventory,3,L1,20,2026-07-14
-Ansible Inventory,Grouping and Parent-Child Relationships,2,L1,4,2026-07-14
-Ansible Variables and Facts,Ansible Variables,3,L1,4,2026-07-14
-Ansible Variables and Facts,Variable Types,2,L1,2,2026-07-14
-Ansible Variables and Facts,Registering Variables and Variable Precedence,3,L1,7,2026-07-14
-Ansible Variables and Facts,Variable Scoping,3,L1,3,2026-07-14
-Ansible Variables and Facts,Magic Variables,3,L1,4,2026-07-14
-Ansible Variables and Facts,Ansible Facts,3,L1,5,2026-07-14
-Ansible Variables and Facts,Lab: Ansible Variables and Facts,4,L1,20,2026-07-14
-Ansible Playbooks,Ansible Playbooks,3,L1,6,2026-07-14
-Ansible Playbooks,Verifying Playbooks,3,L1,6,2026-07-14
-Ansible Playbooks,Ansible-lint,3,L1,3,2026-07-14
-Ansible Playbooks,Lab: Ansible Playbooks,4,L1,20,2026-07-14
-Ansible Playbooks,Ansible Conditionals,3,L1,5,2026-07-14
-Ansible Playbooks,Ansible Conditionals based on facts variables and re-use,3,L1,3,2026-07-14
-Ansible Playbooks,Lab: Conditionals,4,L1,20,2026-07-14
-Ansible Playbooks,Ansible Loops,3,L1,7,2026-07-14
-Ansible Playbooks,Lab: Loops,4,L1,20,2026-07-14
-Ansible Modules and Plugins,Ansible Modules,3,L1,11,2026-07-14
-Ansible Modules and Plugins,Introduction to Ansible Plugins,3,L1,5,2026-07-14
-Ansible Modules and Plugins,Modules and Plugins Index,3,L1,4,2026-07-14
-Ansible Modules and Plugins,Lab: Modules,4,L1,20,2026-07-14
-Ansible Handlers Roles and Collections,Introduction to Handlers,3,L1,3,2026-07-14
-Ansible Handlers Roles and Collections,Ansible Roles,3,L1,8,2026-07-14
-Ansible Handlers Roles and Collections,Ansible Collections,3,L1,4,2026-07-14
-Ansible Handlers Roles and Collections,Lab: Ansible Handlers Roles and Collections,4,L1,20,2026-07-14
-Ansible Templates,Introduction to Templating,3,L1,6,2026-07-14
-Ansible Templates,Jinja2 Templates for Dynamic Configs - Demo,4,L1,8,2026-07-14
-Ansible Templates,Lab: Ansible Templates,4,L1,20,2026-07-14
-Appendix,Demo: Setup Ansible Local Environment - Using VirtualBox,2,L1,10,2026-07-14
-Appendix,Demo: Install Ansible,3,L1,12,2026-07-14
-Appendix,Article: Lab Setup - Troubleshooting Tips,2,L1,5,2026-07-14
-Appendix,Lab: Revisiting Ansible,3,L1,20,2026-07-14
+Introduction,Course Introduction,1,L2,5,2026-07-14
+Introduction,Article: Download Presentation Deck,1,L2,2,2026-07-14
+Introduction,Article: Notes available at KodeKloud Notes,1,L2,2,2026-07-14
+Introduction,Article: How to Reach Out to KodeKloud and Engage with the Community,1,L2,3,2026-07-14
+Introduction to Infrastructure as Code,Challenges with Traditional IT Infrastructure,2,L2,6,2026-07-14
+Introduction to Infrastructure as Code,Types of IAC Tools,2,L2,6,2026-07-14
+Introduction to Infrastructure as Code,Why Terraform?,2,L2,6,2026-07-14
+Getting Started with Terraform,Installing Terraform,2,L2,3,2026-07-14
+Getting Started with Terraform,HashiCorp Configuration Language (HCL) Basics,3,L2,11,2026-07-14
+Getting Started with Terraform,Update and Destroy Infrastructure,2,L2,3,2026-07-14
+Getting Started with Terraform,Lab: HCL Basics,3,L2,20,2026-07-14
+Terraform Basics,Using Terraform Providers,3,L2,5,2026-07-14
+Terraform Basics,Configuration Directory,2,L2,2,2026-07-14
+Terraform Basics,Lab: Terraform Providers,3,L2,20,2026-07-14
+Terraform Basics,Multiple Providers,3,L2,4,2026-07-14
+Terraform Basics,Lab: Multiple Providers,3,L2,20,2026-07-14
+Terraform Basics,Using Input Variables,3,L2,4,2026-07-14
+Terraform Basics,Understanding the Variable Block,3,L2,8,2026-07-14
+Terraform Basics,Lab: Variables,4,L2,20,2026-07-14
+Terraform Basics,Using Variables in Terraform,3,L2,5,2026-07-14
+Terraform Basics,Lab: Using Variables in terraform,4,L2,20,2026-07-14
+Terraform Basics,Resource Attributes,3,L2,4,2026-07-14
+Terraform Basics,Lab: Resource Attributes,4,L2,20,2026-07-14
+Terraform Basics,Resource Dependencies,3,L2,3,2026-07-14
+Terraform Basics,Lab: Resource Dependencies,4,L2,20,2026-07-14
+Terraform Basics,Output Variables,3,L2,3,2026-07-14
+Terraform Basics,Lab: Output Variables,4,L2,20,2026-07-14
+Terraform State,Introduction to Terraform State,3,L2,6,2026-07-14
+Terraform State,Purpose of State,3,L2,7,2026-07-14
+Terraform State,Lab: terraform State,4,L2,20,2026-07-14
+Terraform State,Terraform State Considerations,3,L2,3,2026-07-14
+Working with Terraform,Terraform Commands,3,L2,6,2026-07-14
+Working with Terraform,Lab: Terraform Commands,4,L2,20,2026-07-14
+Working with Terraform,Mutable vs Immutable Infrastructure,3,L2,6,2026-07-14
+Working with Terraform,LifeCycle Rules,3,L2,6,2026-07-14
+Working with Terraform,Lab: Lifecycle Rules,4,L2,20,2026-07-14
+Working with Terraform,Datasources,3,L2,5,2026-07-14
+Working with Terraform,Lab: Datasources,4,L2,20,2026-07-14
+Working with Terraform,Meta-Arguments,3,L2,2,2026-07-14
+Working with Terraform,Count,3,L2,7,2026-07-14
+Working with Terraform,for-each,3,L2,4,2026-07-14
+Working with Terraform,Lab: Count and for each,4,L2,20,2026-07-14
+Working with Terraform,Version Constraints,3,L2,6,2026-07-14
+Working with Terraform,Lab: Version Constraints,4,L2,20,2026-07-14
+Terraform with AWS,Getting Started with AWS,3,L2,3,2026-07-14
+Terraform with AWS,Demo Setup an AWS Account,3,L2,4,2026-07-14
+Terraform with AWS,Introduction to IAM,4,L2,10,2026-07-14
+Terraform with AWS,Demo IAM,4,L2,10,2026-07-14
+Terraform with AWS,Programmatic Access,4,L2,6,2026-07-14
+Terraform with AWS,Lab: AWS CLI and IAM,4,L2,20,2026-07-14
+Terraform with AWS,AWS IAM with Terraform,4,L2,5,2026-07-14
+Terraform with AWS,IAM Policies with Terraform,4,L2,5,2026-07-14
+Terraform with AWS,Lab: IAM with Terraform,5,L2,20,2026-07-14
+Terraform with AWS,Introduction to AWS S3,3,L2,5,2026-07-14
+Terraform with AWS,S3 with Terraform,4,L2,5,2026-07-14
+Terraform with AWS,Lab: S3,4,L2,20,2026-07-14
+Terraform with AWS,Introduction to DynamoDB,3,L2,4,2026-07-14
+Terraform with AWS,Demo Dynamodb,3,L2,4,2026-07-14
+Terraform with AWS,DynamoDB with Terraform,4,L2,4,2026-07-14
+Terraform with AWS,Lab: DynamoDB,4,L2,20,2026-07-14
+Remote State,What is Remote State and State Locking?,4,L2,7,2026-07-14
+Remote State,Remote Backends with S3,4,L2,4,2026-07-14
+Remote State,Lab: Remote State,5,L2,20,2026-07-14
+Remote State,Terraform State Commands,4,L2,5,2026-07-14
+Remote State,Lab: Terraform State Commands,5,L2,20,2026-07-14
+Terraform Provisioners,Introduction to AWS EC2 (optional),3,L2,5,2026-07-14
+Terraform Provisioners,Demo: Deploying an EC2 Instance (optional),4,L2,6,2026-07-14
+Terraform Provisioners,AWS EC2 with Terraform,4,L2,6,2026-07-14
+Terraform Provisioners,Terraform Provisioners,4,L2,6,2026-07-14
+Terraform Provisioners,Provisioner Behaviour,3,L2,3,2026-07-14
+Terraform Provisioners,Lab: AWS EC2 and Provisioners,5,L2,20,2026-07-14
+Terraform Provisioners,Considerations with Provisioners,3,L2,3,2026-07-14
+Terraform Import Taint and Debugging,Terraform Taint,3,L2,2,2026-07-14
+Terraform Import Taint and Debugging,Debugging,3,L2,2,2026-07-14
+Terraform Import Taint and Debugging,Lab: Taint and Debugging,4,L2,20,2026-07-14
+Terraform Import Taint and Debugging,Terraform Import,4,L2,5,2026-07-14
+Terraform Import Taint and Debugging,Lab: Terraform Import,4,L2,20,2026-07-14
+Terraform Modules,What are modules?,3,L2,6,2026-07-14
+Terraform Modules,Creating and Using a Module,4,L2,9,2026-07-14
+Terraform Modules,Using Modules from the Registry,3,L2,4,2026-07-14
+Terraform Modules,Lab: Terraform Modules,4,L2,20,2026-07-14
+Terraform Functions and Conditional Expressions,More Terraform Functions,4,L2,10,2026-07-14
+Terraform Functions and Conditional Expressions,Conditional Expressions,4,L2,7,2026-07-14
+Terraform Functions and Conditional Expressions,Lab: Functions and Conditional Expressions,5,L2,20,2026-07-14
+Terraform Functions and Conditional Expressions,Terraform Workspaces (OSS),4,L2,8,2026-07-14
+Terraform Functions and Conditional Expressions,Lab: terraform Workspaces,5,L2,20,2026-07-14
