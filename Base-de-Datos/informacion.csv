@@ -1,57 +1,45 @@
 Module,Title,Difficulty,Level,Duration,Date
-Introduction,Introduction,1,L1,3,2026-07-13
-Introduction,How to Reach Out to KodeKloud and Engage with the Community,1,L1,3,2026-07-13
-Kubernetes Overview,Containers Overview,2,L1,14,2026-07-13
-Kubernetes Overview,Container Orchestration,2,L1,4,2026-07-13
-Kubernetes Overview,Kubernetes Architecture,3,L1,7,2026-07-13
-Kubernetes Overview,Docker-vs-ContainerD,2,L1,14,2026-07-13
-Kubernetes Overview,A Note on Docker Deprecation,1,L1,3,2026-07-13
-Kubernetes Overview,Lab: Familiarize with Lab Environment,3,L1,20,2026-07-13
-Kubernetes Overview,A Quick Reminder,1,L1,2,2026-07-13
-Kubernetes Concepts,Kubernetes Setup - Introduction and Minikube,2,L1,5,2026-07-13
-Kubernetes Concepts,Demo - Minikube-Setup,3,L1,16,2026-07-13
-Kubernetes Concepts,Pods,3,L1,10,2026-07-13
-Kubernetes Concepts,Demo - Pods,3,L1,5,2026-07-13
-Kubernetes Concepts,A note about creating Pods,2,L1,3,2026-07-13
-YAML Introduction,Introduction to YAML,2,L1,8,2026-07-13
-YAML Introduction,Lab: YAML,3,L1,20,2026-07-13
-Kubernetes Concepts - Pods ReplicaSets Deployments,Pods with YAML,3,L1,7,2026-07-13
-Kubernetes Concepts - Pods ReplicaSets Deployments,Demo - Pods with YAML,3,L1,7,2026-07-13
-Kubernetes Concepts - Pods ReplicaSets Deployments,Demo - YAML - Tips,3,L1,18,2026-07-13
-Kubernetes Concepts - Pods ReplicaSets Deployments,Lab: Pods with YAML,4,L1,20,2026-07-13
-Kubernetes Concepts - Pods ReplicaSets Deployments,Lab Solution,3,L1,12,2026-07-13
-Kubernetes Concepts - Pods ReplicaSets Deployments,Replication Controllers and ReplicaSets,3,L1,17,2026-07-13
-Kubernetes Concepts - Pods ReplicaSets Deployments,Demo - ReplicaSets,3,L1,14,2026-07-13
-Kubernetes Concepts - Pods ReplicaSets Deployments,Lab: Replica Sets,4,L1,20,2026-07-13
-Kubernetes Concepts - Pods ReplicaSets Deployments,Lab Solution,3,L1,15,2026-07-13
-Kubernetes Concepts - Pods ReplicaSets Deployments,Deployments,3,L1,5,2026-07-13
-Kubernetes Concepts - Pods ReplicaSets Deployments,Demo: Deployments,3,L1,5,2026-07-13
-Kubernetes Concepts - Pods ReplicaSets Deployments,Lab: Deployments,4,L1,20,2026-07-13
-Kubernetes Concepts - Pods ReplicaSets Deployments,Lab Solution,3,L1,8,2026-07-13
-Kubernetes Concepts - Pods ReplicaSets Deployments,Deployments - Update and Rollback,3,L1,7,2026-07-13
-Kubernetes Concepts - Pods ReplicaSets Deployments,Demo - Deployments - Update and Rollback,3,L1,15,2026-07-13
-Kubernetes Concepts - Pods ReplicaSets Deployments,Lab: Practice Test Rolling Updates and Rollbacks,4,L1,20,2026-07-13
-Kubernetes Concepts - Pods ReplicaSets Deployments,Lab Solution,3,L1,10,2026-07-13
-Networking in Kubernetes,Basics of Networking in Kubernetes,3,L1,6,2026-07-13
-Services,Services - NodePort,3,L1,14,2026-07-13
-Services,Demo - Services,3,L1,5,2026-07-13
-Services,Services - ClusterIP,3,L1,4,2026-07-13
-Services,Services - Load balancer,3,L1,4,2026-07-13
-Services,Lab: Services,4,L1,20,2026-07-13
-Services,Lab Solution,3,L1,10,2026-07-13
-Microservices Architecture,Microservices Architecture,3,L1,8,2026-07-13
-Microservices Architecture,Deploying voting app on Kubernetes,4,L1,9,2026-07-13
-Microservices Architecture,Demo - Deploying voting app on Kubernetes,4,L1,21,2026-07-13
-Microservices Architecture,Demo - Deploying voting app on Kubernetes with Deployments,4,L1,11,2026-07-13
-Microservices Architecture,A Note for the Previous Demo,2,L1,3,2026-07-13
-Kubernetes on the Cloud,Section Introduction,2,L1,4,2026-07-13
-Kubernetes on the Cloud,Kubernetes on GCP (GKE),4,L1,9,2026-07-13
-Kubernetes on the Cloud,Kubernetes on AWS (EKS),4,L1,10,2026-07-13
-Kubernetes on the Cloud,Kubernetes on Azure (AKS),4,L1,7,2026-07-13
-Conclusion,Conclusion,1,L1,2,2026-07-13
-Appendix,Kubernetes Setup - Kubeadm,3,L1,3,2026-07-13
-Appendix,Demo - Setting Up Virtual Machines on Windows,3,L1,6,2026-07-13
-Appendix,Demo - Setting Up Virtual Machines on Mac,3,L1,25,2026-07-13
-Appendix,Demo - Kubeadm - Configuring Cluster With Kubeadm,4,L1,20,2026-07-13
-Appendix,References,1,L1,2,2026-07-13
-Appendix,Kubernetes Update and Project Videos - Your Essential Guide,2,L1,3,2026-07-13
+Introduction,Introduction,1,L1,3,2026-07-14
+Introduction,Ansible Introduction,1,L1,4,2026-07-14
+Introduction,A Quick Reminder,1,L1,2,2026-07-14
+Introduction,Article: How to Reach Out to KodeKloud and Engage with the Community,1,L1,3,2026-07-14
+Configuration and Basic Concepts,Introduction to Ansible Configuration Files,2,L1,10,2026-07-14
+Configuration and Basic Concepts,Understanding YAML,2,L1,9,2026-07-14
+Configuration and Basic Concepts,Lab: YAML,3,L1,20,2026-07-14
+Configuration and Basic Concepts,Article: Download Course Resources,1,L1,2,2026-07-14
+Configuration and Basic Concepts,Article: Notes available at KodeKloud Notes,1,L1,2,2026-07-14
+Ansible Inventory,Ansible Inventory,2,L1,5,2026-07-14
+Ansible Inventory,Inventory Formats,2,L1,2,2026-07-14
+Ansible Inventory,Lab: Inventory,3,L1,20,2026-07-14
+Ansible Inventory,Grouping and Parent-Child Relationships,2,L1,4,2026-07-14
+Ansible Variables and Facts,Ansible Variables,3,L1,4,2026-07-14
+Ansible Variables and Facts,Variable Types,2,L1,2,2026-07-14
+Ansible Variables and Facts,Registering Variables and Variable Precedence,3,L1,7,2026-07-14
+Ansible Variables and Facts,Variable Scoping,3,L1,3,2026-07-14
+Ansible Variables and Facts,Magic Variables,3,L1,4,2026-07-14
+Ansible Variables and Facts,Ansible Facts,3,L1,5,2026-07-14
+Ansible Variables and Facts,Lab: Ansible Variables and Facts,4,L1,20,2026-07-14
+Ansible Playbooks,Ansible Playbooks,3,L1,6,2026-07-14
+Ansible Playbooks,Verifying Playbooks,3,L1,6,2026-07-14
+Ansible Playbooks,Ansible-lint,3,L1,3,2026-07-14
+Ansible Playbooks,Lab: Ansible Playbooks,4,L1,20,2026-07-14
+Ansible Playbooks,Ansible Conditionals,3,L1,5,2026-07-14
+Ansible Playbooks,Ansible Conditionals based on facts variables and re-use,3,L1,3,2026-07-14
+Ansible Playbooks,Lab: Conditionals,4,L1,20,2026-07-14
+Ansible Playbooks,Ansible Loops,3,L1,7,2026-07-14
+Ansible Playbooks,Lab: Loops,4,L1,20,2026-07-14
+Ansible Modules and Plugins,Ansible Modules,3,L1,11,2026-07-14
+Ansible Modules and Plugins,Introduction to Ansible Plugins,3,L1,5,2026-07-14
+Ansible Modules and Plugins,Modules and Plugins Index,3,L1,4,2026-07-14
+Ansible Modules and Plugins,Lab: Modules,4,L1,20,2026-07-14
+Ansible Handlers Roles and Collections,Introduction to Handlers,3,L1,3,2026-07-14
+Ansible Handlers Roles and Collections,Ansible Roles,3,L1,8,2026-07-14
+Ansible Handlers Roles and Collections,Ansible Collections,3,L1,4,2026-07-14
+Ansible Handlers Roles and Collections,Lab: Ansible Handlers Roles and Collections,4,L1,20,2026-07-14
+Ansible Templates,Introduction to Templating,3,L1,6,2026-07-14
+Ansible Templates,Jinja2 Templates for Dynamic Configs - Demo,4,L1,8,2026-07-14
+Ansible Templates,Lab: Ansible Templates,4,L1,20,2026-07-14
+Appendix,Demo: Setup Ansible Local Environment - Using VirtualBox,2,L1,10,2026-07-14
+Appendix,Demo: Install Ansible,3,L1,12,2026-07-14
+Appendix,Article: Lab Setup - Troubleshooting Tips,2,L1,5,2026-07-14
+Appendix,Lab: Revisiting Ansible,3,L1,20,2026-07-14
