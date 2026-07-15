@@ -1,18 +1,11 @@
 #!/bin/bash
 # =========================================================
 # dashboard.sh - Resumen de progreso en la pantalla inicial
-#
-# IMPORTANTE: nada de esto se guarda en la base de datos.
-# "Curso en progreso" y "% completado" se calculan al vuelo
-# comparando contenidos totales vs Completados. Así, un
-# curso desaparece solo de "Cursos en progreso" el día que
-# marques su última actividad pendiente como Completada,
-# sin que haya que programar ningún borrado.
 # =========================================================
 
 _formatear_horas() {
     local total_min="$1"
-    total_min="${total_min%%.*}"   # trunca decimales (CAST AS REAL puede traer .0)
+    total_min="${total_min%%.*}"
     [ -z "$total_min" ] && total_min=0
     local h=$((total_min / 60))
     local m=$((total_min % 60))
@@ -23,7 +16,6 @@ _formatear_horas() {
     fi
 }
 
-# Barra de progreso visual coloreada según el % (rojo bajo, amarillo medio, verde alto)
 _barra_progreso() {
     local pct="$1" ancho=28
     local llenos=$((pct * ancho / 100))
@@ -71,46 +63,56 @@ mostrar_dashboard_resumen() {
         ORDER BY (SUM(CASE WHEN co.estado='Completado' THEN 1 ELSE 0 END) * 1.0 / COUNT(co.id_contenido)) DESC;
     ")
 
-    # Separar cursos activos y completados
-    local cursos_activos=""
-    local cursos_completados=""
-    local contador=1
+    # Usar arrays para evitar problemas con caracteres especiales
+    local -a activos_ids=()
+    local -a activos_nombres=()
+    local -a activos_comp=()
+    local -a activos_tot=()
+    
+    local -a completados_ids=()
+    local -a completados_nombres=()
+    local -a completados_comp=()
+    local -a completados_tot=()
 
     while IFS='|' read -r id nombre comp tot; do
         [ -z "$id" ] && continue
         
         if [ "$comp" -eq "$tot" ]; then
-            # Curso completado (4 campos)
-            cursos_completados+="${id}|${nombre}|${comp}|${tot}
-    "
+            completados_ids+=("$id")
+            completados_nombres+=("$nombre")
+            completados_comp+=("$comp")
+            completados_tot+=("$tot")
         else
-            # Curso activo (5 campos: contador|id|nombre|comp|tot)
-            cursos_activos+="${contador}|${id}|${nombre}|${comp}|${tot}
-    "
-            ((contador++))
+            activos_ids+=("$id")
+            activos_nombres+=("$nombre")
+            activos_comp+=("$comp")
+            activos_tot+=("$tot")
         fi
     done <<< "$todos_cursos"
 
     # --- Sección: Cursos que deberías estudiar (activos) ---
-    if [ -n "$cursos_activos" ]; then
+    if [ ${#activos_ids[@]} -gt 0 ]; then
         echo -e "  ${C_MAGENTA}📚 Cursos que deberías estudiar${C_RESET}"
-        local num=1
-        while IFS='|' read -r id nombre comp tot; do
-            [ -z "$id" ] && continue
+        for i in "${!activos_ids[@]}"; do
+            local num=$((i + 1))
+            local nombre="${activos_nombres[$i]}"
+            local comp="${activos_comp[$i]}"
+            local tot="${activos_tot[$i]}"
             local pct=$((comp * 100 / tot))
             echo -e "    ${C_BOLD}${num})${C_RESET} ${C_CIAN}${nombre}${C_RESET}  ${C_AMARILLO}(${comp}/${tot} - ${pct}%)${C_RESET}"
-            ((num++))
-        done <<< "$cursos_activos"
+        done
         echo ""
     fi
 
     # --- Sección: Cursos completados ---
-    if [ -n "$cursos_completados" ]; then
+    if [ ${#completados_ids[@]} -gt 0 ]; then
         echo -e "  ${C_VERDE_B}✅ Cursos completados${C_RESET}"
-        while IFS='|' read -r id nombre comp tot; do
-            [ -z "$id" ] && continue
+        for i in "${!completados_ids[@]}"; do
+            local nombre="${completados_nombres[$i]}"
+            local comp="${completados_comp[$i]}"
+            local tot="${completados_tot[$i]}"
             echo -e "    ${C_VERDE}▸ ${nombre}${C_RESET}  ${C_GRIS}(${comp}/${tot})${C_RESET}"
-        done <<< "$cursos_completados"
+        done
         echo ""
     fi
 
