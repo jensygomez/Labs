@@ -46,7 +46,6 @@ mostrar_dashboard_resumen() {
     fila=$(db_row "SELECT COUNT(*), COALESCE(SUM(CASE WHEN estado='Completado' THEN 1 ELSE 0 END),0) FROM contenidos;")
     IFS='|' read -r total completados <<< "$fila"
 
-    # Si todavía no hay contenidos cargados, no mostrar nada (evita una pantalla de puros ceros)
     if [ -z "$total" ] || [ "$total" = "0" ]; then
         return
     fi
@@ -59,51 +58,63 @@ mostrar_dashboard_resumen() {
     echo -e "  ${C_AMARILLO_B}${porcentaje}%${C_RESET}"
     echo ""
 
-    # --- Cursos en progreso: no 100% completados, ordenados por % de avance, top 4 ---
-    local cursos_activos
-    cursos_activos=$(db_row "
-        SELECT c.nombre_curso,
-               SUM(CASE WHEN co.estado='Completado' THEN 1 ELSE 0 END),
-               COUNT(co.id_contenido)
+    # --- Obtener TODOS los cursos con su progreso ---
+    local todos_cursos
+    todos_cursos=$(db_row "
+        SELECT c.id_curso, c.nombre_curso,
+               SUM(CASE WHEN co.estado='Completado' THEN 1 ELSE 0 END) as comp,
+               COUNT(co.id_contenido) as tot
         FROM cursos c
         JOIN modulos m ON m.id_curso = c.id_curso
         JOIN contenidos co ON co.id_modulo = m.id_modulo
         GROUP BY c.id_curso
-        HAVING SUM(CASE WHEN co.estado='Completado' THEN 1 ELSE 0 END) < COUNT(co.id_contenido)
-        ORDER BY (SUM(CASE WHEN co.estado='Completado' THEN 1 ELSE 0 END) * 1.0 / COUNT(co.id_contenido)) DESC
-        LIMIT 4;
+        ORDER BY (SUM(CASE WHEN co.estado='Completado' THEN 1 ELSE 0 END) * 1.0 / COUNT(co.id_contenido)) DESC;
     ")
 
+    # Separar cursos activos y completados
+    local cursos_activos=""
+    local cursos_completados=""
+    local contador=1
+
+    while IFS='|' read -r id nombre comp tot; do
+        [ -z "$id" ] && continue
+        
+        if [ "$comp" -eq "$tot" ]; then
+            # Curso completado (4 campos)
+            cursos_completados+="${id}|${nombre}|${comp}|${tot}
+    "
+        else
+            # Curso activo (5 campos: contador|id|nombre|comp|tot)
+            cursos_activos+="${contador}|${id}|${nombre}|${comp}|${tot}
+    "
+            ((contador++))
+        fi
+    done <<< "$todos_cursos"
+
+    # --- Sección: Cursos que deberías estudiar (activos) ---
     if [ -n "$cursos_activos" ]; then
-        echo -e "  ${C_MAGENTA}Cursos en progreso${C_RESET}"
-        while IFS='|' read -r nombre comp tot; do
-            [ -z "$nombre" ] && continue
-            echo -e "    ${C_CIAN}▸ $nombre${C_RESET}  ${C_AMARILLO}($comp/$tot)${C_RESET}"
+        echo -e "  ${C_MAGENTA}📚 Cursos que deberías estudiar${C_RESET}"
+        local num=1
+        while IFS='|' read -r id nombre comp tot; do
+            [ -z "$id" ] && continue
+            local pct=$((comp * 100 / tot))
+            echo -e "    ${C_BOLD}${num})${C_RESET} ${C_CIAN}${nombre}${C_RESET}  ${C_AMARILLO}(${comp}/${tot} - ${pct}%)${C_RESET}"
+            ((num++))
         done <<< "$cursos_activos"
         echo ""
-    else
-        # No hay ninguno a medias (ej: todo al 100%) -> mostrar qué se completó últimamente
-        local ultimas
-        ultimas=$(db_row "
-            SELECT co.titulo, cp.valor
-            FROM contenidos co
-            JOIN contenido_propiedades cp ON cp.id_contenido = co.id_contenido
-            JOIN propiedades_catalogo pc ON pc.id_propiedad = cp.id_propiedad AND pc.nombre_propiedad = 'fecha'
-            WHERE co.estado = 'Completado'
-            ORDER BY cp.valor DESC, co.id_contenido DESC
-            LIMIT 4;
-        ")
-        if [ -n "$ultimas" ]; then
-            echo -e "  ${C_MAGENTA}Últimas actividades completadas${C_RESET}"
-            while IFS='|' read -r titulo fecha; do
-                [ -z "$titulo" ] && continue
-                echo -e "    ${C_CIAN}▸ $titulo${C_RESET}  ${C_GRIS}($fecha)${C_RESET}"
-            done <<< "$ultimas"
-            echo ""
-        fi
     fi
 
-    # --- Horas totales y por tipo de contenido, solo de lo Completado ---
+    # --- Sección: Cursos completados ---
+    if [ -n "$cursos_completados" ]; then
+        echo -e "  ${C_VERDE_B}✅ Cursos completados${C_RESET}"
+        while IFS='|' read -r id nombre comp tot; do
+            [ -z "$id" ] && continue
+            echo -e "    ${C_VERDE}▸ ${nombre}${C_RESET}  ${C_GRIS}(${comp}/${tot})${C_RESET}"
+        done <<< "$cursos_completados"
+        echo ""
+    fi
+
+    # --- Horas totales ---
     local id_prop_minutos
     id_prop_minutos=$(db_scalar "SELECT id_propiedad FROM propiedades_catalogo WHERE nombre_propiedad='minutos';")
 
