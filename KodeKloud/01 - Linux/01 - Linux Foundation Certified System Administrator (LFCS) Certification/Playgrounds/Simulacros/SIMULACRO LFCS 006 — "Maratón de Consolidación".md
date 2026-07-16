@@ -8,6 +8,7 @@ Nivel: L2
 Fecha de Inicio: 2026-07-16
 Script Vagrant: |-
   # -- mode: ruby --
+
   # vi: set ft=ruby :
 
   Vagrant.configure("2") do |config|
@@ -62,7 +63,6 @@ Script Vagrant: |-
             export DEBIAN_FRONTEND=noninteractive
             apt-get install -y -qq nginx cron
             
-            # Preparar datos para find y tar
             mkdir -p /opt/project
             cd /opt/project
             git init
@@ -75,22 +75,16 @@ Script Vagrant: |-
             mkdir -p /var/log/custom-app
             touch /var/log/custom-app/app1.log /var/log/custom-app/app2.log /var/log/custom-app/error.log
             
-            # Preparar usuarios y grupos
             groupadd -f devteam
             useradd -m -s /bin/bash -G devteam developer1 2>/dev/null || true
             echo 'developer1:caleston123' | chpasswd
             useradd -m -s /bin/bash auditor 2>/dev/null || true
             echo 'auditor:caleston123' | chpasswd
             
-            # Preparar directorio para ACL
             mkdir -p /opt/shared
             chmod 770 /opt/shared
             chown root:devteam /opt/shared
             
-            # Preparar disco para LVM (/dev/vdb)
-            # Se deja sin formatear para que el alumno lo haga
-            
-            # Preparar disco para fstab (/dev/vdc)
             mkfs.ext4 -F /dev/vdc 2>/dev/null || true
             
             systemctl enable nginx
@@ -109,9 +103,10 @@ Script Vagrant: |-
           SHELL
         end
         
-        # ── NODE01: TICKET + SCRIPT ──
+        # ── NODE01: TICKET + SCRIPT VERIFICACIÓN + VALIDADOR ──
         if node[:name] == "node01"
           node_config.vm.provision "shell", privileged: false, inline: <<-SHELL
+            # --- TICKET ---
             cat << 'TICKET' > /home/vagrant/TICKET_SIMULACRO-006.txt
   ================================================================================
   TICKET SIMULACRO-006  │  Severidad: MEDIA  │  Ambiente: PRODUCCIÓN
@@ -155,9 +150,15 @@ Script Vagrant: |-
   l) ls -lh /opt/logs-backup.tar.gz
 
   REGLA DE ORO: CERO archivos temporales en node01.
+
+  --- VALIDADOR ---
+  Cuando termines todas las tareas, ejecuta:
+     bash /home/vagrant/validate.sh
+  Este script te dará tu puntuación final automáticamente.
   ================================================================================
   TICKET
 
+            # --- SCRIPT DE VERIFICACIÓN INICIAL ---
             cat << 'VERIFY' > /tmp/verify-006.sh
   #!/bin/bash
   RED='\e[1;31m'; GREEN='\e[1;32m'; YELLOW='\e[1;33m'; CYAN='\e[1;36m'; RESET='\e[0m'
@@ -165,37 +166,214 @@ Script Vagrant: |-
   echo -e "${CYAN}╔════════════════════════════════════════════════════════════════╗${RESET}"
   echo -e "${CYAN}║          VERIFICACIÓN DE ESCENARIO SIMULACRO-006              ║${RESET}"
   echo -e "${CYAN}╚════════════════════════════════════════════════════════════════╝${RESET}"
-
-  checks=(
-    "node02: Directorio /opt/project existe|[ -d /opt/project ]"
-    "node02: Grupo sysadmins existe|getent group sysadmins >/dev/null"
-    "node02: Disco vdb disponible|sudo blkid /dev/vdb | grep -q . || true"
-    "node02: Disco vdc formateado|sudo blkid /dev/vdc | grep -q ext4"
-    "node02: nginx activo|sudo systemctl is-active --quiet nginx"
-    "node03: Bóveda existe|[ -d /opt/ops-compliance/simulacro-006 ]"
-  )
-
-  for check in "${checks[@]}"; do
-    IFS='|' read -r desc cmd <<< "$check"
-    echo -e "${YELLOW}[ ] $desc${RESET}"
-    if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "sudo $cmd" 2>/dev/null || sshpass -p $PASS ssh -t $SSH_OPTS bob@node03 "$cmd" 2>/dev/null; then
-      echo -e "      ${GREEN}✓ OK${RESET}"
-    else
-      echo -e "      ${RED}✗ FALLÓ${RESET}"; FAIL=1
-    fi
-  done
-
+  echo ""
+  echo -e "${YELLOW}[1/6] node02: Directorio /opt/project existe${RESET}"
+  if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "[ -d /opt/project ]" 2>/dev/null; then
+    echo -e "      ${GREEN}✓ OK${RESET}"
+  else
+    echo -e "      ${RED}✗ FALLÓ${RESET}"; FAIL=1
+  fi
+  echo -e "${YELLOW}[2/6] node02: Grupo devteam existe${RESET}"
+  if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "getent group devteam >/dev/null" 2>/dev/null; then
+    echo -e "      ${GREEN}✓ OK${RESET}"
+  else
+    echo -e "      ${RED}✗ FALLÓ${RESET}"; FAIL=1
+  fi
+  echo -e "${YELLOW}[3/6] node02: Disco vdc formateado${RESET}"
+  if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "sudo blkid /dev/vdc | grep -q ext4" 2>/dev/null; then
+    echo -e "      ${GREEN}✓ OK${RESET}"
+  else
+    echo -e "      ${RED}✗ FALLÓ${RESET}"; FAIL=1
+  fi
+  echo -e "${YELLOW}[4/6] node02: nginx activo${RESET}"
+  if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "sudo systemctl is-active --quiet nginx" 2>/dev/null; then
+    echo -e "      ${GREEN}✓ OK${RESET}"
+  else
+    echo -e "      ${RED}✗ FALLÓ${RESET}"; FAIL=1
+  fi
+  echo -e "${YELLOW}[5/6] node02: Usuarios developer1 y auditor${RESET}"
+  if sshpass -p $PASS ssh -t $SSH_OPTS bob@node02 "id developer1 >/dev/null 2>&1 && id auditor >/dev/null 2>&1" 2>/dev/null; then
+    echo -e "      ${GREEN}✓ OK${RESET}"
+  else
+    echo -e "      ${RED}✗ FALLÓ${RESET}"; FAIL=1
+  fi
+  echo -e "${YELLOW}[6/6] node03: Bóveda existe${RESET}"
+  if sshpass -p $PASS ssh -t $SSH_OPTS bob@node03 "[ -d /opt/ops-compliance/simulacro-006 ]" 2>/dev/null; then
+    echo -e "      ${GREEN}✓ OK${RESET}"
+  else
+    echo -e "      ${RED}✗ FALLÓ${RESET}"; FAIL=1
+  fi
   echo ""
   if [ $FAIL -eq 0 ]; then
-    echo -e "${GREEN}✅ ESCENARIO LISTO. Presiona ENTER para ver el ticket.${RESET}"
+    echo -e "${GREEN}✅ ESCENARIO LISTO${RESET}"
   else
-    echo -e "${RED}⚠️  ALGUNAS VERIFICACIONES FALLARON. Presiona ENTER de todas formas.${RESET}"
+    echo -e "${RED}⚠️  ALGUNAS VERIFICACIONES FALLARON${RESET}"
   fi
+  echo ""
+  echo -e "${YELLOW}Presiona ENTER para ver el ticket del incidente...${RESET}"
   read -r
   cat /home/vagrant/TICKET_SIMULACRO-006.txt
   VERIFY
             chmod +x /tmp/verify-006.sh
             echo 'bash /tmp/verify-006.sh' >> /home/vagrant/.bashrc
+
+            # ═══════════════════════════════════════════════════════════════
+            # SCRIPT VALIDADOR FINAL (se ejecuta al terminar las 12 tareas)
+            # ═══════════════════════════════════════════════════════════════
+            cat << 'VALIDATOR' > /home/vagrant/validate.sh
+  #!/bin/bash
+  RED='\e[1;31m'; GREEN='\e[1;32m'; YELLOW='\e[1;33m'; CYAN='\e[1;36m'; MAGENTA='\e[1;35m'; RESET='\e[0m'; BOLD='\e[1m'
+  SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
+  PASS="caleston123"
+  TOTAL=0; MAX=36; PASS_COUNT=0; FAIL_COUNT=0
+
+  run_node02() { sshpass -p $PASS ssh $SSH_OPTS bob@node02 "$1" 2>/dev/null; }
+
+  check_task() {
+    local task_num=$1; local task_name=$2; local points=$3; local command=$4; local description=$5
+    echo -e "\n${CYAN}┌─ TAREA $task_num: $task_name (${points} puntos) ─${RESET}"
+    echo -e "${YELLOW}   Verificando: $description${RESET}"
+    result=$(run_node02 "$command"); exit_code=$?
+    if [ $exit_code -eq 0 ] && [ -n "$result" ]; then
+      echo -e "   ${GREEN}✅ APROBADO${RESET} — ${GREEN}+$points puntos${RESET}"
+      echo -e "   ${CYAN}Salida:${RESET} $(echo "$result" | head -3)"
+      TOTAL=$((TOTAL + points)); PASS_COUNT=$((PASS_COUNT + 1)); return 0
+    else
+      echo -e "   ${RED}❌ FALLIDO${RESET} — ${RED}+0 puntos${RESET}"
+      FAIL_COUNT=$((FAIL_COUNT + 1)); return 1
+    fi
+  }
+
+  echo -e "${MAGENTA}"
+  echo "╔══════════════════════════════════════════════════════════════╗"
+  echo "║                                                              ║"
+  echo "║     🎯 VALIDADOR LFCS — SIMULACRO #6                         ║"
+  echo "║        Maratón de Consolidación (12 tareas)                  ║"
+  echo "║                                                              ║"
+  echo "╚══════════════════════════════════════════════════════════════╝"
+  echo -e "${RESET}"
+  echo -e "${BOLD}Conectando con node02 para validar...${RESET}"
+  sleep 1
+
+  check_task 1 "Git Commit" 3 "cd /opt/project && git log --oneline -2 | grep -q 'add config'" "Commit con mensaje 'add config' en /opt/project"
+  check_task 2 "User admin01" 3 "id admin01 2>/dev/null | grep -q 'sysadmins' && getent passwd admin01 | grep -q '/bin/bash'" "Usuario admin01 con shell /bin/bash y grupo primario sysadmins"
+
+  echo -e "\n${CYAN}┌─ TAREA 3: LVM Storage (3 puntos) ─${RESET}"
+  echo -e "${YELLOW}   Verificando: PV, VG data_vg, LV app_lv de 500M, formateado ext4${RESET}"
+  pv_ok=$(run_node02 "sudo pvs 2>/dev/null | grep -q '/dev/vdb' && echo 'ok'")
+  vg_ok=$(run_node02 "sudo vgs 2>/dev/null | grep -q 'data_vg' && echo 'ok'")
+  lv_ok=$(run_node02 "sudo lvs 2>/dev/null | grep -q 'app_lv' && echo 'ok'")
+  fs_ok=$(run_node02 "sudo blkid /dev/data_vg/app_lv 2>/dev/null | grep -q 'ext4' && echo 'ok'")
+  if [ "$pv_ok" = "ok" ] && [ "$vg_ok" = "ok" ] && [ "$lv_ok" = "ok" ] && [ "$fs_ok" = "ok" ]; then
+    echo -e "   ${GREEN}✅ APROBADO${RESET} — ${GREEN}+3 puntos${RESET}"
+    TOTAL=$((TOTAL + 3)); PASS_COUNT=$((PASS_COUNT + 1))
+  else
+    echo -e "   ${RED}❌ FALLIDO${RESET} — ${RED}+0 puntos${RESET}"
+    [ "$pv_ok" != "ok" ] && echo -e "   ${RED}   ✗ PV no encontrado en /dev/vdb${RESET}"
+    [ "$vg_ok" != "ok" ] && echo -e "   ${RED}   ✗ VG 'data_vg' no encontrado${RESET}"
+    [ "$lv_ok" != "ok" ] && echo -e "   ${RED}   ✗ LV 'app_lv' no encontrado${RESET}"
+    [ "$fs_ok" != "ok" ] && echo -e "   ${RED}   ✗ LV no formateado como ext4${RESET}"
+    FAIL_COUNT=$((FAIL_COUNT + 1))
+  fi
+
+  echo -e "\n${CYAN}┌─ TAREA 4: Swap File (3 puntos) ─${RESET}"
+  echo -e "${YELLOW}   Verificando: /swapfile de 256MB activo y en fstab${RESET}"
+  swap_active=$(run_node02 "sudo swapon --show 2>/dev/null | grep -q '/swapfile' && echo 'ok'")
+  swap_fstab=$(run_node02 "grep -q '/swapfile' /etc/fstab && echo 'ok'")
+  if [ "$swap_active" = "ok" ] && [ "$swap_fstab" = "ok" ]; then
+    echo -e "   ${GREEN}✅ APROBADO${RESET} — ${GREEN}+3 puntos${RESET}"
+    TOTAL=$((TOTAL + 3)); PASS_COUNT=$((PASS_COUNT + 1))
+  else
+    echo -e "   ${RED}❌ FALLIDO${RESET} — ${RED}+0 puntos${RESET}"
+    [ "$swap_active" != "ok" ] && echo -e "   ${RED}   ✗ /swapfile no está activo${RESET}"
+    [ "$swap_fstab" != "ok" ] && echo -e "   ${RED}   ✗ /swapfile no está en /etc/fstab${RESET}"
+    FAIL_COUNT=$((FAIL_COUNT + 1))
+  fi
+
+  echo -e "\n${CYAN}┌─ TAREA 5: fstab Mount (3 puntos) ─${RESET}"
+  echo -e "${YELLOW}   Verificando: /dev/vdc montado en /mnt/backup con defaults${RESET}"
+  mount_ok=$(run_node02 "mount | grep -q '/dev/vdc.*on /mnt/backup' && echo 'ok'")
+  fstab_ok=$(run_node02 "grep -E '^/dev/vdc[[:space:]]+/mnt/backup[[:space:]]+ext4[[:space:]]+defaults' /etc/fstab >/dev/null && echo 'ok'")
+  if [ "$mount_ok" = "ok" ] && [ "$fstab_ok" = "ok" ]; then
+    echo -e "   ${GREEN}✅ APROBADO${RESET} — ${GREEN}+3 puntos${RESET}"
+    TOTAL=$((TOTAL + 3)); PASS_COUNT=$((PASS_COUNT + 1))
+  else
+    echo -e "   ${RED}❌ FALLIDO${RESET} — ${RED}+0 puntos${RESET}"
+    [ "$mount_ok" != "ok" ] && echo -e "   ${RED}   ✗ /dev/vdc no está montado en /mnt/backup${RESET}"
+    [ "$fstab_ok" != "ok" ] && echo -e "   ${RED}   ✗ Entrada fstab incorrecta o faltante${RESET}"
+    FAIL_COUNT=$((FAIL_COUNT + 1))
+  fi
+
+  echo -e "\n${CYAN}┌─ TAREA 6: sysctl ip_forward (3 puntos) ─${RESET}"
+  echo -e "${YELLOW}   Verificando: net.ipv4.ip_forward = 1 persistente y aplicado${RESET}"
+  runtime=$(run_node02 "sysctl -n net.ipv4.ip_forward 2>/dev/null | tr -d '\r\n'")
+  persistent=$(run_node02 "grep -r 'net.ipv4.ip_forward.*=.*1' /etc/sysctl.d/ 2>/dev/null | grep -v '^#' | grep -q . && echo 'ok'")
+  if [ "$runtime" = "1" ] && [ "$persistent" = "ok" ]; then
+    echo -e "   ${GREEN}✅ APROBADO${RESET} — ${GREEN}+3 puntos${RESET}"
+    TOTAL=$((TOTAL + 3)); PASS_COUNT=$((PASS_COUNT + 1))
+  else
+    echo -e "   ${RED}❌ FALLIDO${RESET} — ${RED}+0 puntos${RESET}"
+    [ "$runtime" != "1" ] && echo -e "   ${RED}   ✗ Valor runtime es '$runtime' (debe ser 1)${RESET}"
+    [ "$persistent" != "ok" ] && echo -e "   ${RED}   ✗ No hay configuración persistente en /etc/sysctl.d/${RESET}"
+    FAIL_COUNT=$((FAIL_COUNT + 1))
+  fi
+
+  check_task 7 "Nginx PID" 3 "[ -f /opt/nginx-pid.txt ] && [ -s /opt/nginx-pid.txt ] && grep -qE '^[0-9]+$' /opt/nginx-pid.txt" "Archivo /opt/nginx-pid.txt con el PID numérico de nginx"
+  check_task 8 "Port 80 LISTEN" 3 "[ -f /opt/port-80.txt ] && grep -q '80' /opt/port-80.txt && grep -qi 'LISTEN' /opt/port-80.txt" "Archivo /opt/port-80.txt con info del puerto 80 en LISTEN"
+  check_task 9 "SSH Config" 3 "grep -E '^PasswordAuthentication[[:space:]]+no' /etc/ssh/sshd_config >/dev/null" "PasswordAuthentication no en /etc/ssh/sshd_config"
+  check_task 10 "Cron developer1" 3 "sudo crontab -u developer1 -l 2>/dev/null | grep -qE '^0[[:space:]]+5[[:space:]]+\*[[:space:]]+\*[[:space:]]+\*'" "Cron job para developer1 a las 05:00 AM diarios"
+  check_task 11 "ACLs auditor" 3 "getfacl /opt/shared 2>/dev/null | grep -qE 'user:auditor:r-x'" "ACL con r-x para usuario auditor en /opt/shared"
+
+  echo -e "\n${CYAN}┌─ TAREA 12: Tar Backup (3 puntos) ─${RESET}"
+  echo -e "${YELLOW}   Verificando: /opt/logs-backup.tar.gz con contenido de /var/log/custom-app/${RESET}"
+  tar_exists=$(run_node02 "[ -f /opt/logs-backup.tar.gz ] && echo 'ok'")
+  tar_valid=$(run_node02 "tar -tzf /opt/logs-backup.tar.gz 2>/dev/null | grep -q 'custom-app' && echo 'ok'")
+  if [ "$tar_exists" = "ok" ] && [ "$tar_valid" = "ok" ]; then
+    echo -e "   ${GREEN}✅ APROBADO${RESET} — ${GREEN}+3 puntos${RESET}"
+    TOTAL=$((TOTAL + 3)); PASS_COUNT=$((PASS_COUNT + 1))
+  else
+    echo -e "   ${RED}❌ FALLIDO${RESET} — ${RED}+0 puntos${RESET}"
+    [ "$tar_exists" != "ok" ] && echo -e "   ${RED}   ✗ /opt/logs-backup.tar.gz no existe${RESET}"
+    [ "$tar_valid" != "ok" ] && echo -e "   ${RED}   ✗ El archivo no contiene /var/log/custom-app/${RESET}"
+    FAIL_COUNT=$((FAIL_COUNT + 1))
+  fi
+
+  PERCENT=$((TOTAL * 100 / MAX))
+  APPROVED=67
+  echo -e "\n${MAGENTA}"
+  echo "╔══════════════════════════════════════════════════════════════╗"
+  echo "║                    📊 RESULTADO FINAL                        ║"
+  echo "╚══════════════════════════════════════════════════════════════╝"
+  echo -e "${RESET}"
+  echo -e "${BOLD}Tareas completadas:${RESET} ${GREEN}$PASS_COUNT/12${RESET}"
+  echo -e "${BOLD}Tareas fallidas:${RESET}    ${RED}$FAIL_COUNT/12${RESET}"
+  echo ""
+  echo -e "${BOLD}Puntuación:${RESET}        ${CYAN}$TOTAL / $MAX puntos${RESET}"
+  echo -e "${BOLD}Porcentaje:${RESET}        ${CYAN}$PERCENT%${RESET}"
+  echo -e "${BOLD}Mínimo para aprobar:${RESET} ${CYAN}$APPROVED%${RESET}"
+  echo ""
+  if [ $PERCENT -ge $APPROVED ]; then
+    echo -e "${GREEN}${BOLD}"
+    echo "╔══════════════════════════════════════════════════════════════╗"
+    echo "║              🎉 ¡APROBADO! ¡FELICIDADES! 🎉                  ║"
+    echo "╚══════════════════════════════════════════════════════════════╝"
+    echo -e "${RESET}"
+  else
+    echo -e "${RED}${BOLD}"
+    echo "╔══════════════════════════════════════════════════════════════╗"
+    echo "║                    ❌ NO APROBADO ❌                          ║"
+    echo "╚══════════════════════════════════════════════════════════════╝"
+    echo -e "${RESET}"
+  fi
+  echo ""
+  echo -e "${YELLOW}💡 Consejo:${RESET} Revisa las tareas marcadas con ❌ y practica esos comandos."
+  echo ""
+  VALIDATOR
+            chmod +x /home/vagrant/validate.sh
+            
+            echo "✅ Ticket, script de verificación y validador creados."
+            echo "🚀 Al hacer 'vagrant ssh node01' se ejecutará el verificador inicial."
+            echo "📝 Cuando termines las 12 tareas, ejecuta: bash /home/vagrant/validate.sh"
           SHELL
         end
       end
