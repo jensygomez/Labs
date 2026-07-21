@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 007 — \"Lo Mejor de Ambos Mundos\".md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 008 — \"Seguridad y Supervisión\".md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "SIMULACRO LFCS 007 — \"Lo Mejor de Ambos Mundos\""
+              "title": "SIMULACRO LFCS 008 — \"Seguridad y Supervisión\""
             }
           }
         ]
@@ -203,8 +203,9 @@
   },
   "active": "56ed188fdf2f56d1",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 006 — \"Maratón de Consolidación\".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 007 — \"Lo Mejor de Ambos Mundos\".md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 008 — \"Seguridad y Supervisión\".md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 006 — \"Maratón de Consolidación\".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 005 — \"Incidentes Variados\".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 004 — \"Refuerzo y Consolidación\".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/PROMT.md",
@@ -228,7 +229,6 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/PG-003 - Auditoría forense de texto y búsquedas avanzadas (Find, Grep y Regex) - V1.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit) - V2.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/PG-002 - Permisos avanzados y bastionado de directorios compartidos (SUID, SGID, Sticky Bit) - V1.md",
     "mi-progreso/progreso.db-journal",
     "mi-progreso/funciones/menu_crud.sh~",
     "mi-progreso/progreso.db",
