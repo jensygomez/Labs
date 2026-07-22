@@ -6,7 +6,7 @@ Vagrant.configure("2") do |config|
   
   nodes = [
     { name: "node01", ip: "192.168.122.11", extra_disks: [] },
-    { name: "node02", ip: "192.168.122.12", extra_disks: ['1G'] }, # extra disk
+    { name: "node02", ip: "192.168.122.12", extra_disks: [] },  # no extra disks needed
     { name: "node03", ip: "192.168.122.13", extra_disks: [] }
   ]
   
@@ -49,7 +49,7 @@ HOSTS
         
         export DEBIAN_FRONTEND=noninteractive
         apt-get update -qq
-        apt-get install -y -qq sshpass curl acl lvm2 ufw zip tree ntp
+        apt-get install -y -qq sshpass curl acl lvm2 ufw zip tree ntp nfs-kernel-server
       SHELL
       
       # ── NODE02: SERVER WITH 12 INCIDENTS ──
@@ -60,57 +60,47 @@ HOSTS
           export DEBIAN_FRONTEND=noninteractive
           apt-get install -y -qq nginx vim tree
           
-          # ── TASK 1: Large files for find ──
-          mkdir -p /var/tmp/bigfiles
-          dd if=/dev/zero of=/var/tmp/bigfiles/file1.dat bs=1M count=15 2>/dev/null
-          dd if=/dev/zero of=/var/tmp/bigfiles/file2.dat bs=1M count=8 2>/dev/null
-          dd if=/dev/zero of=/var/tmp/bigfiles/file3.dat bs=1M count=20 2>/dev/null
-          dd if=/dev/zero of=/var/tmp/bigfiles/file4.dat bs=1M count=5 2>/dev/null
+          # ── TASK 1: tree package NOT installed (we will remove if present) ──
+          apt-get remove -y tree 2>/dev/null || true
           
-          # ── TASK 2: admins group for user ──
-          groupadd -f admins
+          # ── TASK 2: AppArmor is active by default, but we ensure it's not disabled ──
+          # (nothing to do, just leave as is)
           
-          # ── TASK 3: /dev/vdb unformatted disk ──
-          
-          # ── TASK 4: Log for logrotate ──
-          mkdir -p /var/log/webapp
-          cat << 'LOG' > /var/log/webapp/access.log
-192.168.1.10 GET /index.html 200 1024
-192.168.1.11 POST /api/login 401 512
-192.168.1.12 GET /dashboard 200 2048
-LOG
-          
-          # ── TASK 5: SUID on ping ──
-          
-          # ── TASK 6: Script for systemd ──
+          # ── TASK 3: Script directory ──
           mkdir -p /opt/scripts
-          cat << 'SCRIPT' > /opt/scripts/health-check.sh
-#!/bin/bash
-echo "Health check OK - $(date)" >> /var/log/health-status.log
-SCRIPT
-          chmod +x /opt/scripts/health-check.sh
+          # No script created yet, student will create it
           
-          # ── TASK 7: Bob's processes for ps ──
+          # ── TASK 4: No custom sudoers for bob yet ──
+          rm -f /etc/sudoers.d/bob-systemctl 2>/dev/null || true
           
-          # ── TASK 8: ufw disabled by default ──
-          ufw disable 2>/dev/null || true
+          # ── TASK 5: No systemd timer yet ──
+          rm -f /etc/systemd/system/hello.* 2>/dev/null || true
           
-          # ── TASK 9: ss will show existing connections ──
+          # ── TASK 6: No custom rsyslog config yet ──
+          rm -f /etc/rsyslog.d/99-cron.conf 2>/dev/null || true
           
-          # ── TASK 10: Files for zip ──
-          mkdir -p /opt/app-configs
-          echo "db_host=10.0.0.5" > /opt/app-configs/database.conf
-          echo "cache_ttl=3600" > /opt/app-configs/cache.conf
-          echo "log_level=info" > /opt/app-configs/logging.conf
+          # ── TASK 7: No static route yet ──
+          # (we won't pre-add anything)
           
-          # ── TASK 11: NTP installed (default configuration) ──
+          # ── TASK 8: NFS server not yet configured ──
+          # (exports file empty)
           
-          # ── TASK 12: Directory for SGID ──
+          # ── TASK 9: no background nice process yet ──
+          
+          # ── TASK 10: alternative editor not set yet ──
+          # (default is nano? Actually Ubuntu has nano as default, but we can force it to vim.tiny)
+          update-alternatives --set editor /usr/bin/vim.tiny 2>/dev/null || true
+          
+          # ── TASK 11: hostname currently 'node02' (will be changed to server02) ──
+          
+          # ── TASK 12: no limits.conf custom entries yet ──
+          sed -i '/# END OF CUSTOM LIMITS/d' /etc/security/limits.conf 2>/dev/null || true
+          
+          # Shared directory for NFS
           mkdir -p /opt/shared
-          chown root:admins /opt/shared
-          chmod 775 /opt/shared
+          chown root:root /opt/shared
+          chmod 755 /opt/shared
           
-          # active nginx
           systemctl enable nginx
           systemctl start nginx
           
@@ -122,600 +112,422 @@ SCRIPT
       if node[:name] == "node03"
         node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
           echo "🔒 Preparing vault..."
-          mkdir -p /opt/ops-compliance/mock-exam-008
+          mkdir -p /opt/ops-compliance/mock-exam-009
           chown -R bob:bob /opt/ops-compliance
           chmod -R 755 /opt/ops-compliance
-          echo "✅ Vault ready at /opt/ops-compliance/mock-exam-008/"
+          echo "✅ Vault ready at /opt/ops-compliance/mock-exam-009/"
         SHELL
       end
       
-      # ── NODE01: TICKET + VERIFICATION + VALIDATOR + EVIDENCE ──
+      # ── NODE01: TICKET + VERIFICATION + VALIDATOR (evidence‑based) ──
       if node[:name] == "node01"
         node_config.vm.provision "shell", privileged: false, inline: <<-SHELL
           echo "🎫 Generating Ticket, verification, validator, and evidence script on node01..."
           
           # ═══════════════════════════════════════════════════════
-          # TICKET
+          # TICKET (English)
           # ═══════════════════════════════════════════════════════
-          cat << 'TICKET' > /home/vagrant/TICKET_MOCK_EXAM-008.txt
+          cat << 'TICKET' > /home/vagrant/TICKET_MOCK-009.txt
 ================================================================================
-TICKET MOCK_EXAM-008  │  Severity: MEDIUM  │  Environment: PRODUCTION
-🔐 MOCK EXAM-008 — Security and Supervision (12 Tasks)
+TICKET MOCK-009   │  Severity: MEDIUM  │  Environment: PRODUCTION
+🔐 MOCK-009 — The Final Frontier (12 Tasks)
 Module: LFCS Complete  │  Difficulty: 3/10  │  Level: L2
-Control Location:      node01  (Administrator Workstation — bob)
-Server Node:           node02  (Ubuntu 22.04)
-Destination Vault:     node03  (/opt/ops-compliance/mock-exam-008/)
-Cluster Password:      caleston123
+Control Station:    node01  (Administrator — bob)
+Server Node:        node02  (Ubuntu 22.04)
+Vault Destination:  node03  (/opt/ops-compliance/mock-exam-009/)
+Cluster Password:   caleston123
 
-A server on node02 requires 12 system administration tasks, focused on security,
-monitoring, and system operations. Each task addresses a different domain.
-Manage your time: maximum 8-10 minutes per task. If you get stuck, move to the next one.
+This server (node02) requires 12 system administration tasks covering topics not
+yet addressed in previous mocks. Manage your time: ~8–10 minutes per task.
+If stuck, move to the next one.
 
 ================================================================================
-TASK 1 — Essential Commands: Find and Compress (weight 3 points)
+TASK 1 — Package Management: Install and Verify 'tree' (3 points)
 ================================================================================
-The development team wants to free up space by compressing large files.
+The development team needs the 'tree' command for directory listings.
 
 On node02:
-1. Find all files larger than 10M in /var/tmp/bigfiles
-2. Compress each one with gzip (they must remain as .gz files)
-3. Do not delete the originals (gzip replaces them by default)
+1. Install the package 'tree' using apt.
+2. Verify installation by running 'which tree' (should return /usr/bin/tree).
 
 CRITERIA:
-  [ ] Files >10M were compressed (.gz exist)                               --> 40%
-  [ ] Files <=10M remain uncompressed                                      --> 30%
-  [ ] Total files count is 4, large files count is 2 (file1, file3)       --> 30%
+  [ ] Package 'tree' is installed (dpkg -l | grep tree)                  --> 50%
+  [ ] 'which tree' returns a valid path                                  --> 50%
 
-MAX TIME: 10 minutes
+TIME: 5 minutes
 
 ================================================================================
-TASK 2 — Users/Groups: User with Specific UID (weight 3 points)
+TASK 2 — Security/AppArmor: Enforce Mode (3 points)
 ================================================================================
-A user with a fixed UID is required for integration with an external system.
+Ensure AppArmor is active and in enforcing mode.
 
 On node02:
-1. Create a user named "appuser" with UID=1500
-2. Shell: /bin/bash
-3. Primary group: appuser (created automatically)
-4. Secondary group: admins
-5. Password: caleston123
+1. Check if AppArmor is running (sudo aa-status).
+2. If not enforcing, set it to enforce (sudo aa-enforce /etc/apparmor.d/*).
+   (Ubuntu 22.04 is already enforcing, but verify).
 
 CRITERIA:
-  [ ] User appuser exists with UID=1500                                    --> 40%
-  [ ] Primary group is appuser (same name)                                 --> 30%
-  [ ] Belongs to secondary group admins                                    --> 30%
+  [ ] AppArmor is active (sudo aa-status shows profiles in enforce)      --> 50%
+  [ ] The command 'getenforce' would show "Enforcing" (but use aa-status)--> 50%
 
-MAX TIME: 10 minutes
+TIME: 5 minutes
 
 ================================================================================
-TASK 3 — Storage: Format and Mount XFS (weight 3 points)
+TASK 3 — Shell Scripting: Create a Hello Script (3 points)
 ================================================================================
-An XFS filesystem is required for application data.
+Create a simple script that prints a greeting.
 
 On node02:
-1. Disk /dev/vdb is available (unformatted)
-2. Format /dev/vdb as XFS (mkfs.xfs)
-3. Create directory /mnt/data
-4. Mount /dev/vdb on /mnt/data (temporary mount, fstab not required)
+1. Create /opt/scripts/hello.sh with content:
+   #!/bin/bash
+   echo "Hello LFCS"
+2. Make it executable (chmod +x).
+3. Test it (should output "Hello LFCS").
 
 CRITERIA:
-  [ ] /dev/vdb is formatted as XFS (blkid)                                 --> 40%
-  [ ] /mnt/data exists                                                      --> 20%
-  [ ] /dev/vdb is mounted on /mnt/data                                     --> 40%
+  [ ] File /opt/scripts/hello.sh exists and is executable               --> 40%
+  [ ] Contains the correct echo command                                  --> 30%
+  [ ] Running it produces "Hello LFCS"                                   --> 30%
 
-MAX TIME: 10 minutes
+TIME: 8 minutes
 
 ================================================================================
-TASK 4 — Operations/logrotate: Log Rotation (weight 3 points)
+TASK 4 — Sudoers: Passwordless systemctl for bob (3 points)
 ================================================================================
-The file /var/log/webapp/access.log grows quickly and requires daily rotation.
+Allow user bob to run systemctl without a password.
 
 On node02:
-1. Create a configuration file at /etc/logrotate.d/webapp
-2. Rotate logs daily (daily)
-3. Keep 7 rotations (rotate 7)
-4. Compress rotated logs (compress)
-5. Do not use create (optional, not strictly required)
+1. Create a sudoers file in /etc/sudoers.d/ (e.g., bob-systemctl).
+2. Add line: bob ALL=(ALL) NOPASSWD: /usr/bin/systemctl
+3. Verify with 'sudo -l -U bob' (should show that entry).
 
 CRITERIA:
-  [ ] File /etc/logrotate.d/webapp exists                                 --> 30%
-  [ ] Contains "daily", "rotate 7", and "compress"                        --> 50%
-  [ ] Path /var/log/webapp/access.log is specified                         --> 20%
+  [ ] File exists in /etc/sudoers.d/ with correct permission (0440)     --> 30%
+  [ ] Contains the exact line                                            --> 40%
+  [ ] sudo -l -U bob shows the entry                                    --> 30%
 
-MAX TIME: 10 minutes
+TIME: 10 minutes
 
 ================================================================================
-TASK 5 — Security/SUID: Set SUID on Binary (weight 3 points)
+TASK 5 — Systemd Timer: Daily Hello Script (3 points)
 ================================================================================
-For security requirements, the ping command must be executable with privileges.
+Schedule the hello.sh script to run daily at 02:30 using a systemd timer.
 
 On node02:
-1. Verify if /usr/bin/ping has SUID permissions (chmod u+s)
-2. If it does not, enable it
-3. Verify that the SUID bit is set (ls -l)
+1. Create a service unit /etc/systemd/system/hello.service that executes /opt/scripts/hello.sh.
+2. Create a timer unit /etc/systemd/system/hello.timer with OnCalendar=daily and
+   OnCalendar=02:30 (or OnCalendar=*-*-* 02:30:00).
+3. Enable and start the timer.
+4. Verify with 'systemctl list-timers hello.timer'.
 
 CRITERIA:
-  [ ] /usr/bin/ping has the SUID bit set (s in owner permissions)           --> 100%
+  [ ] Both service and timer unit files exist                            --> 30%
+  [ ] Timer is enabled and active                                        --> 40%
+  [ ] Timer shows next trigger time (systemctl list-timers)            --> 30%
 
-MAX TIME: 5 minutes
+TIME: 15 minutes
 
 ================================================================================
-TASK 6 — Systemd: Create a Service (weight 3 points)
+TASK 6 — Rsyslog: Custom Cron Logging (3 points)
 ================================================================================
-A service is required to execute a health script every 5 minutes.
+Log all cron messages to a separate file.
 
 On node02:
-1. Script /opt/scripts/health-check.sh already exists and is executable
-2. Create a systemd unit file at /etc/systemd/system/health-check.service
-3. Execute the script as a simple service (Type=simple)
-4. Enable and start the service (systemctl enable --now)
-5. Verify that it is active (systemctl status)
+1. Create a config file in /etc/rsyslog.d/ (e.g., 99-cron.conf).
+2. Add line: cron.* /var/log/cron-custom.log
+3. Restart rsyslog (sudo systemctl restart rsyslog).
+4. Verify that the file /var/log/cron-custom.log exists (may be empty initially).
 
 CRITERIA:
-  [ ] Unit file exists at the correct path                                 --> 30%
-  [ ] Contains basic directives (ExecStart, Type, etc.)                    --> 30%
-  [ ] Service is enabled and active                                        --> 40%
+  [ ] Config file exists with correct content                            --> 40%
+  [ ] Rsyslog service restarted successfully                             --> 20%
+  [ ] Log file /var/log/cron-custom.log exists                           --> 40%
 
-MAX TIME: 12 minutes
+TIME: 10 minutes
 
 ================================================================================
-TASK 7 — Monitoring/ps: Count User Processes (weight 3 points)
+TASK 7 — Networking: Add a Static Route (3 points)
 ================================================================================
-Need to determine how many processes belonging to user "bob" are running.
+Add a temporary static route to reach network 10.10.10.0/24 via gateway 192.168.122.1.
 
 On node02:
-1. Use ps and grep to count bob's processes (excluding the grep process itself)
-2. Save the count into /opt/bob-process-count.txt
+1. Use 'ip route add' to add the route.
+2. Verify with 'ip route show' (route appears).
 
 CRITERIA:
-  [ ] /opt/bob-process-count.txt exists                                    --> 30%
-  [ ] Contains only an integer number                                      --> 30%
-  [ ] The count is correct (at least 1)                                    --> 40%
+  [ ] Route 10.10.10.0/24 via 192.168.122.1 exists in routing table    --> 100%
 
-MAX TIME: 10 minutes
+TIME: 5 minutes
 
 ================================================================================
-TASK 8 — Networking/ufw: Firewall for SSH (weight 3 points)
+TASK 8 — NFS: Export a Directory (3 points)
 ================================================================================
-SSH access must be restricted to allow incoming connections only from the host machine (IP 192.168.122.1).
+Install NFS server and export /opt/shared to all clients with read-write permissions.
 
 On node02:
-1. Enable ufw if disabled
-2. Configure a rule to allow SSH only from 192.168.122.1
-3. Deny SSH from any other IP address
-4. Enable/apply firewall rules (ufw enable)
+1. Install nfs-kernel-server (already installed).
+2. Add an export line to /etc/exports: /opt/shared *(rw,sync,no_subtree_check)
+3. Export with 'exportfs -a' and verify with 'exportfs -v'.
 
 CRITERIA:
-  [ ] ufw is active (ufw status)                                           --> 20%
-  [ ] Rule exists allowing SSH from 192.168.122.1                           --> 40%
-  [ ] No rule allows SSH from any IP (or explicitly denied)               --> 40%
+  [ ] /etc/exports contains the correct line                             --> 40%
+  [ ] exportfs -v shows the export                                       --> 40%
+  [ ] The directory /opt/shared is exported (showmount -e localhost)    --> 20%
 
-MAX TIME: 10 minutes
+TIME: 10 minutes
 
 ================================================================================
-TASK 9 — Networking/ss: Show Established TCP Connections (weight 3 points)
+TASK 9 — Process Priority: Run with nice (3 points)
 ================================================================================
-The network team needs to view active TCP connections.
+Start a background process with a low priority (higher nice value).
 
 On node02:
-1. Use ss to list all active TCP connections in ESTABLISHED status
-2. Save output to /opt/tcp-established.txt
+1. Run: nice -n 15 sleep 300 &
+2. Verify the process is running with the correct nice value using 'ps -o pid,ni,comm | grep sleep'.
 
 CRITERIA:
-  [ ] /opt/tcp-established.txt exists                                      --> 30%
-  [ ] Contains lines with ESTAB connections                                --> 40%
-  [ ] Command ss was used (not netstat)                                    --> 30%
+  [ ] A 'sleep 300' process is running with nice value 15               --> 100%
 
-MAX TIME: 8 minutes
+TIME: 5 minutes
 
 ================================================================================
-TASK 10 — Packaging/zip: Compress Configurations (weight 3 points)
+TASK 10 — Alternatives: Set Default Editor to nano (3 points)
 ================================================================================
-A zip backup of application configuration files is required.
+Make 'nano' the default editor using update-alternatives.
 
 On node02:
-1. Directory /opt/app-configs/ contains .conf files
-2. Create /opt/configs.zip with all content inside /opt/app-configs/
-3. Verify that the zip archive is valid (unzip -t)
+1. Ensure nano is installed (already).
+2. Run: sudo update-alternatives --set editor /usr/bin/nano
+3. Verify with 'update-alternatives --display editor' shows nano as the selected one.
 
 CRITERIA:
-  [ ] /opt/configs.zip exists                                               --> 40%
-  [ ] Valid zip file (unzip -t)                                            --> 30%
-  [ ] Contains .conf files (database.conf, cache.conf, logging.conf)       --> 30%
+  [ ] update-alternatives --display editor shows nano with priority >0   --> 50%
+  [ ] /usr/bin/editor symlink points to /etc/alternatives/editor -> nano --> 50%
 
-MAX TIME: 10 minutes
+TIME: 8 minutes
 
 ================================================================================
-TASK 11 — Time/NTP: Synchronize Time (weight 3 points)
+TASK 11 — Hostname: Set Permanent Hostname to server02 (3 points)
 ================================================================================
-The server time must be synchronized using NTP servers.
+Change the system's hostname to 'server02' permanently.
 
 On node02:
-1. Ensure NTP service is installed (already installed)
-2. Verify that it is active (systemctl status ntp or systemd-timesyncd)
-3. If inactive, start it and verify clock synchronization
-4. Save the output of `timedatectl show` into /opt/time-status.txt
+1. Use hostnamectl set-hostname server02
+2. Verify with hostnamectl --static and check /etc/hostname.
 
 CRITERIA:
-  [ ] NTP service active (or systemd-timesyncd)                            --> 40%
-  [ ] timedatectl shows "synchronized: yes"                                --> 30%
-  [ ] /opt/time-status.txt contains timedatectl output                     --> 30%
+  [ ] hostnamectl --static shows 'server02'                              --> 60%
+  [ ] /etc/hostname contains 'server02'                                  --> 40%
 
-MAX TIME: 10 minutes
+TIME: 5 minutes
 
 ================================================================================
-TASK 12 — Permissions/SGID: Group Inheritance (weight 3 points)
+TASK 12 — Limits: Increase File Descriptor Limit (3 points)
 ================================================================================
-All files created inside /opt/shared must inherit group ownership "admins".
+Set system-wide file descriptor limits to 65535 for all users.
 
 On node02:
-1. Directory /opt/shared already exists (owned by root:admins, permissions 775)
-2. Set the SGID bit on the directory (chmod g+s)
-3. Create a test file inside to verify it inherits the group ownership
+1. Edit /etc/security/limits.conf
+2. Add lines:
+   * soft nofile 65535
+   * hard nofile 65535
+3. Verify with 'ulimit -n' (for new sessions, but we can check file content).
 
 CRITERIA:
-  [ ] /opt/shared has the SGID bit set (s in group permissions)            --> 40%
-  [ ] New files created inside belong to the admins group                  --> 40%
-  [ ] getfacl or ls -ld displays SGID bit                                  --> 20%
+  [ ] /etc/security/limits.conf contains both lines                      --> 60%
+  [ ] Lines are not commented out (no leading #)                        --> 40%
 
-MAX TIME: 10 minutes
+TIME: 8 minutes
 
 ================================================================================
-EVIDENCE PIPELINE TO NODE03 (OPTIONAL — NO POINTS)
+EVIDENCE PIPELINE TO NODE03 (Optional — does not affect score)
 ================================================================================
-If you wish to automate evidence collection, run on node01:
+To automate evidence collection, run on node01:
   bash /home/vagrant/generate-evidence.sh
 
-This will collect output from all 12 tasks and copy them to:
-  node03:/opt/ops-compliance/mock-exam-008/evidence.txt
+This fetches outputs for all 12 tasks and stores them in:
+  node03:/opt/ops-compliance/mock-exam-009/evidence.txt
 
-Optional, but helps complete full workflow.
+It is **not mandatory** but useful for auditing.
 
 ================================================================================
 SCORING SUMMARY
 ================================================================================
-Task 1:  3 pts (Essential - find/gzip)
-Task 2:  3 pts (Users/Groups - Specific UID)
-Task 3:  3 pts (Storage - XFS)
-Task 4:  3 pts (Operations - logrotate)
-Task 5:  3 pts (Security - SUID)
-Task 6:  3 pts (Systemd - Service)
-Task 7:  3 pts (Monitoring - ps)
-Task 8:  3 pts (Networking - ufw)
-Task 9:  3 pts (Networking - ss)
-Task 10: 3 pts (Packaging - zip)
-Task 11: 3 pts (Time - NTP)
-Task 12: 3 pts (Permissions - SGID)
+Task 1:  3 pts (Package Management)
+Task 2:  3 pts (Security/AppArmor)
+Task 3:  3 pts (Scripting)
+Task 4:  3 pts (Sudoers)
+Task 5:  3 pts (Systemd Timer)
+Task 6:  3 pts (Rsyslog)
+Task 7:  3 pts (Networking - route)
+Task 8:  3 pts (NFS)
+Task 9:  3 pts (Process priority)
+Task 10: 3 pts (Alternatives)
+Task 11: 3 pts (Hostname)
+Task 12: 3 pts (Limits)
 TOTAL: 36 points
-MINIMUM TO PASS (67%): 25 points
+PASSING (67%): 25 points
 
-MAX TOTAL TIME: 120 minutes
+TOTAL TIME: 120 minutes
 
-When finished, run: bash /home/vagrant/validate.sh
+When done, run: bash /home/vagrant/validate.sh
 ================================================================================
 TICKET
 
           # ═══════════════════════════════════════════════════════
-          # INITIAL VERIFICATION SCRIPT
+          # INITIAL VERIFICATION SCRIPT (verify-009.sh)
           # ═══════════════════════════════════════════════════════
-          cat << 'VERIFY' > /tmp/verify-008.sh
+          cat << 'VERIFY' > /tmp/verify-009.sh
 #!/bin/bash
 RED='\e[1;31m'; GREEN='\e[1;32m'; YELLOW='\e[1;33m'; CYAN='\e[1;36m'; RESET='\e[0m'
 SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"; PASS="caleston123"; FAIL=0
 
 echo -e "${CYAN}╔════════════════════════════════════════════════════════════════╗${RESET}"
-echo -e "${CYAN}║          ENVIRONMENT VERIFICATION MOCK-EXAM-008               ║${RESET}"
+echo -e "${CYAN}║          VERIFYING SCENARIO MOCK-009                           ║${RESET}"
 echo -e "${CYAN}╚════════════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
-echo -e "${YELLOW}[1/8] node02: Large files in /var/tmp/bigfiles${RESET}"
-if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "ls /var/tmp/bigfiles/file*.dat 2>/dev/null | wc -l | grep -q 4" 2>/dev/null; then
-  echo -e "      ${GREEN}✓ OK${RESET}"
+echo -e "${YELLOW}[1/6] node02: tree package NOT installed${RESET}"
+if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "dpkg -l tree 2>/dev/null | grep -q ^ii" 2>/dev/null; then
+  echo -e "      ${RED}✗ tree is already installed (should be absent)${RESET}"; FAIL=1
 else
-  echo -e "      ${RED}✗ FAILED${RESET}"; FAIL=1
+  echo -e "      ${GREEN}✓ OK (not installed)${RESET}"
 fi
 
-echo -e "${YELLOW}[2/8] node02: admins group exists${RESET}"
-if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "getent group admins >/dev/null" 2>/dev/null; then
+echo -e "${YELLOW}[2/6] node02: /opt/scripts directory exists${RESET}"
+if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "[ -d /opt/scripts ]" 2>/dev/null; then
   echo -e "      ${GREEN}✓ OK${RESET}"
 else
-  echo -e "      ${RED}✗ FAILED${RESET}"; FAIL=1
+  echo -e "      ${RED}✗ FALLÓ${RESET}"; FAIL=1
 fi
 
-echo -e "${YELLOW}[3/8] node02: /dev/vdb unformatted disk${RESET}"
-if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "sudo blkid /dev/vdb 2>/dev/null | grep -q ." 2>/dev/null; then
-  echo -e "      ${RED}✗ Disk already formatted${RESET}"; FAIL=1
+echo -e "${YELLOW}[3/6] node02: no custom sudoers for systemctl${RESET}"
+if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "ls /etc/sudoers.d/bob-systemctl 2>/dev/null" 2>/dev/null; then
+  echo -e "      ${RED}✗ custom sudoers file already exists${RESET}"; FAIL=1
 else
-  echo -e "      ${GREEN}✓ OK (raw)${RESET}"
+  echo -e "      ${GREEN}✓ OK${RESET}"
 fi
 
-echo -e "${YELLOW}[4/8] node02: Log /var/log/webapp/access.log exists${RESET}"
-if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "[ -f /var/log/webapp/access.log ]" 2>/dev/null; then
+echo -e "${YELLOW}[4/6] node02: no systemd timer/service for hello${RESET}"
+if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "systemctl status hello.timer 2>/dev/null | grep -q 'Loaded: loaded'" 2>/dev/null; then
+  echo -e "      ${RED}✗ hello.timer already exists${RESET}"; FAIL=1
+else
+  echo -e "      ${GREEN}✓ OK${RESET}"
+fi
+
+echo -e "${YELLOW}[5/6] node02: no custom rsyslog config for cron${RESET}"
+if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "ls /etc/rsyslog.d/99-cron.conf 2>/dev/null" 2>/dev/null; then
+  echo -e "      ${RED}✗ custom rsyslog config already exists${RESET}"; FAIL=1
+else
+  echo -e "      ${GREEN}✓ OK${RESET}"
+fi
+
+echo -e "${YELLOW}[6/6] node03: Vault exists${RESET}"
+if sshpass -p $PASS ssh $SSH_OPTS bob@node03 "[ -d /opt/ops-compliance/mock-exam-009 ]" 2>/dev/null; then
   echo -e "      ${GREEN}✓ OK${RESET}"
 else
-  echo -e "      ${RED}✗ FAILED${RESET}"; FAIL=1
-fi
-
-echo -e "${YELLOW}[5/8] node02: Script health-check.sh exists${RESET}"
-if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "[ -x /opt/scripts/health-check.sh ]" 2>/dev/null; then
-  echo -e "      ${GREEN}✓ OK${RESET}"
-else
-  echo -e "      ${RED}✗ FAILED${RESET}"; FAIL=1
-fi
-
-echo -e "${YELLOW}[6/8] node02: Directory /opt/app-configs with .conf files${RESET}"
-if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "ls /opt/app-configs/*.conf 2>/dev/null | wc -l | grep -q 3" 2>/dev/null; then
-  echo -e "      ${GREEN}✓ OK${RESET}"
-else
-  echo -e "      ${RED}✗ FAILED${RESET}"; FAIL=1
-fi
-
-echo -e "${YELLOW}[7/8] node02: Directory /opt/shared exists${RESET}"
-if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "[ -d /opt/shared ]" 2>/dev/null; then
-  echo -e "      ${GREEN}✓ OK${RESET}"
-else
-  echo -e "      ${RED}✗ FAILED${RESET}"; FAIL=1
-fi
-
-echo -e "${YELLOW}[8/8] node03: Vault exists${RESET}"
-if sshpass -p $PASS ssh $SSH_OPTS bob@node03 "[ -d /opt/ops-compliance/mock-exam-008 ]" 2>/dev/null; then
-  echo -e "      ${GREEN}✓ OK${RESET}"
-else
-  echo -e "      ${RED}✗ FAILED${RESET}"; FAIL=1
+  echo -e "      ${RED}✗ FALLÓ${RESET}"; FAIL=1
 fi
 
 echo ""
 if [ $FAIL -eq 0 ]; then
-  echo -e "${GREEN}✅ ENVIRONMENT READY — Press ENTER to view the ticket${RESET}"
+  echo -e "${GREEN}✅ SCENARIO READY — Press ENTER to see the ticket${RESET}"
 else
   echo -e "${RED}⚠️  SOME CHECKS FAILED${RESET}"
 fi
 echo ""
 read -r
-cat /home/vagrant/TICKET_MOCK_EXAM-008.txt
+cat /home/vagrant/TICKET_MOCK-009.txt
 VERIFY
-          chmod +x /tmp/verify-008.sh
-          sed -i '/verify-008/d' /home/vagrant/.bashrc 2>/dev/null || true
-          echo 'bash /tmp/verify-008.sh' >> /home/vagrant/.bashrc
+          chmod +x /tmp/verify-009.sh
+          sed -i '/verify-009/d' /home/vagrant/.bashrc 2>/dev/null || true
+          echo 'bash /tmp/verify-009.sh' >> /home/vagrant/.bashrc
 
           # ═══════════════════════════════════════════════════════
-          # FINAL VALIDATOR (validate.sh)
+          # EVIDENCE GENERATOR (generate-evidence.sh)
           # ═══════════════════════════════════════════════════════
-          cat << 'VALIDATOR' > /home/vagrant/validate.sh
-#!/bin/bash
-RED='\e[1;31m'; GREEN='\e[1;32m'; YELLOW='\e[1;33m'; CYAN='\e[1;36m'; MAGENTA='\e[1;35m'; RESET='\e[0m'; BOLD='\e[1m'
-SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
-PASS="caleston123"
-TOTAL=0; MAX=36; PASS_COUNT=0; FAIL_COUNT=0
-
-run02() { sshpass -p $PASS ssh $SSH_OPTS bob@node02 "$1" 2>/dev/null; }
-
-check() {
-  local n=$1; local name=$2; local pts=$3; local cmd=$4; local desc=$5
-  echo -e "\n${CYAN}┌─ TASK $n: $name ($pts pts) ─${RESET}"
-  echo -e "${YELLOW}   $desc${RESET}"
-  if run02 "$cmd" >/dev/null 2>&1; then
-    echo -e "   ${GREEN}✅ +$pts pts${RESET}"
-    TOTAL=$((TOTAL + pts)); PASS_COUNT=$((PASS_COUNT + 1))
-  else
-    echo -e "   ${RED}❌ +0 pts${RESET}"
-    FAIL_COUNT=$((FAIL_COUNT + 1))
-  fi
-}
-
-echo -e "${MAGENTA}"
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║     🎯 LFCS VALIDATOR — MOCK EXAM #008                      ║"
-echo "║        Security and Supervision (12 tasks)                  ║"
-echo "╚══════════════════════════════════════════════════════════════╝"
-echo -e "${RESET}"
-echo -e "${BOLD}Validating on node02...${RESET}\n"
-
-# T1: find + gzip
-check 1 "large find/gzip" 3 \
-  "[ -f /var/tmp/bigfiles/file1.dat.gz ] && [ -f /var/tmp/bigfiles/file3.dat.gz ] && [ -f /var/tmp/bigfiles/file2.dat ] && [ -f /var/tmp/bigfiles/file4.dat ] && [ ! -f /var/tmp/bigfiles/file1.dat ] && [ ! -f /var/tmp/bigfiles/file3.dat ]" \
-  "Files >10M compressed (.gz), <=10M uncompressed (file2 and file4)"
-
-# T2: User appuser UID 1500 + group admins
-check 2 "User appuser" 3 \
-  "id -u appuser 2>/dev/null | grep -q 1500 && id -g appuser 2>/dev/null | grep -q appuser && id -Gn appuser 2>/dev/null | grep -q admins" \
-  "User appuser UID=1500, primary group appuser, secondary admins"
-
-# T3: XFS and mount
-echo -e "\n${CYAN}┌─ TASK 3: XFS and mount (3 pts) ─${RESET}"
-xfs=$(run02 "sudo blkid /dev/vdb 2>/dev/null | grep -q 'TYPE=\"xfs\"' && echo ok")
-mnt=$(run02 "mount | grep -q '/dev/vdb on /mnt/data' && echo ok")
-if [ "$xfs" = "ok" ] && [ "$mnt" = "ok" ]; then
-  echo -e "   ${GREEN}✅ +3 pts${RESET}"; TOTAL=$((TOTAL+3)); PASS_COUNT=$((PASS_COUNT+1))
-else
-  echo -e "   ${RED}❌ +0 pts${RESET}"
-  [ "$xfs" != "ok" ] && echo -e "   ${RED}  ✗ Not XFS${RESET}"
-  [ "$mnt" != "ok" ] && echo -e "   ${RED}  ✗ Not mounted on /mnt/data${RESET}"
-  FAIL_COUNT=$((FAIL_COUNT+1))
-fi
-
-# T4: logrotate
-check 4 "logrotate" 3 \
-  "[ -f /etc/logrotate.d/webapp ] && grep -q 'daily' /etc/logrotate.d/webapp && grep -q 'rotate 7' /etc/logrotate.d/webapp && grep -q 'compress' /etc/logrotate.d/webapp" \
-  "File /etc/logrotate.d/webapp with daily, rotate 7, compress"
-
-# T5: SUID on ping
-check 5 "SUID ping" 3 \
-  "[ -u /usr/bin/ping ]" \
-  "SUID bit active on /usr/bin/ping"
-
-# T6: Systemd service
-echo -e "\n${CYAN}┌─ TASK 6: Systemd service (3 pts) ─${RESET}"
-srv=$(run02 "[ -f /etc/systemd/system/health-check.service ] && echo ok")
-act=$(run02 "systemctl is-active --quiet health-check.service && echo ok")
-if [ "$srv" = "ok" ] && [ "$act" = "ok" ]; then
-  echo -e "   ${GREEN}✅ +3 pts${RESET}"; TOTAL=$((TOTAL+3)); PASS_COUNT=$((PASS_COUNT+1))
-else
-  echo -e "   ${RED}❌ +0 pts${RESET}"
-  [ "$srv" != "ok" ] && echo -e "   ${RED}  ✗ Unit file does not exist${RESET}"
-  [ "$act" != "ok" ] && echo -e "   ${RED}  ✗ Service not active${RESET}"
-  FAIL_COUNT=$((FAIL_COUNT+1))
-fi
-
-# T7: ps count bob
-check 7 "ps count bob" 3 \
-  "[ -f /opt/bob-process-count.txt ] && [ \$(cat /opt/bob-process-count.txt | tr -d '[:space:]' | grep -E '^[0-9]+$') ] && [ \$(cat /opt/bob-process-count.txt | tr -d '[:space:]') -ge 1 ]" \
-  "/opt/bob-process-count.txt with number >= 1 (digits only)"
-
-# T8: ufw SSH rule
-echo -e "\n${CYAN}┌─ TASK 8: ufw SSH from specific IP (3 pts) ─${RESET}"
-ufw_active=$(run02 "sudo ufw status 2>/dev/null | grep -q 'Status: active' && echo ok")
-rule_allow=$(run02 "sudo ufw status 2>/dev/null | grep -q '22.*ALLOW.*192.168.122.1' && echo ok")
-rule_deny=$(run02 "sudo ufw status 2>/dev/null | grep -q '22.*DENY' || echo ok")
-if [ "$ufw_active" = "ok" ] && [ "$rule_allow" = "ok" ]; then
-  allow_any=$(run02 "sudo ufw status 2>/dev/null | grep -E '22.*ALLOW.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | grep -v '192.168.122.1' | wc -l")
-  if [ "$allow_any" -eq 0 ]; then
-    echo -e "   ${GREEN}✅ +3 pts${RESET}"; TOTAL=$((TOTAL+3)); PASS_COUNT=$((PASS_COUNT+1))
-  else
-    echo -e "   ${RED}❌ +0 pts (there are other rules allowing SSH)${RESET}"; FAIL_COUNT=$((FAIL_COUNT+1))
-  fi
-else
-  echo -e "   ${RED}❌ +0 pts${RESET}"
-  [ "$ufw_active" != "ok" ] && echo -e "   ${RED}  ✗ ufw not active${RESET}"
-  [ "$rule_allow" != "ok" ] && echo -e "   ${RED}  ✗ No allow rule from 192.168.122.1${RESET}"
-  FAIL_COUNT=$((FAIL_COUNT+1))
-fi
-
-# T9: ss established
-check 9 "ss established" 3 \
-  "[ -f /opt/tcp-established.txt ] && grep -q 'ESTAB' /opt/tcp-established.txt" \
-  "File /opt/tcp-established.txt containing ESTAB connections"
-
-# T10: zip
-echo -e "\n${CYAN}┌─ TASK 10: zip (3 pts) ─${RESET}"
-z1=$(run02 "[ -f /opt/configs.zip ] && echo ok")
-z2=$(run02 "unzip -t /opt/configs.zip 2>/dev/null | grep -q 'No errors' && echo ok")
-z3=$(run02 "unzip -l /opt/configs.zip 2>/dev/null | grep -q database.conf && unzip -l /opt/configs.zip 2>/dev/null | grep -q cache.conf && unzip -l /opt/configs.zip 2>/dev/null | grep -q logging.conf && echo ok")
-if [ "$z1" = "ok" ] && [ "$z2" = "ok" ] && [ "$z3" = "ok" ]; then
-  echo -e "   ${GREEN}✅ +3 pts${RESET}"; TOTAL=$((TOTAL+3)); PASS_COUNT=$((PASS_COUNT+1))
-else
-  echo -e "   ${RED}❌ +0 pts${RESET}"
-  [ "$z1" != "ok" ] && echo -e "   ${RED}  ✗ File does not exist${RESET}"
-  [ "$z2" != "ok" ] && echo -e "   ${RED}  ✗ Not a valid zip archive${RESET}"
-  [ "$z3" != "ok" ] && echo -e "   ${RED}  ✗ Missing .conf files${RESET}"
-  FAIL_COUNT=$((FAIL_COUNT+1))
-fi
-
-# T11: NTP / timedatectl
-echo -e "\n${CYAN}┌─ TASK 11: NTP (3 pts) ─${RESET}"
-ntp_active=$(run02 "systemctl is-active --quiet ntp 2>/dev/null && echo ok || systemctl is-active --quiet systemd-timesyncd 2>/dev/null && echo ok")
-sync=$(run02 "timedatectl 2>/dev/null | grep -q 'synchronized: yes' && echo ok")
-file=$(run02 "[ -f /opt/time-status.txt ] && echo ok")
-if { [ "$ntp_active" = "ok" ] || [ "$sync" = "ok" ]; } && [ "$file" = "ok" ]; then
-  echo -e "   ${GREEN}✅ +3 pts${RESET}"; TOTAL=$((TOTAL+3)); PASS_COUNT=$((PASS_COUNT+1))
-else
-  echo -e "   ${RED}❌ +0 pts${RESET}"
-  [ "$ntp_active" != "ok" ] && echo -e "   ${RED}  ✗ NTP service not active${RESET}"
-  [ "$sync" != "ok" ] && echo -e "   ${RED}  ✗ Not synchronized${RESET}"
-  [ "$file" != "ok" ] && echo -e "   ${RED}  ✗ /opt/time-status.txt does not exist${RESET}"
-  FAIL_COUNT=$((FAIL_COUNT+1))
-fi
-
-# T12: SGID on /opt/shared
-echo -e "\n${CYAN}┌─ TASK 12: SGID (3 pts) ─${RESET}"
-sgid=$(run02 "ls -ld /opt/shared 2>/dev/null | grep -q '^d...s' && echo ok")
-run02 "touch /opt/shared/testfile 2>/dev/null" >/dev/null
-group=$(run02 "ls -l /opt/shared/testfile 2>/dev/null | awk '{print \$4}' | grep -q 'admins' && echo ok")
-if [ "$sgid" = "ok" ] && [ "$group" = "ok" ]; then
-  echo -e "   ${GREEN}✅ +3 pts${RESET}"; TOTAL=$((TOTAL+3)); PASS_COUNT=$((PASS_COUNT+1))
-else
-  echo -e "   ${RED}❌ +0 pts${RESET}"
-  [ "$sgid" != "ok" ] && echo -e "   ${RED}  ✗ Missing SGID bit${RESET}"
-  [ "$group" != "ok" ] && echo -e "   ${RED}  ✗ Test file did not inherit admins group${RESET}"
-  FAIL_COUNT=$((FAIL_COUNT+1))
-fi
-
-# ═══════════════════════════════════════════════════════════════
-# FINAL RESULT
-# ═══════════════════════════════════════════════════════════════
-PERCENT=$((TOTAL * 100 / MAX))
-
-echo -e "\n${MAGENTA}"
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                    📊 FINAL RESULT                           ║"
-echo "╚══════════════════════════════════════════════════════════════╝"
-echo -e "${RESET}"
-echo -e "${BOLD}Passed tasks:${RESET}  ${GREEN}$PASS_COUNT / 12${RESET}"
-echo -e "${BOLD}Failed tasks:${RESET}  ${RED}$FAIL_COUNT / 12${RESET}"
-echo -e "${BOLD}Score:${RESET}         ${CYAN}$TOTAL / $MAX points${RESET}"
-echo -e "${BOLD}Percentage:${RESET}    ${CYAN}$PERCENT%${RESET}"
-echo -e "${BOLD}Passing score (67%):${RESET} ${CYAN}25 points${RESET}"
-echo ""
-
-if [ $PERCENT -ge 67 ]; then
-  echo -e "${GREEN}${BOLD}"
-  echo "╔══════════════════════════════════════════════════════════════╗"
-  echo "║           🎉 PASSED! CONGRATULATIONS, BOB! 🎉              ║"
-  echo "╚══════════════════════════════════════════════════════════════╝"
-  echo -e "${RESET}"
-else
-  echo -e "${RED}${BOLD}"
-  echo "╔══════════════════════════════════════════════════════════════╗"
-  echo "║             ❌ FAILED — Keep going! 💪                      ║"
-  echo "╚══════════════════════════════════════════════════════════════╝"
-  echo -e "${RESET}"
-fi
-echo ""
-VALIDATOR
-          chmod +x /home/vagrant/validate.sh
-          
-          # ═══════════════════════════════════════════════════════
-          # OPTIONAL EVIDENCE SCRIPT
-          # ═══════════════════════════════════════════════════════
+          #
+          # NOTE: This script is the single source of truth for validation.
+          # The header lines (--- TASK N: DESCRIPTION ---) MUST match
+          # exactly those searched by validate.sh (case, spacing, number).
+          #
           cat << 'EVIDENCE' > /home/vagrant/generate-evidence.sh
 #!/bin/bash
+# generate-evidence.sh - Collects output for each task and saves to node03.
+# Header format must be synchronized with validate.sh.
+
 SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
 PASS="caleston123"
-DEST="node03:/opt/ops-compliance/mock-exam-008/evidence.txt"
+DEST="node03:/opt/ops-compliance/mock-exam-009/evidence.txt"
 
 echo "🔍 Collecting evidence from node02..."
 {
-  echo "=== MOCK-EXAM-008 EVIDENCE ==="
+  echo "=== EVIDENCE FOR MOCK-009 ==="
   echo "Date: $(date)"
   echo ""
-  echo "--- Task 1: ls -l /var/tmp/bigfiles ---"
-  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "ls -l /var/tmp/bigfiles 2>/dev/null || echo 'Does not exist'"
+
+  # TASK 1: Package tree
+  echo "--- TASK 1: PACKAGE TREE INSTALLED ---"
+  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "dpkg -l tree 2>/dev/null | grep ^ii; which tree 2>/dev/null || echo 'not found'"
   echo ""
-  echo "--- Task 2: id appuser ---"
-  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "id appuser 2>/dev/null || echo 'Does not exist'"
+
+  # TASK 2: AppArmor status
+  echo "--- TASK 2: APPARMOR ENFORCING ---"
+  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "sudo aa-status 2>/dev/null | head -n 5 || echo 'AppArmor not active'"
   echo ""
-  echo "--- Task 3: sudo blkid /dev/vdb; mount | grep vdb ---"
-  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "sudo blkid /dev/vdb 2>/dev/null; mount | grep vdb 2>/dev/null || echo 'Not mounted'"
+
+  # TASK 3: hello.sh script
+  echo "--- TASK 3: HELLO SCRIPT ---"
+  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "ls -l /opt/scripts/hello.sh 2>/dev/null; cat /opt/scripts/hello.sh 2>/dev/null; /opt/scripts/hello.sh 2>/dev/null || echo 'script missing'"
   echo ""
-  echo "--- Task 4: cat /etc/logrotate.d/webapp ---"
-  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "cat /etc/logrotate.d/webapp 2>/dev/null || echo 'Does not exist'"
+
+  # TASK 4: Sudoers entry
+  echo "--- TASK 4: SUDOERS ENTRY ---"
+  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "sudo -l -U bob 2>/dev/null | grep -A2 'User bob' || echo 'no sudo entry'"
   echo ""
-  echo "--- Task 5: ls -l /usr/bin/ping ---"
-  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "ls -l /usr/bin/ping 2>/dev/null || echo 'Does not exist'"
+
+  # TASK 5: Systemd timer
+  echo "--- TASK 5: SYSTEMD TIMER ---"
+  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "systemctl status hello.timer 2>/dev/null; systemctl list-timers hello.timer 2>/dev/null || echo 'timer not found'"
   echo ""
-  echo "--- Task 6: systemctl status health-check.service ---"
-  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "systemctl status health-check.service 2>/dev/null || echo 'Does not exist'"
+
+  # TASK 6: Rsyslog config
+  echo "--- TASK 6: RSYSLOG CUSTOM CONFIG ---"
+  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "cat /etc/rsyslog.d/99-cron.conf 2>/dev/null; ls -l /var/log/cron-custom.log 2>/dev/null || echo 'file missing'"
   echo ""
-  echo "--- Task 7: cat /opt/bob-process-count.txt ---"
-  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "cat /opt/bob-process-count.txt 2>/dev/null || echo 'Does not exist'"
+
+  # TASK 7: Static route
+  echo "--- TASK 7: STATIC ROUTE ---"
+  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "ip route show 2>/dev/null | grep '10.10.10.0/24' || echo 'route missing'"
   echo ""
-  echo "--- Task 8: sudo ufw status ---"
-  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "sudo ufw status 2>/dev/null || echo 'ufw unavailable'"
+
+  # TASK 8: NFS export
+  echo "--- TASK 8: NFS EXPORT ---"
+  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "cat /etc/exports 2>/dev/null | grep /opt/shared; exportfs -v 2>/dev/null | grep /opt/shared || echo 'export missing'"
   echo ""
-  echo "--- Task 9: head /opt/tcp-established.txt ---"
-  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "head /opt/tcp-established.txt 2>/dev/null || echo 'Does not exist'"
+
+  # TASK 9: nice process
+  echo "--- TASK 9: NICE PROCESS ---"
+  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "ps -eo pid,ni,comm 2>/dev/null | grep '[s]leep' | head -n 1 || echo 'no sleep process'"
   echo ""
-  echo "--- Task 10: unzip -l /opt/configs.zip ---"
-  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "unzip -l /opt/configs.zip 2>/dev/null || echo 'Does not exist or invalid'"
+
+  # TASK 10: update-alternatives editor
+  echo "--- TASK 10: EDITOR ALTERNATIVE ---"
+  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "update-alternatives --display editor 2>/dev/null | grep -E '^/usr/bin/nano' | head -n 1; ls -l /usr/bin/editor 2>/dev/null || echo 'editor link missing'"
   echo ""
-  echo "--- Task 11: cat /opt/time-status.txt; timedatectl ---"
-  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "cat /opt/time-status.txt 2>/dev/null; timedatectl 2>/dev/null"
+
+  # TASK 11: Hostname
+  echo "--- TASK 11: HOSTNAME ---"
+  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "hostnamectl --static 2>/dev/null; cat /etc/hostname 2>/dev/null || echo 'hostname missing'"
   echo ""
-  echo "--- Task 12: ls -ld /opt/shared; ls -l /opt/shared/testfile ---"
-  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "ls -ld /opt/shared 2>/dev/null; ls -l /opt/shared/testfile 2>/dev/null || echo 'No testfile'"
+
+  # TASK 12: Limits
+  echo "--- TASK 12: FILE DESCRIPTOR LIMITS ---"
+  sshpass -p $PASS ssh $SSH_OPTS bob@node02 "grep -E '^\*[[:space:]]+(soft|hard)[[:space:]]+nofile' /etc/security/limits.conf 2>/dev/null || echo 'limits missing'"
   echo ""
+
   echo "=== END OF EVIDENCE ==="
-} | sshpass -p $PASS ssh $SSH_OPTS bob@node03 "cat > /opt/ops-compliance/mock-exam-008/evidence.txt"
+} | sshpass -p $PASS ssh $SSH_OPTS bob@node03 "cat > /opt/ops-compliance/mock-exam-009/evidence.txt"
 
 if [ $? -eq 0 ]; then
   echo "✅ Evidence saved to $DEST"
@@ -724,7 +536,182 @@ else
 fi
 EVIDENCE
           chmod +x /home/vagrant/generate-evidence.sh
-          
+
+          # ═══════════════════════════════════════════════════════
+          # VALIDATOR (validate.sh) — evidence‑based
+          # ═══════════════════════════════════════════════════════
+          #
+          # NOTE: This script fetches evidence.txt ONCE from node03,
+          # then validates each task using its dedicated block.
+          # Headers must match those in generate-evidence.sh exactly.
+          #
+          cat << 'VALIDATOR' > /home/vagrant/validate.sh
+#!/bin/bash
+# validate.sh - Validates all tasks by reading evidence.txt from node03.
+# Single fetch, scoped grep per task, graceful failure if evidence missing.
+
+RED='\e[1;31m'; GREEN='\e[1;32m'; YELLOW='\e[1;33m'; CYAN='\e[1;36m'; MAGENTA='\e[1;35m'; RESET='\e[0m'; BOLD='\e[1m'
+SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
+PASS="caleston123"
+TOTAL=0; MAX=36; PASS_COUNT=0; FAIL_COUNT=0
+
+# --- Fetch evidence from node03 ---
+EVIDENCE_FILE="/tmp/evidence-$$.txt"
+echo -e "${CYAN}Fetching evidence from node03...${RESET}"
+if ! sshpass -p $PASS scp $SSH_OPTS bob@node03:/opt/ops-compliance/mock-exam-009/evidence.txt "$EVIDENCE_FILE" 2>/dev/null; then
+  echo -e "${RED}ERROR: Could not fetch evidence.txt from node03.${RESET}"
+  echo -e "${RED}Please run 'bash /home/vagrant/generate-evidence.sh' first.${RESET}"
+  exit 1
+fi
+
+# Helper to extract a task's block (between its header and the next header)
+extract_block() {
+  local task_num=$1
+  local next_num=$((task_num + 1))
+  local header_pattern="--- TASK ${task_num}:"
+  local next_header_pattern="--- TASK ${next_num}:"
+  # If next_num > 12, use end-of-file
+  if [ $next_num -le 12 ]; then
+    sed -n "/$header_pattern/,/$next_header_pattern/p" "$EVIDENCE_FILE" | sed '$d'  # remove line with next header
+  else
+    sed -n "/$header_pattern/,\$p" "$EVIDENCE_FILE"
+  fi
+}
+
+# Check if a block contains a pattern (grep -q)
+block_contains() {
+  local block="$1"
+  local pattern="$2"
+  echo "$block" | grep -q "$pattern"
+}
+
+# Wrapper for each task validation
+validate_task() {
+  local n=$1; local name=$2; local pts=$3; local pattern=$4; local desc=$5
+  echo -e "\n${CYAN}┌─ TASK $n: $name ($pts pts) ─${RESET}"
+  echo -e "${YELLOW}   $desc${RESET}"
+  
+  block=$(extract_block $n)
+  if [ -z "$block" ]; then
+    echo -e "   ${RED}❌ Evidence block for Task $n not found (header missing).${RESET}"
+    echo -e "   ${YELLOW}   Run generate-evidence.sh again.${RESET}"
+    FAIL_COUNT=$((FAIL_COUNT + 1))
+    return
+  fi
+  
+  if echo "$block" | grep -qE "$pattern"; then
+    echo -e "   ${GREEN}✅ +$pts pts${RESET}"
+    TOTAL=$((TOTAL + pts)); PASS_COUNT=$((PASS_COUNT + 1))
+  else
+    echo -e "   ${RED}❌ +0 pts${RESET}"
+    # Optional: show what we found?
+    FAIL_COUNT=$((FAIL_COUNT + 1))
+  fi
+}
+
+echo -e "${MAGENTA}"
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║     🎯 VALIDATOR LFCS — MOCK #009                            ║"
+echo "║        The Final Frontier (12 tasks)                         ║"
+echo "╚══════════════════════════════════════════════════════════════╝"
+echo -e "${RESET}"
+echo -e "${BOLD}Validating using evidence from node03...${RESET}\n"
+
+# T1: tree installed
+validate_task 1 "Package tree" 3 \
+  "tree[[:space:]]+install|^ii[[:space:]]+tree|which tree.*/usr/bin/tree" \
+  "tree package installed and which tree returns path"
+
+# T2: AppArmor enforcing
+validate_task 2 "AppArmor enforcing" 3 \
+  "enforce|Enforcing|profiles.*enforce" \
+  "AppArmor active and in enforcing mode"
+
+# T3: hello script
+validate_task 3 "Hello script" 3 \
+  "Hello LFCS|/opt/scripts/hello.sh.*executable" \
+  "Script exists, executable, prints 'Hello LFCS'"
+
+# T4: sudoers entry
+validate_task 4 "Sudoers systemctl" 3 \
+  "bob.*NOPASSWD.*systemctl|/usr/bin/systemctl" \
+  "bob has NOPASSWD for systemctl"
+
+# T5: systemd timer
+validate_task 5 "Systemd timer" 3 \
+  "hello.timer.*loaded|hello.timer.*active|02:30" \
+  "Timer unit exists, enabled, shows next trigger"
+
+# T6: rsyslog config
+validate_task 6 "Rsyslog cron" 3 \
+  "cron\.\*.*/var/log/cron-custom.log|cron-custom.log" \
+  "Custom rsyslog rule for cron and log file exists"
+
+# T7: static route
+validate_task 7 "Static route" 3 \
+  "10\.10\.10\.0/24.*via.*192\.168\.122\.1" \
+  "Route 10.10.10.0/24 via 192.168.122.1 is present"
+
+# T8: NFS export
+validate_task 8 "NFS export" 3 \
+  "/opt/shared.*\*.*rw|exportfs.*/opt/shared" \
+  "/opt/shared exported with rw to all"
+
+# T9: nice process
+validate_task 9 "Nice process" 3 \
+  "sleep.*ni:?[[:space:]]*15|sleep[[:space:]]+300.*15" \
+  "sleep 300 running with nice 15"
+
+# T10: editor alternative
+validate_task 10 "Editor alternative" 3 \
+  "/usr/bin/nano.*priority|editor.*->.*nano" \
+  "nano set as default editor via update-alternatives"
+
+# T11: hostname
+validate_task 11 "Hostname server02" 3 \
+  "server02" \
+  "hostname is server02 (static and /etc/hostname)"
+
+# T12: limits
+validate_task 12 "File descriptor limits" 3 \
+  "\*[[:space:]]+(soft|hard)[[:space:]]+nofile[[:space:]]+65535" \
+  "limits.conf contains * soft/hard nofile 65535"
+
+# ── Cleanup ──
+rm -f "$EVIDENCE_FILE"
+
+# ── Final summary ──
+PERCENT=$((TOTAL * 100 / MAX))
+
+echo -e "\n${MAGENTA}"
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║                    📊 FINAL RESULT                          ║"
+echo "╚══════════════════════════════════════════════════════════════╝"
+echo -e "${RESET}"
+echo -e "${BOLD}Tasks passed:${RESET}  ${GREEN}$PASS_COUNT / 12${RESET}"
+echo -e "${BOLD}Tasks failed:${RESET}   ${RED}$FAIL_COUNT / 12${RESET}"
+echo -e "${BOLD}Score:${RESET}         ${CYAN}$TOTAL / $MAX points${RESET}"
+echo -e "${BOLD}Percentage:${RESET}    ${CYAN}$PERCENT%${RESET}"
+echo -e "${BOLD}Passing (67%):${RESET}  ${CYAN}25 points${RESET}"
+echo ""
+
+if [ $PERCENT -ge 67 ]; then
+  echo -e "${GREEN}${BOLD}"
+  echo "╔══════════════════════════════════════════════════════════════╗"
+  echo "║           🎉 PASSED! CONGRATULATIONS, BOB! 🎉               ║"
+  echo "╚══════════════════════════════════════════════════════════════╝"
+  echo -e "${RESET}"
+else
+  echo -e "${RED}${BOLD}"
+  echo "╔══════════════════════════════════════════════════════════════╗"
+  echo "║               ❌ NOT PASSED — KEEP GOING! 💪                 ║"
+  echo "╚══════════════════════════════════════════════════════════════╝"
+  echo -e "${RESET}"
+fi
+echo ""
+VALIDATOR
+          chmod +x /home/vagrant/validate.sh
+
           echo "✅ Ticket + Verification + Validator + Evidence script created."
           echo "🚀 vagrant ssh node01 → automatic verification"
           echo "📝 When done: bash /home/vagrant/validate.sh"
