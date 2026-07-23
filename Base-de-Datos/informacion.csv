@@ -1,114 +1,51 @@
 Module,Title,Difficulty,Level,Duration,Date
-Introduction,Course Introduction,1,L1,5,2026-07-14
-Introduction,Why take this Course (AWS CP),1,L1,10,2026-07-14
-Introduction,Register/Taking an AWS Exam for the 1st time - what to know - Demo,1,L1,11,2026-07-14
-Introduction,Cloud Practitioners Exam guide,1,L1,12,2026-07-14
-Introduction,Article: A note about the next topic,1,L1,2,2026-07-14
-Introduction,Lab: What you know now! - Opening Evaluation,2,L1,20,2026-07-14
-Introduction,Article: How to Reach Out to KodeKloud and Engage with the Community,1,L1,3,2026-07-14
-Cloud Computing,What is Cloud Computing in a nutshell,2,L1,12,2026-07-14
-Cloud Computing,What is AWS Specifically,2,L1,11,2026-07-14
-Cloud Computing,Benefits of Cloud,2,L1,8,2026-07-14
-Cloud Computing,Cloud Economics,2,L1,9,2026-07-14
-Cloud Computing,Cloud Design Principals,2,L1,7,2026-07-14
-Cloud Computing,Lab: Six Advantages of Cloud Computing,2,L1,20,2026-07-14
-Cloud Computing,Lab: Quiz - Cloud Computing,2,L1,20,2026-07-14
-Cloud Computing,Article: Course Resources - AWS Cloud Practitioner,1,L1,2,2026-07-14
-Cloud Computing,Article: Notes available at KodeKloud Notes,1,L1,2,2026-07-14
-Security and Compliance,AWS Shared Responsibility Model for Security,2,L1,6,2026-07-14
-Security and Compliance,AWS Cloud security and compliance concepts,2,L1,9,2026-07-14
-Security and Compliance,AWS Identity Access Management,3,L1,16,2026-07-14
-Security and Compliance,AWS IAM - user groups and roles - Demo,3,L1,29,2026-07-14
-Security and Compliance,Organizations,2,L1,3,2026-07-14
-Security and Compliance,Resources for Security of AWS,3,L1,20,2026-07-14
-Security and Compliance,Lab: Security Identity and Compliance,3,L1,20,2026-07-14
-Security and Compliance,Lab: AWS E-commerce Website Architecture Identification,3,L1,20,2026-07-14
-Security and Compliance,Lab: Quiz - AWS Security and Compliance,3,L1,20,2026-07-14
-Technology - Part One,Methods of Deploying and Operating in the Cloud,2,L1,4,2026-07-14
-Technology - Part One,AWS Console - Demo,2,L1,7,2026-07-14
-Technology - Part One,AWS CLI - Demo,3,L1,6,2026-07-14
-Technology - Part One,AWS SDK - Demo,3,L1,6,2026-07-14
-Technology - Part One,AWS global infrastructure,2,L1,13,2026-07-14
-Technology - Part One,Core AWS Services - Networking,3,L1,18,2026-07-14
-Technology - Part One,Networking - Default VPC,2,L1,3,2026-07-14
-Technology - Part One,Networking - Firewall,3,L1,9,2026-07-14
-Technology - Part One,Networking - Overview,2,L1,3,2026-07-14
-Technology - Part One,AWS Networking - Demo,3,L1,20,2026-07-14
-Technology - Part One,Lab: Networking Services,3,L1,20,2026-07-14
-Technology - Part One,Core AWS Services - Storage,3,L1,18,2026-07-14
-Technology - Part One,AWS Storage EBS - Demo,3,L1,13,2026-07-14
-Technology - Part One,AWS Storage EFS - Demo,3,L1,11,2026-07-14
-Technology - Part One,AWS Storage S3 - Demo,3,L1,13,2026-07-14
-Technology - Part One,Lab: Storage Services,3,L1,20,2026-07-14
-Technology - Part One,Core AWS Services - Compute EC2,3,L1,15,2026-07-14
-Technology - Part One,Core AWS Services - Compute Lambda,3,L1,9,2026-07-14
-Technology - Part One,Core AWS Services - Compute Containers,3,L1,10,2026-07-14
-Technology - Part One,Lab: Container Services,3,L1,20,2026-07-14
-Technology - Part One,AWS Compute EC2 - Demo,3,L1,10,2026-07-14
-Technology - Part One,AWS Lambda,3,L1,22,2026-07-14
-Technology - Part One,Lab: Compute Services,3,L1,20,2026-07-14
-Technology - Part One,Lab: Quiz - AWS Technology - Part One,3,L1,20,2026-07-14
-Technology - Part Two,Core AWS Services - Database,3,L1,33,2026-07-14
-Technology - Part Two,AWS Database - Demo,3,L1,8,2026-07-14
-Technology - Part Two,Lab: Database Services,3,L1,20,2026-07-14
-Technology - Part Two,Core AWS Services - Application Integration,3,L1,14,2026-07-14
-Technology - Part Two,AWS App Integration - Demo,3,L1,9,2026-07-14
-Technology - Part Two,Lab: Application Integration,3,L1,20,2026-07-14
-Technology - Part Two,Core AWS Services - Management,3,L1,15,2026-07-14
-Technology - Part Two,AWS Management - Demo,3,L1,6,2026-07-14
-Technology - Part Two,Lab: Management and Governance,3,L1,20,2026-07-14
-Technology - Part Two,Core AWS Services - Migration and Transfer,3,L1,17,2026-07-14
-Technology - Part Two,AWS Migration and Transfer - Demo,3,L1,6,2026-07-14
-Technology - Part Two,Lab: Identify the Missing Data Transfer Service,3,L1,20,2026-07-14
-Technology - Part Two,Lab: Global Multi-Region API with Data Management,4,L1,20,2026-07-14
-Technology - Part Two,Lab: Identify the Missing Data Storage Service,3,L1,20,2026-07-14
-Technology - Part Two,Lab: Quiz - AWS Technology - Part Two,3,L1,20,2026-07-14
-Technology - Part Three,Introduction to AI/ML Services,3,L1,5,2026-07-14
-Technology - Part Three,AI/ML - Sagemaker,3,L1,5,2026-07-14
-Technology - Part Three,AI/ML - Lex for Chatbots,3,L1,5,2026-07-14
-Technology - Part Three,AI/ML - Kendra,3,L1,6,2026-07-14
-Technology - Part Three,AI/ML - Comprehend,3,L1,5,2026-07-14
-Technology - Part Three,AI/ML - Polly,3,L1,4,2026-07-14
-Technology - Part Three,AI/ML - Rekognition,3,L1,4,2026-07-14
-Technology - Part Three,AI/ML - Textract,3,L1,4,2026-07-14
-Technology - Part Three,AI/ML - Transcribe,3,L1,4,2026-07-14
-Technology - Part Three,AI/ML - Translate,3,L1,3,2026-07-14
-Technology - Part Three,AI/ML - Summary,3,L1,4,2026-07-14
-Technology - Part Three,AWS SageMaker - Demo,3,L1,15,2026-07-14
-Technology - Part Three,Secondary AWS Services - Analytics Services,3,L1,10,2026-07-14
-Technology - Part Three,AWS Athena - Demo,3,L1,16,2026-07-14
-Technology - Part Three,Secondary AWS Services - Business Application Services,3,L1,9,2026-07-14
-Technology - Part Three,Amazon Connect - Demo,3,L1,35,2026-07-14
-Technology - Part Three,Secondary AWS Services - Customer Engagement Services,3,L1,14,2026-07-14
-Technology - Part Three,Secondary AWS Services - Developer Tools,3,L1,23,2026-07-14
-Technology - Part Three,Lab: Developer Tools,3,L1,20,2026-07-14
-Technology - Part Three,AWS Cloud9 - Demo,3,L1,8,2026-07-14
-Technology - Part Three,Secondary AWS Services - End-User Computing,3,L1,15,2026-07-14
-Technology - Part Three,AWS Workspaces - Demo,3,L1,9,2026-07-14
-Technology - Part Three,Secondary AWS Services - Frontend Web and Mobile Services,3,L1,8,2026-07-14
-Technology - Part Three,AWS Amplify - Demo,3,L1,12,2026-07-14
-Technology - Part Three,Secondary AWS Services - IoT Services,3,L1,12,2026-07-14
-Billing and Pricing,General Billing in AWS,2,L1,19,2026-07-14
-Billing and Pricing,Specific Billing - EC2,3,L1,14,2026-07-14
-Billing and Pricing,Article: A note for this section,1,L1,2,2026-07-14
-Billing and Pricing,Calculate the following Compute Costs - Calculator Exercise,3,L1,7,2026-07-14
-Billing and Pricing,Specific Billing - RDS,3,L1,8,2026-07-14
-Billing and Pricing,Calculate the following Database Costs - Calculator Exercise,3,L1,2,2026-07-14
-Billing and Pricing,Specific Billing - VPC,3,L1,8,2026-07-14
-Billing and Pricing,Calculate the following Network Costs - Calculator Exercise,3,L1,2,2026-07-14
-Billing and Pricing,Specific Billing - Lambda,3,L1,7,2026-07-14
-Billing and Pricing,Billing for other services in general,2,L1,10,2026-07-14
-Billing and Pricing,Calculate the following Random Service Costs - Calculator Exercise,2,L1,2,2026-07-14
-Billing and Pricing,How Account Structures can affect billing,2,L1,8,2026-07-14
-Billing and Pricing,Tools for Billing Analysis and Support,2,L1,11,2026-07-14
-Billing and Pricing,AWS Support Options,2,L1,13,2026-07-14
-Billing and Pricing,Lab: Billing and Pricing,3,L1,20,2026-07-14
-Billing and Pricing,Lab: Quiz - AWS Pricing and Billing,3,L1,20,2026-07-14
-Bringing it all together,Summary on Cloud Computing,1,L1,6,2026-07-14
-Bringing it all together,Summary on Security and Compliance,1,L1,9,2026-07-14
-Bringing it all together,Summary on Technology,1,L1,20,2026-07-14
-Bringing it all together,Summary on Billing and Pricing,1,L1,9,2026-07-14
-Bringing it all together,Lab: What you know at the end! - Exam 1,4,L1,30,2026-07-14
-Bringing it all together,Lab: What you know at the end! - Exam 2,4,L1,30,2026-07-14
-Bringing it all together,The Road ahead on your AWS Journey,1,L1,10,2026-07-14
-Bringing it all together,Conclusion,1,L1,3,2026-07-14
+EC2 and Storage Fundamentals,Lab: Day 1 - Create Key Pair,2,L2,30,2026-07-22
+EC2 and Storage Fundamentals,Lab: Day 2 - Create Security Group,3,L2,30,2026-07-22
+EC2 and Storage Fundamentals,Lab: Day 3 - Create Subnet,3,L2,30,2026-07-22
+EC2 and Storage Fundamentals,Lab: Day 4 - Enable Versioning for S3 Bucket,3,L2,30,2026-07-22
+EC2 and Storage Fundamentals,Lab: Day 5 - Create GP3 Volume,3,L2,30,2026-07-22
+EC2 and Storage Fundamentals,Lab: Day 6 - Launch EC2 Instance,3,L2,30,2026-07-22
+EC2 and Storage Fundamentals,Lab: Day 7 - Change EC2 Instance Type,3,L2,30,2026-07-22
+EC2 and Storage Fundamentals,Lab: Day 8 - Enable Stop Protection for EC2 Instance,3,L2,30,2026-07-22
+EC2 and Storage Fundamentals,Lab: Day 9 - Enable Termination Protection for EC2 Instance,3,L2,30,2026-07-22
+EC2 and Storage Fundamentals,Lab: Day 10 - Attach Elastic IP to EC2 Instance,3,L2,30,2026-07-22
+EC2 and Storage Fundamentals,Lab: Day 11 - Attach Elastic Network Interface to EC2 Instance,3,L2,30,2026-07-22
+EC2 and Storage Fundamentals,Lab: Day 12 - Attach Volume to EC2 Instance,3,L2,30,2026-07-22
+EC2 and Storage Fundamentals,Lab: Day 13 - Create AMI from EC2 Instance,4,L2,30,2026-07-22
+EC2 and Storage Fundamentals,Lab: Day 14 - Terminate EC2 Instance,3,L2,30,2026-07-22
+EC2 and Storage Fundamentals,Lab: Day 15 - Create Volume Snapshot,3,L2,30,2026-07-22
+IAM and Access Management,Lab: Day 16 - Create IAM User,3,L2,30,2026-07-22
+IAM and Access Management,Lab: Day 17 - Create IAM Group,3,L2,30,2026-07-22
+IAM and Access Management,Lab: Day 18 - Create Read-Only IAM Policy for EC2 Console Access,4,L2,30,2026-07-22
+IAM and Access Management,Lab: Day 19 - Attach IAM Policy to IAM User,4,L2,30,2026-07-22
+IAM and Access Management,Lab: Day 20 - Create IAM Role for EC2 with Policy Attachment,4,L2,30,2026-07-22
+Networking and VPC,Lab: Day 21 - Setting Up an EC2 Instance with an Elastic IP for Application Hosting,4,L2,30,2026-07-22
+Networking and VPC,Lab: Day 22 - Configuring Secure SSH Access to an EC2 Instance,4,L2,30,2026-07-22
+Networking and VPC,Lab: Day 23 - Data Migration Between S3 Buckets Using AWS CLI,4,L2,30,2026-07-22
+Networking and VPC,Lab: Day 24 - Setting Up an Application Load Balancer for an EC2 Instance,4,L2,30,2026-07-22
+Networking and VPC,Lab: Day 25 - Setting Up an EC2 Instance and CloudWatch Alarm,4,L2,30,2026-07-22
+Networking and VPC,Lab: Day 26 - Configuring an EC2 Instance as a Web Server with Nginx,4,L2,30,2026-07-22
+Networking and VPC,Lab: Day 27 - Configuring a Public VPC with an EC2 Instance for Internet Access,5,L2,30,2026-07-22
+Networking and VPC,Lab: Day 28 - Creating a Private ECR Repository,4,L2,30,2026-07-22
+Networking and VPC,Lab: Day 29 - Establishing Secure Communication Between Public and Private VPCs via VPC Peering,5,L2,30,2026-07-22
+Networking and VPC,Lab: Day 30 - Enable Internet Access for Private EC2 using NAT Instance,5,L2,30,2026-07-22
+Databases and Serverless,Lab: Day 31 - Configuring a Private RDS Instance for Application Development,4,L2,30,2026-07-22
+Databases and Serverless,Lab: Day 32 - Snapshot and Restoration of an RDS Instance,4,L2,30,2026-07-22
+Databases and Serverless,Lab: Day 33 - Create a Lambda Function,4,L2,30,2026-07-22
+Databases and Serverless,Lab: Day 34 - Create a Lambda Function Using CLI,5,L2,30,2026-07-22
+Databases and Serverless,Lab: Day 35 - Deploying and Managing Applications on AWS,5,L2,30,2026-07-22
+Advanced AWS Services,Lab: Day 36 - Load Balancing EC2 Instances with Application Load Balancer,4,L2,30,2026-07-22
+Advanced AWS Services,Lab: Day 37 - Managing EC2 Access with S3 Role-based Permissions,4,L2,30,2026-07-22
+Advanced AWS Services,Lab: Day 38 - Deploying Containerized Applications with Amazon ECS,5,L2,30,2026-07-22
+Advanced AWS Services,Lab: Day 39 - Hosting a Static Website on AWS S3,4,L2,30,2026-07-22
+Advanced AWS Services,Lab: Day 40 - Troubleshooting Internet Accessibility for an EC2-Hosted Application,5,L2,30,2026-07-22
+Advanced AWS Services,Lab: Day 41 - Securing Data with AWS KMS,4,L2,30,2026-07-22
+Advanced AWS Services,Lab: Day 42 - Building and Managing NoSQL Databases with AWS DynamoDB,4,L2,30,2026-07-22
+Orchestration and Automation,Lab: Day 43 - Scaling and Managing Kubernetes Clusters with Amazon EKS,5,L2,30,2026-07-22
+Orchestration and Automation,Lab: Day 44 - Implementing Auto Scaling for High Availability in AWS,5,L2,30,2026-07-22
+Orchestration and Automation,Lab: Day 45 - Configure NAT Gateway for Internet Access in a Private VPC,5,L2,30,2026-07-22
+Orchestration and Automation,Lab: Day 46 - Event-Driven Processing with Amazon S3 and Lambda,5,L2,30,2026-07-22
+Orchestration and Automation,Lab: Day 47 - Integrating AWS SQS and SNS for Reliable Messaging,5,L2,30,2026-07-22
+Orchestration and Automation,Lab: Day 48 - Automating Infrastructure Deployment with AWS CloudFormation,5,L2,30,2026-07-22
+Orchestration and Automation,Lab: Day 49 - Centralized Audit Logging with VPC Peering,5,L2,30,2026-07-22
+Orchestration and Automation,Lab: Day 50 - Expanding EC2 Instance Storage for Development Needs,5,L2,30,2026-07-22
