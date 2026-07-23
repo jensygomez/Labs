@@ -1,51 +1,19 @@
 Module,Title,Difficulty,Level,Duration,Date
-EC2 and Storage Fundamentals,Lab: Day 1 - Create Key Pair,2,L2,30,2026-07-22
-EC2 and Storage Fundamentals,Lab: Day 2 - Create Security Group,3,L2,30,2026-07-22
-EC2 and Storage Fundamentals,Lab: Day 3 - Create Subnet,3,L2,30,2026-07-22
-EC2 and Storage Fundamentals,Lab: Day 4 - Enable Versioning for S3 Bucket,3,L2,30,2026-07-22
-EC2 and Storage Fundamentals,Lab: Day 5 - Create GP3 Volume,3,L2,30,2026-07-22
-EC2 and Storage Fundamentals,Lab: Day 6 - Launch EC2 Instance,3,L2,30,2026-07-22
-EC2 and Storage Fundamentals,Lab: Day 7 - Change EC2 Instance Type,3,L2,30,2026-07-22
-EC2 and Storage Fundamentals,Lab: Day 8 - Enable Stop Protection for EC2 Instance,3,L2,30,2026-07-22
-EC2 and Storage Fundamentals,Lab: Day 9 - Enable Termination Protection for EC2 Instance,3,L2,30,2026-07-22
-EC2 and Storage Fundamentals,Lab: Day 10 - Attach Elastic IP to EC2 Instance,3,L2,30,2026-07-22
-EC2 and Storage Fundamentals,Lab: Day 11 - Attach Elastic Network Interface to EC2 Instance,3,L2,30,2026-07-22
-EC2 and Storage Fundamentals,Lab: Day 12 - Attach Volume to EC2 Instance,3,L2,30,2026-07-22
-EC2 and Storage Fundamentals,Lab: Day 13 - Create AMI from EC2 Instance,4,L2,30,2026-07-22
-EC2 and Storage Fundamentals,Lab: Day 14 - Terminate EC2 Instance,3,L2,30,2026-07-22
-EC2 and Storage Fundamentals,Lab: Day 15 - Create Volume Snapshot,3,L2,30,2026-07-22
-IAM and Access Management,Lab: Day 16 - Create IAM User,3,L2,30,2026-07-22
-IAM and Access Management,Lab: Day 17 - Create IAM Group,3,L2,30,2026-07-22
-IAM and Access Management,Lab: Day 18 - Create Read-Only IAM Policy for EC2 Console Access,4,L2,30,2026-07-22
-IAM and Access Management,Lab: Day 19 - Attach IAM Policy to IAM User,4,L2,30,2026-07-22
-IAM and Access Management,Lab: Day 20 - Create IAM Role for EC2 with Policy Attachment,4,L2,30,2026-07-22
-Networking and VPC,Lab: Day 21 - Setting Up an EC2 Instance with an Elastic IP for Application Hosting,4,L2,30,2026-07-22
-Networking and VPC,Lab: Day 22 - Configuring Secure SSH Access to an EC2 Instance,4,L2,30,2026-07-22
-Networking and VPC,Lab: Day 23 - Data Migration Between S3 Buckets Using AWS CLI,4,L2,30,2026-07-22
-Networking and VPC,Lab: Day 24 - Setting Up an Application Load Balancer for an EC2 Instance,4,L2,30,2026-07-22
-Networking and VPC,Lab: Day 25 - Setting Up an EC2 Instance and CloudWatch Alarm,4,L2,30,2026-07-22
-Networking and VPC,Lab: Day 26 - Configuring an EC2 Instance as a Web Server with Nginx,4,L2,30,2026-07-22
-Networking and VPC,Lab: Day 27 - Configuring a Public VPC with an EC2 Instance for Internet Access,5,L2,30,2026-07-22
-Networking and VPC,Lab: Day 28 - Creating a Private ECR Repository,4,L2,30,2026-07-22
-Networking and VPC,Lab: Day 29 - Establishing Secure Communication Between Public and Private VPCs via VPC Peering,5,L2,30,2026-07-22
-Networking and VPC,Lab: Day 30 - Enable Internet Access for Private EC2 using NAT Instance,5,L2,30,2026-07-22
-Databases and Serverless,Lab: Day 31 - Configuring a Private RDS Instance for Application Development,4,L2,30,2026-07-22
-Databases and Serverless,Lab: Day 32 - Snapshot and Restoration of an RDS Instance,4,L2,30,2026-07-22
-Databases and Serverless,Lab: Day 33 - Create a Lambda Function,4,L2,30,2026-07-22
-Databases and Serverless,Lab: Day 34 - Create a Lambda Function Using CLI,5,L2,30,2026-07-22
-Databases and Serverless,Lab: Day 35 - Deploying and Managing Applications on AWS,5,L2,30,2026-07-22
-Advanced AWS Services,Lab: Day 36 - Load Balancing EC2 Instances with Application Load Balancer,4,L2,30,2026-07-22
-Advanced AWS Services,Lab: Day 37 - Managing EC2 Access with S3 Role-based Permissions,4,L2,30,2026-07-22
-Advanced AWS Services,Lab: Day 38 - Deploying Containerized Applications with Amazon ECS,5,L2,30,2026-07-22
-Advanced AWS Services,Lab: Day 39 - Hosting a Static Website on AWS S3,4,L2,30,2026-07-22
-Advanced AWS Services,Lab: Day 40 - Troubleshooting Internet Accessibility for an EC2-Hosted Application,5,L2,30,2026-07-22
-Advanced AWS Services,Lab: Day 41 - Securing Data with AWS KMS,4,L2,30,2026-07-22
-Advanced AWS Services,Lab: Day 42 - Building and Managing NoSQL Databases with AWS DynamoDB,4,L2,30,2026-07-22
-Orchestration and Automation,Lab: Day 43 - Scaling and Managing Kubernetes Clusters with Amazon EKS,5,L2,30,2026-07-22
-Orchestration and Automation,Lab: Day 44 - Implementing Auto Scaling for High Availability in AWS,5,L2,30,2026-07-22
-Orchestration and Automation,Lab: Day 45 - Configure NAT Gateway for Internet Access in a Private VPC,5,L2,30,2026-07-22
-Orchestration and Automation,Lab: Day 46 - Event-Driven Processing with Amazon S3 and Lambda,5,L2,30,2026-07-22
-Orchestration and Automation,Lab: Day 47 - Integrating AWS SQS and SNS for Reliable Messaging,5,L2,30,2026-07-22
-Orchestration and Automation,Lab: Day 48 - Automating Infrastructure Deployment with AWS CloudFormation,5,L2,30,2026-07-22
-Orchestration and Automation,Lab: Day 49 - Centralized Audit Logging with VPC Peering,5,L2,30,2026-07-22
-Orchestration and Automation,Lab: Day 50 - Expanding EC2 Instance Storage for Development Needs,5,L2,30,2026-07-22
+User Management,Lab: Custom Apache User Setup,1,L1,10,2026-03-26
+User Management,Lab: Group Creation and User Assignment,1,L1,12,2026-03-27
+User Management,Lab: Linux User Setup with Non-Interactive Shell,2,L1,12,2026-03-27
+User Management,Lab: Service User Creation without Home Directory,2,L1,15,2026-03-28
+User Management,Lab: Temporary User Setup with Expiry,2,L1,15,2026-03-29
+User Management,Lab: Linux User Data Transfer,2,L1,20,2026-03-29
+Security and Access,Lab: Secure Root SSH Access,3,L1,20,2026-03-30
+Security and Access,Lab: Data Backup for Developer,3,L1,20,2026-03-31
+Security and Access,Lab: Script Execution Permissions,3,L1,25,2026-04-01
+File and System Administration,Lab: File Permission Correction,3,L1,25,2026-04-01
+File and System Administration,Lab: String Replacement,3,L1,25,2026-04-02
+File and System Administration,Lab: Secure Data Transfer,3,L1,30,2026-04-03
+System Configuration,Lab: Restrict Cron Access,4,L1,30,2026-04-04
+System Configuration,Lab: Default GUI Boot Configuration,4,L1,30,2026-04-05
+System Configuration,Lab: Timezone Alignment,3,L1,30,2026-04-05
+System Configuration,Lab: Firewall Configuration,4,L1,35,2026-04-06
+System Configuration,Lab: Process Limit Adjustment,4,L1,35,2026-04-07
+System Configuration,Lab: SElinux Installation and Configuration,5,L1,40,2026-04-07
