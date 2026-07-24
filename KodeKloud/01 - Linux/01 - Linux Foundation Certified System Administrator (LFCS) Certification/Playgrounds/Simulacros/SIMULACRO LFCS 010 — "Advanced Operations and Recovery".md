@@ -8,6 +8,7 @@ Nivel: L2
 Fecha de Inicio: 2026-07-22
 Script Vagrant: |-
   # -- mode: ruby --
+
   # vi: set ft=ruby :
 
   Vagrant.configure("2") do |config|
@@ -136,6 +137,13 @@ Script Vagrant: |-
             
             # ── TASK 11: NFS export already from /opt/shared (created previously) ──
             # We'll mount it locally on /mnt/nfs-local (not yet)
+            mkdir -p /opt/shared
+            chmod 777 /opt/shared
+            echo "Shared NFS data" > /opt/shared/welcome.txt
+            grep -q "/opt/shared" /etc/exports || echo "/opt/shared *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
+            systemctl enable --now nfs-kernel-server 2>/dev/null || service nfs-kernel-server restart
+            exportfs -ra
+            # Student's task: mount it as NFS client on /mnt/nfs-local (not yet)
             mkdir -p /mnt/nfs-local
             umount /mnt/nfs-local 2>/dev/null || true
             
