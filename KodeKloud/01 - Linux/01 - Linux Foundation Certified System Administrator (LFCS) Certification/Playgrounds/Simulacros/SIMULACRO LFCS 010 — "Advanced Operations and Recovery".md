@@ -482,7 +482,7 @@ Script Vagrant: |-
   fi
 
   echo -e "${YELLOW}[4/8] node02: NFS export /opt/shared exists${RESET}"
-  if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "exportfs -v 2>/dev/null | grep -q /opt/shared" 2>/dev/null; then
+  if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "sudo exportfs -v 2>/dev/null | grep -q /opt/shared" 2>/dev/null; then
     echo -e "      ${GREEN}✓ OK${RESET}"
   else
     echo -e "      ${RED}✗ FALLÓ${RESET}"; FAIL=1
