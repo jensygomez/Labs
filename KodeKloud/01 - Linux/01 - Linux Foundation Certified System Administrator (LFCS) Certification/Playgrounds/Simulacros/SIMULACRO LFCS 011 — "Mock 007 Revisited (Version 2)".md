@@ -110,7 +110,7 @@ Script Vagrant: |-
             sed -i '/db-replica.internal/d' /etc/hosts
             
             # ── TASK 9: SSH root login currently permitted (PermitRootLogin yes) ──
-            sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+            sed -i 's/^#*PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
             
             # ── TASK 10: no cron job for root ──
             crontab -u root -r 2>/dev/null || true
@@ -228,7 +228,7 @@ Script Vagrant: |-
   TASK 5 — Storage: Autofs for a Local Directory (3 points)
   ================================================================================
   Configure autofs to automatically mount /opt/autofs-shared (from local directory)
-  at /mnt/auto (the mount point). Use an indirect map.
+  at /mnt/auto (the mount point). Use an indirect map. (Hint: for local directories, use the :/path/to/dir syntax in the map file).
 
   On node02:
   1. Create a directory /opt/autofs-shared with some files.
@@ -484,7 +484,7 @@ Script Vagrant: |-
 
     # TASK 7: err count
     echo "--- TASK 7: ERR COUNT ---"
-    sshpass -p $PASS ssh $SSH_OPTS bob@node02 "cat /opt/err-count.txt 2>/dev/null || echo 'file missing'"
+    sshpass -p $PASS ssh $SSH_OPTS bob@node02 "echo \"Student file: \$(cat /opt/err-count.txt 2>/dev/null || echo missing)\"; echo \"Actual system count: \$(sudo journalctl -p err --no-pager | wc -l)\""
     echo ""
 
     # TASK 8: hosts
@@ -595,7 +595,7 @@ Script Vagrant: |-
   echo -e "${BOLD}Validating using evidence from node03...${RESET}\n"
 
   validate_task 1 "grep/cut errors" 3 \
-    "500.*192\.168\.1\.[0-9]+.*/api/users|500.*GET|500.*POST" \
+    "192\.168\.1\.[0-9]+\s+/api/users" \
     "File contains only IP and URL for status 500"
 
   validate_task 2 "User appuser2" 3 \
@@ -631,7 +631,7 @@ Script Vagrant: |-
     "PermitRootLogin no uncommented"
 
   validate_task 10 "Root cron" 3 \
-    "0 3 \* \* \*.*echo.*backup|3 0.*backup" \
+    "0 3 \* \* \*.*backup" \
     "Cron schedule and command"
 
   validate_task 11 "ACL" 3 \
