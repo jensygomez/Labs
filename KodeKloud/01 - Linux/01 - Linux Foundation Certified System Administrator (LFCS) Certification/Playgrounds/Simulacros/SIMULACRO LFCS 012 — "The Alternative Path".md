@@ -1,0 +1,588 @@
+---
+Titulo: SIMULACRO LFCS 012 — "The Alternative Path"
+Severidad: MEDIA
+Ambiente: Produccion
+Modulo: LFCS Complete
+Dificultad: 3/10
+Nivel: L2
+Fecha de Inicio: 2026-07-26
+Script Vagrant: |-
+  # -- mode: ruby --
+  # vi: set ft=ruby :
+  Vagrant.configure("2") do |config|
+    config.vm.box = "generic/ubuntu2204"
+
+    nodes = [
+      { name: "node01", ip: "192.168.122.11", extra_disks: [] },
+      { name: "node02", ip: "192.168.122.12", extra_disks: ['1G'] },  # 1G disk for btrfs
+      { name: "node03", ip: "192.168.122.13", extra_disks: [] }
+    ]
+
+    nodes.each do |node|
+      config.vm.define node[:name] do |node_config|
+        node_config.vm.hostname = node[:name]
+        
+        node_config.vm.network "private_network",
+          ip: node[:ip],
+          libvirt__network_name: "mgmt-net",
+          libvirt__dhcp_enabled: false
+
+        node_config.vm.provider "libvirt" do |lv|
+          lv.memory = 1024
+          lv.cpus = 1
+          lv.driver = "kvm"
+          node[:extra_disks].each do |size|
+            lv.storage :file, :size => size, :type => 'qcow2'
+          end
+        end
+
+        # ── GENERAL PROVISIONING (all nodes) ──
+        node_config.vm.provision "shell", inline: <<-SHELL
+          echo "🔧 Configuring #{node[:name]}..."
+          for host in node01 node02 node03; do
+            sed -i "/$host/d" /etc/hosts
+          done
+          cat << 'HOSTS' >> /etc/hosts
+  192.168.122.11 node01
+  192.168.122.12 node02
+  192.168.122.13 node03
+  HOSTS
+          useradd -m -s /bin/bash bob 2>/dev/null || true
+          echo 'bob:caleston123' | chpasswd
+          echo 'bob ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/bob
+          chmod 0440 /etc/sudoers.d/bob
+          
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -qq
+          apt-get install -y -qq sshpass curl acl btrfs-progs xz-utils net-tools iptables
+        SHELL
+
+        # ── NODE02: SERVER WITH 12 INCIDENTS ──
+        if node[:name] == "node02"
+          node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
+            echo "🖥️ Configuring node02 with 12 incidents..."
+            export DEBIAN_FRONTEND=noninteractive
+            
+            # ── TASK 1: Large files for du/tar ──
+            mkdir -p /opt/large-data
+            dd if=/dev/zero of=/opt/large-data/file1.img bs=1M count=15 2>/dev/null
+            dd if=/dev/zero of=/opt/large-data/file2.img bs=1M count=20 2>/dev/null
+            dd if=/dev/zero of=/opt/large-data/small.img bs=1M count=2 2>/dev/null
+            
+            # ── TASK 2: no user deployer or group devops yet ──
+            userdel -r deployer 2>/dev/null || true
+            groupdel devops 2>/dev/null || true
+            
+            # ── TASK 3: /dev/vdb is empty, ready for btrfs ──
+            wipefs -a /dev/vdb 2>/dev/null || true
+            
+            # ── TASK 4: journald currently volatile ──
+            mkdir -p /etc/systemd/journald.conf.d
+            echo -e "[Journal]\nStorage=volatile" > /etc/systemd/journald.conf.d/99-mock.conf
+            systemctl restart systemd-journald
+            
+            # ── TASK 5: public drop directory ──
+            mkdir -p /opt/public-drop
+            chmod 777 /opt/public-drop
+            
+            # ── TASK 6: cups is active, ssh is active ──
+            apt-get install -y -qq cups 2>/dev/null
+            systemctl unmask cups 2>/dev/null || true
+            systemctl enable cups 2>/dev/null
+            systemctl start cups 2>/dev/null
+            
+            # ── TASK 7: bob processes ──
+            # Start some background processes for bob
+            su - bob -c "sleep 3600 &" 2>/dev/null
+            su - bob -c "tail -f /dev/null &" 2>/dev/null
+            
+            # ── TASK 8: iptables currently empty ──
+            iptables -F INPUT 2>/dev/null || true
+            
+            # ── TASK 9: netstat available ──
+            # net-tools already installed in general provisioning
+            
+            # ── TASK 10: config files for tar.xz ──
+            mkdir -p /opt/app-configs
+            echo "db_host=10.0.0.5" > /opt/app-configs/database.conf
+            echo "cache_ttl=3600" > /opt/app-configs/cache.conf
+            echo "log_level=info" > /opt/app-configs/logging.conf
+            
+            # ── TASK 11: timezone currently UTC ──
+            ln -sf /usr/share/zoneinfo/UTC /etc/localtime
+            echo "UTC" > /etc/timezone
+            
+            # ── TASK 12: critical config file ──
+            echo "CRITICAL_SETTING=TRUE" > /etc/critical-config.conf
+            chattr -i /etc/critical-config.conf 2>/dev/null || true
+            
+            echo "✅ node02 configured with 12 incidents"
+          SHELL
+        end
+
+        # ── NODE03: VAULT ──
+        if node[:name] == "node03"
+          node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
+            echo "🔒 Preparing vault..."
+            mkdir -p /opt/ops-compliance/mock-exam-012
+            chown -R bob:bob /opt/ops-compliance
+            chmod -R 755 /opt/ops-compliance
+            echo "✅ Vault ready at /opt/ops-compliance/mock-exam-012/"
+          SHELL
+        end
+
+        # ── NODE01: TICKET + VERIFICATION + VALIDATOR (evidence‑based) ──
+        if node[:name] == "node01"
+          node_config.vm.provision "shell", privileged: false, inline: <<-SHELL
+            echo "🎫 Generating Ticket, verification, validator, and evidence script on node01..."
+            
+            # ═══════════════════════════════════════════════════════
+            # TICKET (English)
+            # ═══════════════════════════════════════════════════════
+            cat << 'TICKET' > /home/vagrant/TICKET_MOCK-012.txt
+  ================================================================================
+  TICKET MOCK-012   │  Severity: MEDIUM  │  Environment: PRODUCTION
+  🔐 MOCK-012 — The Alternative Path (12 Tasks)
+  Module: LFCS Complete  │  Difficulty: 3/10  │  Level: L2
+  Control Station:    node01  (Administrator — bob)
+  Server Node:        node02  (Ubuntu 22.04)
+  Vault Destination:  node03  (/opt/ops-compliance/mock-exam-012/)
+  Cluster Password:   caleston123
+
+  This mock covers the same LFCS domains as Mock #8 but requires alternative 
+  tools (iptables, btrfs, chattr, tar.xz, pgrep, netstat, etc.). 
+  Manage your time: ~8–10 minutes per task. If stuck, move on.
+  ================================================================================
+  TASK 1 — Essential Commands: List and Archive Large Files (3 points)
+  ================================================================================
+  Use `du` to find files in `/opt` larger than 10M. Sort them descending and 
+  save the top 5 paths to `/opt/large-files.txt`. 
+  Then, create an uncompressed tar archive `/opt/large-files.tar` containing 
+  that text file.
+  CRITERIA:
+  [ ] /opt/large-files.txt exists and contains paths >10M                  --> 40%
+  [ ] /opt/large-files.tar exists and is a valid tar archive               --> 40%
+  [ ] The archive contains the text file                                   --> 20%
+  TIME: 10 minutes
+  ================================================================================
+  TASK 2 — Users/Groups: Create Group and User (3 points)
+  ================================================================================
+  Create a group named `devops` with GID=3000. 
+  Create a user `deployer` with `devops` as its primary group.
+  CRITERIA:
+  [ ] Group `devops` exists with GID=3000                                  --> 40%
+  [ ] User `deployer` exists with primary group `devops`                   --> 60%
+  TIME: 8 minutes
+  ================================================================================
+  TASK 3 — Storage: Format and Mount btrfs (3 points)
+  ================================================================================
+  Format the entire disk `/dev/vdb` as `btrfs`. 
+  Mount it persistently at `/mnt/pool` using fstab. Use `mount -a` to apply.
+  CRITERIA:
+  [ ] Filesystem is btrfs (blkid)                                          --> 40%
+  [ ] Mounted at /mnt/pool and fstab entry exists                          --> 60%
+  TIME: 12 minutes
+  ================================================================================
+  TASK 4 — Operations: Configure systemd-journald (3 points)
+  ================================================================================
+  Configure `systemd-journald` to store logs persistently in `/var/log/journal`.
+  Set the maximum disk usage to 100M (`SystemMaxUse=100M`).
+  Restart the service to apply.
+  CRITERIA:
+  [ ] Storage=persistent is configured                                     --> 40%
+  [ ] SystemMaxUse=100M is configured                                      --> 40%
+  [ ] Service restarted and /var/log/journal exists                        --> 20%
+  TIME: 10 minutes
+  ================================================================================
+  TASK 5 — Security/Permissions: Sticky Bit (3 points)
+  ================================================================================
+  Set the sticky bit on the directory `/opt/public-drop`.
+  CRITERIA:
+  [ ] Sticky bit is set (ls -ld shows 't' or 1777)                         --> 100%
+  TIME: 5 minutes
+  ================================================================================
+  TASK 6 — Operations/Systemd: Mask and Enable Services (3 points)
+  ================================================================================
+  Mask the `cups.service` so it cannot be started.
+  Ensure `ssh.service` is enabled.
+  CRITERIA:
+  [ ] cups.service is masked                                               --> 50%
+  [ ] ssh.service is enabled                                               --> 50%
+  TIME: 8 minutes
+  ================================================================================
+  TASK 7 — Essential Commands: Count Processes (3 points)
+  ================================================================================
+  Use `pgrep` to count the number of running processes owned by user `bob`.
+  Save the exact number to `/opt/bob-procs.txt`.
+  CRITERIA:
+  [ ] File exists and contains only a number                               --> 40%
+  [ ] Number is correct (should be >= 2)                                   --> 60%
+  TIME: 8 minutes
+  ================================================================================
+  TASK 8 — Networking/Firewall: iptables Rules (3 points)
+  ================================================================================
+  Using `iptables`, ALLOW incoming SSH (port 22) and DROP all other incoming 
+  traffic on the INPUT chain.
+  CRITERIA:
+  [ ] Rule to ACCEPT tcp port 22 exists                                    --> 50%
+  [ ] Rule to DROP all other input exists                                  --> 50%
+  TIME: 10 minutes
+  ================================================================================
+  TASK 9 — Networking/Connections: List Established (3 points)
+  ================================================================================
+  Use `netstat` to list all ESTABLISHED TCP connections.
+  Save the output to `/opt/estab-conns.txt`.
+  CRITERIA:
+  [ ] File exists and contains 'ESTABLISHED'                               --> 50%
+  [ ] Output is from netstat (contains tcp)                                --> 50%
+  TIME: 8 minutes
+  ================================================================================
+  TASK 10 — Essential/Archive: Compressed Backup with xz (3 points)
+  ================================================================================
+  Create a compressed archive `/opt/app-configs-backup.tar.xz` of `/opt/app-configs/`.
+  Use `xz` compression.
+  CRITERIA:
+  [ ] Archive exists                                                       --> 40%
+  [ ] Is a valid .tar.xz (tar -tJf works)                                  --> 40%
+  [ ] Contains .conf files                                                 --> 20%
+  TIME: 8 minutes
+  ================================================================================
+  TASK 11 — Operations/Time: Timezone and Hardware Clock (3 points)
+  ================================================================================
+  Change the system timezone to `America/New_York` by updating `/etc/localtime` 
+  and `/etc/timezone`. 
+  Then, sync the hardware clock to the system clock using `hwclock`.
+  CRITERIA:
+  [ ] Timezone is America/New_York (date shows EST/EDT)                    --> 50%
+  [ ] hwclock command was used / hardware clock synced                     --> 50%
+  TIME: 10 minutes
+  ================================================================================
+  TASK 12 — Security/Attributes: Immutable File (3 points)
+  ================================================================================
+  Set the immutable attribute on `/etc/critical-config.conf` using `chattr`.
+  CRITERIA:
+  [ ] File has the immutable attribute (lsattr shows 'i')                  --> 100%
+  TIME: 5 minutes
+  ================================================================================
+  EVIDENCE PIPELINE TO NODE03 (Required for validation)
+  ================================================================================
+  Run on node01: bash /home/vagrant/generate-evidence.sh
+  ================================================================================
+  SCORING SUMMARY
+  ================================================================================
+  Task 1:  3 pts (du/tar)          Task 7:  3 pts (pgrep)
+  Task 2:  3 pts (Users/Groups)    Task 8:  3 pts (iptables)
+  Task 3:  3 pts (btrfs)           Task 9:  3 pts (netstat)
+  Task 4:  3 pts (journald)        Task 10: 3 pts (tar.xz)
+  Task 5:  3 pts (Sticky bit)      Task 11: 3 pts (Timezone/hwclock)
+  Task 6:  3 pts (Systemd)         Task 12: 3 pts (chattr)
+  TOTAL: 36 points
+  PASSING (67%): 25 points
+  TOTAL TIME: 120 minutes
+
+  When done, run: bash /home/vagrant/validate.sh
+  ================================================================================
+  TICKET
+
+            # ═══════════════════════════════════════════════════════
+            # INITIAL VERIFICATION SCRIPT (verify-012.sh)
+            # ═══════════════════════════════════════════════════════
+            cat << 'VERIFY' > /tmp/verify-012.sh
+  #!/bin/bash
+  RED='\e[1;31m'; GREEN='\e[1;32m'; YELLOW='\e[1;33m'; CYAN='\e[1;36m'; RESET='\e[0m'
+  SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"; PASS="caleston123"; FAIL=0
+
+  echo -e "${CYAN}╔════════════════════════════════════════════════════════════════╗${RESET}"
+  echo -e "${CYAN}║          VERIFYING SCENARIO MOCK-012                           ║${RESET}"
+  echo -e "${CYAN}╚════════════════════════════════════════════════════════════════╝${RESET}"
+  echo ""
+
+  echo -e "${YELLOW}[1/6] node02: Large files exist in /opt/large-data${RESET}"
+  if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "ls -lh /opt/large-data/file1.img 2>/dev/null" 2>/dev/null; then
+    echo -e "      ${GREEN}✓ OK${RESET}"
+  else
+    echo -e "      ${RED}✗ FAILED${RESET}"; FAIL=1
+  fi
+
+  echo -e "${YELLOW}[2/6] node02: /dev/vdb exists and is clean${RESET}"
+  if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "sudo lsblk /dev/vdb 2>/dev/null" 2>/dev/null; then
+    echo -e "      ${GREEN}✓ OK${RESET}"
+  else
+    echo -e "      ${RED}✗ FAILED${RESET}"; FAIL=1
+  fi
+
+  echo -e "${YELLOW}[3/6] node02: Required packages installed (btrfs, xz, net-tools)${RESET}"
+  if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "dpkg -l btrfs-progs xz-utils net-tools 2>/dev/null | grep -c ^ii | grep -q 3" 2>/dev/null; then
+    echo -e "      ${GREEN}✓ OK${RESET}"
+  else
+    echo -e "      ${RED}✗ FAILED${RESET}"; FAIL=1
+  fi
+
+  echo -e "${YELLOW}[4/6] node02: /opt/app-configs exists with .conf files${RESET}"
+  if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "ls /opt/app-configs/*.conf 2>/dev/null | wc -l | grep -q 3" 2>/dev/null; then
+    echo -e "      ${GREEN}✓ OK${RESET}"
+  else
+    echo -e "      ${RED}✗ FAILED${RESET}"; FAIL=1
+  fi
+
+  echo -e "${YELLOW}[5/6] node02: cups is running (to be masked)${RESET}"
+  if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "systemctl is-active cups 2>/dev/null | grep -q active" 2>/dev/null; then
+    echo -e "      ${GREEN}✓ OK (default)${RESET}"
+  else
+    echo -e "      ${RED}✗ already stopped/masked${RESET}"; FAIL=1
+  fi
+
+  echo -e "${YELLOW}[6/6] node03: Vault exists${RESET}"
+  if sshpass -p $PASS ssh $SSH_OPTS bob@node03 "[ -d /opt/ops-compliance/mock-exam-012 ]" 2>/dev/null; then
+    echo -e "      ${GREEN}✓ OK${RESET}"
+  else
+    echo -e "      ${RED}✗ FAILED${RESET}"; FAIL=1
+  fi
+
+  echo ""
+  if [ $FAIL -eq 0 ]; then
+    echo -e "${GREEN}✅ SCENARIO READY — Press ENTER to see the ticket${RESET}"
+  else
+    echo -e "${RED}⚠️  SOME CHECKS FAILED${RESET}"
+  fi
+  echo ""
+  read -r
+  cat /home/vagrant/TICKET_MOCK-012.txt
+  VERIFY
+            chmod +x /tmp/verify-012.sh
+            sed -i '/verify-012/d' /home/vagrant/.bashrc 2>/dev/null || true
+            echo 'bash /tmp/verify-012.sh' >> /home/vagrant/.bashrc
+
+            # ═══════════════════════════════════════════════════════
+            # EVIDENCE GENERATOR (generate-evidence.sh)
+            # ═══════════════════════════════════════════════════════
+            cat << 'EVIDENCE' > /home/vagrant/generate-evidence.sh
+  #!/bin/bash
+  # generate-evidence.sh - Collects output for each task and saves to node03.
+  SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
+  PASS="caleston123"
+  DEST="node03:/opt/ops-compliance/mock-exam-012/evidence.txt"
+
+  echo "🔍 Collecting evidence from node02..."
+  {
+    echo "=== EVIDENCE FOR MOCK-012 ==="
+    echo "Date: $(date)"
+    echo ""
+
+    # TASK 1: du/tar
+    echo "--- TASK 1: LARGE FILES TAR ---"
+    sshpass -p $PASS ssh $SSH_OPTS bob@node02 "cat /opt/large-files.txt 2>/dev/null; echo '---'; tar -tf /opt/large-files.tar 2>/dev/null || echo 'archive missing'"
+    echo ""
+
+    # TASK 2: user deployer
+    echo "--- TASK 2: USER DEPLOYER ---"
+    sshpass -p $PASS ssh $SSH_OPTS bob@node02 "getent group devops 2>/dev/null; id deployer 2>/dev/null || echo 'user missing'"
+    echo ""
+
+    # TASK 3: btrfs mount
+    echo "--- TASK 3: BTRFS MOUNT ---"
+    sshpass -p $PASS ssh $SSH_OPTS bob@node02 "sudo blkid /dev/vdb 2>/dev/null; mount | grep /mnt/pool; grep /dev/vdb /etc/fstab 2>/dev/null || echo 'not mounted'"
+    echo ""
+
+    # TASK 4: journald
+    echo "--- TASK 4: JOURNALD CONFIG ---"
+    sshpass -p $PASS ssh $SSH_OPTS bob@node02 "cat /etc/systemd/journald.conf.d/99-mock.conf 2>/dev/null; ls -ld /var/log/journal 2>/dev/null || echo 'not persistent'"
+    echo ""
+
+    # TASK 5: sticky bit
+    echo "--- TASK 5: STICKY BIT ---"
+    sshpass -p $PASS ssh $SSH_OPTS bob@node02 "ls -ld /opt/public-drop 2>/dev/null || echo 'dir missing'"
+    echo ""
+
+    # TASK 6: systemd mask/enable
+    echo "--- TASK 6: SYSTEMD SERVICES ---"
+    sshpass -p $PASS ssh $SSH_OPTS bob@node02 "systemctl is-enabled cups 2>/dev/null; systemctl is-enabled ssh 2>/dev/null"
+    echo ""
+
+    # TASK 7: pgrep count
+    echo "--- TASK 7: BOB PROCS ---"
+    sshpass -p $PASS ssh $SSH_OPTS bob@node02 "cat /opt/bob-procs.txt 2>/dev/null || echo 'file missing'"
+    echo ""
+
+    # TASK 8: iptables
+    echo "--- TASK 8: IPTABLES RULES ---"
+    sshpass -p $PASS ssh $SSH_OPTS bob@node02 "sudo iptables -L INPUT -n -v 2>/dev/null || echo 'iptables failed'"
+    echo ""
+
+    # TASK 9: netstat
+    echo "--- TASK 9: NETSTAT ESTABLISHED ---"
+    sshpass -p $PASS ssh $SSH_OPTS bob@node02 "cat /opt/estab-conns.txt 2>/dev/null || echo 'file missing'"
+    echo ""
+
+    # TASK 10: tar.xz
+    echo "--- TASK 10: TAR XZ ---"
+    sshpass -p $PASS ssh $SSH_OPTS bob@node02 "ls -l /opt/app-configs-backup.tar.xz 2>/dev/null; tar -tJf /opt/app-configs-backup.tar.xz 2>/dev/null | head -n 5 || echo 'archive invalid'"
+    echo ""
+
+    # TASK 11: timezone
+    echo "--- TASK 11: TIMEZONE ---"
+    sshpass -p $PASS ssh $SSH_OPTS bob@node02 "cat /etc/timezone 2>/dev/null; date +%Z 2>/dev/null; readlink /etc/localtime 2>/dev/null"
+    echo ""
+
+    # TASK 12: chattr
+    echo "--- TASK 12: CHATTR ---"
+    sshpass -p $PASS ssh $SSH_OPTS bob@node02 "sudo lsattr /etc/critical-config.conf 2>/dev/null || echo 'file missing'"
+    echo ""
+
+    echo "=== END OF EVIDENCE ==="
+  } | sshpass -p $PASS ssh $SSH_OPTS bob@node03 "cat > /opt/ops-compliance/mock-exam-012/evidence.txt"
+
+  if [ $? -eq 0 ]; then
+    echo "✅ Evidence saved to $DEST"
+  else
+    echo "❌ Failed to save evidence"
+  fi
+  EVIDENCE
+            chmod +x /home/vagrant/generate-evidence.sh
+
+            # ═══════════════════════════════════════════════════════
+            # VALIDATOR (validate.sh) — evidence‑based
+            # ═══════════════════════════════════════════════════════
+            cat << 'VALIDATOR' > /home/vagrant/validate.sh
+  #!/bin/bash
+  # validate.sh - Validates all tasks by reading evidence.txt from node03.
+  RED='\e[1;31m'; GREEN='\e[1;32m'; YELLOW='\e[1;33m'; CYAN='\e[1;36m'; MAGENTA='\e[1;35m'; RESET='\e[0m'; BOLD='\e[1m'
+  SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
+  PASS="caleston123"
+  TOTAL=0; MAX=36; PASS_COUNT=0; FAIL_COUNT=0
+
+  # --- Fetch evidence from node03 ---
+  EVIDENCE_FILE="/tmp/evidence-$$.txt"
+  echo -e "${CYAN}Fetching evidence from node03...${RESET}"
+  if ! sshpass -p $PASS scp $SSH_OPTS bob@node03:/opt/ops-compliance/mock-exam-012/evidence.txt "$EVIDENCE_FILE" 2>/dev/null; then
+    echo -e "${RED}ERROR: Could not fetch evidence.txt from node03.${RESET}"
+    echo -e "${RED}Please run 'bash /home/vagrant/generate-evidence.sh' first.${RESET}"
+    exit 1
+  fi
+
+  # Helper to extract a task's block
+  extract_block() {
+    local task_num=$1
+    local next_num=$((task_num + 1))
+    local header_pattern="--- TASK ${task_num}:"
+    local next_header_pattern="--- TASK ${next_num}:"
+    
+    if [ $next_num -le 12 ]; then
+      sed -n "/$header_pattern/,/$next_header_pattern/p" "$EVIDENCE_FILE" | sed '$d'
+    else
+      sed -n "/$header_pattern/,\$p" "$EVIDENCE_FILE"
+    fi
+  }
+
+  validate_task() {
+    local n=$1; local name=$2; local pts=$3; local pattern=$4; local desc=$5
+    echo -e "\n${CYAN}┌─ TASK $n: $name ($pts pts) ─${RESET}"
+    echo -e "${YELLOW}   $desc${RESET}"
+    
+    block=$(extract_block $n)
+    if [ -z "$block" ]; then
+      echo -e "   ${RED}❌ Evidence block for Task $n not found (header missing).${RESET}"
+      FAIL_COUNT=$((FAIL_COUNT + 1))
+      return
+    fi
+    
+    if echo "$block" | grep -qE "$pattern"; then
+      echo -e "   ${GREEN}✅ +$pts pts${RESET}"
+      TOTAL=$((TOTAL + pts)); PASS_COUNT=$((PASS_COUNT + 1))
+    else
+      echo -e "   ${RED}❌ +0 pts${RESET}"
+      FAIL_COUNT=$((FAIL_COUNT + 1))
+    fi
+  }
+
+  echo -e "${MAGENTA}"
+  echo "╔══════════════════════════════════════════════════════════════╗"
+  echo "║     🎯 VALIDATOR LFCS — MOCK #012                            ║"
+  echo "║        The Alternative Path (12 tasks)                       ║"
+  echo "╚══════════════════════════════════════════════════════════════╝"
+  echo -e "${RESET}"
+  echo -e "${BOLD}Validating using evidence from node03...${RESET}\n"
+
+  validate_task 1 "Large files tar" 3 \
+    "large-files\.txt|large-files\.tar|file1\.img" \
+    "Text file and tar archive exist"
+  validate_task 2 "User deployer" 3 \
+    "devops.*3000|deployer.*devops" \
+    "Group GID=3000, user primary group devops"
+  validate_task 3 "btrfs mount" 3 \
+    "btrfs|/mnt/pool.*btrfs|/dev/vdb.*btrfs" \
+    "Filesystem btrfs, mounted and fstab entry"
+  validate_task 4 "journald config" 3 \
+    "Storage=persistent|SystemMaxUse=100M" \
+    "Persistent storage and 100M limit configured"
+  validate_task 5 "Sticky bit" 3 \
+    "drwxrwxrwt|1777.*public-drop" \
+    "Sticky bit set on /opt/public-drop"
+  validate_task 6 "Systemd services" 3 \
+    "masked|enabled" \
+    "cups masked, ssh enabled"
+  validate_task 7 "Bob procs" 3 \
+    "^[0-9]+$" \
+    "File contains a number (>=2)"
+  validate_task 8 "iptables rules" 3 \
+    "ACCEPT.*tcp.*dpt:22|DROP.*all" \
+    "Allow SSH, drop all other input"
+  validate_task 9 "netstat estab" 3 \
+    "ESTABLISHED|tcp" \
+    "File contains ESTABLISHED connections"
+  validate_task 10 "tar.xz" 3 \
+    "app-configs-backup\.tar\.xz|database\.conf" \
+    "Archive exists, contains .conf files"
+  validate_task 11 "Timezone" 3 \
+    "America/New_York|EST|EDT" \
+    "Timezone is New York"
+  validate_task 12 "chattr" 3 \
+    "----i-----|Immutable" \
+    "File has immutable attribute"
+
+  rm -f "$EVIDENCE_FILE"
+
+  PERCENT=$((TOTAL * 100 / MAX))
+  echo -e "\n${MAGENTA}"
+  echo "╔══════════════════════════════════════════════════════════════╗"
+  echo "║                    📊 FINAL RESULT                          ║"
+  echo "╚══════════════════════════════════════════════════════════════╝"
+  echo -e "${RESET}"
+  echo -e "${BOLD}Tasks passed:${RESET}  ${GREEN}$PASS_COUNT / 12${RESET}"
+  echo -e "${BOLD}Tasks failed:${RESET}   ${RED}$FAIL_COUNT / 12${RESET}"
+  echo -e "${BOLD}Score:${RESET}         ${CYAN}$TOTAL / $MAX points${RESET}"
+  echo -e "${BOLD}Percentage:${RESET}    ${CYAN}$PERCENT%${RESET}"
+  echo -e "${BOLD}Passing (67%):${RESET}  ${CYAN}25 points${RESET}"
+  echo ""
+
+  if [ $PERCENT -ge 67 ]; then
+    echo -e "${GREEN}${BOLD}"
+    echo "╔══════════════════════════════════════════════════════════════╗"
+    echo "║           🎉 PASSED! CONGRATULATIONS, BOB! 🎉               ║"
+    echo "╚══════════════════════════════════════════════════════════════╝"
+    echo -e "${RESET}"
+  else
+    echo -e "${RED}${BOLD}"
+    echo "╔══════════════════════════════════════════════════════════════╗"
+    echo "║               ❌ NOT PASSED — KEEP GOING! 💪                 ║"
+    echo "╚══════════════════════════════════════════════════════════════╝"
+    echo -e "${RESET}"
+  fi
+  echo ""
+  VALIDATOR
+            chmod +x /home/vagrant/validate.sh
+
+            echo "✅ Ticket + Verification + Validator + Evidence script created."
+            echo "🚀 vagrant ssh node01 → automatic verification"
+            echo "📝 When done: bash /home/vagrant/validate.sh"
+            echo "📦 Generate evidence: bash /home/vagrant/generate-evidence.sh"
+          SHELL
+        end
+      end
+    end
+  end
+---
+[[Laboratorios del LFCS]]
+
+---
+
