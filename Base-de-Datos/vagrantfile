@@ -15,19 +15,6 @@ Vagrant.configure("2") do |config|
   # lo cual causa la condición de carrera "SCP did not finish successfully (255)".
   config.ssh.insert_key = false
 
-  # ── Par de claves SSH estático, solo para este laboratorio ──
-  BOB_PRIVATE_KEY = <<~KEY.freeze
-    -----BEGIN OPENSSH PRIVATE KEY-----
-    b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
-    QyNTUxOQAAACC1asfEbcHTuTT62YNT/A4wukvAokY5rbotIQmPRpAe5QAAAJij5IOHo+SD
-    hwAAAAtzc2gtZWQyNTUxOQAAACC1asfEbcHTuTT62YNT/A4wukvAokY5rbotIQmPRpAe5Q
-    AAAEDJ30PyaNYyrFubnsRKwMG7VPM1wr9RRhs9jNEd3+LY07Vqx8RtwdO5NPrZg1P8DjC6
-    S8CiRjmtui0hCY9GkB7lAAAAD2xhYi1tb2NrMDE1LWJvYgECAwQFBg==
-    -----END OPENSSH PRIVATE KEY-----
-  KEY
-
-  BOB_PUBLIC_KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILVqx8RtwdO5NPrZg1P8DjC6S8CiRjmtui0hCY9GkB7l lab-mock015-bob"
-
   nodes = [
     { name: "node01", ip: "192.168.122.11", extra_disks: [] },
     { name: "node02", ip: "192.168.122.12", extra_disks: ['1G', '1G'] }
@@ -66,6 +53,7 @@ HOSTS
         echo 'bob ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/bob
         chmod 0440 /etc/sudoers.d/bob
 
+        # openssh-clients ya viene instalado por defecto. Instalamos solo lo necesario.
         dnf install -y -q curl acl >/dev/null 2>&1
 
         systemctl enable --now sshd >/dev/null 2>&1
@@ -75,29 +63,36 @@ HOSTS
         systemctl disable --now firewalld >/dev/null 2>&1 || true
       SHELL
 
-      # ── DISTRIBUCION DE CLAVE SSH ESTATICA ──
+      # ── GENERACIÓN Y DISTRIBUCIÓN DINÁMICA DE CLAVE SSH PARA BOB ──
       if node[:name] == "node01"
         node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
-          echo "🔑 Instalando clave privada para bob en node01..."
+          echo "🔑 Generando clave SSH dinámica para bob en node01..."
           mkdir -p /home/bob/.ssh
-          cat << 'PRIVKEY' > /home/bob/.ssh/id_ed25519
-#{BOB_PRIVATE_KEY}
-PRIVKEY
+          
+          # Generar clave ed25519 sin passphrase
+          ssh-keygen -t ed25519 -f /home/bob/.ssh/id_ed25519 -N "" -C "lab-mock015-bob" >/dev/null 2>&1
+          
           chmod 700 /home/bob/.ssh
           chmod 600 /home/bob/.ssh/id_ed25519
+          chmod 644 /home/bob/.ssh/id_ed25519.pub
           chown -R bob:bob /home/bob/.ssh
-        SHELL
-      end
-
-      if node[:name] == "node02"
-        node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
-          echo "🔑 Instalando clave publica de bob@node01 en node02..."
-          mkdir -p /home/bob/.ssh
-          echo '#{BOB_PUBLIC_KEY}' >> /home/bob/.ssh/authorized_keys
-          chmod 700 /home/bob/.ssh
-          chmod 600 /home/bob/.ssh/authorized_keys
-          chown -R bob:bob /home/bob/.ssh
-          restorecon -R /home/bob/.ssh 2>/dev/null || true
+          
+          echo "📤 Copiando clave pública a node02..."
+          # Leemos la clave pública generada
+          PUB_KEY=$(cat /home/bob/.ssh/id_ed25519.pub)
+          
+          # Usamos la clave insegura por defecto de Vagrant para configurar a bob en node02.
+          # Esto evita la necesidad de sshpass (que requiere EPEL en Rocky 9) y funciona 100% fiable.
+          ssh -i /home/vagrant/.ssh/insecure_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null vagrant@node02 "
+            sudo mkdir -p /home/bob/.ssh
+            echo '$PUB_KEY' | sudo tee -a /home/bob/.ssh/authorized_keys
+            sudo chmod 700 /home/bob/.ssh
+            sudo chmod 600 /home/bob/.ssh/authorized_keys
+            sudo chown -R bob:bob /home/bob/.ssh
+            sudo restorecon -R /home/bob/.ssh 2>/dev/null || true
+          " >/dev/null 2>&1
+          
+          echo "✅ Clave SSH configurada y distribuida correctamente."
         SHELL
       end
 
