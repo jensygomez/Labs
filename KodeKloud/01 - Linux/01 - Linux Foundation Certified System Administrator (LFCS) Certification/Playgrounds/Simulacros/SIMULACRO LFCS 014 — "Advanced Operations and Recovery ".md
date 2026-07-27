@@ -8,6 +8,7 @@ Nivel: L2
 Fecha de Inicio: 2026-07-27
 Script Vagrant: |-
   # -- mode: ruby --
+
   # vi: set ft=ruby :
   Vagrant.configure("2") do |config|
     config.vm.box = "generic/ubuntu2204"
@@ -378,9 +379,9 @@ Script Vagrant: |-
   print_res 7 "systemd drop-in" 3 $ok "SSH service override Restart=on-failure" "$out"
 
   # 8. SYSCTL KERNEL PARAMETER
-  out=$(run_remote "sysctl vm.dirty_ratio")
-  if echo "$out" | grep -q "20"; then ok=1; else ok=0; fi
-  print_res 8 "sysctl parameter" 3 $ok "vm.dirty_ratio set to 20" "$out"
+  out=$(run_remote "sysctl vm.dirty_ratio; grep -r 'vm.dirty_ratio' /etc/sysctl.d/ /etc/sysctl.conf 2>/dev/null")
+  if echo "$out" | grep -q "20" && echo "$out" | grep -q "vm.dirty_ratio"; then ok=1; else ok=0; fi
+  print_res 8 "sysctl parameter" 3 $ok "vm.dirty_ratio set to 20 persistently" "$out"
 
   # 9. RAID 0 STRIPING
   out=$(run_remote "sudo mdadm --detail /dev/md0")
@@ -393,13 +394,13 @@ Script Vagrant: |-
   print_res 10 "podman registry" 3 $ok "Podman registry configured with docker.io" "$out"
 
   # 11. BIND MOUNT
-  out=$(run_remote "grep /mnt/app-bind /etc/fstab && mount | grep /mnt/app-bind")
+  out=$(run_remote "grep '/mnt/app-bind' /etc/fstab && findmnt /mnt/app-bind")
   if echo "$out" | grep -q "bind"; then ok=1; else ok=0; fi
   print_res 11 "bind mount" 3 $ok "Bind mount /opt/app to /mnt/app-bind" "$out"
 
-  # 12. MODPROBE OPTIONS
-  out=$(run_remote "cat /etc/modprobe.d/loop.conf 2>/dev/null || grep -r max_loop /etc/modprobe.d/")
-  if echo "$out" | grep -q "max_loop=16"; then ok=1; else ok=0; fi
+  # 12. MODPROBE OPTIONS (Revisión robusta)
+  out=$(run_remote "sudo grep -rnE 'options[[:space:]]+loop[[:space:]]+.*max_loop[[:space:]]*=[[:space:]]*16' /etc/modprobe.d/ 2>/dev/null || cat /sys/module/loop/parameters/max_loop 2>/dev/null")
+  if echo "$out" | grep -qE "max_loop|16"; then ok=1; else ok=0; fi
   print_res 12 "modprobe options" 3 $ok "Loop module max_loop set to 16" "$out"
 
   PERCENT=$((TOTAL * 100 / MAX))
