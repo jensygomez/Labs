@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 015 — \"Integrated Matrix A\".md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 014 — \"Advanced Operations and Recovery \".md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "SIMULACRO LFCS 015 — \"Integrated Matrix A\""
+              "title": "SIMULACRO LFCS 014 — \"Advanced Operations and Recovery \""
             }
           }
         ]
@@ -203,8 +203,8 @@
   },
   "active": "56ed188fdf2f56d1",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 014 — \"Advanced Operations and Recovery \".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 015 — \"Integrated Matrix A\".md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 014 — \"Advanced Operations and Recovery \".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Storage/STG-005 - Los Permisos Rebeldes – ACLs, SGID y Sticky Bit en Directorios Compartidos.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Storage/STG-004 - El Puente Roto – NFS Server and Client y Exportaciones con Restricciones.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Storage/STG-003 - La Montaña Rusa de IO – Monitoreo de Performance y Cuellos de Botella - V1.0.md",
