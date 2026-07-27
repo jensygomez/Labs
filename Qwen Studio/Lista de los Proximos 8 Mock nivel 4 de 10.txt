@@ -1,0 +1,167 @@
+🎲 MOCK #015 — Integrated Matrix A
+Operations (Kernel): Configurar vm.swappiness=10 de forma persistente en /etc/sysctl.d/.
+
+Security (SELinux): Poner SELinux en Enforcing y cambiar el contexto de un puerto no estándar a http_port_t.
+
+Users (PAM/Limits): Configurar límite de procesos (nproc) para un usuario en /etc/security/limits.conf.
+
+Storage (LVM & Filesystem): Extender un Logical Volume XFS y ampliar su sistema de archivos en caliente.
+
+Networking (Chrony): Configurar chrony para sincronizar con un servidor NTP específico y validar con chronyc.
+
+Essential Commands (Git): Inicializar un repositorio Git local, hacer un commit inicial y crear la rama feature.
+
+Containers (Podman): Correr un contenedor Podman nginx mapeando el puerto 8080 al 80 host.
+
+Operations (Systemd/Timers): Crear un systemd.timer que ejecute una tarea de limpieza cada día a las 02:00.
+
+Networking (OpenSSH): Restringir el acceso SSH para rechazar autenticación por contraseña (PasswordAuthentication no).
+
+Storage (Autofs): Configurar un montaje automático de autofs en /mnt/partner para un recurso local/remoto.
+
+🎲 MOCK #016 — Integrated Matrix B
+Users/Security (ACLs): Configurar ACLs por defecto (default:) en /shared/data para el grupo devs.
+
+Networking (Bonding): Configurar una interfaz agregada bond0 con dos interfaces de red esclavas.
+
+Storage (NFS): Exportar un directorio por NFSv4 y montarlo localmente de forma persistente con UUID en /etc/fstab.
+
+Operations (Process Tuning): Modificar el niceness de un proceso en ejecución usando renice.
+
+Security (SSL/TLS): Generar una clave privada de 2048 bits y un certificado SSL autofirmado con openssl.
+
+Containers (Systemd Integration): Generar una unidad de servicio systemd para administrar un contenedor Podman rootless.
+
+Storage (Swap): Crear un archivo Swap de 512MB, formatearlo y activarlo de forma permanente con prioridad 10.
+
+Networking (nftables/iptables): Configurar una regla de redirección de puertos (DNAT del puerto 80 al 8080).
+
+Essential Commands (Logs): Filtrar en journalctl los errores de prioridad err ocurridos desde el último arranque.
+
+Operations (Virtualization): Configurar el inicio automático (autostart) de una VM en libvirt usando virsh.
+
+🎲 MOCK #017 — Integrated Matrix C
+Operations (Boot Recovery): Simular solución a un /etc/fstab corrupto o modificar parámetros de arranque en /etc/default/grub.
+
+Users (Directory Services): Configurar el cliente SSSD/authselect para validar usuarios contra un perfil LDAP ficticio/local.
+
+Storage (Quotas): Habilitar cuotas de usuario (usrquota) en una partición ext4 y asignar un límite blando de 100M.
+
+Networking (Reverse Proxy): Configurar Nginx para que redirija las peticiones de /app hacia [http://127.0.0.1:5000](http://127.0.0.1:5000).
+
+Essential Commands (Permissions): Encontrar todos los archivos con bit SUID en /usr/bin y guardar el listado en /tmp/suid_audit.txt.
+
+Security (SELinux): Ajustar una variable booleana de SELinux (httpd_can_network_connect) de forma permanente.
+
+Networking (Routing): Agregar una ruta estática permanente para la red 192.168.100.0/24 vía interfaz primaria.
+
+Operations (Cron): Programar un crontab del sistema en /etc/cron.d/ con ejecuciones cada 15 minutos.
+
+Containers (Podman Volumes): Desplegar un contenedor registrando un volumen persistente hacia /var/log/app_data.
+
+Users (Environment): Crear un script en /etc/profile.d/app_env.sh para exportar una variable global $APP_STAGE=prod.
+
+🎲 MOCK #018 — Integrated Matrix D
+Networking (IPv6): Configurar una dirección IPv6 estática con su máscara en la interfaz principal.
+
+Storage (LVM): Crear un Physical Volume, un Volume Group de 64MB PE y un LV formateado con XFS.
+
+Users (Sudoers): Permitir a un usuario sysadmin ejecutar únicamente /usr/bin/systemctl restart nginx sin contraseña.
+
+Essential Commands (Git Merge): Realizar la fusión (merge) de dos ramas de Git y resolver un conflicto simple de texto.
+
+Operations (Process Signals): Enviar la señal SIGTERM / SIGKILL a todos los procesos pertenecientes al usuario guest.
+
+Security (SELinux File Contexts): Copiar un sitio web a /custom_web y restaurar correctamente su etiquetado SELinux con semanage + restorecon.
+
+Storage (Automounter Direct): Crear un mapa directo de autofs (/etc/auto.direct) para automontar la ruta /data/archive.
+
+Networking (Timezone/Locale): Cambiar la zona horaria a UTC y configurar el locale a en_US.UTF-8 con timedatectl y localectl.
+
+Operations (Kernel Modules): Configurar opciones permanentes para un módulo del kernel dentro de /etc/modprobe.d/.
+
+Containers (Registry): Configurar una política de registro inseguro o credenciales de repositorio en /etc/containers/registries.conf.
+
+🎲 MOCK #019 — Integrated Matrix E
+Security (PAM / Account Lockout): Ajustar pam_faillock para bloquear usuarios tras 3 intentos fallidos de autenticación.
+
+Storage (Filesystem Check): Desmontar un volumen y realizar una verificación/reparación de sistema de archivos con fsck.
+
+Networking (DNS Resolution): Configurar el orden de búsqueda de dominios (search domain.local) en el resolvedor de red.
+
+Operations (System Target): Cambiar el objetivo de arranque predeterminado del sistema a multi-user.target usando systemctl.
+
+Essential Commands (SSL Validation): Usar openssl x509 para extraer la fecha de vencimiento de un certificado y guardarla en un archivo.
+
+Containers (Rootless Container): Configurar asignación de sub-UIDs (/etc/subuid) para permitir contenedores sin root a un usuario específico.
+
+Users (Umask & Skel): Configurar el umask por defecto del sistema a 027 y agregar un archivo plantilla en /etc/skel/.
+
+Networking (Load Balancing): Configurar un balanceador de carga simple en HAProxy o Nginx con algoritmo round-robin.
+
+Storage (Network Block): Configurar el cliente/montaje de un recurso iSCSI o bloque remoto.
+
+Operations (Resource Limits - cgroups): Usar systemd-run para limitar el uso de memoria RAM de un script a un máximo de 100M.
+
+🎲 MOCK #020 — Integrated Matrix F
+Storage (LVM Snapshot): Crear un snapshot LVM de un volumen lógico antes de modificar sus archivos.
+
+Networking (Packet Filtering): Crear una regla en nftables que bloquee el ICMP (ping) entrante manteniendo la conectividad SSH.
+
+Users (Account Expiration): Crear una cuenta de usuario con expiración automática de cuenta en 30 días (chage).
+
+Security (Auditd): Configurar una regla en auditd para rastrear cualquier modificación en /etc/sudoers.
+
+Operations (Kernel Parameters): Habilitar el reenvío de paquetes IP (net.ipv4.ip_forward=1) mediante sysctl.
+
+Essential Commands (Disk Analysis): Diagnosticar el espacio en disco con du y listar los 5 directorios que consumen más espacio en /var.
+
+Containers (Container Service Limits): Configurar límites de CPU (CPUQuota=50%) en la unidad de systemd de un contenedor.
+
+Networking (SSH Banners): Configurar un mensaje de advertencia obligatorio (Banner) para todas las conexiones SSH entrantes.
+
+Storage (Mount Options): Configurar el archivo /etc/fstab para montar un directorio con opciones de seguridad (noexec,nosuid).
+
+Operations (Service Troubleshooting): Diagnosticar una unidad de systemd fallida por permisos y corregir su archivo de servicio .service.
+
+🎲 MOCK #021 — Integrated Matrix G
+Operations (Rescue Mode): Configurar el sistema para arrancar en modo rescate (rescue.target) o usar un shell interactivo.
+
+Users (Group Management & Sticky Bit): Configurar un directorio /projects con bit SGID y Sticky Bit para colaboración segura.
+
+Storage (Swap Expansion): Agregar un segundo espacio Swap en una partición LVM sin desactivar el Swap existente.
+
+Networking (Virtual Bridge): Crear un Bridge de red virtual (br0) y asociarle una interfaz física.
+
+Security (SELinux Audit): Analizar logs de denegación de SELinux (/var/log/audit/audit.log) y generar un módulo de corrección.
+
+Essential Commands (Git Branch): Crear una nueva rama de Git, cambiar a ella, editar un archivo y subir los cambios.
+
+Containers (Healthcheck): Configurar un contenedor Podman con una política de healthcheck para verificar que el servicio responda.
+
+Networking (NTP Server): Configurar la máquina actual como servidor NTP local para la red interna.
+
+Storage (Autofs Indirect Maps): Configurar montajes automáticos bajo demanda usando mapas indirectos en /home/shares.
+
+Operations (Package Repositories): Agregar un repositorio YUM/DNF local, importar su llave GPG y validar la instalación de un paquete.
+
+🎲 MOCK #022 — Integrated Matrix H (El Simulacro de Cierre de Fase)
+Operations (Process Priorities): Modificar la prioridad de I/O de un proceso usando ionice.
+
+Storage (LVM Migration): Mover datos de un Physical Volume a otro dentro del mismo VG usando pvmove.
+
+Networking (NAT Masquerade): Habilitar el enmascaramiento de red (Masquerading/SNAT) en la interfaz conectada a Internet.
+
+Security (SSL Renewal Setup): Crear una solicitud de firma de certificado (CSR) usando openssl.
+
+Users (Environment Profiles): Configurar un .bashrc o .bash_profile personalizado para un usuario de sistema sin afectar a los demás.
+
+Essential Commands (Monitoring): Diagnosticar cuellos de botella de memoria usando vmstat y free, guardando el diagnóstico.
+
+Containers (Podman Auto-update): Configurar la auto-actualización de imágenes en contenedores Podman mediante etiquetas de systemd.
+
+Networking (Host Name Resolution): Configurar /etc/hosts y resolver conflictos de precedencia en /etc/nsswitch.conf.
+
+Storage (Filesystem XFS Backup): Realizar un respaldo de sistema de archivos XFS usando xfsdump / tar comprimido.
+
+Operations (Systemd Override): Crear un archivo de sobreescritura (drop-in file) en systemd para modificar las variables de entorno de un servicio.
