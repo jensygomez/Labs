@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 013 — \"The Alternative Frontier\".md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 014 — \"Advanced Operations and Recovery \".md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "SIMULACRO LFCS 013 — \"The Alternative Frontier\""
+              "title": "SIMULACRO LFCS 014 — \"Advanced Operations and Recovery \""
             }
           }
         ]
@@ -203,10 +203,10 @@
   },
   "active": "56ed188fdf2f56d1",
   "lastOpenFiles": [
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 013 — \"The Alternative Frontier\".md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 014 — \"Advanced Operations and Recovery \".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 010 — \"Advanced Operations and Recovery\".md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 013 — \"The Alternative Frontier\".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 012 — \"The Alternative Path\".md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 013 — \"The Alternative Frontier\".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 011 — \"Mock 007 Revisited (Version 2)\".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 009 — \"The Final Frontier\".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 008 — \"Seguridad y Supervisión\".md",
@@ -228,7 +228,6 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Operations Deployment/PG-006 - Aplicación bloqueada por políticas de seguridad (SELinux y Parámetros del Kernel) - V2.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/PG-006 - Control de versiones de infraestructura y gestión de ramas locales con Git - V1.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Operations Deployment/Lista de Laboratorios Operations deployment.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/001 - Essential Commands/PG-005 - Gestión criptográfica de infraestructura y despliegue de Certificados SSL TLS - V2.md",
     "mi-progreso/progreso.db-journal",
     "mi-progreso/funciones/menu_crud.sh~",
     "mi-progreso/progreso.db",
