@@ -8,6 +8,7 @@ Nivel: L2
 Fecha de Inicio: 2026-07-27
 Script Vagrant: |-
   # -- mode: ruby --
+
   # vi: set ft=ruby :
   Vagrant.configure("2") do |config|
     config.vm.box = "generic/ubuntu2204"
@@ -409,7 +410,7 @@ Script Vagrant: |-
     echo ""
 
     # TASK 4: sudoers
-    echo "--- TASK 4: SUDOERS ---"
+    echo "--- TASK 4: SUDOERS JOURNALCTL ---"
     sshpass -p $PASS ssh $SSH_OPTS bob@node02 "cat /etc/sudoers.d/bob-journal 2>/dev/null; sudo -l -U bob 2>/dev/null | grep journalctl || echo 'rule missing'"
     echo ""
 
@@ -439,7 +440,7 @@ Script Vagrant: |-
     echo ""
 
     # TASK 10: alternatives
-    echo "--- TASK 10: ALTERNATIVES ---"
+    echo "--- TASK 10: ALTERNATIVES PAGER ---"
     sshpass -p $PASS ssh $SSH_OPTS bob@node02 "update-alternatives --display pager 2>/dev/null | head -n 5; readlink -f /usr/bin/pager 2>/dev/null"
     echo ""
 
@@ -484,14 +485,13 @@ Script Vagrant: |-
 
   extract_block() {
     local task_num=$1
-    local next_num=$((task_num + 1))
-    local header_pattern="--- TASK ${task_num}:"
-    local next_header_pattern="--- TASK ${next_num}:"
+    local header="--- TASK ${task_num}:"
+    local next_header="--- TASK $((task_num + 1)):"
     
-    if [ $next_num -le 12 ]; then
-      sed -n "/$header_pattern/,/$next_header_pattern/p" "$EVIDENCE_FILE" | sed '$d'
+    if [ $task_num -eq 12 ]; then
+      sed -n "/$header/,\$p" "$EVIDENCE_FILE" | tail -n +2
     else
-      sed -n "/$header_pattern/,\$p" "$EVIDENCE_FILE"
+      sed -n "/$header/,/$next_header/p" "$EVIDENCE_FILE" | head -n -1 | tail -n +2
     fi
   }
 
@@ -502,16 +502,19 @@ Script Vagrant: |-
     
     block=$(extract_block $n)
     if [ -z "$block" ]; then
-      echo -e "   ${RED}❌ Evidence block for Task $n not found (header missing).${RESET}"
+      echo -e "   ${RED}❌ Evidence block for Task $n is empty.${RESET}"
+      echo -e "   ${YELLOW}   Possible causes: header mismatch or no output in evidence.${RESET}"
       FAIL_COUNT=$((FAIL_COUNT + 1))
       return
     fi
     
-    if echo "$block" | grep -qE "$pattern"; then
+    if echo "$block" | grep -qE "$pattern" 2>/dev/null; then
       echo -e "   ${GREEN}✅ +$pts pts${RESET}"
       TOTAL=$((TOTAL + pts)); PASS_COUNT=$((PASS_COUNT + 1))
     else
       echo -e "   ${RED}❌ +0 pts${RESET}"
+      echo -e "   ${YELLOW}   Pattern not found in block:${RESET}"
+      echo "$block" | head -n 3 | sed 's/^/   /'
       FAIL_COUNT=$((FAIL_COUNT + 1))
     fi
   }
@@ -534,13 +537,13 @@ Script Vagrant: |-
     "disk-check\.sh.*-rwx|/var/log/disk-check\.log" \
     "Script exists, executable, and log created"
   validate_task 4 "sudoers" 3 \
-    "bob.*journalctl.*NOPASSWD|journalctl.*NOPASSWD.*bob" \
+    "bob.*journalctl.*NOPASSWD|journalctl.*NOPASSWD" \
     "Sudoers rule for journalctl exists"
   validate_task 5 "at command" 3 \
     "atq.*[0-9]|echo.*Scheduled task" \
     "Job scheduled with at"
   validate_task 6 "logrotate" 3 \
-    "daily|rotate 7|compress|create.*640" \
+    "daily|rotate 7|compress|create 640" \
     "Logrotate config complete"
   validate_task 7 "DNS resolver" 3 \
     "nameserver 8\.8\.8\.8" \
@@ -555,7 +558,7 @@ Script Vagrant: |-
     "pager.*/bin/more|/bin/more.*pager" \
     "Pager set to more"
   validate_task 11 "locale" 3 \
-    "es_ES\.UTF-8|LANG=es_ES" \
+    "es_ES\.UTF-8|LANG=es_ES|LC_ALL=es_ES" \
     "Locale configured to Spanish"
   validate_task 12 "nproc limit" 3 \
     "\\*.*nproc.*100|nproc.*100" \
