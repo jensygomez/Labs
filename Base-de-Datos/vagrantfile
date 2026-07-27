@@ -1,6 +1,12 @@
 # -- mode: ruby --
 # vi: set ft=ruby :
 #
+# Fuerza provisioning secuencial (no paralelo). Evita el error
+# "SCP did not finish successfully (255)" que aparece cuando Vagrant
+# sube los scripts de provisioning a node01 y node02 al mismo tiempo
+# en hosts con memoria/CPU ajustados.
+ENV['VAGRANT_NO_PARALLEL'] = 'yes'
+#
 # MOCK-015 — Integrated Matrix A (Rocky Linux 9)
 # Refactor notes (ver resumen al final del chat):
 #   - Cambio de imagen: generic/ubuntu2204 -> generic/rocky9
@@ -27,15 +33,15 @@ Vagrant.configure("2") do |config|
   # PasswordAuthentication en node02 (Task 9).
   BOB_PRIVATE_KEY = <<~KEY.freeze
     -----BEGIN OPENSSH PRIVATE KEY-----
-    b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZWQyNTUx
-    OQAAACDEputlK1cfZ7E+MFIx6o0A5rk4UUXf8e2TfC5Ev5gCgAAAAIjmzO+j5szvowAAAAtzc2gt
-    ZWQyNTUxOQAAACDEputlK1cfZ7E+MFIx6o0A5rk4UUXf8e2TfC5Ev5gCgAAAAEC8F+t6VPL+P+ls
-    sybO+3STgUl+LVqxo41PIy/qAq9498Sm62UrVx9nsT4wUjHqjQDmuThRRd/x7ZN8LkS/mAKAAAAA
-    AAECAwQF
+    b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+    QyNTUxOQAAACC1asfEbcHTuTT62YNT/A4wukvAokY5rbotIQmPRpAe5QAAAJij5IOHo+SD
+    hwAAAAtzc2gtZWQyNTUxOQAAACC1asfEbcHTuTT62YNT/A4wukvAokY5rbotIQmPRpAe5Q
+    AAAEDJ30PyaNYyrFubnsRKwMG7VPM1wr9RRhs9jNEd3+LY07Vqx8RtwdO5NPrZg1P8DjC6
+    S8CiRjmtui0hCY9GkB7lAAAAD2xhYi1tb2NrMDE1LWJvYgECAwQFBg==
     -----END OPENSSH PRIVATE KEY-----
   KEY
 
-  BOB_PUBLIC_KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMSm62UrVx9nsT4wUjHqjQDmuThRRd/x7ZN8LkS/mAKA lab-mock015-bob"
+  BOB_PUBLIC_KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILVqx8RtwdO5NPrZg1P8DjC6S8CiRjmtui0hCY9GkB7l lab-mock015-bob"
 
   nodes = [
     { name: "node01", ip: "192.168.122.11", extra_disks: [] },
