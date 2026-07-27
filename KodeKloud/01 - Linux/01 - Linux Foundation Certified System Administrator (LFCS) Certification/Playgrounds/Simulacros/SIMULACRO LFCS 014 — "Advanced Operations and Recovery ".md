@@ -9,6 +9,7 @@ Fecha de Inicio: 2026-07-27
 Script Vagrant: |-
   # -- mode: ruby --
 
+
   # vi: set ft=ruby :
   Vagrant.configure("2") do |config|
     config.vm.box = "generic/ubuntu2204"
@@ -163,11 +164,13 @@ Script Vagrant: |-
   TASK 6 — Operations: Blacklist Kernel Module (3 points)
   ================================================================================
   Prevent the `pcspkr` (PC speaker) kernel module from loading automatically 
-  by blacklisting it in the appropriate modprobe configuration directory.
+  by creating a configuration file named `/etc/modprobe.d/nobeep.conf`. 
+  Add the directive to blacklist the `pcspkr` module.
   CRITERIA:
-  [ ] Configuration file exists in /etc/modprobe.d/                         --> 40%
-  [ ] Contains the blacklist directive for pcspkr                           --> 60%
+  [ ] Configuration file /etc/modprobe.d/nobeep.conf exists                --> 40%
+  [ ] Contains "blacklist pcspkr" directive                                 --> 60%
   TIME: 8 minutes
+  ================================================================================
   ================================================================================
   TASK 7 — Operations: Systemd Drop-in Override (3 points)
   ================================================================================
@@ -369,19 +372,20 @@ Script Vagrant: |-
   print_res 5 "ssh banner" 3 $ok "SSH daemon configured to show banner" "$out"
 
   # 6. BLACKLIST KERNEL MODULE
-  out=$(run_remote "grep -r pcspkr /etc/modprobe.d/")
-  if echo "$out" | grep -q "blacklist"; then ok=1; else ok=0; fi
-  print_res 6 "blacklist module" 3 $ok "pcspkr module blacklisted" "$out"
+  out=$(run_remote "cat /etc/modprobe.d/nobeep.conf 2>/dev/null")
+  if echo "$out" | grep -qE "^[[:space:]]*blacklist[[:space:]]+pcspkr"; then ok=1; else ok=0; fi
+  print_res 6 "blacklist module" 3 $ok "pcspkr blacklisted in /etc/modprobe.d/nobeep.conf" "$out"
 
   # 7. SYSTEMD DROP-IN OVERRIDE
-  out=$(run_remote "sudo systemctl daemon-reload && sudo systemctl cat ssh.service")
+  out=$(run_remote "sudo systemctl daemon-reload && cat /etc/systemd/system/ssh.service.d/*.conf 2>/dev/null")
   if echo "$out" | grep -q "Restart=on-failure"; then ok=1; else ok=0; fi
-  print_res 7 "systemd drop-in" 3 $ok "SSH service override Restart=on-failure" "$out"
+  print_res 7 "systemd drop-in" 3 $ok "SSH service override Restart=on-failure in drop-in" "$out"
 
   # 8. SYSCTL KERNEL PARAMETER
-  out=$(run_remote "sysctl vm.dirty_ratio; grep -r 'vm.dirty_ratio' /etc/sysctl.d/ /etc/sysctl.conf 2>/dev/null")
-  if echo "$out" | grep -q "20" && echo "$out" | grep -q "vm.dirty_ratio"; then ok=1; else ok=0; fi
-  print_res 8 "sysctl parameter" 3 $ok "vm.dirty_ratio set to 20 persistently" "$out"
+  out_file=$(run_remote "grep -rhnE '^[[:space:]]*vm\.dirty_ratio[[:space:]]*=[[:space:]]*20' /etc/sysctl.d/ /etc/sysctl.conf 2>/dev/null")
+  out_live=$(run_remote "sysctl -n vm.dirty_ratio 2>/dev/null")
+  if [ -n "$out_file" ] && [ "$out_live" -eq 20 ] 2>/dev/null; then ok=1; else ok=0; fi
+  print_res 8 "sysctl parameter" 3 $ok "vm.dirty_ratio set to 20 persistently" "File: $out_file | Live: $out_live"
 
   # 9. RAID 0 STRIPING
   out=$(run_remote "sudo mdadm --detail /dev/md0")
