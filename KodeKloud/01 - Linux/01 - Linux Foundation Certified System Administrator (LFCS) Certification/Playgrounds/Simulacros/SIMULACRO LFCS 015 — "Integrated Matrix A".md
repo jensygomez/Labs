@@ -31,8 +31,8 @@ Script Vagrant: |-
           libvirt__dhcp_enabled: false
 
         node_config.vm.provider "libvirt" do |lv|
-          lv.memory = 1024
-          lv.cpus = 1
+          lv.memory = 2048
+          lv.cpus = 2
           lv.driver = "kvm"
           node[:extra_disks].each do |size|
             lv.storage :file, :size => size, :type => 'qcow2'
