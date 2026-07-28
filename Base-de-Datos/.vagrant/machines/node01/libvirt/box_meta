@@ -1,1 +1,1 @@
-{"name":"generic/rocky9","version":"4.3.12","provider":"libvirt","directory":"boxes/generic-VAGRANTSLASH-rocky9/4.3.12/libvirt"}
+{"name":"almalinux/9","version":"9.8.20260526","provider":"libvirt","directory":"boxes/almalinux-VAGRANTSLASH-9/9.8.20260526/libvirt"}

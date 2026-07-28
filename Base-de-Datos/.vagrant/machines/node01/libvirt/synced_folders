@@ -1,1 +1,1 @@
-{}
+{"rsync":{"/vagrant":{"type":"rsync","guestpath":"/vagrant","hostpath":"/home/jensyg/Labs/Base-de-Datos","disabled":false,"__vagrantfile":true,"owner":"vagrant","group":"vagrant"}}}

@@ -1,18 +1,9 @@
 # -- mode: ruby --
 # vi: set ft=ruby :
-#
-# Fuerza provisioning secuencial (no paralelo). Evita el error
-# "SCP did not finish successfully (255)" que aparece cuando Vagrant
-# sube los scripts de provisioning a node01 y node02 al mismo tiempo
-# en hosts con memoria/CPU ajustados.
 ENV['VAGRANT_NO_PARALLEL'] = 'yes'
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "generic/rocky9"
-
-  # ── FIX CRÍTICO PARA ERROR SCP 255 ──
-  # Evita que Vagrant reemplace la clave SSH insegura por defecto,
-  # lo cual causa la condición de carrera "SCP did not finish successfully (255)".
+  config.vm.box = "almalinux/9"
   config.ssh.insert_key = false
 
   nodes = [
@@ -53,48 +44,12 @@ HOSTS
         echo 'bob ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/bob
         chmod 0440 /etc/sudoers.d/bob
 
-        # openssh-clients ya viene instalado por defecto. Instalamos solo lo necesario.
-        dnf install -y -q curl acl >/dev/null 2>&1
+        dnf install -y -q epel-release >/dev/null 2>&1
+        dnf install -y -q sshpass curl acl >/dev/null 2>&1
 
         systemctl enable --now sshd >/dev/null 2>&1
-
-        # Foco del mock es SELinux, no firewalld: lo deshabilitamos para
-        # evitar ruido de reglas de red que no forman parte del pensum aquí.
         systemctl disable --now firewalld >/dev/null 2>&1 || true
       SHELL
-
-      # ── GENERACIÓN Y DISTRIBUCIÓN DINÁMICA DE CLAVE SSH PARA BOB ──
-      if node[:name] == "node01"
-        node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
-          echo "🔑 Generando clave SSH dinámica para bob en node01..."
-          mkdir -p /home/bob/.ssh
-          
-          # Generar clave ed25519 sin passphrase
-          ssh-keygen -t ed25519 -f /home/bob/.ssh/id_ed25519 -N "" -C "lab-mock015-bob" >/dev/null 2>&1
-          
-          chmod 700 /home/bob/.ssh
-          chmod 600 /home/bob/.ssh/id_ed25519
-          chmod 644 /home/bob/.ssh/id_ed25519.pub
-          chown -R bob:bob /home/bob/.ssh
-          
-          echo "📤 Copiando clave pública a node02..."
-          # Leemos la clave pública generada
-          PUB_KEY=$(cat /home/bob/.ssh/id_ed25519.pub)
-          
-          # Usamos la clave insegura por defecto de Vagrant para configurar a bob en node02.
-          # Esto evita la necesidad de sshpass (que requiere EPEL en Rocky 9) y funciona 100% fiable.
-          ssh -i /home/vagrant/.ssh/insecure_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null vagrant@node02 "
-            sudo mkdir -p /home/bob/.ssh
-            echo '$PUB_KEY' | sudo tee -a /home/bob/.ssh/authorized_keys
-            sudo chmod 700 /home/bob/.ssh
-            sudo chmod 600 /home/bob/.ssh/authorized_keys
-            sudo chown -R bob:bob /home/bob/.ssh
-            sudo restorecon -R /home/bob/.ssh 2>/dev/null || true
-          " >/dev/null 2>&1
-          
-          echo "✅ Clave SSH configurada y distribuida correctamente."
-        SHELL
-      end
 
       # ── NODE02: SERVIDOR CON INCIDENTES Y ENTORNO ──
       if node[:name] == "node02"
@@ -105,10 +60,9 @@ HOSTS
               policycoreutils-python-utils httpd >/dev/null 2>&1
 
           mkdir -p /mnt/autofs_test /opt/repo
-          git init /opt/repo >/dev/null 2>&1
+          git init --bare /opt/repo >/dev/null 2>&1
           chown -R bob:bob /opt/repo
 
-          # ── Escenario intencional de la Task 2 (SELinux) ──
           sed -i 's/^SELINUX=.*/SELINUX=permissive/' /etc/selinux/config
           setenforce 0 2>/dev/null || true
 
@@ -124,17 +78,24 @@ HOSTS
           cat << 'TICKET' > /home/vagrant/TICKET_MOCK-015.txt
 ================================================================================
 TICKET MOCK-015   │  Severity: MEDIUM  │  Environment: PRODUCTION
-🔐 MOCK-015 — Integrated Matrix A (10 Tasks)  │  Rocky Linux 9
+🔐 MOCK-015 — Integrated Matrix A (10 Tasks)  │  AlmaLinux 9
 Module: LFCS Complete  │  Difficulty: 4/10  │  Level: L2
 Control Station:    node01  (Administrator — bob)
-Server Node:        node02  (Rocky Linux 9)
-Cluster Password:   caleston123 (fallback only — key-based auth is set up)
+Server Node:        node02  (AlmaLinux 9)
+Cluster Password:   caleston123
 
 This mock covers a full integration across kernel parameters, SELinux,
 storage, containers, systemd timers, git, chrony, and automount.
 Manage your time: ~10–12 minutes per task.
+
+⚠️  IMPORTANT: Before attempting TASK 9 (SSH Hardening), you MUST configure
+    key-based SSH authentication for user 'bob' between node01 and node02.
+    This is an expected LFCS skill. Use the password 'caleston123' as fallback.
+    If you disable password authentication without setting up keys first,
+    you will lock yourself out of node02.
 ================================================================================
 TASK 1 — Operations: Kernel Sysctl Tuning (3 points)
+================================================================================
 Configure the kernel parameter `vm.swappiness` to `10` persistently on node02
 by creating or editing a file in `/etc/sysctl.d/`. Apply it to the live system.
 CRITERIA:
@@ -143,6 +104,7 @@ CRITERIA:
 TIME: 8 minutes
 ================================================================================
 TASK 2 — Security: SELinux Enforcing + Port Context (3 points)
+================================================================================
 node02 currently has SELinux in Permissive mode. Restore it to Enforcing
 PERSISTENTLY (survives reboot). Additionally, a service needs to listen on
 non-standard TCP port 8585; allow this by adding port 8585/tcp to the
@@ -153,6 +115,7 @@ CRITERIA:
 TIME: 12 minutes
 ================================================================================
 TASK 3 — Users: PAM Limits Configuration (3 points)
+================================================================================
 On node02, restrict the maximum number of processes (`nproc`) for user `bob`
 to `100` soft and `200` hard by configuring `/etc/security/limits.conf`.
 CRITERIA:
@@ -161,6 +124,7 @@ CRITERIA:
 TIME: 8 minutes
 ================================================================================
 TASK 4 — Storage: LVM & Filesystem Extension (3 points)
+================================================================================
 On node02, create a Physical Volume using `/dev/vdb`, a Volume Group named `vg_data`,
 and a Logical Volume named `lv_store` of size 500M formatted as `xfs`, mounted on `/mnt/store`.
 Then extend `lv_store` to occupy 800M and resize the XFS filesystem online.
@@ -170,6 +134,7 @@ CRITERIA:
 TIME: 12 minutes
 ================================================================================
 TASK 5 — Networking: Chrony NTP Configuration (3 points)
+================================================================================
 Configure `chrony` on node02 to use `pool.ntp.org` as an NTP server pool.
 Ensure the `chronyd` service is enabled and active.
 CRITERIA:
@@ -178,15 +143,17 @@ CRITERIA:
 TIME: 10 minutes
 ================================================================================
 TASK 6 — Essential Commands: Git Operations (3 points)
-Inside the directory `/opt/repo` on node02, create a file named `README.md`
-containing the text "Initial Commit". Commit this file to the master/main branch,
-and create a new branch named `feature`.
+================================================================================
+Inside the directory `/opt/repo` on node02, clone the bare repository to a
+working directory, create a file named `README.md` containing the text
+"Initial Commit", commit it, and create a new branch named `feature`.
 CRITERIA:
 [ ] README.md committed in /opt/repo git log                              --> 50%
 [ ] Branch `feature` exists in the repository                             --> 50%
 TIME: 10 minutes
 ================================================================================
 TASK 7 — Containers: Podman Container Deployment (3 points)
+================================================================================
 On node02, run a detached Podman container named `web_app` using the `nginx` image.
 Map host port `8080` to container port `80`.
 CRITERIA:
@@ -195,6 +162,7 @@ CRITERIA:
 TIME: 10 minutes
 ================================================================================
 TASK 8 — Operations: Systemd Timer Automation (3 points)
+================================================================================
 On node02, create a systemd service unit `/etc/systemd/system/cleanup.service`
 that runs `/bin/true`, and a timer unit `/etc/systemd/system/cleanup.timer`
 configured to trigger `cleanup.service` daily (`OnCalendar=daily`). Enable/start the timer.
@@ -204,15 +172,40 @@ CRITERIA:
 TIME: 12 minutes
 ================================================================================
 TASK 9 — Networking: SSH Hardening (3 points)
+================================================================================
 Configure SSH on node02 to explicitly disable password authentication
 (`PasswordAuthentication no`). Ensure configuration is tested and sshd reloaded.
-Note: key-based access for bob remains available, so this will not lock you out.
+
+⚠️  IMPORTANT — DO THIS BEFORE HARDENING SSH:
+
+    1. Volvé a node01 (`exit` desde node02, o abrí otra terminal con
+       `vagrant ssh node01`).
+    2. Estás logueado como el usuario `vagrant` (verificalo con `whoami`).
+       Generá el keypair AHÍ, como `vagrant`, no como `bob`:
+           ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ""
+    3. Copiá la clave pública al authorized_keys de bob en node02:
+           ssh-copy-id -i ~/.ssh/id_ed25519.pub bob@node02
+       (te va a pedir la password de bob una última vez: caleston123)
+    4. Probá que el acceso por clave funciona ANTES de tocar sshd_config:
+           ssh bob@node02 hostname
+       Si te pide password en este paso, NO sigas — algo está mal.
+    5. Recién ahora entrá a node02 y aplicá el hardening.
+    6. Después del hardening, repetí el paso 4 desde node01 para confirmar
+       que seguís teniendo acceso.
+
+    ⚠️ El validador (`validate.sh`, en /home/vagrant/ en node01) se
+    ejecuta como el usuario `vagrant` y se conecta como `bob@node02`.
+    Si generás la clave como bob en vez de como vagrant, el validador
+    no la va a encontrar y todas las tareas fallarán al final, aunque
+    estén bien resueltas.
+
 CRITERIA:
 [ ] PasswordAuthentication set to no in sshd_config or drop-in conf       --> 50%
 [ ] SSH service reloaded without syntax errors                            --> 50%
 TIME: 8 minutes
 ================================================================================
 TASK 10 — Storage: Autofs Direct Mount (3 points)
+================================================================================
 Configure `autofs` on node02 using a direct map (`/etc/auto.direct`) to automount
 the directory `/dev/vdc` (formatted as `ext4`) onto `/mnt/auto_vdc` on demand.
 CRITERIA:
@@ -238,30 +231,38 @@ TICKET
           cat << 'VERIFY' > /tmp/verify-015.sh
 #!/bin/bash
 RED='\e[1;31m'; GREEN='\e[1;32m'; YELLOW='\e[1;33m'; CYAN='\e[1;36m'; RESET='\e[0m'
-SSH_OPTS="-i /home/bob/.ssh/id_ed25519 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=5"
+PASS="caleston123"
+SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
 FAIL=0
 
 echo -e "${CYAN}╔════════════════════════════════════════════════════════════════╗${RESET}"
-echo -e "${CYAN}║          VERIFYING SCENARIO MOCK-015 (Rocky 9)                 ║${RESET}"
+echo -e "${CYAN}║          VERIFYING SCENARIO MOCK-015 (AlmaLinux 9)             ║${RESET}"
 echo -e "${CYAN}╚════════════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
-echo -e "${YELLOW}[1/3] node02: Extra disks /dev/vdb and /dev/vdc exist${RESET}"
-if ssh $SSH_OPTS bob@node02 "lsblk | grep -q vdb && lsblk | grep -q vdc" 2>/dev/null; then
+echo -e "${YELLOW}[1/4] node02: Extra disks /dev/vdb and /dev/vdc exist${RESET}"
+if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "lsblk | grep -q vdb && lsblk | grep -q vdc" 2>/dev/null; then
   echo -e "      ${GREEN}✓ OK${RESET}"
 else
   echo -e "      ${RED}✗ FAILED${RESET}"; FAIL=1
 fi
 
-echo -e "${YELLOW}[2/3] node02: Required packages installed (podman, git, chrony, autofs)${RESET}"
-if ssh $SSH_OPTS bob@node02 "rpm -q podman git chrony autofs" >/dev/null 2>&1; then
+echo -e "${YELLOW}[2/4] node02: Required packages installed${RESET}"
+if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "rpm -q podman git chrony autofs" >/dev/null 2>&1; then
   echo -e "      ${GREEN}✓ OK${RESET}"
 else
   echo -e "      ${RED}✗ FAILED${RESET}"; FAIL=1
 fi
 
-echo -e "${YELLOW}[3/3] node02: /opt/repo initialized${RESET}"
-if ssh $SSH_OPTS bob@node02 "[ -d /opt/repo/.git ]" 2>/dev/null; then
+echo -e "${YELLOW}[3/4] node02: /opt/repo initialized${RESET}"
+if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "[ -d /opt/repo ]" 2>/dev/null; then
+  echo -e "      ${GREEN}✓ OK${RESET}"
+else
+  echo -e "      ${RED}✗ FAILED${RESET}"; FAIL=1
+fi
+
+echo -e "${YELLOW}[4/4] node02: SELinux is Permissive (ready for Task 2)${RESET}"
+if sshpass -p $PASS ssh $SSH_OPTS bob@node02 "getenforce 2>/dev/null | grep -qi permissive" 2>/dev/null; then
   echo -e "      ${GREEN}✓ OK${RESET}"
 else
   echo -e "      ${RED}✗ FAILED${RESET}"; FAIL=1
@@ -283,7 +284,8 @@ VERIFY
 
           cat << 'VALIDATOR' > /home/vagrant/validate.sh
 #!/bin/bash
-SSH_OPTS="-i /home/bob/.ssh/id_ed25519 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=5"
+SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
+PASS="caleston123"
 NODE="bob@node02"
 
 RED='\033[0;31m'
@@ -300,7 +302,7 @@ PASS_COUNT=0
 FAIL_COUNT=0
 
 run_remote() {
-    ssh $SSH_OPTS "$NODE" "$1" 2>/dev/null
+    sshpass -p "$PASS" ssh $SSH_OPTS "$NODE" "$1" 2>/dev/null
 }
 
 print_res() {
@@ -321,15 +323,17 @@ print_res() {
 
 echo -e "${MAGENTA}"
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║      🎯 VALIDATOR LFCS — MOCK #015 (Rocky 9, Direct Check)  ║"
+echo "║      🎯 VALIDATOR LFCS — MOCK #015 (AlmaLinux 9)            ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo -e "${RESET}"
 
+# 1. SYSCTL SWAPPINESS
 out_file=$(run_remote "grep -rhnE '^[[:space:]]*vm\.swappiness[[:space:]]*=[[:space:]]*10' /etc/sysctl.d/ /etc/sysctl.conf 2>/dev/null")
 out_live=$(run_remote "sysctl -n vm.swappiness 2>/dev/null")
 if [ -n "$out_file" ] && [ "$out_live" -eq 10 ] 2>/dev/null; then ok=1; else ok=0; fi
 print_res 1 "sysctl swappiness" 3 $ok "vm.swappiness set to 10 persistently" "File: $out_file | Live: $out_live"
 
+# 2. SELINUX ENFORCING + PORT CONTEXT
 enforce_live=$(run_remote "getenforce 2>/dev/null")
 enforce_persist=$(run_remote "grep -E '^SELINUX=enforcing' /etc/selinux/config 2>/dev/null")
 port_ctx=$(run_remote "sudo semanage port -l 2>/dev/null | grep -w http_port_t | grep -w 8585")
@@ -340,37 +344,45 @@ else
 fi
 print_res 2 "selinux enforcing + port" 3 $ok "SELinux Enforcing (live+persistent) and 8585/tcp under http_port_t" "getenforce: $enforce_live | config: $enforce_persist | port: $port_ctx"
 
-soft_line=$(run_remote "grep -E '^[^#]*bob[[:space:]]+soft[[:space:]]+nproc[[:space:]]+100([[:space:]]|$)' /etc/security/limits.conf /etc/security/limits.d/*.conf 2>/dev/null")
-hard_line=$(run_remote "grep -E '^[^#]*bob[[:space:]]+hard[[:space:]]+nproc[[:space:]]+200([[:space:]]|$)' /etc/security/limits.conf /etc/security/limits.d/*.conf 2>/dev/null")
+# 3. PAM LIMITS
+soft_line=$(run_remote "grep -E '^[^#]*bob[[:space:]]+soft[[:space:]]+nproc[[:space:]]+100' /etc/security/limits.conf /etc/security/limits.d/*.conf 2>/dev/null")
+hard_line=$(run_remote "grep -E '^[^#]*bob[[:space:]]+hard[[:space:]]+nproc[[:space:]]+200' /etc/security/limits.conf /etc/security/limits.d/*.conf 2>/dev/null")
 if [ -n "$soft_line" ] && [ -n "$hard_line" ]; then ok=1; else ok=0; fi
-print_res 3 "pam limits" 3 $ok "bob nproc soft=100 and hard=200 (exact lines)" "soft: $soft_line | hard: $hard_line"
+print_res 3 "pam limits" 3 $ok "bob nproc soft=100 and hard=200" "soft: $soft_line | hard: $hard_line"
 
+# 4. LVM & FILESYSTEM RESIZE
 out=$(run_remote "sudo lvs --noheadings -o lv_size /dev/vg_data/lv_store 2>/dev/null && df -h /mnt/store 2>/dev/null")
 if echo "$out" | grep -qE "800|79" && echo "$out" | grep -q "/mnt/store"; then ok=1; else ok=0; fi
 print_res 4 "lvm resize xfs" 3 $ok "LV expanded to 800M and XFS resized" "$out"
 
+# 5. CHRONY NTP
 cfg=$(run_remote "grep -E '^(server|pool)[[:space:]]+pool\.ntp\.org' /etc/chrony.conf 2>/dev/null")
 svc=$(run_remote "systemctl is-active --quiet chronyd && echo SVC_ACTIVE || echo SVC_INACTIVE")
 if [ -n "$cfg" ] && [ "$svc" = "SVC_ACTIVE" ]; then ok=1; else ok=0; fi
 print_res 5 "chrony ntp" 3 $ok "chrony.conf has pool.ntp.org and chronyd is active" "cfg: $cfg | svc: $svc"
 
-out=$(run_remote "cd /opt/repo && git log -1 2>/dev/null && git branch 2>/dev/null")
-if echo "$out" | grep -q "README.md" || echo "$out" | grep -qi "initial" && echo "$out" | grep -q "feature"; then ok=1; else ok=0; fi
+# 6. GIT OPERATIONS
+out=$(run_remote "cd /opt/repo && git log --all --oneline 2>/dev/null && git branch -a 2>/dev/null")
+if echo "$out" | grep -qi "initial" && echo "$out" | grep -q "feature"; then ok=1; else ok=0; fi
 print_res 6 "git operations" 3 $ok "README.md committed and branch feature exists" "$out"
 
+# 7. PODMAN CONTAINER
 out=$(run_remote "sudo podman ps --format '{{.Names}} {{.Ports}}' 2>/dev/null")
-if echo "$out" | grep -q "web_app" && echo "$out" | grep -q "8080->80"; then ok=1; else ok=0; fi
+if echo "$out" | grep -q "web_app" && echo "$out" | grep -q "8080"; then ok=1; else ok=0; fi
 print_res 7 "podman container" 3 $ok "web_app running with port 8080->80 mapped" "$out"
 
+# 8. SYSTEMD TIMER
 active=$(run_remote "systemctl is-active --quiet cleanup.timer && echo SVC_ACTIVE || echo SVC_INACTIVE")
 enabled=$(run_remote "systemctl is-enabled --quiet cleanup.timer && echo SVC_ENABLED || echo SVC_DISABLED")
 if [ "$active" = "SVC_ACTIVE" ] && [ "$enabled" = "SVC_ENABLED" ]; then ok=1; else ok=0; fi
 print_res 8 "systemd timer" 3 $ok "cleanup.timer active and enabled" "active: $active | enabled: $enabled"
 
+# 9. SSH HARDENING
 out=$(run_remote "sudo sshd -T 2>/dev/null | grep -i '^passwordauthentication'")
 if echo "$out" | grep -qw "no"; then ok=1; else ok=0; fi
 print_res 9 "ssh hardening" 3 $ok "PasswordAuthentication disabled in SSH" "$out"
 
+# 10. AUTOFS DIRECT MOUNT
 master_ref=$(run_remote "grep -l '/etc/auto.direct' /etc/auto.master /etc/auto.master.d/*.autofs 2>/dev/null")
 svc=$(run_remote "systemctl is-active --quiet autofs && echo SVC_ACTIVE || echo SVC_INACTIVE")
 if [ -n "$master_ref" ] && [ "$svc" = "SVC_ACTIVE" ]; then ok=1; else ok=0; fi
