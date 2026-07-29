@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 014 — \"Advanced Operations and Recovery \".md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 015 — \"Integrated Matrix A\".md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "SIMULACRO LFCS 014 — \"Advanced Operations and Recovery \""
+              "title": "SIMULACRO LFCS 015 — \"Integrated Matrix A\""
             }
           }
         ]
@@ -203,6 +203,7 @@
   },
   "active": "56ed188fdf2f56d1",
   "lastOpenFiles": [
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 014 — \"Advanced Operations and Recovery \".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 015 — \"Integrated Matrix A\".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Operations Deployment/OD-005 - El Muro Invisible – Contextos SELinux y Políticas MAC.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Operations Deployment/OD-004 - Dependencias Huérfanas – Repositorios, Paquetes y Compilación desde Fuente.md",
@@ -214,7 +215,6 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Storage/STG-003 - La Montaña Rusa de IO – Monitoreo de Performance y Cuellos de Botella - V1.0.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Storage/STG-002 - El Laberinto LVM – Volúmenes Lógicos que No Montan y VG Fragmentado - V1.0.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Storage/STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 014 — \"Advanced Operations and Recovery \".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/NET-005  - El Túnel Torcido – Fallo en Redirección de Puertos (DNAT) y Enmascaramiento (SNAT).md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/NET-004 - El Muro Ciego – Reglas de Firewall Bloquean Tráfico Legítimo.md",
