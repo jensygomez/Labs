@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 016 — \"Integrated Matrix B\".md",
+                "file": "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 017 — \"Integrated Matrix C\".md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "SIMULACRO LFCS 016 — \"Integrated Matrix B\""
+              "title": "SIMULACRO LFCS 017 — \"Integrated Matrix C\""
             }
           }
         ]
@@ -203,8 +203,9 @@
   },
   "active": "97d1c2591e76e477",
   "lastOpenFiles": [
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 015 — \"Integrated Matrix A\".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 016 — \"Integrated Matrix B\".md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 017 — \"Integrated Matrix C\".md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 015 — \"Integrated Matrix A\".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 014 — \"Advanced Operations and Recovery \".md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Operations Deployment/OD-005 - El Muro Invisible – Contextos SELinux y Políticas MAC.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/002 - Operations Deployment/OD-004 - Dependencias Huérfanas – Repositorios, Paquetes y Compilación desde Fuente.md",
@@ -228,7 +229,6 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/USR-002 -El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/USR-001 - El Desarrollador Privilegiado – Sudo Granular y Grupos de Colaboración.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/PG-004 -- Crisis de identidades y accesos post-migración (Simulación Integradora).md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/PG-004 - Crisis de identidades y accesos post-migración (Simulación Integradora).md",
     "mi-progreso/progreso.db-journal",
     "mi-progreso/funciones/menu_crud.sh~",
     "mi-progreso/progreso.db",

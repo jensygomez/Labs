@@ -7,26 +7,17 @@ Vagrant.configure("2") do |config|
 
   nodes = [
     { name: "node01", ip: "192.168.122.11", extra_disks: [] },
-    { name: "node02", ip: "192.168.122.12", extra_disks: ['1G'] }
+    { name: "node02", ip: "192.168.122.12", extra_disks: ['1G'] } # Extra disk for Quotas task
   ]
 
   nodes.each do |node|
     config.vm.define node[:name] do |node_config|
       node_config.vm.hostname = node[:name]
       
-      # Primary private network
       node_config.vm.network "private_network",
         ip: node[:ip],
         libvirt__network_name: "mgmt-net",
         libvirt__dhcp_enabled: false
-
-      # Secondary network for node02 (for Bonding task)
-      if node[:name] == "node02"
-        node_config.vm.network "private_network",
-          ip: "192.168.123.12",
-          libvirt__network_name: "mgmt-net-2",
-          libvirt__dhcp_enabled: false
-      end
 
       node_config.vm.provider "libvirt" do |lv|
         lv.memory = 2048
@@ -51,53 +42,36 @@ HOSTS
         echo 'bob:caleston123' | chpasswd
         echo 'bob ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/bob
         chmod 0440 /etc/sudoers.d/bob
+        
         dnf install -y -q epel-release >/dev/null 2>&1
         dnf install -y -q sshpass curl acl >/dev/null 2>&1
         systemctl enable --now sshd >/dev/null 2>&1
         systemctl disable --now firewalld >/dev/null 2>&1 || true
       SHELL
 
-      # ── NODE02: SERVER WITH 12 INCIDENTS ──
+      # ── NODE02: SERVER PREPARATION ──
       if node[:name] == "node02"
         node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
-          echo "🖥️ Configuring node02 for MOCK-016..."
+          echo "🖥️ Configuring node02 for MOCK-017..."
           
-          # Install required packages (ADDED 'libvirt' for the daemon)
-          dnf install -y -q libvirt libvirt-client nfs-utils podman nftables iptables openssl nmap-ncat >/dev/null 2>&1
+          # Install required packages for the 12 tasks
+          dnf install -y -q sssd authselect nginx podman quota logrotate python3 >/dev/null 2>&1
           
-          # Prepare directories and groups for ACL task
-          mkdir -p /shared/data
-          groupadd devs 2>/dev/null || true
-          usermod -aG devs bob 2>/dev/null || true
-          chmod 750 /shared/data
+          # Prepare dummy backend for Nginx reverse proxy (Task 4)
+          nohup python3 -m http.server 5000 >/dev/null 2>&1 &
           
-          # Start a background sleep process for bob (for renice task)
-          su - bob -c "nohup sleep 3600 >/dev/null 2>&1 &"
+          # Prepare dummy log for logrotate (Task 11)
+          touch /var/log/custom_app.log
           
-          # Create dummy files for find task (Task 11)
-          touch /var/tmp/bob_file1 /var/tmp/bob_file2 /var/tmp/bob_file3
-          chown bob:bob /var/tmp/bob_file*
+          # Prepare directory for Podman volume (Task 9)
+          mkdir -p /var/log/app_data
+          chmod 777 /var/log/app_data
           
-          # Prepare dummy libvirt VM for autostart task
-          mkdir -p /etc/libvirt/qemu
-          cat << 'EOF' > /etc/libvirt/qemu/mock16-vm.xml
-<domain type='qemu'>
-  <name>mock16-vm</name>
-  <uuid>12345678-1234-1234-1234-123456789016</uuid>
-  <memory unit='KiB'>65536</memory>
-  <vcpu>1</vcpu>
-  <os>
-    <type arch='x86_64'>hvm</type>
-  </os>
-</domain>
-EOF
-          systemctl enable --now libvirtd >/dev/null 2>&1
-          virsh define /etc/libvirt/qemu/mock16-vm.xml >/dev/null 2>&1 || true
+          # Ensure SELinux is enforcing (Task 6)
+          setenforce 1 || true
+          sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
           
-          # Enable lingering for bob so user systemd services can be checked
-          loginctl enable-linger bob >/dev/null 2>&1 || true
-
-          echo "✅ node02 configured for MOCK-016"
+          echo "✅ node02 configured for MOCK-017"
         SHELL
       end
 
@@ -106,180 +80,172 @@ EOF
         node_config.vm.provision "shell", privileged: false, inline: <<-SHELL
           echo "🎫 Generating Ticket, verification, and validator on node01..."
           
-          cat << 'TICKET' > /home/vagrant/TICKET_MOCK-016.txt
+          cat << 'TICKET' > /home/vagrant/TICKET_MOCK-017.txt
 ================================================================================
-TICKET MOCK-016   |  Severity: MEDIUM-HIGH  |  Environment: PRODUCTION
-🔐 MOCK-016 — Integrated Matrix B (12 Tasks)  |  AlmaLinux 9
+TICKET MOCK-017   |  Severity: MEDIUM  |  Environment: PRODUCTION
+🔐 MOCK-017 — Integrated Matrix C (12 Tasks)  |  AlmaLinux 9
 Module: LFCS Complete  |  Difficulty: 4/10  |  Level: L2
 Control Station:    node01  (Administrator — bob)
 Server Node:        node02  (AlmaLinux 9)
 Cluster Password:   caleston123
-This mock escalates difficulty by integrating default ACLs, network bonding,
-NFSv4, process tuning, SSL generation, rootless Podman+systemd, DNAT, and
-advanced systemd/libvirt management. Manage your time: ~10 mins per task.
 ================================================================================
-TASK 1 — Users/Security: Default ACLs (3 points)
+⚠️  PRE-REQUISITE: SSH KEY SETUP (MANDATORY BEFORE STARTING) ⚠️
+Before starting the tasks, you must establish passwordless SSH from node01 to 
+node02 for the 'bob' user.
+1. On node01, generate an SSH key pair for bob: `ssh-keygen -t rsa -N ""`
+2. Copy the public key to node02: `ssh-copy-id bob@node02` (Password: caleston123)
+3. Verify you can connect without a password: `ssh bob@node02`
 ================================================================================
-On node02, configure default ACLs on the directory `/shared/data` so that the
-group `devs` automatically receives `rwx` permissions on all newly created 
-files and subdirectories.
+📝 EVIDENCE BASED VALIDATION RULE:
+For EVERY task below, you MUST save the specific output or configuration 
+content to the designated evidence file (e.g., /tmp/task_01.evidence). 
+The validator will ONLY check these files.
+================================================================================
+TASK 1 — Operations: GRUB Boot Parameters (3 points)
+================================================================================
+On node02, use `grubby` to add the kernel parameter `console=ttyS0` to the 
+default boot entry. Update the bootloader configuration.
 CRITERIA:
-[ ] Default ACL for group devs with rwx exists on /shared/data            --> 50%
-[ ] Directory permissions are correctly set (e.g., 750 or 770)            --> 50%
+[ ] Default kernel parameters include console=ttyS0                       --> 100%
+EVIDENCE: Save output of `grubby --info=DEFAULT | grep args` to /tmp/task_01.evidence
 TIME: 8 minutes
 ================================================================================
-TASK 2 — Networking: Network Bonding (3 points)
+TASK 2 — Users: SSSD & Authselect (3 points)
 ================================================================================
-On node02, configure a network bond named `bond0` using `nmcli`. Set the mode
-to `active-backup` (mode 1) and attach two available network interfaces 
-(e.g., eth1 and eth2, or their enpXsX equivalents) as slaves.
+On node02, install `sssd` and `authselect`. Apply the `sssd` authselect profile 
+with the `with-mkhomedir` feature. Enable and start the `sssd` service.
 CRITERIA:
-[ ] bond0 connection exists and mode is active-backup                     --> 50%
-[ ] Two interfaces are successfully attached as ports to bond0            --> 50%
-TIME: 12 minutes
-================================================================================
-TASK 3 — Storage: NFSv4 Local Export & Mount (3 points)
-================================================================================
-On node02, export the directory `/srv/nfs_share` via NFSv4. Then, mount this
-export locally on `/mnt/nfs_local` persistently in `/etc/fstab`. Ensure the
-nfs-server service is enabled and running.
-CRITERIA:
-[ ] /srv/nfs_share is exported in /etc/exports with NFSv4 settings        --> 50%
-[ ] /mnt/nfs_local is mounted persistently via /etc/fstab                 --> 50%
-TIME: 12 minutes
-================================================================================
-TASK 4 — Operations: Process Tuning (3 points)
-================================================================================
-On node02, identify the `sleep 3600` process running under user `bob` and 
-change its niceness value to `15` using the `renice` command.
-CRITERIA:
-[ ] The sleep 3600 process for user bob has a NI value of 15              --> 100%
-TIME: 8 minutes
-================================================================================
-TASK 5 — Security: SSL/TLS Generation (3 points)
-================================================================================
-On node02, use `openssl` to generate a 2048-bit RSA private key and a 
-self-signed SSL certificate valid for 365 days. Save them as:
-- Key: `/etc/ssl/private/mock16.key`
-- Cert: `/etc/ssl/certs/mock16.crt`
-CRITERIA:
-[ ] Private key exists and is valid 2048-bit RSA                          --> 50%
-[ ] Certificate exists, is self-signed, and valid for ~365 days           --> 50%
+[ ] Authselect profile is set to sssd with with-mkhomedir                   --> 50%
+[ ] sssd service is enabled and running                                     --> 50%
+EVIDENCE: Save output of `authselect current` AND `systemctl is-enabled sssd` to /tmp/task_02.evidence
 TIME: 10 minutes
 ================================================================================
-TASK 6 — Containers: Podman Systemd Integration (3 points)
+TASK 3 — Storage: Disk Quotas (3 points)
 ================================================================================
-On node02, as user `bob`, create a systemd user service to manage a rootless
-Podman container (e.g., running `alpine` or `nginx`). Enable and start the
-service so it runs under bob's user systemd instance.
+On node02, format the extra disk `/dev/vdb` as `ext4`. Mount it persistently 
+on `/mnt/quota` with the `usrquota` option. Enable quotas, and set a soft limit 
+of 100M (102400 blocks) and hard limit of 120M for user `bob`.
 CRITERIA:
-[ ] Systemd user service file exists for bob                              --> 50%
-[ ] Service is active and managing a running podman container             --> 50%
+[ ] /dev/vdb mounted on /mnt/quota with usrquota in fstab                   --> 50%
+[ ] User bob has soft limit 100M configured                                 --> 50%
+EVIDENCE: Save output of `repquota -a | grep bob` to /tmp/task_03.evidence
 TIME: 15 minutes
 ================================================================================
-TASK 7 — Storage: Prioritized Swap File (3 points)
+TASK 4 — Networking: Nginx Reverse Proxy (3 points)
 ================================================================================
-On node02, create a 512MB swap file at `/swapfile2`, set strict permissions
-(600), format it, and enable it persistently in `/etc/fstab` with a priority
-of 10.
+On node02, configure Nginx to act as a reverse proxy. Requests to the location 
+`/app` must be proxied to `http://127.0.0.1:5000`. Ensure nginx is running.
 CRITERIA:
-[ ] /swapfile2 exists with 600 permissions and is active in swapon        --> 50%
-[ ] /etc/fstab contains the entry with pri=10                             --> 50%
-TIME: 10 minutes
-================================================================================
-TASK 8 — Networking: Port Redirection (DNAT) (3 points)
-================================================================================
-On node02, configure a firewall rule (using `nftables` or `iptables`) to 
-redirect incoming TCP traffic destined for port 80 to port 8080 on the local machine.
-CRITERIA:
-[ ] DNAT rule exists in nftables or iptables nat table                    --> 100%
+[ ] Nginx config contains location /app with proxy_pass to 127.0.0.1:5000   --> 100%
+EVIDENCE: Save output of `nginx -T 2>/dev/null | grep -A2 'location /app'` to /tmp/task_04.evidence
 TIME: 12 minutes
 ================================================================================
-TASK 9 — Essential Commands: Advanced Journalctl (3 points)
+TASK 5 — Essential Commands: SUID Audit (3 points)
 ================================================================================
-On node02, use `journalctl` to filter all log entries with priority `err` 
-(or higher) since the last boot, and save the output to `/tmp/boot_errors.log`.
+On node02, find all files with the SUID bit set in `/usr/bin` and save the 
+absolute paths to `/tmp/suid_audit.txt`.
 CRITERIA:
-[ ] /tmp/boot_errors.log exists and contains journalctl output            --> 50%
-[ ] Output is filtered for priority err and current boot (-b)             --> 50%
+[ ] /tmp/suid_audit.txt exists and contains SUID files from /usr/bin        --> 100%
+EVIDENCE: Save the first 3 lines of the file using `head -n 3 /tmp/suid_audit.txt` to /tmp/task_05.evidence
 TIME: 8 minutes
 ================================================================================
-TASK 10 — Operations: Virtualization Autostart (3 points)
+TASK 6 — Security: SELinux Booleans (3 points)
 ================================================================================
-On node02, use `virsh` to configure the pre-defined dummy VM `mock16-vm` 
-to start automatically when the libvirt daemon boots.
+On node02, permanently enable the SELinux boolean `httpd_can_network_connect`.
 CRITERIA:
-[ ] mock16-vm is listed in `virsh list --autostart`                       --> 100%
+[ ] httpd_can_network_connect is set to 'on' permanently                    --> 100%
+EVIDENCE: Save output of `getsebool httpd_can_network_connect` to /tmp/task_06.evidence
 TIME: 8 minutes
 ================================================================================
-TASK 11 — Essential Commands: Find with Exec (3 points)
+TASK 7 — Networking: Persistent Static Route (3 points)
 ================================================================================
-On node02, use a single `find` command to locate all files in `/var/tmp` 
-owned by user `bob` and change their group ownership to `devs` using `-exec`
-or `xargs`.
+On node02, add a persistent static route for the network `192.168.100.0/24` 
+via the gateway `192.168.122.1` using `nmcli`.
 CRITERIA:
-[ ] Command uses find with -exec or xargs to change group                 --> 50%
-[ ] Files in /var/tmp owned by bob now belong to group devs               --> 50%
+[ ] Route 192.168.100.0/24 via 192.168.122.1 exists persistently          --> 100%
+EVIDENCE: Save output of `nmcli con show | grep -A2 'ipv4.routes'` or `ip route | grep 192.168.100` to /tmp/task_07.evidence
 TIME: 10 minutes
 ================================================================================
-TASK 12 — Operations: Systemd Drop-in Override (3 points)
+TASK 8 — Operations: System Cron (3 points)
 ================================================================================
-On node02, create a systemd drop-in override for the `sshd.service` to add 
-the environment variable `CUSTOM_ENV=mock16` without modifying the main unit file.
+On node02, create a system cron job in `/etc/cron.d/mock17_cleanup` that runs 
+the command `echo "cleanup" > /dev/null` every 15 minutes as root.
 CRITERIA:
-[ ] Drop-in directory and override.conf exist for sshd.service            --> 50%
-[ ] systemctl show sshd.service reflects CUSTOM_ENV=mock16                --> 50%
+[ ] /etc/cron.d/mock17_cleanup exists with correct syntax and schedule      --> 100%
+EVIDENCE: Save the content of the cron file using `cat /etc/cron.d/mock17_cleanup` to /tmp/task_08.evidence
+TIME: 8 minutes
+================================================================================
+TASK 9 — Containers: Podman Persistent Volume (3 points)
+================================================================================
+On node02, run a rootless Podman container named `app_logger` using the `alpine` 
+image. Map the host directory `/var/log/app_data` to `/data` inside the container. 
+The container should just run `sleep infinity`.
+CRITERIA:
+[ ] Container 'app_logger' is running with correct volume mapping           --> 100%
+EVIDENCE: Save output of `podman ps --format "{{.Names}} {{.Mounts}}"` to /tmp/task_09.evidence
 TIME: 12 minutes
+================================================================================
+TASK 10 — Users: Global Environment Variable (3 points)
+================================================================================
+On node02, create a script `/etc/profile.d/app_env.sh` that exports the 
+environment variable `APP_STAGE=prod` for all users.
+CRITERIA:
+[ ] /etc/profile.d/app_env.sh exists and exports APP_STAGE=prod             --> 100%
+EVIDENCE: Save the content of the file using `cat /etc/profile.d/app_env.sh` to /tmp/task_10.evidence
+TIME: 8 minutes
+================================================================================
+TASK 11 — Operations: Logrotate Configuration (3 points)
+================================================================================
+On node02, configure logrotate for `/var/log/custom_app.log`. It should rotate 
+daily, keep 7 rotations, compress old logs, and create new files with 640 perms.
+CRITERIA:
+[ ] Logrotate config for custom_app.log exists with correct directives      --> 100%
+EVIDENCE: Save the content of the logrotate config file to /tmp/task_11.evidence
+TIME: 10 minutes
+================================================================================
+TASK 12 — Essential Commands: Tar Archive (3 points)
+================================================================================
+On node02, create a compressed tar archive of the `/etc/ssh` directory and 
+save it as `/tmp/ssh_backup.tar.gz`.
+CRITERIA:
+[ ] /tmp/ssh_backup.tar.gz exists and contains /etc/ssh files               --> 100%
+EVIDENCE: Save output of `tar -tzf /tmp/ssh_backup.tar.gz | wc -l` to /tmp/task_12.evidence
+TIME: 8 minutes
 ================================================================================
 SCORING SUMMARY
 ================================================================================
-Task 1:  3 pts (Default ACLs)      Task 7:  3 pts (Prioritized Swap)
-Task 2:  3 pts (Network Bonding)    Task 8:  3 pts (DNAT Redirection)
-Task 3:  3 pts (NFSv4 Local Mount)  Task 9:  3 pts (Journalctl Filter)
-Task 4:  3 pts (Process Renice)     Task 10: 3 pts (Libvirt Autostart)
-Task 5:  3 pts (SSL Generation)     Task 11: 3 pts (Find + Exec)
-Task 6:  3 pts (Podman Systemd)     Task 12: 3 pts (Systemd Drop-in)
-TOTAL: 36 points
-PASSING (67%): 25 points
-TOTAL TIME: 120 minutes
+Total Tasks: 12  |  Points per task: 3  |  Total: 36 points
+Passing Score: 25 points (67%)  |  Total Time: 120 minutes
 When done, run: bash /home/vagrant/validate.sh
 ================================================================================
 TICKET
 
-          cat << 'VERIFY' > /tmp/verify-016.sh
+          cat << 'VERIFY' > /tmp/verify-017.sh
 #!/bin/bash
 RED='\e[1;31m'; GREEN='\e[1;32m'; YELLOW='\e[1;33m'; CYAN='\e[1;36m'; RESET='\e[0m'
 PASS="caleston123"
 SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
 FAIL=0
 echo -e "\${CYAN}╔════════════════════════════════════════════════════════════════╗\${RESET}"
-echo -e "\${CYAN}║          VERIFYING SCENARIO MOCK-016 (AlmaLinux 9)             ║\${RESET}"
+echo -e "\${CYAN}║          VERIFYING SCENARIO MOCK-017 (AlmaLinux 9)             ║\${RESET}"
 echo -e "\${CYAN}╚════════════════════════════════════════════════════════════════╝\${RESET}"
 
-echo -e "\${YELLOW}[1/4] node02: Extra disk and second network interface exist\${RESET}"
-if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "lsblk | grep -q vdb && ip a | grep -q 192.168.123" 2>/dev/null; then
+echo -e "\${YELLOW}[1/3] node02: Extra disk and basic packages exist\${RESET}"
+if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "lsblk | grep -q vdb && rpm -q nginx podman sssd" >/dev/null 2>&1; then
   echo -e "      \${GREEN}✓ OK\${RESET}"
 else
   echo -e "      \${RED}✗ FAILED\${RESET}"; FAIL=1
 fi
 
-echo -e "\${YELLOW}[2/4] node02: Required packages installed\${RESET}"
-if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "rpm -q nfs-utils libvirt-client podman nftables openssl" >/dev/null 2>&1; then
+echo -e "\${YELLOW}[2/3] node02: SELinux is Enforcing\${RESET}"
+if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "getenforce | grep -q Enforcing" >/dev/null 2>&1; then
   echo -e "      \${GREEN}✓ OK\${RESET}"
 else
   echo -e "      \${RED}✗ FAILED\${RESET}"; FAIL=1
 fi
 
-echo -e "\${YELLOW}[3/4] node02: /shared/data exists and devs group created\${RESET}"
-if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "[ -d /shared/data ] && getent group devs" >/dev/null 2>&1; then
-  echo -e "      \${GREEN}✓ OK\${RESET}"
-else
-  echo -e "      \${RED}✗ FAILED\${RESET}"; FAIL=1
-fi
-
-echo -e "\${YELLOW}[4/4] node02: Dummy libvirt VM defined (System session)\${RESET}"
-# FIXED: Added sudo to check system session instead of user session
-if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "sudo virsh list --all 2>/dev/null | grep -q mock16-vm" 2>/dev/null; then
+echo -e "\${YELLOW}[3/3] node02: User bob exists and has sudo\${RESET}"
+if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "sudo -n true" >/dev/null 2>&1; then
   echo -e "      \${GREEN}✓ OK\${RESET}"
 else
   echo -e "      \${RED}✗ FAILED\${RESET}"; FAIL=1
@@ -292,32 +258,21 @@ else
   echo -e "\${RED}⚠️  SOME CHECKS FAILED\${RESET}"
 fi
 read -r
-cat /home/vagrant/TICKET_MOCK-016.txt
+cat /home/vagrant/TICKET_MOCK-017.txt
 VERIFY
-          chmod +x /tmp/verify-016.sh
-          sed -i '/verify-016/d' /home/vagrant/.bashrc 2>/dev/null || true
-          echo 'bash /tmp/verify-016.sh' >> /home/vagrant/.bashrc
+          chmod +x /tmp/verify-017.sh
+          sed -i '/verify-017/d' /home/vagrant/.bashrc 2>/dev/null || true
+          echo 'bash /tmp/verify-017.sh' >> /home/vagrant/.bashrc
 
           cat << 'VALIDATOR' > /home/vagrant/validate.sh
 #!/bin/bash
 SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=5"
 PASS="caleston123"
 NODE="bob@node02"
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-MAGENTA='\033[0;35m'
-RESET='\033[0m'
-BOLD='\033[1m'
-TOTAL=0
-MAX=36
-PASS_COUNT=0
-FAIL_COUNT=0
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; MAGENTA='\033[0;35m'; RESET='\033[0m'; BOLD='\033[1m'
+TOTAL=0; MAX=36; PASS_COUNT=0; FAIL_COUNT=0
 
-run_remote() {
-  sshpass -p "\$PASS" ssh \$SSH_OPTS "\$NODE" "\$1" 2>/dev/null
-}
+run_remote() { sshpass -p "\$PASS" ssh \$SSH_OPTS "\$NODE" "\$1" 2>/dev/null; }
 
 print_res() {
   local n=\$1; local name=\$2; local pts=\$3; local pass=\$4; local desc=\$5; local out=\$6
@@ -325,11 +280,10 @@ print_res() {
   echo -e "\${YELLOW}   \$desc\${RESET}"
   if [ "\$pass" -eq 1 ]; then
     echo -e "   \${GREEN}✅ +\$pts pts\${RESET}"
-    TOTAL=\$((TOTAL + pts))
-    PASS_COUNT=\$((PASS_COUNT + 1))
+    TOTAL=\$((TOTAL + pts)); PASS_COUNT=\$((PASS_COUNT + 1))
   else
     echo -e "   \${RED}❌ +0 pts\${RESET}"
-    echo -e "   \${YELLOW}   Output obtained:\${RESET}"
+    echo -e "   \${YELLOW}   Evidence obtained:\${RESET}"
     echo "\$out" | head -n 3 | sed 's/^/   /'
     FAIL_COUNT=\$((FAIL_COUNT + 1))
   fi
@@ -337,73 +291,69 @@ print_res() {
 
 echo -e "\${MAGENTA}"
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║      🎯 VALIDATOR LFCS — MOCK #016 (AlmaLinux 9)            ║"
+echo "║      🎯 VALIDATOR LFCS — MOCK #017 (AlmaLinux 9)            ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo -e "\${RESET}"
 
-# 1. DEFAULT ACLS
-out=\$(run_remote "getfacl /shared/data 2>/dev/null | grep -q 'default:group:devs:rwx' && echo OK || echo FAIL")
-if [ "\$out" = "OK" ]; then ok=1; else ok=0; fi
-print_res 1 "default acls" 3 \$ok "Default ACL for group devs with rwx on /shared/data" "\$out"
+# 1. GRUB
+out=\$(run_remote "cat /tmp/task_01.evidence 2>/dev/null")
+if echo "\$out" | grep -q "console=ttyS0"; then ok=1; else ok=0; fi
+print_res 1 "grub params" 3 \$ok "Default kernel includes console=ttyS0" "\$out"
 
-# 2. NETWORK BONDING
-out=\$(run_remote "nmcli con show bond0 2>/dev/null | grep -q 'active-backup' && nmcli con show bond0 | grep -q 'slave' && echo OK || echo FAIL")
-if [ "\$out" = "OK" ]; then ok=1; else ok=0; fi
-print_res 2 "network bonding" 3 \$ok "bond0 exists, mode active-backup, with slave interfaces" "\$out"
+# 2. SSSD
+out=\$(run_remote "cat /tmp/task_02.evidence 2>/dev/null")
+if echo "\$out" | grep -q "sssd" && echo "\$out" | grep -q "enabled"; then ok=1; else ok=0; fi
+print_res 2 "sssd authselect" 3 \$ok "Authselect sssd profile and service enabled" "\$out"
 
-# 3. NFSv4 LOCAL MOUNT
-out_export=\$(run_remote "grep -q '/srv/nfs_share' /etc/exports 2>/dev/null && echo OK || echo FAIL")
-out_mount=\$(run_remote "mount | grep -q '/mnt/nfs_local' 2>/dev/null && echo OK || echo FAIL")
-if [ "\$out_export" = "OK" ] && [ "\$out_mount" = "OK" ]; then ok=1; else ok=0; fi
-print_res 3 "nfs4 local mount" 3 \$ok "/srv/nfs_share exported and mounted on /mnt/nfs_local" "export: \$out_export | mount: \$out_mount"
+# 3. QUOTAS
+out=\$(run_remote "cat /tmp/task_03.evidence 2>/dev/null")
+if echo "\$out" | grep -q "bob" && echo "\$out" | grep -E -q "102400|100M|100.0"; then ok=1; else ok=0; fi
+print_res 3 "disk quotas" 3 \$ok "User bob has 100M soft limit on /mnt/quota" "\$out"
 
-# 4. PROCESS RENICE
-out=$(run_remote "ps -eo user,nice,cmd 2>/dev/null | grep 'bob' | grep 'sleep 3600' | tr -s ' ' | cut -d' ' -f2 | grep -qx '15' && echo OK || echo FAIL")
-if [ "$out" = "OK" ]; then ok=1; else ok=0; fi
-print_res 4 "process renice" 3 $ok "sleep 3600 process for bob has nice value 15" "$out"
+# 4. NGINX
+out=\$(run_remote "cat /tmp/task_04.evidence 2>/dev/null")
+if echo "\$out" | grep -q "location /app" && echo "\$out" | grep -q "proxy_pass.*127.0.0.1:5000"; then ok=1; else ok=0; fi
+print_res 4 "nginx proxy" 3 \$ok "Nginx proxies /app to 127.0.0.1:5000" "\$out"
 
-# 5. SSL GENERATION
-out_key=\$(run_remote "openssl rsa -in /etc/ssl/private/mock16.key -check -noout 2>/dev/null | grep -q 'RSA key ok' && echo OK || echo FAIL")
-out_cert=\$(run_remote "openssl x509 -in /etc/ssl/certs/mock16.crt -noout -text 2>/dev/null | grep -q '2048' && echo OK || echo FAIL")
-if [ "\$out_key" = "OK" ] && [ "\$out_cert" = "OK" ]; then ok=1; else ok=0; fi
-print_res 5 "ssl generation" 3 \$ok "2048-bit RSA key and self-signed cert generated" "key: \$out_key | cert: \$out_cert"
+# 5. SUID
+out=\$(run_remote "cat /tmp/task_05.evidence 2>/dev/null")
+if echo "\$out" | grep -q "/usr/bin"; then ok=1; else ok=0; fi
+print_res 5 "suid audit" 3 \$ok "SUID files in /usr/bin listed" "\$out"
 
-# 6. PODMAN SYSTEMD (Made more robust to accept any service name)
-out_container=\$(run_remote "su - bob -c 'podman ps -q' 2>/dev/null")
-out_svc=\$(run_remote "su - bob -c 'systemctl --user list-units --type=service --state=running' 2>/dev/null | grep -v 'session' | grep -q 'service' && echo OK || echo FAIL")
-if [ -n "\$out_container" ] && [ "\$out_svc" = "OK" ]; then ok=1; else ok=0; fi
-print_res 6 "podman systemd" 3 \$ok "Rootless podman container managed by user systemd service" "container: \$out_container | svc: \$out_svc"
+# 6. SELINUX
+out=\$(run_remote "cat /tmp/task_06.evidence 2>/dev/null")
+if echo "\$out" | grep -q "on"; then ok=1; else ok=0; fi
+print_res 6 "selinux bool" 3 \$ok "httpd_can_network_connect is ON" "\$out"
 
-# 7. PRIORITIZED SWAP
-out_file=\$(run_remote "ls -l /swapfile2 2>/dev/null | grep -q 'rw-------' && echo OK || echo FAIL")
-out_prio=\$(run_remote "swapon --show 2>/dev/null | grep -q '/swapfile2.*10' && echo OK || echo FAIL")
-if [ "\$out_file" = "OK" ] && [ "\$out_prio" = "OK" ]; then ok=1; else ok=0; fi
-print_res 7 "prioritized swap" 3 \$ok "Swap file /swapfile2 active with priority 10" "file: \$out_file | prio: \$out_prio"
+# 7. ROUTING
+out=\$(run_remote "cat /tmp/task_07.evidence 2>/dev/null")
+if echo "\$out" | grep -q "192.168.100.0/24" && echo "\$out" | grep -q "192.168.122.1"; then ok=1; else ok=0; fi
+print_res 7 "static route" 3 \$ok "Persistent route to 192.168.100.0/24" "\$out"
 
-# 8. DNAT REDIRECTION
-out=\$(run_remote "nft list ruleset 2>/dev/null | grep -q 'dnat to :8080' || iptables -t nat -L PREROUTING 2>/dev/null | grep -q '8080' && echo OK || echo FAIL")
-if [ "\$out" = "OK" ]; then ok=1; else ok=0; fi
-print_res 8 "dnat redirection" 3 \$ok "Port 80 redirected to 8080 via nftables or iptables" "\$out"
+# 8. CRON
+out=\$(run_remote "cat /tmp/task_08.evidence 2>/dev/null")
+if echo "\$out" | grep -q "*/15" && echo "\$out" | grep -q "cleanup"; then ok=1; else ok=0; fi
+print_res 8 "system cron" 3 \$ok "Cron job runs every 15 mins" "\$out"
 
-# 9. JOURNALCTL FILTER
-out=\$(run_remote "[ -f /tmp/boot_errors.log ] && grep -qi 'err' /tmp/boot_errors.log && echo OK || echo FAIL")
-if [ "\$out" = "OK" ]; then ok=1; else ok=0; fi
-print_res 9 "journalctl filter" 3 \$ok "/tmp/boot_errors.log contains filtered err logs from current boot" "\$out"
+# 9. PODMAN
+out=\$(run_remote "cat /tmp/task_09.evidence 2>/dev/null")
+if echo "\$out" | grep -q "app_logger" && echo "\$out" | grep -q "/var/log/app_data"; then ok=1; else ok=0; fi
+print_res 9 "podman volume" 3 \$ok "Container app_logger with correct volume" "\$out"
 
-# 10. LIBVIRT AUTOSTART (FIXED: Added sudo for system session)
-out=\$(run_remote "sudo virsh list --autostart 2>/dev/null | grep -q 'mock16-vm' && echo OK || echo FAIL")
-if [ "\$out" = "OK" ]; then ok=1; else ok=0; fi
-print_res 10 "libvirt autostart" 3 \$ok "mock16-vm is configured to autostart with libvirtd" "\$out"
+# 10. ENV VAR
+out=\$(run_remote "cat /tmp/task_10.evidence 2>/dev/null")
+if echo "\$out" | grep -q "APP_STAGE=prod"; then ok=1; else ok=0; fi
+print_res 10 "env variable" 3 \$ok "APP_STAGE=prod exported globally" "\$out"
 
-# 11. FIND WITH EXEC
-out=\$(run_remote "find /var/tmp -user bob -exec stat -c '%G' {} + 2>/dev/null | grep -q 'devs' && echo OK || echo FAIL")
-if [ "\$out" = "OK" ]; then ok=1; else ok=0; fi
-print_res 11 "find with exec" 3 \$ok "Files in /var/tmp owned by bob changed to group devs via find -exec" "\$out"
+# 11. LOGROTATE
+out=\$(run_remote "cat /tmp/task_11.evidence 2>/dev/null")
+if echo "\$out" | grep -q "custom_app.log" && echo "\$out" | grep -q "daily" && echo "\$out" | grep -q "rotate 7"; then ok=1; else ok=0; fi
+print_res 11 "logrotate" 3 \$ok "Logrotate configured for custom_app.log" "\$out"
 
-# 12. SYSTEMD DROP-IN
-out=\$(run_remote "systemctl show sshd.service 2>/dev/null | grep -q 'CUSTOM_ENV=mock16' && echo OK || echo FAIL")
-if [ "\$out" = "OK" ]; then ok=1; else ok=0; fi
-print_res 12 "systemd drop-in" 3 \$ok "sshd.service has drop-in override with CUSTOM_ENV=mock16" "\$out"
+# 12. TAR
+out=\$(run_remote "cat /tmp/task_12.evidence 2>/dev/null")
+if echo "\$out" | grep -E -q "^[1-9][0-9]*\$"; then ok=1; else ok=0; fi
+print_res 12 "tar archive" 3 \$ok "ssh_backup.tar.gz contains files" "\$out"
 
 PERCENT=\$((TOTAL * 100 / MAX))
 echo -e "\n\${MAGENTA}╔══════════════════════════════════════════════════════════════╗\${RESET}"
