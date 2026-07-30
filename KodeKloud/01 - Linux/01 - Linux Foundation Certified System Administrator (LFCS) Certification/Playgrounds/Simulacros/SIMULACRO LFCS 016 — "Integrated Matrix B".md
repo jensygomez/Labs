@@ -368,9 +368,9 @@ Script Vagrant: |-
   print_res 3 "nfs4 local mount" 3 \$ok "/srv/nfs_share exported and mounted on /mnt/nfs_local" "export: \$out_export | mount: \$out_mount"
 
   # 4. PROCESS RENICE
-  out=\$(run_remote "ps -eo user,nice,cmd 2>/dev/null | grep 'bob' | grep 'sleep 3600' | grep -q '15' && echo OK || echo FAIL")
-  if [ "\$out" = "OK" ]; then ok=1; else ok=0; fi
-  print_res 4 "process renice" 3 \$ok "sleep 3600 process for bob has nice value 15" "\$out"
+  out=$(run_remote "ps -eo user,nice,cmd 2>/dev/null | grep 'bob' | grep 'sleep 3600' | tr -s ' ' | cut -d' ' -f2 | grep -qx '15' && echo OK || echo FAIL")
+  if [ "$out" = "OK" ]; then ok=1; else ok=0; fi
+  print_res 4 "process renice" 3 $ok "sleep 3600 process for bob has nice value 15" "$out"
 
   # 5. SSL GENERATION
   out_key=\$(run_remote "openssl rsa -in /etc/ssl/private/mock16.key -check -noout 2>/dev/null | grep -q 'RSA key ok' && echo OK || echo FAIL")
