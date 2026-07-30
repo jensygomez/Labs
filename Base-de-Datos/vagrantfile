@@ -63,7 +63,7 @@ HOSTS
           echo "🖥️ Configuring node02 for MOCK-016..."
           
           # Install required packages (ADDED 'libvirt' for the daemon)
-          dnf install -y -q libvirt libvirt-client nftables iptables openssl nmap-ncat >/dev/null 2>&1
+          dnf install -y -q libvirt libvirt-client nfs-utils podman nftables iptables openssl nmap-ncat >/dev/null 2>&1
           
           # Prepare directories and groups for ACL task
           mkdir -p /shared/data

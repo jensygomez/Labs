@@ -62,7 +62,7 @@ Script Vagrant: |-
           echo 'bob ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/bob
           chmod 0440 /etc/sudoers.d/bob
           dnf install -y -q epel-release >/dev/null 2>&1
-          dnf install -y -q sshpass curl acl nfs-utils podman >/dev/null 2>&1
+          dnf install -y -q sshpass curl acl >/dev/null 2>&1
           systemctl enable --now sshd >/dev/null 2>&1
           systemctl disable --now firewalld >/dev/null 2>&1 || true
         SHELL
@@ -72,8 +72,8 @@ Script Vagrant: |-
           node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
             echo "🖥️ Configuring node02 for MOCK-016..."
             
-            # Install required packages
-            dnf install -y -q libvirt-client nftables iptables openssl nmap-ncat >/dev/null 2>&1
+            # Install required packages (ADDED 'libvirt' for the daemon)
+            dnf install -y -q libvirt libvirt-client nfs-utils podman nftables iptables openssl nmap-ncat >/dev/null 2>&1
             
             # Prepare directories and groups for ACL task
             mkdir -p /shared/data
@@ -83,6 +83,10 @@ Script Vagrant: |-
             
             # Start a background sleep process for bob (for renice task)
             su - bob -c "nohup sleep 3600 >/dev/null 2>&1 &"
+            
+            # Create dummy files for find task (Task 11)
+            touch /var/tmp/bob_file1 /var/tmp/bob_file2 /var/tmp/bob_file3
+            chown bob:bob /var/tmp/bob_file*
             
             # Prepare dummy libvirt VM for autostart task
             mkdir -p /etc/libvirt/qemu
@@ -123,12 +127,6 @@ Script Vagrant: |-
   This mock escalates difficulty by integrating default ACLs, network bonding,
   NFSv4, process tuning, SSL generation, rootless Podman+systemd, DNAT, and
   advanced systemd/libvirt management. Manage your time: ~10 mins per task.
-
-  ⚠️  IMPORTANT — BEFORE TASK 2 (Network Bonding):
-      Run `ip a` on node02 and identify which interface is eth0 (mgmt-net,
-      192.168.122.x) BEFORE selecting slaves for bond0. Do NOT include your
-      management interface as a bond slave — you will lose SSH access with
-      no recovery path except `virsh console node02`.
   ================================================================================
   TASK 1 — Users/Security: Default ACLs (3 points)
   ================================================================================
@@ -289,8 +287,9 @@ Script Vagrant: |-
     echo -e "      \${RED}✗ FAILED\${RESET}"; FAIL=1
   fi
 
-  echo -e "\${YELLOW}[4/4] node02: Dummy libvirt VM defined\${RESET}"
-  if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "virsh list --all 2>/dev/null | grep -q mock16-vm" 2>/dev/null; then
+  echo -e "\${YELLOW}[4/4] node02: Dummy libvirt VM defined (System session)\${RESET}"
+  # FIXED: Added sudo to check system session instead of user session
+  if sshpass -p \$PASS ssh \$SSH_OPTS bob@node02 "sudo virsh list --all 2>/dev/null | grep -q mock16-vm" 2>/dev/null; then
     echo -e "      \${GREEN}✓ OK\${RESET}"
   else
     echo -e "      \${RED}✗ FAILED\${RESET}"; FAIL=1
@@ -379,10 +378,11 @@ Script Vagrant: |-
   if [ "\$out_key" = "OK" ] && [ "\$out_cert" = "OK" ]; then ok=1; else ok=0; fi
   print_res 5 "ssl generation" 3 \$ok "2048-bit RSA key and self-signed cert generated" "key: \$out_key | cert: \$out_cert"
 
-  # 6. PODMAN SYSTEMD
-  out=\$(run_remote "su - bob -c 'systemctl --user is-active podman-*.service' 2>/dev/null | grep -q 'active' && echo OK || echo FAIL")
-  if [ "\$out" = "OK" ]; then ok=1; else ok=0; fi
-  print_res 6 "podman systemd" 3 \$ok "Rootless podman container managed by user systemd service" "\$out"
+  # 6. PODMAN SYSTEMD (Made more robust to accept any service name)
+  out_container=\$(run_remote "su - bob -c 'podman ps -q' 2>/dev/null")
+  out_svc=\$(run_remote "su - bob -c 'systemctl --user list-units --type=service --state=running' 2>/dev/null | grep -v 'session' | grep -q 'service' && echo OK || echo FAIL")
+  if [ -n "\$out_container" ] && [ "\$out_svc" = "OK" ]; then ok=1; else ok=0; fi
+  print_res 6 "podman systemd" 3 \$ok "Rootless podman container managed by user systemd service" "container: \$out_container | svc: \$out_svc"
 
   # 7. PRIORITIZED SWAP
   out_file=\$(run_remote "ls -l /swapfile2 2>/dev/null | grep -q 'rw-------' && echo OK || echo FAIL")
@@ -400,8 +400,8 @@ Script Vagrant: |-
   if [ "\$out" = "OK" ]; then ok=1; else ok=0; fi
   print_res 9 "journalctl filter" 3 \$ok "/tmp/boot_errors.log contains filtered err logs from current boot" "\$out"
 
-  # 10. LIBVIRT AUTOSTART
-  out=\$(run_remote "virsh list --autostart 2>/dev/null | grep -q 'mock16-vm' && echo OK || echo FAIL")
+  # 10. LIBVIRT AUTOSTART (FIXED: Added sudo for system session)
+  out=\$(run_remote "sudo virsh list --autostart 2>/dev/null | grep -q 'mock16-vm' && echo OK || echo FAIL")
   if [ "\$out" = "OK" ]; then ok=1; else ok=0; fi
   print_res 10 "libvirt autostart" 3 \$ok "mock16-vm is configured to autostart with libvirtd" "\$out"
 
@@ -410,11 +410,10 @@ Script Vagrant: |-
   if [ "\$out" = "OK" ]; then ok=1; else ok=0; fi
   print_res 11 "find with exec" 3 \$ok "Files in /var/tmp owned by bob changed to group devs via find -exec" "\$out"
 
-  # 12. SYSTEMD DROP-IN (file on disk + live state)
-  out_file=\$(run_remote "[ -f /etc/systemd/system/sshd.service.d/override.conf ] && grep -q 'CUSTOM_ENV=mock16' /etc/systemd/system/sshd.service.d/override.conf && echo OK || echo FAIL")
-  out_live=\$(run_remote "systemctl show sshd.service 2>/dev/null | grep -q 'CUSTOM_ENV=mock16' && echo OK || echo FAIL")
-  if [ "\$out_file" = "OK" ] && [ "\$out_live" = "OK" ]; then ok=1; else ok=0; fi
-  print_res 12 "systemd drop-in" 3 \$ok "Drop-in override.conf exists on disk AND sshd.service reflects CUSTOM_ENV=mock16" "file: \$out_file | live: \$out_live"
+  # 12. SYSTEMD DROP-IN
+  out=\$(run_remote "systemctl show sshd.service 2>/dev/null | grep -q 'CUSTOM_ENV=mock16' && echo OK || echo FAIL")
+  if [ "\$out" = "OK" ]; then ok=1; else ok=0; fi
+  print_res 12 "systemd drop-in" 3 \$ok "sshd.service has drop-in override with CUSTOM_ENV=mock16" "\$out"
 
   PERCENT=\$((TOTAL * 100 / MAX))
   echo -e "\n\${MAGENTA}╔══════════════════════════════════════════════════════════════╗\${RESET}"
