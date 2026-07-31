@@ -37,3 +37,64 @@ Pistas iniciales (Inglés): 2-3 comandos o áreas por donde empezar, sin revelar
 Solución paso a paso (Inglés): En bloque desplegable, explicando explícitamente qué falso negativo se descartó y cómo.
 validate.sh (Inglés): Script de validación final (local o sshpass).
 Post-Mortem STAR (Inglés): Guion exacto de 4-5 líneas para entrevista, mencionando cómo se descartaron las pistas falsas.
+📋 LISTA DE 50 INCIDENTES — CON TOPOLOGÍA MARCADA
+🟢 NIVEL 3/10 (Labs 1-10) — Cascada corta, 1 falso negativo, nodo único salvo aviso
+(Boot) "El servidor no volvió después del reboot" — típo en fstab, falso negativo: un servicio no crítico también en fail
+(Storage) "Disco lleno de la nada" — log gigante en /var, falso negativo: journal viejo que parece culpable
+(Network) "No hay acceso desde la oficina remota" — regla firewalld faltante, falso negativo: DNS que parece el problema
+(Users) "Un usuario no puede loguearse por SSH, otros sí" — permisos de .ssh, falso negativo: shell en /etc/passwd que parece raro pero está bien
+(Perf) "El servidor se pone lento a la misma hora" — cron job pesado, falso negativo: proceso de otra app que consume CPU normal
+(Logs) "Los logs de la app no aparecen" — dueño incorrecto en /var/log/app, falso negativo: rsyslog parece caído pero funciona
+(Apps) "El sitio web tira 502 intermitente" — backend caído, falso negativo: proxy config que parece mal pero está bien
+(Backup) "El script de backup falla al inicio" — directorio destino read-only, falso negativo: permisos de usuario que parecen el problema
+(Cross) "La app no conecta a la base de datos" — password cambiado en config, falso negativo: firewall que parece bloquear pero no
+(Boot) "El servidor arrancó en modo degradado" — unidad systemd con dependencia fallida, falso negativo: otro servicio no relacionado también en warning
+🟡 NIVEL 4/10 (Labs 11-20) — Cascada media, 2 falsos negativos, nodo único salvo #20 (NFS → 2 nodos)
+(Storage) "El volumen LVM no crece aunque agregamos disco" — falta xfs_growfs, FN: parece problema de LVM extend
+(Network) "El sitio resuelve mal el dominio a veces" — resolv.conf sobrescrito por NetworkManager, FN: parece problema del servidor DNS externo
+(Users) "sudo dejó de funcionar para todo el equipo" — error de sintaxis en sudoers.d, FN: parece problema de PAM
+(Perf) "La aplicación murió sola, sin error visible" — OOM Killer, swap desactivada, FN: parece crash de la aplicación
+(Logs) "El cron job falla, pero manual funciona bien" — variable PATH en cron, FN: parece problema de permisos del script
+(Apps) "El certificado TLS expiró y nadie se enteró" — script de renovación sin permiso de ejecución, FN: parece problema del proveedor del certificado
+(Backup) "El backup corre pero el archivo pesa 0 bytes" — falta pipefail en el script, FN: parece falta de espacio en disco
+(Cross) "El servicio funciona pero solo responde en localhost" — bind address incorrecto tras update, FN: parece problema de firewall
+(Boot) "No podemos hacer rollback del kernel" — grub2 menuentry borrada, FN: parece corrupción de initramfs
+(Storage — 2 nodos) "Un directorio compartido NFS dejó de responder" — firewall bloquea puertos RPC, FN: parece problema del cliente NFS, no del servidor
+🟠 NIVEL 5/10 (Labs 21-30) — Cascada larga, dominios cruzados, 2 falsos negativos, mezcla de topología
+(Network) "Perdimos conectividad tras el hardening de firewall" — rich rules mal aplicadas por subnet, FN: parece problema de rutas
+(Users) "SELinux bloquea el acceso pero el permiso Unix está bien" — contexto de archivo web incorrecto, FN: parece problema de ACL
+(Perf) "El disco está al 100% de I/O sin razón aparente" — swap thrashing por memory leak leve, FN: parece proceso de backup corriendo
+(Logs) "Un log crítico dejó de escribirse de un día para otro" — rsyslog cortado por logrotate sin reinicio, FN: parece que la app dejó de loguear
+(Apps) "La base de datos rechaza conexiones nuevas" — max_connections + procesos zombie no liberados, FN: parece problema de red
+(Backup) "El restore de backup falla a mitad de camino" — snapshot LVM no mergeado, metadata rota, FN: parece espacio insuficiente
+(Cross) "El servicio no arranca, no se sabe si es storage, red o permisos" — disco lleno → logrotate falló → SELinux bloqueó, FN: firewall que parece el culpable
+(Boot) "El servicio se cae solo a los 5 minutos de iniciar" — Restart=always + script que falla a los 5 min, FN: parece problema de memoria
+(Storage) "No podemos escribir en el filesystem" — remounted read-only por error subyacente, FN: parece problema de permisos de usuario
+(Network — 2 nodos) "El NAT dejó de funcionar tras el cambio de proveedor" — interfaz renombrada, regla iptables apunta a la vieja, FN: parece problema del proveedor externo
+🔴 NIVEL 6/10 (Labs 31-40) — Cascada profunda, mínimo 2 falsos negativos (uno requiere herramienta avanzada), 2 nodos en temas de red/cluster
+(Users) "Llaves SSH dejaron de funcionar tras migración" — contexto SELinux en .ssh + sshd_config, FN: parece llave corrupta
+(Perf) "La carga es altísima pero el CPU no está ocupado" — procesos en estado D por mount NFS colgado, FN: parece proceso descontrolado
+(Logs) "Ansible aplicó un cambio y hay 'drift'" — configuración inconsistente, auditoría con ausearch, FN: parece error humano en un solo servidor
+(Apps) "Dos instancias del mismo servicio compiten por el puerto" — socket activado por systemd vs servicio normal, FN: parece problema de configuración duplicada
+(Backup — 2 nodos) "Recuperamos el backup pero faltan permisos y red" — restore parcial, contexto SELinux perdido, FN: parece error del script de restore
+(Boot) "El servidor quedó en modo emergency/rescue" — corrupción en initramfs o fstab con UUID erróneo, FN: parece disco físico dañado
+(Storage) "fsck se activa en cada boot y tarda una eternidad" — inodos corruptos simulados, FN: parece disco lento
+(Network — 2 nodos) "Latencia rara solo en un segmento de red" — MTU mismatch o duplex mal negociado, FN: parece saturación de ancho de banda
+(Users) "Cuenta bloqueada tras 3 intentos, nadie sabe desbloquearla" — pam_faillock agresivo sin documentar, FN: parece contraseña incorrecta real
+(Perf) "Un proceso consume memoria progresivamente" — memory leak, requiere systemd Limits, FN: parece uso normal creciente por carga de usuarios
+🟣 NIVEL 7/10 (Labs 41-50) — Incidentes mayores, "todo parece estar bien" es el falso negativo principal, mínimo 3 FN, 2 nodos en la mitad
+(Logs) "El journal está corrupto y no arranca el servicio" — reconstrucción de journal, machine-id, FN: parece servicio mal instalado
+(Apps) "Contenedor rootless falla tras actualización" — subuid mapping + cgroups v2, FN: parece problema de imagen del contenedor
+(Boot) "Falla intermitente en el arranque" — race condition en systemd, Requires vs Wants, FN: parece hardware inestable
+(Storage) "LVM no activa el VG tras reemplazar un disco" — filtro de lvm.conf + metadata backup, FN: parece disco nuevo defectuoso
+(Network — 2 nodos) "Un servidor nuevo no puede hablar con el clúster" — asymmetric routing + nftables drop, FN: parece problema de DNS
+(Users) "Un grupo nuevo no hereda permisos esperados" — ACLs por defecto + umask + PAM, FN: parece error de asignación de grupo
+(Perf) "El servidor se pone lento y luego se recupera solo" — TCP connection tracking table full, FN: parece pico de tráfico normal
+(Cross — 2 nodos) "Todo parece bien pero el cliente sigue sin acceso" — firewall + SELinux + bind address + proxy, FN: 3 capas que individualmente parecen estar bien
+(Backup) "Incidente mayor: el backup nocturno tumbó producción" — lock en DB + I/O starvation + OOM, FN: parece solo problema de horario de backup
+(Cross — 2 nodos) "El clúster entero se volvió loco tras un reboot en cascada" — split brain, quorum perdido, NTP desincronizado, FN: parece fallo de red simple
+Notas de uso
+De los 50 labs, ~12 requieren 2 nodos (marcados explícitamente arriba). El resto corre en nodo único de 4 vCPU/4GB.
+Cada incidente debe tomar entre 60-180 min de diagnóstico (según nivel) + 10-15 min de post-mortem.
+Guardar cada Post-Mortem STAR en el vault de Obsidian — es material directo para entrevistas.
+Este entrenamiento es independiente de cualquier otro tracking de certificaciones — mantenerlo separado.
