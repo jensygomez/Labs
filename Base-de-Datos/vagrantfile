@@ -25,31 +25,36 @@ Vagrant.configure("2") do |config|
       node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
         echo "🔧 Setting up Incident #01: The Ghost Reboot..."
         
-        # 1. Prepare the extra disk (/dev/vdb)
+        # 1. Formatear el disco extra (/dev/vdb)
         mkfs.xfs -f /dev/vdb
         REAL_UUID=$(blkid -s UUID -o value /dev/vdb)
         
-        # 2. CORRECCIÓN: Montar PRIMERO, luego crear la estructura DENTRO del disco
+        # 2. Crear el punto de montaje ANTES de montar
+        mkdir -p /data
+
+        # 3. Montar el disco
         mount /dev/vdb /data
+        
+        # 4. Crear la estructura DENTRO del disco montado
         mkdir -p /data/app
         
-        # 3. Crear archivo de estado con datos simulados realistas
-        cat <<'STATUS' > /data/app/status
-APP_VERSION=2.4.1
-LAST_SUCCESSFUL_DEPLOY=2024-01-15T14:30:00Z
-DB_CONNECTION_POOL=active
-CACHE_SIZE=512MB
-STATUS
+        # 5. Escribir los datos en el archivo
+        echo "APP_VERSION=2.4.1" > /data/app/status
+        echo "LAST_SUCCESSFUL_DEPLOY=2024-01-15T14:30:00Z" >> /data/app/status
+        echo "DB_CONNECTION_POOL=active" >> /data/app/status
+        echo "CACHE_SIZE=512MB" >> /data/app/status
+        
+        # 6. Permisos correctos
         chown -R vagrant:vagrant /data/app
         
-        # 4. Desmontar el disco (los datos quedan guardados en /dev/vdb)
+        # 7. Desmontar (ahora sí, los datos quedaron guardados permanentemente dentro de /dev/vdb)
         umount /data
 
-        # 5. BREAK IT: Add a FAKE UUID to /etc/fstab with 'nofail'
+        # 8. BREAK IT: Add a FAKE UUID to /etc/fstab with 'nofail'
         FAKE_UUID="12345678-1234-1234-1234-123456789abc"
         echo "UUID=$FAKE_UUID /data xfs defaults,nofail 0 0" >> /etc/fstab
 
-        # 6. Create the Critical App Service (Depends on /data)
+        # 9. Create the Critical App Service (Depends on /data)
         cat <<EOF > /etc/systemd/system/app-backend.service
 [Unit]
 Description=Critical App Backend
@@ -58,7 +63,7 @@ After=local-fs.target
 
 [Service]
 Type=simple
-ExecStart=/bin/bash -c 'if [ -f "/data/app/status" ]; then echo "[$(date)] App started successfully" >> /data/app/status; sleep infinity; else echo "FATAL: /data/app/status not found" >&2; exit 1; fi'
+ExecStart=/bin/bash -c 'if [ -f "/data/app/status" ]; then echo "[\$(date)] App started successfully" >> /data/app/status; sleep infinity; else echo "FATAL: /data/app/status not found" >&2; exit 1; fi'
 Restart=on-failure
 RestartSec=5
 
@@ -68,7 +73,7 @@ EOF
         systemctl daemon-reload
         systemctl enable app-backend.service
 
-        # 7. Create the FALSE NEGATIVE Service
+        # 10. Create the FALSE NEGATIVE Service
         cat <<EOF > /etc/systemd/system/legacy-daemon.service
 [Unit]
 Description=Legacy Monitoring Daemon
@@ -86,7 +91,7 @@ EOF
         systemctl daemon-reload
         systemctl enable legacy-daemon.service
 
-        # 8. Generate the Ticket and Validator
+        # 11. Generate the Ticket and Validator
         cat <<'TICKET' > /home/vagrant/TICKET_INCIDENT-01.txt
 ======================================================================
 INCIDENT TICKET #01 - CRITICAL
@@ -121,12 +126,12 @@ TICKET
 #!/bin/bash
 # Local validator for Incident #01
 
-CYAN='\033[0;36m'; GREEN='\033[0;32m'; RED='\033[0;31m'; YELLOW='\033[0;33m'; RESET='\033[0m'
+CYAN='\\033[0;36m'; GREEN='\\033[0;32m'; RED='\\033[0;31m'; YELLOW='\\033[0;33m'; RESET='\\033[0m'
 TOTAL=0; PASS_COUNT=0; FAIL_COUNT=0
 
 print_res() {
   local n=$1; local name=$2; local pts=$3; local pass=$4; local desc=$5; local out=$6
-  echo -e "\n${CYAN}┌─ CHECK $n: $name ($pts pts) ─${RESET}"
+  echo -e "\\n${CYAN}┌─ CHECK $n: $name ($pts pts) ─${RESET}"
   echo -e "${YELLOW}   $desc${RESET}"
   if [ "$pass" -eq 1 ]; then
     echo -e "   ${GREEN}✅ +$pts pts${RESET}"
@@ -166,7 +171,7 @@ print_res 4 "App Data Integrity" 3 $ok "Application data file contains simulated
 if echo "$out" | grep -q "App started successfully"; then ok=1; else ok=0; fi
 print_res 5 "App Runtime Log" 4 $ok "Application successfully wrote runtime log to status file" "$out"
 
-echo -e "\n${CYAN}└─ SUMMARY ─${RESET}"
+echo -e "\\n${CYAN}└─ SUMMARY ─${RESET}"
 echo -e "Passed: ${GREEN}$PASS_COUNT${RESET} | Failed: ${RED}$FAIL_COUNT${RESET} | Total Score: ${YELLOW}$TOTAL / 16${RESET}"
 VALIDATOR
         chmod +x /home/vagrant/validate.sh
