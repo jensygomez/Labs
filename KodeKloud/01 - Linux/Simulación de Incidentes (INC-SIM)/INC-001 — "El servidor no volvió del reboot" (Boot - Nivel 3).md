@@ -1,0 +1,194 @@
+---
+Titulo: INC-001 — "El servidor no volvió del reboot" (Boot - Nivel 3)
+Severidad: MEDIA
+Ambiente: Produccion
+Dificultad: 3/10
+Nivel: L2
+Fecha de Inicio: 2026-07-31
+Script Vagrant: |-
+  # -*- mode: ruby -*-
+  # vi: set ft=ruby :
+
+  Vagrant.configure("2") do |config|
+    config.vm.box = "almalinux/9"
+    
+    # Single node topology for Incident #01
+    config.vm.define "node01" do |node_config|
+      node_config.vm.hostname = "node01"
+      
+      node_config.vm.network "private_network", 
+        ip: "192.168.122.11", 
+        libvirt__network_name: "mgmt-net",
+        libvirt__dhcp_enabled: false
+
+      node_config.vm.provider "libvirt" do |lv|
+        lv.memory = 4096
+        lv.cpus = 4
+        lv.driver = "kvm"
+        # Extra disk for the storage incident
+        lv.storage :file, :size => '1G', :type => 'qcow2'
+      end
+
+        # ----- PROVISIONING: BREAKING THE SYSTEM -----
+        node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
+          echo "🔧 Setting up Incident #01: The Ghost Reboot..."
+          
+          # 1. Prepare the extra disk (/dev/vdb)
+          mkfs.xfs -f /dev/vdb
+          REAL_UUID=$(blkid -s UUID -o value /dev/vdb)
+          
+          # 2. CORRECCIÓN: Montar PRIMERO, luego crear la estructura DENTRO del disco
+          mount /dev/vdb /data
+          mkdir -p /data/app
+          
+          # 3. Crear archivo de estado con datos simulados realistas
+          cat <<'STATUS' > /data/app/status
+  APP_VERSION=2.4.1
+  LAST_SUCCESSFUL_DEPLOY=2024-01-15T14:30:00Z
+  DB_CONNECTION_POOL=active
+  CACHE_SIZE=512MB
+  STATUS
+          chown -R vagrant:vagrant /data/app
+          
+          # 4. Desmontar el disco (los datos quedan guardados en /dev/vdb)
+          umount /data
+
+          # 5. BREAK IT: Add a FAKE UUID to /etc/fstab with 'nofail'
+          FAKE_UUID="12345678-1234-1234-1234-123456789abc"
+          echo "UUID=$FAKE_UUID /data xfs defaults,nofail 0 0" >> /etc/fstab
+
+          # 6. Create the Critical App Service (Depends on /data)
+          cat <<EOF > /etc/systemd/system/app-backend.service
+  [Unit]
+  Description=Critical App Backend
+  RequiresMountsFor=/data
+  After=local-fs.target
+
+  [Service]
+  Type=simple
+  ExecStart=/bin/bash -c 'if [ -f "/data/app/status" ]; then echo "[$(date)] App started successfully" >> /data/app/status; sleep infinity; else echo "FATAL: /data/app/status not found" >&2; exit 1; fi'
+  Restart=on-failure
+  RestartSec=5
+
+  [Install]
+  WantedBy=multi-user.target
+  EOF
+          systemctl daemon-reload
+          systemctl enable app-backend.service
+
+          # 7. Create the FALSE NEGATIVE Service
+          cat <<EOF > /etc/systemd/system/legacy-daemon.service
+  [Unit]
+  Description=Legacy Monitoring Daemon
+
+  [Service]
+  Type=simple
+  ExecStart=/opt/legacy/start.sh
+  Restart=always
+  RestartSec=10
+
+  [Install]
+  WantedBy=multi-user.target
+  EOF
+          mkdir -p /opt/legacy
+          systemctl daemon-reload
+          systemctl enable legacy-daemon.service
+
+          # 8. Generate the Ticket and Validator
+          cat <<'TICKET' > /home/vagrant/TICKET_INCIDENT-01.txt
+  ======================================================================
+  INCIDENT TICKET #01 - CRITICAL
+  ======================================================================
+  TITLE: Server rebooted but application is completely unresponsive
+  SEVERITY: SEV-1
+  REPORTED BY: NOC Team
+  ======================================================================
+
+  DESCRIPTION:
+  "Hi team, last night we performed a scheduled kernel update and reboot 
+  on the primary application server (node01). The monitoring dashboard 
+  shows the server is online and responding to ping, but the 
+  'app-backend' service is completely down. Users are reporting that 
+  the application is unreachable. 
+
+  Additionally, we are seeing a red alert for a 'legacy-daemon' service 
+  that is constantly failing and restarting. Please investigate and 
+  restore the application ASAP."
+
+  EVALUATION CRITERIA:
+  1. Identify and discard the false negative (legacy-daemon).
+  2. Identify the root cause preventing 'app-backend' from starting.
+  3. Restore the correct storage mount persistently.
+  4. Ensure 'app-backend' is running and healthy.
+
+  ESTIMATED TIME: 60 - 75 minutes.
+  ======================================================================
+  TICKET
+
+          cat <<'VALIDATOR' > /home/vagrant/validate.sh
+  #!/bin/bash
+  # Local validator for Incident #01
+
+  CYAN='\033[0;36m'; GREEN='\033[0;32m'; RED='\033[0;31m'; YELLOW='\033[0;33m'; RESET='\033[0m'
+  TOTAL=0; PASS_COUNT=0; FAIL_COUNT=0
+
+  print_res() {
+    local n=$1; local name=$2; local pts=$3; local pass=$4; local desc=$5; local out=$6
+    echo -e "\n${CYAN}┌─ CHECK $n: $name ($pts pts) ─${RESET}"
+    echo -e "${YELLOW}   $desc${RESET}"
+    if [ "$pass" -eq 1 ]; then
+      echo -e "   ${GREEN}✅ +$pts pts${RESET}"
+      TOTAL=$((TOTAL + pts)); PASS_COUNT=$((PASS_COUNT + 1))
+    else
+      echo -e "   ${RED}❌ +0 pts${RESET}"
+      echo -e "   ${YELLOW}   Output obtained:${RESET}"
+      echo "$out" | head -n 3 | sed 's/^/   /'
+      FAIL_COUNT=$((FAIL_COUNT + 1))
+    fi
+  }
+
+  echo -e "${MAGENTA}🔍 Validating Incident #01 Resolution...${RESET}"
+
+  # Check 1: /data is mounted from /dev/vdb
+  out=$(mount | grep "/data")
+  if echo "$out" | grep -q "/dev/vdb"; then ok=1; else ok=0; fi
+  print_res 1 "Storage Mount" 3 $ok "/data is correctly mounted from /dev/vdb" "$out"
+
+  # Check 2: /etc/fstab has the correct UUID
+  REAL_UUID=$(blkid -s UUID -o value /dev/vdb)
+  out=$(grep "/data" /etc/fstab)
+  if echo "$out" | grep -q "$REAL_UUID"; then ok=1; else ok=0; fi
+  print_res 2 "Persistent FSTAB" 3 $ok "/etc/fstab contains the correct UUID for /data" "$out"
+
+  # Check 3: app-backend is running
+  out=$(systemctl is-active app-backend.service)
+  if [ "$out" == "active" ]; then ok=1; else ok=0; fi
+  print_res 3 "App Backend Status" 3 $ok "app-backend.service is active" "$out"
+
+  # Check 4: App data file exists and contains simulated data
+  out=$(cat /data/app/status 2>/dev/null)
+  if echo "$out" | grep -q "APP_VERSION=2.4.1"; then ok=1; else ok=0; fi
+  print_res 4 "App Data Integrity" 3 $ok "Application data file contains simulated historical data" "$out"
+
+  # Check 5: App successfully appended to the status file
+  if echo "$out" | grep -q "App started successfully"; then ok=1; else ok=0; fi
+  print_res 5 "App Runtime Log" 4 $ok "Application successfully wrote runtime log to status file" "$out"
+
+  echo -e "\n${CYAN}└─ SUMMARY ─${RESET}"
+  echo -e "Passed: ${GREEN}$PASS_COUNT${RESET} | Failed: ${RED}$FAIL_COUNT${RESET} | Total Score: ${YELLOW}$TOTAL / 16${RESET}"
+  VALIDATOR
+          chmod +x /home/vagrant/validate.sh
+          chown vagrant:vagrant /home/vagrant/validate.sh /home/vagrant/TICKET_INCIDENT-01.txt
+
+          echo "✅ Incident #01 deployed successfully."
+          echo "🚀 vagrant ssh node01"
+          echo "📝 Read the ticket: cat /home/vagrant/TICKET_INCIDENT-01.txt"
+          echo "🔍 When done, validate: bash /home/vagrant/validate.sh"
+        SHELL
+    end
+  end
+---
+[[Laboratorios del LFCS]]
+
+---
+
