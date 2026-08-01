@@ -1,5 +1,5 @@
 ---
-Titulo: INC-001 — "El servidor no volvió del reboot" (Boot - Nivel 3)
+Titulo: inc-001-boot-fstab-mount-failure.yml
 Severidad: MEDIA
 Ambiente: Produccion
 Dificultad: 3/10
