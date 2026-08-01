@@ -3,13 +3,13 @@
 
 Vagrant.configure("2") do |config|
   config.vm.box = "almalinux/9"
-  
+
   # Single node topology for Incident #01
   config.vm.define "node01" do |node_config|
     node_config.vm.hostname = "node01"
-    
-    node_config.vm.network "private_network", 
-      ip: "192.168.122.11", 
+
+    node_config.vm.network "private_network",
+      ip: "192.168.122.11",
       libvirt__network_name: "mgmt-net",
       libvirt__dhcp_enabled: false
 
@@ -24,29 +24,29 @@ Vagrant.configure("2") do |config|
       # ----- PROVISIONING: BREAKING THE SYSTEM -----
       node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
         echo "🔧 Setting up Incident #01: The Ghost Reboot..."
-        
+
         # 1. Formatear el disco extra (/dev/vdb)
         mkfs.xfs -f /dev/vdb
         REAL_UUID=$(blkid -s UUID -o value /dev/vdb)
-        
+
         # 2. Crear el punto de montaje ANTES de montar
         mkdir -p /data
 
         # 3. Montar el disco
         mount /dev/vdb /data
-        
+
         # 4. Crear la estructura DENTRO del disco montado
         mkdir -p /data/app
-        
+
         # 5. Escribir los datos en el archivo
         echo "APP_VERSION=2.4.1" > /data/app/status
         echo "LAST_SUCCESSFUL_DEPLOY=2024-01-15T14:30:00Z" >> /data/app/status
         echo "DB_CONNECTION_POOL=active" >> /data/app/status
         echo "CACHE_SIZE=512MB" >> /data/app/status
-        
+
         # 6. Permisos correctos
         chown -R vagrant:vagrant /data/app
-        
+
         # 7. Desmontar (ahora sí, los datos quedaron guardados permanentemente dentro de /dev/vdb)
         umount /data
 
@@ -91,7 +91,7 @@ EOF
         systemctl daemon-reload
         systemctl enable legacy-daemon.service
 
-        # 11. Generate the Ticket and Validator
+        # 11. Generate the Ticket
         cat <<'TICKET' > /home/vagrant/TICKET_INCIDENT-01.txt
 ======================================================================
 INCIDENT TICKET #01 - CRITICAL
@@ -102,14 +102,14 @@ REPORTED BY: NOC Team
 ======================================================================
 
 DESCRIPTION:
-"Hi team, last night we performed a scheduled kernel update and reboot 
-on the primary application server (node01). The monitoring dashboard 
-shows the server is online and responding to ping, but the 
-'app-backend' service is completely down. Users are reporting that 
-the application is unreachable. 
+"Hi team, last night we performed a scheduled kernel update and reboot
+on the primary application server (node01). The monitoring dashboard
+shows the server is online and responding to ping, but the
+'app-backend' service is completely down. Users are reporting that
+the application is unreachable.
 
-Additionally, we are seeing a red alert for a 'legacy-daemon' service 
-that is constantly failing and restarting. Please investigate and 
+Additionally, we are seeing a red alert for a 'legacy-daemon' service
+that is constantly failing and restarting. Please investigate and
 restore the application ASAP."
 
 EVALUATION CRITERIA:
@@ -122,11 +122,12 @@ ESTIMATED TIME: 60 - 75 minutes.
 ======================================================================
 TICKET
 
+        # 12. Generate the Validator
         cat <<'VALIDATOR' > /home/vagrant/validate.sh
 #!/bin/bash
 # Local validator for Incident #01
 
-CYAN='\\033[0;36m'; GREEN='\\033[0;32m'; RED='\\033[0;31m'; YELLOW='\\033[0;33m'; RESET='\\033[0m'
+CYAN='\\033[0;36m'; GREEN='\\033[0;32m'; RED='\\033[0;31m'; YELLOW='\\033[0;33m'; MAGENTA='\\033[0;35m'; RESET='\\033[0m'
 TOTAL=0; PASS_COUNT=0; FAIL_COUNT=0
 
 print_res() {
@@ -146,41 +147,62 @@ print_res() {
 
 echo -e "${MAGENTA}🔍 Validating Incident #01 Resolution...${RESET}"
 
-# Check 1: /data is mounted from /dev/vdb
+REAL_UUID=$(blkid -s UUID -o value /dev/vdb)
+
 out=$(mount | grep "/data")
 if echo "$out" | grep -q "/dev/vdb"; then ok=1; else ok=0; fi
 print_res 1 "Storage Mount" 3 $ok "/data is correctly mounted from /dev/vdb" "$out"
 
-# Check 2: /etc/fstab has the correct UUID
-REAL_UUID=$(blkid -s UUID -o value /dev/vdb)
 out=$(grep "/data" /etc/fstab)
 if echo "$out" | grep -q "$REAL_UUID"; then ok=1; else ok=0; fi
 print_res 2 "Persistent FSTAB" 3 $ok "/etc/fstab contains the correct UUID for /data" "$out"
 
-# Check 3: app-backend is running
 out=$(systemctl is-active app-backend.service)
 if [ "$out" == "active" ]; then ok=1; else ok=0; fi
 print_res 3 "App Backend Status" 3 $ok "app-backend.service is active" "$out"
 
-# Check 4: App data file exists and contains simulated data
 out=$(cat /data/app/status 2>/dev/null)
 if echo "$out" | grep -q "APP_VERSION=2.4.1"; then ok=1; else ok=0; fi
 print_res 4 "App Data Integrity" 3 $ok "Application data file contains simulated historical data" "$out"
 
-# Check 5: App successfully appended to the status file
 if echo "$out" | grep -q "App started successfully"; then ok=1; else ok=0; fi
 print_res 5 "App Runtime Log" 4 $ok "Application successfully wrote runtime log to status file" "$out"
 
 echo -e "\\n${CYAN}└─ SUMMARY ─${RESET}"
 echo -e "Passed: ${GREEN}$PASS_COUNT${RESET} | Failed: ${RED}$FAIL_COUNT${RESET} | Total Score: ${YELLOW}$TOTAL / 16${RESET}"
 VALIDATOR
-        chmod +x /home/vagrant/validate.sh
-        chown vagrant:vagrant /home/vagrant/validate.sh /home/vagrant/TICKET_INCIDENT-01.txt
+
+        # 13. Generate the break script (PHASE 2 — for Ansible remediation testing)
+        cat <<'BREAKSCRIPT' > /home/vagrant/break-fstab.sh
+#!/bin/bash
+# Re-breaks the environment WITHOUT destroying the VM.
+# Use this to test your Ansible playbook repeatedly and fast.
+set -e
+
+echo "💥 Re-injecting Incident #01 (fake UUID in fstab)..."
+
+# Stop the service and unmount cleanly if currently mounted
+systemctl stop app-backend.service 2>/dev/null || true
+umount /data 2>/dev/null || true
+
+# Remove any existing /data line from fstab (real or fake UUID)
+sed -i '/\\/data/d' /etc/fstab
+
+# Re-inject the fake UUID
+FAKE_UUID="12345678-1234-1234-1234-123456789abc"
+echo "UUID=$FAKE_UUID /data xfs defaults,nofail 0 0" >> /etc/fstab
+
+echo "✅ Incident re-injected. Run your Ansible playbook now, then validate.sh"
+BREAKSCRIPT
+
+        chmod +x /home/vagrant/validate.sh /home/vagrant/break-fstab.sh
+        chown vagrant:vagrant /home/vagrant/validate.sh /home/vagrant/break-fstab.sh /home/vagrant/TICKET_INCIDENT-01.txt
 
         echo "✅ Incident #01 deployed successfully."
         echo "🚀 vagrant ssh node01"
         echo "📝 Read the ticket: cat /home/vagrant/TICKET_INCIDENT-01.txt"
         echo "🔍 When done, validate: bash /home/vagrant/validate.sh"
+        echo "💥 To re-test Ansible remediation: sudo bash /home/vagrant/break-fstab.sh"
       SHELL
   end
 end
