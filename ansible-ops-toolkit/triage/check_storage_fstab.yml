@@ -1,0 +1,33 @@
+---
+- name: Triage de Almacenamiento, Espacio y Puntos de Montaje (fstab)
+  hosts: localhost
+  connection: local
+  become: true
+
+  tasks:
+
+    - name: 1. Inspeccionar servicios con dependencias de montaje (RequiresMountsFor)
+      ansible.builtin.shell: "systemctl list-units --type=service --state=failed,inactive | head -n 15"
+      register: failed_services
+      changed_when: false
+
+    - name: 2. Verificar integridad de /etc/fstab mediante findmnt
+      ansible.builtin.command: findmnt --verify
+      register: fstab_verify
+      failed_when: false
+      changed_when: false
+
+    - name: 3. Revisar espacio disponible en disco (df -h)
+      ansible.builtin.command: df -h -x tmpfs -x devtmpfs
+      register: disk_space
+      changed_when: false
+
+    - name: === INFORME DE TRIAJE: STORAGE & FSTAB ===
+      ansible.builtin.debug:
+        msg:
+          - "--- SERVICIOS AFECTADOS / INACTIVOS ---"
+          - "{{ failed_services.stdout_lines }}"
+          - "--- VERIFICACIÓN DE /etc/fstab (ERRORES [E]) ---"
+          - "{{ fstab_verify.stdout_lines }}"
+          - "--- USO DE ESPACIO EN DISCO ---"
+          - "{{ disk_space.stdout_lines }}"

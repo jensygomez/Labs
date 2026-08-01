@@ -1,0 +1,33 @@
+---
+- name: Triage de Estado General de Systemd y Logs de Error
+  hosts: localhost
+  connection: local
+  become: true
+
+  tasks:
+
+    - name: 1. Capturar todas las unidades en estado FAILED
+      ansible.builtin.command: systemctl list-units --state=failed --no-pager
+      register: failed_units
+      changed_when: false
+
+    - name: 2. Extraer los últimos 20 errores críticos del Journal del Kernel/Systemd
+      ansible.builtin.command: journalctl -p err..emerg -n 20 --no-pager
+      register: journal_errors
+      changed_when: false
+
+    - name: 3. Verificar si el sistema está en estado 'degraded' o 'running'
+      ansible.builtin.command: systemctl is-system-running
+      register: system_state
+      failed_when: false
+      changed_when: false
+
+    - name: === INFORME DE TRIAJE: SYSTEMD & LOGS ===
+      ansible.builtin.debug:
+        msg:
+          - "--- ESTADO GLOBAL DEL SISTEMA ---"
+          - "Estado: {{ system_state.stdout }}"
+          - "--- UNIDADES / SERVICIOS EN FALLA ---"
+          - "{{ failed_units.stdout_lines }}"
+          - "--- ÚLTIMOS LOGS DE ERROR CRÍTICO (JOURNALCTL) ---"
+          - "{{ journal_errors.stdout_lines }}"

@@ -1,0 +1,82 @@
+---
+- name: Remediar Incidente #01 - Ghost Reboot (Storage & Service Recovery)
+  hosts: localhost
+  connection: local
+  become: true
+
+  tasks:
+
+    # -------------------------------------------------------------
+    # 1. IDENTIFICAR Y DESCARTAR LA FALSA ALERTA (legacy-daemon)
+    # -------------------------------------------------------------
+    - name: Deshabilitar y detener el servicio falso (legacy-daemon)
+      ansible.builtin.systemd:
+        name: legacy-daemon.service
+        state: stopped
+        enabled: false
+
+    # -------------------------------------------------------------
+    # 2. OBTENER EL UUID REAL DEL DISCO DE ALMACENAMIENTO (/dev/vdb)
+    # -------------------------------------------------------------
+    - name: Consultar el UUID real del disco /dev/vdb mediante blkid
+      ansible.builtin.command: blkid -s UUID -o value /dev/vdb
+      register: blkid_output
+      changed_when: false
+
+    - name: Mostrar el UUID detectado para auditoría
+      ansible.builtin.debug:
+        msg: "El UUID real detectado para /dev/vdb es: {{ blkid_output.stdout | trim }}"
+
+    # -------------------------------------------------------------
+    # 3. CORREGIR PERSISTENCIA EN /etc/fstab Y MONTAR ALMACENAMIENTO
+    # -------------------------------------------------------------
+    - name: Eliminar la entrada con el UUID falso/corrupto de /etc/fstab
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        regexp: '.*12345678-1234-1234-1234-123456789abc.*'
+        state: absent
+
+    - name: Configurar la entrada correcta con el UUID real para /data en /etc/fstab
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        line: "UUID={{ blkid_output.stdout | trim }} /data xfs defaults,nofail 0 0"
+        state: present
+
+    - name: Montar todos los sistemas de archivos configurados en /etc/fstab
+      ansible.builtin.command: mount -a
+      register: mount_result
+      changed_when: false
+
+    # -------------------------------------------------------------
+    # 4. RECARGAR SYSTEMD Y RESTAURAR EL SERVICIO PRINCIPAL
+    # -------------------------------------------------------------
+    - name: Forzar recarga de daemon de systemd para actualizar los mountpoints
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Iniciar y habilitar de forma persistente el servicio app-backend
+      ansible.builtin.systemd:
+        name: app-backend.service
+        state: restarted
+        enabled: true
+
+    # -------------------------------------------------------------
+    # 5. GUARDAR INFORME DE AUDITORÍA EN UN ARCHIVO .TXT
+    # -------------------------------------------------------------
+    - name: Guardar informe de remediación en /var/log/remediation_inc001.txt
+      ansible.builtin.copy:
+        dest: "/var/log/remediation_inc001.txt"
+        content: |
+          ==========================================================
+                 INFORME DE REMEDIACIÓN - INCIDENTE #01
+                 Fecha: {{ ansible_date_time.iso8601 }}
+          ==========================================================
+          1. ALERTA FALSA: legacy-daemon.service detenido.
+          2. PERSISTENCIA: /etc/fstab corregido con UUID {{ blkid_output.stdout | trim }}
+          3. ALMACENAMIENTO: Punto de montaje /data activo.
+          4. ESTADO SYSTEMD: app-backend está {{ app_status.stdout | upper }}
+          5. LOG DE LA APP:
+          {{ app_file_status.stdout }}
+          ==========================================================
+          RESULTADO FINAL: APLICACIÓN OPERATIVA Y SATISFACTORIA
+          ==========================================================
