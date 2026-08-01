@@ -11,14 +11,10 @@
             "id": "97d1c2591e76e477",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "01 - Linux/Simulación de Incidentes (INC-SIM)/INC-001 — \"El servidor no volvió del reboot\" (Boot - Level 3).md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "INC-001 — \"El servidor no volvió del reboot\" (Boot - Level 3)"
+              "title": "Nova aba"
             }
           }
         ]
@@ -203,8 +199,14 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "97d1c2591e76e477",
+  "active": "71e502a7760e2595",
   "lastOpenFiles": [
+    "04 - Simulación de Incidentes (INC-SIM)/INC-002 — \"Disk full out of nowhere\" (Storage - Level 3).md",
+    "04 - Simulación de Incidentes (INC-SIM)/INC-001 — \"El servidor no volvió del reboot\" (Boot - Level 3).md",
+    "04 - Simulación de Incidentes (INC-SIM)",
+    "Simulación de Incidentes (INC-SIM)/INC-002 — \"Disk full out of nowhere\" (Storage - Level 3).md",
+    "Simulación de Incidentes (INC-SIM)/INC-001 — \"El servidor no volvió del reboot\" (Boot - Level 3).md",
+    "Simulación de Incidentes (INC-SIM)",
     "01 - Linux/Simulación de Incidentes (INC-SIM)/INC-002 — \"Disk full out of nowhere\" (Storage - Level 3).md",
     "01 - Linux/Simulación de Incidentes (INC-SIM)/INC-001 — \"El servidor no volvió del reboot\" (Boot - Level 3).md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/Simulacros/SIMULACRO LFCS 017 — \"Integrated Matrix C\".md",
@@ -228,10 +230,6 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/NET-003 - La Interfaz Fantasma – Fallo en el Levantamiento de Interfaces y Enrutamiento  - V1.0.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/NET-002 - La Paradoja Temporal – Deriva de Reloj y Fallo de Autenticación en Clúster.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/NET-001 - El Candado Oxidado – Bloqueo de Acceso SSH y Resolución de Nombres.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/USR-005 - Cerrando la Puerta Grande – SSH Hardening Básico en node02.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/USR-004 - Las Llaves del Reino – Gestión de Acceso SSH y Autenticación por Claves -  V1.0.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/USR-003 - La Bomba de Tenedores (Fork Bomb) – Límites de Recursos de Usuario.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/003 - Users and Groups/USR-002 -El Entorno Roto – Perfiles de Sistema y Plantillas de Usuario (etc skel) - V1.0.md",
     "mi-progreso/progreso.db-journal",
     "mi-progreso/funciones/menu_crud.sh~",
     "mi-progreso/progreso.db",
@@ -239,8 +237,6 @@
     "mi-progreso/funciones/menu_progreso.sh",
     "mi-progreso/funciones/menu_crud.sh",
     "mi-progreso/funciones/db_init.sh",
-    "mi-progreso/progreso.sh",
-    "mi-progreso/funciones",
     "TCC/Discilinas POS.jpeg",
     "LINUX/00 - qui/Sem título.canvas",
     "Advanced Bash Scripting/01 - Introduction.canvas",
