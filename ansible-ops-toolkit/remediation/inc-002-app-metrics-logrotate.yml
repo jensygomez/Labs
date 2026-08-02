@@ -47,13 +47,27 @@
         state: started
         enabled: true
 
-    # 6. Comprobar si el informe de auditoría ya existe en el disco
+    # 6. Captura del uso de disco para el informe
+    - name: Check partition usage after remediation
+      ansible.builtin.shell:
+        cmd: df -h /var/log/app-metrics | tail -n 1
+      register: disk_status
+      changed_when: false
+
+    # 7. Captura del estado del servicio para el informe
+    - name: Check status of app-metrics service
+      ansible.builtin.command:
+        cmd: systemctl is-active app-metrics.service
+      register: service_status
+      changed_when: false
+
+    # 8. Comprobar si el informe de auditoría ya existe en el disco
     - name: Check if remediation report already exists
       ansible.builtin.stat:
         path: /var/log/remediation_inc002.txt
       register: report_file
 
-    # 7. Crear el informe SOLO si no existe previa ejecución (Garantiza changed=0 en ejecuciones posteriores)
+    # 9. Crear el informe SOLO si no existe previa ejecución
     - name: Guardar informe de remediación en /var/log/remediation_inc002.txt
       ansible.builtin.copy:
         dest: "/var/log/remediation_inc002.txt"

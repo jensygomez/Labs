@@ -1,63 +1,69 @@
 ---
-- name: Storage & Disk Space Deep Triage
+- name: Master Storage, Inodes & Fstab Triage
   hosts: all
+  become: true
   gather_facts: true
-  tasks:
 
-    # 1. Chequeo de uso de Particiones (Bloques)
-    - name: Get partition disk usage
-      ansible.builtin.shell: |
-        df -hP
+  tasks:
+    # 1. Verificar errores de sintaxis u opciones en /etc/fstab
+    - name: 1. Verificar integridad de /etc/fstab mediante findmnt
+      ansible.builtin.command: findmnt --verify
+      register: fstab_verify
+      failed_when: false
+      changed_when: false
+
+    # 2. Capturar servicios caídos o inactivos
+    - name: 2. Inspeccionar servicios con posibles fallas o inactivos
+      ansible.builtin.shell: "systemctl list-units --type=service --state=failed,inactive | head -n 15"
+      register: failed_services
+      changed_when: false
+
+    # 3. Uso de espacio en disco (Bloques)
+    - name: 3. Revisar espacio disponible en disco (df -h)
+      ansible.builtin.command: df -hP -x tmpfs -x devtmpfs
       register: disk_usage
       changed_when: false
 
-    # 2. Chequeo de Inodos (Crucial cuando df -h muestra espacio pero no se pueden crear archivos)
-    - name: Get inode usage
-      ansible.builtin.shell: |
-        df -iP
+    # 4. Uso de Inodos
+    - name: 4. Revisar consumo de inodos (df -i)
+      ansible.builtin.command: df -iP -x tmpfs -x devtmpfs
       register: inode_usage
       changed_when: false
 
-    # 3. Detectar procesos reteniendo archivos eliminados (Espacio "fantasma" consumido)
-    - name: Check for unlinked/deleted open files holding space
-      ansible.builtin.shell: |
-        lsof +L1 2>/dev/null || true
+    # 5. Archivos fantasma (Borrados pero retenidos por descriptores en memoria)
+    - name: 5. Detectar procesos reteniendo archivos eliminados
+      ansible.builtin.shell: "lsof +L1 2>/dev/null || true"
       register: deleted_open_files
       changed_when: false
 
-    # 4. Encontrar los 10 archivos más grandes en /var/log
-    - name: Find top 10 largest files in /var/log
-      ansible.builtin.shell: |
-        find /var/log -type f -exec ls -s {} + 2>/dev/null | sort -n -r | head -n 10
+    # 6. Archivos más pesados en /var/log
+    - name: 6. Encontrar los 10 archivos más grandes en /var/log
+      ansible.builtin.shell: "find /var/log -type f -exec ls -s {} + 2>/dev/null | sort -n -r | head -n 10"
       register: top_large_files
       changed_when: false
 
-    # 5. Verificar estado de servicios que suelen fallar por I/O o Full Disk
-    - name: Check logrotate service/timer status
-      ansible.builtin.systemd:
-        name: "{{ item }}"
-      register: logrotate_status
-      ignore_errors: true
-      loop:
-        - logrotate.service
-        - logrotate.timer
-
-    # 6. Reporte Final de Triage
-    - name: Display Triage Summary
+    # 7. REPORTE FINAL UNIFICADO
+    - name: Display Master Triage Summary
       ansible.builtin.debug:
         msg:
           - "========================================================"
-          - "               STORAGE & DISK TRIAGE REPORT             "
+          - "         MASTER STORAGE, INODES & FSTAB TRIAGE          "
           - "========================================================"
-          - "--- [PARTITION USAGE (df -h)] ---"
+          - "--- [ 1. VERIFICACIÓN DE /etc/fstab (findmnt) ] ---"
+          - "{{ fstab_verify.stdout_lines if fstab_verify.stdout != '' else (fstab_verify.stderr_lines if fstab_verify.stderr != '' else 'fstab OK (Sin errores detectados).') }}"
+          - ""
+          - "--- [ 2. SERVICIOS AFECTADOS / INACTIVOS ] ---"
+          - "{{ failed_services.stdout_lines }}"
+          - ""
+          - "--- [ 3. USO DE ESPACIO EN DISCO (df -h) ] ---"
           - "{{ disk_usage.stdout_lines }}"
           - ""
-          - "--- [INODE USAGE (df -i)] ---"
+          - "--- [ 4. USO DE INODOS (df -i) ] ---"
           - "{{ inode_usage.stdout_lines }}"
           - ""
-          - "--- [DELETED FILES STILL OPEN IN MEMORY (lsof +L1)] ---"
-          - "{{ deleted_open_files.stdout_lines if deleted_open_files.stdout != '' else 'No open deleted files found.' }}"
+          - "--- [ 5. ARCHIVOS ELIMINADOS AÚN ABIERTOS EN MEMORIA (lsof +L1) ] ---"
+          - "{{ deleted_open_files.stdout_lines if deleted_open_files.stdout != '' else 'No hay archivos borrados retenidos en memoria.' }}"
           - ""
-          - "--- [TOP 10 LARGEST FILES IN /var/log] ---"
+          - "--- [ 6. TOP 10 ARCHIVOS MÁS GRANDES EN /var/log ] ---"
           - "{{ top_large_files.stdout_lines }}"
           - "========================================================"
