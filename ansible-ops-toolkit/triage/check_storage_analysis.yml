@@ -1,0 +1,63 @@
+---
+- name: Storage & Disk Space Deep Triage
+  hosts: all
+  gather_facts: true
+  tasks:
+
+    # 1. Chequeo de uso de Particiones (Bloques)
+    - name: Get partition disk usage
+      ansible.builtin.shell: |
+        df -hP
+      register: disk_usage
+      changed_when: false
+
+    # 2. Chequeo de Inodos (Crucial cuando df -h muestra espacio pero no se pueden crear archivos)
+    - name: Get inode usage
+      ansible.builtin.shell: |
+        df -iP
+      register: inode_usage
+      changed_when: false
+
+    # 3. Detectar procesos reteniendo archivos eliminados (Espacio "fantasma" consumido)
+    - name: Check for unlinked/deleted open files holding space
+      ansible.builtin.shell: |
+        lsof +L1 2>/dev/null || true
+      register: deleted_open_files
+      changed_when: false
+
+    # 4. Encontrar los 10 archivos más grandes en /var/log
+    - name: Find top 10 largest files in /var/log
+      ansible.builtin.shell: |
+        find /var/log -type f -exec ls -s {} + 2>/dev/null | sort -n -r | head -n 10
+      register: top_large_files
+      changed_when: false
+
+    # 5. Verificar estado de servicios que suelen fallar por I/O o Full Disk
+    - name: Check logrotate service/timer status
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+      register: logrotate_status
+      ignore_errors: true
+      loop:
+        - logrotate.service
+        - logrotate.timer
+
+    # 6. Reporte Final de Triage
+    - name: Display Triage Summary
+      ansible.builtin.debug:
+        msg:
+          - "========================================================"
+          - "               STORAGE & DISK TRIAGE REPORT             "
+          - "========================================================"
+          - "--- [PARTITION USAGE (df -h)] ---"
+          - "{{ disk_usage.stdout_lines }}"
+          - ""
+          - "--- [INODE USAGE (df -i)] ---"
+          - "{{ inode_usage.stdout_lines }}"
+          - ""
+          - "--- [DELETED FILES STILL OPEN IN MEMORY (lsof +L1)] ---"
+          - "{{ deleted_open_files.stdout_lines if deleted_open_files.stdout != '' else 'No open deleted files found.' }}"
+          - ""
+          - "--- [TOP 10 LARGEST FILES IN /var/log] ---"
+          - "{{ top_large_files.stdout_lines }}"
+          - "========================================================"
