@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "04 - Simulación de Incidentes (INC-SIM)/inc-003-network-firewalld-rule-missing.yml.md",
+                "file": "04 - Simulación de Incidentes (INC-SIM)/inc-001-boot-fstab-mount-failure.yml.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "inc-003-network-firewalld-rule-missing.yml"
+              "title": "inc-001-boot-fstab-mount-failure.yml"
             }
           }
         ]
@@ -205,8 +205,9 @@
   },
   "active": "97d1c2591e76e477",
   "lastOpenFiles": [
-    "04 - Simulación de Incidentes (INC-SIM)/inc-002-storage-var-log-disk-full.yml.md",
+    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Storage/STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente.md",
     "04 - Simulación de Incidentes (INC-SIM)/inc-003-network-firewalld-rule-missing.yml.md",
+    "04 - Simulación de Incidentes (INC-SIM)/inc-002-storage-var-log-disk-full.yml.md",
     "04 - Simulación de Incidentes (INC-SIM)/inc-001-boot-fstab-mount-failure.yml.md",
     "01 - Linux/Simulación de Incidentes (INC-SIM)/INC-001 — \"El servidor no volvió del reboot\" (Boot - Level 3).md",
     "04 - Simulación de Incidentes (INC-SIM)",
@@ -228,7 +229,6 @@
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Storage/STG-004 - El Puente Roto – NFS Server and Client y Exportaciones con Restricciones.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Storage/STG-003 - La Montaña Rusa de IO – Monitoreo de Performance y Cuellos de Botella - V1.0.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Storage/STG-002 - El Laberinto LVM – Volúmenes Lógicos que No Montan y VG Fragmentado - V1.0.md",
-    "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Storage/STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/PG-NET-001 - Recuperación de Infraestructura tras Migración de Red - V1.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/NET-005  - El Túnel Torcido – Fallo en Redirección de Puertos (DNAT) y Enmascaramiento (SNAT).md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/004 - Networking/NET-004 - El Muro Ciego – Reglas de Firewall Bloquean Tráfico Legítimo.md",

@@ -1,0 +1,17 @@
+---
+# inc-001-fix.yml
+#
+# Playbook de remediación para inc-001-boot-fstab-mount-failure.
+# Requisitos (ver incident.yml -> criterio_resolucion):
+#   - Debe ser IDEMPOTENTE: correrlo contra los 3 nodos de la flota
+#     no debe romper los 2 que ya están sanos.
+#   - No hardcodear el nombre del nodo afectado — el playbook debe
+#     detectar el problema, no asumirlo (usá `when` con una tarea de
+#     chequeo previo, no un `hosts: node02` fijo).
+#
+# TODO (Jensy): completar tareas de diagnóstico + remediación acá.
+
+- name: Remediar mount de /data en la flota de aplicación
+  hosts: fleet   # ver inventory/hosts.ini
+  become: true
+  tasks: []

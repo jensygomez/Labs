@@ -1,0 +1,76 @@
+id: inc-001
+slug: boot-fstab-mount-failure
+title: "Aplicación caída tras mantenimiento programado — servidor responde ping pero servicio no arranca"
+nivel: 3
+dominio: boot
+
+# --- Topología ---
+topologia:
+  nodos_flota: [node01, node02, node03]
+  nodo_storage: node04
+  os_asignacion: random          # resuelto por gremlin.sh en build-time, ver .topology-resolved.yml
+  fuerza_os: null
+
+# --- Selección del nodo afectado (NUNCA se declara a mano, la resuelve gremlin.sh) ---
+seleccion_nodo_afectado:
+  modo: random
+  cantidad_nodos_afectados: 1    # nivel 3 = nodo único, cascada corta
+  excluye: []
+  requiere_os: null              # este fallo es agnóstico de familia (aplica igual en Alma/Ubuntu)
+
+# --- Ticket estilo Jira/Zabbix (lo primero que ve Jensy, en frío) ---
+ticket:
+  proyecto: "OPS"
+  numero: "OPS-1042"
+  tipo: Incident
+  prioridad: P1
+  reportado_por: "Zabbix Monitoring"
+  hora: "03:14 AM"
+  resumen: "app-backend DOWN en fleet tras mantenimiento nocturno — servidor responde ping"
+  descripcion: |
+    Alerta automática: el servicio app-backend dejó de responder en uno de los
+    nodos de la flota de aplicación (node01/02/03 — el dashboard no especifica cuál,
+    el ping ICMP a los 3 nodos es exitoso). El mantenimiento programado de anoche
+    incluyó un reinicio de kernel en toda la flota. El balanceador está redirigiendo
+    tráfico a los nodos sanos, pero el cliente reporta lentitud intermitente porque
+    la flota está operando con capacidad reducida.
+  notas_turno_anterior: |
+    "Reboot post-mantenimiento OK en los 3 nodos, todos responden ping y SSH.
+    Vi una alarma de 'legacy-daemon' reiniciándose en loop en uno de los nodos,
+    lo reinicié manualmente con systemctl restart un par de veces pero sigue
+    cayendo — parece el bug conocido que ya reportamos en OPS-891, no debería
+    ser el causante de la caída de app-backend. Dejo el ticket abierto para
+    el próximo turno, no tuve tiempo de revisar más a fondo." — Turno Noche L1
+  cliente_impacto: "Latencia intermitente y errores 502 esporádicos en checkout"
+
+# --- Ocultos hasta después de resolver (uso del validador / autoevaluación) ---
+falsos_negativos:
+  - "legacy-daemon.service falla y reinicia en loop, pero es un problema preexistente
+     y no tiene relación causal con app-backend — el turno anterior perdió tiempo
+     ahí y no llegó a revisar el mount de /data."
+  - "systemctl status app-backend puede mostrar 'activating (auto-restart)' en vez
+     de 'failed' directo, porque el servicio tiene Restart=on-failure — a simple
+     vista puede parecer que 'está intentando arrancar' en vez de estar bloqueado
+     por un mount inexistente."
+
+causa_raiz: |
+  Durante el mantenimiento se agregó una entrada a /etc/fstab para el volumen
+  de datos de la aplicación, pero con un UUID incorrecto (copy-paste error o
+  disco reemplazado sin actualizar fstab). Al reiniciar, systemd no pudo montar
+  /data (el mount tiene 'nofail' así que el boot no se detiene, pero tampoco
+  monta). app-backend.service tiene RequiresMountsFor=/data, así que arranca
+  en loop de reintento sin poder inicializar.
+
+criterio_resolucion:
+  - "El filesystem correcto está montado en /data en el nodo afectado, con el UUID real del dispositivo"
+  - "/etc/fstab refleja el UUID correcto y persiste tras un reboot"
+  - "app-backend.service está 'active (running)' en los 3 nodos de la flota"
+  - "Existe un playbook de remediación idempotente en site/playbooks/inc-001-fix.yml"
+  - "El playbook fue ejecutado contra los 3 nodos sin romper los 2 sanos"
+  - "Existe un playbook de verificación en site/playbooks/inc-001-healthcheck.yml"
+
+entregables:
+  - diagnóstico manual documentado en runbook.md
+  - playbook de remediación (Ansible, idempotente) — site/playbooks/inc-001-fix.yml
+  - playbook de verificación post-fix — site/playbooks/inc-001-healthcheck.yml
+  - resumen en inglés formato STAR (al final de runbook.md)

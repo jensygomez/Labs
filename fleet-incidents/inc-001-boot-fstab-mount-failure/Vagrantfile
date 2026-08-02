@@ -1,0 +1,84 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+#
+# inc-001-boot-fstab-mount-failure
+# Topología estándar: node01-03 (flota) + node04 (storage)
+# El nodo afectado y la mezcla de OS se resuelven UNA VEZ por corrida,
+# antes de que Vagrant defina las VMs — así ni el propio Vagrantfile
+# "sabe" el resultado hasta que corrés `vagrant up`.
+
+require 'yaml'
+require 'securerandom'
+
+FLEET      = ["node01", "node02", "node03"]
+STORAGE    = "node04"
+OS_POOL    = ["almalinux/9", "generic/ubuntu2204"]
+TOPOLOGY_FILE = File.join(File.dirname(__FILE__), ".topology-resolved.yml")
+
+# --- Resolver topología (solo si no existe ya, para que un `vagrant up`
+#     posterior sobre la misma corrida no cambie el nodo afectado a mitad
+#     de troubleshooting) ---
+if File.exist?(TOPOLOGY_FILE)
+  topology = YAML.load_file(TOPOLOGY_FILE)
+else
+  topology = {
+    "affected_node" => FLEET.sample,
+    "os_per_node"   => {}
+  }
+  (FLEET + [STORAGE]).each do |node|
+    topology["os_per_node"][node] = OS_POOL.sample
+  end
+  File.write(TOPOLOGY_FILE, topology.to_yaml)
+end
+
+AFFECTED_NODE = topology["affected_node"]
+OS_PER_NODE   = topology["os_per_node"]
+
+Vagrant.configure("2") do |config|
+
+  (FLEET + [STORAGE]).each do |node|
+    config.vm.define node do |node_config|
+      node_config.vm.box = OS_PER_NODE[node]
+      node_config.vm.hostname = node
+
+      node_config.vm.network "private_network",
+        ip: "192.168.122.#{10 + FLEET.index(node).to_i rescue 14}",
+        libvirt__network_name: "mgmt-net",
+        libvirt__dhcp_enabled: false
+
+      node_config.vm.provider "libvirt" do |lv|
+        lv.memory = 1024   # 1GB — presupuesto validado en el hardware de Jensy
+        lv.cpus   = 1
+        lv.driver = "kvm"
+      end
+
+      # --- Provisioning base: IGUAL en los 3 nodos de la flota ---
+      # (para que no se pueda adivinar el nodo afectado solo mirando
+      #  qué VM tiene "código distinto")
+      if FLEET.include?(node)
+        node_config.vm.provision "shell",
+          path: "provision/common-app-baseline.sh",
+          privileged: true
+
+        # Solo el nodo elegido al azar recibe la inyección del gremlin.
+        # Este bloque es IDÉNTICO en estructura para los 3 — la diferencia
+        # la decide Ruby arriba, no un humano leyendo el archivo.
+        if node == AFFECTED_NODE
+          node_config.vm.provision "shell",
+            path: "gremlin/inject.sh",
+            privileged: true
+        end
+      end
+
+      # --- node04: storage, siempre sano, mismo rol en todos los labs ---
+      if node == STORAGE
+        node_config.vm.provider "libvirt" do |lv|
+          lv.storage :file, size: "2G", type: "qcow2"
+        end
+        node_config.vm.provision "shell",
+          path: "provision/storage-baseline.sh",
+          privileged: true
+      end
+    end
+  end
+end
