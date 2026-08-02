@@ -1,6 +1,6 @@
 ---
 - name: Remediar Incidente #01 - Ghost Reboot (Storage & Service Recovery)
-  hosts: all
+  hosts: fleet
   become: true
 
   tasks:
