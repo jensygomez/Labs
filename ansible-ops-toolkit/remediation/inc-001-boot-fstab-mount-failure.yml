@@ -1,7 +1,6 @@
 ---
 - name: Remediar Incidente #01 - Ghost Reboot (Storage & Service Recovery)
-  hosts: localhost
-  connection: local
+  hosts: all
   become: true
 
   tasks:

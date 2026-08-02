@@ -21,7 +21,7 @@
       failed_when: false
       changed_when: false
 
-    - name: === INFORME DE TRIAJE: SYSTEMD & LOGS ===
+    - name: === INFORME DE TRIAJE SYSTEMD & LOGS ===
       ansible.builtin.debug:
         msg:
           - "--- ESTADO GLOBAL DEL SISTEMA ---"
