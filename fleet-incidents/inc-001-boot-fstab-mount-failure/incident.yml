@@ -54,18 +54,22 @@ falsos_negativos:
      por un mount inexistente."
 
 causa_raiz: |
-  Durante el mantenimiento se agregó una entrada a /etc/fstab para el volumen
-  de datos de la aplicación, pero con un UUID incorrecto (copy-paste error o
-  disco reemplazado sin actualizar fstab). Al reiniciar, systemd no pudo montar
-  /data (el mount tiene 'nofail' así que el boot no se detiene, pero tampoco
-  monta). app-backend.service tiene RequiresMountsFor=/data, así que arranca
-  en loop de reintento sin poder inicializar.
+  Durante el mantenimiento nocturno, la entrada de /etc/fstab que monta
+  /data desde el nodo de storage (node04, vía NFS) fue reemplazada por
+  una entrada con dos problemas: (1) un typo en la IP del servidor NFS
+  (apunta a una IP que no existe en la red), y (2) falta la opción
+  '_netdev', que le indica a systemd que este mount depende de la red
+  y debe esperar a que esté disponible antes de intentar montar. Sin
+  esa opción, y con la IP incorrecta, el mount nunca se completa tras
+  el reboot. app-backend.service tiene RequiresMountsFor=/data, así
+  que no puede arrancar.
 
 criterio_resolucion:
-  - "El filesystem correcto está montado en /data en el nodo afectado, con el UUID real del dispositivo"
-  - "/etc/fstab refleja el UUID correcto y persiste tras un reboot"
+  - "/etc/fstab en el nodo afectado apunta a la IP correcta de node04 (192.168.122.14) y al export correcto (/srv/nfs/appdata)"
+  - "La entrada de fstab incluye '_netdev' (o equivalente x-systemd.automount) para que dependa correctamente de la red"
+  - "/data está montado en el nodo afectado y su contenido coincide con /srv/nfs/appdata en node04"
   - "app-backend.service está 'active (running)' en los 3 nodos de la flota"
-  - "Existe un playbook de remediación idempotente en site/playbooks/inc-001-fix.yml"
+  - "Existe un playbook de remediación idempotente en site/playbooks/inc-001-fix.yml que DETECTA el problema antes de corregirlo (no asume qué nodo está afectado)"
   - "El playbook fue ejecutado contra los 3 nodos sin romper los 2 sanos"
   - "Existe un playbook de verificación en site/playbooks/inc-001-healthcheck.yml"
 

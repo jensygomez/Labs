@@ -9,83 +9,148 @@ Script Vagrant: |-
   # -*- mode: ruby -*-
 
   # vi: set ft=ruby :
+  #
+  # INC-001: The Ghost Reboot (NFS mount failure)
+  # Topologia: node01/02/03 = flota de app | node04 = storage (NFS real)
+  #
+  # NO ABRAS este archivo linea por linea antes de terminar el triage si
+  # queres practicar diagnostico en frio -- el nodo afectado y la causa
+  # raiz estan mas abajo, marcados. Empeza siempre por el ticket.
+
+  IP = {
+    "node01" => "192.168.122.11",
+    "node02" => "192.168.122.12",
+    "node03" => "192.168.122.13",
+    "node04" => "192.168.122.14",
+  }
+  STORAGE_IP = IP["node04"]
+  STORAGE_EXPORT = "/srv/nfs/appdata"
 
   Vagrant.configure("2") do |config|
-    config.vm.box = "almalinux/9"
-    
-    # Single node topology for Incident #01
-    config.vm.define "node01" do |node_config|
-      node_config.vm.hostname = "node01"
-      
-      node_config.vm.network "private_network", 
-        ip: "192.168.122.11", 
-        libvirt__network_name: "mgmt-net",
-        libvirt__dhcp_enabled: false
 
-      node_config.vm.provider "libvirt" do |lv|
-        lv.memory = 4096
-        lv.cpus = 4
+    # ============================================================
+    # PROVISIONING GLOBAL -- igual en las 4 VMs
+    # ============================================================
+    config.vm.provision "shell", privileged: true, inline: <<-SHELL
+      echo "Instalando herramientas base: lsof, vim, bash-completion..."
+      if [ -f /etc/redhat-release ]; then
+        dnf install -y lsof vim bash-completion nfs-utils
+      else
+        apt-get update -y
+        apt-get install -y lsof vim bash-completion nfs-common
+      fi
+    SHELL
+
+    config.vm.provision "shell", privileged: false, inline: <<-SHELL
+      cat > ~/.vimrc <<-'VIMRC'
+  set number
+  syntax on
+  set expandtab
+  set tabstop=2
+  set shiftwidth=2
+  VIMRC
+    SHELL
+
+    # ============================================================
+    # NODE04 -- storage real, exporta /srv/nfs/appdata via NFS
+    # ============================================================
+    config.vm.define "node04" do |n|
+      n.vm.box = "almalinux/9"
+      n.vm.hostname = "node04"
+      n.vm.network "private_network",
+        ip: IP["node04"], libvirt__network_name: "mgmt-net", libvirt__dhcp_enabled: false
+      n.vm.provider "libvirt" do |lv|
+        lv.memory = 1024
+        lv.cpus = 1
         lv.driver = "kvm"
-        # Extra disk for the storage incident
-        lv.storage :file, :size => '1G', :type => 'qcow2'
       end
 
-        # ----- PROVISIONING: BREAKING THE SYSTEM -----
-        node_config.vm.provision "shell", privileged: true, inline: <<-SHELL
-          echo "🔧 Setting up Incident #01: The Ghost Reboot..."
-          
-          # 1. Formatear el disco extra (/dev/vdb)
-          mkfs.xfs -f /dev/vdb
-          REAL_UUID=$(blkid -s UUID -o value /dev/vdb)
-          
-          # 2. Crear el punto de montaje ANTES de montar
+      n.vm.provision "shell", privileged: true, inline: <<-SHELL
+        echo "==> node04: configurando export NFS..."
+        dnf install -y nfs-utils
+        mkdir -p #{STORAGE_EXPORT}
+        cat > #{STORAGE_EXPORT}/status <<-'STATUS'
+  APP_VERSION=2.4.1
+  LAST_SUCCESSFUL_DEPLOY=2024-01-15T14:30:00Z
+  DB_CONNECTION_POOL=active
+  CACHE_SIZE=512MB
+  STATUS
+        chown -R nobody:nobody #{STORAGE_EXPORT}
+        chmod -R 777 #{STORAGE_EXPORT}
+        echo "#{STORAGE_EXPORT} 192.168.122.0/24(rw,sync,no_subtree_check,no_root_squash)" > /etc/exports
+        systemctl enable --now rpcbind
+        exportfs -ra
+        systemctl enable --now nfs-server
+        if systemctl is-active --quiet firewalld; then
+          firewall-cmd --permanent --add-service=nfs --add-service=rpc-bind --add-service=mountd
+          firewall-cmd --reload
+        fi
+        echo "==> node04 listo. Export:"
+        exportfs -v
+      SHELL
+    end
+
+    # ============================================================
+    # FLOTA: node01, node02, node03 -- MISMO baseline en los 3
+    # ============================================================
+    ["node01", "node02", "node03"].each do |node|
+      config.vm.define node do |n|
+        n.vm.box = "almalinux/9"
+        n.vm.hostname = node
+        n.vm.network "private_network",
+          ip: IP[node], libvirt__network_name: "mgmt-net", libvirt__dhcp_enabled: false
+        n.vm.provider "libvirt" do |lv|
+          lv.memory = 1024
+          lv.cpus = 1
+          lv.driver = "kvm"
+        end
+
+        # --- Baseline identico en los 3: monta NFS, arranca app-backend
+        #     y el legacy-daemon (falso negativo). Corre SIEMPRE. ---
+        n.vm.provision "shell", privileged: true, inline: <<-SHELL
+          echo "==> #{node}: esperando a que node04 exporte NFS..."
+          RETRY=0
+          until showmount -e #{STORAGE_IP} 2>/dev/null | grep -q "#{STORAGE_EXPORT}"; do
+            RETRY=$((RETRY + 1))
+            if [ "$RETRY" -ge 30 ]; then
+              echo "FATAL: node04 no respondio a tiempo" >&2
+              exit 1
+            fi
+            sleep 5
+          done
+
           mkdir -p /data
+          echo "#{STORAGE_IP}:#{STORAGE_EXPORT} /data nfs defaults,_netdev,x-systemd.automount,x-systemd.mount-timeout=15 0 0" >> /etc/fstab
+          mount -a
 
-          # 3. Montar el disco
-          mount /dev/vdb /data
-          
-          # 4. Crear la estructura DENTRO del disco montado
-          mkdir -p /data/app
-          
-          # 5. Escribir los datos en el archivo
-          echo "APP_VERSION=2.4.1" > /data/app/status
-          echo "LAST_SUCCESSFUL_DEPLOY=2024-01-15T14:30:00Z" >> /data/app/status
-          echo "DB_CONNECTION_POOL=active" >> /data/app/status
-          echo "CACHE_SIZE=512MB" >> /data/app/status
-          
-          # 6. Permisos correctos
-          chown -R vagrant:vagrant /data/app
-          
-          # 7. Desmontar (ahora sí, los datos quedaron guardados permanentemente dentro de /dev/vdb)
-          umount /data
-
-          # 8. BREAK IT: Add a FAKE UUID to /etc/fstab with 'nofail'
-          FAKE_UUID="12345678-1234-1234-1234-123456789abc"
-          echo "UUID=$FAKE_UUID /data xfs defaults,nofail 0 0" >> /etc/fstab
-
-          # 9. Create the Critical App Service (Depends on /data)
-          cat <<EOF > /etc/systemd/system/app-backend.service
+          cat > /etc/systemd/system/app-backend.service <<-'UNIT'
   [Unit]
   Description=Critical App Backend
   RequiresMountsFor=/data
-  After=local-fs.target
+  After=remote-fs.target network-online.target
+  Wants=network-online.target
 
   [Service]
   Type=simple
-  ExecStart=/bin/bash -c 'if [ -f "/data/app/status" ]; then echo "[\$(date)] App started successfully" >> /data/app/status; sleep infinity; else echo "FATAL: /data/app/status not found" >&2; exit 1; fi'
+  ExecStart=/bin/bash -c 'if [ -f "/data/status" ]; then echo "[$(date)] App started successfully" >> /data/status; sleep infinity; else echo "FATAL: /data/status not found" >&2; exit 1; fi'
   Restart=on-failure
   RestartSec=5
 
   [Install]
   WantedBy=multi-user.target
-  EOF
-          systemctl daemon-reload
-          systemctl enable app-backend.service
+  UNIT
 
-          # 10. Create the FALSE NEGATIVE Service
-          cat <<EOF > /etc/systemd/system/legacy-daemon.service
+          mkdir -p /opt/legacy
+          cat > /opt/legacy/start.sh <<-'LEGACY'
+  #!/bin/bash
+  echo "legacy-daemon: simulando fallo conocido (OPS-891)..."
+  exit 1
+  LEGACY
+          chmod +x /opt/legacy/start.sh
+
+          cat > /etc/systemd/system/legacy-daemon.service <<-'UNIT'
   [Unit]
-  Description=Legacy Monitoring Daemon
+  Description=Legacy Monitoring Daemon (known issue OPS-891)
 
   [Service]
   Type=simple
@@ -95,103 +160,98 @@ Script Vagrant: |-
 
   [Install]
   WantedBy=multi-user.target
-  EOF
-          mkdir -p /opt/legacy
+  UNIT
+
           systemctl daemon-reload
-          systemctl enable legacy-daemon.service
+          systemctl enable --now legacy-daemon.service || true
+          systemctl enable --now app-backend.service || true
+          echo "==> #{node}: baseline completo."
+        SHELL
 
-          # 11. Generate the Ticket and Validator
-          cat <<'TICKET' > /home/vagrant/TICKET_INCIDENT-01.txt
+        # --- El ticket vive en cada nodo de la flota, como en produccion
+        #     real (no sabes por cual vas a entrar primero) ---
+        n.vm.provision "shell", privileged: false, inline: <<-SHELL
+          cat > ~/TICKET_INC-001.txt <<-'TICKET'
   ======================================================================
-  INCIDENT TICKET #01 - CRITICAL
+  OPS-1042 - INCIDENT - P1
   ======================================================================
-  TITLE: Server rebooted but application is completely unresponsive
-  SEVERITY: SEV-1
-  REPORTED BY: NOC Team
+  REPORTADO POR: Zabbix Monitoring        HORA: 03:14 AM
+  RESUMEN: app-backend DOWN en fleet tras mantenimiento nocturno
   ======================================================================
 
-  DESCRIPTION:
-  "Hi team, last night we performed a scheduled kernel update and reboot 
-  on the primary application server (node01). The monitoring dashboard 
-  shows the server is online and responding to ping, but the 
-  'app-backend' service is completely down. Users are reporting that 
-  the application is unreachable. 
+  DESCRIPCION:
+  Alerta automatica: el servicio app-backend dejo de responder en uno
+  de los nodos de la flota de aplicacion (node01/02/03 -- el dashboard
+  no especifica cual, el ping ICMP a los 3 nodos es exitoso). El
+  mantenimiento programado de anoche incluyo un reinicio de kernel en
+  toda la flota. El balanceador esta redirigiendo trafico a los nodos
+  sanos, pero el cliente reporta lentitud intermitente porque la flota
+  esta operando con capacidad reducida.
 
-  Additionally, we are seeing a red alert for a 'legacy-daemon' service 
-  that is constantly failing and restarting. Please investigate and 
-  restore the application ASAP."
+  NOTAS DEL TURNO ANTERIOR (L1 nocturno):
+  "Reboot post-mantenimiento OK en los 3 nodos, todos responden ping y
+  SSH. Vi una alarma de 'legacy-daemon' reiniciandose en loop en uno de
+  los nodos, lo reinicie manualmente con systemctl restart un par de
+  veces pero sigue cayendo -- parece el bug conocido que ya reportamos
+  en OPS-891, no deberia ser el causante de la caida de app-backend.
+  Dejo el ticket abierto para el proximo turno, no tuve tiempo de
+  revisar mas a fondo."
 
-  EVALUATION CRITERIA:
-  1. Identify and discard the false negative (legacy-daemon).
-  2. Identify the root cause preventing 'app-backend' from starting.
-  3. Restore the correct storage mount persistently.
-  4. Ensure 'app-backend' is running and healthy.
+  IMPACTO AL CLIENTE: Latencia intermitente y errores 502 esporadicos
+  en checkout.
 
-  ESTIMATED TIME: 60 - 75 minutes.
+  CRITERIO DE RESOLUCION:
+  1. Identificar y descartar la falsa alerta (legacy-daemon / OPS-891).
+  2. Identificar la causa real que impide arrancar app-backend.
+  3. Restaurar el mount de /data de forma persistente (sobrevive reboot).
+  4. app-backend activo en los 3 nodos de la flota.
+  5. Automatizar el fix en un playbook idempotente (site/playbooks/).
   ======================================================================
   TICKET
-
-          cat <<'VALIDATOR' > /home/vagrant/validate.sh
-  #!/bin/bash
-  # Local validator for Incident #01
-
-  CYAN='\\033[0;36m'; GREEN='\\033[0;32m'; RED='\\033[0;31m'; YELLOW='\\033[0;33m'; RESET='\\033[0m'
-  TOTAL=0; PASS_COUNT=0; FAIL_COUNT=0
-
-  print_res() {
-    local n=$1; local name=$2; local pts=$3; local pass=$4; local desc=$5; local out=$6
-    echo -e "\\n${CYAN}┌─ CHECK $n: $name ($pts pts) ─${RESET}"
-    echo -e "${YELLOW}   $desc${RESET}"
-    if [ "$pass" -eq 1 ]; then
-      echo -e "   ${GREEN}✅ +$pts pts${RESET}"
-      TOTAL=$((TOTAL + pts)); PASS_COUNT=$((PASS_COUNT + 1))
-    else
-      echo -e "   ${RED}❌ +0 pts${RESET}"
-      echo -e "   ${YELLOW}   Output obtained:${RESET}"
-      echo "$out" | head -n 3 | sed 's/^/   /'
-      FAIL_COUNT=$((FAIL_COUNT + 1))
-    fi
-  }
-
-  echo -e "${MAGENTA}🔍 Validating Incident #01 Resolution...${RESET}"
-
-  # Check 1: /data is mounted from /dev/vdb
-  out=$(mount | grep "/data")
-  if echo "$out" | grep -q "/dev/vdb"; then ok=1; else ok=0; fi
-  print_res 1 "Storage Mount" 3 $ok "/data is correctly mounted from /dev/vdb" "$out"
-
-  # Check 2: /etc/fstab has the correct UUID
-  REAL_UUID=$(blkid -s UUID -o value /dev/vdb)
-  out=$(grep "/data" /etc/fstab)
-  if echo "$out" | grep -q "$REAL_UUID"; then ok=1; else ok=0; fi
-  print_res 2 "Persistent FSTAB" 3 $ok "/etc/fstab contains the correct UUID for /data" "$out"
-
-  # Check 3: app-backend is running
-  out=$(systemctl is-active app-backend.service)
-  if [ "$out" == "active" ]; then ok=1; else ok=0; fi
-  print_res 3 "App Backend Status" 3 $ok "app-backend.service is active" "$out"
-
-  # Check 4: App data file exists and contains simulated data
-  out=$(cat /data/app/status 2>/dev/null)
-  if echo "$out" | grep -q "APP_VERSION=2.4.1"; then ok=1; else ok=0; fi
-  print_res 4 "App Data Integrity" 3 $ok "Application data file contains simulated historical data" "$out"
-
-  # Check 5: App successfully appended to the status file
-  if echo "$out" | grep -q "App started successfully"; then ok=1; else ok=0; fi
-  print_res 5 "App Runtime Log" 4 $ok "Application successfully wrote runtime log to status file" "$out"
-
-  echo -e "\\n${CYAN}└─ SUMMARY ─${RESET}"
-  echo -e "Passed: ${GREEN}$PASS_COUNT${RESET} | Failed: ${RED}$FAIL_COUNT${RESET} | Total Score: ${YELLOW}$TOTAL / 16${RESET}"
-  VALIDATOR
-          chmod +x /home/vagrant/validate.sh
-          chown vagrant:vagrant /home/vagrant/validate.sh /home/vagrant/TICKET_INCIDENT-01.txt
-
-          echo "✅ Incident #01 deployed successfully."
-          echo "🚀 vagrant ssh node01"
-          echo "📝 Read the ticket: cat /home/vagrant/TICKET_INCIDENT-01.txt"
-          echo "🔍 When done, validate: bash /home/vagrant/validate.sh"
+          echo "Ticket disponible en ~/TICKET_INC-001.txt"
         SHELL
+      end
     end
+
+    # ============================================================
+    # CAUSA RAIZ -- SOLO en el nodo elegido. NO LEER si queres
+    # practicar diagnostico en frio.
+    #
+    # Nodo afectado: node02
+    # Fallo: fstab reemplazado con IP incorrecta y SIN _netdev, asi que
+    # systemd intenta montar antes de que la red este lista, apuntando
+    # ademas a un servidor NFS que no existe.
+    # ============================================================
+    config.vm.define "node02" do |n|
+      n.vm.provision "shell", privileged: true, inline: <<-SHELL
+        echo "[FAULT] Rompiendo mount NFS en node02..."
+        umount /data 2>/dev/null || true
+        sed -i '/\\/data nfs/d' /etc/fstab
+        echo "192.168.122.99:#{STORAGE_EXPORT} /data nfs defaults 0 0" >> /etc/fstab
+        systemctl daemon-reload
+        mount -a || true
+        systemctl restart app-backend.service || true
+
+        # Script de re-inyeccion, para practicar el fix mas de una vez
+        # sin destruir la VM (mismo patron que ya usabas en inc-003)
+        cat > /home/vagrant/break-mount.sh <<-'BREAK'
+  #!/bin/bash
+  set -e
+  echo "Re-inyectando INC-001 en $(hostname)..."
+  umount /data 2>/dev/null || true
+  sed -i '/\\/data nfs/d' /etc/fstab
+  echo "192.168.122.99:/srv/nfs/appdata /data nfs defaults 0 0" >> /etc/fstab
+  systemctl daemon-reload
+  mount -a || true
+  systemctl restart app-backend.service || true
+  echo "Incidente re-inyectado. Corre tu playbook de fix y despues validate con el healthcheck."
+  BREAK
+        chmod +x /home/vagrant/break-mount.sh
+        chown vagrant:vagrant /home/vagrant/break-mount.sh
+        echo "[FAULT] Listo."
+      SHELL
+    end
+
   end
 ---
 [[Laboratorios del LFCS]]

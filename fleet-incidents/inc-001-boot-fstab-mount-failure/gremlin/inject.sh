@@ -1,43 +1,31 @@
 #!/usr/bin/env bash
 # gremlin/inject.sh — inc-001-boot-fstab-mount-failure
 #
-# NO ABRIR ESTE ARCHIVO DURANTE EL EJERCICIO. Es la causa raíz.
-# Solo corre en el nodo que Ruby eligió al azar en el Vagrantfile.
+# NO ABRIR ESTE ARCHIVO DURANTE EL EJERCICIO. Es la causa raiz.
 #
-# Fallo: /etc/fstab referencia un UUID que NO existe en el dispositivo real.
-# Con 'nofail' el boot no se cuelga, pero /data nunca se monta, y
-# app-backend.service (que depende de /data) queda reintentando sin arrancar.
+# Fallo: durante el "mantenimiento nocturno", alguien reemplazo la linea
+# de fstab por una con un typo en la IP del storage Y sin la opcion
+# '_netdev'. Sin _netdev, systemd no sabe que este mount depende de la
+# red, e intenta montarlo demasiado temprano en el boot (antes de que la
+# interfaz de red este arriba) ademas de apuntar a un servidor que no
+# existe. Resultado: el mount nunca se completa, y app-backend
+# (RequiresMountsFor=/data) queda sin poder arrancar.
 
 set -o errexit
 set -o pipefail
 
-echo "🔧 [gremlin] Rompiendo fstab en $(hostname)..."
+echo "[gremlin] Rompiendo el mount NFS en $(hostname)..."
 
-# El dispositivo /data ya fue armado por common-app-baseline.sh como
-# parte del filesystem raíz (no hay disco extra en este incidente nivel 3
-# — el "mount roto" es simulado con un bind/tmpfs que gremlin desmonta
-# y reemplaza por una entrada fstab con UUID inventado).
+umount /data 2>/dev/null || true
 
-# 1. Mover el contenido real a un lugar seguro temporalmente
-mv /data /data.real
+# Sacar la linea sana que puso common-app-baseline.sh
+sed -i '/\/data nfs/d' /etc/fstab
 
-# 2. Crear el punto de montaje vacío que fstab intentará usar
-mkdir -p /data
+# Meter la linea rota: IP con typo (122.14 -> 122.99) y SIN _netdev
+echo "192.168.122.99:/srv/nfs/appdata /data nfs defaults 0 0" >> /etc/fstab
 
-# 3. Insertar un UUID falso en fstab (simula disco reemplazado sin
-#    actualizar el fstab, o copy-paste error durante mantenimiento)
-FAKE_UUID="12345678-1234-1234-1234-123456789abc"
-echo "UUID=${FAKE_UUID} /data xfs defaults,nofail 0 0" >> /etc/fstab
-
-# 4. Reiniciar systemd para que intente montar (fallará silenciosamente
-#    por el nofail, dejando /data vacío)
 systemctl daemon-reload
 mount -a || true
-
-# 5. Reiniciar app-backend para que quede en su estado real de fallo
-#    (RequiresMountsFor=/data + directorio vacío = no encuentra status)
 systemctl restart app-backend.service || true
 
-echo "🔧 [gremlin] Fallo inyectado. Datos reales preservados en /data.real"
-echo "    (el playbook de fix real debe restaurar el mount correcto,"
-echo "     no simplemente mover /data.real de vuelta a mano)"
+echo "[gremlin] Fallo inyectado: fstab apunta a IP inexistente, sin _netdev."

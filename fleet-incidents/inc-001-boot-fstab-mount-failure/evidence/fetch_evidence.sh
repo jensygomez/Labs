@@ -24,12 +24,14 @@ for node in $NODES; do
     vagrant ssh "$node" -c "mount | grep data || echo 'NO_DATA_MOUNT'" 2>/dev/null
     echo "--- fstab (líneas de /data) ---"
     vagrant ssh "$node" -c "grep '/data' /etc/fstab || echo 'NO_FSTAB_ENTRY'" 2>/dev/null
+    echo "--- showmount -e contra node04 (192.168.122.14) ---"
+    vagrant ssh "$node" -c "showmount -e 192.168.122.14 || echo 'STORAGE_UNREACHABLE'" 2>/dev/null
     echo "--- systemctl status app-backend ---"
     vagrant ssh "$node" -c "systemctl status app-backend.service --no-pager -l || true" 2>/dev/null
     echo "--- systemctl status legacy-daemon ---"
     vagrant ssh "$node" -c "systemctl status legacy-daemon.service --no-pager -l || true" 2>/dev/null
-    echo "--- contenido /data/app/status ---"
-    vagrant ssh "$node" -c "cat /data/app/status 2>/dev/null || echo 'STATUS_FILE_NOT_FOUND'" 2>/dev/null
+    echo "--- contenido /data/status ---"
+    vagrant ssh "$node" -c "cat /data/status 2>/dev/null || echo 'STATUS_FILE_NOT_FOUND'" 2>/dev/null
     echo "###NODE_END:${node}"
     echo ""
   } >> "$OUTFILE"

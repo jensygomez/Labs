@@ -1,55 +1,83 @@
 #!/usr/bin/env bash
 # common-app-baseline.sh
-# Corre IGUAL en node01, node02 y node03 — sano o afectado, todos arrancan
-# con exactamente esta base. La diferencia (si la hay) la agrega gremlin/inject.sh
-# DESPUÉS, en un provisioner separado.
+# Corre IGUAL en node01, node02 y node03. Ahora monta /data via NFS real
+# desde node04, con un patron de espera/reintento — nunca asumimos que
+# el storage ya esta listo, lo confirmamos activamente antes de montar.
+# Esto es lo mismo que un depends_on + healthcheck de Docker Compose,
+# o un readinessProbe de Kubernetes, aplicado a VMs con Bash puro.
 
 set -o errexit
 set -o pipefail
 
-echo "==> Baseline: creando estructura de datos de la app..."
+STORAGE_IP="192.168.122.14"
+STORAGE_EXPORT="/srv/nfs/appdata"
 
-mkdir -p /data/app
-cat > /data/app/status <<EOF
-APP_VERSION=2.4.1
-LAST_SUCCESSFUL_DEPLOY=2024-01-15T14:30:00Z
-DB_CONNECTION_POOL=active
-CACHE_SIZE=512MB
-EOF
-chown -R vagrant:vagrant /data/app 2>/dev/null || true
+if [ -f /etc/redhat-release ]; then
+  OS_FAMILY="rhel"
+else
+  OS_FAMILY="debian"
+fi
+
+echo "==> Instalando cliente NFS (familia: ${OS_FAMILY})..."
+if [ "$OS_FAMILY" = "rhel" ]; then
+  dnf install -y nfs-utils
+else
+  apt-get update -y
+  apt-get install -y nfs-common
+fi
+
+echo "==> Esperando a que node04 (${STORAGE_IP}) exporte NFS..."
+MAX_RETRIES=30
+RETRY=0
+until showmount -e "$STORAGE_IP" 2>/dev/null | grep -q "$STORAGE_EXPORT"; do
+  RETRY=$((RETRY + 1))
+  if [ "$RETRY" -ge "$MAX_RETRIES" ]; then
+    echo "FATAL: node04 no respondio NFS despues de ${MAX_RETRIES} intentos" >&2
+    exit 1
+  fi
+  echo "    ...node04 todavia no responde, reintento ${RETRY}/${MAX_RETRIES}"
+  sleep 5
+done
+echo "==> node04 confirmado, export disponible."
+
+# --- Punto de montaje + fstab (esta es la version CORRECTA, sana) ---
+mkdir -p /data
+if ! grep -q "/data" /etc/fstab; then
+  echo "${STORAGE_IP}:${STORAGE_EXPORT} /data nfs defaults,_netdev,x-systemd.automount,x-systemd.mount-timeout=15 0 0" >> /etc/fstab
+fi
+
+mount -a
 
 echo "==> Baseline: creando app-backend.service..."
 
-cat > /etc/systemd/system/app-backend.service <<'EOF'
+cat > /etc/systemd/system/app-backend.service << 'UNIT_EOF'
 [Unit]
 Description=Critical App Backend
 RequiresMountsFor=/data
-After=local-fs.target
+After=remote-fs.target network-online.target
+Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/bin/bash -c 'if [ -f "/data/app/status" ]; then echo "[$(date)] App started successfully" >> /data/app/status; sleep infinity; else echo "FATAL: /data/app/status not found" >&2; exit 1; fi'
+ExecStart=/bin/bash -c 'if [ -f "/data/status" ]; then echo "[$(date)] App started successfully" >> /data/status; sleep infinity; else echo "FATAL: /data/status not found" >&2; exit 1; fi'
 Restart=on-failure
 RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
-EOF
+UNIT_EOF
 
 echo "==> Baseline: creando legacy-daemon.service (false negative preexistente)..."
 
 mkdir -p /opt/legacy
-cat > /opt/legacy/start.sh <<'EOF'
+cat > /opt/legacy/start.sh << 'LEGACY_EOF'
 #!/bin/bash
-# Daemon legacy con bug conocido (OPS-891) — falla y reinicia en loop
-# SIN relación con el incidente actual. Existe para practicar descarte
-# de ruido, no es parte de la causa raíz.
 echo "legacy-daemon: simulando fallo conocido..."
 exit 1
-EOF
+LEGACY_EOF
 chmod +x /opt/legacy/start.sh
 
-cat > /etc/systemd/system/legacy-daemon.service <<'EOF'
+cat > /etc/systemd/system/legacy-daemon.service << 'UNIT_EOF'
 [Unit]
 Description=Legacy Monitoring Daemon (known issue OPS-891)
 
@@ -61,7 +89,7 @@ RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
-EOF
+UNIT_EOF
 
 systemctl daemon-reload
 systemctl enable --now legacy-daemon.service || true
