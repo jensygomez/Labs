@@ -1,7 +1,6 @@
 ---
 - name: Triage de Estado General de Systemd y Logs de Error
-  hosts: localhost
-  connection: local
+  hosts: all_nodes
   become: true
 
   tasks:

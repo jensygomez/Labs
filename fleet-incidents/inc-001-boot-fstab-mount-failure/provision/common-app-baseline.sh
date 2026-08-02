@@ -65,6 +65,6 @@ EOF
 
 systemctl daemon-reload
 systemctl enable --now legacy-daemon.service || true
-systemctl enable app-backend.service
+systemctl enable --now app-backend.service || true
 
 echo "==> Baseline completo en $(hostname)."

@@ -41,8 +41,15 @@ Vagrant.configure("2") do |config|
       node_config.vm.box = OS_PER_NODE[node]
       node_config.vm.hostname = node
 
+      IP_MAP = {
+        "node01" => "192.168.122.11",
+        "node02" => "192.168.122.12",
+        "node03" => "192.168.122.13",
+        "node04" => "192.168.122.14",
+      }
+
       node_config.vm.network "private_network",
-        ip: "192.168.122.#{10 + FLEET.index(node).to_i rescue 14}",
+        ip: IP_MAP[node],
         libvirt__network_name: "mgmt-net",
         libvirt__dhcp_enabled: false
 
