@@ -1,0 +1,10 @@
+---
+# group_vars/all.yml
+ansible_user: vagrant
+ansible_port: 22
+ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+
+# La clave privada se construye dinámicamente, pero Ansible no permite jinja en vars estáticas.
+# En su lugar, podemos definir la ruta base y luego usar un set_fact en el playbook.
+# O simplemente pasar la ruta completa como variable extra.
+ansible_ssh_private_key_file: "{{ lab_private_key | default('/home/jensyg/Labs/fleet-incidents/inc-001-boot-fstab-mount-failure/.vagrant/machines/{{ inventory_hostname }}/libvirt/private_key') }}"

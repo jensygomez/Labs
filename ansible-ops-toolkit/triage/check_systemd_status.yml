@@ -1,57 +1,35 @@
 ---
-- name: Triage de Systemd y Logs (mejorado)
+- name: Triage Systemd y logs
   hosts: all_nodes
   become: true
   vars:
     journal_lines: 20
-    report_dir: /tmp/triage_reports
 
   tasks:
-    - name: Asegurar que existe el directorio de reportes local
-      delegate_to: localhost
-      run_once: true
-      ansible.builtin.file:
-        path: "{{ report_dir }}"
-        state: directory
-        mode: 0755
-
-    - name: Obtener estado de todos los servicios
+    - name: Obtener estado de servicios
       ansible.builtin.service_facts:
       register: services
 
-    - name: Filtrar servicios en estado 'failed'
+    - name: Listar servicios en failed
       ansible.builtin.set_fact:
         failed_services: "{{ services.ansible_facts.services | dict2items | selectattr('value.state', 'equalto', 'failed') | map(attribute='key') | list }}"
 
-    - name: Capturar estado del sistema
+    - name: Estado del sistema
       ansible.builtin.command: systemctl is-system-running
       register: system_state
       failed_when: false
       changed_when: false
 
-    - name: Obtener últimos errores del journal
+    - name: Últimos errores del journal
       ansible.builtin.command: "journalctl -p err..emerg -n {{ journal_lines }} --no-pager"
       register: journal_errors
       changed_when: false
-      ignore_errors: true   # si no hay logs, puede fallar pero no importa
+      ignore_errors: true
 
-    - name: Generar informe en el nodo
-      ansible.builtin.template:
-        src: triage_report.j2
-        dest: "/tmp/triage_{{ ansible_hostname }}.txt"
-        mode: 0644
-      vars:
-        report_content: |
-          === INFORME DE TRIAJE ===
-          Fecha: {{ ansible_date_time.iso8601 }}
-          Host: {{ ansible_hostname }}
-          Estado del sistema: {{ system_state.stdout | default('desconocido') }}
-          Servicios fallidos: {{ failed_services | join(', ') if failed_services else 'Ninguno' }}
-          --- Últimos {{ journal_lines }} errores críticos ---
-          {{ journal_errors.stdout | default('No se encontraron errores.') }}
-
-    - name: Recolectar informes al controlador
-      ansible.builtin.fetch:
-        src: "/tmp/triage_{{ ansible_hostname }}.txt"
-        dest: "{{ report_dir }}/"
-        flat: yes
+    - name: Mostrar informe
+      ansible.builtin.debug:
+        msg:
+          - "Host: {{ ansible_hostname }}"
+          - "Estado sistema: {{ system_state.stdout | default('desconocido') }}"
+          - "Servicios fallidos: {{ failed_services | join(', ') if failed_services else 'Ninguno' }}"
+          - "Logs: {{ journal_errors.stdout | default('Sin errores') }}"
