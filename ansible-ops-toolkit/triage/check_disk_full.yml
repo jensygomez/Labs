@@ -96,7 +96,51 @@
       when: "'/var/log/app-metrics' in nfs_mounts_current.stdout_lines"
 
     # ------------------------------------------------------------
-    # 3. INFORME ESTRUCTURADO EN PANTALLA
+    # 3. PRE-CALCULAR LAS LÍNEAS DE DIAGNÓSTICO (antes del informe)
+    #
+    # IMPORTANTE: dentro de una lista de "msg:", cada elemento es su
+    # propia plantilla Jinja CERRADA en sí misma. No se puede abrir
+    # un {% if %} en un elemento y su {% endif %} en otro -- Jinja
+    # espera el cierre en la MISMA línea/elemento. Por eso toda la
+    # lógica condicional se resuelve ACÁ, con set_fact, y el informe
+    # de abajo solo muestra el resultado ya calculado.
+    # ------------------------------------------------------------
+    - name: Calcular línea de diagnóstico -- uso de disco
+      ansible.builtin.set_fact:
+        diag_disco: >-
+          {{
+            ('⚠️  ALERTA: Partición(es) con uso > ' ~ disk_threshold ~ '%')
+            if (high_usage_partitions | default([]) | length > 0)
+            else '✅ Uso de disco dentro de lo normal.'
+          }}
+
+    - name: Calcular línea de diagnóstico -- estado del NFS
+      ansible.builtin.set_fact:
+        diag_nfs: >-
+          {{
+            '❌ CRÍTICO: NFS montado pero NO escribible (probablemente lleno).'
+            if (nfs_writable.stdout is defined and 'ERROR' in nfs_writable.stdout)
+            else (
+              '❌ CRÍTICO: NFS NO montado en el punto esperado.'
+              if (nfs_writable.stdout is defined and 'NO_MONTADO' in nfs_writable.stdout)
+              else '✅ NFS OK'
+            )
+          }}
+
+    - name: Calcular línea de diagnóstico -- crecimiento del log
+      ansible.builtin.set_fact:
+        diag_crecimiento: >-
+          {{
+            '🚨 ALERTA: Crecimiento de log > 1KB/segundo (posible runaway).'
+            if (
+              log_growth.stdout is defined
+              and (log_growth.stdout | regex_search('\\d+') | default('0')) | int > 1000
+            )
+            else '✅ Crecimiento normal'
+          }}
+
+    # ------------------------------------------------------------
+    # 4. INFORME ESTRUCTURADO EN PANTALLA
     # ------------------------------------------------------------
     - name: "=== INFORME DE TRIAJE DE DISCO ==="
       ansible.builtin.debug:
@@ -125,26 +169,16 @@
           - ""
           - "────────────────────────────────────────────────────────────"
           - "🔍 DIAGNÓSTICO RÁPIDO:"
-          - "{% if high_usage_partitions | length > 0 %}"
-          - "  ⚠️  ALERTA: Partición(es) con uso > {{ disk_threshold }}%"
-          - "{% else %}"
-          - "  ✅ Uso de disco dentro de lo normal."
-          - "{% endif %}"
-          - "{% if nfs_writable.stdout is defined and 'ERROR' in nfs_writable.stdout %}"
-          - "  ❌ CRÍTICO: NFS montado pero NO escribible (probablemente lleno)."
-          - "{% elif nfs_writable.stdout is defined and 'NO_MONTADO' in nfs_writable.stdout %}"
-          - "  ❌ CRÍTICO: NFS NO montado en el punto esperado."
-          - "{% endif %}"
-          - "{% if log_growth.stdout is defined and log_growth.stdout | regex_search('\\d+') | int > 1000 %}"
-          - "  🚨 ALERTA: Crecimiento de log > 1KB/segundo (posible runaway)."
-          - "{% endif %}"
+          - "{{ diag_disco }}"
+          - "{{ diag_nfs }}"
+          - "{{ diag_crecimiento }}"
           - ""
           - "╔══════════════════════════════════════════════════════════╗"
           - "║  Para remediación, revisa: remediation/inc-002-*.yml     ║"
           - "╚══════════════════════════════════════════════════════════╝"
 
     # ------------------------------------------------------------
-    # 4. OPCIONAL: Guardar informe en archivo local (útil para auditoría)
+    # 5. OPCIONAL: Guardar informe en archivo local (útil para auditoría)
     # ------------------------------------------------------------
     - name: Guardar informe en archivo local
       delegate_to: localhost
