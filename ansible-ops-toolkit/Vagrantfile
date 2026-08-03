@@ -3,9 +3,6 @@
 
 # INC-004: SSH Key-Based Authentication Failure (Directory Permissions Drift)
 # Topology: node01/02/03 = app fleet | node04 = deployment / automation server
-# DO NOT open this file line-by-line before finishing triage if you want 
-# to practice cold diagnostics -- the affected node and root cause are 
-# hardcoded below, marked. Always start from the ticket.
 
 IP = {
   "node01" => "192.168.122.11",
@@ -92,7 +89,7 @@ TESTSCRIPT
         # Wait for node04 public key to be ready before copying
         echo "==> #{node}: Waiting for node04 deployer public key..."
         RETRY=0
-        until vagrant SSH_AUTH_SOCK= ssh -o StrictHostKeyChecking=no -o ConnectTimeout=2 192.168.122.14 "cat /home/vagrant/.ssh/id_deployer.pub" > /tmp/deployer.pub 2>/dev/null; do
+        until ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=2 vagrant@192.168.122.14 "cat /home/vagrant/.ssh/id_deployer.pub" > /tmp/deployer.pub 2>/dev/null; do
           RETRY=$((RETRY + 1))
           if [ "$RETRY" -ge 30 ]; then
             echo "FATAL: node04 public key non-retrievable" >&2
@@ -170,7 +167,7 @@ TICKET
       cat > /home/vagrant/break-ssh-perms.sh <<-'BREAK'
 #!/bin/bash
 set -e
-echo "Re-injecting INC-004 (relaxing SSH directory permissions on $(hostname))..."
+echo "Re-injecting INC-004 (relaxing SSH directory permissions on $(hostname))...."
 
 chmod 777 /home/appuser
 chmod 777 /home/appuser/.ssh
