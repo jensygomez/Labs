@@ -19,6 +19,13 @@ STORAGE_IP = IP["node04"]
 STORAGE_EXPORT = "/srv/nfs/appdata"
 
 Vagrant.configure("2") do |config|
+  # === INYECTAR TU CLAVE SSH EN TODAS LAS VMs ===
+  config.ssh.insert_key = false
+  config.ssh.private_key_path = "~/.ssh/id_ed25519"
+  config.ssh.public_key_path = "~/.ssh/id_ed25519.pub"
+
+  # ... el resto de tu Vagrantfile ...
+
 
   # ============================================================
   # PROVISIONING GLOBAL -- igual en las 4 VMs
