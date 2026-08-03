@@ -1,0 +1,28 @@
+---
+- name: Remediacion Idempotente - Apertura de Puerto 8080 de Firewalld
+  hosts: fleet
+  become: true
+
+  tasks:
+    - name: Tarea 1 - Asegurar que el puerto 8080/tcp esté permitido en firewalld
+      ansible.posix.firewalld:
+        port: 8080/tcp
+        permanent: true
+        state: enabled
+        immediate: true
+      register: firewall_result
+
+    - name: Tarea 2 - Mostrar informe de remediacion
+      ansible.builtin.debug:
+        msg:
+          - "========================================================="
+          - "        INFORME DE REMEDIACION - INCIDENTE #003"
+          - "        Nodo: {{ ansible_hostname }}"
+          - "========================================================="
+          - " "
+          - "1. REGLA DE FIREWALL: Puerto 8080/tcp habilitado."
+          - "   Se realizó algun cambio en este nodo...?: {{ firewall_result.changed }}"
+          - " "
+          - "========================================================="
+          - " RESULTADO FINAL: PUERTO 8080 ABIERTO y FLOTA REPARADA"
+          - "========================================================="
