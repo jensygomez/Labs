@@ -205,9 +205,9 @@
   },
   "active": "97d1c2591e76e477",
   "lastOpenFiles": [
-    "04 - Simulación de Incidentes (INC-SIM)/inc-003-network-firewalld-rule-missing.yml.md",
     "04 - Simulación de Incidentes (INC-SIM)/inc-002-storage-var-log-disk-full.yml.md",
     "04 - Simulación de Incidentes (INC-SIM)/inc-001-boot-fstab-mount-failure.yml.md",
+    "04 - Simulación de Incidentes (INC-SIM)/inc-003-network-firewalld-rule-missing.yml.md",
     "01 - Linux/01 - Linux Foundation Certified System Administrator (LFCS) Certification/Playgrounds/005 - Storage/STG-001 - El Disco Olvidado – Particionamiento, Filesystems y Montaje Persistente.md",
     "01 - Linux/Simulación de Incidentes (INC-SIM)/INC-001 — \"El servidor no volvió del reboot\" (Boot - Level 3).md",
     "04 - Simulación de Incidentes (INC-SIM)",
