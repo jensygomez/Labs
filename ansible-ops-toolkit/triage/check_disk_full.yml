@@ -1,114 +1,181 @@
 ---
-- name: Triage de Problemas de Disco (Disk Full / NFS / Logs)
+- name: Triaje de Problemas de Disco (Disk Full / NFS / Logs)
   hosts: all_nodes
   become: true
-  gather_facts: true   # Necesario para obtener información de discos y montajes
-
   vars:
-    # Directorios críticos a revisar (puedes ampliarlos)
-    critical_dirs:
-      - /
-      - /var
-      - /var/log
-      - /var/log/app-metrics   # Específico de nuestro incidente
-      - /srv/nfs               # Posible punto de montaje NFS
-    # Tamaño mínimo para considerar un archivo "grande" (en MB)
-    large_file_threshold: 50
+    disk_threshold: 80           # Alerta si uso > 80%
+    large_file_size: 100         # Archivos > 100MB
+    nfs_mounts:                  # Puntos de montaje NFS a revisar
+      - /var/log/app-metrics
 
   tasks:
-
-    # 1. INFORMACIÓN GENERAL DEL SISTEMA
-    - name: "=== INFORMACIÓN GENERAL ==="
-      ansible.builtin.debug:
-        msg: "Host: {{ ansible_hostname }} - Fecha: {{ ansible_date_time.iso8601 }}"
-
-    # 2. USO DE DISCO EN DIRECTORIOS CRÍTICOS
-    - name: "=== USO DE DISCO EN DIRECTORIOS CRÍTICOS ==="
-      ansible.builtin.debug:
-        msg: "{{ item }}"
-      loop: "{{ critical_dirs }}"
-      vars:
-        # Obtenemos el uso de disco para cada directorio
-        df_output: "{{ lookup('pipe', 'df -h ' ~ item ~ ' 2>/dev/null') }}"
-      loop_control:
-        label: "{{ item }}"
-      when: item is not none
+    # ------------------------------------------------------------
+    # 1. RECOPILACIÓN DE DATOS
+    # ------------------------------------------------------------
+    - name: Obtener uso de disco de todas las particiones
+      ansible.builtin.shell:
+        cmd: df -h --output=target,used,size,use% | tail -n +2 | sed 's/  */ /g'
+      register: disk_usage
+      changed_when: false
       ignore_errors: true
 
-    # 3. LISTAR ARCHIVOS GRANDES EN DIRECTORIOS CLAVE
-    - name: "=== ARCHIVOS GRANDES (> {{ large_file_threshold }} MB) EN /var/log Y SUBDIRECTORIOS ==="
+    - name: Obtener puntos de montaje NFS
       ansible.builtin.shell:
-        cmd: |
-          find /var/log -type f -size +{{ large_file_threshold }}M -exec ls -lh {} \; 2>/dev/null || echo "No large files found"
+        cmd: mount -t nfs,nfs4 | awk '{print $3}'
+      register: nfs_mounts_current
+      changed_when: false
+      ignore_errors: true
+
+    - name: Buscar archivos grandes (> {{ large_file_size }}MB) en /var/log
+      ansible.builtin.find:
+        paths: /var/log
+        file_type: file
+        size: "{{ large_file_size }}m"
+        recurse: yes
       register: large_files
+      ignore_errors: true
+
+    - name: Verificar proceso app-metrics-writer.sh
+      ansible.builtin.shell:
+        cmd: ps aux | grep app-metrics-writer | grep -v grep || echo "No running"
+      register: metrics_process
       changed_when: false
       ignore_errors: true
 
-    - name: Mostrar archivos grandes
-      ansible.builtin.debug:
-        msg: "{{ large_files.stdout_lines }}"
-      when: large_files.stdout_lines | length > 0
-
-    # 4. IDENTIFICAR PROCESOS QUE ESCRIBEN EN /var/log (o en montajes NFS)
-    - name: "=== PROCESOS ESCRIBIENDO EN /var/log (usando lsof) ==="
+    - name: Verificar tasa de crecimiento del log (últimos 30 segundos)
       ansible.builtin.shell:
         cmd: |
-          lsof +D /var/log 2>/dev/null | head -20 || echo "No processes found"
-      register: lsof_log
+          LOGFILE="/var/log/app-metrics/metrics.log"
+          if [ -f "$LOGFILE" ]; then
+            SIZE_BEFORE=$(stat -c %s "$LOGFILE")
+            sleep 30
+            SIZE_AFTER=$(stat -c %s "$LOGFILE")
+            GROWTH=$(( ($SIZE_AFTER - $SIZE_BEFORE) / 30 ))
+            echo "Crecimiento: ${GROWTH} bytes/segundo"
+          else
+            echo "Archivo de log no existe"
+          fi
+      register: log_growth
       changed_when: false
       ignore_errors: true
+      when: "'/var/log/app-metrics' in nfs_mounts_current.stdout_lines"
 
-    - name: Mostrar procesos
-      ansible.builtin.debug:
-        msg: "{{ lsof_log.stdout_lines }}"
-      when: lsof_log.stdout_lines | length > 0
+    # ------------------------------------------------------------
+    # 2. ANÁLISIS Y DETECCIÓN DE PROBLEMAS
+    # ------------------------------------------------------------
+    - name: Detectar particiones con uso > {{ disk_threshold }}%
+      ansible.builtin.set_fact:
+        high_usage_partitions: >-
+          {{
+            disk_usage.stdout_lines
+            | select('search', '([0-9]+)%')
+            | map('regex_replace', '.* ([0-9]+)%.*', '\\1')
+            | map('int')
+            | select('>', disk_threshold)
+            | list
+          }}
+      when: disk_usage.stdout is defined
 
-    # 5. VERIFICAR ESTADO DE NFS (si existe)
-    - name: "=== ESTADO DE MONTURAS NFS ==="
+    - name: Detectar si el NFS está montado y escribible
       ansible.builtin.shell:
         cmd: |
-          mount -t nfs,nfs4 2>/dev/null | awk '{print $3}' | while read m; do
-            echo "Montura: $m"
-            df -h $m 2>/dev/null | tail -1
-            echo "---"
-          done
-      register: nfs_mounts
+          MOUNT_POINT="/var/log/app-metrics"
+          if mount | grep -q "$MOUNT_POINT"; then
+            if touch "$MOUNT_POINT/.write_test" 2>/dev/null; then
+              rm -f "$MOUNT_POINT/.write_test"
+              echo "OK - Montado y escribible"
+            else
+              echo "ERROR - Montado pero NO escribible"
+            fi
+          else
+            echo "NO_MONTADO"
+          fi
+      register: nfs_writable
       changed_when: false
       ignore_errors: true
+      when: "'/var/log/app-metrics' in nfs_mounts_current.stdout_lines"
 
-    - name: Mostrar información de NFS
-      ansible.builtin.debug:
-        msg: "{{ nfs_mounts.stdout_lines }}"
-      when: nfs_mounts.stdout_lines | length > 0
-
-    # 6. VERIFICAR SI HAY ERRORES DE "NO SPACE" EN EL JOURNAL RECIENTE
-    - name: "=== ERRORES DE DISCO LLENO (journalctl) ==="
-      ansible.builtin.command:
-        cmd: journalctl -p err -g "No space left on device" -n 10 --no-pager
-      register: disk_errors
-      changed_when: false
-      ignore_errors: true
-
-    - name: Mostrar errores de disco
-      ansible.builtin.debug:
-        msg: "{{ disk_errors.stdout_lines }}"
-      when: disk_errors.stdout_lines | length > 0
-
-    # 7. RESUMEN VISUAL (BONITO) CON EMOJIS
-    - name: "=== RESUMEN FINAL ==="
+    # ------------------------------------------------------------
+    # 3. INFORME ESTRUCTURADO EN PANTALLA
+    # ------------------------------------------------------------
+    - name: "=== INFORME DE TRIAJE DE DISCO ==="
       ansible.builtin.debug:
         msg:
-          - "✅ **TRIAGE COMPLETADO** para {{ ansible_hostname }}"
-          - "📌 **Uso de disco en directorios críticos:**"
-          - "  - /: {{ lookup('pipe', 'df -h / | tail -1 | awk \"{print \\$5}\"') }} usado ({{ lookup('pipe', 'df -h / | tail -1 | awk \"{print \\$4}\"') }} libre)"
-          - "  - /var/log: {{ lookup('pipe', 'df -h /var/log 2>/dev/null | tail -1 | awk \"{print \\$5}\"') }} usado ({{ lookup('pipe', 'df -h /var/log 2>/dev/null | tail -1 | awk \"{print \\$4}\"') }} libre)"
-          - "  - /var/log/app-metrics: {{ lookup('pipe', 'df -h /var/log/app-metrics 2>/dev/null | tail -1 | awk \"{print \\$5}\"') }} usado ({{ lookup('pipe', 'df -h /var/log/app-metrics 2>/dev/null | tail -1 | awk \"{print \\$4}\"') }} libre)"
-          - "📂 **Archivos grandes (> {{ large_file_threshold }}MB) en /var/log:**"
-          - "  {{ large_files.stdout_lines | default(['Ninguno']) }}"
-          - "🔄 **Procesos escribiendo en /var/log:**"
-          - "  {{ lsof_log.stdout_lines | default(['Ninguno']) }}"
-          - "📡 **Monturas NFS:**"
-          - "  {{ nfs_mounts.stdout_lines | default(['No hay NFS']) }}"
-          - "💥 **Errores de espacio en disco:**"
-          - "  {{ disk_errors.stdout_lines | default(['Ninguno']) }}"
-      run_once: false   # se ejecuta en cada nodo
+          - "╔══════════════════════════════════════════════════════════╗"
+          - "║         INFORME DE DISCO - {{ ansible_hostname }}         ║"
+          - "╚══════════════════════════════════════════════════════════╝"
+          - ""
+          - "📊 USO DE DISCO:"
+          - "{{ disk_usage.stdout_lines | default(['No disponible']) }}"
+          - ""
+          - "📂 ARCHIVOS GRANDES (> {{ large_file_size }}MB) EN /var/log:"
+          - "{{ large_files.files | map(attribute='path') | list | default(['Ninguno']) }}"
+          - ""
+          - "🔗 PUNTOS DE MONTAJE NFS DETECTADOS:"
+          - "{{ nfs_mounts_current.stdout_lines | default(['Ninguno']) }}"
+          - ""
+          - "✍️ ESTADO DE ESCRITURA EN NFS:"
+          - "{{ nfs_writable.stdout | default('N/A') }}"
+          - ""
+          - "🔄 PROCESO DE LOGGING:"
+          - "{{ metrics_process.stdout_lines | default(['No detectado']) }}"
+          - ""
+          - "📈 TASA DE CRECIMIENTO DEL LOG:"
+          - "{{ log_growth.stdout | default('N/A') }}"
+          - ""
+          - "────────────────────────────────────────────────────────────"
+          - "🔍 DIAGNÓSTICO RÁPIDO:"
+          - "{% if high_usage_partitions | length > 0 %}"
+          - "  ⚠️  ALERTA: Partición(es) con uso > {{ disk_threshold }}%"
+          - "{% else %}"
+          - "  ✅ Uso de disco dentro de lo normal."
+          - "{% endif %}"
+          - "{% if nfs_writable.stdout is defined and 'ERROR' in nfs_writable.stdout %}"
+          - "  ❌ CRÍTICO: NFS montado pero NO escribible (probablemente lleno)."
+          - "{% elif nfs_writable.stdout is defined and 'NO_MONTADO' in nfs_writable.stdout %}"
+          - "  ❌ CRÍTICO: NFS NO montado en el punto esperado."
+          - "{% endif %}"
+          - "{% if log_growth.stdout is defined and log_growth.stdout | regex_search('\\d+') | int > 1000 %}"
+          - "  🚨 ALERTA: Crecimiento de log > 1KB/segundo (posible runaway)."
+          - "{% endif %}"
+          - ""
+          - "╔══════════════════════════════════════════════════════════╗"
+          - "║  Para remediación, revisa: remediation/inc-002-*.yml     ║"
+          - "╚══════════════════════════════════════════════════════════╝"
+
+    # ------------------------------------------------------------
+    # 4. OPCIONAL: Guardar informe en archivo local (útil para auditoría)
+    # ------------------------------------------------------------
+    - name: Guardar informe en archivo local
+      delegate_to: localhost
+      run_once: true
+      ansible.builtin.copy:
+        content: |
+          ========================================
+          INFORME DE TRIAJE DE DISCO
+          Fecha: {{ ansible_date_time.iso8601 }}
+          ========================================
+
+          {% for host in ansible_play_hosts %}
+          --- {{ host }} ---
+          USO DE DISCO:
+          {{ hostvars[host].disk_usage.stdout | default('No disponible') }}
+
+          ARCHIVOS GRANDES:
+          {{ hostvars[host].large_files.files | map(attribute='path') | list | default('Ninguno') }}
+
+          NFS MONTADO:
+          {{ hostvars[host].nfs_mounts_current.stdout | default('Ninguno') }}
+
+          ESCRITURA NFS:
+          {{ hostvars[host].nfs_writable.stdout | default('N/A') }}
+
+          PROCESO DE LOGGING:
+          {{ hostvars[host].metrics_process.stdout | default('No detectado') }}
+
+          CRECIMIENTO LOG:
+          {{ hostvars[host].log_growth.stdout | default('N/A') }}
+
+          {% endfor %}
+        dest: "/tmp/disk_triage_report_{{ ansible_date_time.epoch }}.txt"
+        mode: 0644
