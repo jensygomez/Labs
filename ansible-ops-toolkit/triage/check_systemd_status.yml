@@ -1,32 +1,57 @@
 ---
-- name: Triage de Estado General de Systemd y Logs de Error
+- name: Triage de Systemd y Logs (mejorado)
   hosts: all_nodes
   become: true
+  vars:
+    journal_lines: 20
+    report_dir: /tmp/triage_reports
 
   tasks:
+    - name: Asegurar que existe el directorio de reportes local
+      delegate_to: localhost
+      run_once: true
+      ansible.builtin.file:
+        path: "{{ report_dir }}"
+        state: directory
+        mode: 0755
 
-    - name: 1. Capturar todas las unidades en estado FAILED
-      ansible.builtin.command: systemctl list-units --state=failed --no-pager
-      register: failed_units
-      changed_when: false
+    - name: Obtener estado de todos los servicios
+      ansible.builtin.service_facts:
+      register: services
 
-    - name: 2. Extraer los últimos 20 errores críticos del Journal del Kernel/Systemd
-      ansible.builtin.command: journalctl -p err..emerg -n 20 --no-pager
-      register: journal_errors
-      changed_when: false
+    - name: Filtrar servicios en estado 'failed'
+      ansible.builtin.set_fact:
+        failed_services: "{{ services.ansible_facts.services | dict2items | selectattr('value.state', 'equalto', 'failed') | map(attribute='key') | list }}"
 
-    - name: 3. Verificar si el sistema está en estado 'degraded' o 'running'
+    - name: Capturar estado del sistema
       ansible.builtin.command: systemctl is-system-running
       register: system_state
       failed_when: false
       changed_when: false
 
-    - name: === INFORME DE TRIAJE SYSTEMD & LOGS ===
-      ansible.builtin.debug:
-        msg:
-          - "--- ESTADO GLOBAL DEL SISTEMA ---"
-          - "Estado: {{ system_state.stdout }}"
-          - "--- UNIDADES / SERVICIOS EN FALLA ---"
-          - "{{ failed_units.stdout_lines }}"
-          - "--- ÚLTIMOS LOGS DE ERROR CRÍTICO (JOURNALCTL) ---"
-          - "{{ journal_errors.stdout_lines }}"
+    - name: Obtener últimos errores del journal
+      ansible.builtin.command: "journalctl -p err..emerg -n {{ journal_lines }} --no-pager"
+      register: journal_errors
+      changed_when: false
+      ignore_errors: true   # si no hay logs, puede fallar pero no importa
+
+    - name: Generar informe en el nodo
+      ansible.builtin.template:
+        src: triage_report.j2
+        dest: "/tmp/triage_{{ ansible_hostname }}.txt"
+        mode: 0644
+      vars:
+        report_content: |
+          === INFORME DE TRIAJE ===
+          Fecha: {{ ansible_date_time.iso8601 }}
+          Host: {{ ansible_hostname }}
+          Estado del sistema: {{ system_state.stdout | default('desconocido') }}
+          Servicios fallidos: {{ failed_services | join(', ') if failed_services else 'Ninguno' }}
+          --- Últimos {{ journal_lines }} errores críticos ---
+          {{ journal_errors.stdout | default('No se encontraron errores.') }}
+
+    - name: Recolectar informes al controlador
+      ansible.builtin.fetch:
+        src: "/tmp/triage_{{ ansible_hostname }}.txt"
+        dest: "{{ report_dir }}/"
+        flat: yes
