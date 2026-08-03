@@ -2,9 +2,7 @@
 - name: Remediar Incidente #01 - Ghost Reboot (Storage & Service Recovery)
   hosts: fleet
   become: true
-
   tasks:
-
     # -------------------------------------------------------------
     # 1. IDENTIFICAR Y DESCARTAR LA FALSA ALERTA (legacy-daemon)
     # -------------------------------------------------------------
@@ -15,49 +13,52 @@
         enabled: false
 
     # -------------------------------------------------------------
-    # 2. OBTENER EL UUID REAL DEL DISCO DE ALMACENAMIENTO (/dev/vdb)
+    # 2. ASEGURAR LA RUTA CORRECTA PARA /data (detecta Y corrige)
     # -------------------------------------------------------------
-    - name: Consultar el UUID real del disco /dev/vdb mediante blkid
-      ansible.builtin.command: blkid -s UUID -o value /dev/vdb
-      register: blkid_output
-      changed_when: false
-
-    - name: Mostrar el UUID detectado para auditoría
-      ansible.builtin.debug:
-        msg: "El UUID real detectado para /dev/vdb es: {{ blkid_output.stdout | trim }}"
-
-    # -------------------------------------------------------------
-    # 3. CORREGIR PERSISTENCIA EN /etc/fstab Y MONTAR ALMACENAMIENTO
-    # -------------------------------------------------------------
-    - name: Eliminar la entrada con el UUID falso/corrupto de /etc/fstab
+    - name: Asegurar que /etc/fstab tenga la linea NFS correcta para /data
       ansible.builtin.lineinfile:
         path: /etc/fstab
-        regexp: '.*12345678-1234-1234-1234-123456789abc.*'
-        state: absent
-
-    - name: Configurar la entrada correcta con el UUID real para /data en /etc/fstab
-      ansible.builtin.lineinfile:
-        path: /etc/fstab
-        line: "UUID={{ blkid_output.stdout | trim }} /data xfs defaults,nofail 0 0"
+        regexp: '.*:/srv/nfs/appdata\s+/data\s+nfs.*'
+        line: "192.168.122.14:/srv/nfs/appdata /data nfs defaults,_netdev,x-systemd.automount,x-systemd.mount-timeout=15 0 0"
         state: present
+      register: fstab_fix
 
-    - name: Montar todos los sistemas de archivos configurados en /etc/fstab
+    - name: Montar /data si la entrada de fstab cambio
       ansible.builtin.command: mount -a
+      when: fstab_fix.changed
       register: mount_result
       changed_when: false
 
     # -------------------------------------------------------------
-    # 4. RECARGAR SYSTEMD Y RESTAURAR EL SERVICIO PRINCIPAL
+    # 3. RECARGAR SYSTEMD Y RESTAURAR EL SERVICIO PRINCIPAL
+    #    (solo si el fstab realmente cambio en este nodo)
     # -------------------------------------------------------------
     - name: Forzar recarga de daemon de systemd para actualizar los mountpoints
       ansible.builtin.systemd:
         daemon_reload: true
+      when: fstab_fix.changed
 
     - name: Iniciar y habilitar de forma persistente el servicio app-backend
       ansible.builtin.systemd:
         name: app-backend.service
         state: restarted
         enabled: true
+      when: fstab_fix.changed
+
+    # -------------------------------------------------------------
+    # 4. RECOLECTAR DATOS ACTUALES PARA EL INFORME
+    # -------------------------------------------------------------
+    - name: Consultar estado actual de app-backend para el informe
+      ansible.builtin.command: systemctl is-active app-backend.service
+      register: app_status
+      failed_when: false
+      changed_when: false
+
+    - name: Consultar contenido de /data/status para el informe
+      ansible.builtin.command: cat /data/status
+      register: app_file_status
+      failed_when: false
+      changed_when: false
 
     # -------------------------------------------------------------
     # 5. GUARDAR INFORME DE AUDITORÍA EN UN ARCHIVO .TXT
@@ -69,9 +70,11 @@
           ==========================================================
                  INFORME DE REMEDIACIÓN - INCIDENTE #01
                  Fecha: {{ ansible_date_time.iso8601 }}
+                 Nodo: {{ inventory_hostname }}
           ==========================================================
           1. ALERTA FALSA: legacy-daemon.service detenido.
-          2. PERSISTENCIA: /etc/fstab corregido con UUID {{ blkid_output.stdout | trim }}
+          2. PERSISTENCIA: /etc/fstab -> 192.168.122.14:/srv/nfs/appdata
+             Cambio aplicado en este nodo: {{ fstab_fix.changed }}
           3. ALMACENAMIENTO: Punto de montaje /data activo.
           4. ESTADO SYSTEMD: app-backend está {{ app_status.stdout | upper }}
           5. LOG DE LA APP:
