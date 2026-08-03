@@ -14,11 +14,13 @@ IP = {
 Vagrant.configure("2") do |config|
 
   # === INYECTAR CLAVE SSH DE CONTROL EN TODAS LAS VMs ===
-  public_key = File.read(File.expand_path("~/.ssh/id_ed25519.pub")).strip
-  config.vm.provision "shell", privileged: false, inline: <<-SHELL
-    echo "#{public_key}" >> /home/vagrant/.ssh/authorized_keys
-    chmod 600 /home/vagrant/.ssh/authorized_keys
-  SHELL
+  if File.exist?(File.expand_path("~/.ssh/id_ed25519.pub"))
+    public_key = File.read(File.expand_path("~/.ssh/id_ed25519.pub")).strip
+    config.vm.provision "shell", privileged: false, inline: <<-SHELL
+      echo "#{public_key}" >> /home/vagrant/.ssh/authorized_keys
+      chmod 600 /home/vagrant/.ssh/authorized_keys
+    SHELL
+  end
 
   # ============================================================
   # GLOBAL PROVISIONING -- Minimal requirements
@@ -30,7 +32,7 @@ Vagrant.configure("2") do |config|
   SHELL
 
   # ============================================================
-  # NODE04 -- Deployment / Automation Node (Deploys code via deployer key)
+  # NODE04 -- Deployment / Automation Node
   # ============================================================
   config.vm.define "node04" do |n|
     n.vm.box = "almalinux/9"
@@ -48,6 +50,10 @@ Vagrant.configure("2") do |config|
       mkdir -p ~/.ssh && chmod 700 ~/.ssh
       ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_deployer -C "deployer@node04"
       
+      # Export public key to shared /vagrant folder for fleet provisioning
+      mkdir -p /vagrant/.vagrant_keys
+      cp ~/.ssh/id_deployer.pub /vagrant/.vagrant_keys/id_deployer.pub
+
       # Master test script to verify fleet deployment connectivity
       cat > ~/test-deploy-access.sh <<-'TESTSCRIPT'
 #!/bin/bash
@@ -86,20 +92,13 @@ TESTSCRIPT
         useradd -m -s /bin/bash appuser
         mkdir -p /home/appuser/.ssh
         
-        # Wait for node04 public key to be ready before copying
-        echo "==> #{node}: Waiting for node04 deployer public key..."
-        RETRY=0
-        until ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=2 vagrant@192.168.122.14 "cat /home/vagrant/.ssh/id_deployer.pub" > /tmp/deployer.pub 2>/dev/null; do
-          RETRY=$((RETRY + 1))
-          if [ "$RETRY" -ge 30 ]; then
-            echo "FATAL: node04 public key non-retrievable" >&2
-            exit 1
-          fi
-          sleep 3
-        done
-
-        cat /tmp/deployer.pub > /home/appuser/.ssh/authorized_keys
-        rm -f /tmp/deployer.pub
+        # Read key from local shared directory
+        if [ -f /vagrant/.vagrant_keys/id_deployer.pub ]; then
+          cat /vagrant/.vagrant_keys/id_deployer.pub > /home/appuser/.ssh/authorized_keys
+        else
+          echo "ERROR: Deployer key not found in shared volume" >&2
+          exit 1
+        fi
 
         # Correct permissions baseline
         chown -R appuser:appuser /home/appuser
@@ -147,9 +146,7 @@ TICKET
   end
 
   # ============================================================
-  # ROOT CAUSE -- ONLY on the chosen node. DO NOT READ if you want
-  # to practice cold diagnostics.
-  # Affected node: node01
+  # ROOT CAUSE INJECTION -- ONLY on node01
   # Fault: Permission drift on home and .ssh path (777 on /home/appuser 
   # and 777 on /home/appuser/.ssh). SSHd StrictModes silently rejects 
   # key-based auth when parent directories are group/world-writable.
