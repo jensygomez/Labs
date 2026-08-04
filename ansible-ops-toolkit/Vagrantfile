@@ -11,16 +11,33 @@ IP = {
   "node04" => "192.168.122.14",
 }
 
+# === CLAVE DEL DEPLOYER: generada UNA VEZ en el HOST, nunca en una VM ===
+# Antes esto se generaba dentro de node04 y se intentaba compartir via
+# /vagrant -- pero /vagrant NO es una carpeta compartida en tiempo real
+# entre VMs (es un rsync unidireccional host->VM, congelado al aprovisionar).
+# Por eso node01 nunca podia leer la clave que node04 habia generado.
+# La solucion: generarla/leerla ACA, en el host, antes de tocar ninguna VM,
+# y despues embeberla como texto en los heredocs de cada nodo -- mismo
+# patron que ya usamos con la clave SSH personal en inc-001/inc-002.
+DEPLOYER_KEY_PATH = File.expand_path("~/.ssh/id_deployer")
+
+unless File.exist?(DEPLOYER_KEY_PATH)
+  system("ssh-keygen -t ed25519 -N '' -f #{DEPLOYER_KEY_PATH} -q -C 'deployer@lab'")
+end
+
+DEPLOYER_PUBLIC_KEY  = File.read("#{DEPLOYER_KEY_PATH}.pub").strip
+DEPLOYER_PRIVATE_KEY = File.read(DEPLOYER_KEY_PATH)
+
+# === CLAVE PERSONAL DE JENSY (para que el/Ansible puedan entrar a las VMs) ===
+JENSY_PUBLIC_KEY = File.read(File.expand_path("~/.ssh/id_ed25519.pub")).strip
+
 Vagrant.configure("2") do |config|
 
-  # === INYECTAR CLAVE SSH DE CONTROL EN TODAS LAS VMs ===
-  if File.exist?(File.expand_path("~/.ssh/id_ed25519.pub"))
-    public_key = File.read(File.expand_path("~/.ssh/id_ed25519.pub")).strip
-    config.vm.provision "shell", privileged: false, inline: <<-SHELL
-      echo "#{public_key}" >> /home/vagrant/.ssh/authorized_keys
-      chmod 600 /home/vagrant/.ssh/authorized_keys
-    SHELL
-  end
+  # === INYECTAR CLAVE SSH PERSONAL EN TODAS LAS VMs ===
+  config.vm.provision "shell", privileged: false, inline: <<-SHELL
+    echo "#{JENSY_PUBLIC_KEY}" >> /home/vagrant/.ssh/authorized_keys
+    chmod 600 /home/vagrant/.ssh/authorized_keys
+  SHELL
 
   # ============================================================
   # GLOBAL PROVISIONING -- Minimal requirements
@@ -45,16 +62,19 @@ Vagrant.configure("2") do |config|
       lv.driver = "kvm"
     end
 
+    # La clave del deployer ya existe (viene del host) -- acá solo
+    # se ESCRIBE en node04, no se genera de nuevo.
     n.vm.provision "shell", privileged: false, inline: <<-SHELL
-      echo "==> node04: generating deployer SSH keypair..."
+      echo "==> node04: writing deployer SSH keypair (generated on host)..."
       mkdir -p ~/.ssh && chmod 700 ~/.ssh
-      ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_deployer -C "deployer@node04"
-      
-      # Export public key to shared /vagrant folder for fleet provisioning
-      mkdir -p /vagrant/.vagrant_keys
-      cp ~/.ssh/id_deployer.pub /vagrant/.vagrant_keys/id_deployer.pub
 
-      # Master test script to verify fleet deployment connectivity
+      cat > ~/.ssh/id_deployer <<-'PRIVKEY'
+#{DEPLOYER_PRIVATE_KEY}
+PRIVKEY
+      chmod 600 ~/.ssh/id_deployer
+      echo "#{DEPLOYER_PUBLIC_KEY}" > ~/.ssh/id_deployer.pub
+      chmod 644 ~/.ssh/id_deployer.pub
+
       cat > ~/test-deploy-access.sh <<-'TESTSCRIPT'
 #!/bin/bash
 for ip in 192.168.122.11 192.168.122.12 192.168.122.13; do
@@ -85,22 +105,16 @@ TESTSCRIPT
         lv.driver = "kvm"
       end
 
+      # La clave publica del deployer viene del host directamente --
+      # ya NO se lee desde /vagrant, asi que no importa el orden de
+      # arranque entre node04 y la flota.
       n.vm.provision "shell", privileged: true, inline: <<-SHELL
         echo "==> #{node}: Setting up application user and SSH baseline..."
-        
-        # Create unprivileged application deployment user
+
         useradd -m -s /bin/bash appuser
         mkdir -p /home/appuser/.ssh
-        
-        # Read key from local shared directory
-        if [ -f /vagrant/.vagrant_keys/id_deployer.pub ]; then
-          cat /vagrant/.vagrant_keys/id_deployer.pub > /home/appuser/.ssh/authorized_keys
-        else
-          echo "ERROR: Deployer key not found in shared volume" >&2
-          exit 1
-        fi
+        echo "#{DEPLOYER_PUBLIC_KEY}" > /home/appuser/.ssh/authorized_keys
 
-        # Correct permissions baseline
         chown -R appuser:appuser /home/appuser
         chmod 700 /home/appuser
         chmod 700 /home/appuser/.ssh
@@ -117,17 +131,17 @@ INC-004 - INCIDENT - P2
 REPORTED BY: Jenkins CI/CD / Deployment Pipeline     TIME: 04:10 AM
 SUMMARY: Automated application deployment failing via SSH on one node
 DESCRIPTION:
-The automated deployment job running on node04 is unable to deploy code 
-to 'appuser' on one of the application nodes. The deployment script fails 
-with "Permission denied (publickey)". As a result, the deployment pipeline 
+The automated deployment job running on node04 is unable to deploy code
+to 'appuser' on one of the application nodes. The deployment script fails
+with "Permission denied (publickey)". As a result, the deployment pipeline
 is blocked, and application code is out of sync across the fleet.
 
 NOTES FROM PREVIOUS SHIFT (L1 night):
-"Checked sshd service on all target nodes; active and running everywhere. 
-I verified that the deployer public key on node04 matches the string in 
-/home/appuser/.ssh/authorized_keys on the failing node. Since the key 
-matched, I suspected SSH port/firewall issues or sshd_config password 
-authentication settings being disabled. I restarted sshd on all nodes, 
+"Checked sshd service on all target nodes; active and running everywhere.
+I verified that the deployer public key on node04 matches the string in
+/home/appuser/.ssh/authorized_keys on the failing node. Since the key
+matched, I suspected SSH port/firewall issues or sshd_config password
+authentication settings being disabled. I restarted sshd on all nodes,
 but deployment still fails with 'Permission denied'. Leaving for day shift."
 
 CLIENT IMPACT: Code releases stalled; risk of partial fleet deployments.
@@ -147,20 +161,18 @@ TICKET
 
   # ============================================================
   # ROOT CAUSE INJECTION -- ONLY on node01
-  # Fault: Permission drift on home and .ssh path (777 on /home/appuser 
-  # and 777 on /home/appuser/.ssh). SSHd StrictModes silently rejects 
+  # Fault: Permission drift on home and .ssh path (777 on /home/appuser
+  # and 777 on /home/appuser/.ssh). SSHd StrictModes silently rejects
   # key-based auth when parent directories are group/world-writable.
   # ============================================================
   config.vm.define "node01" do |n|
     n.vm.provision "shell", privileged: true, inline: <<-SHELL
       echo "[FAULT] Injecting INC-004 SSH directory permission drift on node01..."
-      
-      # Invalidate SSH StrictModes safety checks by over-granting permissions
+
       chmod 777 /home/appuser
       chmod 777 /home/appuser/.ssh
       chmod 666 /home/appuser/.ssh/authorized_keys
 
-      # Re-injection script for Phase 2 idempotency testing
       cat > /home/vagrant/break-ssh-perms.sh <<-'BREAK'
 #!/bin/bash
 set -e
@@ -174,7 +186,7 @@ echo "Incident re-injected. SSH permissions broken."
 BREAK
       chmod +x /home/vagrant/break-ssh-perms.sh
       chown vagrant:vagrant /home/vagrant/break-ssh-perms.sh
-      
+
       echo "[FAULT] Ready."
     SHELL
   end
