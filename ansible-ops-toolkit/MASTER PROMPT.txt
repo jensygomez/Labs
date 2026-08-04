@@ -116,7 +116,7 @@ These are real bugs hit and fixed — check for them every time a new triage/rem
 1. inc-001-boot-fstab-mount-failure ✅ **built, run, resolved**
 2. inc-002-storage-var-log-disk-full ✅ **built, run, resolved**
 3. inc-003-network-firewalld-rule-missing ✅ **built, run, resolved**
-4. inc-004-users-ssh-directory-permissions
+4. inc-004-users-ssh-directory-permissions ✅ **built, run, resolved**
 5. inc-005-perf-heavy-cron-job
 6. inc-006-logs-app-log-ownership
 7. inc-007-apps-intermittent-502-backend
