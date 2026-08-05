@@ -43,7 +43,7 @@
       copy:
         dest: /etc/cron.d/heavy-log-scan
         content: |
-          # Heavy log scan job
+          # Heavy log scan job - runs every minute
           * * * * * root /usr/local/bin/heavy-log-scan.sh
         mode: '0644'
         owner: root
@@ -56,25 +56,66 @@
   hosts: fleet
   become: yes
   tasks:
-    - name: Set high-stress MOTD banner
+    - name: Set high-stress MOTD banner with ANSI colors
       copy:
         dest: /etc/motd
         content: |
-          🚨 P2 SEV-2: INTERMITTENT HIGH LOAD AVG ON FLEET. TRIAGE REQUIRED. SEE ~/TICKET.md
+          \033[1;31m======================================================================\033[0m
+          \033[1;31mOPS-1042 - INCIDENT - P2\033[0m
+          \033[1;31m======================================================================\033[0m
+          \033[1;33mREPORTADO POR:\033[0m Zabbix Monitoring        \033[1;33mHORA:\033[0m 03:14 AM
+          \033[1;33mRESUMEN:\033[0m \033[1;37mIntermittent high load average on fleet nodes\033[0m
+          \033[1;31m======================================================================\033[0m
+          
+          \033[1;33mACTION REQUIRED:\033[0m Triage immediately. See \033[1;36m~/TICKET.md\033[0m for full details.
+          
         mode: '0644'
 
-    - name: Deploy Jira-style incident ticket to user's home
+    - name: Deploy professional Jira-style incident ticket
       copy:
         dest: /home/jensyg/TICKET.md
         content: |
-          # INCIDENT TICKET: INC-005
+          ======================================================================
+          OPS-1042 - INCIDENT - P2
+          ======================================================================
+          REPORTADO POR: Zabbix Monitoring        HORA: 03:14 AM
+          RESUMEN: Intermittent high load average on fleet nodes
+          ======================================================================
           
-          **Severity**: P2
-          **Symptom**: Monitoring alerts showing intermittent CPU spikes and high I/O wait (iowait > 40%) on the fleet. Load average occasionally jumps to 3.0+ on a 1-vCPU node.
-          **Impact**: Degraded performance for background processing jobs.
+          DESCRIPCION:
+          Alerta automatica: los nodos de la flota de aplicacion (node01/02/03)
+          estan reportando picos intermitentes de carga (load average > 3.0) y
+          alto I/O wait (>40%). El problema no es constante -- aparece y desaparece
+          en ciclos de aproximadamente 1 minuto. El balanceador de carga sigue
+          funcionando, pero el cliente reporta lentitud intermitente en las APIs
+          de backend durante estos picos.
           
-          **NOTES FROM PREVIOUS SHIFT**:
-          > "Logged in around 02:15 and saw a `find` process consuming 100% CPU. Killed it (`kill -9 <pid>`). Load average dropped back to 0.1 immediately. Assumed it was just a delayed nightly maintenance task that ran late. Didn't see any other issues."
+          El dashboard de Zabbix muestra que los 3 nodos tienen el mismo patron
+          de comportamiento, pero no esta claro si todos estan afectados por igual
+          o si uno es el origen del problema.
+          
+          NOTAS DEL TURNO ANTERIOR (L1 nocturno):
+          "Me conecte alrededor de las 02:15 AM y vi un proceso `find` consumiendo
+          100% CPU en uno de los nodos. Lo mate con `kill -9 <pid>` y el load average
+          bajo inmediatamente a 0.1. Asumi que era solo una tarea de mantenimiento
+          nocturno que se ejecuto tarde. No vi otros problemas. Deje el ticket abierto
+          para el proximo turno porque no tuve tiempo de revisar mas a fondo, pero
+          parece un falso positivo."
+          
+          IMPACTO AL CLIENTE: Latencia intermitente y timeouts esporadicos en las
+          APIs de backend durante los picos de carga. El equipo de desarrollo reporta
+          que algunas requests estan tardando >5 segundos cuando deberian tomar <500ms.
+          
+          CRITERIO DE RESOLUCION:
+          1. Identificar cual nodo(s) de la flota estan causando los picos de carga.
+          2. Identificar la causa raiz del proceso `find` que aparece periodicamente.
+          3. Determinar por que el problema "regresa" despues de matar el proceso.
+          4. Remover o reprogramar la tarea problematica de forma permanente.
+          5. Verificar que el load average se mantiene <1.0 durante al menos 10 minutos.
+          6. Automatizar el fix en un playbook idempotente (remediation/remediate-inc-005.yml).
+          
+          PRIORIDAD: P2 - Degradacion de servicio, pero no outage completo.
+          ======================================================================
         owner: jensyg
         group: jensyg
         mode: '0644'
