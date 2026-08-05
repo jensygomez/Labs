@@ -36,14 +36,14 @@ echo "==> Levantando node03 (fleet)..."
 bash "$SCRIPT_DIR/make-node.sh" node03 192.168.122.13
 
 echo "==> Levantando node04 (storage)..."
-bash "$SCRIPT_DIR/make-node.sh" node04 192.168.122.14
+bash "$SCRIPT_DIR/make-node.sh" node04 192.168.122.14 nfs-utils
 
 echo ""
 echo "==> Las 4 VMs estan arrancando. Cloud-init tarda ~30-60 segundos"
 echo "    en aplicar la configuracion la PRIMERA vez que bootea cada una."
 echo ""
 echo "Probar con:"
-echo "  ssh labadmin@192.168.122.11"
-echo "  ssh labadmin@192.168.122.12"
-echo "  ssh labadmin@192.168.122.13"
-echo "  ssh labadmin@192.168.122.14"
+echo "  ssh jensyg@192.168.122.11"
+echo "  ssh jensyg@192.168.122.12"
+echo "  ssh jensyg@192.168.122.13"
+echo "  ssh jensyg@192.168.122.14"

@@ -1,0 +1,80 @@
+---
+# ==============================================================================
+# INCIDENT INJECTION: inc-005-perf-heavy-cron-job
+# ==============================================================================
+# WARNING: This playbook intentionally degrades system performance.
+# DO NOT RUN IN PRODUCTION. For lab use only.
+# ==============================================================================
+
+- name: Inject Incident INC-005 (Heavy Cron Job)
+  hosts: all_nodes
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Ensure /usr/local/bin exists
+      file:
+        path: /usr/local/bin
+        state: directory
+        mode: '0755'
+
+# ==============================================================================
+# DO NOT READ — ROOT CAUSE
+# The fault is injected ONLY on node02. 
+# A poorly optimized script is scheduled to run every minute, causing 
+# severe CPU and I/O wait spikes.
+# ==============================================================================
+- name: Inject Fault on Culprit Node
+  hosts: node02
+  become: yes
+  tasks:
+    - name: Deploy the poorly optimized log analysis script
+      copy:
+        dest: /usr/local/bin/heavy-log-scan.sh
+        content: |
+          #!/bin/bash
+          # Simulates a heavy, poorly optimized log analysis job
+          # Scans all log files and forces disk I/O and CPU usage
+          find /var/log -type f -name "*.log" -exec grep -l "ERROR" {} \; > /dev/null 2>&1
+        mode: '0755'
+        owner: root
+        group: root
+
+    - name: Schedule the heavy job to run every minute
+      copy:
+        dest: /etc/cron.d/heavy-log-scan
+        content: |
+          # Heavy log scan job
+          * * * * * root /usr/local/bin/heavy-log-scan.sh
+        mode: '0644'
+        owner: root
+        group: root
+
+# ==============================================================================
+# TICKET DELIVERY MECHANISM (Visible on all fleet nodes for alerting)
+# ==============================================================================
+- name: Configure Alerting and Ticket Delivery
+  hosts: fleet
+  become: yes
+  tasks:
+    - name: Set high-stress MOTD banner
+      copy:
+        dest: /etc/motd
+        content: |
+          🚨 P2 SEV-2: INTERMITTENT HIGH LOAD AVG ON FLEET. TRIAGE REQUIRED. SEE ~/TICKET.md
+        mode: '0644'
+
+    - name: Deploy Jira-style incident ticket to user's home
+      copy:
+        dest: /home/jensyg/TICKET.md
+        content: |
+          # INCIDENT TICKET: INC-005
+          
+          **Severity**: P2
+          **Symptom**: Monitoring alerts showing intermittent CPU spikes and high I/O wait (iowait > 40%) on the fleet. Load average occasionally jumps to 3.0+ on a 1-vCPU node.
+          **Impact**: Degraded performance for background processing jobs.
+          
+          **NOTES FROM PREVIOUS SHIFT**:
+          > "Logged in around 02:15 and saw a `find` process consuming 100% CPU. Killed it (`kill -9 <pid>`). Load average dropped back to 0.1 immediately. Assumed it was just a delayed nightly maintenance task that ran late. Didn't see any other issues."
+        owner: jensyg
+        group: jensyg
+        mode: '0644'
