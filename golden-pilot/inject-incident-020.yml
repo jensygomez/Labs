@@ -4,6 +4,19 @@
   hosts: storage
   become: yes
   tasks:
+    - name: Asegurar que firewalld y sus bindings de Python estén instalados
+      dnf:
+        name: 
+          - firewalld
+          - python3-firewall
+        state: present
+
+    - name: Iniciar y habilitar firewalld
+      systemd:
+        name: firewalld
+        state: started
+        enabled: yes
+
     - name: Crear directorio a exportar
       file:
         path: /shared_data
@@ -21,7 +34,7 @@
         state: restarted
         enabled: yes
 
-    - name: "INYECCION DE FALLO: Bloquear puerto 2049 con rich-rule"
+    - name: "🚨 INYECCION DE FALLO: Bloquear puerto 2049 con rich-rule"
       firewalld:
         rich_rule: 'rule family="ipv4" source address="192.168.122.0/24" port port="2049" protocol="tcp" drop'
         permanent: yes

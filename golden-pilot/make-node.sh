@@ -42,19 +42,35 @@ echo "==> [$NODE_NAME] Creando disco overlay..."
 qemu-img create -f qcow2 -F qcow2 -b "$GOLDEN_IMG" "$NODE_DISK" 20G
 
 # --- 2. cloud-init: user-data (que instalar, que usuario, que clave) ---
-PACKAGE_LIST="qemu-guest-agent"
+
+# 🧰 EL BOTIQUÍN DE DIAGNÓSTICO (Cubre el 95% de los 50 incidentes)
+BASE_PACKAGES=(
+    "qemu-guest-agent"
+    # Redes y Firewalls
+    "nmap-ncat" "tcpdump" "bind-utils" "iproute" "firewalld" "python3-firewall" "nfs-utils"
+    # Storage y Sistema
+    "lsof" "strace" "sysstat" "lvm2" "e2fsprogs" "xfsprogs"
+    # Seguridad y Logs
+    "policycoreutils-python-utils" "setools-console" "audit"
+    # Comodidad Básica (Para que no sufras en la terminal)
+    "vim-enhanced" "tmux" "htop" "git" "bash-completion"
+)
+
+# Unimos los paquetes base con los extra (si los pasaste como argumento)
+PACKAGE_LIST="${BASE_PACKAGES[*]}"
 if [ -n "$EXTRA_PACKAGES" ]; then
-  PACKAGE_LIST="$PACKAGE_LIST,${EXTRA_PACKAGES}"
+    PACKAGE_LIST="$PACKAGE_LIST ${EXTRA_PACKAGES}"
 fi
-PACKAGE_LIST_YAML=$(echo "$PACKAGE_LIST" | tr ',' '\n' | sed 's/^/  - /')
+
+# Convertimos la lista separada por espacios a formato YAML para cloud-init
+PACKAGE_LIST_YAML=$(echo "$PACKAGE_LIST" | tr ' ' '\n' | sed 's/^/  - /')
 
 cat > "$NODE_DIR/user-data" <<EOF
 #cloud-config
 hostname: ${NODE_NAME}
 manage_etc_hosts: true
 
-# Tu clave personal, inyectada por el mecanismo NATIVO de cloud-init.
-# Sin usuario "vagrant", sin key-swap, sin "insecure key detected".
+# Usuario corporativo estándar (sin 'vagrant', sin 'jensyg' para no confundir)
 users:
 - name: labadmin
   sudo: ALL=(ALL) NOPASSWD:ALL
@@ -69,6 +85,7 @@ ${PACKAGE_LIST_YAML}
 
 runcmd:
   - systemctl enable --now qemu-guest-agent
+  - systemctl enable --now firewalld
 EOF
 
 # --- 3. cloud-init: network-config (IP estatica, sin DHCP) ---

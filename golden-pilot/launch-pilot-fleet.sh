@@ -36,7 +36,7 @@ echo "==> Levantando node03 (fleet)..."
 bash "$SCRIPT_DIR/make-node.sh" node03 192.168.122.13
 
 echo "==> Levantando node04 (storage)..."
-bash "$SCRIPT_DIR/make-node.sh" node04 192.168.122.14 nfs-utils
+bash "$SCRIPT_DIR/make-node.sh" node04 192.168.122.14
 
 echo ""
 echo "==> Las 4 VMs estan arrancando. Cloud-init tarda ~30-60 segundos"
