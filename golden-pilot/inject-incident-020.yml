@@ -1,0 +1,47 @@
+---
+# --- FASE 1: Preparar el Servidor (node04) ---
+- name: "INC-020: Configurar Servidor NFS y aplicar fallo"
+  hosts: storage
+  become: yes
+  tasks:
+    - name: Crear directorio a exportar
+      file:
+        path: /shared_data
+        state: directory
+        mode: '0777'
+        
+    - name: Configurar exportación NFS
+      copy:
+        content: "/shared_data 192.168.122.0/24(rw,sync,no_root_squash)\n"
+        dest: /etc/exports
+        
+    - name: Reiniciar e iniciar servicio NFS
+      systemd:
+        name: nfs-server
+        state: restarted
+        enabled: yes
+
+    - name: "INYECCION DE FALLO: Bloquear puerto 2049 con rich-rule"
+      firewalld:
+        rich_rule: 'rule family="ipv4" source address="192.168.122.0/24" port port="2049" protocol="tcp" drop'
+        permanent: yes
+        state: enabled
+        immediate: yes
+
+# --- FASE 2: Preparar los Clientes (node01, 02, 03) ---
+- name: "INC-020: Preparar clientes NFS para el montaje"
+  hosts: fleet
+  become: yes
+  tasks:
+    - name: Crear punto de montaje local
+      file:
+        path: /mnt/shared
+        state: directory
+        
+    - name: Agregar NFS al fstab (pero no montarlo aún)
+      mount:
+        path: /mnt/shared
+        src: 192.168.122.14:/shared_data
+        fstype: nfs
+        opts: "defaults,_netdev,timeo=30,retrans=2"
+        state: present
