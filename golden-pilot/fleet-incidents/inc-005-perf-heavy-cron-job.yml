@@ -50,72 +50,55 @@
         group: root
 
 # ==============================================================================
-# TICKET DELIVERY MECHANISM (Visible on all fleet nodes for alerting)
+# TICKET DELIVERY MECHANISM - IN ENGLISH, FOR ALL FLEET NODES
 # ==============================================================================
-- name: Configure Alerting and Ticket Delivery
+- name: Deploy full incident ticket to MOTD
   hosts: fleet
   become: yes
   tasks:
-    - name: Set high-stress MOTD banner with ANSI colors
+    - name: Deploy complete incident ticket to /etc/motd
       copy:
         dest: /etc/motd
-        content: |
-          \033[1;31m======================================================================\033[0m
-          \033[1;31mOPS-1042 - INCIDENT - P2\033[0m
-          \033[1;31m======================================================================\033[0m
-          \033[1;33mREPORTADO POR:\033[0m Zabbix Monitoring        \033[1;33mHORA:\033[0m 03:14 AM
-          \033[1;33mRESUMEN:\033[0m \033[1;37mIntermittent high load average on fleet nodes\033[0m
-          \033[1;31m======================================================================\033[0m
-          
-          \033[1;33mACTION REQUIRED:\033[0m Triage immediately. See \033[1;36m~/TICKET.md\033[0m for full details.
-          
-        mode: '0644'
-
-    - name: Deploy professional Jira-style incident ticket
-      copy:
-        dest: /home/jensyg/TICKET.md
         content: |
           ======================================================================
           OPS-1042 - INCIDENT - P2
           ======================================================================
-          REPORTADO POR: Zabbix Monitoring        HORA: 03:14 AM
-          RESUMEN: Intermittent high load average on fleet nodes
+          REPORTED BY: Zabbix Monitoring        TIME: 03:14 AM
+          SUMMARY: Intermittent high load average on one of the fleet nodes
           ======================================================================
           
-          DESCRIPCION:
-          Alerta automatica: los nodos de la flota de aplicacion (node01/02/03)
-          estan reportando picos intermitentes de carga (load average > 3.0) y
-          alto I/O wait (>40%). El problema no es constante -- aparece y desaparece
-          en ciclos de aproximadamente 1 minuto. El balanceador de carga sigue
-          funcionando, pero el cliente reporta lentitud intermitente en las APIs
-          de backend durante estos picos.
+          DESCRIPTION:
+          Automatic alert: one of the application fleet nodes (node01/02/03)
+          is reporting intermittent load spikes (load average > 3.0) and
+          high I/O wait (>40%). The problem is not constant -- it appears
+          and disappears in approximately 1-minute cycles. The load balancer
+          is still functioning, but the client reports intermittent slowness
+          in the backend APIs during these spikes.
           
-          El dashboard de Zabbix muestra que los 3 nodos tienen el mismo patron
-          de comportamiento, pero no esta claro si todos estan afectados por igual
-          o si uno es el origen del problema.
+          The Zabbix dashboard shows that one node has a different behavior
+          pattern than the others, but it is not clear which one is the
+          source of the problem.
           
-          NOTAS DEL TURNO ANTERIOR (L1 nocturno):
-          "Me conecte alrededor de las 02:15 AM y vi un proceso `find` consumiendo
-          100% CPU en uno de los nodos. Lo mate con `kill -9 <pid>` y el load average
-          bajo inmediatamente a 0.1. Asumi que era solo una tarea de mantenimiento
-          nocturno que se ejecuto tarde. No vi otros problemas. Deje el ticket abierto
-          para el proximo turno porque no tuve tiempo de revisar mas a fondo, pero
-          parece un falso positivo."
+          NOTES FROM PREVIOUS SHIFT (Night L1):
+          "I logged in around 02:15 AM and saw a `find` process consuming
+          100% CPU on one of the nodes. I killed it with `kill -9 <pid>` and
+          the load average immediately dropped to 0.1. I assumed it was just
+          a late-running nightly maintenance task. I didn't see any other
+          issues. I left the ticket open for the next shift because I didn't
+          have time to investigate further, but it seems like a false positive."
           
-          IMPACTO AL CLIENTE: Latencia intermitente y timeouts esporadicos en las
-          APIs de backend durante los picos de carga. El equipo de desarrollo reporta
-          que algunas requests estan tardando >5 segundos cuando deberian tomar <500ms.
+          CLIENT IMPACT: Intermittent latency and sporadic timeouts in the
+          backend APIs during load spikes. The development team reports that
+          some requests are taking >5 seconds when they should take <500ms.
           
-          CRITERIO DE RESOLUCION:
-          1. Identificar cual nodo(s) de la flota estan causando los picos de carga.
-          2. Identificar la causa raiz del proceso `find` que aparece periodicamente.
-          3. Determinar por que el problema "regresa" despues de matar el proceso.
-          4. Remover o reprogramar la tarea problematica de forma permanente.
-          5. Verificar que el load average se mantiene <1.0 durante al menos 10 minutos.
-          6. Automatizar el fix en un playbook idempotente (remediation/remediate-inc-005.yml).
+          RESOLUTION CRITERIA:
+          1. Identify which node in the fleet is causing the load spikes.
+          2. Identify the root cause of the `find` process that appears periodically.
+          3. Determine why the problem "returns" after killing the process.
+          4. Remove or reschedule the problematic task permanently.
+          5. Verify that the load average stays <1.0 for at least 10 minutes.
+          6. Automate the fix in an idempotent playbook (remediation/remediate-inc-005.yml).
           
-          PRIORIDAD: P2 - Degradacion de servicio, pero no outage completo.
+          PRIORITY: P2 - Service degradation, but not a complete outage.
           ======================================================================
-        owner: jensyg
-        group: jensyg
         mode: '0644'

@@ -1,0 +1,28 @@
+---
+- name: "OPS-1042 - Idnetificar nodo con alta carga / proceso find"
+  hosts: all
+  become: true
+  gather_facts: false
+
+  tasks:
+    # --- FASE 1: DIAGNOSTICO SILENCIOSO EN LA FLOTA ---
+    - name: Tarea 1 - Buscar cualquier tarea programada sospechosa en la flota
+      ansible.builtin.shell: |
+        grep -Hn "" /etc/cron.d/* | grep -v "0hourly"
+      register: cron_check
+      failed_when: false
+      changed_when: false
+
+    - name: Tarea 1.1 - MOSTRAR SOLO EL NODO AFECTADO
+      ansible.builtin.debug:
+        msg: 
+          - "!NODO AFECTADO IDENTIFICADO!: {{ inventory_hostname }}"
+          - "Detalle de la tarea:"
+          - "{{ cron_check.stdout_lines }}"
+      when: cron_check.rc == 0 and cron_check.stdout != ""
+
+
+
+
+
+
