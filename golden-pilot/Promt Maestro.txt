@@ -183,7 +183,7 @@ inc-001-boot-fstab-mount-failure ✅ built, run, resolved
 inc-002-storage-var-log-disk-full ✅ built, run, resolved
 inc-003-network-firewalld-rule-missing ✅ built, run, resolved
 inc-004-users-ssh-directory-permissions ✅ built, run, resolved
-inc-005-perf-heavy-cron-job
+inc-005-perf-heavy-cron-job ✅ built, run, resolved
 inc-006-logs-app-log-ownership
 inc-007-apps-intermittent-502-backend
 inc-008-backup-readonly-destination
