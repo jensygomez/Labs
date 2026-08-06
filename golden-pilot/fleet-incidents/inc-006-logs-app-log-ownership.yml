@@ -10,7 +10,14 @@
   become: yes
   gather_facts: no
   tasks:
-    - name: Ensure 'appuser' exists with consistent UID/GID across all nodes
+
+    - name: Ensure 'appuser' group exist with consistent GID
+      group:
+        name: appuser
+        gid: 1001
+        state: present
+
+    - name: Ensure 'appuser' exist with consistent UID
       user:
         name: appuser
         uid: 1001
