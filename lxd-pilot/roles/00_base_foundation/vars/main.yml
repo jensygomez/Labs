@@ -1,0 +1,23 @@
+---
+base_packages:
+  - vim
+  - wget
+  - curl
+  - bash-completion
+  - htop
+  - tmux
+  - net-tools
+  - bind-utils
+  - firewalld
+  - audit
+  - chrony
+  - python3
+  - python3-pip
+  - python3-libselinux # CRITICO para Ansible en RHEL/Alma
+  - epel-release
+
+sysctl_tweaks:
+  - name: net.ipv4.ip_forward
+    value: '1'
+  - name: vm.swappiness
+    value: '10'

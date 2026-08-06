@@ -1,0 +1,75 @@
+---
+# 1. Configurar Hostname y Dominio
+- name: Establecer hostname estático
+  hostname:
+    name: "{{ inventory_hostname }}.lab.local"
+
+- name: Asegurar hostname en /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.0\.1'
+    line: "127.0.0.1   {{ inventory_hostname }}.lab.local {{ inventory_hostname }} localhost"
+    state: present
+
+# 2. Instalación de Paquetes Base (Usando DNF)
+- name: Instalar repositorios EPEL
+  dnf:
+    name: epel-release
+    state: present
+
+- name: Instalar paquetes base de infraestructura
+  dnf:
+    name: "{{ base_packages }}"
+    state: present
+    update_cache: yes
+
+# 3. Configuración de Seguridad y Firewall
+- name: Iniciar y habilitar Firewalld
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: Permitir SSH en el firewall (Zona pública)
+  firewalld:
+    service: ssh
+    permanent: yes
+    state: enabled
+    immediate: yes
+
+- name: Habilitar auditoría del kernel (auditd)
+  systemd:
+    name: auditd
+    state: started
+    enabled: yes
+
+# 4. Sincronización de Tiempo (CRUCIAL)
+- name: Iniciar y habilitar Chrony (NTP)
+  systemd:
+    name: chronyd
+    state: started
+    enabled: yes
+
+# 5. Optimizaciones del Kernel (Sysctl)
+- name: Aplicar tweaks de sysctl para rendimiento
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    sysctl_set: yes
+    state: present
+    reload: yes
+  loop: "{{ sysctl_tweaks }}"
+
+# 6. Creación de usuario de servicio (para futuras apps)
+- name: Crear usuario de servicio 'deployer' sin shell
+  user:
+    name: deployer
+    shell: /sbin/nologin
+    create_home: no
+    system: yes
+    state: present
+
+# 7. Limpieza de cache DNF
+- name: Limpiar cache de DNF
+  command: dnf clean all
+  changed_when: false

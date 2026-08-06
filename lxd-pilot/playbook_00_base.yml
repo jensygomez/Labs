@@ -1,0 +1,9 @@
+# playbook_00_base.yml
+---
+- name: 00 - Aplicar Infraestructura Base a la Flota AlmaLinux
+  hosts: servers
+  become: yes
+  gather_facts: yes
+
+  roles:
+    - role: 00_base_foundation
