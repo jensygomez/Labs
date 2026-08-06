@@ -1,0 +1,40 @@
+config:
+  user.user-data: |
+    #cloud-config
+    hostname: {{ container.name }}
+    manage_etc_hosts: true
+    users:
+      - name: jensyg
+        sudo: ALL=(ALL) NOPASSWD:ALL
+        groups: wheel
+        shell: /bin/bash
+        ssh_authorized_keys:
+          - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWfbAiQX1GhxiPrlZwpfISA7Ni+4b4kVyqQ8ktrC6Yh jensyg@golden-pilot-lab
+    package_update: false
+    packages:
+      - qemu-guest-agent
+      - sysstat
+      - strace
+      - lsof
+      - htop
+      - tcpdump
+      - mtr
+      - bind-utils
+      - nmap-ncat
+      - policycoreutils-python-utils
+      - setools-console
+      - acl
+      - lvm2
+      - xfsprogs
+      - e2fsprogs
+      - podman
+devices:
+  root:
+    path: /
+    pool: default
+    type: disk
+  eth0:
+    name: eth0
+    nictype: bridged
+    parent: lxdbr0
+    type: nic
