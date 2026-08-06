@@ -1,3 +1,4 @@
+
 #!/bin/bash
 # make-lxd-fleet.sh
 
@@ -16,6 +17,9 @@ if ! lxc image alias list -f csv | grep -q "almalinux9"; then
     lxc image alias create almalinux9 b6ad3898b575
 fi
 
+# Leer tu clave SSH pública para inyectarla
+SSH_KEY=$(cat ~/.ssh/id_ed25519.pub 2>/dev/null || cat ~/.ssh/id_rsa.pub 2>/dev/null || echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWfbAiQX1GhxiPrlZwpfISA7Ni+4b4kVyqQ8ktrC6Yh jensyg@golden-pilot-lab")
+
 echo "🚀 Desplegando flota de 10 servidores barebone..."
 for i in {1..10}; do
     NAME=$(printf "server%02d" $i)
@@ -26,28 +30,37 @@ for i in {1..10}; do
         continue
     fi
 
-    # Generar YAML de red con indentación perfecta usando Here-Doc
-    NETWORK_CONFIG=$(cat <<EOF
-version: 2
-ethernets:
-  eth0:
-    addresses:
-      - $IP/24
-    routes:
-      - to: default
-        via: 192.168.100.254
-    nameservers:
-      addresses:
-        - 8.8.8.8
-        - 1.1.1.1
+    # Generar cloud-init con runcmd usando nmcli (Infalible en AlmaLinux 9)
+    USER_DATA=$(cat <<EOF
+#cloud-config
+package_update: true
+packages:
+  - openssh-server
+  - python3
+ssh_authorized_keys:
+  - $SSH_KEY
+users:
+  - default
+  - name: labadmin
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: wheel, users
+    shell: /bin/bash
+    lock_passwd: true
+disable_root: true
+ssh_pwauth: false
+runcmd:
+  - systemctl enable --now sshd
+  - nmcli con add con-name static-eth0 type ethernet ifname eth0 ipv4.addresses $IP/24 ipv4.gateway 192.168.100.254 ipv4.dns "8.8.8.8,1.1.1.1" ipv4.method manual || true
+  - nmcli con up static-eth0 || true
 EOF
 )
 
     echo "   -> Creando $NAME con IP $IP..."
-    lxc launch almalinux9 $NAME --profile profile-lab --config cloud-init.network-config="$NETWORK_CONFIG"
+    # Lanzamos con el perfil y le inyectamos el user-data dinámico
+    lxc launch almalinux9 $NAME --profile profile-lab --config cloud-init.user-data="$USER_DATA"
 done
 
-echo "✅ Flota desplegada. Esperando 20s a que cloud-init configure la red..."
-sleep 20
+echo "✅ Flota desplegada. Esperando 30s a que nmcli configure las IPs y SSH arranque..."
+sleep 30
 echo "📊 Estado actual de la flota:"
 lxc list

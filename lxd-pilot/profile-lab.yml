@@ -1,15 +1,15 @@
 # profile-lab.yml
 config:
+  limits.memory: 512MB
   user.user-data: |
     #cloud-config
     package_update: true
     packages:
       - openssh-server
-      - python3       
+      - python3
       - python3-pip
     ssh_authorized_keys:
-      # Pega aquí tu clave pública (cat ~/.ssh/id_rsa.pub) para entrar sin password
-      - ssh-rsa ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWfbAiQX1GhxiPrlZwpfISA7Ni+4b4kVyqQ8ktrC6Yh jensyg@golden-pilot-lab
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWfbAiQX1GhxiPrlZwpfISA7Ni+4b4kVyqQ8ktrC6Yh jensyg@golden-pilot-lab
     users:
       - default
       - name: labadmin
@@ -17,14 +17,14 @@ config:
         groups: wheel, users
         shell: /bin/bash
         lock_passwd: true
-        ssh_pwauth: false
+    ssh_pwauth: false
+    disable_root: true
 
 description: Perfil base barebone para los 10 servidores del laboratorio
 devices:
   eth0:
     name: eth0
-    nictype: bridged
-    parent: lab-net
+    network: lab-net
     type: nic
   root:
     path: /
