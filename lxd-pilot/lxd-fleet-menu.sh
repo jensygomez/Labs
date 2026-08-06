@@ -1,8 +1,6 @@
 #!/bin/bash
 # lxd-fleet-menu.sh
 
-ROLES_DIR="./roles"
-
 # Función para contar estados
 get_states() {
     TOTAL=$(lxc list -c n --format csv 2>/dev/null | wc -l)
@@ -10,46 +8,62 @@ get_states() {
     STOPPED=$(lxc list -c ns --format csv 2>/dev/null | grep STOPPED | wc -l)
 }
 
-# Función para limpiar y destruir
+# Función para destruir SOLO la flota serverXX
 destroy_fleet() {
-    echo "🗑️  Destruyendo flota completa..."
+    echo "🗑️  Destruyendo flota 'serverXX'..."
     for i in {1..10}; do
         NAME=$(printf "server%02d" $i)
         lxc delete $NAME --force 2>/dev/null
     done
-    echo "✅ Flota eliminada sin dejar rastro."
+    echo "✅ Flota serverXX eliminada."
     sleep 2
 }
 
-# Submenú para cargar roles (Ansible)
-load_role_menu() {
-    if [ ! -d "$ROLES_DIR" ] || [ -z "$(ls -A $ROLES_DIR 2>/dev/null)" ]; then
-        echo "⚠️  No hay archivos en la carpeta '$ROLES_DIR'."
-        echo "   Crea archivos .yml ahí para que Ansible los lea."
+# Función de LIMPIEZA NUCLEAR (Borra TODO)
+nuke_lab() {
+    echo "⚠️  ¡ADVERTENCIA! Esto borrará TODOS los contenedores en LXD."
+    read -p "¿Estás 100% seguro? (escribe 'SI' para confirmar): " confirm
+    if [[ "$confirm" == "SI" ]]; then
+        echo "💥 Detonando limpieza nuclear..."
+        # Obtiene todos los nombres de contenedores y los borra
+        lxc list -c n --format csv | grep -v '^$' | xargs -r lxc delete --force
+        echo "✅ Laboratorio completamente limpio."
+        sleep 2
+    else
+        echo "Operación cancelada."
+        sleep 1
+    fi
+}
+
+# Submenú para cargar Playbooks de Ansible
+load_playbook_menu() {
+    clear
+    echo "=== 🎭 CARGAR PLAYBOOK (ANSIBLE) ==="
+    echo "Selecciona el playbook a ejecutar sobre la flota:"
+    
+    files=($(ls playbook_*.yml 2>/dev/null))
+    
+    if [ ${#files[@]} -eq 0 ]; then
+        echo "⚠️  No hay playbooks (playbook_*.yml) en el directorio actual."
         read -p "Presiona Enter para volver..."
         return
     fi
 
-    clear
-    echo "=== 🎭 CARGAR ROL (ANSIBLE) ==="
-    echo "Selecciona el rol a aplicar a la flota:"
-    
-    # Leer archivos dinámicamente
-    files=($(ls $ROLES_DIR/*.yml $ROLES_DIR/*.yaml 2>/dev/null))
     for i in "${!files[@]}"; do
-        echo "  $((i+1))) $(basename ${files[$i]})"
+        echo "  $((i+1))) ${files[$i]}"
     done
     echo "  b) Volver al menú principal"
     
     read -p "Opción: " role_opt
     if [[ "$role_opt" =~ ^[0-9]+$ ]] && [ "$role_opt" -ge 1 ] && [ "$role_opt" -le "${#files[@]}" ]; then
         SELECTED_FILE="${files[$((role_opt-1))]}"
-        echo "🚀 Ejecutando Ansible Playbook: $SELECTED_FILE"
-        # Asumiendo que tienes un inventario o usas el plugin de lxd. 
-        # Aquí lanzarías tu comando ansible real. Ejemplo:
-        # ansible-playbook -i lxd_inventory.ini $SELECTED_FILE
-        echo "(Simulación) ansible-playbook $SELECTED_FILE"
+        echo "🚀 Ejecutando: ansible-playbook -i inventory.ini $SELECTED_FILE"
+        echo "---------------------------------------------------------"
+        ansible-playbook -i inventory.ini "$SELECTED_FILE"
+        echo "---------------------------------------------------------"
         read -p "Presiona Enter para continuar..."
+    elif [[ "$role_opt" == "b" || "$role_opt" == "B" ]]; then
+        return
     fi
 }
 
@@ -57,15 +71,19 @@ load_role_menu() {
 while true; do
     clear
     get_states
+    
     echo "========================================="
     echo "       🖥️  LXD FLEET MANAGER  🖥️"
     echo "========================================="
     echo "Estado: Total=$TOTAL | Running=$RUNNING | Stopped=$STOPPED"
     echo "-----------------------------------------"
+    
+    # Mostrar tabla de LXC
+    lxc list
+    echo "-----------------------------------------"
 
     if [ "$TOTAL" -eq 0 ]; then
-        # ESCENARIO A: No hay máquinas
-        echo "1) Iniciar VMs (Crear flota base)"
+        echo "1) Iniciar VMs (Crear flota base server01-10)"
         echo "2) Refrescar"
         echo "q) Salir"
         read -p "Opción: " opt
@@ -77,9 +95,8 @@ while true; do
         esac
 
     elif [ "$RUNNING" -eq 0 ] && [ "$STOPPED" -gt 0 ]; then
-        # ESCENARIO B: Hay máquinas pero están paradas
-        echo "1) Reiniciar en su estado actual (Start)"
-        echo "2) Destruirlas (Sin dejar rastro)"
+        echo "1) Encender todos (Start)"
+        echo "2) Destruir flota 'serverXX'"
         echo "3) Refrescar"
         echo "q) Salir"
         read -p "Opción: " opt
@@ -92,23 +109,21 @@ while true; do
         esac
 
     elif [ "$RUNNING" -gt 0 ]; then
-        # ESCENARIO C: Hay máquinas corriendo
-        echo "1) Cargar Rol (Ansible Playbooks)"
-        echo "2) Reiniciar su estado actual (Restart)"
-        echo "3) Parar/Stop (Mantiene configuración)"
-        echo "4) Destruirlas (Sin dejar rastro)"
+        echo "1) Cargar Playbook (Ansible)"
+        echo "2) Reiniciar todos (Restart)"
+        echo "3) Parar todos (Stop)"
+        echo "4) Destruir flota 'serverXX'"
         echo "5) Refrescar"
+        echo "0) 💥 LIMPIEZA NUCLEAR (Borrar TODO)"
         echo "q) Salir"
         read -p "Opción: " opt
         case $opt in
-            1) load_role_menu ;;
+            1) load_playbook_menu ;;
             2) echo "🔄 Reiniciando servidores..."; lxc restart --all; sleep 3 ;;
             3) echo "🛑 Apagando servidores..."; lxc stop --all; sleep 2 ;;
-            4) 
-                read -p "¿Estás 100% seguro? (s/N): " confirm
-                if [[ "$confirm" == "s" || "$confirm" == "S" ]]; then destroy_fleet; fi 
-                ;;
+            4) destroy_fleet ;;
             5) continue ;;
+            0) nuke_lab ;;
             q|Q) exit 0 ;;
             *) echo "Opción inválida"; sleep 1 ;;
         esac
