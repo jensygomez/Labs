@@ -1,9 +1,9 @@
-==============================================================================
-INCIDENT INJECTION: inc-006-logs-app-log-ownership
-==============================================================================
-WARNING: This playbook intentionally breaks application logging across the fleet.
-DO NOT RUN IN PRODUCTION. For lab use only.
-==============================================================================
+# ==============================================================================
+# INCIDENT INJECTION: inc-006-logs-app-log-ownership
+# ==============================================================================
+# WARNING: This playbook intentionally breaks application logging across the fleet.
+# DO NOT RUN IN PRODUCTION. For lab use only.
+# ==============================================================================
 ---
 - name: Inject Incident INC-006 (App Log Ownership / NFS Permissions)
   hosts: all_nodes
@@ -18,9 +18,9 @@ DO NOT RUN IN PRODUCTION. For lab use only.
         state: present
         create_home: no
 
-==============================================================================
-STORAGE NODE SETUP (node04)
-==============================================================================
+# ==============================================================================
+# STORAGE NODE SETUP (node04)
+# ==============================================================================
 - name: Configure NFS Server on Storage Node
   hosts: node04
   become: yes
@@ -50,9 +50,9 @@ STORAGE NODE SETUP (node04)
         systemctl enable --now nfs-server
       changed_when: true
 
-==============================================================================
-FLEET NODES SETUP (node01-03)
-==============================================================================
+# ==============================================================================
+# FLEET NODES SETUP (node01-03)
+# ==============================================================================
 - name: Configure NFS Clients and Deploy App on Fleet
   hosts: fleet
   become: yes
@@ -119,15 +119,15 @@ FLEET NODES SETUP (node01-03)
         enabled: yes
         daemon_reload: yes
 
-==============================================================================
-DO NOT READ — ROOT CAUSE
-The fault is injected ONLY on node03.
-The systemd service on node03 is modified to remove the 'User=appuser' 
-directive. The app runs as 'root'. Because the NFS server (node04) 
-has 'root_squash' enabled, the 'root' writes are mapped to 'nobody'.
-The other nodes (running as 'appuser') get "Permission denied" when 
-trying to write to the shared log file created by node03.
-==============================================================================
+# ==============================================================================
+# DO NOT READ — ROOT CAUSE
+# The fault is injected ONLY on node03.
+# The systemd service on node03 is modified to remove the 'User=appuser' 
+# directive. The app runs as 'root'. Because the NFS server (node04) 
+# has 'root_squash' enabled, the 'root' writes are mapped to 'nobody'.
+# The other nodes (running as 'appuser') get "Permission denied" when 
+# trying to write to the shared log file created by node03.
+# ==============================================================================
 - name: Inject Fault on Culprit Node
   hosts: node03
   become: yes
@@ -158,9 +158,9 @@ trying to write to the shared log file created by node03.
         state: restarted
         daemon_reload: yes
 
-==============================================================================
-TICKET DELIVERY MECHANISM - IN ENGLISH, FOR ALL FLEET & STORAGE NODES
-==============================================================================
+# ==============================================================================
+# TICKET DELIVERY MECHANISM - IN ENGLISH, FOR ALL FLEET & STORAGE NODES
+# ==============================================================================
 - name: Deploy full incident ticket to MOTD
   hosts: all_nodes
   become: yes
