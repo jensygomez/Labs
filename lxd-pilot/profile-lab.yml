@@ -9,7 +9,7 @@ config:
       - python3
       - python3-pip
     ssh_authorized_keys:
-      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWfbAiQX1GhxiPrlZwpfISA7Ni+4b4kVyqQ8ktrC6Yh jensyg@golden-pilot-lab
+      - ssh-ed25519 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN+gsGnVlOOJXtW6Wz87hc1CPhOz++T2lCoB6F3Eksbg jensyg@lxd-fleet
     users:
       - default
       - name: labadmin

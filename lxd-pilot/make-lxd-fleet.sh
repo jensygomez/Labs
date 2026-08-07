@@ -13,7 +13,7 @@ if ! lxc image alias list -f csv | grep -q "almalinux9"; then
     lxc image alias create almalinux9 b6ad3898b575
 fi
 
-SSH_KEY=$(cat ~/.ssh/id_ed25519.pub 2>/dev/null || cat ~/.ssh/id_rsa.pub 2>/dev/null || echo "ssh-ed25519 TU_CLAVE_PUBLICA_AQUI")
+SSH_KEY=$(cat ~/.ssh/id_ed25519.pub 2>/dev/null || cat ~/.ssh/id_rsa.pub 2>/dev/null || echo "ssh-ed25519 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN+gsGnVlOOJXtW6Wz87hc1CPhOz++T2lCoB6F3Eksbg jensyg@lxd-fleet")
 
 echo "🚀 Desplegando flota de 10 servidores barebone..."
 for i in {1..8}; do
