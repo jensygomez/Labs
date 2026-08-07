@@ -74,6 +74,6 @@ done
 echo ""
 echo "✅ Flota creada con DHCP. Esperando 20s a que obtengan IPs..."
 sleep 20
-lxc list
+lxc list -c ns | grep "server"
 echo ""
 echo "💡 Ahora ejecuta: ./setup-fleet.sh para configurar IPs fijas + Golden Base"

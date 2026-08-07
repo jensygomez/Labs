@@ -1,5 +1,5 @@
 #!/bin/bash
-# lxd-fleet-menu.sh - Menú con soporte de snapshot
+# lxd-fleet-menu.sh - Menú con flujo de dos pasos
 
 SNAPSHOT_NAME="golden-base"
 
@@ -27,7 +27,6 @@ destroy_all() {
 
 restore_snapshot() {
     echo "🔄 Restaurando snapshot '$SNAPSHOT_NAME' en todos los servidores..."
-    echo "   (Esto reiniciará los servidores al estado Golden Base)"
     for i in $(seq -w 1 10); do
         NAME="server${i}"
         if lxc info $NAME &>/dev/null; then
@@ -43,7 +42,7 @@ restore_snapshot() {
 load_playbook_menu() {
     clear
     echo "=== 🎭 CARGAR PLAYBOOK (ANSIBLE) ==="
-    files=($(ls playbook_*.yml roles/playbook_*.yml 2>/dev/null))
+    files=($(ls playbook_*.yml 2>/dev/null))
     
     if [ ${#files[@]} -eq 0 ]; then
         echo "⚠️  No hay playbooks disponibles."
@@ -76,11 +75,12 @@ while true; do
     echo "========================================="
     echo "Estado: Total=$TOTAL | Running=$RUNNING | Stopped=$STOPPED"
     echo "-----------------------------------------"
-    lxc list 
+    lxc list
+    
     echo "-----------------------------------------"
 
     if [ "$TOTAL" -eq 0 ]; then
-        echo "1) 🚀 Crear flota con Golden Base + Snapshot"
+        echo "1) 🚀 Paso 1: Crear flota (con DHCP)"
         echo "2) Refrescar"
         echo "q) Salir"
         read -p "Opción: " opt
@@ -91,34 +91,37 @@ while true; do
             *) echo "Opción inválida"; sleep 1 ;;
         esac
 
-    elif [ "$RUNNING" -eq 0 ] && [ "$STOPPED" -gt 0 ]; then
-        echo "1) ⏳ Encender todos (Start)"
-        echo "2) 🔄 Restaurar snapshot y encender"
-        echo "3) 🗑️  Destruir todo"
-        echo "4) Refrescar"
-        echo "q) Salir"
-        read -p "Opción: " opt
-        case $opt in
-            1) lxc start --all; sleep 3 ;;
-            2) restore_snapshot ;;
-            3) destroy_all ;;
-            4) continue ;;
-            q|Q) exit 0 ;;
-            *) echo "Opción inválida"; sleep 1 ;;
-        esac
-
     elif [ "$RUNNING" -gt 0 ]; then
-        echo "1) 🎭 Cargar Playbook (Ansible)"
-        echo "2) 🔄 Reiniciar todos (Restart)"
-        echo "3) 🛑 Parar todos (Stop - mantiene configuración)"
-        echo "4) 🔄 Restaurar snapshot (vuelve a Golden Base)"
-        echo "5) 🗑️  Destruir todo"
-        echo "6) Refrescar"
+        # Verificar si tienen snapshot (si no tienen, necesitan setup)
+        HAS_SNAPSHOT=$(lxc info server01 2>/dev/null | grep -c "golden-base")
+        
+        if [ "$HAS_SNAPSHOT" -eq 0 ]; then
+            echo "1) ⚙️  Paso 2: Configurar Golden Base + Snapshot"
+        fi
+        
+        echo "2) 🎭 Cargar Playbook (Ansible)"
+        echo "3) 🔄 Reiniciar todos (Restart)"
+        echo "4) 🛑 Parar todos (Stop)"
+        echo "5) 🔄 Restaurar snapshot (vuelve a Golden Base)"
+        echo "6) 🗑️  Destruir todo"
+        echo "7) Refrescar"
         echo "q) Salir"
         read -p "Opción: " opt
         case $opt in
-            1) load_playbook_menu ;;
-            2) lxc restart --all; sleep 3 ;;
+            1) 
+                if [ "$HAS_SNAPSHOT" -eq 0 ]; then
+                    ./setup-fleet.sh
+                else
+                    load_playbook_menu
+                fi
+                ;;
+            2) 
+                if [ "$HAS_SNAPSHOT" -eq 0 ]; then
+                    load_playbook_menu
+                else
+                    lxc restart --all; sleep 3
+                fi
+                ;;
             3) echo "🛑 Parando servidores..."; lxc stop --all; sleep 2 ;;
             4) restore_snapshot ;;
             5) destroy_all ;;
