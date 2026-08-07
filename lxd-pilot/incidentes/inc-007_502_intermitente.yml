@@ -1,0 +1,213 @@
+==============================================================================
+INCIDENT INJECTION: inc-007-apps-intermittent-502-backend
+ADAPTADO PARA FLOTA DE 10 SERVIDORES (Golden Base Lab)
+==============================================================================
+---
+# 1. CONFIGURAR EL BACKEND (El que responde lento)
+- name: Setup Backend API on Storage Node
+  hosts: backend_api
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Ensure /opt/backend directory exists
+      file:
+        path: /opt/backend
+        state: directory
+        mode: '0755'
+
+    - name: Deploy slow backend Python API
+      copy:
+        dest: /opt/backend/api.py
+        content: |
+          import http.server, socketserver, time, random
+          class SlowHandler(http.server.SimpleHTTPRequestHandler):
+              def do_GET(self):
+                  time.sleep(random.uniform(0.5, 2.5)) # Retraso aleatorio
+                  self.send_response(200)
+                  self.send_header('Content-type', 'text/plain')
+                  self.end_headers()
+                  self.wfile.write(b"OK\n")
+          if __name__ == '__main__':
+              with socketserver.TCPServer(("", 8080), SlowHandler) as httpd:
+                  httpd.serve_forever()
+        mode: '0755'
+
+    - name: Deploy systemd service for backend API
+      copy:
+        dest: /etc/systemd/system/backend-api.service
+        content: |
+          [Unit]
+          Description=Slow Backend API
+          After=network.target
+          [Service]
+          Type=simple
+          ExecStart=/usr/bin/python3 /opt/backend/api.py
+          Restart=always
+          [Install]
+          WantedBy=multi-user.target
+        mode: '0644'
+
+    - name: Start and enable backend API
+      systemd:
+        name: backend-api
+        state: started
+        enabled: yes
+        daemon_reload: yes
+
+    - name: Allow backend port in firewalld
+      ansible.posix.firewalld:
+        port: 8080/tcp
+        permanent: yes
+        state: enabled
+        immediate: yes
+
+==============================================================================
+# 2. CONFIGURAR LOS PROXYS SALUDABLES (La mayoría de la flota)
+==============================================================================
+- name: Setup Reverse Proxy on Healthy Fleet Nodes
+  hosts: frontend_fleet
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Install Nginx
+      dnf:
+        name: nginx
+        state: present
+
+    - name: Allow HTTP port in firewalld
+      ansible.posix.firewalld:
+        service: http
+        permanent: yes
+        state: enabled
+        immediate: yes
+
+    - name: Allow Nginx to make network connections (SELinux)
+      ansible.posix.seboolean:
+        name: httpd_can_network_connect
+        state: yes
+        persistent: yes
+
+    - name: Deploy standard Nginx reverse proxy config (Timeout seguro de 5s)
+      copy:
+        dest: /etc/nginx/conf.d/backend_proxy.conf
+        content: |
+          server {
+              listen 80;
+              server_name _;
+              location / {
+                  # VARIABLE DINÁMICA: Usa la IP real de server04 del inventario
+                  proxy_pass http://{{ hostvars['server04']['ansible_host'] }}:8080;
+                  proxy_read_timeout 5s;
+                  proxy_connect_timeout 2s;
+              }
+          }
+        mode: '0644'
+
+    - name: Remove default Nginx config to avoid conflicts
+      file:
+        path: /etc/nginx/conf.d/default.conf
+        state: absent
+
+    - name: Start and enable Nginx
+      systemd:
+        name: nginx
+        state: started
+        enabled: yes
+
+==============================================================================
+# 3. INYECTAR LA FALLA (El culpable oculto entre la multitud)
+==============================================================================
+- name: Inject Fault on Culprit Node
+  hosts: culprit_node
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Install Nginx on culprit (if not already done by other plays)
+      dnf:
+        name: nginx
+        state: present
+
+    - name: Allow HTTP port in firewalld on culprit
+      ansible.posix.firewalld:
+        service: http
+        permanent: yes
+        state: enabled
+        immediate: yes
+
+    - name: Break Nginx config by lowering proxy_read_timeout to 1s
+      copy:
+        dest: /etc/nginx/conf.d/backend_proxy.conf
+        content: |
+          server {
+              listen 80;
+              server_name _;
+              location / {
+                  proxy_pass http://{{ hostvars['server04']['ansible_host'] }}:8080;
+                  proxy_read_timeout 1s;  # <--- AQUÍ ESTÁ EL SABOTAGE
+                  proxy_connect_timeout 2s;
+              }
+          }
+        mode: '0644'
+
+    - name: Reload Nginx to apply broken config
+      systemd:
+        name: nginx
+        state: reloaded
+
+==============================================================================
+# 4. ENTREGAR EL TICKET DE INCIDENTE (MOTD)
+==============================================================================
+- name: Deploy full incident ticket to MOTD
+  hosts: all_nodes
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Deploy complete incident ticket to /etc/motd
+      copy:
+        dest: /etc/motd
+        content: |
+          ======================================================================
+          OPS-1070 - INCIDENTE - PRIORIDAD 2
+          ======================================================================
+          REPORTADO POR: API Gateway / Zabbix      HORA: 14:22 PM
+          RESUMEN: Errores intermitentes 502 Bad Gateway en la API de backend
+          ======================================================================
+          DESCRIPCIÓN:
+          El gateway externo reporta errores 502 intermitentes al enrutar 
+          tráfico a nuestra flota de frontend (server01 a server09). 
+          El servicio backend está en server04 y es alcanzable, pero los 
+          clientes experimentan fallos aleatorios (tasa de error ~30-40%).
+
+          NOTAS DEL TURNO NOCTURNO (Nivel 1):
+          "Revisé server04. CPU y memoria están bien, el servicio corre. 
+          Reinicié el proceso backend por si acaso. Corrí 'mtr' desde los 
+          nodos frontend a server04 y vi 0% de pérdida de paquetes. 
+          Revisé logs de Nginx en server01 y server02 y estaban limpios. 
+          Cierro como 'No se puede reproducir', parece un fallo de red 
+          transitorio o problema del cliente."
+
+          IMPACTO: Usuarios finales experimentan fallos en la UI y envíos de formularios.
+          ======================================================================
+        mode: '0644'
+
+==============================================================================
+# 5. VERIFICACIÓN SILENCIOSA (Para que tú, como creador, sepas que funciona)
+==============================================================================
+- name: Verify injection silently
+  hosts: culprit_node
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Run silent verification loop to confirm 502s
+      shell: |
+        for i in {1..10}; do
+          curl -s -o /dev/null -w "%{http_code}\n" http://localhost/
+        done | grep -q "502" && echo "502_DETECTED" || echo "NO_502"
+      register: verify_result
+      changed_when: false
+      failed_when: false
+
+    - name: Print clean status message for the instructor
+      debug:
+        msg: "✅ Incidente INC-007 inyectado perfectamente. El nodo culpable está generando 502s."
+      run_once: yes

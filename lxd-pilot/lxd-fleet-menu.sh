@@ -1,7 +1,35 @@
 #!/bin/bash
-# lxd-fleet-menu.sh - Menú con flujo de dos pasos
+# lxd-fleet-menu.sh - Menú con pasos secuenciales
 
 SNAPSHOT_NAME="golden-base"
+NETWORK_CONFIGURED=false
+PACKAGES_INSTALLED=false
+SNAPSHOT_CREATED=false
+
+# Función para verificar estado de configuración
+check_status() {
+    # Verificar si tiene IP fija (server01 debería tener 10.45.223.101)
+    IP_SERVER01=$(lxc exec server01 -- ip addr show eth0 2>/dev/null | grep "inet " | awk '{print $2}' | cut -d/ -f1 | head -1)
+    if [[ "$IP_SERVER01" == "10.45.223.101" ]]; then
+        NETWORK_CONFIGURED=true
+    else
+        NETWORK_CONFIGURED=false
+    fi
+    
+    # Verificar si tiene paquetes instalados
+    if lxc exec server01 -- rpm -q openssh-server &>/dev/null 2>&1; then
+        PACKAGES_INSTALLED=true
+    else
+        PACKAGES_INSTALLED=false
+    fi
+    
+    # Verificar si tiene snapshot
+    if lxc info server01 2>/dev/null | grep -q "$SNAPSHOT_NAME"; then
+        SNAPSHOT_CREATED=true
+    else
+        SNAPSHOT_CREATED=false
+    fi
+}
 
 get_states() {
     TOTAL=$(lxc list -c n --format csv 2>/dev/null | grep "server" | wc -l)
@@ -32,10 +60,10 @@ restore_snapshot() {
         if lxc info $NAME &>/dev/null; then
             lxc stop $NAME --force 2>/dev/null
             lxc restore $NAME $SNAPSHOT_NAME 2>/dev/null && echo "   ✅ $NAME restaurado" || echo "   ❌ $NAME no tiene snapshot"
+            lxc start $NAME 2>/dev/null
         fi
     done
-    echo "✅ Snapshots restaurados. Encendiendo servidores..."
-    lxc start --all 2>/dev/null
+    echo "✅ Snapshots restaurados."
     sleep 3
 }
 
@@ -69,14 +97,33 @@ load_playbook_menu() {
 while true; do
     clear
     get_states
+    check_status
     
     echo "========================================="
     echo "       🖥️  LXD FLEET MANAGER  🖥️"
     echo "========================================="
     echo "Estado: Total=$TOTAL | Running=$RUNNING | Stopped=$STOPPED"
     echo "-----------------------------------------"
-    lxc list
+    lxc list 
+    echo "-----------------------------------------"
     
+    # Mostrar estado de configuración
+    echo "📋 Estado de configuración:"
+    if [ "$NETWORK_CONFIGURED" = true ]; then
+        echo "   ✅ Red configurada (IPs fijas)"
+    else
+        echo "   ⬜ Red SIN configurar"
+    fi
+    if [ "$PACKAGES_INSTALLED" = true ]; then
+        echo "   ✅ Paquetes instalados"
+    else
+        echo "   ⬜ Paquetes SIN instalar"
+    fi
+    if [ "$SNAPSHOT_CREATED" = true ]; then
+        echo "   ✅ Snapshot creado"
+    else
+        echo "   ⬜ Snapshot SIN crear"
+    fi
     echo "-----------------------------------------"
 
     if [ "$TOTAL" -eq 0 ]; then
@@ -91,39 +138,60 @@ while true; do
             *) echo "Opción inválida"; sleep 1 ;;
         esac
 
-    elif [ "$RUNNING" -gt 0 ]; then
-        # Verificar si tienen snapshot (si no tienen, necesitan setup)
-        HAS_SNAPSHOT=$(lxc info server01 2>/dev/null | grep -c "golden-base")
-        
-        if [ "$HAS_SNAPSHOT" -eq 0 ]; then
-            echo "1) ⚙️  Paso 2: Configurar Golden Base + Snapshot"
-        fi
-        
-        echo "2) 🎭 Cargar Playbook (Ansible)"
-        echo "3) 🔄 Reiniciar todos (Restart)"
-        echo "4) 🛑 Parar todos (Stop)"
-        echo "5) 🔄 Restaurar snapshot (vuelve a Golden Base)"
-        echo "6) 🗑️  Destruir todo"
-        echo "7) Refrescar"
+    elif [ "$RUNNING" -eq 0 ] && [ "$STOPPED" -gt 0 ]; then
+        echo "1) ⏳ Encender todos (Start)"
+        echo "2) 🗑️  Destruir todo"
+        echo "3) Refrescar"
         echo "q) Salir"
         read -p "Opción: " opt
         case $opt in
-            1) 
-                if [ "$HAS_SNAPSHOT" -eq 0 ]; then
-                    ./setup-fleet.sh
-                else
-                    load_playbook_menu
-                fi
-                ;;
-            2) 
-                if [ "$HAS_SNAPSHOT" -eq 0 ]; then
-                    load_playbook_menu
-                else
-                    lxc restart --all; sleep 3
-                fi
-                ;;
+            1) lxc start --all; sleep 3 ;;
+            2) destroy_all ;;
+            3) continue ;;
+            q|Q) exit 0 ;;
+            *) echo "Opción inválida"; sleep 1 ;;
+        esac
+
+    elif [ "$RUNNING" -gt 0 ]; then
+        # Menú dinámico según estado de configuración
+        echo "1) 🎭 Cargar Playbook (Ansible)"
+        echo "2) 🔄 Reiniciar todos (Restart)"
+        echo "3) 🛑 Parar todos (Stop)"
+        
+        if [ "$NETWORK_CONFIGURED" = false ]; then
+            echo "4) 🌐 Configurar IPs fijas (Paso 2)"
+        elif [ "$PACKAGES_INSTALLED" = false ]; then
+            echo "4) 📦 Instalar paquetes base (Paso 3)"
+        elif [ "$SNAPSHOT_CREATED" = false ]; then
+            echo "4) 📸 Crear Golden Base Snapshot (Paso 4)"
+        else
+            echo "4) 🔄 Restaurar snapshot (vuelve a Golden Base)"
+        fi
+        
+        echo "5) 🗑️  Destruir todo"
+        echo "6) Refrescar"
+        echo "q) Salir"
+        
+        read -p "Opción: " opt
+        case $opt in
+            1) load_playbook_menu ;;
+            2) lxc restart --all; sleep 3 ;;
             3) echo "🛑 Parando servidores..."; lxc stop --all; sleep 2 ;;
-            4) restore_snapshot ;;
+            4) 
+                if [ "$NETWORK_CONFIGURED" = false ]; then
+                    ./setup-network.sh
+                    read -p "Presiona Enter para continuar..."
+                elif [ "$PACKAGES_INSTALLED" = false ]; then
+                    ./install-packages.sh
+                    read -p "Presiona Enter para continuar..."
+                elif [ "$SNAPSHOT_CREATED" = false ]; then
+                    ./create-snapshot.sh
+                    read -p "Presiona Enter para continuar..."
+                else
+                    restore_snapshot
+                    read -p "Presiona Enter para continuar..."
+                fi
+                ;;
             5) destroy_all ;;
             6) continue ;;
             q|Q) exit 0 ;;
@@ -131,3 +199,4 @@ while true; do
         esac
     fi
 done
+
