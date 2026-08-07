@@ -4,6 +4,21 @@
 SUBNET="10.45.223"
 GATEWAY="$SUBNET.1"
 NETWORK_NAME="lab-net"
+FLEET_PREFIX="server"
+FLEET_COUNT=10
+
+# 🕵️ Detectar contenedores existentes
+EXISTING=$(lxc list -c n --format csv 2>/dev/null | grep -v '^$' | wc -l)
+if [ "$EXISTING" -gt 0 ]; then
+    echo "⚠️  Ya existen $EXISTING contenedor(es) en el sistema:"
+    lxc list -c n
+    echo ""
+    read -p "¿Deseas eliminarlos antes de crear la nueva flota? (s/N): " clean
+    if [[ "$clean" == "s" || "$clean" == "S" ]]; then
+        echo "🗑️  Eliminando contenedores existentes..."
+        lxc list -c n --format csv | grep -v '^$' | xargs -r lxc delete --force
+    fi
+fi
 
 echo "🔧 Configurando red LXD '$NETWORK_NAME' ($SUBNET.0/24)..."
 if ! lxc network list -f csv | grep -q "^$NETWORK_NAME,"; then
@@ -33,23 +48,28 @@ EOF
 
 echo "🖼️  Verificando imagen de AlmaLinux 9..."
 if ! lxc image list -f csv | grep -q "almalinux/9"; then
+    echo "   -> Descargando imagen (puede tardar)..."
     lxc image copy images:almalinux/9 local: --alias almalinux9
 fi
 
-# 🌟 CLAVE DINÁMICA: Lee tu clave pública actual automáticamente
-SSH_KEY=$(cat ~/.ssh/id_lxd_fleet.pub 2>/dev/null || cat ~/.ssh/id_rsa.pub 2>/dev/null || echo "ssh-ed25519 TU_CLAVE_AQUI")
+# 🌟 CLAVE DINÁMICA
+SSH_KEY=$(cat ~/.ssh/id_lxd_fleet.pub 2>/dev/null || cat ~/.ssh/id_lab_pilot.pub 2>/dev/null || cat ~/.ssh/id_rsa.pub 2>/dev/null)
+if [ -z "$SSH_KEY" ]; then
+    echo "❌ ERROR: No se encontró ninguna clave pública en ~/.ssh/"
+    echo "   Genera una con: ssh-keygen -t ed25519 -f ~/.ssh/id_lxd_fleet"
+    exit 1
+fi
 
-echo "🚀 Desplegando flota de 10 servidores (server01 - server10)..."
-for i in {1..10}; do
-    NAME=$(printf "server%02d" $i)
-    IP="$SUBNET.$((100 + i))"
+echo "🚀 Desplegando flota de $FLEET_COUNT servidores ($FLEET_PREFIX 01-$FLEET_COUNT)..."
+for i in $(seq -w 1 $FLEET_COUNT); do
+    NAME="${FLEET_PREFIX}${i}"
+    IP="$SUBNET.$((100 + 10#$i))"
     
     if lxc info $NAME &>/dev/null; then
         echo "⚠️  $NAME ya existe. Saltando..."
         continue
     fi
 
-    # Cloud-init dinámico (sin comillas en EOF para que expanda $SSH_KEY)
     USER_DATA=$(cat <<EOF
 #cloud-config
 package_update: true
@@ -67,13 +87,13 @@ runcmd:
   - chmod 600 /root/.ssh/authorized_keys
   - systemctl enable --now sshd
   - sed -i 's/^#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+  - sed -i 's/^PermitRootLogin no/PermitRootLogin yes/' /etc/ssh/sshd_config
   - systemctl restart sshd
   - setenforce 0 || true
   - sed -i 's/^SELINUX=enforcing/SELINUX=permissive/' /etc/selinux/config
 EOF
 )
 
-    # Configuración de red estática persistente (Network Manager la respetará)
     NETWORK_CONFIG=$(cat <<EOF
 version: 2
 ethernets:
@@ -98,4 +118,4 @@ done
 
 echo "✅ Flota desplegada. Esperando 20s a que cloud-init termine..."
 sleep 20
-lxc list
+lxc list -c ns
