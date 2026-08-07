@@ -1,0 +1,34 @@
+---
+# playbook_test_pedro.yml
+# Crea usuario 'pedro' con expiración en 365 días
+
+- name: TEST - Crear usuario pedro en toda la flota
+  hosts: servers
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Calcular fecha de expiración (365 días)
+      set_fact:
+        expiration_epoch: "{{ (ansible_date_time.epoch | int) + (365 * 86400) }}"
+
+    - name: Crear usuario pedro
+      user:
+        name: pedro
+        comment: "Usuario de prueba - Expira en 365 días"
+        shell: /bin/bash
+        create_home: yes
+        groups: wheel
+        append: yes
+        expires: "{{ expiration_epoch }}"
+        password: "{{ 'pedro123' | password_hash('sha512') }}"
+        update_password: on_create
+
+    - name: Verificar usuario creado
+      command: id pedro
+      register: user_check
+      changed_when: false
+
+    - name: Mostrar resultado
+      debug:
+        msg: "✅ Usuario 'pedro' creado en {{ inventory_hostname }} ({{ ansible_host }}) - {{ user_check.stdout }}"
