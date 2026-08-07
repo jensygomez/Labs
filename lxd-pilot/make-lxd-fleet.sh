@@ -3,7 +3,7 @@
 
 SUBNET="10.45.223"
 GATEWAY="$SUBNET.1"
-NETWORK_NAME="lab-net"
+NETWORK_NAME="lxdbr0"  # ← CAMBIO: Usamos lxdbr0 en lugar de lab-net
 FLEET_PREFIX="server"
 FLEET_COUNT=10
 
@@ -20,12 +20,7 @@ if [ "$EXISTING" -gt 0 ]; then
     fi
 fi
 
-echo "🔧 Configurando red LXD '$NETWORK_NAME' ($SUBNET.0/24)..."
-if ! lxc network list -f csv | grep -q "^$NETWORK_NAME,"; then
-    lxc network create $NETWORK_NAME ipv4.address=$GATEWAY/24 ipv4.nat=true ipv4.dhcp=false
-else
-    lxc network set $NETWORK_NAME ipv4.address=$GATEWAY/24 2>/dev/null || true
-fi
+echo "✅ Usando red LXD existente: $NETWORK_NAME ($SUBNET.0/24)"
 
 echo "📦 Configurando perfil base 'profile-lab'..."
 lxc profile delete profile-lab 2>/dev/null || true
@@ -37,7 +32,7 @@ description: Perfil base barebone para los servidores del laboratorio
 devices:
   eth0:
     name: eth0
-    network: lab-net
+    network: lxdbr0  # ← CAMBIO: Usamos lxdbr0
     type: nic
   root:
     path: /
@@ -118,4 +113,4 @@ done
 
 echo "✅ Flota desplegada. Esperando 20s a que cloud-init termine..."
 sleep 20
-lxc list -c ns
+lxc list
