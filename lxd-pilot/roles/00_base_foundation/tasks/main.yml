@@ -73,3 +73,22 @@
 - name: Limpiar cache de DNF
   command: dnf clean all
   changed_when: false
+# --- PEGA ESTO AL FINAL DE TU main.yml ---
+
+# 8. Hacer la red persistente usando nmcli (NetworkManager)
+# Busca esta tarea y cámbiala:
+- name: Configurar IP estática persistente en NetworkManager
+  command: >
+    nmcli con mod "Wired connection 1" 
+    ipv4.addresses {{ ansible_host }}/24 
+    ipv4.gateway 10.77.77.254 
+    ipv4.dns 8.8.8.8 
+    ipv4.method manual
+  changed_when: true
+  notify: restart network
+
+# Aseguramos que el servicio de red se reinicie para aplicar los cambios de nmcli
+- name: Asegurar que NetworkManager esté activo
+  systemd:
+    name: NetworkManager
+    state: restarted

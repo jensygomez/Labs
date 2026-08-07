@@ -3,3 +3,5 @@
   systemd:
     name: sshd
     state: restarted
+- name: restart network
+  command: nmcli con up "Wired connection 1"
