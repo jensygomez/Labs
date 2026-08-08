@@ -1,15 +1,17 @@
 ---
-- name: "OPS-1070 - Diagnostico Tarea 1: Verificación de ulimit en Frontends"
+- name: Diagnostico de Drift por comparacion de Estado
   hosts: frontends
-  gather_facts: false
+  gather_facts: no
 
   tasks:
-    - name: "1.1 - Obtener ulimit -n del sistema"
-      ansible.builtin.shell: "ulimit -n"
-      register: sys_ulimit
-      changed_when: false
+    - name: Obtener informacion del archivo de proxy
+      ansible.builtin.stat:
+        path: /etc/nginx/conf.d/backend_proxy.conf
+      register: proxy_file_stat
 
-    - name: "1.2 - Alertar solo si ulimit es insuficiente (< 65535)"
+    - name: Reportar Estado y Checksum
       ansible.builtin.debug:
-        msg: "ANOMALÍA DETECTADA: {{ inventory_hostname }} tiene ulimit -n = {{ sys_ulimit.stdout }}"
-      when: sys_ulimit.stdout | int < 65535
+        msg: >
+          Nodo {{ inventory_hostname }} --> 
+          Existe: {{ proxy_file_stat.stat.exists }} | 
+          Checksum: {{ proxy_file_stat.stat.checksum | default('N/A') }}
