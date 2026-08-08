@@ -1,15 +1,15 @@
 ---
-- name: "OPS-1070 - Diagnostico de Frontends (Nginx/Proxy)"
+- name: "OPS-1070 - Diagnostico Tarea 1: Verificación de ulimit en Frontends"
   hosts: frontends
   gather_facts: false
 
   tasks:
-    - name: "1.1 - Verificar limite de archivos abiertos (ulimit) en Nginx"
+    - name: "1.1 - Obtener ulimit -n del sistema"
       ansible.builtin.shell: "ulimit -n"
-      register: nginx_ulimit
+      register: sys_ulimit
       changed_when: false
 
-    - name: "1.2 - Mostrar solo frontends con ulimit bajo (< 65535)"
+    - name: "1.2 - Alertar solo si ulimit es insuficiente (< 65535)"
       ansible.builtin.debug:
-        msg: "ATENCION {{ inventory_hostname }} tiene un ulimit de {{ nginx_ulimit.stdout }}"
-      when: nginx_ulimit.stdout | int < 65535
+        msg: "ANOMALÍA DETECTADA: {{ inventory_hostname }} tiene ulimit -n = {{ sys_ulimit.stdout }}"
+      when: sys_ulimit.stdout | int < 65535
