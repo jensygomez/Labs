@@ -136,6 +136,45 @@ PRIORITY: P? - [Priority description]
 
 ---
 
+---
+
+## SILENT VERIFICATION MECHANISM
+
+Every fault-injection script/playbook must include a verification step at the end that confirms the fault was successfully injected, without revealing any details about the root cause or which node is affected.
+
+**Requirements:**
+- The script must verify that all components of the fault are in place (services running, configurations modified, tickets deployed, etc.)
+- Output must be minimal: only "✅ Fault injected successfully" or "❌ ERROR: Fault injection failed"
+- NEVER reveal which node carries the fault
+- NEVER reveal what the root cause is
+- NEVER show diagnostic details that would give away the solution
+
+**Example verification structure (Bash):**
+```bash
+# Silent verification
+VERIFY_OK=true
+
+# Check that the fault components are in place
+if ! lxc exec server03 -- systemctl is-active --quiet nginx 2>/dev/null; then
+    VERIFY_OK=false
+fi
+
+if ! lxc exec server03 -- grep -q "proxy_read_timeout 1s" /etc/nginx/conf.d/backend_proxy.conf 2>/dev/null; then
+    VERIFY_OK=false
+fi
+
+if ! lxc exec server01 -- grep -q "OPS-1070" /etc/motd 2>/dev/null; then
+    VERIFY_OK=false
+fi
+
+if [ "$VERIFY_OK" = true ]; then
+    echo "✅ Fault injected successfully."
+else
+    echo "❌ ERROR: Fault injection failed."
+    exit 1
+fi
+
+
 ## ANSIBLE PLAYBOOK DESIGN RULES (Scalability for 1000-Server Fleets)
 
 **Jensy must create TWO playbooks per incident:**
