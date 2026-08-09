@@ -1,0 +1,9 @@
+---
+- name: OPS-1080 - Validar conexion con el servidor de backup
+  hosts: backup_server
+  gather_facts: false
+
+  tasks:
+    - name: Probar conectividad de Ansible
+      ansible.builtin.ping:
+ 

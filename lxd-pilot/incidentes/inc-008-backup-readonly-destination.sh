@@ -119,10 +119,14 @@ lxc exec server01 -- /usr/local/bin/nightly-backup.sh
 echo ""
 echo "💥 Step 5: Injecting fault on server01..."
 
+# server01 must be privileged: CAP_LINUX_IMMUTABLE is only enforceable
+# against the initial user namespace, so unprivileged LXC containers
+# cannot set the immutable inode flag even as root inside the container.
+lxc config set server01 security.privileged true
+lxc restart server01
+sleep 5
+
 # DO NOT READ — ROOT CAUSE
-# The backup destination directory has the immutable attribute set.
-# Any attempt to create new files or subdirectories will fail with
-# "Operation not permitted", but the backup script ignores the error.
 lxc exec server01 -- chattr +i /backup/destination
 
 # ==========================================
