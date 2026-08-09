@@ -1,9 +1,17 @@
 ---
-- name: OPS-1080 - Validar conexion con el servidor de backup
+- name: Remediation - INC-008 Backup Readonly Destination
   hosts: backup_server
   gather_facts: false
 
   tasks:
-    - name: Probar conectividad de Ansible
-      ansible.builtin.ping:
+    - name: Asegurar que /backup/destination exista y que no tenga atributo inmutable
+      ansible.builtin.file:
+        path: backup/destination
+        state: directory
+        attributes: "-i"
+        mode: '0755'
+        owner: root
+        group: root
+
+
  
