@@ -27,6 +27,48 @@ The infrastructure runs on **LXD/LXC containers** (with optional KVM/libvirt VMs
 - **Resource budget:** 1-2GB RAM / 1-2 vCPU per VM
 - **Use cases:** inc-019 (GRUB2), inc-036 (initramfs), inc-037 (fsck), inc-041 (journal/machine-id), inc-044 (LVM filter)
 
+### Storage Node Implementation Policy
+
+Default: the storage node runs as a PRIVILEGED LXD container with loop-device-backed
+block storage, NOT a full VM. `security.privileged=true` grants CAP_SYS_ADMIN and
+kernel-flag capabilities (chattr, mount, LVM, NFS server) without the boot/resource
+cost of a VM, since it shares the host kernel.
+
+Escalate to a real KVM/libvirt VM ONLY for the incidents that require an isolated
+kernel/boot path: inc-019, inc-036, inc-037, inc-041, inc-044 (unchanged from
+existing list).
+
+## TOPOLOGY UTILIZATION RULE — All-Node Involvement (mandatory from inc-009 onward)
+
+Minimum footprint per incident: 4 nodes — 3 in the HA fleet tier (server01-03) +
+1 storage/backend node (server04). Maximum: 10 nodes total, to protect laptop
+resources. Incidents may use more than 4 when the domain calls for it (e.g. a
+second storage tier, a dedicated DB node distinct from NFS, etc.), always within
+the 10-node ceiling.
+
+Every provisioned node must have a REAL functional role and REAL active traffic —
+no node exists purely as "installed and idle." Specifically:
+
+- The storage node must run a real backing service relevant to the incident's
+  domain (NFS export, database, object store, rsync target) — never a bare local
+  directory standing in for a service.
+- The fleet nodes (whichever are healthy) must be ACTIVELY generating real,
+  continuous traffic against that backend — cron/systemd-timer jobs doing real
+  writes/reads/queries — not just present in the inventory. This is what forces
+  genuine differentiation between "healthy but present" and "actually faulty"
+  instead of trivially spotting the one node with an obviously different config.
+- Where 2+ nodes could plausibly be blamed, the incident design must require
+  per-node/per-process instrumentation to isolate the real culprit (e.g.
+  `/proc/<PID>/io`, per-node auth logs, per-node connection state) rather than
+  a single aggregate signal that only proves "someone" is misbehaving.
+
+Design checklist before shipping inc-009+:
+1. Does every provisioned node have a real functional role, not idle?
+2. Does isolating the fault require differentiating between plausible suspects?
+3. Will the (Jensy-authored) triage playbook run against the full fleet/storage
+   group, not a single hardcoded host?
+4. Is the shared backend a real dedicated service, not a stand-in directory?
+
 ### Topology Patterns
 1. **Fleet Pattern (Default):** 3-4 containers for distributed/networked incidents
    - `server01-server03`: "the fleet" (identical baseline, one carries the fault)
@@ -281,8 +323,8 @@ inc-004-users-ssh-directory-permissions ✅ built, run, resolved
 inc-005-perf-heavy-cron-job ✅ built, run, resolved
 inc-006-logs-app-log-ownership ✅ built, run, resolved
 inc-007-apps-intermittent-502-backend ✅ built, run, resolved
-inc-008-backup-readonly-destination
-inc-009-cross-db-password-mismatch
+inc-008-backup-readonly-destination ✅ built, run, resolved
+inc-009-cross-db-password-mismatch ✅ built, run, resolved
 inc-010-boot-degraded-systemd-dependency
 🟡 Level 4/10 (11–20) — medium cascade, 2 false negatives, single node except #20 (NFS → 2 nodes)
 inc-011-storage-lvm-growfs-missing

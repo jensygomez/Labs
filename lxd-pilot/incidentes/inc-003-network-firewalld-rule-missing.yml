@@ -1,0 +1,188 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# INC-003: Missing Internal Firewall Rule (Service Unreachable Across Fleet)
+# Topology: node01/02/03 = app fleet | node04 = monitoring / gateway node
+# DO NOT open this file line-by-line before finishing triage if you want 
+# to practice cold diagnostics -- the affected node and root cause are 
+# hardcoded below, marked. Always start from the ticket.
+
+IP = {
+  "node01" => "192.168.122.11",
+  "node02" => "192.168.122.12",
+  "node03" => "192.168.122.13",
+  "node04" => "192.168.122.14",
+}
+
+Vagrant.configure("2") do |config|
+
+  # === INYECTAR CLAVE SSH EN TODAS LAS VMs ===
+  public_key = File.read(File.expand_path("~/.ssh/id_ed25519.pub")).strip
+  config.vm.provision "shell", privileged: false, inline: <<-SHELL
+    echo "#{public_key}" >> /home/vagrant/.ssh/authorized_keys
+    chmod 600 /home/vagrant/.ssh/authorized_keys
+  SHELL
+
+  # ============================================================
+  # GLOBAL PROVISIONING -- Minimal, only what's functionally required
+  # ============================================================
+  config.vm.provision "shell", privileged: true, inline: <<-SHELL
+    echo "Installing base networking utilities..."
+    dnf install -y firewalld nc
+    systemctl enable --now firewalld
+  SHELL
+
+  # ============================================================
+  # NODE04 -- Gateway / Health Checker Node
+  # ============================================================
+  config.vm.define "node04" do |n|
+    n.vm.box = "almalinux/9"
+    n.vm.hostname = "node04"
+    n.vm.network "private_network",
+      ip: IP["node04"], libvirt__network_name: "mgmt-net", libvirt__dhcp_enabled: false
+    n.vm.provider "libvirt" do |lv|
+      lv.memory = 1024
+      lv.cpus = 1
+      lv.driver = "kvm"
+    end
+
+    n.vm.provision "shell", privileged: true, inline: <<-SHELL
+      echo "==> node04: setting up monitoring checker..."
+      cat > /usr/local/bin/check-fleet-api.sh <<-'CHECKER'
+#!/bin/bash
+for ip in 192.168.122.11 192.168.122.12 192.168.122.13; do
+  echo -n "Checking $ip:8080 ... "
+  if nc -zv -w 2 $ip 8080 >/dev/null 2>&1; then
+    echo "OK"
+  else
+    echo "FAILED (No route or connection timed out)"
+  fi
+done
+CHECKER
+      chmod +x /usr/local/bin/check-fleet-api.sh
+    SHELL
+  end
+
+  # ============================================================
+  # FLEET: node01, node02, node03 -- Identical baseline
+  # ============================================================
+  ["node01", "node02", "node03"].each do |node|
+    config.vm.define node do |n|
+      n.vm.box = "almalinux/9"
+      n.vm.hostname = node
+      n.vm.network "private_network",
+        ip: IP[node], libvirt__network_name: "mgmt-net", libvirt__dhcp_enabled: false
+      n.vm.provider "libvirt" do |lv|
+        lv.memory = 1024
+        lv.cpus = 1
+        lv.driver = "kvm"
+      end
+
+      n.vm.provision "shell", privileged: true, inline: <<-SHELL
+        echo "==> #{node}: Setting up Python internal API service..."
+        dnf install -y python3
+
+        # Simple HTTP API Server listening on 8080
+        cat > /usr/local/bin/app-api.py <<-'PYSERVICE'
+import http.server
+import socketserver
+
+PORT = 8080
+Handler = http.server.SimpleHTTPRequestHandler
+
+with socketserver.TCPServer(("", PORT), Handler) as httpd:
+    print(f"Serving API on port {PORT}")
+    httpd.serve_forever()
+PYSERVICE
+        chmod +x /usr/local/bin/app-api.py
+
+        cat > /etc/systemd/system/app-api.service <<-'UNIT'
+[Unit]
+Description=Internal Application API
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/bin/app-api.py
+Restart=always
+User=nobody
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+        systemctl daemon-reload
+        systemctl enable --now app-api.service
+
+        # Standard Baseline: Open port 8080/tcp permanently
+        firewall-cmd --permanent --add-port=8080/tcp
+        firewall-cmd --reload
+        echo "==> #{node}: Baseline complete."
+      SHELL
+
+      # Ticket lives on every fleet node
+      n.vm.provision "shell", privileged: false, inline: <<-SHELL
+        cat > ~/TICKET_INC-003.txt <<-'TICKET'
+======================================================================
+INC-003 - INCIDENT - P2
+REPORTED BY: Datadog / Network Health Checker         TIME: 03:15 AM
+SUMMARY: Internal API Service timeout on one of the fleet nodes
+DESCRIPTION:
+The internal API service (listening on TCP port 8080) is failing network 
+health checks from node04 (gateway/checker). Connections to one specific 
+fleet node are timing out, causing downstream microservices to drop requests.
+
+NOTES FROM PREVIOUS SHIFT (L1 night):
+"Checked the app-api.service status across all nodes; systemctl says 
+it's ACTIVE (running) everywhere. I noticed a line in systemd logs 
+saying 'broken pipe' and assumed python3 crashed or the socket failed to bind. 
+I restarted the app-api service on all nodes, but node04 still gets 
+timeout errors when polling the service. Left ticket for day shift."
+
+CLIENT IMPACT: Intermittent HTTP 504 errors on external API endpoints.
+
+RESOLUTION CRITERIA:
+1. Identify and discard the false negative (the systemd/python restart theory).
+2. Isolate which specific node is unreachable on port 8080/tcp.
+3. Diagnose the root cause (Firewall rule missing vs process not listening vs routing).
+4. Restore access by opening port 8080/tcp permanently on firewalld.
+5. Build a generic Ansible Triage & Remediation playbook for future network/firewall issues.
+======================================================================
+TICKET
+        echo "Ticket available at ~/TICKET_INC-003.txt"
+      SHELL
+    end
+  end
+
+  # ============================================================
+  # ROOT CAUSE -- ONLY on the chosen node. DO NOT READ if you want
+  # to practice cold diagnostics.
+  # Affected node: node03
+  # Fault: TCP port 8080 is removed from firewalld runtime & permanent 
+  # configuration on node03, causing silent TCP drop (timeout).
+  # ============================================================
+  config.vm.define "node03" do |n|
+    n.vm.provision "shell", privileged: true, inline: <<-SHELL
+      echo "[FAULT] Injecting INC-003 missing firewall rule on node03..."
+      
+      firewall-cmd --permanent --remove-port=8080/tcp
+      firewall-cmd --reload
+
+      # Re-injection script for Phase 2 idempotency testing
+      cat > /home/vagrant/break-firewall.sh <<-'BREAK'
+#!/bin/bash
+set -e
+echo "Re-injecting INC-003 (removing port 8080/tcp from firewalld on $(hostname))..."
+
+firewall-cmd --permanent --remove-port=8080/tcp
+firewall-cmd --reload
+
+echo "Incident re-injected. Port 8080/tcp is now blocked."
+BREAK
+      chmod +x /home/vagrant/break-firewall.sh
+      chown vagrant:vagrant /home/vagrant/break-firewall.sh
+      
+      echo "[FAULT] Ready."
+    SHELL
+  end
+
+end
