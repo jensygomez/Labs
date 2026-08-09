@@ -12,6 +12,51 @@
         mode: '0755'
         owner: root
         group: root
+    - name: 2. Desplegar script de backup mejorado con validaciones estrictas
+      ansible.builtin.copy:
+        dest: /usr/local/bin/nightly-backup.sh
+        mode: '0755'
+        owner: root
+        group: root
+        content: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          BACKUP_SRC="/var/lib/appdata"
+          BACKUP_DST="/backup/destination"
+          LOG_FILE="/var/log/backup.log"
+          DATE=$(date +%Y%m%d)
+          TARGET_DIR="$BACKUP_DST/$DATE"
+
+          log() {
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+          }
+
+          log "Starting nightly backup..."
+
+          if [ ! -w "$BACKUP_DST" ]; then
+              log "ERROR: Destination directory $BACKUP_DST is not writable." >&2
+              exit 1
+          fi
+
+          mkdir -p "$TARGET_DIR"
+
+          if rsync -aq "$BACKUP_SRC/" "$TARGET_DIR/"; then
+              FILE_COUNT=$(ls -A "$TARGET_DIR" | wc -l)
+              if [ "$FILE_COUNT" -gt 0 ]; then
+                  SIZE=$(du -sh "$TARGET_DIR" | cut -f1)
+                  log "Backup completed successfully. Copied $FILE_COUNT files ($SIZE)."
+                  exit 0
+              else
+                  log "ERROR: Backup completed but destination folder is empty." >&2
+                  exit 1
+              fi
+          else
+              log "ERROR: rsync failed to copy data." >&2
+              exit 1
+          fi
+        
+    
 
 
  
