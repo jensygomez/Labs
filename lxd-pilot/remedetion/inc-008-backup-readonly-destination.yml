@@ -4,14 +4,24 @@
   gather_facts: false
 
   tasks:
-    - name: Asegurar que /backup/destination exista y que no tenga atributo inmutable
+    - name: 1. Remover Atributo inmutable de /backup/destination si estuviera activo
+      ansible.builtin.shell: |
+        if lsattr -d /backup/destination | awk '{print $1}' | grep -q 'i'; then
+            chattr -i /backup/destination
+            echo "changed"
+        else
+            echo "ok"
+        fi
+      register: chattr_result
+      changed_when: "'changed' in chattr_result.stdout"
+    - name: 1b. Asegurar permisos y propietarios en /backup/destination
       ansible.builtin.file:
-        path: backup/destination
+        path: /backup/destination
         state: directory
-        attributes: "-i"
         mode: '0755'
         owner: root
         group: root
+
     - name: 2. Desplegar script de backup mejorado con validaciones estrictas
       ansible.builtin.copy:
         dest: /usr/local/bin/nightly-backup.sh
@@ -59,4 +69,20 @@
     
 
 
- 
+    - name: 3. Ejecutar el script de backup manualmente
+      ansible.builtin.command: /usr/local/bin/nightly-backup.sh
+      register: backup_exec
+      changed_when: true
+
+    - name: 4. Validar el contenido copiado en /backup/destination
+      ansible.builtin.command: ls -lh /backup/destination/
+      register: backup_ls
+      changed_when: false
+
+    - name: 5. Mostrar salida de la ejecucion y verificacion
+      ansible.builtin.debug:
+        msg:
+          - "--- Salida del Script ---"
+          - "{{ backup_exec.stdout_lines }}"
+          - "--- Directorio de Destino ---"
+          - "{{ backup_ls.stdout_lines }}"
