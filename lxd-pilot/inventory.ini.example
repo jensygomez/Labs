@@ -1,7 +1,0 @@
-[app_fleet]
-server01 ansible_host=10.45.223.10
-server02 ansible_host=10.45.223.11
-server03 ansible_host=10.45.223.12
-
-[monitoring]
-monitoring ansible_host=10.45.223.20

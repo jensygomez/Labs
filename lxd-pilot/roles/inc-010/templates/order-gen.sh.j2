@@ -1,4 +1,0 @@
-#!/bin/bash
-mkdir -p /var/spool/orders
-echo "{\"node\":\"$(hostname)\",\"order_id\":\"$(date +%s%N)\",\"ts\":\"$(date -Is)\"}" \
-  > /var/spool/orders/order-$(date +%s%N).json

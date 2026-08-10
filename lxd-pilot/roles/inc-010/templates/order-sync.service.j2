@@ -1,8 +1,0 @@
-[Unit]
-Description=Sync local orders to central S3 storage
-Requires=s3-backend.service
-After=s3-backend.service
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/order-sync.sh

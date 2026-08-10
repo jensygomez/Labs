@@ -1,7 +1,0 @@
----
-fakecloud_endpoint: "http://10.45.223.1:4566"
-aws_access_key: test
-aws_secret_key: test
-aws_region: us-east-1
-node_exporter_textfile_dir: /var/lib/node_exporter/textfile_collector
-prometheus_rules_dir: /opt/prometheus/rules
