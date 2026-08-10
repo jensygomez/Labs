@@ -117,6 +117,19 @@ resource "lxd_instance" "fakecloud" {
           content: |
             PermitRootLogin yes
             PasswordAuthentication no
+        - path: /root/.aws/credentials
+          owner: root:root
+          permissions: '0600'
+          content: |
+            [default]
+            aws_access_key_id = test
+            aws_secret_access_key = test
+        - path: /root/.aws/config
+          owner: root:root
+          permissions: '0600'
+          content: |
+            [default]
+            region = us-east-1
       packages:
         - python3
         - openssh-server
@@ -125,6 +138,7 @@ resource "lxd_instance" "fakecloud" {
         - curl
         - unzip
         - bind-utils
+        - awscli
       runcmd:
         - ssh-keygen -A
         - systemctl enable --now sshd
@@ -197,14 +211,11 @@ resource "null_resource" "setup_fakecloud" {
       "export AWS_ACCESS_KEY_ID=test",
       "export AWS_SECRET_ACCESS_KEY=test",
       "export AWS_DEFAULT_REGION=us-east-1",
-      "dnf install -y awscli",
-      "curl -fsSL https://fakecloud.dev/install.sh | bash",
-      "nohup fakecloud --port 4566 --host 0.0.0.0 > /var/log/fakecloud.log 2>&1 &",
-      "sleep 10",
-      "aws --endpoint-url http://localhost:4566 s3 mb s3://labs-logs || true",
-      "aws --endpoint-url http://localhost:4566 iam create-role --role-name app-role --assume-role-policy-document '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ec2.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}' || true",
-      "aws --endpoint-url http://localhost:4566 iam attach-role-policy --role-name app-role --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess || true",
-      "aws --endpoint-url http://localhost:4566 rds create-db-instance --db-instance-identifier mydb --db-instance-class db.t3.micro --engine postgres --master-username admin --master-user-password password123 --allocated-storage 20 || true"
+      "export AWS_ENDPOINT_URL=http://10.45.223.1:4566",
+      "aws s3 mb s3://labs-logs || true",
+      "aws iam create-role --role-name app-role --assume-role-policy-document '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ec2.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}' || true",
+      "aws iam attach-role-policy --role-name app-role --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess || true",
+      "aws rds create-db-instance --db-instance-identifier mydb --db-instance-class db.t3.micro --engine postgres --master-username admin --master-user-password password123 --allocated-storage 20 || true"
     ]
     connection {
       type        = "ssh"
@@ -223,7 +234,7 @@ resource "null_resource" "setup_monitoring" {
       "wget -q https://github.com/prometheus/prometheus/releases/download/v2.51.0/prometheus-2.51.0.linux-amd64.tar.gz",
       "tar -xzf prometheus-2.51.0.linux-amd64.tar.gz",
       "mv prometheus-2.51.0.linux-amd64 /opt/prometheus",
-      "cat > /opt/prometheus/prometheus.yml <<'EOF'\nglobal:\n  scrape_interval: 15s\nscrape_configs:\n  - job_name: 'lxc'\n    static_configs:\n      - targets: ['${lxd_instance.server[0].ipv4_address}:9100', '${lxd_instance.server[1].ipv4_address}:9100', '${lxd_instance.server[2].ipv4_address}:9100']\n  - job_name: 'fakecloud'\n    static_configs:\n      - targets: ['${lxd_instance.fakecloud.ipv4_address}:4566']\nEOF",
+      "cat > /opt/prometheus/prometheus.yml <<'EOF'\nglobal:\n  scrape_interval: 15s\nscrape_configs:\n  - job_name: 'lxc'\n    static_configs:\n      - targets: ['${lxd_instance.server[0].ipv4_address}:9100', '${lxd_instance.server[1].ipv4_address}:9100', '${lxd_instance.server[2].ipv4_address}:9100']\n  - job_name: 'fakecloud'\n    static_configs:\n      - targets: ['10.45.223.1:4566']\nEOF",
       "nohup /opt/prometheus/prometheus --config.file=/opt/prometheus/prometheus.yml --web.listen-address=0.0.0.0:9090 > /var/log/prometheus.log 2>&1 &"
     ]
     connection {
