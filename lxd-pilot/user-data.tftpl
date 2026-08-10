@@ -1,0 +1,39 @@
+#cloud-config
+disable_root: false
+
+ssh_authorized_keys:
+  - ${ssh_pubkey}
+
+write_files:
+  - path: /root/.ssh/authorized_keys
+    owner: root:root
+    permissions: '0600'
+    content: |
+      ${ssh_pubkey}
+
+  - path: /etc/ssh/sshd_config.d/00-lxd-root.conf
+    owner: root:root
+    permissions: '0644'
+    content: |
+      PermitRootLogin yes
+
+package_update: true
+
+packages:
+  - python3
+  - openssh-server
+  - e2fsprogs
+  - tar
+  - wget
+
+runcmd:
+  - ssh-keygen -A
+  - mkdir -p /root/.ssh
+  - chmod 700 /root/.ssh
+  - chown root:root /root/.ssh/authorized_keys || true
+  - chmod 600 /root/.ssh/authorized_keys || true
+  - sed -i -E "s/^#?PermitRootLogin.*/PermitRootLogin yes/" /etc/ssh/sshd_config || true
+  - systemctl enable --now sshd
+  - systemctl restart sshd
+
+final_message: "cloud-init finished"
