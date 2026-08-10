@@ -58,10 +58,9 @@ resource "lxd_container" "server" {
         - wget
       runcmd:
         - ssh-keygen -A
-        - systemctl enable --now sshd
         - sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
         - sed -i 's/PermitRootLogin no/PermitRootLogin yes/' /etc/ssh/sshd_config
-        - systemctl restart sshd
+        - systemctl enable --now sshd
     EOT
   }
 }
