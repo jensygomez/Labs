@@ -13,7 +13,6 @@ terraform {
 
 provider "lxd" {}
 
-# 1. Perfil Base LXD para los nodos
 resource "lxd_profile" "fleet" {
   name = "fleet"
   config = {
@@ -21,6 +20,16 @@ resource "lxd_profile" "fleet" {
     "limits.memory"       = "512MB"
     "security.privileged" = "true"
   }
+
+  device {
+    name = "root"
+    type = "disk"
+    properties = {
+      path = "/"
+      pool = "default"
+    }
+  }
+
   device {
     name = "eth0"
     type = "nic"
@@ -30,24 +39,13 @@ resource "lxd_profile" "fleet" {
   }
 }
 
-# 2. Flota de Servidores (server01, server02, server03)
 resource "lxd_container" "server" {
-  count     = 3
-  name      = format("server%02d", count.index + 1)
-  image     = "images:almalinux/9"
-  profiles  = [lxd_profile.fleet.name]
+  count    = 3
+  name     = format("server%02d", count.index + 1)
+  image    = "almalinux9"
+  profiles = [lxd_profile.fleet.name]
 
   config = {
-    "user.network-config" = <<-EOT
-      version: 2
-      ethernets:
-        eth0:
-          addresses:
-            - 10.45.223.${101 + count.index}/24
-          gateway4: 10.45.223.1
-          nameservers:
-            addresses: [8.8.8.8, 1.1.1.1]
-    EOT
     "user.user-data" = <<-EOT
       #cloud-config
       ssh_authorized_keys:
@@ -59,6 +57,7 @@ resource "lxd_container" "server" {
         - tar
         - wget
       runcmd:
+        - ssh-keygen -A
         - systemctl enable --now sshd
         - sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
         - sed -i 's/PermitRootLogin no/PermitRootLogin yes/' /etc/ssh/sshd_config
@@ -67,23 +66,12 @@ resource "lxd_container" "server" {
   }
 }
 
-# 3. Contenedor de Monitoreo (Prometheus)
 resource "lxd_container" "monitoring" {
   name     = "monitoring"
-  image    = "images:almalinux/9"
+  image    = "almalinux9"
   profiles = [lxd_profile.fleet.name]
 
   config = {
-    "user.network-config" = <<-EOT
-      version: 2
-      ethernets:
-        eth0:
-          addresses:
-            - 10.45.223.105/24
-          gateway4: 10.45.223.1
-          nameservers:
-            addresses: [8.8.8.8, 1.1.1.1]
-    EOT
     "user.user-data" = <<-EOT
       #cloud-config
       ssh_authorized_keys:
@@ -94,21 +82,21 @@ resource "lxd_container" "monitoring" {
         - wget
         - tar
       runcmd:
+        - ssh-keygen -A
         - systemctl enable --now sshd
     EOT
   }
 }
 
-# 4. Inventario dinámico para Ansible
 resource "local_file" "inventory" {
   content = templatefile("${path.module}/inventory.tpl", {
     servers = [
-      { name = "server01", ip = "10.45.223.101" },
-      { name = "server02", ip = "10.45.223.102" },
-      { name = "server03", ip = "10.45.223.103" }
+      for c in lxd_container.server : {
+        name = c.name
+        ip   = c.ip_address
+      }
     ]
-    monitoring_ip = "10.45.223.105"
-    fakecloud_ip  = "127.0.0.1" # fakecloud corriendo nativamente en el host
+    monitoring_ip = lxd_container.monitoring.ip_address
   })
   filename = "${path.module}/inventory.ini"
 }
