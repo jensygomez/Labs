@@ -1,0 +1,58 @@
+---
+# inc-010.yml
+# Run with: ansible-playbook -i inventory.ini inc-010.yml
+#
+# Replaces the old inc-010-boot-degraded-systemd-dependency.sh (Steps 0-10)
+# with five idempotent plays. Re-running this playbook top to bottom is
+# always safe: only what actually changed gets touched.
+
+- name: "Step A - Base platform (all fleet + monitoring)"
+  hosts: app_fleet:monitoring
+  become: true
+  roles:
+    - common
+
+- name: "Step B - Deploy inc-010 order pipeline (healthy state)"
+  hosts: app_fleet:monitoring
+  become: true
+  tasks:
+    - name: Deploy inc-010 order pipeline and Prometheus alert rule
+      ansible.builtin.include_role:
+        name: inc-010
+        tasks_from: deploy
+
+- name: "Step C - Let a healthy baseline build up"
+  hosts: app_fleet
+  gather_facts: false
+  tasks:
+    - name: Wait for a couple of order-gen/order-sync cycles
+      ansible.builtin.pause:
+        seconds: 90
+      run_once: true
+
+- name: "Step D - Deploy incident ticket to every node"
+  hosts: app_fleet:monitoring
+  become: true
+  vars_files:
+    - roles/inc-010/vars/main.yml
+  tasks:
+    - name: Deploy incident ticket
+      ansible.builtin.include_role:
+        name: common
+        tasks_from: deploy_ticket
+
+- name: "Step E - Inject fault, reboot fleet, verify"
+  hosts: app_fleet
+  become: true
+  roles:
+    - role: inc-010
+  tasks:
+    - name: Inject the fault and reboot the fleet
+      ansible.builtin.include_role:
+        name: inc-010
+        tasks_from: inject_fault
+
+    - name: Verify fault injection
+      ansible.builtin.include_role:
+        name: inc-010
+        tasks_from: verify

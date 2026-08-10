@@ -1,0 +1,20 @@
+#!/bin/bash
+mkdir -p /root/.aws
+sleep {{ creds_setup_delay_seconds }}
+cat > /root/.aws/credentials << 'CREDS'
+[default]
+aws_access_key_id = {{ aws_access_key }}
+aws_secret_access_key = {{ aws_secret_key }}
+CREDS
+cat > /root/.aws/config << 'CONF'
+[default]
+region = {{ aws_region }}
+CONF
+
+# Explicit readiness flag. We check THIS file rather than trusting the
+# AWS CLI to fail on missing credentials, because FakeCloud does not
+# validate credentials at all -- an unauthenticated request still
+# succeeds against it. Without this flag, s3-backend.sh would report
+# success even when it started before this service finished.
+mkdir -p /var/lib/aws-creds-setup
+touch /var/lib/aws-creds-setup/.ready

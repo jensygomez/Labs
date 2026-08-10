@@ -1,0 +1,14 @@
+[Unit]
+Description=S3 Backend Connectivity Check
+{% if with_dependency | default(true) %}
+Requires=aws-creds-setup.service
+After=aws-creds-setup.service
+{% endif %}
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/s3-backend.sh
+
+[Install]
+WantedBy=multi-user.target

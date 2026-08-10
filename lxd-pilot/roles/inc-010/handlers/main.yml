@@ -1,0 +1,7 @@
+---
+- name: reload prometheus
+  ansible.builtin.shell: >
+    kill -HUP $(cat /opt/prometheus/prometheus.pid 2>/dev/null) 2>/dev/null
+    || pkill -HUP prometheus
+  changed_when: true
+  failed_when: false

@@ -1,0 +1,52 @@
+---
+bucket_name: central-orders
+fault_node: server02
+creds_setup_delay_seconds: 4
+
+ticket_text: |
+  ======================================================================
+  OPS-1091 - INCIDENT - P2
+  ======================================================================
+  REPORTED BY: Central Orders Dashboard / Prometheus     TIME: 06:40 AM
+  SUMMARY: One fleet node stopped delivering orders to central S3
+  storage after last night's maintenance reboot
+  ======================================================================
+  DESCRIPTION:
+  The order-gen/order-sync pipeline runs on server01-03 (HA fleet tier).
+  Each node generates order files locally and syncs them every minute to
+  a central S3 bucket (s3://central-orders) on the FakeCloud endpoint.
+  A nightly maintenance window rebooted all three fleet nodes at 03:00 AM.
+
+  Since that reboot, the central-orders dashboard shows order files
+  arriving from only two of the three fleet nodes. The load balancer's
+  HTTP health checks against /health on all three nodes continue to
+  return 200 OK, and no nginx errors have been logged.
+
+  NOTES FROM PREVIOUS SHIFT (Night L1):
+  "Logged into the FakeCloud console and checked the S3 bucket - the
+  bucket exists, permissions look correct, and I can list objects from
+  my laptop without any issues. Pinged the FakeCloud endpoint from all
+  three fleet nodes - 0% packet loss. Concluded S3 itself is completely
+  healthy and this is probably a stale dashboard cache. Closed as false
+  alarm."
+
+  CLIENT IMPACT:
+  Central order reconciliation depends on every fleet node's orders
+  landing in s3://central-orders. A node that keeps passing its load
+  balancer health check while silently failing to deliver orders after a
+  reboot can keep receiving production traffic indefinitely without
+  anyone noticing, until finance flags a reconciliation gap days later.
+
+  RESOLUTION CRITERIA:
+  1. Identify which fleet node stopped delivering orders after the
+     maintenance reboot, and why.
+  2. Determine why the HTTP health check did not catch this.
+  3. Fix the root cause so the affected node reliably connects to S3
+     and resumes syncing on every future boot, not just this one.
+  4. Verify by checking order arrivals in S3 for all three nodes and
+     confirming the affected node's systemd boot state is no longer
+     degraded.
+  5. Automate the fix in an idempotent Ansible role.
+
+  PRIORITY: P2 - Silent degradation surviving reboots, monitoring blind spot.
+  ======================================================================

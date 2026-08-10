@@ -1,0 +1,9 @@
+[Unit]
+Description=Run order-sync every 60s
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=60s
+
+[Install]
+WantedBy=timers.target

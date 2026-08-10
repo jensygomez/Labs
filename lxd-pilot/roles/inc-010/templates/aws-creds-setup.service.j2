@@ -1,0 +1,10 @@
+[Unit]
+Description=Provision AWS credentials for S3 backend access
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/aws-creds-setup.sh
+
+[Install]
+WantedBy=multi-user.target

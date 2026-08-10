@@ -1,0 +1,43 @@
+---
+# roles/common/tasks/main.yml
+# Base platform setup, identical for every incident. Runs once per node.
+
+- name: Install base packages (nginx, curl)
+  ansible.builtin.dnf:
+    name:
+      - nginx
+      - curl
+    state: present
+
+- name: Enable and start nginx
+  ansible.builtin.systemd:
+    name: nginx
+    enabled: true
+    state: started
+
+- name: Deploy independent liveness health endpoint
+  ansible.builtin.copy:
+    content: "OK\n"
+    dest: /usr/share/nginx/html/health
+    mode: '0644'
+
+- name: Ensure node_exporter textfile collector directory exists
+  ansible.builtin.file:
+    path: "{{ node_exporter_textfile_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Deploy node_exporter systemd unit (textfile + systemd collectors)
+  ansible.builtin.template:
+    src: node_exporter.service.j2
+    dest: /etc/systemd/system/node_exporter.service
+  notify: restart node_exporter
+
+- name: Ensure AWS CLI config directory exists
+  ansible.builtin.file:
+    path: /root/.aws
+    state: directory
+    mode: '0700'
+
+- name: Flush handlers so node_exporter is up before incident roles run
+  ansible.builtin.meta: flush_handlers

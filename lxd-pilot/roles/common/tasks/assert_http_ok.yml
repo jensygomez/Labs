@@ -1,0 +1,24 @@
+---
+# roles/common/tasks/assert_http_ok.yml
+# Reusable: asserts a local HTTP endpoint returns 200.
+# Requires: assert_http_url (e.g. "http://localhost/health")
+# Optional: assert_http_label (string used in the failure message)
+
+- name: "Check HTTP endpoint ({{ assert_http_label | default(assert_http_url) }})"
+  ansible.builtin.uri:
+    url: "{{ assert_http_url }}"
+    status_code: 200
+  register: _http_check
+  failed_when: false
+
+- name: "Assert HTTP endpoint is healthy ({{ assert_http_label | default(assert_http_url) }})"
+  ansible.builtin.assert:
+    that:
+      - _http_check.status == 200
+    fail_msg: >-
+      HTTP check FAILED on {{ inventory_hostname }} for
+      {{ assert_http_label | default(assert_http_url) }}
+      (got status {{ _http_check.status | default('no response') }})
+    success_msg: >-
+      HTTP check OK on {{ inventory_hostname }} for
+      {{ assert_http_label | default(assert_http_url) }}

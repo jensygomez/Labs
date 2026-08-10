@@ -1,0 +1,22 @@
+groups:
+  - name: inc-010-order-sync
+    rules:
+      - alert: OrderSyncFailing
+        expr: order_sync_success == 0
+        for: 2m
+        labels:
+          severity: warning
+          incident: inc-010
+        annotations:
+          summary: "Order sync failing on {{ '{{' }} $labels.instance {{ '}}' }}"
+          description: "The order-sync service has been failing for more than 2 minutes on {{ '{{' }} $labels.instance {{ '}}' }}."
+
+      - alert: SystemdDegraded
+        expr: node_systemd_unit_state{state="failed"} > 0
+        for: 1m
+        labels:
+          severity: critical
+          incident: inc-010
+        annotations:
+          summary: "Systemd unit failed on {{ '{{' }} $labels.instance {{ '}}' }}"
+          description: "A systemd unit is in failed state on {{ '{{' }} $labels.instance {{ '}}' }}."

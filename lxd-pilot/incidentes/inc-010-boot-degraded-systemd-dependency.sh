@@ -103,6 +103,37 @@ OnUnitActiveSec=20s
 WantedBy=timers.target
 EOF"
 
+    # --- aws-creds-setup: simulates a config-management step that
+    # provisions AWS credentials before anything else can use them ---
+    lxc exec $NODE -- bash -c "cat > /usr/local/bin/aws-creds-setup.sh << 'SCRIPT'
+#!/bin/bash
+mkdir -p /root/.aws
+sleep 15
+cat > /root/.aws/credentials << 'CREDS'
+[default]
+aws_access_key_id = test
+aws_secret_access_key = test
+CREDS
+cat > /root/.aws/config << 'CONF'
+[default]
+region = us-east-1
+CONF
+SCRIPT"
+    lxc exec $NODE -- chmod +x /usr/local/bin/aws-creds-setup.sh
+
+    lxc exec $NODE -- bash -c "cat > /etc/systemd/system/aws-creds-setup.service << 'EOF'
+[Unit]
+Description=Provision AWS credentials for S3 backend access
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/aws-creds-setup.sh
+
+[Install]
+WantedBy=multi-user.target
+EOF"
+
     # --- s3-backend: verifies S3 connectivity and "mounts" the backend ---
     lxc exec $NODE -- bash -c "cat > /usr/local/bin/s3-backend.sh << 'SCRIPT'
 #!/bin/bash
@@ -128,8 +159,8 @@ SCRIPT"
     lxc exec $NODE -- bash -c "cat > /etc/systemd/system/s3-backend.service << 'EOF'
 [Unit]
 Description=S3 Backend Connectivity Check
-After=network-online.target
-Wants=network-online.target
+Requires=aws-creds-setup.service
+After=aws-creds-setup.service
 
 [Service]
 Type=oneshot
@@ -193,6 +224,7 @@ EOF"
 
     # Reload and enable all services
     lxc exec $NODE -- systemctl daemon-reload
+    lxc exec $NODE -- systemctl enable --now aws-creds-setup.service >/dev/null 2>&1
     lxc exec $NODE -- systemctl enable --now s3-backend.service >/dev/null 2>&1
     lxc exec $NODE -- systemctl enable --now order-gen.timer order-sync.timer >/dev/null 2>&1
 done

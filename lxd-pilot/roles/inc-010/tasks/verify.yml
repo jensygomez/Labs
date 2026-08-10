@@ -1,0 +1,65 @@
+---
+# roles/inc-010/tasks/verify.yml
+# Verifies the fault injection worked as intended. Unlike the old bash
+# VERIFY_OK flag, every check here fails independently and tells you
+# exactly which one broke.
+
+- name: Check S3 bucket is reachable (control host)
+  ansible.builtin.command: >
+    aws --endpoint-url {{ fakecloud_endpoint }} s3 ls s3://{{ bucket_name }}
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ aws_access_key }}"
+    AWS_SECRET_ACCESS_KEY: "{{ aws_secret_key }}"
+    AWS_DEFAULT_REGION: "{{ aws_region }}"
+  delegate_to: localhost
+  run_once: true
+  register: _bucket_check
+  changed_when: false
+
+- name: Check MOTD ticket is present
+  ansible.builtin.command: grep -q "OPS-1091" /etc/motd
+  register: _motd_check
+  changed_when: false
+  failed_when: false
+
+- name: Assert MOTD ticket is present
+  ansible.builtin.assert:
+    that: _motd_check.rc == 0
+    fail_msg: "MOTD ticket OPS-1091 missing on {{ inventory_hostname }}"
+
+- name: Check order-sync.timer exists
+  ansible.builtin.stat:
+    path: /etc/systemd/system/order-sync.timer
+  register: _timer_check
+
+- name: Assert order-sync.timer exists
+  ansible.builtin.assert:
+    that: _timer_check.stat.exists
+    fail_msg: "order-sync.timer missing on {{ inventory_hostname }}"
+
+- name: Assert /health endpoint returns 200 (independent liveness check)
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: assert_http_ok
+  vars:
+    assert_http_url: "http://localhost/health"
+    assert_http_label: "{{ inventory_hostname }} /health"
+
+- name: "Assert fault node ({{ fault_node }}) is in 'degraded' boot state"
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: assert_boot_state
+  vars:
+    assert_boot_target_host: "{{ fault_node }}"
+    assert_boot_expected_state: degraded
+  run_once: true
+
+- name: "Assert healthy fleet nodes are in 'running' boot state"
+  ansible.builtin.include_role:
+    name: common
+    tasks_from: assert_boot_state
+  vars:
+    assert_boot_target_host: "{{ item }}"
+    assert_boot_expected_state: running
+  loop: "{{ groups['app_fleet'] | difference([fault_node]) }}"
+  run_once: true

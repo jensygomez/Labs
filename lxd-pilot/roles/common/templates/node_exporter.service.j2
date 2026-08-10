@@ -1,0 +1,11 @@
+[Unit]
+Description=Node Exporter
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/node_exporter --collector.textfile.directory={{ node_exporter_textfile_dir }} --collector.systemd
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
