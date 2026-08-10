@@ -3,10 +3,11 @@
 ${s.name} ansible_host=${s.ip} ansible_user=root ansible_ssh_private_key_file=~/.ssh/id_lxd_fleet
 %{ endfor ~}
 
-[monitoring]
+[cloud]
+fakecloud ansible_host=${fakecloud_ip} ansible_user=root ansible_ssh_private_key_file=~/.ssh/id_lxd_fleet
 monitoring_node ansible_host=${monitoring_ip} ansible_user=root ansible_ssh_private_key_file=~/.ssh/id_lxd_fleet
 
-[cloud]
+[local]
 localhost ansible_connection=local
 
 [all:vars]
