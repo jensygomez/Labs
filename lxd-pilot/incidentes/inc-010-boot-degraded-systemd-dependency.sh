@@ -230,6 +230,7 @@ echo ""
 echo "🔧 Step 5: Injecting Prometheus alert rule..."
 MONITORING_IP=$(lxc list -c n4 --format csv | grep "^monitoring," | awk -F',' '{print $2}' | awk '{print $1}')
 
+lxc exec monitoring -- mkdir -p /opt/prometheus/rules
 lxc exec monitoring -- bash -c "cat > /opt/prometheus/rules/inc-010-alerts.yml << 'EOF'
 groups:
   - name: inc-010-order-sync
