@@ -1,15 +1,19 @@
-resource "lxd_storage_volume" "app_lvm_disk" {
+resource "lxd_volume" "app_lvm_disk" {
   count = var.app_count
   name  = "app-lvm-${count.index + 1}"
   pool  = "default"
-  size  = "500MB"
+  config = {
+    size = "500MB"
+  }
 }
 
-resource "lxd_storage_volume" "app_data_disk" {
+resource "lxd_volume" "app_data_disk" {
   count = var.app_count
   name  = "app-data-${count.index + 1}"
   pool  = "default"
-  size  = "500MB"
+  config = {
+    size = "500MB"
+  }
 }
 
 resource "lxd_instance" "app_vm" {
@@ -41,7 +45,7 @@ resource "lxd_instance" "app_vm" {
     name = "eth0"
     type = "nic"
     properties = {
-      network = data.lxd_network.lxdbr0.name
+      network = "lxdbr0"  # Referencia directa por nombre
     }
   }
 
@@ -50,7 +54,7 @@ resource "lxd_instance" "app_vm" {
     type = "disk"
     properties = {
       pool   = "default"
-      source = lxd_storage_volume.app_lvm_disk[count.index].name
+      source = lxd_volume.app_lvm_disk[count.index].name
     }
   }
 
@@ -59,7 +63,7 @@ resource "lxd_instance" "app_vm" {
     type = "disk"
     properties = {
       pool   = "default"
-      source = lxd_storage_volume.app_data_disk[count.index].name
+      source = lxd_volume.app_data_disk[count.index].name
     }
   }
 }

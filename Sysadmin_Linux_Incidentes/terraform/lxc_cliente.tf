@@ -1,7 +1,7 @@
 resource "lxd_instance" "cliente_lxc" {
   name   = "cliente-lxc"
   image  = local.lxc_image
-  type   = "container" # LXC puro, ultra ligero
+  type   = "container"
   
   config = {
     "limits.cpu"    = "1"
@@ -26,7 +26,7 @@ resource "lxd_instance" "cliente_lxc" {
     name = "eth0"
     type = "nic"
     properties = {
-      network = data.lxd_network.lxdbr0.name
+      network = "lxdbr0"  # Referencia directa por nombre
     }
   }
 }

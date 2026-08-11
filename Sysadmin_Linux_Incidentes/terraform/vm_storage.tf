@@ -1,7 +1,9 @@
-resource "lxd_storage_volume" "storage_nfs_disk" {
+resource "lxd_volume" "storage_nfs_disk" {
   name = "storage-nfs-disk"
   pool = "default"
-  size = "1GB"
+  config = {
+    size = "1GB"
+  }
 }
 
 resource "lxd_instance" "storage_vm" {
@@ -32,7 +34,7 @@ resource "lxd_instance" "storage_vm" {
     name = "eth0"
     type = "nic"
     properties = {
-      network = data.lxd_network.lxdbr0.name
+      network = "lxdbr0"  # Referencia directa por nombre
     }
   }
 
@@ -41,7 +43,7 @@ resource "lxd_instance" "storage_vm" {
     type = "disk"
     properties = {
       pool   = "default"
-      source = lxd_storage_volume.storage_nfs_disk.name
+      source = lxd_volume.storage_nfs_disk.name
     }
   }
 }
