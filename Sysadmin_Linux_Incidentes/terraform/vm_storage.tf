@@ -1,6 +1,7 @@
 resource "lxd_volume" "storage_nfs_disk" {
-  name = "storage-nfs-disk"
-  pool = "default"
+  name         = "storage-nfs-disk"
+  pool         = "default"
+  content_type = "block"          # ← AGREGAR ESTA LÍNEA
   config = {
     size = "1GB"
   }
@@ -10,7 +11,7 @@ resource "lxd_instance" "storage_vm" {
   name   = "storage-vm"
   image  = local.vm_image
   type   = "virtual-machine"
-  
+
   config = {
     "limits.cpu"    = "1"
     "limits.memory" = "1GB"
@@ -34,7 +35,7 @@ resource "lxd_instance" "storage_vm" {
     name = "eth0"
     type = "nic"
     properties = {
-      network = "lxdbr0"  # Referencia directa por nombre
+      network = "lxdbr0"
     }
   }
 

@@ -1,16 +1,18 @@
 resource "lxd_volume" "app_lvm_disk" {
-  count = var.app_count
-  name  = "app-lvm-${count.index + 1}"
-  pool  = "default"
+  count        = var.app_count
+  name         = "app-lvm-${count.index + 1}"
+  pool         = "default"
+  content_type = "block"          # ← AGREGAR ESTA LÍNEA
   config = {
     size = "500MB"
   }
 }
 
 resource "lxd_volume" "app_data_disk" {
-  count = var.app_count
-  name  = "app-data-${count.index + 1}"
-  pool  = "default"
+  count        = var.app_count
+  name         = "app-data-${count.index + 1}"
+  pool         = "default"
+  content_type = "block"          # ← AGREGAR ESTA LÍNEA
   config = {
     size = "500MB"
   }
@@ -21,7 +23,7 @@ resource "lxd_instance" "app_vm" {
   name   = "app-vm-${count.index + 1}"
   image  = local.vm_image
   type   = "virtual-machine"
-  
+
   config = {
     "limits.cpu"    = "1"
     "limits.memory" = "1GB"
@@ -45,7 +47,7 @@ resource "lxd_instance" "app_vm" {
     name = "eth0"
     type = "nic"
     properties = {
-      network = "lxdbr0"  # Referencia directa por nombre
+      network = "lxdbr0"
     }
   }
 
