@@ -121,228 +121,517 @@ Same rules as before:
 
 ---
 
-## THE 50 INCIDENTS (Updated for Hybrid Cloud)
 
-**Incidents 001‑010** are already built, run, and resolved (Linux‑only, simple). They serve as reference.
+---
 
-**Incidents 011‑050** are designed with the hybrid architecture in mind. Each has a **real‑world production problem**, a **domain classification**, and a **topology requirement**.
+## INCIDENT TOPOLOGY & PHILOSOPHY
 
-### 🟡 Level 4/10 (011-020) — Medium cascade, 2 false negatives
+### Fixed Topology (for all incidents)
+- **Always 3 LXC nodes** (server01–03). One carries the fault (chosen by the AI, hidden from Jensy).
+- **Always fakecloud** (S3, RDS, Route53, IAM) available on the host at `10.45.223.1:4566`.
+- **Always monitoring** (Prometheus) scraping all components.
+- **Optional extra nodes** (server04, etc.) only when an incident needs a dedicated backend.
+- **VM incidents** (GRUB, fstab emergency, fsck, journal, LVM filter) run on KVM, not LXC.
 
-#### inc-011-storage-lvm-growfs-missing (Linux‑only)
-- **Problem:** LVM volume extended but filesystem not grown (classic storage ops mistake).
-- **Topology:** 3 LXC nodes + fakecloud S3 for backup logs. One node has the issue.
-- **Fault:** lvextend done but no resize2fs/xfs_growfs.
-- **False negatives:** `lvs` shows free space; `df` shows 100% but `du` doesn't explain the total size.
+### Incident Classification (by domain)
+- **Linux-only:** Fault resides entirely in the LXC node.
+- **Cloud-only:** Fault resides in a fakecloud service.
+- **Hybrid:** Fault spans both domains.
 
-#### inc-012-network-resolv-conf-overwritten (Linux‑only)
-- **Problem:** NetworkManager overwrites `/etc/resolv.conf` on reboot, removing custom DNS entries.
-- **Topology:** 3 LXC nodes + Route53 (fakecloud) for internal DNS. One node loses its custom resolver.
+### Red Herrings & Previous Shift Notes
+- Always included in the MOTD ticket.
+- Must be plausible and physical (e.g., "We saw error X and restarted service Y, but it didn't help").
+- Must never hint at the actual root cause or the affected node.
+
+---
+
+## TICKET DELIVERY MECHANISM (MOTD)
+The incident ticket appears in `/etc/motd` on all LXC nodes. It includes:
+- Incident ID and severity (e.g., "OPS-1091 - INCIDENT - P2")
+- Reported by and timestamp
+- Summary (1–2 lines)
+- Full description with symptoms, impact, and red herrings
+- Resolution criteria (numbered list)
+- Instruction to: (1) resolve manually first, (2) then create TWO Ansible playbooks (triage + remediation) for a 1000-server fleet.
+
+**ALL TICKET CONTENT IN ENGLISH.**
+
+---
+
+## ANSIBLE PLAYBOOK DESIGN (Scalability for 1000+ Servers)
+- **Triage playbook:** Identify which servers are affected using `when:` conditions and minimal output.
+- **Remediation playbook:** Fix only the affected servers, idempotently.
+- **Cloud resources:** Use `awscli` (against fakecloud) or `boto3` to check/fix S3, RDS, IAM.
+
+---
+
+## THE 50 INCIDENTS (Hybrid Cloud + Implementation Constraints)
+
+Each incident now carries: **Problem**, **Topology**, **Environment**, **Mechanism** (deterministic injection), **Verify** (observable proof), **False negatives**, and **LXD gotcha** when relevant.
+
+**Incidents 001–010** are built and resolved (reference). **inc-010** is the canonical three-layer template.
+
+### 🟡 Level 4/10 (011-020)
+
+#### inc-011-storage-lvm-growfs-missing (Linux-only)
+- **Problem:** LVM volume extended but filesystem not grown.
+- **Topology:** 3 LXC nodes + fakecloud S3 for backup logs. One node affected.
+- **Environment:** LXC privileged + loop device (NO VM needed).
+- **Mechanism:** sparse file → `losetup` → `pvcreate`/`vgcreate datavg` → `lvcreate datalv` (~400MB) → `mkfs.ext4` → mount `/data` → fill to 90%. Fault: `lvextend` to 100%FREE but NO `resize2fs`. Deterministic.
+- **Verify:** `df /data` ≥ 90% AND `vgs` Free > 0 AND `resize2fs -P` < LV size.
+- **False negatives:** `lvs` shows free space; `df` shows 100%; `du` doesn't explain total.
+- **LXD gotcha:** needs `modprobe loop` on host + privileged (already in fleet profile).
+
+#### inc-012-network-resolv-conf-overwritten (Linux-only)
+- **Problem:** NetworkManager overwrites `/etc/resolv.conf` on reboot, removing custom DNS.
+- **Topology:** 3 LXC nodes + Route53 (fakecloud). One node loses its resolver.
+- **Environment:** LXC.
+- **Mechanism:** Write custom `resolv.conf` + a NM dispatcher that wipes it on `up`. Deterministic on reboot.
+- **Verify:** After reboot, `/etc/resolv.conf` lacks the custom nameserver; `getent hosts <internal>` fails.
 - **False negatives:** Ping by IP works; only name resolution fails.
 
-#### inc-013-users-sudoers-syntax-error (Linux‑only)
-- **Problem:** Syntax error in `/etc/sudoers.d/` drop‑in breaks sudo for a group.
+#### inc-013-users-sudoers-syntax-error (Linux-only)
+- **Problem:** Syntax error in `/etc/sudoers.d/` drop-in breaks sudo for a group.
 - **Topology:** 3 LXC nodes. One has the corrupt file.
-- **False negatives:** Root via SSH key still works; problem only for admin group.
+- **Environment:** LXC.
+- **Mechanism:** Drop a syntactically invalid file into `/etc/sudoers.d/`. Deterministic.
+- **Verify:** `visudo -c` reports error; `sudo -l` as group member fails.
+- **False negatives:** Root via SSH key works; problem only for the admin group.
 
-#### inc-014-perf-oom-killer-no-swap (Linux‑only)
-- **Problem:** No swap configured; heavy cron job triggers OOM killer, killing a critical service.
-- **Topology:** 3 LXC nodes. One has no swap.
-- **False negatives:** Service has `Restart=always` and restarts quickly, hiding the kill.
+#### inc-014-perf-oom-killer-no-swap (Linux-only) — REFRAME
+- **Problem:** Workload exceeds memory ceiling → OOM kills a critical service.
+- **Topology:** 3 LXC nodes. One affected.
+- **Environment:** LXC (cgroup memory limit). **REFRAME:** swap is host-level in LXC; cannot disable per-container.
+- **Mechanism:** `MemoryMax=150M` on the service + cron that allocates >150MB → cgroup OOM kill. `Restart=always` hides it.
+- **Verify:** `journalctl` shows "Memory cgroup out of memory" for that service's cgroup.
+- **False negatives:** Service auto-restarts; host free memory looks fine (limit is per-cgroup).
+- **LXD gotcha:** Do NOT manipulate swap; use cgroup limits (deterministic, container-safe).
 
-#### inc-015-logs-cron-missing-path (Linux‑only)
+#### inc-015-logs-cron-missing-path (Linux-only)
 - **Problem:** Cron job fails because `PATH` doesn't include the binary.
-- **Topology:** 3 LXC nodes. One has a different/minimal `PATH` in crontab.
+- **Topology:** 3 LXC nodes. One has a minimal `PATH` in crontab.
+- **Environment:** LXC.
+- **Mechanism:** Crontab entry calling a binary by bare name with a stripped `PATH`. Deterministic.
+- **Verify:** cron log shows "command not found"; manual run with full PATH works.
 - **False negatives:** Script works manually; only fails via cron.
 
-#### inc-016-apps-tls-renew-script-permissions (Linux‑only)
+#### inc-016-apps-tls-renew-script-permissions (Linux-only)
 - **Problem:** Certbot renewal hook loses execute bit after deploy.
-- **Topology:** 3 LXC nodes + fakecloud S3 (for cert backup). One node has the hook without `+x`.
+- **Topology:** 3 LXC nodes + fakecloud S3 (cert backup). One node's hook lacks `+x`.
+- **Environment:** LXC.
+- **Mechanism:** `chmod -x` on the renewal hook. Deterministic.
+- **Verify:** `certbot renew --dry-run` fails on hook; `ls -l` shows no `x`.
 - **False negatives:** HTTPS still works until expiry; no visible error.
 
-#### inc-017-backup-missing-pipefail-zero-bytes (Linux‑only + S3)
+#### inc-017-backup-missing-pipefail-zero-bytes (Linux-only + S3)
 - **Problem:** `tar | gzip` without `pipefail`; tar fails but gzip exits 0 → empty backup uploaded to S3.
 - **Topology:** 3 LXC nodes backing up to S3 (fakecloud). One has the broken script.
-- **False negatives:** Exit code 0, log says "backup OK", but S3 object size is 0.
+- **Environment:** LXC + fakecloud S3.
+- **Mechanism:** Backup script reads a missing dir (tar fails) but pipes to gzip without `set -o pipefail`; uploads 0-byte object. Deterministic.
+- **Verify:** S3 object size is 0; script exit code 0; log says "backup OK".
+- **False negatives:** Exit code 0, log says OK, but S3 object is empty.
 
-#### inc-018-cross-incorrect-bind-address (Linux‑only)
-- **Problem:** Service binds to `127.0.0.1` instead of `0.0.0.0` — works locally, fails from other nodes.
+#### inc-018-cross-incorrect-bind-address (Linux-only)
+- **Problem:** Service binds to `127.0.0.1` instead of `0.0.0.0` — works locally, fails remotely.
 - **Topology:** 3 LXC nodes. One has the misconfigured bind.
+- **Environment:** LXC.
+- **Mechanism:** Set service config to `Listen=127.0.0.1`. Deterministic.
+- **Verify:** `curl localhost:PORT` works; `curl <node-ip>:PORT` from another node fails; `ss -ltnp` shows 127.0.0.1.
 - **False negatives:** `curl localhost` works; service shows "active (running)".
 
-#### inc-019-boot-grub2-menuentry-deleted (Linux‑only, single‑node, requires VM)
+#### inc-019-boot-grub2-menuentry-deleted (Linux-only, single-node, VM)
 - **Problem:** GRUB2 entry corrupted/deleted → system won't boot.
-- **Topology:** Single VM (not LXC) — use KVM for this one.
+- **Topology:** Single VM (KVM, not LXC).
+- **Environment:** VM (required — GRUB doesn't apply to LXC).
+- **Mechanism:** Corrupt/delete the GRUB menuentry. Deterministic on boot.
+- **Verify:** VM drops to GRUB rescue / fails to boot.
 - **False negatives:** None — it's a boot failure.
 
-#### inc-020-storage-nfs-rpc-firewall-blocked (Linux‑only)
-- **Problem:** Firewalld blocks RPC/NFS port → mounts are stale/intermittent.
-- **Topology:** 3 LXC nodes + an NFS server (could be server04 or fakecloud EFS). One node has the firewall rule missing.
-- **False negatives:** `rpcinfo -p` on server looks fine; only the affected client can't mount.
+#### inc-020-storage-nfs-rpc-firewall-blocked (Linux-only)
+- **Problem:** Firewalld blocks RPC/NFS port → mounts stale/intermittent.
+- **Topology:** 3 LXC nodes + NFS server (server04). One node missing the firewall rule.
+- **Environment:** LXC (privileged for firewalld).
+- **Mechanism:** `firewall-cmd --remove-service=nfs` (or block RPC port) on one client. Deterministic.
+- **Verify:** Affected client can't mount; `rpcinfo -p <server>` from that client times out.
+- **False negatives:** `rpcinfo -p` on the server looks fine; only the affected client fails.
 
----
+### 🟠 Level 5/10 (021-030)
 
-### 🟠 Level 5/10 (021-030) — Long cascade, cross‑domain, 2+ false negatives
-
-#### inc-021-network-firewall-rich-rules-subnet (Linux‑only)
+#### inc-021-network-firewall-rich-rules-subnet (Linux-only)
 - **Problem:** Rich rule points to old subnet after migration → blocks new traffic.
 - **Topology:** 3 LXC nodes. One has the stale rich rule.
-- **False negatives:** `firewall-cmd --list-all` looks normal; service itself is healthy.
+- **Environment:** LXC (privileged).
+- **Mechanism:** Add a rich rule allowing only the OLD subnet. Deterministic.
+- **Verify:** Traffic from new subnet blocked; `firewall-cmd --list-rich-rules` shows stale rule.
+- **False negatives:** `firewall-cmd --list-all` looks normal; service itself healthy.
 
-#### inc-022-users-selinux-web-context (Linux‑only)
-- **Problem:** Web content copied without correct SELinux context (`httpd_sys_content_t`) → 403 despite correct Unix permissions.
-- **Topology:** 3 LXC nodes serving same content. One has wrong context.
+#### inc-022-users-selinux-web-context (Linux-only) — ⚠️ SELINUX
+- **Problem:** Web content copied without `httpd_sys_content_t` → 403 despite correct Unix perms.
+- **Topology:** 3 LXC nodes. One has wrong context.
+- **Environment:** **VM with SELinux enforcing** (host is MX/AppArmor → SELinux disabled in LXC).
+- **Mechanism:** `chcon -t unconfined_u:object_r:default_t:s0` on web content. Deterministic.
+- **Verify:** `curl` returns 403; `ls -Z` shows wrong context; `ausearch -m avc` shows denial.
 - **False negatives:** `ls -l` permissions are identical.
+- **LXD gotcha:** SELinux is DISABLED in LXC on this host → MUST use VM or verify `getenforce` first.
 
-#### inc-023-perf-disk-io-swap-thrashing (Linux‑only)
-- **Problem:** Memory pressure forces aggressive swapping, causing I/O thrashing.
-- **Topology:** 3 LXC nodes. One has undersized memory for its load.
-- **False negatives:** CPU% looks normal; `free -h` doesn't tell the full story without `vmstat`/`iostat`.
+#### inc-023-perf-disk-io-swap-thrashing (Linux-only) — REFRAME
+- **Problem:** Memory pressure forces swapping → I/O thrashing.
+- **Topology:** 3 LXC nodes. One undersized for its load.
+- **Environment:** LXC (cgroup memory limit). **REFRAME:** swap is host-level.
+- **Mechanism:** Tight `MemoryMax=` + memory-hungry workload → pressure, high `vmstat` si/so analog via cgroup pressure. Deterministic.
+- **Verify:** `vmstat`/`iostat`/cgroup pressure show thrashing; CPU% looks normal.
+- **False negatives:** CPU% normal; `free -h` incomplete without `vmstat`/`iostat`.
+- **LXD gotcha:** Use cgroup memory pressure, not host swap.
 
-#### inc-024-logs-rsyslog-logrotate-no-restart (Linux‑only)
-- **Problem:** Logrotate rotates log but doesn't send HUP to rsyslog → process writes to old inode.
-- **Topology:** 3 LXC nodes. One has missing `postrotate` directive.
-- **False negatives:** rsyslog is "active (running)" but writing to nowhere.
+#### inc-024-logs-rsyslog-logrotate-no-restart (Linux-only)
+- **Problem:** Logrotate rotates but doesn't HUP rsyslog → writes to old inode.
+- **Topology:** 3 LXC nodes. One missing `postrotate`.
+- **Environment:** LXC.
+- **Mechanism:** Remove `postrotate`/`copytruncate` from logrotate config. Deterministic on rotation.
+- **Verify:** After rotation, rsyslog holds deleted inode (`lsof | grep deleted`); new log stays empty.
+- **False negatives:** rsyslog "active (running)" but writing to nowhere.
 
 #### inc-025-apps-db-max-connections-zombies (Hybrid — RDS)
-- **Problem:** `max_connections` on RDS (fakecloud) exhausted by zombie/idle connections → new connections rejected.
-- **Topology:** 3 LXC nodes connecting to RDS (fakecloud). One node has a connection leak.
-- **False negatives:** RDS is "up" and accepts manual connections; other nodes work fine until pool fills.
+- **Problem:** RDS (fakecloud) `max_connections` exhausted by leaked connections → new ones rejected.
+- **Topology:** 3 LXC nodes connecting to RDS (fakecloud). One has a connection leak.
+- **Environment:** LXC + fakecloud RDS.
+- **Mechanism:** App on one node opens connections and never closes them until pool fills. Deterministic under load.
+- **Verify:** New connections rejected; fakecloud RDS shows connections at max.
+- **False negatives:** RDS "up"; manual connection works until pool fills.
 
-#### inc-026-backup-lvm-snapshot-merge-failure (Linux‑only)
-- **Problem:** LVM snapshot used for backup never merged/removed → grows and fills volume.
+#### inc-026-backup-lvm-snapshot-merge-failure (Linux-only)
+- **Problem:** LVM snapshot never merged/removed → grows and fills volume.
 - **Topology:** 3 LXC nodes. One has orphaned snapshot.
-- **False negatives:** Backup "completed OK"; problem appears later on the origin volume.
+- **Environment:** LXC privileged + loop device (or VM).
+- **Mechanism:** Create LV snapshot, never merge, keep writing to origin. Deterministic.
+- **Verify:** `lvs` shows snapshot at high %; origin degrades.
+- **False negatives:** Backup "completed OK"; problem appears later on origin.
+- **LXD gotcha:** needs loop device + privileged.
 
-#### inc-027-cross-cascade-disk-logrotate-selinux (Hybrid — disk + SELinux)
-- **Problem:** Disk nearly full → logrotate fails midway → SELinux contexts get corrupted.
+#### inc-027-cross-cascade-disk-logrotate-selinux (Hybrid) — ⚠️ SELINUX
+- **Problem:** Disk nearly full → logrotate fails midway → SELinux contexts corrupted.
 - **Topology:** 3 LXC nodes + S3 for log archiving. One has the cascade.
+- **Environment:** **VM with SELinux enforcing** (SELinux part) + disk fill.
+- **Mechanism:** Fill disk → logrotate fails → leaves files with wrong context. Deterministic.
+- **Verify:** Disk full + logrotate error + `ls -Z` wrong context.
 - **False negatives:** SELinux errors appear only after logrotate failure.
+- **LXD gotcha:** SELinux part needs VM/enforcing.
 
-#### inc-028-boot-restart-always-failing-script (Linux‑only)
-- **Problem:** Service in crash‑loop with `Restart=always`; monitoring sees it as "running" due to PID file.
-- **Topology:** 3 LXC nodes. One in crash‑loop.
-- **False negatives:** `systemctl status` may show "activating (auto‑restart)" interpreted as healthy.
+#### inc-028-boot-restart-always-failing-script (Linux-only)
+- **Problem:** Service crash-loops with `Restart=always`; monitoring sees "running" via PID file.
+- **Topology:** 3 LXC nodes. One crash-looping.
+- **Environment:** LXC.
+- **Mechanism:** Service `ExecStart` exits 1 immediately + `Restart=always`. Deterministic loop.
+- **Verify:** `systemctl status` shows repeated restarts; `journalctl -u` shows loop; PID keeps changing.
+- **False negatives:** `systemctl status` may show "activating (auto-restart)" read as healthy.
+- **LXD gotcha:** Deterministic (not a race) — safe in LXC.
 
-#### inc-029-storage-filesystem-remount-readonly (Linux‑only)
-- **Problem:** Filesystem remounts as read‑only after journal errors; cached writes appear successful.
+#### inc-029-storage-filesystem-remount-readonly (Linux-only)
+- **Problem:** Filesystem remounts read-only after journal errors; cached writes appear successful.
 - **Topology:** 3 LXC nodes. One remounted RO.
+- **Environment:** LXC privileged + loop device (or VM).
+- **Mechanism:** Mount a loop-backed ext4 with `errors=remount-ro`, trigger a journal error. Deterministic.
+- **Verify:** `mount` shows `ro`; writes fail with EROFS after flush.
 - **False negatives:** Writes appear successful until flush.
+- **LXD gotcha:** needs loop device + privileged.
 
-#### inc-030-network-nat-interface-renamed (Linux‑only)
-- **Problem:** Interface name changes (e.g., eth0→ens3) after kernel update → NAT rules broken.
+#### inc-030-network-nat-interface-renamed (Linux-only) — ⚠️ HOST-CONTROLLED
+- **Problem:** Interface name changes (eth0→ens3) → NAT rules broken.
 - **Topology:** 3 LXC nodes. One has stale NAT rules.
-- **False negatives:** Interface is UP with correct IP; only NAT rules are broken.
+- **Environment:** LXC — **CAUTION:** interface naming is controlled by LXD.
+- **Mechanism:** NAT rules reference an interface name that doesn't exist; simulate by pointing NAT at a nonexistent iface. Deterministic.
+- **Verify:** NAT doesn't apply; `iptables -t nat -L` shows rule against missing iface.
+- **False negatives:** Interface is UP with correct IP; only NAT broken.
+- **LXD gotcha:** Can't truly rename iface in LXC; simulate with a rule referencing a phantom iface.
 
----
+### 🔴 Level 6/10 (031-040)
 
-### 🔴 Level 6/10 (031-040) — Deep cascade, 2+ false negatives, 2 nodes in cluster/network
-
-#### inc-031-users-ssh-selinux-context (Linux‑only)
-- **Problem:** SELinux context on `~/.ssh` (`ssh_home_t`) incorrect → SSH key login fails.
+#### inc-031-users-ssh-selinux-context (Linux-only) — ⚠️ SELINUX
+- **Problem:** Wrong SELinux context on `~/.ssh` (`ssh_home_t`) → key login fails.
 - **Topology:** 3 LXC nodes. One has wrong context.
+- **Environment:** **VM with SELinux enforcing**.
+- **Mechanism:** `chcon` wrong context on `~/.ssh`. Deterministic.
+- **Verify:** SSH key login denied; `ls -Zd ~/.ssh` wrong; `ausearch -m avc` shows denial.
 - **False negatives:** Unix permissions are correct.
+- **LXD gotcha:** SELinux disabled in LXC → use VM.
 
-#### inc-032-perf-high-load-nfs-uninterruptible (Linux‑only)
-- **Problem:** Processes in D state waiting for a slow NFS server → high load without CPU usage.
-- **Topology:** 2 explicit nodes (client + NFS server) within the 3‑node fleet.
+#### inc-032-perf-high-load-nfs-uninterruptible (Linux-only)
+- **Problem:** Processes in D state waiting for slow NFS → high load, no CPU.
+- **Topology:** 2 nodes (client + NFS server) within the fleet.
+- **Environment:** LXC (privileged).
+- **Mechanism:** Slow/unresponsive NFS server → client processes stuck in D state. Deterministic under load.
+- **Verify:** `top` load high, %CPU ~0; `ps` shows D-state processes.
 - **False negatives:** `top` shows load 8.0 but %CPU near 0.
 
-#### inc-033-logs-ansible-drift-ausearch (Linux‑only)
-- **Problem:** Manual change made outside Ansible; need to find who/when using `ausearch`/auditd.
-- **Topology:** 3 LXC nodes managed by Ansible. One has drift.
-- **False negatives:** The file itself looks correct; only audit logs reveal the change.
+#### inc-033-logs-ansible-drift-ausearch (Linux-only) — ⚠️ AUDITD
+- **Problem:** Manual change outside Ansible; find who/when with `ausearch`/auditd.
+- **Topology:** 3 LXC nodes. One has drift.
+- **Environment:** LXC — **CAUTION:** auditd is limited in containers.
+- **Mechanism:** Manual file change; auditd rule logs it. Verify auditd actually works in LXC first.
+- **Verify:** `ausearch -f <file>` reveals the change; file itself looks correct.
+- **False negatives:** File looks correct; only audit logs reveal the change.
+- **LXD gotcha:** Verify auditd functions in LXC; otherwise use VM.
 
-#### inc-034-apps-port-conflict-systemd-socket (Linux‑only)
-- **Problem:** Old `.socket` unit holds a port; the actual service is "active" but not listening.
+#### inc-034-apps-port-conflict-systemd-socket (Linux-only)
+- **Problem:** Old `.socket` unit holds a port; service "active" but not listening.
 - **Topology:** 3 LXC nodes. One has the socket conflict.
-- **False negatives:** `systemctl status` says "active"; the port is held by a different unit.
+- **Environment:** LXC.
+- **Mechanism:** Enable a stray `.socket` unit that binds the port. Deterministic.
+- **Verify:** `ss -ltnp` shows port held by the socket unit; service not actually listening.
+- **False negatives:** `systemctl status` says "active"; port held by a different unit.
 
-#### inc-035-backup-partial-restore-selinux (Linux‑only)
+#### inc-035-backup-partial-restore-selinux (Linux-only) — ⚠️ SELINUX
 - **Problem:** Backup restored but SELinux contexts not restored → service denies access.
-- **Topology:** 3 LXC nodes + S3 for backups. One has missing `restorecon`.
-- **False negatives:** Files exist with correct owner/perms, but service still rejects them.
+- **Topology:** 3 LXC nodes + S3 for backups. One missing `restorecon`.
+- **Environment:** **VM with SELinux enforcing**.
+- **Mechanism:** Restore files without `restorecon`. Deterministic.
+- **Verify:** Service denies access; `ls -Z` wrong context; `restorecon -n` shows what would change.
+- **False negatives:** Files exist with correct owner/perms but service rejects them.
+- **LXD gotcha:** SELinux disabled in LXC → use VM.
 
-#### inc-036-boot-emergency-mode-initramfs-fstab (Linux‑only, single‑node, VM)
+#### inc-036-boot-emergency-mode-initramfs-fstab (Linux-only, VM)
 - **Problem:** Broken fstab entry forces emergency mode on boot.
-- **Topology:** Single VM (not LXC).
+- **Topology:** Single VM.
+- **Environment:** VM (required).
+- **Mechanism:** Add a bad fstab entry with `nofail` absent. Deterministic on boot.
+- **Verify:** VM drops to emergency mode.
 - **False negatives:** None — boot failure.
 
-#### inc-037-storage-fsck-corrupt-inodes (Linux‑only, single‑node, VM)
-- **Problem:** Inode corruption requires manual `fsck` and data loss decisions.
+#### inc-037-storage-fsck-corrupt-inodes (Linux-only, VM)
+- **Problem:** Inode corruption requires manual `fsck` and data-loss decisions.
 - **Topology:** Single VM.
+- **Environment:** VM (required).
+- **Mechanism:** Corrupt inodes on a secondary FS with `debugfs`/`xfs_io`. Deterministic.
+- **Verify:** `fsck` reports corruption; mount fails or errors.
 - **False negatives:** None — filesystem damage.
 
-#### inc-038-network-mtu-mismatch-latency (Linux‑only)
-- **Problem:** MTU mismatch between two nodes causes fragmentation; small pings work, large transfers fail.
-- **Topology:** 2 explicit nodes within the fleet.
-- **False negatives:** ICMP small packets work; TCP connects but hangs on real transfer.
+#### inc-038-network-mtu-mismatch-latency (Linux-only)
+- **Problem:** MTU mismatch → fragmentation; small pings work, large transfers fail.
+- **Topology:** 2 nodes within the fleet.
+- **Environment:** LXC (needs `ip link set mtu` control — verify).
+- **Mechanism:** Set mismatched MTU on the two nodes' interfaces. Deterministic.
+- **Verify:** Small ping OK; `ping -s 1472 -M do` fails; large `curl` hangs.
+- **False negatives:** ICMP small packets work; TCP connects but hangs on transfer.
+- **LXD gotcha:** Verify MTU changes are honored on the LXD veth.
 
-#### inc-039-users-pam-faillock-account-locked (Linux‑only)
-- **Problem:** `pam_faillock` locks a service account after repeated failed attempts.
+#### inc-039-users-pam-faillock-account-locked (Linux-only)
+- **Problem:** `pam_faillock` locks a service account after repeated failures.
 - **Topology:** 3 LXC nodes. One has the account locked.
-- **False negatives:** Password/key is correct; the lock is temporary.
+- **Environment:** LXC.
+- **Mechanism:** Trigger N failed logins to trip faillock. Deterministic.
+- **Verify:** `faillock --user <u>` shows lock; login denied even with correct creds.
+- **False negatives:** Password/key correct; the lock is temporary.
 
-#### inc-040-perf-memory-leak-systemd-limits (Linux‑only)
-- **Problem:** Memory leak hits `MemoryMax` cgroup limit → service gets killed/restarted periodically.
+#### inc-040-perf-memory-leak-systemd-limits (Linux-only)
+- **Problem:** Memory leak hits `MemoryMax` → service killed/restarted periodically.
 - **Topology:** 3 LXC nodes. One has the leak.
-- **False negatives:** Service "recovers" each time; host memory looks normal (limit is per‑cgroup).
+- **Environment:** LXC (cgroup).
+- **Mechanism:** Leaky service + `MemoryMax=`. Deterministic periodic kill.
+- **Verify:** Periodic OOM kills in journal; per-cgroup limit hit; host memory normal.
+- **False negatives:** Service "recovers" each time; host memory looks normal.
 
----
+### 🟣 Level 7/10 (041-050)
 
-### 🟣 Level 7/10 (041-050) — Major incidents, "everything looks fine" is the main false negative, 3+ FN
-
-#### inc-041-logs-journal-corrupt-machine-id (Linux‑only, single‑node, VM)
-- **Problem:** Journal/machine‑ID corruption breaks logging and identity‑dependent services.
+#### inc-041-logs-journal-corrupt-machine-id (Linux-only, VM)
+- **Problem:** Journal/machine-ID corruption breaks logging and identity-dependent services.
 - **Topology:** Single VM.
+- **Environment:** VM (required).
+- **Mechanism:** Corrupt journal files / machine-id. Deterministic.
+- **Verify:** `journalctl` errors; machine-id mismatch.
 - **False negatives:** None — journal corruption.
 
-#### inc-042-apps-rootless-container-subuid-cgroups (Linux‑only)
-- **Problem:** Rootless Podman container fails due to subuid/subgid range or cgroup v2 delegation.
-- **Topology:** 3 LXC nodes. One has the misconfigured rootless container.
+#### inc-042-apps-rootless-container-subuid-cgroups (Linux-only) — ⚠️ NESTING
+- **Problem:** Rootless Podman fails due to subuid/subgid range or cgroup v2 delegation.
+- **Topology:** 3 LXC nodes. One misconfigured.
+- **Environment:** LXC with `security.nesting=true` (required for podman inside LXC).
+- **Mechanism:** Break subuid/subgid range or cgroup delegation. Deterministic.
+- **Verify:** Container created but fails to start; `podman info` shows the error.
 - **False negatives:** Container appears created but fails to start.
+- **LXD gotcha:** MUST set `security.nesting=true`.
 
-#### inc-043-boot-systemd-race-condition (Linux‑only)
-- **Problem:** Race condition between two systemd units without proper ordering → intermittent failure on some boots.
-- **Topology:** 3 LXC nodes; reboot repeatedly to expose the race.
-- **False negatives:** Works on some boots, fails on others.
+#### inc-043-boot-systemd-race-condition (Linux-only) — REFRAME
+- **Problem:** Two systemd units misordered → dependent fails on boot.
+- **Topology:** 3 LXC nodes.
+- **Environment:** LXC. **REFRAME:** true races are non-deterministic in LXD (fast, consistent boot). Convert to a deterministic ordering bug.
+- **Mechanism:** Service B `Requires=` A, but A reads a file that doesn't exist at boot (like inc-010's `EnvironmentFile`). Fails every boot. Deterministic.
+- **Verify:** `systemctl is-system-running` = degraded on exactly one node; reproducible every reboot.
+- **False negatives:** Works if you manually restart A then B after boot.
+- **LXD gotcha:** Avoid timing races; use missing-file / broken-dependency faults.
 
-#### inc-044-storage-lvm-filter-metadata-backup (Linux‑only, single‑node, VM)
-- **Problem:** LVM filter misconfigured → cannot see/activate a VG; requires `vgcfgrestore`.
+#### inc-044-storage-lvm-filter-metadata-backup (Linux-only, VM)
+- **Problem:** LVM filter misconfigured → can't see/activate VG; needs `vgcfgrestore`.
 - **Topology:** Single VM.
+- **Environment:** VM (required).
+- **Mechanism:** Bad `lvm.conf` filter. Deterministic.
+- **Verify:** `pvs`/`vgs` don't show the VG; mount fails.
 - **False negatives:** None — storage unavailable.
 
-#### inc-045-network-asymmetric-routing-nftables (Linux‑only)
-- **Problem:** Asymmetric routing combined with nftables state discards return traffic.
-- **Topology:** 2 explicit multi‑homed nodes within the fleet.
-- **False negatives:** Outgoing traffic works; incoming response is dropped.
+#### inc-045-network-asymmetric-routing-nftables (Linux-only)
+- **Problem:** Asymmetric routing + nftables state discards return traffic.
+- **Topology:** 2 multi-homed nodes.
+- **Environment:** LXC (needs multi-homing — verify).
+- **Mechanism:** Two default routes via different ifaces + stateful nftables. Deterministic.
+- **Verify:** Outgoing works; incoming response dropped; `conntrack`/`tcpdump` shows it.
+- **False negatives:** Outgoing traffic works; incoming response dropped.
+- **LXD gotcha:** Multi-homing in LXC needs extra NICs; verify feasibility.
 
-#### inc-046-users-default-acls-umask-pam (Linux‑only)
-- **Problem:** Default ACLs + `umask` from `pam_umask` produce files that a group cannot read, despite owner/group looking correct.
-- **Topology:** 3 LXC nodes. One has the wrong umask/ACL inheritance.
-- **False negatives:** `ls -l` looks normal; need `getfacl` to see the issue.
+#### inc-046-users-default-acls-umask-pam (Linux-only)
+- **Problem:** Default ACLs + `pam_umask` produce unreadable files for a group.
+- **Topology:** 3 LXC nodes. One has wrong umask/ACL inheritance.
+- **Environment:** LXC.
+- **Mechanism:** Set restrictive `pam_umask` + default ACL. Deterministic.
+- **Verify:** `getfacl` shows the problem; group can't read despite owner/group looking right.
+- **False negatives:** `ls -l` looks normal; need `getfacl`.
 
-#### inc-047-perf-tcp-conntrack-table-full (Linux‑only)
-- **Problem:** `nf_conntrack` table fills under load → new connections dropped silently.
-- **Topology:** 3 LXC nodes under real load. One has conntrack limit reached.
-- **False negatives:** App logs don't show errors; only `conntrack -S` reveals the limit.
+#### inc-047-perf-tcp-conntrack-table-full (Linux-only) — ⚠️ HOST-LEVEL
+- **Problem:** `nf_conntrack` table fills → new connections dropped silently.
+- **Topology:** 3 LXC nodes under load.
+- **Environment:** LXC — **CAUTION:** `nf_conntrack` is host-level.
+- **Mechanism:** Lower `nf_conntrack_max` + generate connections. May need host manipulation or VM.
+- **Verify:** `conntrack -S` shows insert_failed/drop; new connections fail.
+- **False negatives:** App logs clean; only `conntrack -S` reveals the limit.
+- **LXD gotcha:** conntrack table is host-scoped; may need host tuning or VM.
 
-#### inc-048-cross-multi-layer-firewall-selinux-proxy (Hybrid — firewalld + SELinux + proxy)
-- **Problem:** Three security layers interact poorly: firewalld blocks a port, SELinux denies the proxy, and the proxy misconfiguration masks both.
-- **Topology:** 3 LXC nodes + fakecloud (for external endpoints). One has the cascade.
-- **False negatives:** Each layer alone looks "normal"; the combination causes the failure.
+#### inc-048-cross-multi-layer-firewall-selinux-proxy (Hybrid) — ⚠️ SELINUX
+- **Problem:** firewalld blocks a port + SELinux denies the proxy + proxy misconfig masks both.
+- **Topology:** 3 LXC nodes + fakecloud. One has the cascade.
+- **Environment:** **VM with SELinux enforcing** (for the SELinux layer) + firewalld.
+- **Mechanism:** Stack the three faults. Deterministic.
+- **Verify:** Each layer alone looks normal; combined they fail. Peel back one at a time.
+- **False negatives:** Each layer alone looks "normal".
+- **LXD gotcha:** SELinux layer needs VM/enforcing.
 
 #### inc-049-backup-db-lock-io-starvation-oom (Hybrid — RDS + local disk)
-- **Problem:** Backup job takes DB lock → queries queue → I/O starvation → OOM on the LXC node.
-- **Topology:** 3 LXC nodes + RDS (fakecloud). One node suffers the cascade.
-- **False negatives:** DB is up; queries work initially; OOM is the final symptom.
+- **Problem:** Backup takes DB lock → queries queue → I/O starvation → OOM on the node.
+- **Topology:** 3 LXC nodes + RDS (fakecloud). One suffers the cascade.
+- **Environment:** LXC + fakecloud RDS + cgroup.
+- **Mechanism:** Backup job holds lock + memory pressure via cgroup. Deterministic under load.
+- **Verify:** Queries queue, I/O wait spikes, OOM in journal.
+- **False negatives:** DB up; queries work initially; OOM is the final symptom.
 
 #### inc-050-cross-cluster-split-brain-ntp-quorum (Hybrid — DNS + time sync)
-- **Problem:** NTP drift breaks quorum of a distributed cluster (simulated with corosync/pacemaker or a custom app). Split‑brain occurs.
-- **Topology:** 3 LXC nodes + Route53 (fakecloud) for service discovery. One node has clock drift.
-- **False negatives:** Network is up; services respond; quorum loss is only detected by cluster logs.
+- **Problem:** NTP drift breaks cluster quorum → split-brain.
+- **Topology:** 3 LXC nodes + Route53 (fakecloud) for discovery. One has clock drift.
+- **Environment:** LXC (chrony).
+- **Mechanism:** Skew the clock on one node (chrony misconfig / `date -s`). Deterministic.
+- **Verify:** Cluster logs show quorum loss; `chronyc tracking` shows drift.
+- **False negatives:** Network up; services respond; quorum loss only in cluster logs.
+- **LXD gotcha:** Time is shared with the host in LXC — verify `date -s` / chrony can actually skew inside the container; if not, use VM.
 
 ---
+
+## RISK SUMMARY TABLE (quick reference)
+
+| Category | Incidents | Constraint | Action |
+|---|---|---|---|
+| 🔴 SELinux disabled (MX host = AppArmor) | 022, 027, 031, 035, 048 | SELinux off in LXC | Use KVM VM with SELinux enforcing |
+| 🔴 Swap is host-level | 014, 023 | No per-container swap | Re-frame as cgroup `MemoryMax=` |
+| 🟠 Block device / LVM / FS | 011, 026, 029, 044 | No real disks in LXC | Loop device + privileged, or VM |
+| 🟠 Kernel / netfilter host-level | 047, 030 | Host-scoped resources | Flag / re-frame / VM |
+| 🟠 Timing races | 043, (028 partial) | Non-deterministic in LXD | Convert to deterministic ordering bug |
+| 🟡 auditd / nesting | 033, 042 | auditd limited; podman needs nesting | Verify / set `security.nesting=true` |
+| 🟡 Multi-homing / time | 038, 045, 050 | LXD controls NICs & clock | Verify feasibility per case |
+| ✅ Already VM | 019, 036, 037, 041, 044 | Correct | No action |
+
+---
+
+## HOW TO USE THIS PROMPT
+
+When Jensy says "let's build inc-XXX", the AI will:
+1. **Check the Environment & LXD gotcha** for that incident FIRST. If it needs a VM or a re-frame, say so before writing code.
+2. **Layer 2 — write `setup.yml`** (Ansible, idempotent) deploying the incident's app/services/buckets/alerts.
+3. **Layer 3 — write `inject-fault.sh`** (BASH, <120 lines) that injects the DETERMINISTIC fault + MOTD + reboot (if boot incident) + silent verification.
+4. Choose the affected node (e.g., server02) and hardcode it into `inject-fault.sh`.
+5. Provide run instructions.
+6. **Never reveal** which node is affected or the root cause.
+
+Jensy's job:
+- `terraform apply` (Layer 1, already done) → `ansible-playbook setup.yml` (Layer 2) → `./inject-fault.sh` (Layer 3).
+- Triage using Linux tools and AWS CLI (against fakecloud at `10.45.223.1:4566`).
+- Resolve manually first.
+- Write two Ansible playbooks (triage + remediation) for 1000+ servers.
+- `terraform destroy` + recreate for the next incident.
+
+---
+**End of PROMPT_MAESTRO**
+---
+
+---
+## ⚠️ HARD CONSTRAINTS & LESSONS LEARNED (MANDATORY FOR ALL INCIDENTS)
+
+These rules encode REAL failures hit while building this lab. Every incident
+(inc-011 → inc-050) MUST comply. Ignoring them reproduces broken infrastructure.
+
+### 1. Base Image — ALWAYS the cloud variant
+- USE: `almalinux9-cloud` (alias of `images:almalinux/9/cloud`). It ships cloud-init.
+- NEVER use base `images:almalinux/9` → no cloud-init → user-data, SSH keys and
+  packages silently fail. Symptom: Ansible/SSH `Connection refused` on port 22.
+
+### 2. Terraform resource — ALWAYS `lxd_instance`
+- Use `resource "lxd_instance"` with `type = "container"`.
+- `lxd_container` is DEPRECATED (warnings, will be removed).
+
+### 3. Networking — ALWAYS DHCP, NEVER static via network-config
+- Let LXD assign IPs via DHCP on `lxdbr0`; reference nodes by name or by the DHCP
+  IP captured in the generated `inventory.ini`.
+- NEVER use `user.network-config` for static IPs → cloud-init fails with
+  "Address default is not a valid ip address/network" and the node boots broken.
+
+### 4. FakeCloud — host service, NOT a container
+- FakeCloud runs as a systemd service ON THE HOST (mx) at `http://10.45.223.1:4566`.
+- DO NOT create a `fakecloud` LXD container. Reach it from fleet nodes via
+  `aws --endpoint-url http://10.45.223.1:4566`.
+- `10.45.223.1` is the `lxdbr0` gateway, reachable from every container.
+
+### 5. AWS CLI — install AND configure on every node that talks to FakeCloud
+- Install `awscli` in base packages.
+- Inject `/root/.aws/credentials` (test/test) and `/root/.aws/config` (region=us-east-1).
+- AWS CLI refuses to run without credentials + region even though FakeCloud ignores
+  them ("Unable to locate credentials" / "You must specify a region").
+
+### 6. ⚠️ FAULT INJECTION — LXD networking is INSTANT (the #1 gotcha)
+- LXD containers bring networking up immediately at boot. There is NO network race.
+- These fault types DO NOT REPRODUCE — do NOT use them:
+  - Missing `After=network-online.target` / `Wants=network-online.target`.
+  - NFS / S3 / network mount races at boot.
+  - `Before=network-online.target` tricks or `ExecStartPre` network checks.
+- USE DETERMINISTIC FAULTS (trigger reliably regardless of boot timing):
+  - Missing required file: `EnvironmentFile=/path` (no `-` prefix), missing `ExecStart`
+    binary, `ConditionPathExists=` pointing to a nonexistent path.
+  - Broken config syntax: sudoers, fstab, systemd unit, SELinux context.
+  - Removed package/binary, changed permissions/ownership, firewall rules.
+  - LVM / filesystem state changes.
+
+### 7. Boot-degraded incidents — the reliable recipe
+To guarantee `systemctl is-system-running` returns `degraded`:
+1. Backend service (e.g. `s3-backend.service`) reads a required `EnvironmentFile=/etc/xxx.env`.
+2. Dependent service declares `Requires=<backend>` + `After=<backend>`.
+3. Fault = DELETE the `.env` file on the target node.
+4. On reboot systemd can't load the missing EnvironmentFile → backend fails →
+   dependent fails → boot = `degraded`.
+5. Keep `/health` (nginx) as an INDEPENDENT unit so it still returns 200 (blind spot).
+
+### 8. Three-layer architecture (mandatory)
+- Layer 1 — Terraform (`main.tf`): infra COMMON to ALL incidents: containers, SSH keys,
+  base packages (python3, openssh, awscli, nginx, rsync, curl, bind-utils),
+  Node Exporter + textfile collector, Prometheus, inventory.ini. Deployed ONCE.
+- Layer 2 — Ansible (`incidentes/inc-XXX/setup.yml`): incident-specific app. Idempotent.
+  Deploys scripts, systemd units, S3 buckets, Prometheus alert rules.
+- Layer 3 — BASH (`incidentes/inc-XXX/inject-fault.sh`): ONLY injects fault + MOTD +
+  reboot + silent verify. Keep under ~120 lines. Not idempotent by design.
+
+### 9. Ansible templating gotcha
+- Embedding Prometheus rules (Go-template `{{ }}`) in Ansible `copy.content` breaks Jinja2
+  (`unexpected char '$'` on `{{ $labels.instance }}`).
+- Fix: escape as `{{ '{{' }} $labels.instance {{ '}}' }}` or wrap in `{% raw %} ... {% endraw %}`.
+
+### 10. Inventory hygiene
+- Never name an Ansible group `localhost` (collides with the implicit localhost host). Use `[local]`.
+
+### 11. Monitoring — make it real, not decorative
+- Each incident's `setup.yml` MUST inject a Prometheus alert rule relevant to the fault.
+- Use the Node Exporter textfile collector (`/var/lib/node_exporter/textfile_collector/*.prom`)
+  to expose custom app metrics (e.g. `order_sync_success 0/1`).
 
 ## HOW TO USE THIS PROMPT
 

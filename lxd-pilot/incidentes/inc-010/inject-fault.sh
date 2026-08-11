@@ -1,6 +1,5 @@
 #!/bin/bash
 # inc-010 | inject-fault.sh
-# Solo inyecta el fallo. La app ya fue desplegada por Ansible.
 set -e
 
 FAULT_NODE="server02"
@@ -9,34 +8,19 @@ echo "======================================================================"
 echo "💥 INC-010 | Injecting fault into $FAULT_NODE"
 echo "======================================================================"
 
-# --- Inyectar el fallo: eliminar network ordering de s3-backend.service ---
 # DO NOT READ — ROOT CAUSE
-# s3-backend.service pierde After=network-online.target y Wants=network-online.target.
-# Al bootear, systemd intenta verificar S3 antes de tener red → falla.
-# order-sync.service tiene Requires=s3-backend.service → falla por dependencia.
-# Boot queda "degraded". /health (nginx) sigue en 200 porque es independiente.
+# En el nodo afectado, se elimina /etc/s3-backend.env.
+# El servicio s3-backend.service tiene EnvironmentFile=/etc/s3-backend.env
+# (SIN el prefijo - que lo haría opcional). Al boot, systemd no encuentra
+# el archivo, el servicio falla, order-sync falla por Requires=, y el
+# boot queda "degraded". /health (nginx) es independiente y sigue en 200.
 
-echo "   → Removing network ordering from s3-backend.service on $FAULT_NODE..."
-lxc exec $FAULT_NODE -- systemctl disable --now s3-backend.service 2>/dev/null || true
-
-lxc exec $FAULT_NODE -- bash -c "cat > /etc/systemd/system/s3-backend.service << 'EOF'
-[Unit]
-Description=S3 Backend Connectivity Check
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/usr/local/bin/s3-backend.sh
-
-[Install]
-WantedBy=multi-user.target
-EOF"
-
+echo "   → Removing /etc/s3-backend.env on $FAULT_NODE..."
+lxc exec $FAULT_NODE -- rm -f /etc/s3-backend.env
 lxc exec $FAULT_NODE -- systemctl daemon-reload
-lxc exec $FAULT_NODE -- systemctl enable s3-backend.service 2>/dev/null || true
 echo "   ✅ Fault injected."
 
-# --- Escribir MOTD ticket en todos los nodos ---
+# --- MOTD ticket ---
 echo "   → Deploying MOTD ticket..."
 
 TICKET='======================================================================
@@ -96,8 +80,8 @@ MOTD"
 done
 echo "   ✅ MOTD ticket deployed."
 
-# --- Rebootear la flota para disparar el race condition ---
-echo "   → Rebooting fleet to trigger the boot race..."
+# --- Reboot ---
+echo "   → Rebooting fleet to trigger the fault..."
 for NODE in server01 server02 server03; do
     lxc restart $NODE
 done
@@ -107,7 +91,7 @@ sleep 40
 echo "⏳ Waiting 90s for sync cycles post-reboot..."
 sleep 90
 
-# --- Verificación silenciosa ---
+# --- Verificación ---
 echo ""
 echo "🔍 Verifying fault injection..."
 VERIFY_OK=true
@@ -143,19 +127,11 @@ if [ "$VERIFY_OK" = true ]; then
     echo "✅ Fault injected successfully. Exactly 1 node degraded."
 else
     echo "❌ ERROR: Fault injection failed."
+    echo "   Degraded count: $DEGRADED_COUNT (expected 1)"
     exit 1
 fi
 
 echo ""
 echo "======================================================================"
 echo "✅ INC-010 READY"
-echo "======================================================================"
-echo ""
-echo "🎯 Your mission:"
-echo "   1. Enter any node:  lxc exec server01 -- bash"
-echo "   2. Read the ticket: cat /etc/motd"
-echo "   3. Compare order arrivals per node in S3"
-echo "   4. Find which node is degraded and why (hint: it's not S3)"
-echo "   5. Fix it so it survives future reboots"
-echo "   6. Explain why /health didn't catch this"
 echo "======================================================================"

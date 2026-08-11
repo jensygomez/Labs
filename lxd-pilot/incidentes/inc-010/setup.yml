@@ -1,4 +1,24 @@
 ---
+- name: "INC-010 | Create S3 bucket in FakeCloud"
+  hosts: localhost
+  connection: local
+  vars:
+    fakecloud_endpoint: "http://10.45.223.1:4566"
+    bucket_name: "central-orders"
+  environment:
+    AWS_ACCESS_KEY_ID: test
+    AWS_SECRET_ACCESS_KEY: test
+    AWS_DEFAULT_REGION: us-east-1
+
+  tasks:
+    - name: Create S3 bucket
+      command: >
+        aws --endpoint-url {{ fakecloud_endpoint }}
+        s3 mb s3://{{ bucket_name }}
+      register: bucket_result
+      failed_when: false
+      changed_when: bucket_result.rc == 0
+
 - name: "INC-010 | Deploy order pipeline (S3 backend)"
   hosts: app_fleet
   become: true
@@ -9,8 +29,6 @@
     textfile_dir: "/var/lib/node_exporter/textfile_collector"
 
   tasks:
-
-    # --- Directorios base ---
     - name: Create required directories
       file:
         path: "{{ item }}"
@@ -22,7 +40,6 @@
         - "{{ mount_point }}"
         - "{{ textfile_dir }}"
 
-    # --- order-gen: simula tráfico real ---
     - name: Deploy order-gen script
       copy:
         dest: /usr/local/bin/order-gen.sh
@@ -57,7 +74,6 @@
           [Install]
           WantedBy=timers.target
 
-    # --- s3-backend: verifica conectividad con S3 ---
     - name: Deploy s3-backend script
       copy:
         dest: /usr/local/bin/s3-backend.sh
@@ -68,7 +84,7 @@
           MOUNT_POINT={{ mount_point }}
           mkdir -p $MOUNT_POINT
 
-          RESULT=$(aws --endpoint-url {{ fakecloud_endpoint }} s3 ls s3://{{ bucket_name }} 2>&1)
+          RESULT=$(aws --endpoint-url ${FAKECLOUD_ENDPOINT} s3 ls s3://${BUCKET_NAME} 2>&1)
           if [ $? -eq 0 ]; then
               echo "[$(date)] S3 backend connected" >> $LOG_FILE
               touch $MOUNT_POINT/.s3-mounted
@@ -90,12 +106,24 @@
           [Service]
           Type=oneshot
           RemainAfterExit=yes
+          EnvironmentFile=/etc/s3-backend.env
           ExecStart=/usr/local/bin/s3-backend.sh
 
           [Install]
           WantedBy=multi-user.target
+          
+    - name: Deploy s3-backend environment file
+      copy:
+        dest: /etc/s3-backend.env
+        mode: '0644'
+        content: |
+          FAKECLOUD_ENDPOINT=http://10.45.223.1:4566
+          BUCKET_NAME=central-orders
+          AWS_ACCESS_KEY_ID=test
+          AWS_SECRET_ACCESS_KEY=test
+          AWS_DEFAULT_REGION=us-east-1
+    
 
-    # --- order-sync: sincroniza a S3 ---
     - name: Deploy order-sync script
       copy:
         dest: /usr/local/bin/order-sync.sh
@@ -149,13 +177,11 @@
           [Install]
           WantedBy=timers.target
 
-    # --- /health endpoint (independiente) ---
     - name: Deploy /health endpoint
       copy:
         dest: /usr/share/nginx/html/health
         content: "OK"
 
-    # --- Activar todo ---
     - name: Reload systemd
       systemd:
         daemon_reload: yes
@@ -171,28 +197,6 @@
         - order-sync.timer
         - nginx
 
----
-- name: "INC-010 | Create S3 bucket in FakeCloud"
-  hosts: localhost
-  connection: local
-  vars:
-    fakecloud_endpoint: "http://10.45.223.1:4566"
-    bucket_name: "central-orders"
-  environment:
-    AWS_ACCESS_KEY_ID: test
-    AWS_SECRET_ACCESS_KEY: test
-    AWS_DEFAULT_REGION: us-east-1
-
-  tasks:
-    - name: Create S3 bucket
-      command: >
-        aws --endpoint-url {{ fakecloud_endpoint }}
-        s3 mb s3://{{ bucket_name }}
-      register: bucket_result
-      failed_when: false
-      changed_when: bucket_result.rc == 0
-
----
 - name: "INC-010 | Inject Prometheus alert rule"
   hosts: monitoring_node
   become: true
@@ -217,7 +221,13 @@
                     severity: warning
                     incident: inc-010
                   annotations:
-                    summary: "Order sync failing on {{ $labels.instance }}"
+                    summary: "Order sync failing on {{ '{{' }} $labels.instance {{ '}}' }}"
+
+    - name: Check if rule_files exists in prometheus.yml
+      command: grep -q "rule_files" /opt/prometheus/prometheus.yml
+      register: rule_files_check
+      failed_when: false
+      changed_when: false
 
     - name: Add rule_files to prometheus.yml if missing
       lineinfile:
@@ -226,7 +236,8 @@
         line: |
           rule_files:
             - /opt/prometheus/rules/*.yml
-      when: "'rule_files' not in lookup('file', '/opt/prometheus/prometheus.yml')"
+      when: rule_files_check.rc != 0
 
     - name: Reload Prometheus
       shell: pkill -HUP prometheus || true
+
