@@ -1,0 +1,138 @@
+---
+- name: "INC-011 | Create S3 bucket for backup logs"
+  hosts: localhost
+  connection: local
+  vars:
+    fakecloud_endpoint: "http://10.45.223.1:4566"
+    bucket_name: "backup-logs"
+  environment:
+    AWS_ACCESS_KEY_ID: test
+    AWS_SECRET_ACCESS_KEY: test
+    AWS_DEFAULT_REGION: us-east-1
+  tasks:
+    - name: Create backup-logs bucket
+      command: aws --endpoint-url {{ fakecloud_endpoint }} s3 mb s3://{{ bucket_name }}
+      register: bucket_result
+      failed_when: false
+      changed_when: bucket_result.rc == 0
+
+- name: "INC-011 | Deploy LVM data volume + backup app"
+  hosts: app_fleet
+  become: true
+  vars:
+    fakecloud_endpoint: "http://10.45.223.1:4566"
+    bucket_name: "backup-logs"
+  tasks:
+    - name: Install lvm2 and e2fsprogs
+      package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - lvm2
+        - e2fsprogs
+
+    - name: Deploy LVM setup script
+      copy:
+        dest: /usr/local/bin/setup-lvm.sh
+        mode: '0755'
+        content: |
+          #!/bin/bash
+          set -e
+          DISK_IMG=/var/lvm-disk.img
+          VG=datavg
+          LV=datalv
+          MOUNT=/data
+
+          # Sparse disk (512MB)
+          [ -f $DISK_IMG ] || truncate -s 512M $DISK_IMG
+
+          # Attach loop if needed
+          losetup -j $DISK_IMG | grep -q $DISK_IMG || losetup -f $DISK_IMG
+          LOOP=$(losetup -j $DISK_IMG | head -1 | cut -d: -f1)
+
+          # VG
+          if ! vgs $VG &>/dev/null; then
+            pvcreate $LOOP
+            vgcreate $VG $LOOP
+          fi
+
+          # LV (only 200MB of the ~512MB VG -> leaves free space for the fault)
+          if ! lvs $VG/$LV &>/dev/null; then
+            lvcreate -L 200M -n $LV $VG
+            mkfs.ext4 -q /dev/$VG/$LV
+          fi
+
+          # Mount
+          mkdir -p $MOUNT
+          mountpoint -q $MOUNT || mount /dev/$VG/$LV $MOUNT
+
+          # Seed ~100MB of "order data"
+          [ -f $MOUNT/orders.db ] || dd if=/dev/urandom of=$MOUNT/orders.db bs=1M count=100 2>/dev/null
+
+    - name: Run LVM setup
+      command: /usr/local/bin/setup-lvm.sh
+
+    - name: Deploy backup-to-S3 script
+      copy:
+        dest: /usr/local/bin/app-backup.sh
+        mode: '0755'
+        content: |
+          #!/bin/bash
+          # Simulated app: writes to /data, then uploads log to S3
+          echo "[$(date -Is)] order heartbeat from $(hostname)" >> /data/app.log
+          aws --endpoint-url {{ fakecloud_endpoint }} \
+            s3 cp /data/app.log s3://{{ bucket_name }}/$(hostname)/app.log >/dev/null 2>&1
+
+    - name: Deploy backup systemd service
+      copy:
+        dest: /etc/systemd/system/app-backup.service
+        content: |
+          [Unit]
+          Description=App log backup to S3
+          [Service]
+          Type=oneshot
+          ExecStart=/usr/local/bin/app-backup.sh
+
+    - name: Deploy backup timer (every 60s)
+      copy:
+        dest: /etc/systemd/system/app-backup.timer
+        content: |
+          [Unit]
+          Description=Run app backup every 60s
+          [Timer]
+          OnBootSec=15s
+          OnUnitActiveSec=60s
+          [Install]
+          WantedBy=timers.target
+
+    - name: Enable backup timer
+      systemd:
+        name: app-backup.timer
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+- name: "INC-011 | Inject Prometheus alert rule"
+  hosts: monitoring_node
+  become: true
+  tasks:
+    - name: Deploy alert rule for /data exhaustion
+      copy:
+        dest: /opt/prometheus/rules/inc-011-alerts.yml
+        content: |
+          groups:
+            - name: inc-011-storage
+              rules:
+                - alert: DataVolumeNearlyFull
+                  expr: (node_filesystem_avail_bytes{mountpoint="/data"} / node_filesystem_size_bytes{mountpoint="/data"}) * 100 < 10
+                  for: 1m
+                  labels:
+                    severity: warning
+                    incident: inc-011
+                  annotations:
+                    summary: "Data volume nearly full on {{ '{{' }} $labels.instance {{ '}}' }}"
+
+    - name: Reload Prometheus
+      shell: pkill -HUP prometheus || true
+
+
