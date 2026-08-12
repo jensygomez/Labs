@@ -1,0 +1,46 @@
+---
+- name: "BASSELINE | Install essential system package"
+  ansible.builtin.dnf:
+    name:
+      - curl
+      - wget
+      - git
+      - vim
+      - htop
+      - iotop
+      - net-tools
+      - bind-utils
+      - pciutils
+      - tar
+      - rsync
+    state: present
+    update_cache: true
+
+- name: "BASELINE | Set system timezone"
+  community.general.timezone:
+    name: "America/Sao_Paulo"
+
+- name: "BASELINE | Create sysadmin user"
+  ansible.builtin.group:
+    name: sysadmin
+    state: present
+
+- name: "BASELINE | Create sysadmin user"
+  ansible.builtin.user:
+    name: sysadmin
+    group: sysadmin
+    groups: wheel
+    append: true
+    shell: /bin/bash
+    state: present
+
+- name: "BASELINE | Configure passwordless sudo for sysadmin"
+  ansible.builtin.copy:
+    content: "sysadmin ALL=(ALL) NOPASSWD: ALL\n"
+    dest: /etc/sudoers.d/sysadmin
+    owner: root
+    group: root
+    mode: '0440'
+    validate: 'visudo -cf %s'
+
+

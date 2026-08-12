@@ -2,6 +2,8 @@
 - name: "Phase 03 - Apply Linux Baeline to all nodes"
   hosts: all
   gather_facts: true
+  tags:
+    - baseline
   roles:
     - linux_baseline
 
