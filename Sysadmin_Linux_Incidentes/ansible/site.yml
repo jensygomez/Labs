@@ -1,24 +1,15 @@
 ---
-# 1. Configuración común a todos los nodos
-- name: Preparación Base
+- name: 1. Preparacion Base de Todos los Nodos
   hosts: all
   roles:
     - common
 
-# 2. Servidor de Almacenamiento NFS
-- name: Configurar Servidor NFS
+- name: 2. Configurar Servidor de Almacenamiento NFS
   hosts: storage_vms
   roles:
     - storage_nfs
 
-# 3. Nodos de Aplicación Web
-- name: Configurar Servidores de Aplicación
+- name: 3. Configurar Nodos de Aplicacion Web
   hosts: app_vms
   roles:
     - app_node
-
-# 4. Entorno de Emulación AWS
-- name: Configurar Entorno Cloud
-  hosts: aws_cloud_vms
-  roles:
-    - fakecloud_aws

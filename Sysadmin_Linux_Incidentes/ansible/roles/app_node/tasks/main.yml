@@ -1,0 +1,21 @@
+---
+- name: Instalar cliente NFS y Python para microservicios
+  dnf:
+    name:
+      - nfs-utils
+      - python3
+      - python3-pip
+    state: present
+
+- name: Crear punto de montaje local para NFS
+  file:
+    path: /mnt/app_storage
+    state: directory
+
+- name: Montar volumen NFS desde storage-vm
+  ansible.posix.mount:
+    path: /mnt/app_storage
+    src: "{{ hostvars[groups['storage_vms'][0]]['ansible_host'] }}:/srv/nfs/app_data"
+    fstype: nfs
+    opts: defaults
+    state: mounted

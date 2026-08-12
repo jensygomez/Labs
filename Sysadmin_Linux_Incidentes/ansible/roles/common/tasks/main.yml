@@ -1,0 +1,11 @@
+---
+- name: Instalar paquetes base del sistema
+  dnf:
+    name:
+      - curl
+      - wget
+      - net-tools
+      - bind-utils
+      - iputils
+      - htop
+    state: present
