@@ -1,6 +1,7 @@
 ---
 - name: "Phase 03 - Apply Linux Baeline to all nodes"
   hosts: all
+  serial: 1
   gather_facts: true
   tags:
     - baseline
@@ -9,6 +10,7 @@
 
 - name: "Phase 06/07/08 - Storage Foundation & Services"
   hosts: storage_nodes
+  serial: 1
   gather_facts: true
   roles:
     - lvm
@@ -16,6 +18,7 @@
 
 - name: "Pjase 09/10 - High Availability & Web Aplication Stack"
   hosts: ha_nodes
+  serial: 1
   gather_facts: true
   roles:
     - haproxy

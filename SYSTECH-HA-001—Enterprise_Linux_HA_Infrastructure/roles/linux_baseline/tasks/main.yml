@@ -1,5 +1,11 @@
 ---
-- name: "BASSELINE | Install essential system package"
+- name: "BASELINE | Install EPEL repository"
+  ansible.builtin.dnf:
+    name: epel-release
+    state: present
+    update_cache: true
+
+- name: "BASELINE | Install essential system package"
   ansible.builtin.dnf:
     name:
       - curl
