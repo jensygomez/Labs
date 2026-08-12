@@ -1,0 +1,9 @@
+#cloud-config
+disable_root: false
+ssh_pwauth: false
+users:
+  - name: root
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN+gsGnVlOOJXtW6Wz87hc1CPhOz++T2lCoB6F3Eksbg jensyg@lxd-fleet
+runcmd:
+  - systemctl enable --now qemu-guest-agent

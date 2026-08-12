@@ -1,9 +1,9 @@
 locals {
   ssh_pubkey   = trimspace(file(pathexpand("~/.ssh/id_lxd_fleet.pub")))
   fakecloud_ip = "10.45.223.1"
-
-  vm_image  = "almalinux9-vm-std"    # ← CAMBIAR AQUÍ
-  lxc_image = "almalinux9-cloud"     # El cliente LXC sigue igual
+  
+  vm_image  = "almalinux9-vm-cloud"
+  lxc_image = "almalinux9-cloud"
 }
 
 # ⚠️ ESTE BLOQUE FALTABA:
