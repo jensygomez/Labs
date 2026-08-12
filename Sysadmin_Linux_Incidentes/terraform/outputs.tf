@@ -1,9 +1,9 @@
 output "app_vms_ips" {
-  value = [for vm in lxd_instance.app_vm : vm.ipv4_address]
+  value = [for vm in libvirt_domain.app_vm : vm.network_interface[0].addresses[0]]
 }
 
 output "storage_vm_ip" {
-  value = lxd_instance.storage_vm.ipv4_address
+  value = libvirt_domain.storage_vm.network_interface[0].addresses[0]
 }
 
 output "cliente_lxc_ip" {

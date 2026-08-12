@@ -1,5 +1,9 @@
 provider "lxd" {}
 
+provider "libvirt" {
+  uri = "qemu:///system"
+}
+
 provider "aws" {
   region                      = "us-east-1"
   access_key                  = "test"
@@ -8,12 +12,11 @@ provider "aws" {
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
   s3_use_path_style           = true
-
   endpoints {
-    s3       = "http://10.45.223.1:4566"
-    route53  = "http://10.45.223.1:4566"
-    elbv2    = "http://10.45.223.1:4566"
-    rds      = "http://10.45.223.1:4566"
-    iam      = "http://10.45.223.1:4566"
+    s3      = "http://10.45.223.1:4566"
+    route53 = "http://10.45.223.1:4566"
+    elbv2   = "http://10.45.223.1:4566"
+    rds     = "http://10.45.223.1:4566"
+    iam     = "http://10.45.223.1:4566"
   }
 }
