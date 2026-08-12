@@ -1,11 +1,3 @@
-output "app_vms_ips" {
-  value = [for vm in libvirt_domain.app_vm : vm.network_interface[0].addresses[0]]
-}
-
-output "storage_vm_ip" {
-  value = libvirt_domain.storage_vm.network_interface[0].addresses[0]
-}
-
 output "cliente_lxc_ip" {
   value = lxd_instance.cliente_lxc.ipv4_address
 }
