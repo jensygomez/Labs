@@ -1,7 +1,7 @@
 ---
 - name: "Phase 03 - Apply Linux Baeline to all nodes"
   hosts: all
-  serial: 1
+  serial: 2
   gather_facts: true
   tags:
     - baseline

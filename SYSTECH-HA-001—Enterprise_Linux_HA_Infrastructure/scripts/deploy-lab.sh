@@ -8,7 +8,7 @@ BASE_IMG="${BASE_IMG:-/var/lib/libvirt/images/almalinux9-cloud-base.qcow2}"
 SSH_PUBKEY_FILE="${SSH_PUBKEY_FILE:-$HOME/.ssh/id_lxd_fleet.pub}"
 SSH_PRIVKEY_FILE="${SSH_PRIVKEY_FILE:-${SSH_PUBKEY_FILE%.pub}}"
 
-MEMORY_MB=1024
+MEMORY_MB=1536
 VCPUS=1
 
 APP_VMS=(server01 server02 server03)

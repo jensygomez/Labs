@@ -1,27 +1,10 @@
 ---
-- name: "BASELINE | Install EPEL repository"
-  ansible.builtin.dnf:
-    name: epel-release
-    state: present
-    update_cache: true
-
-- name: "BASELINE | Install essential system package"
-  ansible.builtin.dnf:
-    name:
-      - curl
-      - wget
-      - git
-      - vim
-      - htop
-      - iotop
-      - net-tools
-      - bind-utils
-      - pciutils
-      - tar
-      - rsync
-    state: present
-    update_cache: true
-
+- name: "BASELINE | Fast CLI package installation"
+  ansible.builtin.command:
+    cmd: "dnf install -y epel-release curl wget git vim htop  net-tools bind-utils pciutils tar rsync"
+  register: dnf_result
+  changed_when: "'Nothing to do' not in dnf_result.stdout"
+ 
 - name: "BASELINE | Set system timezone"
   community.general.timezone:
     name: "America/Sao_Paulo"
