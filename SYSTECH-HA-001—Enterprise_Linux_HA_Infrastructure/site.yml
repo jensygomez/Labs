@@ -1,0 +1,23 @@
+---
+- name: "Phase 03 - Apply Linux Baeline to all nodes"
+  hosts: all
+  gather_facts: true
+  roles:
+    - linux_baseline
+
+- name: "Phase 06/07/08 - Storage Foundation & Services"
+  hosts: storage_nodes
+  gather_facts: true
+  roles:
+    - lvm
+    - nfs
+
+- name: "Pjase 09/10 - High Availability & Web Aplication Stack"
+  hosts: ha_nodes
+  gather_facts: true
+  roles:
+    - haproxy
+    - keepalived
+    - nginx
+
+
