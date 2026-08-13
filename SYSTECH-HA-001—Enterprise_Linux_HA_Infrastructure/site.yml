@@ -1,32 +1,85 @@
 ---
-- name: "Phase 03 - Apply Linux Baeline to all nodes"
-  hosts: all
-  serial: 2
-  gather_facts: true
-  tags:
-    - baseline
-  roles:
-    - linux_baseline
+# ==============================================================================
+# SYSTECH-HA-001 - Enterprise Linux HA Infrastructure
+# ==============================================================================
+#
+# SECUENCIA DE EJECUCIÓN (Comandos de orquestación):
+#
+# 1. Ejecutar todo el stack completo:
+#    ansible-playbook site.yml
+#
+# 2. Despliegue fase por fase (Útil para pruebas o reconstrucción modular):
+#    Fase 03 (Baseline):  ansible-playbook site.yml --tags baseline
+#    Fase 06/08 (Storage): ansible-playbook site.yml --tags storage
+#    Fase 09a (VIP HA):   ansible-playbook site.yml --tags keepalived
+#    Fase 09b (LB HA):    ansible-playbook site.yml --tags haproxy
+#    Fase 10 (Web Stack):  ansible-playbook site.yml --tags nginx
+#
+# ==============================================================================
 
+# ------------------------------------------------------------------------------
+# FASE 01 / 03: BASELINE DE SEGURIDAD Y CONFIGURACIÓN BASE
+# Comando individual: ansible-playbook site.yml --tags baseline
+# ------------------------------------------------------------------------------
+- name: "Phase 03 - Apply Linux Baseline to all nodes"
+  hosts: all
+  become: true
+  gather_facts: true
+  roles:
+    - role: baseline
+      tags: baseline
+
+
+# ------------------------------------------------------------------------------
+# FASE 06 / 07 / 08: ALMACENAMIENTO Y SERVICIOS CORE DE INFRAESTRUCTURA
+# Comando individual: ansible-playbook site.yml --tags storage
+# ------------------------------------------------------------------------------
 - name: "Phase 06/07/08 - Storage Foundation & Services"
   hosts: storage_nodes
-  serial: 1
+  become: true
   gather_facts: true
   roles:
-    - lvm
-    - nfs
+    - role: storage
+      tags: storage
 
-- name: "Pjase 09/10 - High Availability & Web Aplication Stack"
+
+# ------------------------------------------------------------------------------
+# FASE 09A: ALTA DISPONIBILIDAD - RED / VIP (KEEPALIVED)
+# Comando individual: ansible-playbook site.yml --tags keepalived
+# ------------------------------------------------------------------------------
+- name: "Phase 09a - High Availability VIP Layer (Keepalived)"
   hosts: ha_nodes
-  serial: 1
+  become: true
   gather_facts: true
-  tags:
-    - ha
-    - keepalived
   roles:
-    - haproxy
-    - keepalived
-    - nginx
-  
+    - role: keepalived
+      tags: keepalived
+
+
+# ------------------------------------------------------------------------------
+# FASE 09B: ALTA DISPONIBILIDAD - BALANCEADOR DE CARGA (HAPROXY)
+# Comando individual: ansible-playbook site.yml --tags haproxy
+# ------------------------------------------------------------------------------
+- name: "Phase 09b - High Availability Load Balancer Layer (HAProxy)"
+  hosts: ha_nodes
+  become: true
+  gather_facts: true
+  roles:
+    - role: haproxy
+      tags: haproxy
+
+
+# ------------------------------------------------------------------------------
+# FASE 10: CAPA DE APLICACIÓN WEB (NGINX BACKENDS)
+# Comando individual: ansible-playbook site.yml --tags nginx
+# NOTA: Próxima fase a implementar para completar el stack end-to-end.
+# ------------------------------------------------------------------------------
+- name: "Phase 10 - Web Application Stack (Nginx Backends)"
+  hosts: ha_nodes
+  become: true
+  gather_facts: true
+  roles:
+    - role: nginx
+      tags: nginx
 
 
