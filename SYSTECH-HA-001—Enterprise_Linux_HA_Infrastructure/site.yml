@@ -20,9 +20,13 @@
   hosts: ha_nodes
   serial: 1
   gather_facts: true
+  tags:
+    - ha
+    - keepalived
   roles:
     - haproxy
     - keepalived
     - nginx
+  
 
 

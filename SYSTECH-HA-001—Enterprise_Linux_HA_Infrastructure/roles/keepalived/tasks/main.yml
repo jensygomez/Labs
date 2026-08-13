@@ -1,0 +1,22 @@
+---
+- name: "KEEPALIVED | Install keepalived and psmisc"
+  ansible.builtin.dnf:
+    name:
+      - keepalived
+      - psmisc
+    state: present
+
+- name: "KEEPALIVED | Configure keepalived.conf"
+  ansible.builtin.template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart keepalived
+
+- name: "KEEPALIVED | Ensure keepalived service is enabled and started"
+  ansible.builtin.systemd:
+    name: keepalived
+    state: started
+    enabled: true 

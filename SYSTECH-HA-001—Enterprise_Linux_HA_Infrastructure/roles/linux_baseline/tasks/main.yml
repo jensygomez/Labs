@@ -1,10 +1,23 @@
 ---
 - name: "BASELINE | Fast CLI package installation"
-  ansible.builtin.command:
-    cmd: "dnf install -y epel-release curl wget git vim htop  net-tools bind-utils pciutils tar rsync"
-  register: dnf_result
-  changed_when: "'Nothing to do' not in dnf_result.stdout"
- 
+  ansible.builtin.dnf:
+    name: epel-release
+    state: present
+
+- name: "BASELINE | Install baseline CLI packages"
+  ansible.builtin.dnf:
+    name:
+      - curl
+      - wget
+      - git
+      - vim
+      - htop
+      - net-tools
+      - bind-utils
+      - pciutils
+      - tar
+      - rsync
+
 - name: "BASELINE | Set system timezone"
   community.general.timezone:
     name: "America/Sao_Paulo"
