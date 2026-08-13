@@ -1,0 +1,46 @@
+global
+  log            127.0.0.1 local2
+  chroot         /var/lib/haproxy
+  pidfile        /var/run/haproxy.pid
+  maxconn        4000
+  user           haproxy
+  group          haproxy
+  daemon         
+  stats socket   /var/lib/haproxy/stats
+
+defaults
+  mode                      http
+  log                       global
+  option                    httplog
+  option                    dontlognull
+  option http-server-close
+  option forwardfor         except 127.0.0.0/8
+  option                    redispatch
+  retries                   3
+  timeout http-request      10s
+  timeout queue             1m
+  timeout connect           10s
+  timeout client            1m
+  timeout server            1m
+  timeout http-keep-alive   10s
+  timeout check             10s
+  maxconn                   3000
+
+frontend http_front
+  bind {{ keepalived_vip }}:{{ haproxy_frontend_port }}
+  default_backend http_back
+
+backend http_back
+  balance {{ haprooxy_backend_balance }}
+  {% for server in haproxy_backend_servers %}
+  server {{ server.name }} {{ server.ip }}:{{ haproxy_backend_port }} check
+  {% endfor %}
+
+listen stats
+  bind {{ keepalived_vip }}:9000
+  mode http
+  stats enable
+  stats uri /
+  stats refresh 5s
+
+

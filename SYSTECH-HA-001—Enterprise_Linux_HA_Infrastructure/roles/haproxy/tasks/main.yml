@@ -1,0 +1,29 @@
+---
+- name: "HAPROXY | Allow binding to non-local IP addresses"
+  ansible.posix.sysctl:
+    - name: net.ipv4.ip_nonlocal_bind
+      value: '1'
+      state: present
+      reload: yes
+
+- name: "HAPROXY | Install HAProxy package"
+  ansible.builtin.dnf:
+    name: haproxy
+    state: present
+
+- name: "HAPROXY | Configure haproxy.cfg"
+  ansible.builtin.template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart haproxy
+
+- name: "HAPROXY | Ensure HAProxy service is enabled and started"
+  ansible.builtin.systemd:
+    name: haproxy
+    state: started
+    enabled: true
+
+ 
