@@ -34,13 +34,13 @@
 # FASE 06 / 07 / 08: ALMACENAMIENTO Y SERVICIOS CORE DE INFRAESTRUCTURA
 # Comando individual: ansible-playbook site.yml --tags storage
 # ------------------------------------------------------------------------------
-- name: "Phase 06/07/08 - Storage Foundation & Services"
-  hosts: storage_nodes
-  become: true
-  gather_facts: true
-  roles:
-    - role: storage
-      tags: storage
+#- name: "Phase 06/07/08 - Storage Foundation & Services"
+#  hosts: storage_nodes
+#  become: true
+#  gather_facts: true
+#  roles:
+#    - role: storage
+#      tags: storage
 
 
 # ------------------------------------------------------------------------------

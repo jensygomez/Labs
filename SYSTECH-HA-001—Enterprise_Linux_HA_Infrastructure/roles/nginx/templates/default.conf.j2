@@ -1,0 +1,10 @@
+server {
+    listen       {{ nginx_port | default(8080) }} default_server;
+    listen       [::]:{{ nginx_port | default(8080) }} default_server;
+    server_name  _;
+    root         /usr/share/nginx/html;
+
+    location / {
+        index  index.html index.htm;
+    }
+}

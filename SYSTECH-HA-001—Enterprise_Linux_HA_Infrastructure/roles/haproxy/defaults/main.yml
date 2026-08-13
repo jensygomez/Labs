@@ -1,7 +1,7 @@
 ---
 haproxy_frontend_port: 80
 haproxy_backend_balance: roundrobin
-haproxy_backend_port: 80
+haproxy_backend_port: 8080
 
 # Node Backend donde core Nginx
 haproxy_backend_servers:

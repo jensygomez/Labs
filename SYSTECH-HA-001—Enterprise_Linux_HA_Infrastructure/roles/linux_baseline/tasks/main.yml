@@ -17,6 +17,7 @@
       - pciutils
       - tar
       - rsync
+      - policycoreutils-python-utils
 
 - name: "BASELINE | Set system timezone"
   community.general.timezone:
