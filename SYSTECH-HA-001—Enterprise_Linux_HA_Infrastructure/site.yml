@@ -26,7 +26,7 @@
   become: true
   gather_facts: true
   roles:
-    - role: baseline
+    - role: linux_baseline
       tags: baseline
 
 

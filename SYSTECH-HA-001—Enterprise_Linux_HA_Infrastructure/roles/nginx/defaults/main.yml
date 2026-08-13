@@ -1,0 +1,5 @@
+---
+nginx_port: 80
+nginx_web_root: "/usr/share/nginx/html"
+nginx_service_state: "started"
+nginx_service_enabled: true
