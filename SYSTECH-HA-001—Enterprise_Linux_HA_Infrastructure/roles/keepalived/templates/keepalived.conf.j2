@@ -1,30 +1,32 @@
 global_defs {
-  router_id {{ inventory_hostname }}
-  enable_script_security
-  script_user root
+    router_id {{ inventory_hostname }}
+    enable_script_security
+    script_user root
 }
 
 vrrp_script check_haproxy {
-  script "/usr/bin/killall -0 haproxy"
-  interval 2
-  weight 2
+    script "/usr/bin/killall -0 haproxy"
+    interval 2
+    weight 2
 }
 
 vrrp_instance VI_1 {
-  state {{ keepalived_role }}
-  interface {{ keepalived_interface }}
-  virtual_router_id {{ keepalived_router_id }}
-  priority {{ keepalived_priority }}
-  advert_int 1
+    state {{ keepalived_role }}
+    interface {{ keepalived_interface }}
+    virtual_router_id {{ keepalived_router_id }}
+    priority {{ keepalived_priority }}
+    advert_int 1
 
-  authentication {{
-    auth_type PASS
-    auth_pass {{ keepalived_auth_pass }}
-  }
+    authentication {
+        auth_type PASS
+        auth_pass {{ keepalived_auth_pass }}
+    }
 
-  track_script {
-    check_haproxy
-  }
+    virtual_ipaddress {
+        {{ keepalived_vip }}/{{ keepalived_vip_cidr }} dev {{ keepalived_interface }}
+    }
 
+    track_script {
+        check_haproxy
+    }
 }
-
