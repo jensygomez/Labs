@@ -4,12 +4,19 @@ set -euo pipefail
 ########################################
 # Configuración general
 ########################################
+# El script se autolocaliza: no depende de $HOME ni del nombre de usuario.
+# BASH_SOURCE[0] = ruta desde donde se está ejecutando este archivo.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Como el script vive en scripts/, la raíz del proyecto es un nivel arriba.
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
 BASE_IMG="${BASE_IMG:-/var/lib/libvirt/images/almalinux9-cloud-base.qcow2}"
 LXC_IMAGE="${LXC_IMAGE:-ubuntu:24.04}"
 SSH_PUBKEY_FILE="${SSH_PUBKEY_FILE:-$HOME/.ssh/id_lxd_fleet.pub}"
 SSH_PRIVKEY_FILE="${SSH_PRIVKEY_FILE:-${SSH_PUBKEY_FILE%.pub}}"
 
-MEMORY_MB=1024   # para VMs (puedes ajustar)
+MEMORY_MB=1536   # para VMs (puedes ajustar)
 VCPUS=1
 
 # VMs (nodos de aplicación y almacenamiento)
@@ -24,7 +31,7 @@ ALL_CONTAINERS=("${LB_CONTAINERS[@]}" "${DB_CONTAINERS[@]}")
 
 ALL_NODES=("${ALL_VMS[@]}" "${ALL_CONTAINERS[@]}")
 
-INVENTORY_DIR="${INVENTORY_DIR:-$HOME/Labs/SYSTECH-HA-001—Enterprise_Linux_HA_Infrastructure/inventories/production}"
+INVENTORY_DIR="${INVENTORY_DIR:-${PROJECT_ROOT}/inventories/production}"
 INVENTORY_FILE="${INVENTORY_DIR}/hosts.yml"
 
 declare -A CURRENT_IPS=()
@@ -180,8 +187,10 @@ wait_lxc_ip() {
   local IP=""
   echo "==> Esperando IP para contenedor LXC $NAME..."
   for _ in $(seq 1 30); do
-    # MÉTODO CORREGIDO: usar lxc info
-    IP="$(lxc info "$NAME" 2>/dev/null | grep -i "inet " | grep -v inet6 | grep -v 127.0.0.1 | awk '{print $2}' | cut -d/ -f1 | head -n1 || true)"
+    # MÉTODO CORREGIDO: usar 'lxc list' con salida CSV (estructurada),
+    # en vez de parsear texto libre de 'lxc info' (formato frágil).
+    # -c 4 = columna IPV4. Filtramos por nombre exacto con ^NAME$.
+    IP="$(lxc list "^${NAME}\$" --format csv -c 4 2>/dev/null | cut -d' ' -f1 | head -n1 || true)"
     if [[ "$IP" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
       CURRENT_IPS["$NAME"]="$IP"
       echo "==> [$NAME] IP detectada: $IP"
