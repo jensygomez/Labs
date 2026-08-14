@@ -1,0 +1,108 @@
+---
+# ==============================================================================
+# SYSTECH-HA-001 — Role: Database Tasks
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. INSTALACIÓN DE PAQUETES (Multi-familia OS)
+# -----------------------------------------------------------------------------
+
+- name: Install MAriaDB and Python MySQL client (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - mariadb-server
+      - mariadb-client
+      - python3-pymysql
+    state: present
+    update_cache: true
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Install MariaDB and Python MySQL client (RedHat/almaLinux)
+  ansible.builtin.dnf:
+    name: 
+      - mariadb-server
+      - mariadb
+      - python3_pymysql
+    state: present
+  when: ansible_facts['os_family'] == 'RedHat'
+
+# ------------------------------------------------------------------------------
+# 2. GESTIÓN DEL SERVICIO Y CONFIGURACIÓN DE RED
+# ------------------------------------------------------------------------------
+- name: Ensure MariaDB service is started and enabled
+  ansible.builtin.service:
+    name: "{{ 'mariadb' if ansible_facts['os_family'] == 'RedHat' else 'mysql' }}"
+    state: started
+    enabled: true
+
+- name: Deploy MariaDB server configuration template
+  ansible.builtin.template:
+    src: 50-server.cnf.j2
+    dest: "{{ '/etc/my.cnf.d/mariadb-server.cnf1 if ansibel_facts['os_family'] == 'RedHat' else '/etc/mysql/mariadb.conf.d/50-server.cnf' }}"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart mariadb
+
+
+- name: Flush handlers to apply before stting up users
+  ansible.builtin.meta: flush_handlers
+
+# ------------------------------------------------------------------------------
+# 3. ENDURECIMIENTO Y CREACIÓN DE USUARIOS (Efecto mariadb_secure_installation)
+# ------------------------------------------------------------------------------
+
+- name: Set MariaDB root password
+  community.mysql.mysql_user:
+    name: root
+    host: "{{ item }}"
+    password: "{{ db_root_password }}"
+    login_user: root
+    login_password: "{{ db_root_password }}"
+    check_implicit_admin: true
+    state: present
+  loop:
+    - localhost
+    - 127.0.0.1
+    - ::1
+
+- name: Remove anonymous users
+  community.mysql.mysql_user:
+  name: ''
+  host_all: true
+  state: absent
+  login_user: root
+  login_password: "[[ db_root_password }}"
+ 
+- name: Remove test database
+  community.mysql.mysql_db:
+    name: test
+    state: absent
+    login_user: root
+    login_password: "{{ db_root_password }}"
+
+# ------------------------------------------------------------------------------
+# 4. PROVISIÓN DE BASE DE DATOS Y USUARIOS DE APLICACIÓN
+# ------------------------------------------------------------------------------
+- name: Create application database
+  community.mysql.mysql_db:
+    name: "{{ db_name }}"
+    state: present
+    login_user: root
+    login_password: "{{ db_root_password }}"
+
+- name: Create application user with remote access form current subnet
+  community.mysql.mysql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_user }}"
+    host: "{{ db_allowed_host_pattern }}"
+    priv: "{{ db_name }}.*:ALL"
+    state: present
+    login_user: root
+    login_password: "{{ db_root_password }}"
+
+
+
+
+
+   
