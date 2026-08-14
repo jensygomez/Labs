@@ -9,26 +9,36 @@
 #    ansible-playbook site.yml
 #
 # 2. Despliegue fase por fase (Útil para pruebas o reconstrucción modular):
-#    Fase 03 (Baseline):  ansible-playbook site.yml --tags baseline
-#    Fase 06/08 (Storage): ansible-playbook site.yml --tags storage
-#    Fase 09a (VIP HA):   ansible-playbook site.yml --tags keepalived
-#    Fase 09b (LB HA):    ansible-playbook site.yml --tags haproxy
+#    Fase 01 (Baseline):   ansible-playbook site.yml --tags baseline
+#    Fase 02 (VIP HA):     ansible-playbook site.yml --tags keepalived
+#    Fase 09b (LB HA):     ansible-playbook site.yml --tags haproxy
 #    Fase 10 (Web Stack):  ansible-playbook site.yml --tags nginx
 #
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# FASE 01 / 03: BASELINE DE SEGURIDAD Y CONFIGURACIÓN BASE
+# FASE 01: BASELINE DE SEGURIDAD Y CONFIGURACIÓN BASE
 # Comando individual: ansible-playbook site.yml --tags baseline
 # ------------------------------------------------------------------------------
-- name: "Phase 03 - Apply Linux Baseline to all nodes"
-  hosts: all
+- name: "Phase 01 - Apply Linux Baseline to all nodes"
+  hosts: ha_nodes:storage_nodes
   become: true
   gather_facts: true
   roles:
     - role: linux_baseline
       tags: baseline
 
+# ------------------------------------------------------------------------------
+# FASE 02: ALTA DISPONIBILIDAD - RED / VIP (KEEPALIVED)
+# Comando individual: ansible-playbook site.yml --tags keepalived
+# ------------------------------------------------------------------------------
+- name: "Phase 02 - High Availability VIP Layer (Keepalived)"
+  hosts: ha_nodes
+  become: true
+  gather_facts: true
+  roles:
+    - role: keepalived
+      tags: keepalived
 
 # ------------------------------------------------------------------------------
 # FASE 06 / 07 / 08: ALMACENAMIENTO Y SERVICIOS CORE DE INFRAESTRUCTURA
@@ -41,19 +51,6 @@
 #  roles:
 #    - role: storage
 #      tags: storage
-
-
-# ------------------------------------------------------------------------------
-# FASE 09A: ALTA DISPONIBILIDAD - RED / VIP (KEEPALIVED)
-# Comando individual: ansible-playbook site.yml --tags keepalived
-# ------------------------------------------------------------------------------
-- name: "Phase 09a - High Availability VIP Layer (Keepalived)"
-  hosts: ha_nodes
-  become: true
-  gather_facts: true
-  roles:
-    - role: keepalived
-      tags: keepalived
 
 
 # ------------------------------------------------------------------------------
