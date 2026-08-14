@@ -4,7 +4,6 @@
 # ==============================================================================
 #
 # SECUENCIA DE EJECUCIÓN (Comandos de orquestación):
-#
 # 1. Ejecutar todo el stack completo:
 #    ansible-playbook site.yml
 #

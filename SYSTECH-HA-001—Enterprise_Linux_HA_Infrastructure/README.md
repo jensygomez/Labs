@@ -1,865 +1,164 @@
-# SYSTECH-HA-001 — Enterprise Linux HA Infrastructure
+# SYSTECH-HA-001 — Enterprise Linux Hybrid HA Infrastructure
 
 ## 1. Descripción
 
 Proyecto práctico de **Systech Consulting** para diseñar, implementar y operar una infraestructura empresarial Linux de alta disponibilidad para un cliente ficticio, **ACME Corporation**.
 
-El proyecto simula el trabajo de un **Junior Linux Systems Administrator / Engineer**, con énfasis en:
+El proyecto simula el trabajo de un **Junior Linux Systems Administrator / SRE**, con foco en:
 
-- Administración Linux empresarial
-- Automatización con Ansible
-- Alta disponibilidad
-- Storage
-- Networking
-- Seguridad
-- Monitoring
-- Logging
-- Backup
-- Troubleshooting
-- Resolución de incidentes de producción
+- Administración Linux empresarial (AlmaLinux 9 + Ubuntu 24.04)
+- Automatización con Ansible (roles, handlers, templates, group_vars)
+- Alta disponibilidad (VIP flotante + balanceo de carga)
+- Troubleshooting real, documentado como incidentes
 
-La infraestructura será construida desde el principio con **Ansible e idempotencia** como principios fundamentales.
+La infraestructura se construye con **Ansible e idempotencia** como principios fundamentales, sobre un laboratorio **híbrido**: VMs KVM/libvirt para los nodos de aplicación/storage, y contenedores LXD para los nodos de borde (load balancers, base de datos).
+
+> Nota: el diseño original contemplaba 5 VMs homogéneas en AlmaLinux. Durante la implementación se migró a una topología híbrida (VMs + LXC) para optimizar recursos de laboratorio, lo que introdujo el desafío real de mantener roles de Ansible compatibles con dos familias de SO (RedHat/Debian) — documentado en la sección 8.
 
 ---
 
 ## 2. Objetivo
 
-Diseñar y desplegar una plataforma Linux altamente disponible capaz de soportar aplicaciones empresariales, almacenamiento compartido, monitoreo y servicios de infraestructura.
-
-El objetivo no es solamente instalar servicios, sino desarrollar una metodología completa:
-
-```text
-DESIGN
-  ↓
-AUTOMATE
-  ↓
-DEPLOY
-  ↓
-VALIDATE
-  ↓
-BREAK
-  ↓
-TROUBLESHOOT
-  ↓
-FIX
-  ↓
-AUTOMATE THE FIX
-  ↓
-VALIDATE IDEMPOTENCY
-```
+Desplegar un stack web en alta disponibilidad, con failover validado extremo a extremo (VIP → balanceador → backend de aplicación), y documentar cada incidente de implementación real encontrado en el camino como parte del portfolio de troubleshooting.
 
 ---
 
-## 3. Infraestructura
+## 3. Infraestructura actual
 
-### Application / HA Nodes
+| Host | Plataforma | SO | Rol |
+|---|---|---|---|
+| `lb01` | LXD (contenedor) | Ubuntu 24.04 | Load Balancer — Keepalived + HAProxy (MASTER) |
+| `lb02` | LXD (contenedor) | Ubuntu 24.04 | Load Balancer — Keepalived + HAProxy (BACKUP) |
+| `server01` | KVM (VM) | AlmaLinux 9 | Backend de aplicación — Nginx |
+| `server02` | KVM (VM) | AlmaLinux 9 | Backend de aplicación — Nginx |
+| `server03` | KVM (VM) | AlmaLinux 9 | Backend de aplicación — Nginx |
+| `storage01` | KVM (VM) | AlmaLinux 9 | Reservado — sin rol asignado todavía |
+| `db01` | LXD (contenedor) | Ubuntu 24.04 | Reservado — sin rol asignado todavía |
 
-```text
-server01
-server02
-server03
-```
-
-Funciones previstas:
-
-- Linux application node
-- Nginx
-- HAProxy
-- Keepalived
-- Pacemaker
-- Corosync
-- Application services
-- Monitoring agents
-- Centralized logging agents
-
-### Storage Nodes
-
-```text
-storage01
-storage02
-```
-
-Funciones previstas:
-
-- NFS
-- Samba
-- iSCSI
-- RAID
-- LVM
-- Filesystems
-- Storage replication / redundancy
-- Backup repositories
+Todos los nodos comparten la red `lxdbr0` (`10.45.223.0/24`).
 
 ---
 
-## 4. Arquitectura conceptual
+## 4. Arquitectura actual (validada)
 
 ```text
                          ACME USERS
                               |
                               v
                     +-------------------+
-                    |     HAProxy       |
-                    |    Keepalived     |
-                    |       VIP         |
-                    +---------+---------+
-                              |
-             +----------------+----------------+
-             |                |                |
-             v                v                v
-        +---------+      +---------+      +---------+
-        |server01 |      |server02 |      |server03 |
-        | HA/App  |      | HA/App  |      | HA/App  |
-        +----+----+      +----+----+      +----+----+
-             |                |                |
-             +----------------+----------------+
-                              |
-                       STORAGE NETWORK
-                              |
-                  +-----------+-----------+
-                  |                       |
-                  v                       v
-             +----------+            +----------+
-             |storage01 |            |storage02 |
-             | NFS      |            | NFS      |
-             | Samba    |            | Samba    |
-             | iSCSI    |            | iSCSI    |
-             +----------+            +----------+
+                    |  VIP 10.45.223.250 |
+                    |  Keepalived (VRRP) |
+                    +----+-----------+---+
+                         |           |
+                      lb01 (M)   lb02 (B)
+                    HAProxy     HAProxy
+                    (roundrobin)
+                         |
+             +-----------+-----------+
+             |           |           |
+             v           v           v
+        +---------+ +---------+ +---------+
+        |server01 | |server02 | |server03 |
+        |  Nginx  | |  Nginx  | |  Nginx  |
+        +---------+ +---------+ +---------+
+
+        storage01  →  sin rol asignado (baseline únicamente)
+        db01       →  sin rol asignado (pendiente de definir)
 ```
 
 ---
 
-## 5. Administración
+## 5. Tecnologías utilizadas hasta ahora
 
-La infraestructura será administrada mediante un **Ansible Control Node**.
+### Automatización
+- Ansible (roles, handlers, templates Jinja2, `group_vars`, tags)
+- Inventario estático (`inventories/production/hosts.yml`)
 
-```text
-                  +------------------+
-                  | Ansible Control  |
-                  |      Node        |
-                  +--------+---------+
-                           |
-             +-------------+-------------+
-             |             |             |
-             v             v             v
-         server01      server02      server03
-             |             |             |
-             +-------------+-------------+
-                           |
-                     storage01
-                     storage02
-```
+### Sistemas operativos
+- AlmaLinux 9 (VMs KVM/libvirt) — familia RedHat, `dnf`
+- Ubuntu 24.04 (contenedores LXD) — familia Debian, `apt`
 
-El Control Node puede ser el host de laboratorio o una máquina Linux dedicada.
+### Alta disponibilidad
+- Keepalived (VRRP, VIP flotante, failover MASTER/BACKUP)
+- HAProxy (balanceo `roundrobin`, `stats` en puerto 9000)
+
+### Aplicación
+- Nginx (backend de aplicación, 3 nodos)
 
 ---
 
-## 6. Tecnologías
-
-### Operating System
-
-- Rocky Linux 9 / RHEL-compatible Linux
-
-### Automation
-
-- Ansible
-- YAML
-- Jinja2
-- Ansible Roles
-- Ansible Handlers
-- Ansible Vault
-- Idempotency
-- Inventory management
-
-### Linux Administration
-
-- systemd
-- journald
-- SSH
-- sudo
-- users/groups
-- permissions
-- ACLs
-- SELinux
-- firewalld/nftables
-- cron/systemd timers
-- package management
-
-### Networking
-
-- IPv4
-- DNS
-- NTP/Chrony
-- routing
-- TCP/UDP
-- sockets
-- troubleshooting with:
-  - `ss`
-  - `ip`
-  - `dig`
-  - `getent`
-  - `tcpdump`
-  - `ping`
-  - `traceroute`
-
-### Storage
-
-- RAID
-- LVM
-- XFS
-- ext4
-- NFS
-- Samba
-- iSCSI
-- mount management
-- `/etc/fstab`
-
-### High Availability
-
-- HAProxy
-- Keepalived
-- Pacemaker
-- Corosync
-- VIP / floating IP
-- resource management
-- failover testing
-
-### Applications
-
-- Nginx
-- Apache HTTPD
-- PHP-FPM
-- MariaDB
-- PostgreSQL
-- Redis
-
-### Monitoring
-
-- Prometheus
-- Node Exporter
-- Grafana
-
-### Logging
-
-- rsyslog
-- journald
-- Loki
-
-### Backup
-
-- Backup repository
-- Database backups
-- Configuration backups
-- Restore testing
-
----
-
-# 7. Project Structure
+## 6. Estructura actual del proyecto
 
 ```text
 SYSTECH-HA-001/
-│
 ├── README.md
-├── CHANGELOG.md
-├── LICENSE
-│
-├── ansible.cfg
 ├── site.yml
-├── requirements.yml
 │
 ├── inventories/
 │   └── production/
 │       ├── hosts.yml
-│       ├── group_vars/
-│       │   ├── all.yml
-│       │   ├── ha.yml
-│       │   ├── app.yml
-│       │   └── storage.yml
-│       │
-│       └── host_vars/
-│           ├── server01.yml
-│           ├── server02.yml
-│           ├── server03.yml
-│           ├── storage01.yml
-│           └── storage02.yml
-│
-├── playbooks/
-│   ├── site.yml
-│   ├── baseline.yml
-│   ├── networking.yml
-│   ├── security.yml
-│   ├── storage.yml
-│   ├── ha.yml
-│   ├── applications.yml
-│   ├── monitoring.yml
-│   └── backup.yml
+│       └── group_vars/
+│           └── lb_nodes.yml      # keepalived_vip (compartida entre roles)
 │
 ├── roles/
 │   ├── linux_baseline/
-│   ├── networking/
-│   ├── dns/
-│   ├── chrony/
-│   ├── ssh_hardening/
-│   ├── firewall/
-│   ├── selinux/
-│   ├── lvm/
-│   ├── raid/
-│   ├── nfs/
-│   ├── samba/
-│   ├── iscsi/
-│   ├── haproxy/
 │   ├── keepalived/
-│   ├── pacemaker/
-│   ├── nginx/
-│   ├── database/
-│   ├── monitoring/
-│   ├── logging/
-│   └── backup/
+│   ├── haproxy/
+│   └── nginx/
 │
-├── templates/
-├── files/
-├── vars/
-├── handlers/
-│
-├── docs/
-│   ├── architecture.md
-│   ├── network.md
-│   ├── storage.md
-│   ├── ha-design.md
-│   └── operations.md
-│
-├── tests/
-│   ├── connectivity/
-│   ├── idempotency/
-│   └── validation/
-│
-└── incidents/
-    ├── INC-1001-nfs-mount/
-    ├── INC-1002-vip-failover/
-    ├── INC-1003-haproxy-backend/
-    ├── INC-1004-selinux/
-    └── ...
-```
-
-> El árbol representa el estado objetivo del proyecto. Los componentes se crearán progresivamente durante las fases de implementación.
-
----
-
-# 8. Implementation Phases
-
-## Phase 01 — Project Foundation
-
-**Objetivo:** crear la estructura inicial del proyecto Ansible.
-
-Actividades:
-
-- Git repository
-- `ansible.cfg`
-- inventory
-- `site.yml`
-- project documentation
-- connectivity validation
-
----
-
-## Phase 02 — Ansible Foundation
-
-**Objetivo:** establecer una base Ansible reutilizable.
-
-Conceptos:
-
-- inventories
-- groups
-- host variables
-- group variables
-- roles
-- handlers
-- templates
-- variables
-- facts
-- tags
-- check mode
-- diff mode
-- idempotency
-
----
-
-## Phase 03 — Linux Baseline
-
-Configurar automáticamente:
-
-- hostname
-- packages
-- users
-- groups
-- sudo
-- SSH
-- timezone
-- chrony
-- basic system configuration
-
----
-
-## Phase 04 — Networking
-
-Implementar y validar:
-
-- management network
-- application network
-- storage network
-- DNS
-- NTP
-- routes
-- connectivity
-
----
-
-## Phase 05 — Security Baseline
-
-Implementar:
-
-- SSH hardening
-- firewalld/nftables
-- SELinux
-- sudo policies
-- file permissions
-- service restrictions
-
----
-
-## Phase 06 — Storage Foundation
-
-Implementar:
-
-- disks
-- partitions
-- RAID
-- LVM
-- filesystems
-- mount points
-- `/etc/fstab`
-
----
-
-## Phase 07 — Shared Storage
-
-Implementar:
-
-- NFS
-- Samba
-- storage permissions
-- ACLs
-- shared application directories
-
----
-
-## Phase 08 — iSCSI
-
-Implementar:
-
-- iSCSI target
-- iSCSI initiators
-- sessions
-- persistent storage
-- filesystem creation
-- troubleshooting
-
----
-
-## Phase 09 — High Availability
-
-Implementar:
-
-- HAProxy
-- Keepalived
-- VIP
-- Pacemaker
-- Corosync
-- resource management
-- failover testing
-
----
-
-## Phase 10 — Application Stack
-
-Implementar:
-
-- Nginx
-- Apache
-- PHP-FPM
-- application service
-- application shared storage
-
----
-
-## Phase 11 — Database
-
-Implementar:
-
-- MariaDB and/or PostgreSQL
-- database configuration
-- backup
-- restore
-- connectivity
-- basic performance validation
-
----
-
-## Phase 12 — Monitoring
-
-Implementar:
-
-- Prometheus
-- Node Exporter
-- Grafana
-- CPU monitoring
-- RAM monitoring
-- disk monitoring
-- filesystem monitoring
-- service availability
-
----
-
-## Phase 13 — Centralized Logging
-
-Implementar:
-
-- rsyslog
-- journald
-- centralized log collection
-- application logs
-- authentication logs
-- troubleshooting workflow
-
----
-
-## Phase 14 — Backup
-
-Implementar:
-
-- configuration backups
-- application backups
-- database backups
-- storage backups
-- retention
-- restore tests
-
----
-
-## Phase 15 — Automation Hardening
-
-Objetivo:
-
-```text
-Run #1 → changes applied
-Run #2 → changed=0
-Run #3 → changed=0
-```
-
-Validar:
-
-- idempotency
-- check mode
-- handlers
-- failure handling
-- safe re-runs
-- configuration drift
-
----
-
-# 9. Production Incident Simulation
-
-Una vez que la infraestructura esté estable, Systech comenzará a generar incidentes controlados.
-
-El objetivo es simular un entorno real de operaciones.
-
-## Incident Catalog
-
-```text
-INC-1001 - NFS mount fails after reboot
-INC-1002 - VIP not moving between nodes
-INC-1003 - HAProxy backend DOWN
-INC-1004 - SELinux blocks application
-INC-1005 - Disk reaches 100%
-INC-1006 - LVM filesystem not mounted
-INC-1007 - NFS permissions incorrect
-INC-1008 - iSCSI session disconnected
-INC-1009 - MariaDB service fails
-INC-1010 - DNS resolution broken
-INC-1011 - Chrony synchronization failure
-INC-1012 - SSH authentication failure
-INC-1013 - Firewall blocking application
-INC-1014 - Nginx returns 502
-INC-1015 - High CPU
-INC-1016 - High load average
-INC-1017 - Memory exhaustion
-INC-1018 - RAID degraded
-INC-1019 - Backup failure
-INC-1020 - Node unavailable
-```
-
-Cada incidente debe contener:
-
-```text
-Ticket ID
-Priority
-Description
-Impact
-Symptoms
-Environment
-Initial evidence
-Troubleshooting
-Root cause
-Resolution
-Validation
-Preventive action
-Ansible improvement
+└── scripts/
+    ├── deploy-lab_Hybrid.sh      # provisión VMs + LXC, genera hosts.yml
+    └── destroy-lab.sh            # limpieza dinámica de todo lo desplegado
 ```
 
 ---
 
-# 10. Incident Philosophy
+## 7. Fases completadas y validadas
 
-Los incidentes no deben proporcionar directamente la solución.
+| Fase | Comando | Hosts | Estado |
+|---|---|---|---|
+| 01 — Linux Baseline | `ansible-playbook site.yml --tags baseline` | `ha_nodes:storage_nodes` | ✅ Validado |
+| 02 — Keepalived (VIP) | `ansible-playbook site.yml --tags keepalived` | `lb_nodes` | ✅ Validado, con test de failover real |
+| 03 — HAProxy (LB) | `ansible-playbook site.yml --tags haproxy` | `lb_nodes` | ✅ Validado |
+| 04 — Nginx (backend) | `ansible-playbook site.yml --tags nginx` | `ha_nodes` | ✅ Validado |
 
-El objetivo es desarrollar un workflow de troubleshooting:
-
-```text
-OBSERVE
-   ↓
-COLLECT EVIDENCE
-   ↓
-FORM HYPOTHESIS
-   ↓
-TEST
-   ↓
-IDENTIFY ROOT CAUSE
-   ↓
-FIX
-   ↓
-VALIDATE
-   ↓
-DOCUMENT
-   ↓
-AUTOMATE
-```
-
-Cuando sea posible, la corrección definitiva debe incorporarse a Ansible.
-
----
-
-# 11. Idempotency Standard
-
-Todo componente automatizado debe poder ejecutarse repetidamente sin producir cambios innecesarios.
-
-Ejemplo:
+### Validación end-to-end realizada
 
 ```bash
-ansible-playbook site.yml
+curl http://10.45.223.250
 ```
 
-Primera ejecución:
+Respuesta `200 OK`, rotación confirmada entre `server01`/`server02`/`server03` (balanceo `roundrobin` funcionando).
 
-```text
-changed > 0
-```
+### Test de failover realizado
 
-Segunda ejecución:
+Se detuvo `keepalived` en `lb01` (MASTER) con tráfico HTTP activo contra la VIP:
 
-```text
-changed=0
-```
-
-Si una ejecución posterior vuelve a producir cambios sin una modificación intencional de configuración, debe investigarse.
+- La VIP migró a `lb02` (BACKUP) correctamente.
+- El servicio HTTP no tuvo interrupciones observables durante la transición (0 requests fallidos en el loop de validación).
+- Al restaurar `lb01`, recuperó el rol MASTER por preemption (mayor `priority`).
 
 ---
 
-# 12. Validation
+## 8. Incidentes reales encontrados durante la implementación
 
-Cada fase debe tener criterios de aceptación.
+Cada uno de estos fue un problema real de esta fase de construcción, no un ejercicio simulado — quedan documentados porque son la base del futuro catálogo de incidentes formal.
 
-Ejemplos:
-
-### Linux
-
-```bash
-systemctl --failed
-```
-
-Resultado esperado:
-
-```text
-0 failed units
-```
-
-### Networking
-
-```bash
-ping
-ss
-ip
-dig
-```
-
-### Storage
-
-```bash
-lsblk
-vgs
-lvs
-df -h
-mount
-```
-
-### HA
-
-Simular:
-
-```text
-server01 DOWN
-```
-
-y comprobar:
-
-```text
-VIP → server02
-```
-
-### Ansible
-
-Ejecutar dos veces:
-
-```bash
-ansible-playbook site.yml
-ansible-playbook site.yml
-```
-
-La segunda ejecución debe ser idempotente.
+1. **Detección de IP de contenedores LXC fallaba silenciosamente** — el parsing de `lxc info` buscaba un patrón de texto que no coincidía con el formato real de salida. Resuelto migrando a `lxc list --format csv`.
+2. **`linux_baseline` y `haproxy`/`keepalived` fallaban en los LXC** — los roles usaban `ansible.builtin.dnf` exclusivamente, incompatible con Ubuntu. Resuelto con tareas condicionadas por `ansible_facts['os_family']`.
+3. **Error de sintaxis YAML** — comilla de cierre partida en dos líneas al editar `when:` a mano.
+4. **`validate` de un fragmento de configuración de Nginx** — el módulo `template` requiere `%s` en `validate`, y no se puede validar un fragmento de config aislado (`conf.d/*.conf`) con `nginx -t`. Resuelto validando la configuración completa ya ensamblada, en una tarea separada.
+5. **VIP en subred incorrecta** — `keepalived_vip` apuntaba a `192.168.122.0/24` (red `default` de libvirt), pero los nodos reales están en `10.45.223.0/24` (`lxdbr0`). La VIP quedaba asignada pero inalcanzable.
+6. **Variables de un rol no visibles en otro rol/play** — `keepalived_vip` definida en `roles/keepalived/defaults/main.yml` no estaba disponible durante la play de `haproxy` (plays distintas = scope distinto). Resuelto centralizando la variable en `inventories/production/group_vars/lb_nodes.yml`, que persiste durante todo el playbook run.
 
 ---
 
-# 13. Estimated Lab Hours
+## 9. Próximo paso
 
-Objetivo inicial:
+Todavía sin definir cuál de las siguientes dos opciones se implementa primero:
 
-| Phase | Hours |
-|---|---:|
-| 01. Project Foundation | 4 h |
-| 02. Ansible Foundation | 8 h |
-| 03. Linux Baseline | 8 h |
-| 04. Networking + DNS + NTP | 6 h |
-| 05. Security Baseline | 8 h |
-| 06. LVM + RAID + Filesystems | 8 h |
-| 07. NFS + Samba | 8 h |
-| 08. iSCSI | 6 h |
-| 09. HAProxy + Keepalived | 8 h |
-| 10. Pacemaker + Corosync | 8 h |
-| 11. Application Stack | 6 h |
-| 12. Database | 4 h |
-| 13. Monitoring + Logging | 6 h |
-| 14. Backup | 4 h |
-| 15. Automation Hardening | 4 h |
-| 16. Production Incidents | 12 h |
-| **TOTAL** | **104 h** |
-
----
-
-# 14. Project Status
-
-```text
-Project: SYSTECH-HA-001
-Status: Not Started
-
-Target:
-104 laboratory hours
-
-Implementation:
-0 / 92 h
-
-Incident Response:
-0 / 12 h
-
-Overall:
-0 / 104 h
-```
-
----
-
-# 15. Success Criteria
-
-El proyecto será considerado completado cuando:
-
-- [ ] Los 5 servidores estén correctamente configurados.
-- [ ] La infraestructura sea administrable mediante Ansible.
-- [ ] Los playbooks sean idempotentes.
-- [ ] Linux baseline esté automatizado.
-- [ ] Networking esté validado.
-- [ ] DNS y NTP funcionen correctamente.
-- [ ] Security baseline esté implementado.
-- [ ] Storage esté correctamente configurado.
-- [ ] NFS esté operativo.
-- [ ] Samba esté operativo.
-- [ ] iSCSI esté operativo.
-- [ ] HAProxy esté operativo.
-- [ ] Keepalived/VIP esté operativo.
-- [ ] Pacemaker/Corosync esté operativo.
-- [ ] La aplicación esté disponible.
-- [ ] Database esté disponible.
-- [ ] Monitoring esté funcionando.
-- [ ] Centralized logging esté funcionando.
-- [ ] Backup esteja funcionando.
-- [ ] Restore haya sido probado.
-- [ ] Los 20 incidentes hayan sido resueltos.
-- [ ] Las soluciones permanentes relevantes hayan sido automatizadas.
-- [ ] Se hayan realizado pruebas de failover.
-- [ ] Se haya validado la idempotencia de Ansible.
-- [ ] La documentación técnica esté completa.
-
----
-
-# 16. Skills Developed
-
-Al finalizar este proyecto se espera haber desarrollado experiencia práctica en:
-
-```text
-Linux Administration
-Networking
-DNS
-NTP
-SSH
-Security
-SELinux
-Firewalls
-LVM
-RAID
-Filesystems
-NFS
-Samba
-iSCSI
-HAProxy
-Keepalived
-Pacemaker
-Corosync
-Nginx
-MariaDB/PostgreSQL
-Monitoring
-Logging
-Backup
-Ansible
-YAML
-Jinja2
-Troubleshooting
-Incident Management
-Root Cause Analysis
-```
-
----
-
-# 17. Project Principle
-
-> **Don't just configure it. Automate it, break it, troubleshoot it, fix it, and make the fix reproducible.**
-
-Este proyecto representa una simulación de trabajo real de un **Linux Systems Administrator / Engineer** dentro de Systech Consulting.
+- **MariaDB en `db01`** (nodo único, sin HA — decisión consciente de dejar la replicación de base de datos como proyecto futuro separado).
+- **Rol de storage en `storage01`** (actualmente solo tiene el baseline aplicado, sin ningún servicio).
 
 ---
 
@@ -873,21 +172,4 @@ SYSTECH-HA-001
 
 ```text
 ACME Corporation
-```
-
-## Project Type
-
-```text
-Enterprise Linux Infrastructure
-High Availability
-Automation
-Storage
-Operations
-Incident Response
-```
-
-## Target Lab Time
-
-```text
-104 hours
 ```
