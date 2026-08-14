@@ -11,8 +11,8 @@
 # 2. Despliegue fase por fase (Útil para pruebas o reconstrucción modular):
 #    Fase 01 (Baseline):   ansible-playbook site.yml --tags baseline
 #    Fase 02 (VIP HA):     ansible-playbook site.yml --tags keepalived
-#    Fase 09b (LB HA):     ansible-playbook site.yml --tags haproxy
-#    Fase 10 (Web Stack):  ansible-playbook site.yml --tags nginx
+#    Fase 03 (LB HA):      ansible-playbook site.yml --tags haproxy
+#    Fase 04 (Web Stack):  ansible-playbook site.yml --tags nginx
 #
 # ==============================================================================
 
@@ -33,7 +33,7 @@
 # Comando individual: ansible-playbook site.yml --tags keepalived
 # ------------------------------------------------------------------------------
 - name: "Phase 02 - High Availability VIP Layer (Keepalived)"
-  hosts: ha_nodes
+  hosts: lb_nodes
   become: true
   gather_facts: true
   roles:
@@ -41,37 +41,23 @@
       tags: keepalived
 
 # ------------------------------------------------------------------------------
-# FASE 06 / 07 / 08: ALMACENAMIENTO Y SERVICIOS CORE DE INFRAESTRUCTURA
-# Comando individual: ansible-playbook site.yml --tags storage
-# ------------------------------------------------------------------------------
-#- name: "Phase 06/07/08 - Storage Foundation & Services"
-#  hosts: storage_nodes
-#  become: true
-#  gather_facts: true
-#  roles:
-#    - role: storage
-#      tags: storage
-
-
-# ------------------------------------------------------------------------------
-# FASE 09B: ALTA DISPONIBILIDAD - BALANCEADOR DE CARGA (HAPROXY)
+# FASE 03: ALTA DISPONIBILIDAD - BALANCEADOR DE CARGA (HAPROXY)
 # Comando individual: ansible-playbook site.yml --tags haproxy
 # ------------------------------------------------------------------------------
-- name: "Phase 09b - High Availability Load Balancer Layer (HAProxy)"
-  hosts: ha_nodes
+- name: "Phase 03 - High Availability Load Balancer Layer (HAProxy)"
+  hosts: lb_nodes
   become: true
   gather_facts: true
   roles:
     - role: haproxy
       tags: haproxy
 
-
 # ------------------------------------------------------------------------------
-# FASE 10: CAPA DE APLICACIÓN WEB (NGINX BACKENDS)
+# FASE 04: CAPA DE APLICACIÓN WEB (NGINX BACKENDS)
 # Comando individual: ansible-playbook site.yml --tags nginx
 # NOTA: Próxima fase a implementar para completar el stack end-to-end.
 # ------------------------------------------------------------------------------
-- name: "Phase 10 - Web Application Stack (Nginx Backends)"
+- name: "Phase 04 - Web Application Stack (Nginx Backends)"
   hosts: ha_nodes
   become: true
   gather_facts: true

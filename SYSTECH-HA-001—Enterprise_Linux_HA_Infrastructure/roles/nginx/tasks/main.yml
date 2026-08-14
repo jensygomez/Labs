@@ -22,7 +22,7 @@
     owner: root
     group: root
     mode: '0644'
-    validate: "nginx -t -c /etc/nginx/nginx.conf"
+  
   notify: "restart nginx"
 
 - name: "NGINX | Deploy custom index.html template"
@@ -33,6 +33,9 @@
     group: root
     mode: '0644'
 
+- name: "NGINX | Validate full configuration after conf.d changes"
+  ansible.builtin.command: nginx -t
+  changed_when: false
 - name: "NGINX | Ensure Nginx service is enabled and started"
   ansible.builtin.systemd:
     name: nginx

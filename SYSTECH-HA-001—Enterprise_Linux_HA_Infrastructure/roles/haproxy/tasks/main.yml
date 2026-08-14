@@ -6,10 +6,18 @@
     state: present
     reload: true
 
-- name: "HAPROXY | Install HAProxy package"
+- name: "HAPROXY | Install HAProxy package (Red Hat Family)"
   ansible.builtin.dnf:
     name: haproxy
     state: present
+  when: ansible_facts['os_family'] == "RedHat"
+
+- name: "HAPROXY | Install HAProxy package (Debian Family)"
+  ansible.builtin.apt:
+    name: haproxy
+    state: present
+    update_cache: true
+  when: ansible_facts['os_family'] == "Debian"
 
 - name: "HAPROXY | Configure haproxy.cfg"
   ansible.builtin.template:
