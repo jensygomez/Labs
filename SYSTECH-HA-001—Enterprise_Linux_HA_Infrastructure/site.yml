@@ -12,7 +12,7 @@
 #    Fase 02 (VIP HA):     ansible-playbook site.yml --tags keepalived
 #    Fase 03 (LB HA):      ansible-playbook site.yml --tags haproxy
 #    Fase 04 (Web Stack):  ansible-playbook site.yml --tags nginx
-#
+#    Fase 05 (MariaDB):    ansibel-playbook site.yml --tags database
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
@@ -64,4 +64,15 @@
     - role: nginx
       tags: nginx
 
+# ------------------------------------------------------------------------------
+# FASE 05: CAPA DE BASE DE DATOS (MARIADB)
+# Comando individual: ansible-playbook site.yml --tags database
+# -----------------------------------------------------------------------------
+- name: "Phase 05 - Database Layer (MariaDB)"
+  hosts: database_nodes
+  become: true
+  gather_facts: true
+  roles:
+    - role: database
+      tags: database
 
