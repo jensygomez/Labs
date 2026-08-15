@@ -12,7 +12,6 @@
 #    Fase 02 (VIP HA):     ansible-playbook site.yml --tags keepalived --ask-vault-pass
 #    Fase 03 (LB HA):      ansible-playbook site.yml --tags haproxy --ask-vault-pass
 #    Fase 04 (Web Stack):  ansible-playbook site.yml --tags nginx --ask-vault-pass
-#    Fase 05 (MariaDB):    ansibel-playbook site.yml --tags database --ask-vault-pass
 #    Fase 05 (MariaDB):    ansible-playbook site.yml --tags database --ask-vault-pass
 #    Fase 06 (App Layer):  ansible-playbook site.yml --tags db_seed,app --ask-vault-pass
 # ==============================================================================
@@ -23,6 +22,7 @@
 # ------------------------------------------------------------------------------
 - name: "Phase 01 - Apply Linux Baseline to all nodes"
   hosts: ha_nodes:storage_nodes
+  serial: 2
   become: true
   gather_facts: true
   roles:
@@ -35,6 +35,7 @@
 # ------------------------------------------------------------------------------
 - name: "Phase 02 - High Availability VIP Layer (Keepalived)"
   hosts: lb_nodes
+  serial: 2
   become: true
   gather_facts: true
   roles:
@@ -47,6 +48,7 @@
 # ------------------------------------------------------------------------------
 - name: "Phase 03 - High Availability Load Balancer Layer (HAProxy)"
   hosts: lb_nodes
+  serial: 2
   become: true
   gather_facts: true
   roles:
@@ -60,6 +62,7 @@
 # ------------------------------------------------------------------------------
 - name: "Phase 04 - Web Application Stack (Nginx Backends)"
   hosts: ha_nodes
+  serial: 2
   become: true
   gather_facts: true
   roles:
@@ -72,6 +75,7 @@
 # -----------------------------------------------------------------------------
 - name: "Phase 05 - Database Layer (MariaDB)"
   hosts: database_nodes
+  serial: 2
   become: true
   gather_facts: true
   roles:
@@ -87,7 +91,8 @@
 # ------------------------------------------------------------------------------
 - name: "Pahse 06a - Database Seeding (Schema + Test Data)"
   hosts: database_nodes
-  becmome: true
+  serial: 2
+  become: true
   gather_facts: true
   roles: 
     - role: db_seed
@@ -96,6 +101,7 @@
 
 - name: "Phase 06b - Application Layer (Flask + Gunicorn"
   hosts: server01
+  serial: 2
   become: true
   gather_facts: true
   roles:

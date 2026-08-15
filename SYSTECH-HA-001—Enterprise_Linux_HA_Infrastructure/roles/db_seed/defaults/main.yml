@@ -8,7 +8,7 @@ app_db_user: app_user
 
 # Password para el usuario definida en el vault
 # inventories/production/group_vars/vault.yml (encriptado con ansible-vault)
-app_db_password: "{{ app_db_password }}"
+app_db_password: "{{ vault_app_db_password }}"
 db_seed_admin_user: root
 
 

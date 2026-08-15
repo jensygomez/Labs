@@ -1,5 +1,4 @@
 ---
-
 - name: Copy schema template to db01
   ansible.builtin.template:
     src: schema.sql.j2
@@ -7,27 +6,26 @@
     mode: '0600'
 
 - name: Import schema into database
-  community.mysql.mysql_db
-  name: "{{ db_seed_database }}
-  state: import
-  target: /tmp/schema.sql
-  login_user: "{{ db_seed_admin_user }}"
-  login_password: "{{ db_root_password }}"
-  login_unix_socket: /run/mysqld/mysqld.sock
+  community.mysql.mysql_db:
+    name: "{{ db_seed_database }}"
+    state: import
+    target: /tmp/schema.sql
+    login_user: "{{ db_seed_admin_user }}"
+    login_password: "{{ vault_db_root_password }}"
+    login_unix_socket: /run/mysqld/mysqld.sock
 
-- name: Create app_user witch SELECT-only grant
+- name: Create app_user with SELECT-only grant
   community.mysql.mysql_user:
-  name: "{{ app_db_user }}"
-  password: "{{ db_seed_database }}.{{ db_seed_table }}:SELECT"
-  host: '%'
-  state: present
-  login_user: "{{ db_seed_admin_user }}"
-  login_password: "{{ db_root_password }}"
-  login_unix_socket: /run/mysqld/mysqld.sock
+    name: "{{ app_db_user }}"
+    password: "{{ vault_app_db_password }}"
+    priv: "{{ db_seed_database }}.{{ db_seed_table }}:SELECT"
+    host: '%'
+    state: present
+    login_user: "{{ db_seed_admin_user }}"
+    login_password: "{{ vault_db_root_password }}"
+    login_unix_socket: /run/mysqld/mysqld.sock
 
 - name: Remove temporary schema file
   ansible.builtin.file:
     path: /tmp/schema.sql
     state: absent
-
-

@@ -1,3 +1,6 @@
+#Regla: las tasks de un rol solo deben referenciar vault_* directamente
+# nunca una variable defaults de otro rol 
+# (los defaults no cruzan entre roles a menos que ambos corran en el mismo play).
 # Variables de Password Guardadas en el Vault
 # para editar usar:
 # EDITOR=vim ansible-vault edit inventories/production/group_vars/all/vault.yml
