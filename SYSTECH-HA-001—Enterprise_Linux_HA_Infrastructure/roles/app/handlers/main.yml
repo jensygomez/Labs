@@ -1,0 +1,7 @@
+---
+- name: restart gunicorn
+  ansible.builtin.systemd:
+    name: gunicorn
+    daemon_reload: true
+    state: restarted
+

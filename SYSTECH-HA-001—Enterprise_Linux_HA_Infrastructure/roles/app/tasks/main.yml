@@ -1,0 +1,59 @@
+---
+- name: Create dedicated system user for the app
+  ansible.builtin.user:
+    name: "{{ app_system_user }}
+    system: true
+    shell: /sbin/nologin
+    create_home: false
+
+- name: Install Python3 and venv ( RedHat family)
+  ansible.builtin.dnf:
+    name: 
+      - python3
+      - python3-pip
+    state: presetn
+  when: ansible_facts['os_family'] == "RedHat"
+
+- name: Create install directory
+  ansible.builtin.file:
+    path: "{{ app_install_dir }}"
+    state: directory
+    owner: "{{ app_system_user }}"
+    group: "{{ app_system_user }}"
+    mode: '0750'
+
+- name: Create Python virtual enviroment
+  ansible.builtin.command:
+    cmd: "python3 -m venv {{ app_venv_path }}"
+    creates: "{{ app_venv_path }}/bin/activate"
+
+- name: Install Flask, Gunicorn and PyMySQL in venv
+  ansible.builtin.pip:
+    name: 
+      - flask
+      - gunicorn
+      - pymysql
+    virtualenv: "{{ app_venv_path }}"
+
+- name: Deploy application code
+  ansible.builtin.copy:
+    src: app.py
+    dest: "{{ app_install_dir }}/app.py"
+    owner: "{{ app_system_user }}"
+    group: "{{ app_system_user }}"
+    mode: '0640'
+  notify: restart gunicorn
+
+- name: Deploy systemd unit for Gunicorn
+  ansible.builtin.template:
+    src: gunicorn.service.j2
+    dest: /etc/systemd/system/gunicorn.service
+    mode: '0644'
+  notify: restart gunicorn
+
+- name: enable and Start Gunicorn service
+  ansible.builtin.systemd:
+    name: gunicorn
+    enabled: true
+    state: started
+

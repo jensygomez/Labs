@@ -1,0 +1,16 @@
+[Unit]
+Descripttion=Gunicorn instance for ACME Flask app
+After=network.target
+
+[Service]
+User={{ app_system_user }}
+Group={{ app_system_user }}
+WorkingDirectory={{app_install_dir }}
+EnviromentFile={{ app_install_dir }}/app_env
+ExecStart={{ app_venv_path }}/bin/gunicorn --workers 2 --bind 127.0.0.1:{{ app_port }} app:app
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
