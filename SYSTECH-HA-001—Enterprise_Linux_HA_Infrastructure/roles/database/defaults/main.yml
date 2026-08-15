@@ -9,10 +9,10 @@ db_port: 3306
 db_bind_address: "0.0.0.0"
 
 # Credenciales y DB inicial (Personaliza según tus necesidades)
-db_root_password: "Password123"
+db_root_password: "{{ db_root_password }}"
 db_name: "acme_db"
 db_user: "acme_user"
-db_password: "Password123"
+db_password: "{{ Password123 }} "
 
 # Máscara de red/patrón permitido para que los backends (ha_nodes) se conecten.
 # '10.45.223.%' permite a cualquier host de la subred 10.45.223.0/24 conectar

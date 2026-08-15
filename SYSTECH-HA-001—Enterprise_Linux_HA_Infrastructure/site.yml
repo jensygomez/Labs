@@ -8,16 +8,18 @@
 #    ansible-playbook site.yml
 #
 # 2. Despliegue fase por fase (Útil para pruebas o reconstrucción modular):
-#    Fase 01 (Baseline):   ansible-playbook site.yml --tags baseline
-#    Fase 02 (VIP HA):     ansible-playbook site.yml --tags keepalived
-#    Fase 03 (LB HA):      ansible-playbook site.yml --tags haproxy
-#    Fase 04 (Web Stack):  ansible-playbook site.yml --tags nginx
-#    Fase 05 (MariaDB):    ansibel-playbook site.yml --tags database
+#    Fase 01 (Baseline):   ansible-playbook site.yml --tags baseline --ask-vault-pass
+#    Fase 02 (VIP HA):     ansible-playbook site.yml --tags keepalived --ask-vault-pass
+#    Fase 03 (LB HA):      ansible-playbook site.yml --tags haproxy --ask-vault-pass
+#    Fase 04 (Web Stack):  ansible-playbook site.yml --tags nginx --ask-vault-pass
+#    Fase 05 (MariaDB):    ansibel-playbook site.yml --tags database --ask-vault-pass
+#    Fase 05 (MariaDB):    ansible-playbook site.yml --tags database --ask-vault-pass
+#    Fase 06 (App Layer):  ansible-playbook site.yml --tags db_seed,app --ask-vault-pass
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
 # FASE 01: BASELINE DE SEGURIDAD Y CONFIGURACIÓN BASE
-# Comando individual: ansible-playbook site.yml --tags baseline
+# Comando individual: ansible-playbook site.yml --tags baseline --ask-vault-pass
 # ------------------------------------------------------------------------------
 - name: "Phase 01 - Apply Linux Baseline to all nodes"
   hosts: ha_nodes:storage_nodes
@@ -29,7 +31,7 @@
 
 # ------------------------------------------------------------------------------
 # FASE 02: ALTA DISPONIBILIDAD - RED / VIP (KEEPALIVED)
-# Comando individual: ansible-playbook site.yml --tags keepalived
+# Comando individual: ansible-playbook site.yml --tags keepalived --ask-vault-pass
 # ------------------------------------------------------------------------------
 - name: "Phase 02 - High Availability VIP Layer (Keepalived)"
   hosts: lb_nodes
@@ -41,7 +43,7 @@
 
 # ------------------------------------------------------------------------------
 # FASE 03: ALTA DISPONIBILIDAD - BALANCEADOR DE CARGA (HAPROXY)
-# Comando individual: ansible-playbook site.yml --tags haproxy
+# Comando individual: ansible-playbook site.yml --tags haproxy --ask-vault-pass
 # ------------------------------------------------------------------------------
 - name: "Phase 03 - High Availability Load Balancer Layer (HAProxy)"
   hosts: lb_nodes
@@ -53,7 +55,7 @@
 
 # ------------------------------------------------------------------------------
 # FASE 04: CAPA DE APLICACIÓN WEB (NGINX BACKENDS)
-# Comando individual: ansible-playbook site.yml --tags nginx
+# Comando individual: ansible-playbook site.yml --tags nginx --ask-vault-pass
 # NOTA: Próxima fase a implementar para completar el stack end-to-end.
 # ------------------------------------------------------------------------------
 - name: "Phase 04 - Web Application Stack (Nginx Backends)"
@@ -66,7 +68,7 @@
 
 # ------------------------------------------------------------------------------
 # FASE 05: CAPA DE BASE DE DATOS (MARIADB)
-# Comando individual: ansible-playbook site.yml --tags database
+# Comando individual: ansible-playbook site.yml --tags database --ask-vault-pass
 # -----------------------------------------------------------------------------
 - name: "Phase 05 - Database Layer (MariaDB)"
   hosts: database_nodes
@@ -76,3 +78,26 @@
     - role: database
       tags: database
 
+
+# ------------------------------------------------------------------------------
+# FASE 06: CAPA DE APLICACIÓN (SEEDING + PYTHON/FLASK/GUNICORN)
+# Comando individual: ansible-playbook site.yml --tags db_seed,app --ask-vault-pass
+# NOTA: El play de 'app' apunta solo a server01 durante validación inicial.
+#       Una vez validado end-to-end, cambiar hosts: server01 -> hosts: ha_nodes.
+# ------------------------------------------------------------------------------
+- name: "Pahse 06a - Database Seeding (Schema + Test Data)"
+  hosts: database_nodes
+  becmome: true
+  gather_facts: true
+  roles: 
+    - role: db_seed
+      tags: db_seed
+
+
+- name: "Phase 06b - Application Layer (Flask + Gunicorn"
+  hosts: server01
+  become: true
+  gather_facts: true
+  roles:
+    - role: app
+      tags: app
