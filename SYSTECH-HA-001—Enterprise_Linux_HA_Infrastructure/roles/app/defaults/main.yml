@@ -1,0 +1,13 @@
+---
+app_port: 8000
+app_install_dir: /opt/acme_app
+app_system_user: appuser
+app_venv_path: "{{ app_install_dir }}/venv"
+
+#Datos de conexion a la DB (Host resuleto dinamicamente via inventario)
+app_db_host: "{{ hostvars['db01']['ansible_host'] }}"
+app_db_name: "{{ db_seed_database }}"
+app_db_user: "{{ app_db_user }}
+app_db_password: {{ vault_app_db_password }}"
+
+
