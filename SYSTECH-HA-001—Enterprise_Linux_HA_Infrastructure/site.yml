@@ -86,8 +86,6 @@
 # ------------------------------------------------------------------------------
 # FASE 06: CAPA DE APLICACIÓN (SEEDING + PYTHON/FLASK/GUNICORN)
 # Comando individual: ansible-playbook site.yml --tags db_seed,app --ask-vault-pass
-# NOTA: El play de 'app' apunta solo a server01 durante validación inicial.
-#       Una vez validado end-to-end, cambiar hosts: server01 -> hosts: ha_nodes.
 # ------------------------------------------------------------------------------
 - name: "Pahse 06a - Database Seeding (Schema + Test Data)"
   hosts: database_nodes
@@ -100,7 +98,7 @@
 
 
 - name: "Phase 06b - Application Layer (Flask + Gunicorn"
-  hosts: server01
+  hosts: ha_nodes
   serial: 2
   become: true
   gather_facts: true

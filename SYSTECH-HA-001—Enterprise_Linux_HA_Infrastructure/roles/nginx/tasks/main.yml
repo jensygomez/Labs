@@ -25,6 +25,13 @@
   
   notify: "restart nginx"
 
+- name: Allow Nginx to connect to backend app over network (SELinux)
+  ansible.posix.seboolean:
+    name: httpd_can_network_connect
+    state: true
+    persistent: true
+  when: ansible_facts['os_family'] == "RedHat"
+
 - name: "NGINX | Deploy custom index.html template"
   ansible.builtin.template:
     src: index.html.j2
