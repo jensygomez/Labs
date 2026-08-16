@@ -33,8 +33,8 @@ Desplegar un stack web en alta disponibilidad con capa de persistencia relaciona
 | `lb01` | LXD (contenedor) | Ubuntu 24.04 | Load Balancer — Keepalived + HAProxy (MASTER) |
 | `lb02` | LXD (contenedor) | Ubuntu 24.04 | Load Balancer — Keepalived + HAProxy (BACKUP) |
 | `server01` | KVM (VM) | AlmaLinux 9 | Backend de aplicación — Nginx + Flask/Gunicorn |
-| `server02` | KVM (VM) | AlmaLinux 9 | Backend de aplicación — Nginx (app pendiente) |
-| `server03` | KVM (VM) | AlmaLinux 9 | Backend de aplicación — Nginx (app pendiente) |
+| `server02` | KVM (VM) | AlmaLinux 9 | Backend de aplicación — Nginx + Flask/Gunicorn |
+| `server03` | KVM (VM) | AlmaLinux 9 | Backend de aplicación — Nginx + Flask/Gunicorn |
 | `storage01` | KVM (VM) | AlmaLinux 9 | Reservado — sin rol asignado todavía (solo baseline) |
 | `db01` | LXD (contenedor) | Ubuntu 24.04 | Base de Datos Relacional — MariaDB (seeding aplicado) |
 
@@ -63,8 +63,9 @@ Todos los nodos comparten la red `lxdbr0` (`10.45.223.0/24`).
         +---------+ +---------+ +---------+
         |server01 | |server02 | |server03 |
         |  Nginx  | |  Nginx  | |  Nginx  |
-        | Flask/  | |(pend.)  | |(pend.)  |
-        | Gunicorn| |         | |         |
+        | (proxy) | | (proxy) | | (proxy) |
+        | Flask/  | | Flask/  | | Flask/  |
+        | Gunicorn| | Gunicorn| | Gunicorn|
         +----+----+ +----+----+ +----+----+
              |           |           |
              +-----------+-----------+
@@ -79,10 +80,10 @@ Todos los nodos comparten la red `lxdbr0` (`10.45.223.0/24`).
         storage01  →  sin rol asignado (baseline únicamente)
 ```
 
-> **Estado de integración (Fase 06):** la capa de aplicación (Flask + Gunicorn + MariaDB)
-> está validada de forma aislada en `server01` (puerto 8000, bypass de Nginx).
-> El `proxy_pass` de Nginx hacia Gunicorn está **pendiente de configurar**, por lo
-> que el flujo VIP → HAProxy → Nginx → App todavía no está validado end-to-end.
+> **Estado de integración (Fase 06 — cerrada):** flujo completo validado
+> extremo a extremo: `VIP (Keepalived) → HAProxy → Nginx (proxy_pass) →
+> Gunicorn → Flask → PyMySQL → MariaDB`. Rotación roundrobin confirmada
+> entre los 3 backends con datos reales de `acme_db.customers`.
 
 ---
 
@@ -161,7 +162,7 @@ SYSTECH-HA-001/
 | 04 — Nginx (backend) | `ansible-playbook site.yml --tags nginx` | `ha_nodes` | ✅ Validado |
 | 05 — MariaDB (Database) | `ansible-playbook site.yml --tags database` | `database_nodes` | ✅ Validado |
 | 06a — DB Seeding | `ansible-playbook site.yml --tags db_seed` | `database_nodes` | ✅ Validado |
-| 06b — App Layer (Flask/Gunicorn) | `ansible-playbook site.yml --tags app` | `server01` | ⚠️ Validado aislado (puerto 8000) — integración Nginx pendiente |
+| 06b — App Layer (Flask/Gunicorn + Nginx proxy) | `ansible-playbook site.yml --tags app,nginx` | `ha_nodes` | ✅ Validado end-to-end vía VIP |
 
 ### Validación end-to-end realizada
 
@@ -178,11 +179,11 @@ ansible server01 -m shell -a "mysql -u acme_user -pPassword123 -h $DB_IP -e 'SHO
 ```
 Respuesta exitosa devolviendo `acme_db` e `information_schema` directamente desde `server01` hacia `db01`.
 
-3. **Capa de Aplicación aislada (Fase 06b):**
+3. **Capa de Aplicación + Balanceo End-to-End (Fase 06):**
 ```bash
-ansible server01 -m command -a "curl -s http://127.0.0.1:8000/"
+for i in $(seq 1 9); do ansible lb01 -m command -a "curl -s http://10.45.223.250/" | grep served_by; done
 ```
-Respuesta JSON exitosa: hostname del nodo (`served_by`) + datos consultados en vivo desde `acme_db.customers`. Confirma la cadena completa Gunicorn → Flask → PyMySQL → MariaDB.
+Rotación roundrobin confirmada entre `server01`/`server02`/`server03`, cada respuesta con datos reales consultados en vivo desde `acme_db.customers`. Cadena completa validada: VIP → HAProxy → Nginx (proxy_pass) → Gunicorn → Flask → PyMySQL → MariaDB.
 
 ### Test de failover realizado
 
@@ -220,13 +221,16 @@ Cada uno de estos fue un problema real de esta fase de construcción, no un ejer
 
 11. **Typos en unit file de systemd rompieron la carga de variables de entorno** — `EnviromentFile` (faltaba la `n`) en `gunicorn.service.j2` no fue reconocido por systemd (`Unknown key name, ignoring`), por lo que Gunicorn arrancó sin `DB_HOST`/`DB_USER`/`DB_PASS`, y la app fallaba con `Can't connect to MySQL server on 'localhost'`. Buen recordatorio de que systemd ignora silenciosamente directivas desconocidas en vez de fallar — el error solo aparece en `journalctl`, no en el output de Ansible.
 
+12. **SELinux bloqueaba la conexión de Nginx hacia Gunicorn (502 Bad Gateway)** — en AlmaLinux, el booleano `httpd_can_network_connect` viene desactivado por defecto, impidiendo que Nginx abra conexiones salientes incluso hacia `127.0.0.1`. El error solo aparece en `/var/log/nginx/error.log` (`connect() failed (13: Permission denied)`), no en el output del módulo `template`/`copy` de Ansible. Resuelto con el módulo `ansible.posix.seboolean` (`httpd_can_network_connect: true`, `persistent: true`), condicionado a `os_family == RedHat`.
+
 ---
 
 ## 9. Próximo paso
 
-* **Cerrar Fase 06b:** configurar `proxy_pass` en el rol `nginx` hacia `127.0.0.1:{{ app_port }}`, extender el rol `app` de `server01` a `ha_nodes` (server02/03), y validar el flujo completo VIP → HAProxy → Nginx → App → DB.
 * **Rol de storage en `storage01`** (actualmente solo tiene el baseline aplicado, sin ningún servicio de almacenamiento en red como NFS o iSCSI).
 * **Monitoring + alerting** (fase futura): LXC dedicada con Prometheus/Alertmanager o Zabbix, plantillas Jinja2 para el formato de alertas, y un endpoint receptor de "tickets".
+* **Migrar `community.mysql` → `community.mariadb`** antes de la deprecation formal en la versión 6.0.0.
+* **Client01** (LXC de demostración) ejecutando `curl` en bucle contra la VIP, como capa de observabilidad separada del flujo de validación técnica.
 
 ---
 

@@ -16,20 +16,40 @@ LXC_IMAGE="${LXC_IMAGE:-ubuntu:24.04}"
 SSH_PUBKEY_FILE="${SSH_PUBKEY_FILE:-$HOME/.ssh/id_lxd_fleet.pub}"
 SSH_PRIVKEY_FILE="${SSH_PRIVKEY_FILE:-${SSH_PUBKEY_FILE%.pub}}"
 
-MEMORY_MB=1536   # para VMs (puedes ajustar)
+MEMORY_MB=1024   # para VMs (puedes ajustar)
 VCPUS=1
 
 # VMs (nodos de aplicación y almacenamiento)
 APP_VMS=(server01 server02 server03)
-STORAGE_VMS=(storage01)
+
+# storage01 comentado temporalmente: laptop de laboratorio con 12GB RAM,
+# sin rol de servicio asignado todavía (solo baseline). Se libera ~1.5GB
+# de RAM al no crearla. Descomentar cuando se implemente el rol de storage
+# (NFS/iSCSI) — ver README sección 9, "Próximo paso".
+# STORAGE_VMS=(storage01)
+STORAGE_VMS=()
+
 ALL_VMS=("${APP_VMS[@]}" "${STORAGE_VMS[@]}")
 
 # Contenedores LXC (balanceadores y base de datos)
 LB_CONTAINERS=(lb01 lb02)
 DB_CONTAINERS=(db01)
-ALL_CONTAINERS=("${LB_CONTAINERS[@]}" "${DB_CONTAINERS[@]}")
+
+# Contenedores LXC de monitoring (Zabbix server + frontend + DB local)
+MONITORING_CONTAINERS=(monitoring01)
+
+ALL_CONTAINERS=("${LB_CONTAINERS[@]}" "${DB_CONTAINERS[@]}" "${MONITORING_CONTAINERS[@]}")
 
 ALL_NODES=("${ALL_VMS[@]}" "${ALL_CONTAINERS[@]}")
+
+# Límite de memoria por contenedor LXC. Por defecto LXD no limita RAM,
+# lo cual es peligroso en una laptop de recursos ajustados: un contenedor
+# con un bug (fuga de memoria, proceso descontrolado) podría consumir
+# toda la RAM del host. Se fija explícito por nombre de contenedor;
+# los que no aparecen en el mapa quedan sin límite (comportamiento actual).
+declare -A LXC_MEMORY_LIMIT=(
+  [monitoring01]="1GB"
+)
 
 INVENTORY_DIR="${INVENTORY_DIR:-${PROJECT_ROOT}/inventories/production}"
 INVENTORY_FILE="${INVENTORY_DIR}/hosts.yml"
@@ -151,6 +171,16 @@ wait_vm_ip() {
 ########################################
 # Funciones: LXC / Contenedores
 ########################################
+apply_lxc_memory_limit() {
+  local NAME="$1"
+  local LIMIT="${LXC_MEMORY_LIMIT[$NAME]:-}"
+
+  if [[ -n "$LIMIT" ]]; then
+    echo "==> Aplicando límite de memoria a $NAME: $LIMIT"
+    lxc config set "$NAME" limits.memory "$LIMIT"
+  fi
+}
+
 create_lxc() {
   local NAME="$1"
 
@@ -161,11 +191,16 @@ create_lxc() {
     else
       echo "==> El contenedor LXC '$NAME' ya existe y está corriendo."
     fi
+    # Reafirmar el límite aunque el contenedor ya exista, por si se
+    # cambió el mapa LXC_MEMORY_LIMIT desde la última corrida.
+    apply_lxc_memory_limit "$NAME"
     return 0
   fi
 
   echo "==> Creando contenedor LXC: $NAME ($LXC_IMAGE)"
   lxc launch "$LXC_IMAGE" "$NAME"
+
+  apply_lxc_memory_limit "$NAME"
 
   # Esperar a que el contenedor tenga red
   sleep 5
@@ -316,6 +351,19 @@ cat >> "$INVENTORY_FILE" <<EOF
 EOF
 
 for NODE in "${DB_CONTAINERS[@]}"; do
+  cat >> "$INVENTORY_FILE" <<EOF
+        ${NODE}:
+          ansible_host: ${CURRENT_IPS[$NODE]}
+EOF
+done
+
+cat >> "$INVENTORY_FILE" <<EOF
+
+    monitoring_nodes:
+      hosts:
+EOF
+
+for NODE in "${MONITORING_CONTAINERS[@]}"; do
   cat >> "$INVENTORY_FILE" <<EOF
         ${NODE}:
           ansible_host: ${CURRENT_IPS[$NODE]}
