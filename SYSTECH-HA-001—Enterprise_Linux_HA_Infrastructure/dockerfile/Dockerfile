@@ -9,7 +9,9 @@ RUN apk add --no-cache \
     bash \
     curl \
     jq \
-    opentofu
+    opentofu \
+    vim \
+    sudo
 
 # Configurar entorno virtual e instalar Ansible + Proxmox SDK
 RUN python3 -m venv /opt/venv && \
