@@ -1,28 +1,33 @@
-FROM alpine:3.19
+# dockerfile/Dockerfile
+FROM ubuntu:22.04
 
-# Instalar dependencias del sistema de forma limpia
-RUN apk add --no-cache \
-    python3 \
-    py3-pip \
-    openssh-client \
-    git \
-    bash \
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 1. Instalar dependencias base
+RUN apt-get update && apt-get install -y \
     curl \
+    git \
     jq \
-    opentofu \
-    vim \
-    sudo
+    unzip \
+    gnupg \
+    software-properties-common \
+    python3 \
+    python3-pip \
+    python3-venv \
+    openssh-client \
+    iputils-ping \
+    net-tools \
+    && rm -rf /var/lib/apt/lists/*
 
-# Configurar entorno virtual e instalar Ansible + Proxmox SDK
-RUN python3 -m venv /opt/venv && \
-    /opt/venv/bin/pip install --upgrade pip && \
-    /opt/venv/bin/pip install ansible proxmoxer requests
+# 2. Instalar OpenTofu
+RUN curl -fsSL https://get.opentofu.org/install-opentofu.sh -o install-opentofu.sh
+RUN chmod +x install-opentofu.sh
+RUN ./install-opentofu.sh --install-method deb
+RUN rm install-opentofu.sh
 
-ENV PATH="/opt/venv/bin:$PATH"
+# 3. Instalar Ansible
+RUN pip3 install --no-cache-dir --upgrade pip && \
+    pip3 install --no-cache-dir ansible ansible-lint
 
-# Instalar colección de Ansible para Proxmox
-RUN ansible-galaxy collection install community.general
-
+# 4. Crear directorio de trabajo
 WORKDIR /workspace
-
-CMD ["/bin/bash"]
