@@ -4,4 +4,12 @@ Given the ambiguity and lack of clear build artifacts, dependency directories, o
 
 Therefore, outputting an empty .gitignore as per the rules:
 
-(Nothing)
+(Nothing)**/.ssh/
+**/.bash_history
+**/*.tfstate
+**/*.tfstate.backup
+**/*.tfvars
+**/tfplan
+Base-de-Datos/progreso.db
+.ssh/
+**/.ssh/

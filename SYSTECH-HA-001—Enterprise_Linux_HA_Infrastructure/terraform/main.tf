@@ -4,18 +4,21 @@ resource "proxmox_download_file" "almalinux_cloud_image" {
   datastore_id = "local"
   node_name    = var.target_node
   url          = "https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/AlmaLinux-9-GenericCloud-latest.x86_64.qcow2"
-  file_name    = "almalinux-9-cloudinit.qcow2"
+  file_name    = "almalinux-9-cloudinit.iso" # ← Corregido: .qcow2 → .iso
 }
 
-# Snippet de Cloud-Init para personalización adicional
+# Snippet de Cloud-Init (uno por VM, con hostname correcto)
 resource "proxmox_virtual_environment_file" "cloud_user_config" {
-  content_type  = "snippets"
-  datastore_id  = "local"
-  node_name     = var.target_node
+  for_each    = var.cluster_nodes
+  content_type = "snippets"
+  datastore_id = "local"
+  node_name    = var.target_node
 
   source_raw {
     data = <<-EOF
     #cloud-config
+    hostname: ${each.key}
+    preserve_hostname: false
     users:
       - name: ansible
         groups: wheel
@@ -31,7 +34,7 @@ resource "proxmox_virtual_environment_file" "cloud_user_config" {
     runcmd:
       - systemctl enable --now qemu-guest-agent
     EOF
-    file_name = "cloud-user-config.yml"
+    file_name = "cloud-user-config-${each.key}.yml"
   }
 }
 
@@ -59,7 +62,7 @@ resource "proxmox_virtual_environment_vm" "almalinux_cluster" {
   # Disco principal del Sistema Operativo
   disk {
     datastore_id = "local-lvm"
-    file_id      = proxmox_download_file.almalinux_cloud_image.id # ✅ Referencia corregida
+    file_id      = proxmox_download_file.almalinux_cloud_image.id
     interface    = "scsi0"
     size         = 20
   }
@@ -78,6 +81,6 @@ resource "proxmox_virtual_environment_vm" "almalinux_cluster" {
         gateway = "10.10.10.1"
       }
     }
-    user_data_file_id = proxmox_virtual_environment_file.cloud_user_config.id
+    user_data_file_id = proxmox_virtual_environment_file.cloud_user_config[each.key].id
   }
 }

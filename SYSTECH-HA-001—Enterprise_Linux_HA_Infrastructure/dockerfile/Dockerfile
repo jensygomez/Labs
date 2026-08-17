@@ -31,3 +31,8 @@ RUN pip3 install --no-cache-dir --upgrade pip && \
 
 # 4. Crear directorio de trabajo
 WORKDIR /workspace
+
+# Crear symlink para que SSH encuentre la llave desde cualquier directorio
+RUN mkdir -p /workspace/terraform/.ssh && \
+    ln -sf /workspace/.ssh/id_lxd_fleet /workspace/terraform/.ssh/id_lxd_fleet 2>/dev/null || true
+
