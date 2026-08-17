@@ -6,6 +6,13 @@ SECRETS_FILE="$SECRETS_DIR/systech-secrets.yml"
 SSH_KEY_DIR="./.ssh_tmp"
 IMAGE_NAME="systech-control"
 
+# 🛡️ Limpieza garantizada incluso si el script falla o se cancela
+cleanup() {
+    rm -f "$SECRETS_FILE.plaintext"
+    rm -rf "$SSH_KEY_DIR"
+}
+trap cleanup EXIT
+
 if [ -f "$SECRETS_FILE" ]; then
     echo "⚠️  $SECRETS_FILE ya existe. Si deseas recrearlo, bórralo primero."
     exit 1
@@ -41,15 +48,13 @@ EOF
 
 echo "🛡️  Cifrando secretos con Ansible Vault..."
 podman run -it --rm \
+    --network none \
+    --user root \
     -v "$(pwd):/workspace:Z" \
     -w "/workspace" \
     --entrypoint /bin/bash \
-    $IMAGE_NAME \
-    -c "ansible-vault encrypt secrets/systech-secrets.yml.plaintext --output=secrets/systech-secrets.yml"
-
-# Limpieza
-rm -f "$SECRETS_FILE.plaintext"
-rm -rf "$SSH_KEY_DIR"
+    systech-control \
+    -c "ansible-vault encrypt --ask-vault-pass secrets/systech-secrets.yml.plaintext --output=secrets/systech-secrets.yml && chown 1000:1000 secrets/systech-secrets.yml"
 
 echo "✅ ¡Bootstrap completado! Vault cifrado creado en $SECRETS_FILE"
 echo "📝 Recuerda añadir la siguiente Clave Pública a tus authorized_keys en Proxmox/Objetivos:"

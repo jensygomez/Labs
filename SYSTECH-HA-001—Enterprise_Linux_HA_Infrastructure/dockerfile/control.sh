@@ -4,7 +4,7 @@ set -e
 # ==========================================
 # 1. CONFIGURACIÓN DE ENTORNO
 # ==========================================
-export TF_VAR_proxmox_api_url="https://192.168.18.100:8006/"
+export TF_VAR_proxmox_api_url="https:/192.168.18.100:8006/"
 # ELIMINADO: TF_VAR_proxmox_api_token (Ahora está en el Vault)
 # ELIMINADO: TF_VAR_proxmox_ssh_private_key (Ahora está en el Vault)
 

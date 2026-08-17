@@ -3,10 +3,16 @@ set -e
 
 SECRETS_FILE="/workspace/secrets/systech-secrets.yml"
 
+# Asegurar que /workspace/.ssh sea escribible por jensyg
+if [ -d "/workspace/.ssh" ] && [ ! -w "/workspace/.ssh" ]; then
+    echo "⚠️  Corrigiendo permisos de /workspace/.ssh..."
+    echo "   Ejecuta 'sudo chown -R \$(id -u):\$(id -g) .' en tu host"
+fi
+
 if [ -f "$SECRETS_FILE" ]; then
     echo "🔓 Desencriptando Ansible Vault..."
     # ansible-vault view pedirá la contraseña interactivamente gracias a 'podman run -it'
-    if ! ansible-vault view "$SECRETS_FILE" > /tmp/.secrets_decrypted.yml; then
+    if ! ansible-vault view --ask-vault-pass "$SECRETS_FILE" > /tmp/.secrets_decrypted.yml; then
         echo "❌ Error al desencriptar el Vault. Contraseña incorrecta o archivo dañado."
         exit 1
     fi
@@ -23,7 +29,7 @@ with open("/tmp/.secrets_decrypted.yml") as f:
 ssh_dir = os.path.expanduser("~/.ssh")
 os.makedirs(ssh_dir, exist_ok=True)
 
-# Configurar clave privada
+# Configurar clave privada para SSH directo
 key_path = os.path.join(ssh_dir, "id_systech_control")
 with open(key_path, "w") as k:
     k.write(data["ssh_private_key"])
@@ -43,6 +49,8 @@ os.chmod(config_path, stat.S_IREAD | stat.S_IWRITE)
 env_file = "/tmp/.systech_env"
 with open(env_file, "w") as e:
     e.write(f'export TF_VAR_proxmox_api_token="{data["proxmox_api_token"]}"\n')
+    # ✅ LÍNEA CRÍTICA: Triple comilla para preservar saltos de línea de la clave privada
+    e.write(f'export TF_VAR_proxmox_ssh_private_key="""{data["ssh_private_key"]}"""\n')
     if "ssh_public_key" in data:
         e.write(f'export TF_VAR_ssh_public_key="{data["ssh_public_key"]}"\n')
 EOF
