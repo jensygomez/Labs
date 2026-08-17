@@ -39,9 +39,6 @@ resource "proxmox_virtual_environment_file" "cloud_user_config" {
 }
 
 # Snippet de Meta-Data (uno por VM) — FIX del bug "hostname: localhost"
-# El provider bpg/proxmox autogenera un meta-data con local-hostname fijo
-# en "localhost", el cual cloud-init prioriza sobre el hostname del
-# user-data. Al pasar nuestro propio meta-data, evitamos ese conflicto.
 resource "proxmox_virtual_environment_file" "cloud_meta_config" {
   for_each     = var.cluster_nodes
   content_type = "snippets"
@@ -103,5 +100,13 @@ resource "proxmox_virtual_environment_vm" "almalinux_cluster" {
     user_data_file_id = proxmox_virtual_environment_file.cloud_user_config[each.key].id
     meta_data_file_id = proxmox_virtual_environment_file.cloud_meta_config[each.key].id
   }
-}
+} # ← AQUÍ FALTABA CERRAR LA LLAVE
 
+# Generación automática del inventario de Ansible
+resource "local_file" "ansible_inventory" {
+  content = templatefile("${path.module}/inventory.tmpl", {
+    vms  = proxmox_virtual_environment_vm.almalinux_cluster
+    lxcs = proxmox_virtual_environment_container.lxc
+  })
+  filename = "${path.module}/../ansible/inventories/production/hosts.yml"
+}
