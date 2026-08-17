@@ -12,7 +12,7 @@
 ~h
 # Command Line History (newest to oldest):
 :wq
-|2,0,1786989670,,"wq"
+|2,0,1786991117,,"wq"
 
 # Search String History (newest to oldest):
 
@@ -55,34 +55,46 @@
 |3,1,36,0,1,0,1786989464,"8"
 
 # File marks:
-'0  1  0  ~/.ansible/tmp/ansible-local-14gbpe1q7g/tmp9uonsymo.yml
-|4,48,1,0,1786989670,"~/.ansible/tmp/ansible-local-14gbpe1q7g/tmp9uonsymo.yml"
-'1  2  19  ~/.ansible/tmp/ansible-local-86xw71hxzr/tmp1pbm59jx.yml
-|4,49,2,19,1786989486,"~/.ansible/tmp/ansible-local-86xw71hxzr/tmp1pbm59jx.yml"
-'2  1  0  ~/.ansible/tmp/ansible-local-51ndoxe684/tmp1qnq6j7v.yml
-|4,50,1,0,1786988149,"~/.ansible/tmp/ansible-local-51ndoxe684/tmp1qnq6j7v.yml"
-'3  2  79  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
-|4,51,2,79,1786988016,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
-'4  2  85  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
-|4,52,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
-'5  107  0  ~/terraform/main.tf
-|4,53,107,0,1786931418,"~/terraform/main.tf"
-'6  104  0  ~/terraform/lxc.tf
-|4,54,104,0,1786930805,"~/terraform/lxc.tf"
-'7  62  0  ~/terraform/lxc.tf
-|4,55,62,0,1786930474,"~/terraform/lxc.tf"
+'0  1  0  ~/.ansible/tmp/ansible-local-127wq5vq_xp/tmp23avx7wi.yml
+|4,48,1,0,1786991117,"~/.ansible/tmp/ansible-local-127wq5vq_xp/tmp23avx7wi.yml"
+'1  1  0  ~/.ansible/tmp/ansible-local-14gbpe1q7g/tmp9uonsymo.yml
+|4,49,1,0,1786989670,"~/.ansible/tmp/ansible-local-14gbpe1q7g/tmp9uonsymo.yml"
+'2  2  19  ~/.ansible/tmp/ansible-local-86xw71hxzr/tmp1pbm59jx.yml
+|4,50,2,19,1786989486,"~/.ansible/tmp/ansible-local-86xw71hxzr/tmp1pbm59jx.yml"
+'3  1  0  ~/.ansible/tmp/ansible-local-51ndoxe684/tmp1qnq6j7v.yml
+|4,51,1,0,1786988149,"~/.ansible/tmp/ansible-local-51ndoxe684/tmp1qnq6j7v.yml"
+'4  2  79  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
+|4,52,2,79,1786988016,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
+'5  2  85  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
+|4,53,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
+'6  107  0  ~/terraform/main.tf
+|4,54,107,0,1786931418,"~/terraform/main.tf"
+'7  104  0  ~/terraform/lxc.tf
+|4,55,104,0,1786930805,"~/terraform/lxc.tf"
 '8  62  0  ~/terraform/lxc.tf
 |4,56,62,0,1786930474,"~/terraform/lxc.tf"
-'9  1  6  ~/terraform/lxc.tf
-|4,57,1,6,1786930453,"~/terraform/lxc.tf"
+'9  62  0  ~/terraform/lxc.tf
+|4,57,62,0,1786930474,"~/terraform/lxc.tf"
 
 # Jumplist (newest first):
+-'  1  0  ~/.ansible/tmp/ansible-local-127wq5vq_xp/tmp23avx7wi.yml
+|4,39,1,0,1786991117,"~/.ansible/tmp/ansible-local-127wq5vq_xp/tmp23avx7wi.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-14gbpe1q7g/tmp9uonsymo.yml
+|4,39,1,0,1786989670,"~/.ansible/tmp/ansible-local-14gbpe1q7g/tmp9uonsymo.yml"
 -'  1  0  ~/.ansible/tmp/ansible-local-14gbpe1q7g/tmp9uonsymo.yml
 |4,39,1,0,1786989670,"~/.ansible/tmp/ansible-local-14gbpe1q7g/tmp9uonsymo.yml"
 -'  2  19  ~/.ansible/tmp/ansible-local-86xw71hxzr/tmp1pbm59jx.yml
 |4,39,2,19,1786989486,"~/.ansible/tmp/ansible-local-86xw71hxzr/tmp1pbm59jx.yml"
 -'  2  19  ~/.ansible/tmp/ansible-local-86xw71hxzr/tmp1pbm59jx.yml
 |4,39,2,19,1786989486,"~/.ansible/tmp/ansible-local-86xw71hxzr/tmp1pbm59jx.yml"
+-'  2  19  ~/.ansible/tmp/ansible-local-86xw71hxzr/tmp1pbm59jx.yml
+|4,39,2,19,1786989486,"~/.ansible/tmp/ansible-local-86xw71hxzr/tmp1pbm59jx.yml"
+-'  2  19  ~/.ansible/tmp/ansible-local-86xw71hxzr/tmp1pbm59jx.yml
+|4,39,2,19,1786989486,"~/.ansible/tmp/ansible-local-86xw71hxzr/tmp1pbm59jx.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-86xw71hxzr/tmp1pbm59jx.yml
+|4,39,1,0,1786989445,"~/.ansible/tmp/ansible-local-86xw71hxzr/tmp1pbm59jx.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-86xw71hxzr/tmp1pbm59jx.yml
+|4,39,1,0,1786989445,"~/.ansible/tmp/ansible-local-86xw71hxzr/tmp1pbm59jx.yml"
 -'  1  0  ~/.ansible/tmp/ansible-local-86xw71hxzr/tmp1pbm59jx.yml
 |4,39,1,0,1786989445,"~/.ansible/tmp/ansible-local-86xw71hxzr/tmp1pbm59jx.yml"
 -'  1  0  ~/.ansible/tmp/ansible-local-86xw71hxzr/tmp1pbm59jx.yml
@@ -95,6 +107,14 @@
 |4,39,1,0,1786988149,"~/.ansible/tmp/ansible-local-51ndoxe684/tmp1qnq6j7v.yml"
 -'  1  0  ~/.ansible/tmp/ansible-local-51ndoxe684/tmp1qnq6j7v.yml
 |4,39,1,0,1786988149,"~/.ansible/tmp/ansible-local-51ndoxe684/tmp1qnq6j7v.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-51ndoxe684/tmp1qnq6j7v.yml
+|4,39,1,0,1786988149,"~/.ansible/tmp/ansible-local-51ndoxe684/tmp1qnq6j7v.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-51ndoxe684/tmp1qnq6j7v.yml
+|4,39,1,0,1786988149,"~/.ansible/tmp/ansible-local-51ndoxe684/tmp1qnq6j7v.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-51ndoxe684/tmp1qnq6j7v.yml
+|4,39,1,0,1786988149,"~/.ansible/tmp/ansible-local-51ndoxe684/tmp1qnq6j7v.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-51ndoxe684/tmp1qnq6j7v.yml
+|4,39,1,0,1786988149,"~/.ansible/tmp/ansible-local-51ndoxe684/tmp1qnq6j7v.yml"
 -'  2  79  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
 |4,39,2,79,1786988016,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
 -'  2  79  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
@@ -111,6 +131,38 @@
 |4,39,2,79,1786988016,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
 -'  2  79  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
 |4,39,2,79,1786988016,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
+-'  2  79  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
+|4,39,2,79,1786988016,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
+-'  2  79  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
+|4,39,2,79,1786988016,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
+-'  2  79  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
+|4,39,2,79,1786988016,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
+-'  2  79  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
+|4,39,2,79,1786988016,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
+-'  2  79  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
+|4,39,2,79,1786988016,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
+-'  2  79  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
+|4,39,2,79,1786988016,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
+-'  2  79  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
+|4,39,2,79,1786988016,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
+-'  2  79  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
+|4,39,2,79,1786988016,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
+|4,39,1,0,1786987979,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
+|4,39,1,0,1786987979,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
+|4,39,1,0,1786987979,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
+|4,39,1,0,1786987979,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
+|4,39,1,0,1786987979,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
+|4,39,1,0,1786987979,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
+|4,39,1,0,1786987979,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
+|4,39,1,0,1786987979,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
 -'  1  0  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
 |4,39,1,0,1786987979,"~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml"
 -'  1  0  ~/.ansible/tmp/ansible-local-45se96uxj2/tmp5vmbiey6.yml
@@ -159,6 +211,38 @@
 |4,39,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
 -'  2  85  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
 |4,39,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
+-'  2  85  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
+|4,39,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
+-'  2  85  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
+|4,39,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
+-'  2  85  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
+|4,39,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
+-'  2  85  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
+|4,39,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
+-'  2  85  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
+|4,39,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
+-'  2  85  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
+|4,39,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
+-'  2  85  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
+|4,39,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
+-'  2  85  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
+|4,39,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
+-'  2  85  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
+|4,39,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
+-'  2  85  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
+|4,39,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
+-'  2  85  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
+|4,39,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
+-'  2  85  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
+|4,39,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
+-'  2  85  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
+|4,39,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
+-'  2  85  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
+|4,39,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
+-'  2  85  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
+|4,39,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
+-'  2  85  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
+|4,39,2,85,1786964137,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
 -'  1  0  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
 |4,39,1,0,1786964094,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
 -'  1  0  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
@@ -191,94 +275,14 @@
 |4,39,1,0,1786964094,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
 -'  1  0  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
 |4,39,1,0,1786964094,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786931418,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786931413,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786931413,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786931413,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786931413,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786931413,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786931413,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786931413,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786931413,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786931413,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786931413,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786931413,"~/terraform/main.tf"
+-'  1  0  ~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml
+|4,39,1,0,1786964094,"~/.ansible/tmp/ansible-local-176rd7vl_c/tmp2cb67fz5.yml"
 
 # History of marks within files (newest to oldest):
+
+> ~/.ansible/tmp/ansible-local-127wq5vq_xp/tmp23avx7wi.yml
+	*	1786991117	0
+	"	1	0
 
 > ~/.ansible/tmp/ansible-local-14gbpe1q7g/tmp9uonsymo.yml
 	*	1786989669	0
