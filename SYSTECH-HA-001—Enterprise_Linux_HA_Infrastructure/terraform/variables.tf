@@ -34,3 +34,18 @@ variable "cluster_nodes" {
     "server03" = { vmid = 203, ip = "10.10.10.23/24", cores = 1, memory = 1536 }
   }
 }
+
+# Mapa de contenedores LXC - agregar/quitar entradas aqui, nada mas
+variable "lxc_containers" {
+  type = map(object({
+    vmid          = number
+    ip            = string
+    cores         = number
+    memory        = number
+    disk_size     = number
+  }))
+  default = {
+    "lxc01" = { vmid = 301, ip = "10.10.10.31/24", cores = 1, memory = 512, disk_size = 8 }
+    "lxc02" = { vmid = 302, ip = "10.10.10.32/24", cores = 1, memory = 512, disk_size = 8 }
+  }
+}
