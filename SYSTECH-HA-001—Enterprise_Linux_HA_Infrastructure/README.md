@@ -1,247 +1,270 @@
-# SYSTECH-HA-001 — Enterprise Linux Hybrid HA Infrastructure
+# SYSTECH-HA-001 — Enterprise Linux HA Infrastructure
 
-## 1. Descripción
-
-Proyecto práctico de **Systech Consulting** para diseñar, implementar y operar una infraestructura empresarial Linux de alta disponibilidad para un cliente ficticio, **ACME Corporation**.
-
-El proyecto simula el trabajo de un **Junior Linux Systems Administrator / SRE**, con foco en:
-
-- Administración Linux empresarial (AlmaLinux 9 + Ubuntu 24.04)
-- Automatización con Ansible (roles, handlers, templates, group_vars)
-- Alta disponibilidad (VIP flotante + balanceo de carga)
-- Capa de persistencia segura (MariaDB) con automatización multi-OS e idempotencia
-- Capa de aplicación (Python/Flask/Gunicorn) conectada a la base de datos
-- Gestión de secretos con Ansible Vault
-- Troubleshooting real, documentado como incidentes
-
-La infraestructura se construye con **Ansible e idempotencia** como principios fundamentales, sobre un laboratorio **híbrido**: VMs KVM/libvirt para los nodos de aplicación/storage, y contenedores LXD para los nodos de borde (load balancers, base de datos).
-
-> Nota: El diseño original contemplaba 5 VMs homogéneas en AlmaLinux. Durante la implementación se migró a una topología híbrida (VMs + LXC) para optimizar recursos de laboratorio, lo que introdujo el desafío real de mantener roles de Ansible compatibles con dos familias de SO (RedHat/Debian) — documentado en la sección 8.
+Guía de referencia del laboratorio de alta disponibilidad sobre Proxmox VE,
+gestionado con OpenTofu (IaC) y Ansible (configuración).
 
 ---
 
-## 2. Objetivo
+## 1. Instalación base de Proxmox
 
-Desplegar un stack web en alta disponibilidad con capa de persistencia relacional y capa de aplicación, con failover validado extremo a extremo (VIP → balanceador → backend de aplicación → base de datos), y documentar cada incidente de implementación real encontrado en el camino como parte del portfolio de troubleshooting.
+### 1.1 Instalación del hipervisor
 
----
+Proxmox VE se instaló sobre hardware dedicado (nodo `homelab`), usando el
+instalador oficial de Proxmox VE 7.x (Debian based). Configuración de red
+inicial durante la instalación:
 
-## 3. Infraestructura actual
+| Parámetro | Valor |
+| :--- | :--- |
+| IP de gestión (vmbr0) | `192.168.18.100/24` |
+| Gateway | El de la red LAN (`192.168.18.1`) |
+| Hostname del nodo | `homelab` |
 
-| Host | Plataforma | SO | Rol |
-|---|---|---|---|
-| `lb01` | LXD (contenedor) | Ubuntu 24.04 | Load Balancer — Keepalived + HAProxy (MASTER) |
-| `lb02` | LXD (contenedor) | Ubuntu 24.04 | Load Balancer — Keepalived + HAProxy (BACKUP) |
-| `server01` | KVM (VM) | AlmaLinux 9 | Backend de aplicación — Nginx + Flask/Gunicorn |
-| `server02` | KVM (VM) | AlmaLinux 9 | Backend de aplicación — Nginx + Flask/Gunicorn |
-| `server03` | KVM (VM) | AlmaLinux 9 | Backend de aplicación — Nginx + Flask/Gunicorn |
-| `storage01` | KVM (VM) | AlmaLinux 9 | Reservado — sin rol asignado todavía (solo baseline) |
-| `db01` | LXD (contenedor) | Ubuntu 24.04 | Base de Datos Relacional — MariaDB (seeding aplicado) |
+Acceso a la interfaz web: `https://192.168.18.100:8006/`
 
-Todos los nodos comparten la red `lxdbr0` (`10.45.223.0/24`).
+### 1.2 Red NAT del laboratorio (vmbr1)
 
----
+Para aislar las VMs/LXC del laboratorio de la red LAN doméstica, se creó un
+segundo bridge dedicado con NAT, en vez de conectar todo directamente a
+`vmbr0`. Esto simula una red interna de datacenter separada de la red de
+administración.
 
-## 4. Arquitectura actual
+**Pasos realizados en Proxmox (`Datacenter → homelab → Network`):**
 
-```text
-                         ACME USERS
-                              |
-                              v
-                    +-------------------+
-                    |  VIP 10.45.223.250 |
-                    |  Keepalived (VRRP) |
-                    +----+-----------+---+
-                         |           |
-                      lb01 (M)   lb02 (B)
-                    HAProxy     HAProxy
-                    (roundrobin)
-                         |
-             +-----------+-----------+
-             |           |           |
-             v           v           v
-        +---------+ +---------+ +---------+
-        |server01 | |server02 | |server03 |
-        |  Nginx  | |  Nginx  | |  Nginx  |
-        | (proxy) | | (proxy) | | (proxy) |
-        | Flask/  | | Flask/  | | Flask/  |
-        | Gunicorn| | Gunicorn| | Gunicorn|
-        +----+----+ +----+----+ +----+----+
-             |           |           |
-             +-----------+-----------+
-                         |
-                         v (TCP 3306)
-                    +---------+
-                    |  db01   |
-                    | MariaDB |
-                    | acme_db |
-                    +---------+
+1. Crear un nuevo **Linux Bridge**: `vmbr1`
+2. Sin puerto físico asignado (`Bridge ports` vacío) — bridge interno, no
+   conectado a la NIC física.
+3. IP del bridge: `10.10.10.1/24` (actúa como gateway de la red de
+   laboratorio).
+4. Habilitar NAT/masquerade para que las VMs salgan a internet a través del
+   nodo Proxmox:
 
-        storage01  →  sin rol asignado (baseline únicamente)
-```
-
-> **Estado de integración (Fase 06 — cerrada):** flujo completo validado
-> extremo a extremo: `VIP (Keepalived) → HAProxy → Nginx (proxy_pass) →
-> Gunicorn → Flask → PyMySQL → MariaDB`. Rotación roundrobin confirmada
-> entre los 3 backends con datos reales de `acme_db.customers`.
-
----
-
-## 5. Tecnologías utilizadas hasta ahora
-
-### Automatización
-
-* Ansible (roles, handlers, templates Jinja2, `group_vars`, tags)
-* Ansible Vault (gestión de secretos — passwords de MariaDB y app fuera de texto plano)
-* Colección `community.mysql` (gestión idempotente de usuarios y bases de datos —
-  deprecada, ver incidente #8)
-* Inventario estático (`inventories/production/hosts.yml`)
-
-### Sistemas operativos
-
-* AlmaLinux 9 (VMs KVM/libvirt) — familia RedHat, `dnf`
-* Ubuntu 24.04 (contenedores LXD) — familia Debian, `apt`
-
-### Alta disponibilidad
-
-* Keepalived (VRRP, VIP flotante, failover MASTER/BACKUP)
-* HAProxy (balanceo `roundrobin`, `stats` en puerto 9000)
-
-### Capa de Aplicación y Persistencia
-
-* Nginx (backend de aplicación en 3 nodos)
-* MariaDB 10.5+ (motor de base de datos relacional)
-* Python3 + venv + Flask + Gunicorn (runtime de aplicación, gestionado por systemd)
-* PyMySQL (driver de conexión Python → MariaDB)
-
----
-
-## 6. Estructura actual del proyecto
-
-```text
-SYSTECH-HA-001/
-├── README.md
-├── site.yml
-├── ansible.cfg
-├── requirements.yml
-│
-├── inventories/
-│   └── production/
-│       ├── hosts.yml
-│       ├── group_vars/
-│       │   ├── all/
-│       │   │   └── vault.yml       # secretos, encriptado con ansible-vault
-│       │   └── lb_nodes.yml        # keepalived_vip (compartida entre roles)
-│       └── host_vars/
-│           ├── lb01.yml
-│           └── lb02.yml
-│
-├── roles/
-│   ├── linux_baseline/
-│   ├── keepalived/
-│   ├── haproxy/
-│   ├── nginx/
-│   ├── database/
-│   ├── db_seed/         # Fase 06a — schema + datos de prueba + app_user
-│   └── app/              # Fase 06b — Flask + Gunicorn + systemd
-│
-└── scripts/
-    ├── deploy-lab_Hybrid.sh      # provisión VMs + LXC, genera hosts.yml
-    └── destroy-lab.sh            # limpieza dinámica de todo lo desplegado
-```
-
----
-
-## 7. Fases completadas y validadas
-
-| Fase | Comando | Hosts | Estado |
-| --- | --- | --- | --- |
-| 01 — Linux Baseline | `ansible-playbook site.yml --tags baseline` | `ha_nodes:storage_nodes` | ✅ Validado |
-| 02 — Keepalived (VIP) | `ansible-playbook site.yml --tags keepalived` | `lb_nodes` | ✅ Validado, con test de failover real |
-| 03 — HAProxy (LB) | `ansible-playbook site.yml --tags haproxy` | `lb_nodes` | ✅ Validado |
-| 04 — Nginx (backend) | `ansible-playbook site.yml --tags nginx` | `ha_nodes` | ✅ Validado |
-| 05 — MariaDB (Database) | `ansible-playbook site.yml --tags database` | `database_nodes` | ✅ Validado |
-| 06a — DB Seeding | `ansible-playbook site.yml --tags db_seed` | `database_nodes` | ✅ Validado |
-| 06b — App Layer (Flask/Gunicorn + Nginx proxy) | `ansible-playbook site.yml --tags app,nginx` | `ha_nodes` | ✅ Validado end-to-end vía VIP |
-
-### Validación end-to-end realizada
-
-1. **Balanceo Web (Fase 02-04):**
 ```bash
-curl http://10.45.223.250
-```
-Respuesta `200 OK`, rotación confirmada entre `server01`/`server02`/`server03` (balanceo `roundrobin` funcionando).
+# En el nodo Proxmox (vía shell), habilitar IP forwarding
+echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
+sysctl -p
 
-2. **Acceso Remoto a Base de Datos (Fase 05):**
+# Reglas NAT (agregar a /etc/network/interfaces, dentro del bloque vmbr1)
+post-up   iptables -t nat -A POSTROUTING -s '10.10.10.0/24' -o vmbr0 -j MASQUERADE
+post-down iptables -t nat -D POSTROUTING -s '10.10.10.0/24' -o vmbr0 -j MASQUERADE
+```
+
+5. Reiniciar el servicio de red o el nodo para aplicar.
+
+Resultado: `10.10.10.0/24` es una red privada donde viven las VMs y LXC del
+laboratorio, con salida a internet vía NAT, pero **no accesible directamente**
+desde la LAN salvo que el host tenga una ruta estática agregada (ver más
+abajo).
+
+### 1.3 Ruta estática en el host de administración (MXLinux)
+
+Para que la máquina de trabajo (`jensyg@mx`, `192.168.18.8`) pueda llegar a
+la red `10.10.10.0/24` sin pasar por NAT (acceso directo, no solo salida a
+internet):
+
 ```bash
-DB_IP=$(ansible-inventory --host db01 | grep -oP '(?<="ansible_host": ")[^"]+')
-ansible server01 -m shell -a "mysql -u acme_user -pPassword123 -h $DB_IP -e 'SHOW DATABASES;'"
+sudo nmcli connection modify "Wired connection 1" \
+  +ipv4.routes "10.10.10.0/24 192.168.18.100"
+sudo nmcli connection up "Wired connection 1"
 ```
-Respuesta exitosa devolviendo `acme_db` e `information_schema` directamente desde `server01` hacia `db01`.
 
-3. **Capa de Aplicación + Balanceo End-to-End (Fase 06):**
+Esto le dice al host: "para llegar a `10.10.10.0/24`, el siguiente salto es
+Proxmox (`192.168.18.100`)", que actúa como router entre ambas redes.
+
+### 1.4 Storage
+
+En `Datacenter → Storage → local`, se habilitó el content type **Snippets**
+(`Edit → Content → ✅ Snippets`), requisito para que OpenTofu pueda subir los
+archivos de cloud-init.
+
+---
+
+## 2. Terraform / OpenTofu — Gestión de VMs y LXC
+
+Todo el aprovisionamiento vive en `terraform/`. La filosofía del proyecto es:
+**nunca edites el bloque `resource`, solo edita el mapa de variables**. Cada
+entrada del mapa es una VM o un LXC independiente en el state — agregar,
+quitar o renombrar es una operación aislada y segura.
+
+### 2.1 Estructura
+
+```
+terraform/
+├── providers.tf     # Provider bpg/proxmox
+├── variables.tf      # Mapas cluster_nodes (VMs) y lxc_containers (LXC)
+├── main.tf            # Recursos de las VMs (AlmaLinux)
+├── lxc.tf              # Recursos de los LXC (Ubuntu) + creación de usuario ansible
+└── outputs.tf         # IPs resultantes
+```
+
+### 2.2 Agregar, quitar o renombrar una VM
+
+Editar el mapa `cluster_nodes` en `terraform/variables.tf`:
+
+```hcl
+variable "cluster_nodes" {
+  type = map(object({
+    vmid   = number
+    ip     = string
+    cores  = number
+    memory = number
+  }))
+  default = {
+    "server01" = { vmid = 201, ip = "10.10.10.21/24", cores = 1, memory = 1536 }
+    "server02" = { vmid = 202, ip = "10.10.10.22/24", cores = 1, memory = 1536 }
+    "server03" = { vmid = 203, ip = "10.10.10.23/24", cores = 1, memory = 1536 }
+  }
+}
+```
+
+- **Agregar** una VM nueva → agrega una línea al mapa con un `vmid` e `ip`
+  que no estén en uso.
+- **Quitar** una VM → borra su línea. Tofu la destruye en el próximo apply,
+  sin tocar las demás.
+- **Renombrar** una VM → la *key* del mapa (`"server01"`) es el nombre. Si la
+  cambias, Tofu la trata como una VM nueva (destruye la vieja, crea la
+  nueva) porque el nombre está atado al hostname vía cloud-init.
+
+El hostname y hardware siempre son 100% consistentes con lo que pongas en el
+mapa, gracias a los dos snippets de cloud-init generados automáticamente por
+`main.tf` (`cloud_user_config` para usuarios/paquetes, `cloud_meta_config`
+para forzar el `local-hostname` correcto — ver sección de troubleshooting
+más abajo sobre por qué esto es necesario).
+
+### 2.3 Agregar, quitar o renombrar un LXC
+
+Mismo patrón, en el mapa `lxc_containers`:
+
+```hcl
+variable "lxc_containers" {
+  type = map(object({
+    vmid      = number
+    ip        = string
+    cores     = number
+    memory    = number
+    disk_size = number
+  }))
+  default = {
+    "lxc01" = { vmid = 301, ip = "10.10.10.31/24", cores = 1, memory = 512, disk_size = 8 }
+    "lxc02" = { vmid = 302, ip = "10.10.10.32/24", cores = 1, memory = 512, disk_size = 8 }
+  }
+}
+```
+
+**Ejemplo — agregar un LXC llamado `zabbix`:**
+
+```hcl
+"zabbix" = { vmid = 303, ip = "10.10.10.33/24", cores = 2, memory = 1024, disk_size = 12 }
+```
+
+Solo agrega esa línea, corre `tofu plan -out=tfplan && tofu apply "tfplan"`,
+y el contenedor se crea con hostname `zabbix`, IP `10.10.10.33`, y el
+usuario `ansible` ya provisionado con sudo NOPASSWD (vía el `null_resource`
+en `lxc.tf`) — listo para que Ansible lo tome sin configuración manual.
+
+**Reglas para no chocar recursos:**
+
+| Recurso | Rango sugerido |
+| :--- | :--- |
+| VMs (`cluster_nodes`) | vmid 201-299, IP `10.10.10.2x` |
+| LXC (`lxc_containers`) | vmid 301-399, IP `10.10.10.3x` |
+
+### 2.4 Comandos del día a día
+
 ```bash
-for i in $(seq 1 9); do ansible lb01 -m command -a "curl -s http://10.45.223.250/" | grep served_by; done
+tofu plan -out=tfplan        # Siempre revisar el plan antes de aplicar
+tofu apply "tfplan"          # Aplicar el plan guardado
+tofu output                  # Ver las IPs actuales de VMs y LXC
+tofu destroy -auto-approve   # Destruir todo el laboratorio
 ```
-Rotación roundrobin confirmada entre `server01`/`server02`/`server03`, cada respuesta con datos reales consultados en vivo desde `acme_db.customers`. Cadena completa validada: VIP → HAProxy → Nginx (proxy_pass) → Gunicorn → Flask → PyMySQL → MariaDB.
 
-### Test de failover realizado
+### 2.5 Notas importantes
 
-Se detuvo `keepalived` en `lb01` (MASTER) con tráfico HTTP activo contra la VIP:
-
-* La VIP migró a `lb02` (BACKUP) correctamente.
-* El servicio HTTP no tuvo interrupciones observables durante la transición (0 requests fallidos en el loop de validación).
-* Al restaurar `lb01`, recuperó el rol MASTER por preemption (mayor `priority`).
+- **VMs (AlmaLinux):** el usuario `ansible` se crea vía cloud-init
+  (`main.tf`, snippet `cloud_user_config`) en el primer boot.
+- **LXC (Ubuntu):** el template LXC no soporta creación de usuarios vía
+  cloud-init de la misma forma que las VMs. Por eso `lxc.tf` incluye un
+  `null_resource` que se conecta como `root` (único usuario que trae el
+  template) inmediatamente después de crear el contenedor, y crea el
+  usuario `ansible` con la misma llave SSH y sudo NOPASSWD. Este paso se
+  re-ejecuta automáticamente si el LXC se recrea (ver `triggers` en el
+  recurso).
+- **Hostname de VMs en `localhost`:** si alguna vez ves este bug de nuevo,
+  la causa es que Proxmox autogenera un meta-data propio con
+  `local-hostname: localhost` que pisa el `hostname:` del user-data. La
+  solución ya está aplicada en `main.tf` vía el recurso
+  `cloud_meta_config`, que fuerza un `local-hostname` explícito por VM.
 
 ---
 
-## 8. Incidentes reales encontrados durante la implementación
+## 3. Pendiente — Ansible: primer despliegue del rol `linux_baseline`
 
-Cada uno de estos fue un problema real de esta fase de construcción, no un ejercicio simulado — quedan documentados porque son la base del futuro catálogo de incidentes formal.
+Con la infraestructura (VMs + LXC) ya desplegada y accesible por SSH como
+usuario `ansible`, el siguiente paso es correr la primera configuración base
+sobre todos los nodos.
 
-1. **Detección de IP de contenedores LXC fallaba silenciosamente** — el parsing de `lxc info` buscaba un patrón de texto que no coincidía con el formato real de salida. Resuelto migrando a `lxc list --format csv`.
+### 3.1 Qué falta antes de ejecutar
 
-2. **`linux_baseline` y `haproxy`/`keepalived` fallaban en los LXC** — los roles usaban `ansible.builtin.dnf` exclusivamente, incompatible con Ubuntu. Resuelto con tareas condicionadas por `ansible_facts['os_family']`.
+- [ ] Actualizar `inventories/production/hosts.yml` con las IPs reales de
+      `tofu output` (server01-03, lxc01-02, y cualquier LXC nuevo como
+      `zabbix`).
+- [ ] Revisar `inventories/production/group_vars/all/vault.yml` — confirmar
+      que los secretos estén cifrados con `ansible-vault` antes de commitear.
+- [ ] Confirmar conectividad SSH de Ansible hacia todos los nodos:
+      ```bash
+      ansible all -i inventories/production/hosts.yml -m ping
+      ```
 
-3. **Error de sintaxis YAML** — comilla de cierre partida en dos líneas al editar `when:` a mano.
+### 3.2 Ejecutar solo el rol `linux_baseline`
 
-4. **`validate` de un fragmento de configuración de Nginx** — el módulo `template` requiere `%s` en `validate`, y no se puede validar un fragmento de config aislado (`conf.d/*.conf`) con `nginx -t`. Resuelto validando la configuración completa ya ensamblada, en una tarea separada.
+En vez de correr `site.yml` completo (que incluye haproxy, keepalived, app,
+database, nginx), limitar el primer despliegue solo al baseline:
 
-5. **VIP en subred incorrecta** — `keepalived_vip` apuntaba a `192.168.122.0/24` (red `default` de libvirt), pero los nodos reales están en `10.45.223.0/24` (`lxdbr0`). La VIP quedaba asignada pero inalcanzable.
+```bash
+ansible-playbook site.yml \
+  -i inventories/production/hosts.yml \
+  --tags linux_baseline \
+  --limit all
+```
 
-6. **Variables de un rol no visibles en otro rol/play** — `keepalived_vip` definida en `roles/keepalived/defaults/main.yml` no estaba disponible durante la play de `haproxy` (plays distintas = scope distinto). Resuelto centralizando la variable en `inventories/production/group_vars/lb_nodes.yml`, que persiste durante todo el playbook run. El mismo patrón de error reapareció en la Fase 06 (ver incidente #9) — confirma que es un error recurrente de diseño, no un caso aislado.
+O bien, si `site.yml` no tiene tags definidos por rol todavía, crear un
+playbook mínimo temporal (`baseline-only.yml`):
 
-7. **Fallo de autenticación inicial de MariaDB en Ubuntu/LXC** — MariaDB utiliza el plugin `unix_socket` por defecto para `root` en la familia Debian, rechazando conexiones por clave TCP local (`Access denied for user 'root'@'localhost'`). Resuelto pasando `login_unix_socket` en la tarea inicial y generando `/root/.my.cnf` con permisos `0600` para garantizar idempotencia total en futuras ejecuciones.
+```yaml
+- hosts: all
+  become: true
+  roles:
+    - linux_baseline
+```
 
-8. **Depreciación del namespace de la colección MySQL** — `community.mysql.mysql_db` y `mysql_user` generan advertencias de deprecation (soporte de MariaDB se retira en la versión 6.0.0). Pendiente migrar a `community.mariadb` en una fase futura.
+```bash
+ansible-playbook baseline-only.yml -i inventories/production/hosts.yml
+```
 
-9. **Credenciales en texto plano en `defaults/main.yml`** — passwords de MariaDB y del usuario de aplicación estaban hardcodeadas (`Password123`) en archivos versionados. Resuelto migrando todos los secretos a `inventories/production/group_vars/all/vault.yml`, encriptado con `ansible-vault`. Se estableció la convención: las tasks de cada rol referencian variables `vault_*` directamente y nunca dependen de `defaults` de otro rol (mismo error de scope que el incidente #6, reaparecido en un contexto distinto).
+### 3.3 Verificación post-despliegue
 
-10. **Variable auto-referenciada (bucle de recursión infinita)** — `app_db_user: "{{ app_db_user }}"` en `roles/app/defaults/main.yml` causó `Recursive loop detected in template: maximum recursion depth exceeded`. Ocurrió al intentar "heredar" el valor desde otro rol usando el mismo nombre de variable. Resuelto asignando el valor literal directamente.
+```bash
+ansible all -i inventories/production/hosts.yml -m setup -a "filter=ansible_hostname"
+```
 
-11. **Typos en unit file de systemd rompieron la carga de variables de entorno** — `EnviromentFile` (faltaba la `n`) en `gunicorn.service.j2` no fue reconocido por systemd (`Unknown key name, ignoring`), por lo que Gunicorn arrancó sin `DB_HOST`/`DB_USER`/`DB_PASS`, y la app fallaba con `Can't connect to MySQL server on 'localhost'`. Buen recordatorio de que systemd ignora silenciosamente directivas desconocidas en vez de fallar — el error solo aparece en `journalctl`, no en el output de Ansible.
+Confirma que cada nodo reporte su hostname correcto (server01, server02,
+server03, lxc01, lxc02, y cualquiera agregado después) — esto también sirve
+como prueba final de que el fix del hostname en las VMs quedó bien aplicado
+de forma persistente.
 
-12. **SELinux bloqueaba la conexión de Nginx hacia Gunicorn (502 Bad Gateway)** — en AlmaLinux, el booleano `httpd_can_network_connect` viene desactivado por defecto, impidiendo que Nginx abra conexiones salientes incluso hacia `127.0.0.1`. El error solo aparece en `/var/log/nginx/error.log` (`connect() failed (13: Permission denied)`), no en el output del módulo `template`/`copy` de Ansible. Resuelto con el módulo `ansible.posix.seboolean` (`httpd_can_network_connect: true`, `persistent: true`), condicionado a `os_family == RedHat`.
+### 3.4 Siguientes roles (después de validar baseline)
+
+Una vez que `linux_baseline` corra limpio en todos los nodos, continuar en
+este orden con el resto de `site.yml`:
+
+1. `haproxy` — load balancer
+2. `keepalived` — failover VIP
+3. `database` — MariaDB
+4. `db_seed` — seed inicial de datos
+5. `app` — aplicación Flask/Gunicorn
+6. `nginx` — reverse proxy
 
 ---
 
-## 9. Próximo paso
-
-* **Rol de storage en `storage01`** (actualmente solo tiene el baseline aplicado, sin ningún servicio de almacenamiento en red como NFS o iSCSI).
-* **Monitoring + alerting** (fase futura): LXC dedicada con Prometheus/Alertmanager o Zabbix, plantillas Jinja2 para el formato de alertas, y un endpoint receptor de "tickets".
-* **Migrar `community.mysql` → `community.mariadb`** antes de la deprecation formal en la versión 6.0.0.
-* **Client01** (LXC de demostración) ejecutando `curl` en bucle contra la VIP, como capa de observabilidad separada del flujo de validación técnica.
-
----
-
-## Project ID
-
-```text
-SYSTECH-HA-001
-```
-
-## Client
-
-```text
-ACME Corporation
-```
+*Última actualización: infraestructura de VMs y LXC funcional, hostname de
+VMs corregido, usuario `ansible` provisionado en ambos tipos de recurso.
+Pendiente: primer `ansible-playbook` run.*
