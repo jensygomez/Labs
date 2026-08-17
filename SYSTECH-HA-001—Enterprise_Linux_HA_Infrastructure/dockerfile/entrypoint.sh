@@ -1,0 +1,61 @@
+#!/bin/bash
+set -e
+
+SECRETS_FILE="/workspace/secrets/systech-secrets.yml"
+
+if [ -f "$SECRETS_FILE" ]; then
+    echo "🔓 Desencriptando Ansible Vault..."
+    # ansible-vault view pedirá la contraseña interactivamente gracias a 'podman run -it'
+    if ! ansible-vault view "$SECRETS_FILE" > /tmp/.secrets_decrypted.yml; then
+        echo "❌ Error al desencriptar el Vault. Contraseña incorrecta o archivo dañado."
+        exit 1
+    fi
+    
+    # Parsear YAML y configurar entorno
+    python3 << 'EOF'
+import yaml
+import os
+import stat
+
+with open("/tmp/.secrets_decrypted.yml") as f:
+    data = yaml.safe_load(f)
+
+ssh_dir = os.path.expanduser("~/.ssh")
+os.makedirs(ssh_dir, exist_ok=True)
+
+# Configurar clave privada
+key_path = os.path.join(ssh_dir, "id_systech_control")
+with open(key_path, "w") as k:
+    k.write(data["ssh_private_key"])
+os.chmod(key_path, stat.S_IREAD | stat.S_IWRITE) # 0600
+
+# Configurar SSH config
+config_path = os.path.join(ssh_dir, "config")
+with open(config_path, "w") as c:
+    c.write("Host *\n")
+    c.write("  IdentityFile ~/.ssh/id_systech_control\n")
+    c.write("  IdentitiesOnly yes\n")
+    c.write("  StrictHostKeyChecking accept-new\n")
+    c.write("  UserKnownHostsFile /dev/null\n")
+os.chmod(config_path, stat.S_IREAD | stat.S_IWRITE)
+
+# Preparar variables de entorno para OpenTofu/Ansible
+env_file = "/tmp/.systech_env"
+with open(env_file, "w") as e:
+    e.write(f'export TF_VAR_proxmox_api_token="{data["proxmox_api_token"]}"\n')
+    if "ssh_public_key" in data:
+        e.write(f'export TF_VAR_ssh_public_key="{data["ssh_public_key"]}"\n')
+EOF
+
+    # Inyectar variables en la sesión actual
+    source /tmp/.systech_env
+    
+    # Limpieza segura de archivos temporales en /tmp
+    rm -f /tmp/.secrets_decrypted.yml /tmp/.systech_env
+    echo "✅ Secretos cargados y SSH configurado."
+else
+    echo "⚠️  No se encontró $SECRETS_FILE. Saltando inyección de secretos."
+fi
+
+# Ejecutar el comando pasado (ej. /bin/bash)
+exec "$@"

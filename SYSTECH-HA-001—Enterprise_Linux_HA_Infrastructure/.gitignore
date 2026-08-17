@@ -1,1 +1,9 @@
 .vault_pass.txt
+
+# Secretos temporales y llaves
+*.plaintext
+*.decrypted
+*.tmp
+*.key
+.ssh_tmp/
+secrets/*.plaintext
