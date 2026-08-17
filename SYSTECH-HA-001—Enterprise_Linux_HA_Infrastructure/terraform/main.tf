@@ -9,7 +9,7 @@ resource "proxmox_download_file" "almalinux_cloud_image" {
 
 # Snippet de Cloud-Init (uno por VM, con hostname correcto)
 resource "proxmox_virtual_environment_file" "cloud_user_config" {
-  for_each    = var.cluster_nodes
+  for_each     = var.cluster_nodes
   content_type = "snippets"
   datastore_id = "local"
   node_name    = var.target_node
@@ -38,9 +38,28 @@ resource "proxmox_virtual_environment_file" "cloud_user_config" {
   }
 }
 
+# Snippet de Meta-Data (uno por VM) — FIX del bug "hostname: localhost"
+# El provider bpg/proxmox autogenera un meta-data con local-hostname fijo
+# en "localhost", el cual cloud-init prioriza sobre el hostname del
+# user-data. Al pasar nuestro propio meta-data, evitamos ese conflicto.
+resource "proxmox_virtual_environment_file" "cloud_meta_config" {
+  for_each     = var.cluster_nodes
+  content_type = "snippets"
+  datastore_id = "local"
+  node_name    = var.target_node
+
+  source_raw {
+    data = <<-EOF
+    instance-id: ${each.key}
+    local-hostname: ${each.key}
+    EOF
+    file_name = "cloud-meta-config-${each.key}.yml"
+  }
+}
+
 # Recurso para crear el Cluster de 3 VMs AlmaLinux
 resource "proxmox_virtual_environment_vm" "almalinux_cluster" {
-  for_each  = var.cluster_nodes
+  for_each = var.cluster_nodes
 
   name      = each.key
   node_name = var.target_node
@@ -82,5 +101,7 @@ resource "proxmox_virtual_environment_vm" "almalinux_cluster" {
       }
     }
     user_data_file_id = proxmox_virtual_environment_file.cloud_user_config[each.key].id
+    meta_data_file_id = proxmox_virtual_environment_file.cloud_meta_config[each.key].id
   }
 }
+

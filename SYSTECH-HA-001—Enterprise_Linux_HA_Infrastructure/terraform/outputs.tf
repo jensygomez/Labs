@@ -11,3 +11,11 @@ output "cluster_ip_addresses" {
       )
   }
 }
+
+output "lxc_ip_addresses" {
+  description = "Direcciones IP asignadas a cada contenedor LXC"
+  value = {
+    for k, v in proxmox_virtual_environment_container.lxc_cluster :
+      k => split("/", v.initialization[0].ip_config[0].ipv4[0].address)[0]
+  }
+}
