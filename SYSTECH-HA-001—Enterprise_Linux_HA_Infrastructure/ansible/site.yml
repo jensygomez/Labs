@@ -30,6 +30,19 @@
     - role: linux_baseline
       tags: baseline
 
+
+# ------------------------------------------------------------------------------
+# FASE 02: CONFIGURACIONES DEL ZABBBIX SERVER
+# MONITOREO: ZABBIX SERVER (LXC Container 10.10.10.40)
+# ------------------------------------------------------------------------------
+- name: "Phase Zabbix - Deploy Zabbix Monitoring Server"
+  hosts: monitoring_nodes
+  become: true
+  gather_facts: true
+  roles:
+    - role: zabbix_server
+      tags: zabbix_server
+
 # ------------------------------------------------------------------------------
 # FASE 02: ALTA DISPONIBILIDAD - RED / VIP (KEEPALIVED)
 # Comando individual: ansible-playbook site.yml --tags keepalived --ask-vault-pass

@@ -1,0 +1,164 @@
+---
+# ansible/roles/zabbix_server/tasks/main.yml
+
+- name: "010 | ZABBIX SERVER | Install prerequisites, PostgreSQL, PHP-PgSQL and locales"
+  apt:
+    name:
+      - wget
+      - curl
+      - gnupg
+      - acl
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+      - php8.3-pgsql
+      - locales
+    state: present
+    update_cache: yes
+  notify: restart php-fpm
+
+- name: "020 | ZABBIX SERVER | Ensure en_US.UTF-8 locale is generated"
+  locale_gen:
+    name: en_US.UTF-8
+    state: present
+
+- name: "025 | ZABBIX SERVER | Configure system default locale to en_US.UTF-8"
+  lineinfile:
+    path: /etc/default/locale
+    regexp: '^LANG='
+    line: 'LANG=en_US.UTF-8'
+    create: yes
+  notify: restart php-fpm
+
+- name: "030 | ZABBIX SERVER | Download Zabbix repository package"
+  get_url:
+    url: "https://repo.zabbix.com/zabbix/{{ zabbix_version }}/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_7.0+ubuntu24.04_all.deb"
+    dest: "/tmp/zabbix-release.deb"
+    mode: '0644'
+
+- name: "040 | ZABBIX SERVER | Install Zabbix repository"
+  apt:
+    deb: "/tmp/zabbix-release.deb"
+
+- name: "050 | ZABBIX SERVER | Update apt cache after adding Zabbix repo"
+  apt:
+    update_cache: yes
+
+- name: "060 | ZABBIX SERVER | Install Zabbix Server, Frontend, Nginx and Agent"
+  apt:
+    name:
+      - zabbix-server-pgsql
+      - zabbix-frontend-php
+      - zabbix-nginx-conf
+      - zabbix-sql-scripts
+      - zabbix-agent2
+    state: present
+
+- name: "070 | ZABBIX SERVER | Start and enable PostgreSQL"
+  systemd:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: "080 | ZABBIX SERVER | Create PostgreSQL database user"
+  become: true
+  become_user: postgres
+  postgresql_user:
+    name: "{{ zabbix_db_user }}"
+    password: "{{ zabbix_db_pass }}"
+    role_attr_flags: SUPERUSER
+
+- name: "090 | ZABBIX SERVER | Create PostgreSQL database with UTF8 encoding"
+  become: true
+  become_user: postgres
+  postgresql_db:
+    name: "{{ zabbix_db_name }}"
+    owner: "{{ zabbix_db_user }}"
+    encoding: UTF8
+    lc_collate: en_US.UTF-8
+    lc_ctype: en_US.UTF-8
+    template: template0  # ← CLAVE: esto asegura UTF8 desde el inicio
+
+- name: "100 | ZABBIX SERVER | Check if Zabbix schema is imported"
+  command: psql -U {{ zabbix_db_user }} -d {{ zabbix_db_name }} -c "SELECT 1 FROM users LIMIT 1;"
+  environment:
+    PGPASSWORD: "{{ zabbix_db_pass }}"
+  register: zabbix_db_check
+  failed_when: false
+  changed_when: false
+
+- name: "110 | ZABBIX SERVER | Import Zabbix initial schema into PostgreSQL"
+  shell: "zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | PGPASSWORD='{{ zabbix_db_pass }}' psql -U {{ zabbix_db_user }} -d {{ zabbix_db_name }} -h localhost"
+  when: zabbix_db_check.rc != 0
+
+- name: "120 | ZABBIX SERVER | Configure DBPassword in zabbix_server.conf"
+  lineinfile:
+    path: /etc/zabbix/zabbix_server.conf
+    regexp: '^#? ?DBPassword='
+    line: "DBPassword={{ zabbix_db_pass }}"
+  notify: restart zabbix-server
+
+- name: "130 | ZABBIX SERVER | Tune PHP-FPM settings for Zabbix Frontend"
+  ini_file:
+    path: /etc/php/8.3/fpm/php.ini
+    section: PHP
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+  loop:
+    - { option: 'post_max_size', value: '16M' }
+    - { option: 'max_execution_time', value: '300' }
+    - { option: 'max_input_time', value: '300' }
+  notify: restart php-fpm
+
+- name: "140 | ZABBIX SERVER | Deploy Frontend zabbix.conf.php"
+  template:
+    src: zabbix.conf.php.j2
+    dest: /etc/zabbix/web/zabbix.conf.php
+    owner: www-data
+    group: www-data
+    mode: '0600'
+  notify: restart php-fpm
+
+- name: "150 | ZABBIX SERVER | Deploy Nginx configuration for Zabbix"
+  template:
+    src: nginx.conf.j2
+    dest: /etc/zabbix/nginx.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart nginx
+
+- name: "160 | ZABBIX SERVER | Link Zabbix Nginx config to conf.d"
+  file:
+    src: /etc/zabbix/nginx.conf
+    dest: /etc/nginx/conf.d/zabbix.conf
+    state: link
+    force: yes
+  notify: restart nginx
+
+- name: "170 | ZABBIX SERVER | Remove default Nginx site configuration"
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: restart nginx
+
+- name: "175 | ZABBIX SERVER | Allow HTTP and Zabbix ports through UFW"
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop:
+    - '80'
+    - '10051'
+  when: ansible_facts.services['ufw.service'] is defined
+
+- name: "180 | ZABBIX SERVER | Ensure Zabbix Server, Nginx, and PHP-FPM are started and enabled"
+  systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop:
+    - zabbix-server
+    - zabbix-agent2
+    - nginx
+    - php8.3-fpm
