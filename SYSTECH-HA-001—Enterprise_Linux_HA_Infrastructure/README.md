@@ -58,6 +58,7 @@ herramientas ni guardar secretos en el host.
 - Todo el ciclo (`control.sh` → `entrypoint.sh` → `tofu apply`) reproducible
   en una laptop nueva siguiendo el checklist de este documento.
 - Servidor de Monitoreo Zabbix Server 7.0 LTS (zabbix - 10.10.10.40) provisionado y funcional con Nginx, PHP 8.3-FPM y PostgreSQL 16 (UTF-8).
+- Monitoreo Activo configurado mediante Zabbix Agent 2 (`zabbix-agent2`) en los nodos AlmaLinux (`server01`, `server02`, `server03`) integrado mediante regla de Autoregistration nativa.
 
 ---
 
@@ -407,12 +408,16 @@ SYSTECH-HA-001—Enterprise_Linux_HA_Infrastructure/
   - Automatizado vía Ansible (`roles/zabbix_server`).
   - Stack: **PostgreSQL 16 (UTF-8 via template0)** + **Nginx** + **PHP 8.3-FPM** en Ubuntu 24.04.
   - Generación de locales `en_US.UTF-8` e integración de esquemas e interfaz web.
+- [x] **Fase 03: Zabbix Agent 2 & Auto-registration:**
+  - Despliegue automatizado de `zabbix-agent2` vía Ansible (`roles/zabbix_agent`) en los nodos AlmaLinux.
+  - Integración nativa sin fricción vía *Autoregistration Action* en la GUI de Zabbix vinculando automáticamente la plantilla `Linux by Zabbix agent active`.
+  
 
 ### 📋 Próxima Tarea
 
-- [ ] **Despliegue e integración de Zabbix Agent 2 (`roles/zabbix_agent`):**
-  - Crear e implementar el rol de Ansible para instalar `zabbix-agent2` en `server01`, `server02`, `server03`, `lxc01` y `lxc02`.
-  - Configurar los agentes para comunicar métricas activas/pasivas hacia el servidor Zabbix (`10.10.10.40`).
+- [ ] **Fase 04: Despliegue de Alta Disponibilidad con Keepalived (`roles/keepalived`):**
+  - Configurar VRRP entre los nodos para gestionar la IP Virtual (VIP) `10.10.10.100` (o la IP asignada en las variables del proyecto).
+  - Validar prioridades MASTER / BACKUP y el failover en caliente al simular caída de interfaz/nodo.
 - [ ] Ejecutar `ansible-playbook site.yml` (roles pendientes: haproxy, keepalived, app, database, db_seed, nginx).
 - [ ] Definir estrategia para `terraform.tfstate` (actualmente local; no viaja con el repo entre laptops).
 - [ ] Eliminar el token huérfano `token-proxmox` en Proxmox.
