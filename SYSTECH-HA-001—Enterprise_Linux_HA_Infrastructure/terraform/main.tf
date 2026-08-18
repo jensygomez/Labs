@@ -106,7 +106,7 @@ resource "proxmox_virtual_environment_vm" "almalinux_cluster" {
 resource "local_file" "ansible_inventory" {
   content = templatefile("${path.module}/inventory.tmpl", {
     vms  = proxmox_virtual_environment_vm.almalinux_cluster
-    lxcs = proxmox_virtual_environment_container.lxc
+    lxcs = proxmox_virtual_environment_container.lxc_cluster
   })
   filename = "${path.module}/../ansible/inventories/production/hosts.yml"
 }
