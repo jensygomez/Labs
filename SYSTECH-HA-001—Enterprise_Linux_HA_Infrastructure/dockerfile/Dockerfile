@@ -20,10 +20,10 @@ RUN curl -fsSL https://get.opentofu.org/install-opentofu.sh -o install-opentofu.
     && rm install-opentofu.sh
 
 # ==========================================
-# 3. Ansible (+ argcomplete y PyYAML)
+# 3. Ansible (+ argcomplete, PyYAML y zabbix-utils)
 # ==========================================
 RUN pip3 install --no-cache-dir --upgrade pip && \
-    pip3 install --no-cache-dir ansible ansible-lint argcomplete PyYAML
+    pip3 install --no-cache-dir ansible ansible-lint argcomplete PyYAML zabbix-utils
 
 # ==========================================
 # 4. Crear el usuario jensyg con HOME=/workspace

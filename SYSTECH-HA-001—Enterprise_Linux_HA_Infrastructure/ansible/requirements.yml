@@ -1,4 +1,5 @@
 ---
 collections:
   - name: community.mysql
-  - mame: ansible.posix
+  - name: ansible.posix
+  - name: community.zabbix

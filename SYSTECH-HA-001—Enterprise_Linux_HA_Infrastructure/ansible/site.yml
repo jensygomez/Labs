@@ -59,7 +59,6 @@
 
 
 
-
 # ------------------------------------------------------------------------------
 # FASE 02: ALTA DISPONIBILIDAD - RED / VIP (KEEPALIVED)
 # Comando individual: ansible-playbook site.yml --tags keepalived --ask-vault-pass
