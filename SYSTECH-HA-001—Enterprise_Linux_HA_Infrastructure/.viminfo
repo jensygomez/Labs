@@ -15,7 +15,7 @@
 
 # Command Line History (newest to oldest):
 :wq
-|2,0,1786999687,,"wq"
+|2,0,1787022338,,"wq"
 
 # Search String History (newest to oldest):
 ? \<name\>
@@ -60,230 +60,255 @@
 |3,0,36,0,1,0,1786989464,"8"
 
 # File marks:
-'0  110  0  ~/ansible/site.yml
-|4,48,110,0,1786999687,"~/ansible/site.yml"
-'1  11  136  ~/ansible/site.yml
-|4,49,11,136,1786999289,"~/ansible/site.yml"
-'2  11  136  ~/ansible/site.yml
-|4,50,11,136,1786999289,"~/ansible/site.yml"
-'3  112  0  ~/terraform/main.tf
-|4,51,112,0,1786998731,"~/terraform/main.tf"
-'4  20  11  ~/terraform/inventory.tmpl
-|4,52,20,11,1786998516,"~/terraform/inventory.tmpl"
-'5  17  67  ~/terraform/inventory.tmpl
-|4,53,17,67,1786998378,"~/terraform/inventory.tmpl"
-'6  17  67  ~/terraform/inventory.tmpl
-|4,54,17,67,1786998378,"~/terraform/inventory.tmpl"
-'7  106  0  ~/terraform/main.tf
-|4,55,106,0,1786998311,"~/terraform/main.tf"
-'8  112  0  ~/terraform/main.tf
-|4,56,112,0,1786998311,"~/terraform/main.tf"
-'9  107  0  ~/terraform/main.tf
-|4,57,107,0,1786998206,"~/terraform/main.tf"
+'0  31  11  ~/terraform/inventory.tmpl
+|4,48,31,11,1787022338,"~/terraform/inventory.tmpl"
+'1  30  0  ~/terraform/inventory.tmpl
+|4,49,30,0,1787022320,"~/terraform/inventory.tmpl"
+'2  30  0  ~/terraform/inventory.tmpl
+|4,50,30,0,1787022320,"~/terraform/inventory.tmpl"
+'3  30  0  ~/terraform/inventory.tmpl
+|4,51,30,0,1787021319,"~/terraform/inventory.tmpl"
+'4  30  0  ~/terraform/inventory.tmpl
+|4,52,30,0,1787021319,"~/terraform/inventory.tmpl"
+'5  54  0  ~/terraform/variables.tf
+|4,53,54,0,1787020958,"~/terraform/variables.tf"
+'6  110  0  ~/ansible/site.yml
+|4,54,110,0,1786999687,"~/ansible/site.yml"
+'7  11  136  ~/ansible/site.yml
+|4,55,11,136,1786999289,"~/ansible/site.yml"
+'8  11  136  ~/ansible/site.yml
+|4,56,11,136,1786999289,"~/ansible/site.yml"
+'9  112  0  ~/terraform/main.tf
+|4,57,112,0,1786998731,"~/terraform/main.tf"
 
 # Jumplist (newest first):
+-'  31  11  ~/terraform/inventory.tmpl
+|4,39,31,11,1787022338,"~/terraform/inventory.tmpl"
+-'  1  0  ~/terraform/inventory.tmpl
+|4,39,1,0,1787022330,"~/terraform/inventory.tmpl"
+-'  30  0  ~/terraform/inventory.tmpl
+|4,39,30,0,1787022320,"~/terraform/inventory.tmpl"
+-'  30  0  ~/terraform/inventory.tmpl
+|4,39,30,0,1787022320,"~/terraform/inventory.tmpl"
+-'  30  0  ~/terraform/inventory.tmpl
+|4,39,30,0,1787021319,"~/terraform/inventory.tmpl"
+-'  20  11  ~/terraform/inventory.tmpl
+|4,39,20,11,1787021074,"~/terraform/inventory.tmpl"
+-'  20  11  ~/terraform/inventory.tmpl
+|4,39,20,11,1787021074,"~/terraform/inventory.tmpl"
+-'  20  11  ~/terraform/inventory.tmpl
+|4,39,20,11,1787021074,"~/terraform/inventory.tmpl"
+-'  54  0  ~/terraform/variables.tf
+|4,39,54,0,1787020958,"~/terraform/variables.tf"
+-'  54  0  ~/terraform/variables.tf
+|4,39,54,0,1787020958,"~/terraform/variables.tf"
+-'  54  0  ~/terraform/variables.tf
+|4,39,54,0,1787020958,"~/terraform/variables.tf"
+-'  54  0  ~/terraform/variables.tf
+|4,39,54,0,1787020958,"~/terraform/variables.tf"
+-'  54  0  ~/terraform/variables.tf
+|4,39,54,0,1787020958,"~/terraform/variables.tf"
+-'  54  0  ~/terraform/variables.tf
+|4,39,54,0,1787020958,"~/terraform/variables.tf"
+-'  54  0  ~/terraform/variables.tf
+|4,39,54,0,1787020958,"~/terraform/variables.tf"
+-'  54  0  ~/terraform/variables.tf
+|4,39,54,0,1787020958,"~/terraform/variables.tf"
+-'  52  0  ~/terraform/variables.tf
+|4,39,52,0,1787020847,"~/terraform/variables.tf"
+-'  52  0  ~/terraform/variables.tf
+|4,39,52,0,1787020847,"~/terraform/variables.tf"
+-'  52  0  ~/terraform/variables.tf
+|4,39,52,0,1787020847,"~/terraform/variables.tf"
+-'  52  0  ~/terraform/variables.tf
+|4,39,52,0,1787020847,"~/terraform/variables.tf"
+-'  52  0  ~/terraform/variables.tf
+|4,39,52,0,1787020847,"~/terraform/variables.tf"
+-'  52  0  ~/terraform/variables.tf
+|4,39,52,0,1787020847,"~/terraform/variables.tf"
+-'  52  0  ~/terraform/variables.tf
+|4,39,52,0,1787020847,"~/terraform/variables.tf"
+-'  52  0  ~/terraform/variables.tf
+|4,39,52,0,1787020847,"~/terraform/variables.tf"
+-'  110  0  ~/ansible/site.yml
+|4,39,110,0,1786999687,"~/ansible/site.yml"
+-'  110  0  ~/ansible/site.yml
+|4,39,110,0,1786999687,"~/ansible/site.yml"
+-'  110  0  ~/ansible/site.yml
+|4,39,110,0,1786999687,"~/ansible/site.yml"
+-'  110  0  ~/ansible/site.yml
+|4,39,110,0,1786999687,"~/ansible/site.yml"
+-'  110  0  ~/ansible/site.yml
+|4,39,110,0,1786999687,"~/ansible/site.yml"
+-'  110  0  ~/ansible/site.yml
+|4,39,110,0,1786999687,"~/ansible/site.yml"
+-'  110  0  ~/ansible/site.yml
+|4,39,110,0,1786999687,"~/ansible/site.yml"
+-'  110  0  ~/ansible/site.yml
+|4,39,110,0,1786999687,"~/ansible/site.yml"
+-'  110  0  ~/ansible/site.yml
+|4,39,110,0,1786999687,"~/ansible/site.yml"
+-'  110  0  ~/ansible/site.yml
+|4,39,110,0,1786999687,"~/ansible/site.yml"
+-'  110  0  ~/ansible/site.yml
+|4,39,110,0,1786999687,"~/ansible/site.yml"
+-'  110  0  ~/ansible/site.yml
+|4,39,110,0,1786999687,"~/ansible/site.yml"
+-'  110  0  ~/ansible/site.yml
+|4,39,110,0,1786999687,"~/ansible/site.yml"
+-'  110  0  ~/ansible/site.yml
+|4,39,110,0,1786999687,"~/ansible/site.yml"
+-'  110  0  ~/ansible/site.yml
+|4,39,110,0,1786999687,"~/ansible/site.yml"
 -'  110  0  ~/ansible/site.yml
 |4,39,110,0,1786999687,"~/ansible/site.yml"
 -'  37  0  ~/ansible/site.yml
 |4,39,37,0,1786999605,"~/ansible/site.yml"
+-'  37  0  ~/ansible/site.yml
+|4,39,37,0,1786999605,"~/ansible/site.yml"
+-'  37  0  ~/ansible/site.yml
+|4,39,37,0,1786999605,"~/ansible/site.yml"
+-'  37  0  ~/ansible/site.yml
+|4,39,37,0,1786999605,"~/ansible/site.yml"
+-'  37  0  ~/ansible/site.yml
+|4,39,37,0,1786999605,"~/ansible/site.yml"
+-'  37  0  ~/ansible/site.yml
+|4,39,37,0,1786999605,"~/ansible/site.yml"
+-'  37  0  ~/ansible/site.yml
+|4,39,37,0,1786999605,"~/ansible/site.yml"
+-'  37  0  ~/ansible/site.yml
+|4,39,37,0,1786999605,"~/ansible/site.yml"
+-'  37  0  ~/ansible/site.yml
+|4,39,37,0,1786999605,"~/ansible/site.yml"
+-'  37  0  ~/ansible/site.yml
+|4,39,37,0,1786999605,"~/ansible/site.yml"
+-'  37  0  ~/ansible/site.yml
+|4,39,37,0,1786999605,"~/ansible/site.yml"
+-'  37  0  ~/ansible/site.yml
+|4,39,37,0,1786999605,"~/ansible/site.yml"
+-'  37  0  ~/ansible/site.yml
+|4,39,37,0,1786999605,"~/ansible/site.yml"
+-'  37  0  ~/ansible/site.yml
+|4,39,37,0,1786999605,"~/ansible/site.yml"
+-'  37  0  ~/ansible/site.yml
+|4,39,37,0,1786999605,"~/ansible/site.yml"
+-'  37  0  ~/ansible/site.yml
+|4,39,37,0,1786999605,"~/ansible/site.yml"
 -'  11  136  ~/ansible/site.yml
 |4,39,11,136,1786999595,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999595,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999595,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999595,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999595,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999595,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999595,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999595,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999595,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999595,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999595,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999595,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999595,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999595,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999595,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999595,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999289,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999289,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999289,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999289,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999289,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999289,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999289,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999289,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999289,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999289,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999289,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999289,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999289,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999289,"~/ansible/site.yml"
+-'  11  136  ~/ansible/site.yml
+|4,39,11,136,1786999289,"~/ansible/site.yml"
 -'  11  136  ~/ansible/site.yml
 |4,39,11,136,1786999289,"~/ansible/site.yml"
 -'  1  0  ~/ansible/site.yml
 |4,39,1,0,1786999012,"~/ansible/site.yml"
 -'  1  0  ~/ansible/site.yml
 |4,39,1,0,1786999012,"~/ansible/site.yml"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998731,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998731,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998731,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998731,"~/terraform/main.tf"
--'  106  0  ~/terraform/main.tf
-|4,39,106,0,1786998697,"~/terraform/main.tf"
--'  106  0  ~/terraform/main.tf
-|4,39,106,0,1786998697,"~/terraform/main.tf"
--'  106  0  ~/terraform/main.tf
-|4,39,106,0,1786998697,"~/terraform/main.tf"
--'  106  0  ~/terraform/main.tf
-|4,39,106,0,1786998697,"~/terraform/main.tf"
--'  20  11  ~/terraform/inventory.tmpl
-|4,39,20,11,1786998516,"~/terraform/inventory.tmpl"
--'  20  11  ~/terraform/inventory.tmpl
-|4,39,20,11,1786998516,"~/terraform/inventory.tmpl"
--'  20  11  ~/terraform/inventory.tmpl
-|4,39,20,11,1786998516,"~/terraform/inventory.tmpl"
--'  20  11  ~/terraform/inventory.tmpl
-|4,39,20,11,1786998516,"~/terraform/inventory.tmpl"
--'  20  11  ~/terraform/inventory.tmpl
-|4,39,20,11,1786998516,"~/terraform/inventory.tmpl"
--'  20  11  ~/terraform/inventory.tmpl
-|4,39,20,11,1786998516,"~/terraform/inventory.tmpl"
--'  20  11  ~/terraform/inventory.tmpl
-|4,39,20,11,1786998516,"~/terraform/inventory.tmpl"
--'  20  11  ~/terraform/inventory.tmpl
-|4,39,20,11,1786998516,"~/terraform/inventory.tmpl"
--'  1  0  ~/terraform/inventory.tmpl
-|4,39,1,0,1786998509,"~/terraform/inventory.tmpl"
--'  1  0  ~/terraform/inventory.tmpl
-|4,39,1,0,1786998509,"~/terraform/inventory.tmpl"
--'  1  0  ~/terraform/inventory.tmpl
-|4,39,1,0,1786998509,"~/terraform/inventory.tmpl"
--'  1  0  ~/terraform/inventory.tmpl
-|4,39,1,0,1786998509,"~/terraform/inventory.tmpl"
--'  1  0  ~/terraform/inventory.tmpl
-|4,39,1,0,1786998509,"~/terraform/inventory.tmpl"
--'  1  0  ~/terraform/inventory.tmpl
-|4,39,1,0,1786998509,"~/terraform/inventory.tmpl"
--'  1  0  ~/terraform/inventory.tmpl
-|4,39,1,0,1786998509,"~/terraform/inventory.tmpl"
--'  1  0  ~/terraform/inventory.tmpl
-|4,39,1,0,1786998509,"~/terraform/inventory.tmpl"
--'  17  67  ~/terraform/inventory.tmpl
-|4,39,17,67,1786998378,"~/terraform/inventory.tmpl"
--'  17  67  ~/terraform/inventory.tmpl
-|4,39,17,67,1786998378,"~/terraform/inventory.tmpl"
--'  17  67  ~/terraform/inventory.tmpl
-|4,39,17,67,1786998378,"~/terraform/inventory.tmpl"
--'  17  67  ~/terraform/inventory.tmpl
-|4,39,17,67,1786998378,"~/terraform/inventory.tmpl"
--'  17  67  ~/terraform/inventory.tmpl
-|4,39,17,67,1786998378,"~/terraform/inventory.tmpl"
--'  17  67  ~/terraform/inventory.tmpl
-|4,39,17,67,1786998378,"~/terraform/inventory.tmpl"
--'  17  67  ~/terraform/inventory.tmpl
-|4,39,17,67,1786998378,"~/terraform/inventory.tmpl"
--'  17  67  ~/terraform/inventory.tmpl
-|4,39,17,67,1786998378,"~/terraform/inventory.tmpl"
--'  17  67  ~/terraform/inventory.tmpl
-|4,39,17,67,1786998378,"~/terraform/inventory.tmpl"
--'  17  67  ~/terraform/inventory.tmpl
-|4,39,17,67,1786998378,"~/terraform/inventory.tmpl"
--'  17  67  ~/terraform/inventory.tmpl
-|4,39,17,67,1786998378,"~/terraform/inventory.tmpl"
--'  17  67  ~/terraform/inventory.tmpl
-|4,39,17,67,1786998378,"~/terraform/inventory.tmpl"
--'  17  67  ~/terraform/inventory.tmpl
-|4,39,17,67,1786998378,"~/terraform/inventory.tmpl"
--'  17  67  ~/terraform/inventory.tmpl
-|4,39,17,67,1786998378,"~/terraform/inventory.tmpl"
--'  17  67  ~/terraform/inventory.tmpl
-|4,39,17,67,1786998378,"~/terraform/inventory.tmpl"
--'  17  67  ~/terraform/inventory.tmpl
-|4,39,17,67,1786998378,"~/terraform/inventory.tmpl"
--'  1  0  ~/terraform/inventory.tmpl
-|4,39,1,0,1786998355,"~/terraform/inventory.tmpl"
--'  1  0  ~/terraform/inventory.tmpl
-|4,39,1,0,1786998355,"~/terraform/inventory.tmpl"
--'  1  0  ~/terraform/inventory.tmpl
-|4,39,1,0,1786998355,"~/terraform/inventory.tmpl"
--'  1  0  ~/terraform/inventory.tmpl
-|4,39,1,0,1786998355,"~/terraform/inventory.tmpl"
--'  1  0  ~/terraform/inventory.tmpl
-|4,39,1,0,1786998355,"~/terraform/inventory.tmpl"
--'  1  0  ~/terraform/inventory.tmpl
-|4,39,1,0,1786998355,"~/terraform/inventory.tmpl"
--'  1  0  ~/terraform/inventory.tmpl
-|4,39,1,0,1786998355,"~/terraform/inventory.tmpl"
--'  1  0  ~/terraform/inventory.tmpl
-|4,39,1,0,1786998355,"~/terraform/inventory.tmpl"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998311,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998311,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998311,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998311,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998311,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998311,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998311,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998311,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998311,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998311,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998311,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998311,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998311,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998311,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998311,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1786998311,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  1  0  ~/terraform/main.tf
-|4,39,1,0,1786998303,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786998206,"~/terraform/main.tf"
--'  114  0  ~/terraform/main.tf
-|4,39,114,0,1786998206,"~/terraform/main.tf"
--'  114  0  ~/terraform/main.tf
-|4,39,114,0,1786998206,"~/terraform/main.tf"
--'  114  0  ~/terraform/main.tf
-|4,39,114,0,1786998206,"~/terraform/main.tf"
--'  114  0  ~/terraform/main.tf
-|4,39,114,0,1786998206,"~/terraform/main.tf"
--'  114  0  ~/terraform/main.tf
-|4,39,114,0,1786998206,"~/terraform/main.tf"
--'  114  0  ~/terraform/main.tf
-|4,39,114,0,1786998206,"~/terraform/main.tf"
--'  114  0  ~/terraform/main.tf
-|4,39,114,0,1786998206,"~/terraform/main.tf"
--'  114  0  ~/terraform/main.tf
-|4,39,114,0,1786998206,"~/terraform/main.tf"
--'  107  0  ~/terraform/main.tf
-|4,39,107,0,1786998206,"~/terraform/main.tf"
+-'  1  0  ~/ansible/site.yml
+|4,39,1,0,1786999012,"~/ansible/site.yml"
+-'  1  0  ~/ansible/site.yml
+|4,39,1,0,1786999012,"~/ansible/site.yml"
+-'  1  0  ~/ansible/site.yml
+|4,39,1,0,1786999012,"~/ansible/site.yml"
+-'  1  0  ~/ansible/site.yml
+|4,39,1,0,1786999012,"~/ansible/site.yml"
+-'  1  0  ~/ansible/site.yml
+|4,39,1,0,1786999012,"~/ansible/site.yml"
+-'  1  0  ~/ansible/site.yml
+|4,39,1,0,1786999012,"~/ansible/site.yml"
+-'  1  0  ~/ansible/site.yml
+|4,39,1,0,1786999012,"~/ansible/site.yml"
+-'  1  0  ~/ansible/site.yml
+|4,39,1,0,1786999012,"~/ansible/site.yml"
+-'  1  0  ~/ansible/site.yml
+|4,39,1,0,1786999012,"~/ansible/site.yml"
+-'  1  0  ~/ansible/site.yml
+|4,39,1,0,1786999012,"~/ansible/site.yml"
 
 # History of marks within files (newest to oldest):
+
+> ~/terraform/inventory.tmpl
+	*	1787022338	0
+	"	31	11
+	^	31	12
+	.	31	11
+	+	17	67
+	+	20	12
+	+	22	21
+	+	29	12
+	+	31	11
+
+> ~/terraform/variables.tf
+	*	1787020957	0
+	"	54	0
+	^	54	0
+	.	53	0
+	+	39	0
+	+	48	90
+	+	49	90
+	+	48	89
+	+	52	0
+	+	51	0
+	+	50	93
+	+	53	0
 
 > ~/ansible/site.yml
 	*	1786999686	0
@@ -361,14 +386,6 @@
 	+	106	0
 	+	112	0
 
-> ~/terraform/inventory.tmpl
-	*	1786998516	0
-	"	20	11
-	^	20	12
-	.	20	11
-	+	17	67
-	+	20	11
-
 > ~/.ansible/tmp/ansible-local-374ouhv61tj/tmpdt5dkgdu.yml
 	*	1786998058	0
 	"	1	0
@@ -433,14 +450,3 @@
 	^	21	1
 	.	21	0
 	+	21	0
-
-> ~/terraform/variables.tf
-	*	1786930180	0
-	"	51	0
-	^	51	1
-	.	51	0
-	+	39	0
-	+	48	90
-	+	49	90
-	+	48	89
-	+	51	0
