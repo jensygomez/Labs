@@ -1,0 +1,34 @@
+---
+# roles/zabbix_agent/tasks/install_redhat.yml
+# Aplica a: server01, server02, server03 (AlmaLinux 9)
+
+- name: Verificar si el repo de Zabbix ya está instalado
+  command: rpm -q zabbix-release
+  register: zabbix_repo_check
+  changed_when: false
+  failed_when: false
+
+- name: Instalar el paquete de repositorio de Zabbix {{ zabbix_version }}
+  # NOTA: zabbix-release-7.0-1.el9.noarch está auto-firmado con SHA1, algoritmo
+  # que la política criptográfica DEFAULT de AlmaLinux/RHEL 9 rechaza
+  # ("Hash algorithm SHA1 not available"). disable_gpg_check aplica SOLO a
+  # este paquete puente; el repo real que instala (zabbix-agent2 en sí) sí
+  # se verifica normalmente en la tarea siguiente. Validado manualmente en
+  # server01 el 2026-08-18.
+  dnf:
+    name: "{{ zabbix_repo_rpm_url }}"
+    state: present
+    disable_gpg_check: true
+  when: zabbix_repo_check.rc != 0
+
+- name: Limpiar caché de dnf tras agregar el repo nuevo
+  command: dnf clean all
+  when: zabbix_repo_check.rc != 0
+  changed_when: false
+
+- name: Instalar zabbix-agent2 y plugins
+  dnf:
+    name:
+      - zabbix-agent2
+      - zabbix-agent2-plugin-*
+    state: present

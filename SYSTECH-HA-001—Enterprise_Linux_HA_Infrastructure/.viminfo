@@ -15,9 +15,9 @@
 
 # Command Line History (newest to oldest):
 :wq
-|2,0,1787034838,,"wq"
+|2,0,1787048909,,"wq"
 :q!
-|2,0,1787032893,,"q!"
+|2,0,1787047503,,"q!"
 
 # Search String History (newest to oldest):
 ? \<name\>
@@ -31,261 +31,417 @@
 
 # Registers:
 ""1	LINE	0
-	  ignore_errors: yes
-|3,1,1,1,1,0,1787034409,"  ignore_errors: yes"
+	---
+|3,1,1,1,1,0,1787048716,"---"
 "2	LINE	0
-	    state: absent
-|3,0,2,1,1,0,1787034409,"    state: absent"
+	# roles/zabbix_agent/tasks/install_redhat.yml
+|3,0,2,1,1,0,1787048716,"# roles/zabbix_agent/tasks/install_redhat.yml"
 "3	LINE	0
-	    name: "{{ zabbix_db_user }}"
-|3,0,3,1,1,0,1787034408,"    name: \"{{ zabbix_db_user }}\""
+	# Aplica a: server01, server02, server03 (AlmaLinux 9)
+|3,0,3,1,1,0,1787048716,"# Aplica a: server01, server02, server03 (AlmaLinux 9)"
 "4	LINE	0
-	  postgresql_user:
-|3,0,4,1,1,0,1787034408,"  postgresql_user:"
-"5	LINE	0
-	  become_user: postgres
-|3,0,5,1,1,0,1787034408,"  become_user: postgres"
-"6	LINE	0
-	  become: true
-|3,0,6,1,1,0,1787034407,"  become: true"
-"7	LINE	0
-	- name: "088 | ZABBIX SERVER | Drop existing Zabbix user if exists"
-|3,0,7,1,1,0,1787034407,"- name: \"088 | ZABBIX SERVER | Drop existing Zabbix user if exists\""
-"8	LINE	0
 	
-|3,0,8,1,1,0,1787034406,""
+|3,0,4,1,1,0,1787048715,""
+"5	LINE	0
+	- name: Verificar si el repo de Zabbix ya está instalado
+|3,0,5,1,1,0,1787048715,"- name: Verificar si el repo de Zabbix ya está instalado"
+"6	LINE	0
+	  command: rpm -q zabbix-release
+|3,0,6,1,1,0,1787048715,"  command: rpm -q zabbix-release"
+"7	LINE	0
+	  register: zabbix_repo_check
+|3,0,7,1,1,0,1787048715,"  register: zabbix_repo_check"
+"8	LINE	0
+	  changed_when: false
+|3,0,8,1,1,0,1787048715,"  changed_when: false"
 "9	LINE	0
-	  ignore_errors: yes
-|3,0,9,1,1,0,1787034406,"  ignore_errors: yes"
+	  failed_when: false
+|3,0,9,1,1,0,1787048715,"  failed_when: false"
 "-	CHAR	0
 	8
 |3,0,36,0,1,0,1786989464,"8"
 
 # File marks:
-'0  153  55  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,48,153,55,1787034838,"~/ansible/roles/zabbix_server/tasks/main.yml"
-'1  164  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,49,164,15,1787034537,"~/ansible/roles/zabbix_server/tasks/main.yml"
-'2  154  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,50,154,15,1787034537,"~/ansible/roles/zabbix_server/tasks/main.yml"
-'3  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,51,16,13,1787034445,"~/ansible/roles/zabbix_server/handlers/main.yml"
-'4  82  0  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,52,82,0,1787034432,"~/ansible/roles/zabbix_server/tasks/main.yml"
-'5  82  0  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,53,82,0,1787034432,"~/ansible/roles/zabbix_server/tasks/main.yml"
-'6  82  0  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,54,82,0,1787034432,"~/ansible/roles/zabbix_server/tasks/main.yml"
-'7  82  0  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,55,82,0,1787034432,"~/ansible/roles/zabbix_server/tasks/main.yml"
-'8  71  19  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,56,71,19,1787033326,"~/ansible/roles/zabbix_server/tasks/main.yml"
-'9  86  19  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,57,86,19,1787033326,"~/ansible/roles/zabbix_server/tasks/main.yml"
+'0  5  17  ~/ansible/roles/zabbix_agent/handlers/main.yml
+|4,48,5,17,1787048909,"~/ansible/roles/zabbix_agent/handlers/main.yml"
+'1  34  17  ~/ansible/roles/zabbix_agent/tasks/install_redhat.yml
+|4,49,34,17,1787048734,"~/ansible/roles/zabbix_agent/tasks/install_redhat.yml"
+'2  1  0  ~/ansible/roles/zabbix_agent/tasks/install_redhat.yml
+|4,50,1,0,1787048380,"~/ansible/roles/zabbix_agent/tasks/install_redhat.yml"
+'3  17  0  ~/ansible/roles/zabbix_agent/tasks/install_redhat.yml
+|4,51,17,0,1787048380,"~/ansible/roles/zabbix_agent/tasks/install_redhat.yml"
+'4  13  125  ~/ansible/site.yml
+|4,52,13,125,1787048060,"~/ansible/site.yml"
+'5  45  7  ~/ansible/site.yml
+|4,53,45,7,1787047538,"~/ansible/site.yml"
+'6  45  7  ~/ansible/site.yml
+|4,54,45,7,1787047538,"~/ansible/site.yml"
+'7  1  0  ~/../ansible/site.yml
+|4,55,1,0,1787047503,"~/../ansible/site.yml"
+'8  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,56,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+'9  25  0  ~/ansible/roles/zabbix_agent/templates/zabbix_agent2.conf.j2
+|4,57,25,0,1787046986,"~/ansible/roles/zabbix_agent/templates/zabbix_agent2.conf.j2"
 
 # Jumplist (newest first):
--'  153  55  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,153,55,1787034838,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  164  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,164,15,1787034814,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  154  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,154,15,1787034537,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  1  0  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,1,0,1787034530,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  1  0  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,1,0,1787034530,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787034445,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787034445,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787034445,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787034445,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  82  0  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,82,0,1787034432,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  82  0  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,82,0,1787034432,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  82  0  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,82,0,1787034432,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  82  0  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,82,0,1787034432,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  71  19  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,71,19,1787034393,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  71  19  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,71,19,1787034393,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  71  19  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,71,19,1787034393,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  71  19  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,71,19,1787034393,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  86  19  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,86,19,1787033326,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  86  19  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,86,19,1787033326,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  86  19  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,86,19,1787033326,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  86  19  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,86,19,1787033326,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  165  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,165,15,1787033288,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  180  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,180,15,1787033288,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  155  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,155,15,1787033288,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  170  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,170,15,1787033288,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  155  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,155,15,1787033288,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  170  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,170,15,1787033288,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  155  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,155,15,1787033288,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  170  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,170,15,1787033288,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  138  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,138,15,1787033171,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  163  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,163,15,1787033171,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  138  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,138,15,1787033171,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  153  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,153,15,1787033171,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  138  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,138,15,1787033171,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  153  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,153,15,1787033171,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  138  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,138,15,1787033171,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  153  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,153,15,1787033171,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  1  0  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,1,0,1787033160,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  1  0  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,1,0,1787033160,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  1  0  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,1,0,1787033160,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  1  0  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,1,0,1787033160,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  1  0  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,1,0,1787033160,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  1  0  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,1,0,1787033160,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  29  3  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,29,3,1787032893,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  29  3  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,29,3,1787032893,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  29  3  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,29,3,1787032893,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  29  3  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,29,3,1787032893,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  29  3  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,29,3,1787032893,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  29  3  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,29,3,1787032893,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  29  3  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,29,3,1787032893,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  29  3  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,29,3,1787032893,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  29  3  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,29,3,1787032893,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  29  3  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,29,3,1787032893,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  162  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,162,15,1787032706,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  135  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,135,15,1787032706,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  177  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,177,15,1787032706,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  160  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,160,15,1787032706,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  152  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,152,15,1787032706,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  135  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,135,15,1787032706,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  167  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,167,15,1787032706,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  150  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,150,15,1787032706,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  152  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,152,15,1787032706,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  135  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,135,15,1787032706,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  167  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,167,15,1787032706,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  150  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,150,15,1787032706,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  150  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,150,15,1787032706,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  152  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,152,15,1787032706,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  135  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,135,15,1787032706,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  167  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,167,15,1787032706,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  150  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,150,15,1787032706,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  150  15  ~/ansible/roles/zabbix_server/tasks/main.yml
-|4,39,150,15,1787032706,"~/ansible/roles/zabbix_server/tasks/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
--'  16  13  ~/ansible/roles/zabbix_server/handlers/main.yml
-|4,39,16,13,1787032540,"~/ansible/roles/zabbix_server/handlers/main.yml"
+-'  5  17  ~/ansible/roles/zabbix_agent/handlers/main.yml
+|4,39,5,17,1787048909,"~/ansible/roles/zabbix_agent/handlers/main.yml"
+-'  7  0  ~/ansible/roles/zabbix_agent/handlers/main.yml
+|4,39,7,0,1787048901,"~/ansible/roles/zabbix_agent/handlers/main.yml"
+-'  34  17  ~/ansible/roles/zabbix_agent/tasks/install_redhat.yml
+|4,39,34,17,1787048734,"~/ansible/roles/zabbix_agent/tasks/install_redhat.yml"
+-'  34  17  ~/ansible/roles/zabbix_agent/tasks/install_redhat.yml
+|4,39,34,17,1787048734,"~/ansible/roles/zabbix_agent/tasks/install_redhat.yml"
+-'  1  0  ~/ansible/roles/zabbix_agent/tasks/install_redhat.yml
+|4,39,1,0,1787048656,"~/ansible/roles/zabbix_agent/tasks/install_redhat.yml"
+-'  1  0  ~/ansible/roles/zabbix_agent/tasks/install_redhat.yml
+|4,39,1,0,1787048656,"~/ansible/roles/zabbix_agent/tasks/install_redhat.yml"
+-'  17  0  ~/ansible/roles/zabbix_agent/tasks/install_redhat.yml
+|4,39,17,0,1787048380,"~/ansible/roles/zabbix_agent/tasks/install_redhat.yml"
+-'  17  0  ~/ansible/roles/zabbix_agent/tasks/install_redhat.yml
+|4,39,17,0,1787048380,"~/ansible/roles/zabbix_agent/tasks/install_redhat.yml"
+-'  35  0  ~/ansible/roles/zabbix_agent/tasks/install_redhat.yml
+|4,39,35,0,1787048317,"~/ansible/roles/zabbix_agent/tasks/install_redhat.yml"
+-'  35  0  ~/ansible/roles/zabbix_agent/tasks/install_redhat.yml
+|4,39,35,0,1787048317,"~/ansible/roles/zabbix_agent/tasks/install_redhat.yml"
+-'  13  125  ~/ansible/site.yml
+|4,39,13,125,1787048060,"~/ansible/site.yml"
+-'  13  125  ~/ansible/site.yml
+|4,39,13,125,1787048060,"~/ansible/site.yml"
+-'  13  125  ~/ansible/site.yml
+|4,39,13,125,1787048060,"~/ansible/site.yml"
+-'  13  125  ~/ansible/site.yml
+|4,39,13,125,1787048060,"~/ansible/site.yml"
+-'  13  125  ~/ansible/site.yml
+|4,39,13,125,1787048060,"~/ansible/site.yml"
+-'  13  125  ~/ansible/site.yml
+|4,39,13,125,1787048060,"~/ansible/site.yml"
+-'  13  125  ~/ansible/site.yml
+|4,39,13,125,1787048060,"~/ansible/site.yml"
+-'  13  125  ~/ansible/site.yml
+|4,39,13,125,1787048060,"~/ansible/site.yml"
+-'  45  7  ~/ansible/site.yml
+|4,39,45,7,1787047978,"~/ansible/site.yml"
+-'  45  7  ~/ansible/site.yml
+|4,39,45,7,1787047978,"~/ansible/site.yml"
+-'  45  7  ~/ansible/site.yml
+|4,39,45,7,1787047978,"~/ansible/site.yml"
+-'  45  7  ~/ansible/site.yml
+|4,39,45,7,1787047978,"~/ansible/site.yml"
+-'  45  7  ~/ansible/site.yml
+|4,39,45,7,1787047978,"~/ansible/site.yml"
+-'  45  7  ~/ansible/site.yml
+|4,39,45,7,1787047978,"~/ansible/site.yml"
+-'  45  7  ~/ansible/site.yml
+|4,39,45,7,1787047978,"~/ansible/site.yml"
+-'  45  7  ~/ansible/site.yml
+|4,39,45,7,1787047978,"~/ansible/site.yml"
+-'  45  7  ~/ansible/site.yml
+|4,39,45,7,1787047538,"~/ansible/site.yml"
+-'  45  7  ~/ansible/site.yml
+|4,39,45,7,1787047538,"~/ansible/site.yml"
+-'  45  7  ~/ansible/site.yml
+|4,39,45,7,1787047538,"~/ansible/site.yml"
+-'  45  7  ~/ansible/site.yml
+|4,39,45,7,1787047538,"~/ansible/site.yml"
+-'  45  7  ~/ansible/site.yml
+|4,39,45,7,1787047538,"~/ansible/site.yml"
+-'  45  7  ~/ansible/site.yml
+|4,39,45,7,1787047538,"~/ansible/site.yml"
+-'  45  7  ~/ansible/site.yml
+|4,39,45,7,1787047538,"~/ansible/site.yml"
+-'  45  7  ~/ansible/site.yml
+|4,39,45,7,1787047538,"~/ansible/site.yml"
+-'  13  28  ~/ansible/site.yml
+|4,39,13,28,1787047512,"~/ansible/site.yml"
+-'  13  28  ~/ansible/site.yml
+|4,39,13,28,1787047512,"~/ansible/site.yml"
+-'  13  28  ~/ansible/site.yml
+|4,39,13,28,1787047512,"~/ansible/site.yml"
+-'  13  28  ~/ansible/site.yml
+|4,39,13,28,1787047512,"~/ansible/site.yml"
+-'  13  28  ~/ansible/site.yml
+|4,39,13,28,1787047512,"~/ansible/site.yml"
+-'  13  28  ~/ansible/site.yml
+|4,39,13,28,1787047512,"~/ansible/site.yml"
+-'  13  28  ~/ansible/site.yml
+|4,39,13,28,1787047512,"~/ansible/site.yml"
+-'  13  28  ~/ansible/site.yml
+|4,39,13,28,1787047512,"~/ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  1  0  ~/../ansible/site.yml
+|4,39,1,0,1787047503,"~/../ansible/site.yml"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
+-'  97  0  ~/ansible/roles/zabbix_agent/README.md
+|4,39,97,0,1787047269,"~/ansible/roles/zabbix_agent/README.md"
 
 # History of marks within files (newest to oldest):
+
+> ~/ansible/roles/zabbix_agent/handlers/main.yml
+	*	1787048909	0
+	"	5	17
+	^	5	18
+	.	5	18
+	+	7	0
+	+	5	18
+
+> ~/ansible/roles/zabbix_agent/tasks/install_redhat.yml
+	*	1787048734	0
+	"	34	17
+	^	34	18
+	.	34	17
+	+	1	18
+	+	1	0
+	+	1	3
+	+	34	17
+
+> ~/ansible/site.yml
+	*	1787048059	0
+	"	13	125
+	^	13	126
+	.	13	125
+	+	27	16
+	+	28	1
+	+	24	49
+	+	23	46
+	+	11	136
+	+	67	0
+	+	68	0
+	+	69	0
+	+	70	0
+	+	71	0
+	+	72	0
+	+	73	0
+	+	74	0
+	+	80	0
+	+	81	0
+	+	82	0
+	+	83	0
+	+	84	0
+	+	85	0
+	+	86	0
+	+	87	0
+	+	94	0
+	+	95	0
+	+	96	0
+	+	97	0
+	+	98	0
+	+	99	0
+	+	100	0
+	+	101	0
+	+	107	0
+	+	108	0
+	+	109	0
+	+	110	0
+	+	111	0
+	+	112	0
+	+	113	0
+	+	114	0
+	+	121	0
+	+	122	0
+	+	123	0
+	+	124	0
+	+	125	0
+	+	126	0
+	+	127	0
+	+	128	0
+	+	131	0
+	+	132	0
+	+	133	0
+	+	134	0
+	+	131	0
+	+	132	0
+	+	133	0
+	+	134	1
+	+	135	0
+	+	136	0
+	+	137	0
+	+	138	16
+	+	140	1
+	+	63	0
+	+	47	0
+	+	46	24
+	+	38	0
+	+	37	44
+	+	13	4
+	+	12	152
+	+	12	51
+	+	11	31
+	+	12	92
+	+	13	28
+	+	15	28
+	+	16	28
+	+	17	28
+	+	18	28
+	+	15	6
+	+	16	0
+	+	15	2
+	+	13	31
+	+	13	25
+	+	12	27
+	+	11	27
+	+	14	0
+	+	13	28
+	+	62	0
+	+	58	23
+	+	53	20
+	+	13	125
+
+> ~/../ansible/site.yml
+	*	1787047501	0
+	"	1	0
+
+> ~/ansible/roles/zabbix_agent/README.md
+	*	1787047268	0
+	"	97	0
+	^	97	0
+	.	96	3
+	+	96	3
+
+> ~/ansible/roles/zabbix_agent/templates/zabbix_agent2.conf.j2
+	*	1787046984	0
+	"	25	0
+	^	25	0
+	.	24	36
+	+	24	36
+
+> ~/ansible/roles/zabbix_agent/tasks/install_debian.yml
+	*	1787046928	0
+	"	34	0
+	^	34	0
+	.	33	18
+	+	33	18
+
+> ~/ansible/roles/zabbix_agent/tasks/main.yml
+	*	1787046412	0
+	"	53	0
+	^	53	0
+	.	52	35
+	+	52	35
+
+> ~/ansible/roles/zabbix_agent/meta/main.yml
+	*	1787046252	0
+	"	15	0
+	^	15	0
+	.	14	16
+	+	14	16
+
+> ~/ansible/roles/zabbix_agent/defaults/main.yml
+	*	1787045992	0
+	"	41	0
+	^	41	0
+	.	40	166
+	+	40	166
 
 > ~/ansible/roles/zabbix_server/tasks/main.yml
 	*	1787034837	0
@@ -349,75 +505,6 @@
 	.	7	0
 	+	3	24
 	+	7	0
-
-> ~/ansible/site.yml
-	*	1787027049	0
-	"	43	24
-	^	43	25
-	.	35	44
-	+	25	16
-	+	26	1
-	+	22	49
-	+	21	46
-	+	11	136
-	+	50	0
-	+	51	0
-	+	52	0
-	+	53	0
-	+	54	0
-	+	55	0
-	+	56	0
-	+	57	0
-	+	63	0
-	+	64	0
-	+	65	0
-	+	66	0
-	+	67	0
-	+	68	0
-	+	69	0
-	+	70	0
-	+	77	0
-	+	78	0
-	+	79	0
-	+	80	0
-	+	81	0
-	+	82	0
-	+	83	0
-	+	84	0
-	+	90	0
-	+	91	0
-	+	92	0
-	+	93	0
-	+	94	0
-	+	95	0
-	+	96	0
-	+	97	0
-	+	104	0
-	+	105	0
-	+	106	0
-	+	107	0
-	+	108	0
-	+	109	0
-	+	110	0
-	+	111	0
-	+	114	0
-	+	115	0
-	+	116	0
-	+	117	0
-	+	114	0
-	+	115	0
-	+	116	0
-	+	117	1
-	+	118	0
-	+	119	0
-	+	120	0
-	+	121	16
-	+	123	1
-	+	46	0
-	+	45	0
-	+	44	24
-	+	36	0
-	+	35	44
 
 > ~/terraform/inventory.tmpl
 	*	1787022338	0

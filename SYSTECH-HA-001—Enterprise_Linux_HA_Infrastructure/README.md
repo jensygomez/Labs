@@ -11,10 +11,9 @@ herramientas ni guardar secretos en el host.
 ---
 
 ## 🏗️ Topología de Infraestructura
-
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│  HOST: MXLinux (jensyg@mx)                                         │
+│  HOST: MXLinux (jensygomez@mx)                                         │
 │  IP: 192.168.18.8 / Red: 192.168.18.0/24                          │
 │  ┌───────────────────────────────────────────────────────────────┐  │
 │  │  CONTENEDOR PODMAN: systech-control (Zero-Trust)               │  │
@@ -38,11 +37,12 @@ herramientas ni guardar secretos en el host.
 │  │  │  │.10.10.21 │  │.10.10.22 │  │.10.10.23 │              │  │  │
 │  │  │  └──────────┘  └──────────┘  └──────────┘              │  │  │
 │  │  │                                                         │  │  │
-│  │  │  ┌──────────┐  ┌──────────┐                            │  │  │
-│  │  │  │  lxc01   │  │  lxc02   │  (Ubuntu 24.04)             │  │  │
-│  │  │  │ VMID 301 │  │ VMID 302 │                            │  │  │
-│  │  │  │.10.10.31 │  │.10.10.32 │                            │  │  │
-│  │  │  └──────────┘  └──────────┘                            │  │  │
+│  │  │  ┌──────────┐  ┌──────────┐  ┌──────────┐              │  │  │
+│  │  │  │  lxc01   │  │  lxc02   │  │  zabbix  │              │  │  │
+│  │  │  │ VMID 301 │  │ VMID 302 │  │ VMID 401 │              │  │  │
+│  │  │  │ Ubuntu   │  │ Ubuntu   │  │ Ubuntu   │              │  │  │
+│  │  │  │.10.10.31 │  │.10.10.32 │  │.10.10.40 │              │  │  │
+│  │  │  └──────────┘  └──────────┘  └──────────┘              │  │  │
 │  │  └─────────────────────────────────────────────────────────┘  │  │
 │  └───────────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────┘
@@ -57,6 +57,7 @@ herramientas ni guardar secretos en el host.
 - Autenticación API de Proxmox funcional vía token con ACL correcta.
 - Todo el ciclo (`control.sh` → `entrypoint.sh` → `tofu apply`) reproducible
   en una laptop nueva siguiendo el checklist de este documento.
+- Servidor de Monitoreo Zabbix Server 7.0 LTS (zabbix - 10.10.10.40) provisionado y funcional con Nginx, PHP 8.3-FPM y PostgreSQL 16 (UTF-8).
 
 ---
 
@@ -371,7 +372,8 @@ SYSTECH-HA-001—Enterprise_Linux_HA_Infrastructure/
 │   ├── haproxy/
 │   ├── keepalived/
 │   ├── linux_baseline/
-│   └── nginx/
+│   ├── nginx/
+│   └── zabbix_server/
 ├── secrets/
 │   └── systech-secrets.yml       # Vault cifrado: token API + llave SSH del control node
 ├── site.yml
@@ -394,37 +396,27 @@ SYSTECH-HA-001—Enterprise_Linux_HA_Infrastructure/
 
 ### ✅ Completado
 
-- [x] Arquitectura Zero-Trust del nodo de control (bootstrap + entrypoint
-      + control.sh) diseñada, probada y recuperada tras formateo de laptop
-- [x] Token API de Proxmox con ACL correcta (`systech-vault-token`)
-- [x] Secretos consolidados en Ansible Vault (`secrets/systech-secrets.yml`)
-- [x] `terraform.tfvars` limpio de secretos hardcodeados
-- [x] Ruta estática host → laboratorio documentada como paso obligatorio
-      de re-bootstrap
-- [x] 3 VMs AlmaLinux 9 + 2 LXC Ubuntu 24.04 creados y accesibles por SSH
-      con llave `systech-control` y usuario `ansible`
-- [x] Este README actualizado con toda la sesión de troubleshooting
+- [x] Arquitectura Zero-Trust del nodo de control (bootstrap + entrypoint + control.sh) probada y recuperada tras formateo.
+- [x] Token API de Proxmox con ACL correcta (`systech-vault-token`).
+- [x] Secretos consolidados en Ansible Vault (`secrets/systech-secrets.yml`).
+- [x] `terraform.tfvars` limpio de secretos hardcodeados.
+- [x] Ruta estática host → laboratorio documentada como paso obligatorio de re-bootstrap.
+- [x] 3 VMs AlmaLinux 9 + 2 LXC Ubuntu 24.04 + 1 Node Zabbix Server creados y accesibles por SSH con llave `systech-control` y usuario `ansible`.
+- [x] **Fase 01: Linux Baseline exitoso:** Aplicado en todos los nodos (usuarios, SSH hardening, repositorios y paquetes base).
+- [x] **Fase 02: Zabbix Server 7.0 LTS instalado y operativo:**
+  - Automatizado vía Ansible (`roles/zabbix_server`).
+  - Stack: **PostgreSQL 16 (UTF-8 via template0)** + **Nginx** + **PHP 8.3-FPM** en Ubuntu 24.04.
+  - Generación de locales `en_US.UTF-8` e integración de esquemas e interfaz web.
 
-### 📋 Pendiente (próxima sesión)
+### 📋 Próxima Tarea
 
-- [ ] **Consolidar el Vault de Ansible con el Vault del control node.**
-      Actualmente existe un vault separado en
-      `inventories/production/group_vars/all/vault.yml`. Evaluar si
-      conviene usar un único Vault (`secrets/systech-secrets.yml`) como
-      fuente para ambos (Terraform y Ansible), o mantenerlos separados
-      con contraseñas distintas por separación de responsabilidades.
-- [ ] Verificar inventario Ansible (`hosts.yml`) contra las IPs reales
-      actuales (`.21/.22/.23` VMs, `.31/.32` LXC)
-- [ ] Ejecutar `ansible-playbook site.yml` (roles: baseline, haproxy,
-      keepalived, app, database, db_seed, nginx)
-- [ ] Definir estrategia para `terraform.tfstate` (actualmente local; no
-      viaja con el repo entre laptops)
-- [ ] Eliminar el token huérfano `token-proxmox` en Proxmox
-- [ ] Borrar o convertir en plantilla real (`templatefile()`) el archivo
-      sin uso `cloud-init/user-data.yml`
-- [ ] Probar failover de keepalived (VIP)
-- [ ] Probar balanceo de HAProxy
-- [ ] Documentar procedimientos de disaster recovery
+- [ ] **Despliegue e integración de Zabbix Agent 2 (`roles/zabbix_agent`):**
+  - Crear e implementar el rol de Ansible para instalar `zabbix-agent2` en `server01`, `server02`, `server03`, `lxc01` y `lxc02`.
+  - Configurar los agentes para comunicar métricas activas/pasivas hacia el servidor Zabbix (`10.10.10.40`).
+- [ ] Ejecutar `ansible-playbook site.yml` (roles pendientes: haproxy, keepalived, app, database, db_seed, nginx).
+- [ ] Definir estrategia para `terraform.tfstate` (actualmente local; no viaja con el repo entre laptops).
+- [ ] Eliminar el token huérfano `token-proxmox` en Proxmox.
+- [ ] Probar failover de keepalived (VIP) y balanceo de HAProxy.
 
 ---
 

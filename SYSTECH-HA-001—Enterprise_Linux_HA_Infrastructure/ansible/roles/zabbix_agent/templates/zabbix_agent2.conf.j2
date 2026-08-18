@@ -1,0 +1,25 @@
+# {{ ansible_managed }}
+# Generado por el rol zabbix_agent — SYSTECH-HA-001
+
+PidFile=/run/zabbix/zabbix_agent2.pid
+LogFile={{ zabbix_agent_log_file }}
+LogFileSize={{ zabbix_agent_log_file_size }}
+
+{% if zabbix_agent_passive_checks %}
+Server={{ zabbix_server_ip }}
+{% endif %}
+
+{% if zabbix_agent_active_checks %}
+ServerActive={{ zabbix_server_ip }}
+RefreshActiveChecks={{ zabbix_agent_refresh_active_checks }}
+BufferSend={{ zabbix_agent_buffer_send }}
+BufferSize={{ zabbix_agent_buffer_size }}
+{% endif %}
+
+Hostname={{ zabbix_agent_hostname }}
+ListenPort={{ zabbix_agent_listen_port }}
+
+Include=/etc/zabbix/zabbix_agent2.d/*.conf
+
+ControlSocket=/run/zabbix/agent.sock
+

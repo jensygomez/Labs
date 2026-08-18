@@ -1,0 +1,53 @@
+---
+# roles/zabbix_agent/tasks/main.yml
+
+- name: "010 | Instalar zabbix-agent2 (rama RedHat / AlmaLinux)"
+  include_tasks: install_redhat.yml
+  when: ansible_os_family == "RedHat"
+
+- name: "020 | Instalar zabbix-agent2 (rama Debian / Ubuntu)"
+  include_tasks: install_debian.yml
+  when: ansible_os_family == "Debian"
+
+- name: "030 | Fallar si la familia de SO no está soportada por este rol"
+  fail:
+    msg: >
+      zabbix_agent no soporta ansible_os_family={{ ansible_os_family }}.
+      Familias soportadas: RedHat, Debian.
+  when: ansible_os_family not in ["RedHat", "Debian"]
+
+- name: "040 | Desplegar zabbix_agent2.conf"
+  template:
+    src: zabbix_agent2.conf.j2
+    dest: /etc/zabbix/zabbix_agent2.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart zabbix-agent2
+
+- name: "050 | Habilitar y arrancar zabbix-agent2"
+  systemd:
+    name: zabbix-agent2
+    enabled: true
+    state: started
+
+- name: "060 | Abrir puerto {{ zabbix_agent_listen_port }}/tcp en firewalld (RedHat)"
+  ansible.posix.firewalld:
+    port: "{{ zabbix_agent_listen_port }}/tcp"
+    permanent: true
+    immediate: true
+    state: enabled
+  when:
+    - zabbix_agent_manage_firewall
+    - ansible_os_family == "RedHat"
+
+- name: "070 | Abrir puerto {{ zabbix_agent_listen_port }}/tcp en ufw (Debian)"
+  community.general.ufw:
+    rule: allow
+    port: "{{ zabbix_agent_listen_port }}"
+    proto: tcp
+    src: "{{ zabbix_server_ip }}"
+  when:
+    - zabbix_agent_manage_firewall
+    - ansible_os_family == "Debian"
+

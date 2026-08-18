@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  role_name: zabbix_agent
+  description: Instala y configura zabbix-agent2 en nodos RedHat/AlmaLinux y Debian/Ubuntu
+  min_ansible_version: "2.14"
+  platforms:
+    - name: EL
+      versions:
+        - "9"
+    - name: Ubuntu
+      versions:
+        - "24.04"
+
+dependencies: []
+
