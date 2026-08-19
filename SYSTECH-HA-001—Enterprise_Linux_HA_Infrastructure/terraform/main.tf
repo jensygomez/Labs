@@ -116,8 +116,18 @@ resource "proxmox_virtual_environment_vm" "almalinux_cluster" {
 # Generación automática del inventario de Ansible
 resource "local_file" "ansible_inventory" {
   content = templatefile("${path.module}/inventory.tmpl", {
-    vms  = proxmox_virtual_environment_vm.almalinux_cluster
-    lxcs = proxmox_virtual_environment_container.lxc_cluster
+    vms = {
+      for k, vm in proxmox_virtual_environment_vm.almalinux_cluster : k => {
+        name = k
+        ip   = var.cluster_nodes[k].ip
+      }
+    }
+    lxcs = {
+      for k, lxc in proxmox_virtual_environment_container.lxc_cluster : k => {
+        name = k
+        ip   = var.lxc_containers[k].ip
+      }
+    }
   })
   filename = "${path.module}/../ansible/inventories/production/hosts.yml"
 }
