@@ -8,8 +8,6 @@
 #    ansible-playbook site.yml
 #
 # 2. Despliegue fase por fase (Útil para pruebas o reconstrucción modular):
-#    Fase 01 (Baseline)    : ansible-playbook -i ansible/inventories/production/hosts.yml ansible/site.yml --tags baseline --ask-vault-pass
-#    Fase 02 (ZabbixServer): ansible-playbook -i ansible/inventories/production/hosts.yml ansible/site.yml --tags zabbix_server --ask-vault-pass
 #    Fase 03 (ZabbixAgent) : ansible-playbook -i ansible/inventories/production/hosts.yml ansible/site.yml --tags zabbix_agent --ask-vault-pass 
 #    Fase 02 (VIP HA)        :     ansible-playbook site.yml --tags keepalived --ask-vault-pass
 #    Fase 03 (LB HA)         :      ansible-playbook site.yml --tags haproxy --ask-vault-pass
@@ -23,117 +21,9 @@
 # Solo Aplica a las 3 VMS que tienen AlmaLinux9
 # Comando individual: ansible-playbook -i ansible/inventories/production/hosts.yml ansible/site.yml --tags baseline --ask-vault-pass
 # ------------------------------------------------------------------------------
-- name: "Phase 01 - Apply Linux Baseline to all nodes"
-  hosts: ha_nodes
-# serial: 2
-  become: true
-  gather_facts: true
-  roles:
-    - role: linux_baseline
-      tags: baseline
-
-
-# ------------------------------------------------------------------------------
-# FASE 02: CONFIGURACIONES DEL ZABBBIX SERVER
-# MONITOREO: ZABBIX SERVER (LXC Container 10.10.10.40)
-# ------------------------------------------------------------------------------
-- name: "Phase Zabbix - Deploy Zabbix Monitoring Server"
-  hosts: monitoring_nodes
-  become: true
-  gather_facts: true
-  roles:
-    - role: zabbix_server
-      tags: zabbix_server
-
-# ------------------------------------------------------------------------------
-# FASE 03: CONFIGURACIONES DEL ZABBIX AGENT
-# MONITOREO: ZABBIX AGENT en los 5 nodos (server01/02/03 + lxc01 + lxc02)
-# ------------------------------------------------------------------------------
-- name: "Phase 03 | Zabbix Agent in all nodes"
-  hosts: "ha_nodes" #:lxc01:lxc02"
-  become: true
-  gather_facts: true
-  roles:
-    - role: zabbix_agent
-      tags: zabbix_agent
-
-
-
-# ------------------------------------------------------------------------------
-# FASE 02: ALTA DISPONIBILIDAD - RED / VIP (KEEPALIVED)
-# Comando individual: ansible-playbook site.yml --tags keepalived --ask-vault-pass
-# ------------------------------------------------------------------------------
-#- name: "Phase 02 - High Availability VIP Layer (Keepalived)"
-#  hosts: lb_nodes
-#  serial: 2
-#  become: true
-#  gather_facts: true
-#  roles:
-#    - role: keepalived
-#      tags: keepalived
-
-# ------------------------------------------------------------------------------
-# FASE 03: ALTA DISPONIBILIDAD - BALANCEADOR DE CARGA (HAPROXY)
-# Comando individual: ansible-playbook site.yml --tags haproxy --ask-vault-pass
-# ------------------------------------------------------------------------------
-#- name: "Phase 03 - High Availability Load Balancer Layer (HAProxy)"
-#  hosts: lb_nodes
-#  serial: 2
-#  become: true
-#  gather_facts: true
-#  roles:
-#    - role: haproxy
-#      tags: haproxy
-
-# ------------------------------------------------------------------------------
-# FASE 04: CAPA DE APLICACIÓN WEB (NGINX BACKENDS)
-# Comando individual: ansible-playbook site.yml --tags nginx --ask-vault-pass
-# NOTA: Próxima fase a implementar para completar el stack end-to-end.
-# ------------------------------------------------------------------------------
-#- name: "Phase 04 - Web Application Stack (Nginx Backends)"
-#  hosts: ha_nodes
-#  serial: 2
-#  become: true
-#  gather_facts: true
-#  roles:
-#    - role: nginx
-#      tags: nginx
-
-# ------------------------------------------------------------------------------
-# FASE 05: CAPA DE BASE DE DATOS (MARIADB)
-# Comando individual: ansible-playbook site.yml --tags database --ask-vault-pass
-# -----------------------------------------------------------------------------
-#- name: "Phase 05 - Database Layer (MariaDB)"
-#  hosts: database_nodes
-#  serial: 2
-#  become: true
-#  gather_facts: true
-#  roles:
-#    - role: database
-#      tags: database
-
-
-# ------------------------------------------------------------------------------
-# FASE 06: CAPA DE APLICACIÓN (SEEDING + PYTHON/FLASK/GUNICORN)
-# Comando individual: ansible-playbook site.yml --tags db_seed,app --ask-vault-pass
-# ------------------------------------------------------------------------------
-#- name: "Pahse 06a - Database Seeding (Schema + Test Data)"
-#  hosts: database_nodes
-#  serial: 2
-#  become: true
-#  gather_facts: true
-#  roles: 
-#    - role: db_seed
-#      tags: db_seed
-
-
-#- name: "Phase 06b - Application Layer (Flask + Gunicorn"
-#  hosts: ha_nodes
-# serial: 2
-# become: true
-#  gather_facts: true
-#  roles:
-#    - role: app
-#      tags: app
 #
-#
+- name: "Aprovisionamiento del Laboratorio HA - Módulo 1: Storage NFS y LVM"
+  hosts: all
+  become: true
+  roles:
+    - role_nfs_lvm_storage

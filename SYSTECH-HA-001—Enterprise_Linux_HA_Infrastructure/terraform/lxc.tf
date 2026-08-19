@@ -84,8 +84,8 @@ resource "null_resource" "lxc_provision_user" {
     type        = "ssh"
     host        = split("/", each.value.ip)[0]
     user        = "root"
-    private_key = var.proxmox_ssh_private_key
-    timeout     = "60s"
+    private_key = file("~/.ssh/id_systech_control")
+    timeout     = "2m"
   }
 
   provisioner "remote-exec" {
