@@ -173,12 +173,13 @@ SYSTECH-HA-001—Enterprise_Linux_HA_Infrastructure/
 │       └── hosts.yml
 ├── README.md                     # ← Este archivo
 ├── roles/
-│   ├── role_nfs_lvm_storage/     # Módulo 1: Storage NFS/LVM + Web Apache
-│   ├── role_systemd_custom_app/  # Módulo 2: Custom Systemd Unit + Logs NFS
-│   ├── role_haproxy_keepalived/ # Módulo 3: Keepalived + HAProxy + Session NFS
-│   ├── role_selinux_security/    # Módulo 4: SELinux Policies + Custom Ports
-│   ├── role_pam_sudoers_users/   # Módulo 5: PAM + SSH Hardening + NFS Homes
-│   └── role_firewalld_nftables/  # Módulo 6: Firewalld + NFTables + DB Storage
+│   ├── role_lb_ha/                   # ROL BASE: Ingress HAProxy + Keepalived + Traffic Generator
+│   ├── role_nfs_lvm_storage/         # Módulo 1: Storage NFS/LVM + Web Apache
+│   ├── role_systemd_custom_app/      # Módulo 2: Custom Systemd Unit + Logs NFS
+│   ├── role_network_kernel_tuning/   # Módulo 3: Kernel Parameters (sysctl) + Sockets Tuning
+│   ├── role_selinux_security/        # Módulo 4: SELinux Policies + Custom Ports
+│   ├── role_pam_sudoers_users/       # Módulo 5: PAM + SSH Hardening + NFS Homes
+│   └── role_firewalld_nftables/      # Módulo 6: Firewalld + NFTables + DB Storage
 ├── secrets/
 │   └── systech-secrets.yml       # Vault principal: Token Proxmox + SSH Key
 ├── site.yml
@@ -220,14 +221,5 @@ tofu apply
 
 ---
 
-### 📌 Nuestra Primera Tarea: `role_nfs_lvm_storage`
-
-1. **Ajuste de Terraform/OpenTofu (`terraform/`):** Garantizar que la infraestructura tenga declaradas las 4 VMs (`app01-03`, `storage01`) y los 3 LXC (`lb01`, `lb02`, `client`).
-2. **Creación del primer Rol:** Crear el directorio `roles/role_nfs_lvm_storage/`.
-3. **Configuración de Storage:** Crear el playbook para inicializar un Physical Volume (PV), Volume Group (VG) y Logical Volume (LV) en `storage01`, exportándolo vía NFS (`/mnt/shared_webdata`).
-4. **Configuración de Clientes NFS (VMs `app01-03`):** Montar el recurso remoto en `/var/www/html` y levantar Apache (`httpd`).
-5. **Configuración de Tráfico (`client`):** Crear un script en el contenedor LXC cliente enviando consultas constantes a las VMs para validar el estado HTTP 200.
-
-¿Listo para iniciar editando los archivos de Terraform y crear el primer rol?
 
 ```
