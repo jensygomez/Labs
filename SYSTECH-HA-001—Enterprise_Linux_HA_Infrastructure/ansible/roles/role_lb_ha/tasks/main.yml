@@ -1,0 +1,63 @@
+---
+# ============================================================
+# CONFIGURACIÓN DE LOS LOAD BALANCERS (lb01 y lb02)
+# ============================================================
+- name: "LB | Instalar HAProxy, Keepalived y psmisc"
+  ansible.builtin.package:
+    name:
+      - haproxy
+      - keepalived
+      - psmisc
+    state: present
+  when: inventory_hostname in groups['lb_nodes']
+
+- name: "LB | Permitir bind de IPs no locales en Kernel (sysctl)"
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_nonlocal_bind
+    value: '1'
+    state: present
+    reload: true
+  when: inventory_hostname in groups['lb_nodes']
+
+- name: "LB | Configurar /etc/keepalived/keepalived.conf"
+  ansible.builtin.template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    mode: '0644'
+  vars:
+    keepalived_role: "{{ 'MASTER' if inventory_hostname == 'lb01' else 'BACKUP' }}"
+    keepalived_priority: "{{ 101 if inventory_hostname == 'lb01' else 100 }}"
+  notify: Restart Keepalived
+  when: inventory_hostname in groups['lb_nodes']
+
+- name: "LB | Configurar /etc/haproxy/haproxy.cfg"
+  ansible.builtin.template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    mode: '0644'
+  notify: Restart HAProxy
+  when: inventory_hostname in groups['lb_nodes']
+
+- name: "LB | Iniciar y habilitar HAProxy y Keepalived"
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - haproxy
+    - keepalived
+  when: inventory_hostname in groups['lb_nodes']
+
+# ============================================================
+# CONFIGURACIÓN DEL CLIENTE (client - Ubuntu/Debian)
+# ============================================================
+- name: "CLIENT | Instalar herramientas de prueba HTTP y red"
+  ansible.builtin.package:
+    name:
+      - curl
+      - dnsutils
+      - iputils-ping
+      - apache2-utils
+    state: present
+    update_cache: true
+  when: inventory_hostname in groups['client_nodes']

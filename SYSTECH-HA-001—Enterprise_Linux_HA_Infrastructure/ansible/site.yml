@@ -21,9 +21,11 @@
 # Solo Aplica a las 3 VMS que tienen AlmaLinux9
 # Comando individual: ansible-playbook -i ansible/inventories/production/hosts.yml ansible/site.yml --tags baseline --ask-vault-pass
 # ------------------------------------------------------------------------------
-#
-- name: "Aprovisionamiento del Laboratorio HA - Módulo 1: Storage NFS y LVM"
+
+
+- name: "Aprovisionamiento del Laboratorio HA - Módulo 1 & 2"
   hosts: all
   become: true
   roles:
     - role_nfs_lvm_storage
+    - role_lb_ha
