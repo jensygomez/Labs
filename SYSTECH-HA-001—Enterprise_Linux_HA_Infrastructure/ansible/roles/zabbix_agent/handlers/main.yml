@@ -1,7 +1,0 @@
----
-# roles/zabbix_agent/handlers/main.yml
-- name: restart zabbix-agent2
-  systemd:
-    name: zabbix-agent2
-    state: restarted
-

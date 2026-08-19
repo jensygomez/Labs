@@ -1,6 +1,0 @@
----
-- name: Restart mariadb
-  ansible.builtin.service:
-    name: "{{ 'mariadb' if ansible_facts['os_family'] == 'RedHat' else 'mysql' }}"
-    state: restarted
-
