@@ -83,6 +83,17 @@ resource "proxmox_virtual_environment_vm" "almalinux_cluster" {
     size         = 20
   }
 
+  # Discos adicionales dinámicos para LVM / Storage (scsi1, scsi2, scsi3)
+  dynamic "disk" {
+    for_each = [for idx, size in each.value.extra_disks : { index = idx + 1, size = size }]
+    content {
+      datastore_id = "local-lvm"
+      interface    = "scsi${disk.value.index}"
+      size         = disk.value.size
+      file_format  = "raw"
+    }
+  }
+
   # Configuración de Red vinculada al bridge vmbr1 (Red del Laboratorio)
   network_device {
     bridge = "vmbr1"
@@ -100,7 +111,7 @@ resource "proxmox_virtual_environment_vm" "almalinux_cluster" {
     user_data_file_id = proxmox_virtual_environment_file.cloud_user_config[each.key].id
     meta_data_file_id = proxmox_virtual_environment_file.cloud_meta_config[each.key].id
   }
-} # ← AQUÍ FALTABA CERRAR LA LLAVE
+} 
 
 # Generación automática del inventario de Ansible
 resource "local_file" "ansible_inventory" {

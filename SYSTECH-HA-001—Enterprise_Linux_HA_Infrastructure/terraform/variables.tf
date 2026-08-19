@@ -23,15 +23,17 @@ variable "ssh_public_key" {
 # Mapa para definir el cluster de 3 nodos
 variable "cluster_nodes" {
   type = map(object({
-    vmid   = number
-    ip     = string
-    cores  = number
-    memory = number # AÑADIDO: Faltaba en la definición del objeto
+    vmid        = number
+    ip          = string
+    cores       = number
+    memory      = number 
+    extra_disks = list(number)
   }))
   default = {
-    "server01" = { vmid = 201, ip = "10.10.10.21/24", cores = 1, memory = 1536 }
-    "server02" = { vmid = 202, ip = "10.10.10.22/24", cores = 1, memory = 1536 }
-    "server03" = { vmid = 203, ip = "10.10.10.23/24", cores = 1, memory = 1536 }
+    "app01"     = { vmid = 201, ip = "10.10.10.21/24", cores = 1, memory = 1536, extra_disks = [] }
+    "app02"     = { vmid = 202, ip = "10.10.10.22/24", cores = 1, memory = 1536, extra_disks = [] }
+    "app03"     = { vmid = 203, ip = "10.10.10.23/24", cores = 1, memory = 1536, extra_disks = [] }
+    "storage01" = { vmid = 204, ip = "10.10.10.25/24", cores = 1, memory = 1536, extra_disks = [1, 1, 1] }
   }
 }
 
