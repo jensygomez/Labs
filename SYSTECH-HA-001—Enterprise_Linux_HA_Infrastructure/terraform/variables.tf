@@ -45,9 +45,9 @@ variable "lxc_containers" {
     disk_size     = number
   }))
   default = {
-    "lxc01" = { vmid = 301, ip = "10.10.10.31/24", cores = 1, memory = 512, disk_size = 8 }
-    "lxc02" = { vmid = 302, ip = "10.10.10.32/24", cores = 1, memory = 512, disk_size = 8 }
-    "zabbix" = { vmid = 340, ip = "10.10.10.40/24", cores = 1, memory = 1024, disk_size = 10 }
+    "lb01" = { vmid = 301, ip = "10.10.10.31/24", cores = 1, memory = 512, disk_size = 8 }
+    "lb02" = { vmid = 302, ip = "10.10.10.32/24", cores = 1, memory = 512, disk_size = 8 }
+    "client" = { vmid = 303, ip = "10.10.10.33/24", cores = 1, memory = 512, disk_size = 8 }
 }
 }
 
