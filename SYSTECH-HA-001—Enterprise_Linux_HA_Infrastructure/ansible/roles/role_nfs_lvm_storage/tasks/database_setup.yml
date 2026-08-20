@@ -46,6 +46,7 @@
   loop:
     - iscsid
     - iscsi
+  ignore_errors: true
 
 - name: "Descubrir iSCSI Target en storage01"
   ansible.builtin.command:

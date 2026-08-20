@@ -5,11 +5,18 @@
       - nfs-utils
       - lvm2
       - firewalld
-      - targetcli # <--- NUEVO: Necesario para iSCSI Target
+      - targetcli 
     state: present
     update_cache: true
   when: ansible_os_family == "RedHat"
     
+- name: "Crear grupo postgres en storage01 con GID 26"
+  ansible.builtin.group:
+    name: postgres
+    gid: 26
+    system: true
+  when: ansible_hostname == "storage01"
+
 - name: "Crear usuario postgres en storage01 con UID 26"
   ansible.builtin.user:
     name: postgres

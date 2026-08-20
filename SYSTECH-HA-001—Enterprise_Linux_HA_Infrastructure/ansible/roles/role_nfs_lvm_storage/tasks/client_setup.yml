@@ -6,39 +6,63 @@
       - jq
     state: present
     update_cache: true
-#    cache_valid_time: 3600
-#  when: ansible_os_family == "Debian"
 
 - name: "Desplegar script de tráfico continuo en el cliente"
   ansible.builtin.copy:
     dest: /usr/local/bin/infinite_traffic.sh
     mode: '0755'
     content: |
-			#!/bin/bash
-			VIP="10.10.10.30"
-  
-			while true; do
-				for q in {1..5}; do
-					clear
-					echo "=========================================================="
-					echo "         SYSTECH LAB — DYNAMIC QUERY TRAFFIC              "
-					echo "=========================================================="
-					echo "Enviando Petición Q$q a la VIP ($VIP)..."
-					echo "----------------------------------------------------------"
+      #!/bin/bash
+      VIP="10.10.10.30"
       
-					# Manejo de timeouts: máximo 3s de conexión y 5s totales
-					RESPONSE=$(curl -s --connect-timeout 3 --max-time 5 "http://${VIP}/index.php?q=${q}")
-      
-					if [ -z "$RESPONSE" ]; then
-						echo " [!] ERROR: Sin respuesta de la VIP ${VIP} (Timeout o puerto 80 cerrado)"
-					elif echo "$RESPONSE" | jq . >/dev/null 2>&1; then
-						echo "$RESPONSE" | jq .
-					else
-						echo "Respuesta del servidor (no JSON):"
-						echo "$RESPONSE"
-					fi
-      
-					echo "----------------------------------------------------------"
-					sleep 2
-				done
-			done
+      while true; do
+        for q in {1..5}; do
+          clear
+          echo "=========================================================="
+          echo "         SYSTECH LAB — DYNAMIC QUERY TRAFFIC              "
+          echo "=========================================================="
+          echo "Enviando Petición Q$q a la VIP ($VIP)..."
+          echo "----------------------------------------------------------"
+          
+          # Manejo de timeouts: máximo 3s de conexión y 5s totales
+          RESPONSE=$(curl -s --connect-timeout 3 --max-time 5 "http://${VIP}/index.php?q=${q}")
+          
+          if [ -z "$RESPONSE" ]; then
+            echo " [!] ERROR: Sin respuesta de la VIP ${VIP} (Timeout o puerto 80 cerrado)"
+          elif echo "$RESPONSE" | jq . >/dev/null 2>&1; then
+            echo "$RESPONSE" | jq .
+          else
+            echo "Respuesta del servidor (no JSON):"
+            echo "$RESPONSE"
+          fi
+          
+          echo "----------------------------------------------------------"
+          sleep 2
+        done
+      done
+
+- name: "Crear servicio systemd para el tráfico continuo"
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/infinite-scroll.service
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Generador de tráfico sintético continuo para HAProxy
+      After=network.target
+
+      [Service]
+      Type=simple
+      ExecStart=/usr/local/bin/infinite_traffic.sh
+      Restart=always
+      RestartSec=5
+      User=root
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: "Recargar systemd, habilitar e iniciar el servicio de tráfico"
+  ansible.builtin.systemd:
+    name: infinite-scroll
+    state: started
+    enabled: true
+    daemon_reload: true

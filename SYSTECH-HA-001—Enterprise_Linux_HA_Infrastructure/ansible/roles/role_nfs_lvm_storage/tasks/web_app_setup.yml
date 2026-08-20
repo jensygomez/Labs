@@ -11,12 +11,20 @@
     update_cache: true
   when: ansible_os_family == "RedHat"
 
+- name: "Asegurar que el punto de montaje exista como directorio"
+  ansible.builtin.file:
+    path: /var/www/html
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
 - name: "Montar recurso NFS compartido para la Web"
   ansible.posix.mount:
     path: /var/www/html
     src: "{{ storage_host_ip }}:/exports/webdata"
     fstype: nfs
-    opts: "defaults,_netdev"
+    opts: "rw,sync,noatime,nodev,nosuid"
     state: mounted
 
 - name: "Desplegar aplicación PHP dinámica (Feed)"
