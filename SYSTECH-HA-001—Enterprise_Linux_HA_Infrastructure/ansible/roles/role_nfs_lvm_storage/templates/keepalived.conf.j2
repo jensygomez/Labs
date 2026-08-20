@@ -1,0 +1,14 @@
+vrrp_instance VI_1 {
+    state {{ keepalived_state | default('BACKUP') }}
+    interface {{ keepalived_interface | default('eth0') }}
+    virtual_router_id {{ keepalived_vrrp_id | default(51) }}
+    priority {{ keepalived_priority | default(100) }}
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass {{ keepalived_auth_pass | default('Secr3t!') }}
+    }
+    virtual_ipaddress {
+        {{ keepalived_vip }}
+    }
+}

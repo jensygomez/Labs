@@ -38,15 +38,14 @@
     content: "InitiatorName={{ iscsi_initiator_iqn }}\n"
     mode: '0600'
 
-- name: "Iniciar servicios iSCSI"
+- name: "Iniciar servicios iSCSI Initiator"
   ansible.builtin.systemd:
     name: "{{ item }}"
     state: started
     enabled: true
   loop:
+    - iscsid.socket
     - iscsid
-    - iscsi
-  ignore_errors: true
 
 - name: "Descubrir iSCSI Target en storage01"
   ansible.builtin.command:

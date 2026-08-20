@@ -1,2 +1,4 @@
 ---
-keepalived_vip: "10.45.223.250"
+keepalived_interface: "eth0"
+keepalived_vrrp_id: 51
+keepalived_vip: "10.10.10.30/24"

@@ -1,5 +1,5 @@
 ---
-- name: "Actualizar repositorios e instalar HAProxy y Keepalived en Ubuntu"
+- name: "Instalar paquetes en nodos Load Balancer (Ubuntu/Debian)"
   ansible.builtin.apt:
     name:
       - haproxy
@@ -10,18 +10,36 @@
     cache_valid_time: 3600
   when: ansible_os_family == "Debian"
 
-- name: "Habilitar la asignación de IP No Local en el Kernel (binding VIP)"
+- name: "Habilitar la asignación de IP no local en el Kernel (ip_nonlocal_bind)"
   ansible.posix.sysctl:
     name: net.ipv4.ip_nonlocal_bind
     value: '1'
     state: present
     reload: true
 
-- name: "Iniciar y habilitar HAProxy y Keepalived"
+- name: "Desplegar configuración de Keepalived desde plantilla Jinja2"
+  ansible.builtin.template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: "Reiniciar Keepalived"
+
+- name: "Desplegar configuración de HAProxy desde plantilla Jinja2"
+  ansible.builtin.template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    owner: root
+    group: root
+    mode: '0644'
+  notify: "Reiniciar HAProxy"
+
+- name: "Garantizar que Keepalived y HAProxy estén iniciados y habilitados"
   ansible.builtin.systemd:
     name: "{{ item }}"
     state: started
     enabled: true
   loop:
-    - haproxy
     - keepalived
+    - haproxy
