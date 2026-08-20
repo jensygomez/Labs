@@ -1,30 +1,9 @@
-# ==============================================================================
-# INCIDENTE 001 - "Apache no arranca tras mantenimiento"
-# Dificultad: 3/10 (L1 - Junior)
-#
-# PROPÓSITO: Inyectar una falla controlada en UN nodo aleatorio de app_nodes.
-# El "mantenimiento" nocturno estandarizó el puerto de escucha de Apache a
-# 8099 en toda la flota. En la mayoría de nodos se actualizó también el
-# contexto SELinux del puerto (semanage port), pero en el nodo afectado esa
-# parte del cambio no se aplicó -> httpd falla al hacer bind por SELinux.
-#
-# USO:
-#   ansible-playbook -i inventories/production/hosts.yml \
-#     "incident/001 - Apache no arranca tras mantenimiento/Apache no arranca tras mantenimiento.yml" \
-#     --ask-vault-pass
-#
-# NOTA: Guarda un backup (.pre_incident_001) del archivo original y del
-# contexto SELinux, para que "Recuperacion al estado anterior del
-# incidente.yml" pueda revertir exactamente lo que este playbook hizo.
-# Es seguro re-ejecutarlo (no rompe un nodo que ya tiene el incidente activo).
-# ==============================================================================
-
-- name: "Incidente 001 - Selección del nodo objetivo"
+---
+- name: "System Maintenance Validation"
   hosts: localhost
   connection: local
   gather_facts: false
   tasks:
-
     - name: "10"
       ansible.builtin.set_fact:
         nodo_incidente_001: "{{ groups['app_nodes'] | random }}"
@@ -36,25 +15,22 @@
 
     - name: "30"
       ansible.builtin.debug:
-        msg: "Incidente 001 será inyectado en: {{ nodo_incidente_001 }}"
+        msg: "Target selected."
 
-
-- name: "40"
+- name: "System Maintenance Validation - Execution"
   hosts: incident_001_target
   become: true
   gather_facts: true
-
   tasks:
-
     - name: "50"
       ansible.builtin.stat:
-        path: /etc/httpd/conf/httpd.conf.pre_incident_001
+        path: /etc/httpd/conf/httpd.conf.orig
       register: ya_inyectado
 
     - name: "60"
       ansible.builtin.copy:
         src: /etc/httpd/conf/httpd.conf
-        dest: /etc/httpd/conf/httpd.conf.pre_incident_001
+        dest: /etc/httpd/conf/httpd.conf.orig
         remote_src: true
       when: not ya_inyectado.stat.exists
 
@@ -67,36 +43,55 @@
     - name: "80"
       ansible.builtin.copy:
         content: "{{ selinux_ports_backup.stdout }}\n"
-        dest: /etc/httpd/conf/selinux_ports.pre_incident_001
+        dest: /etc/httpd/conf/selinux_ports.orig
         mode: '0644'
       when: not ya_inyectado.stat.exists
 
+    # --- FALSOS POSITIVOS / DISTRACCIONES ---
     - name: "90"
+      ansible.builtin.shell: |
+        echo "$(date) - [INFO] Post-maintenance check: SELinux context for port 8099 verified and active." >> /var/log/messages
+        echo "$(date) - [INFO] Firewall rules for 8099 verified." >> /var/log/messages
+      when: not ya_inyectado.stat.exists
+
+    - name: "91"
+      ansible.builtin.shell: |
+        echo "$(date) - [WARN] chronyd: System clock drift detected. Synchronizing..." >> /var/log/messages
+      when: not ya_inyectado.stat.exists
+
+    - name: "92"
+      ansible.builtin.copy:
+        content: |
+          Maintenance Post-Check Report:
+          - All nodes healthy.
+          - Port 8099 open in firewalld.
+          - SELinux permissive mode verified.
+          - NTP synchronized.
+        dest: /tmp/maint_check.log
+        mode: '0644'
+      when: not ya_inyectado.stat.exists
+    # ----------------------------------------
+
+    - name: "100"
       ansible.builtin.lineinfile:
         path: /etc/httpd/conf/httpd.conf
         regexp: '^Listen '
         line: 'Listen 8099'
       when: not ya_inyectado.stat.exists
 
-    # A propósito NO ejecutamos "semanage port -a -t http_port_t -p tcp 8099"
-    # -> esto es justo lo que faltó en el "mantenimiento" y es la causa raíz
-    # que el estudiante debe encontrar.
-
-    - name: "100"
+    - name: "110"
       ansible.builtin.systemd:
         name: httpd
         state: restarted
       ignore_errors: true
       when: not ya_inyectado.stat.exists
 
-    - name: "110"
+    - name: "120"
       ansible.builtin.command: systemctl is-active httpd
       register: httpd_status
       changed_when: false
       failed_when: false
 
-#    - name: "[LOG INTERNO - no forma parte del ticket]"
-#      ansible.builtin.debug:
-#        msg: >-
-#          Incidente 001 sobre {{ inventory_hostname }} -> estado httpd:
-#          {{ httpd_status.stdout }}. Backup guardado: {{ not ya_inyectado.stat.exists }}
+    - name: "130"
+      ansible.builtin.debug:
+        msg: "Execution completed. Status: {{ httpd_status.stdout }}"

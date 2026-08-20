@@ -1,35 +1,17 @@
-# ==============================================================================
-# INCIDENTE 001 - Recuperación al estado anterior
-#
-# PROPÓSITO: Revertir exactamente lo que hizo
-#   "Apache no arranca tras mantenimiento.yml", en el nodo donde haya sido
-#   inyectado (sea cual sea -- no necesitas saber cuál de antemano).
-#
-# Es completamente idempotente: si se ejecuta contra un nodo sin el
-# incidente activo, no hace nada y lo reporta explícitamente. Se puede
-# correr contra los 3 app_nodes sin miedo a romper el que ya está sano.
-#
-# USO:
-#   ansible-playbook -i inventories/production/hosts.yml \
-#     "incident/001 - Apache no arranca tras mantenimiento/Recuperacion al estado anterior del incidente.yml" \
-#     --ask-vault-pass
-# ==============================================================================
-
-- name: "10"
+---
+- name: "System State Reconciliation"
   hosts: app_nodes
   become: true
   gather_facts: true
-
   tasks:
-
     - name: "20"
       ansible.builtin.stat:
-        path: /etc/httpd/conf/httpd.conf.pre_incident_001
+        path: /etc/httpd/conf/httpd.conf.orig
       register: backup_conf
 
     - name: "30"
       ansible.builtin.copy:
-        src: /etc/httpd/conf/httpd.conf.pre_incident_001
+        src: /etc/httpd/conf/httpd.conf.orig
         dest: /etc/httpd/conf/httpd.conf
         remote_src: true
         owner: root
@@ -39,31 +21,26 @@
 
     - name: "40"
       ansible.builtin.file:
-        path: /etc/httpd/conf/httpd.conf.pre_incident_001
+        path: "{{ item }}"
         state: absent
+      loop:
+        - /etc/httpd/conf/httpd.conf.orig
+        - /etc/httpd/conf/selinux_ports.orig
+        - /tmp/maint_check.log
       when: backup_conf.stat.exists
 
     - name: "50"
-      ansible.builtin.file:
-        path: /etc/httpd/conf/selinux_ports.pre_incident_001
-        state: absent
-      when: backup_conf.stat.exists
-
-    - name: "60"
       ansible.builtin.systemd:
         name: httpd
         state: restarted
       when: backup_conf.stat.exists
 
-    - name: "70"
+    - name: "60"
       ansible.builtin.command: systemctl is-active httpd
       register: httpd_status_after
       changed_when: false
       when: backup_conf.stat.exists
 
-    - name: "80"
+    - name: "70"
       ansible.builtin.debug:
-        msg: >-
-          {{ 'Incidente 001 revertido en ' + inventory_hostname + '. httpd activo: ' + httpd_status_after.stdout
-             if backup_conf.stat.exists
-             else inventory_hostname + ': sin incidente 001 activo en este nodo, nada que hacer.' }}
+        msg: "Task completed. httpd status: {{ httpd_status_after.stdout | default('skipped') }}"
