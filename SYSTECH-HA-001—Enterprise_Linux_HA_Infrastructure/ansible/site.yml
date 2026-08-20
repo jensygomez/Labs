@@ -28,4 +28,3 @@
   become: true
   roles:
     - role_nfs_lvm_storage
-    - role_lb_ha
