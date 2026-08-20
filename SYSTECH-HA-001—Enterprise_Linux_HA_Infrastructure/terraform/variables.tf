@@ -30,10 +30,13 @@ variable "cluster_nodes" {
     extra_disks = list(number)
   }))
   default = {
-    "app01"     = { vmid = 201, ip = "10.10.10.21/24", cores = 1, memory = 1536, extra_disks = [] }
-    "app02"     = { vmid = 202, ip = "10.10.10.22/24", cores = 1, memory = 1536, extra_disks = [] }
-    "app03"     = { vmid = 203, ip = "10.10.10.23/24", cores = 1, memory = 1536, extra_disks = [] }
-    "storage01" = { vmid = 204, ip = "10.10.10.25/24", cores = 1, memory = 1536, extra_disks = [1, 1, 1] }
+    "app01"     = { vmid = 331, ip = "10.10.10.31/24", cores = 1, memory = 1536, extra_disks = [] }
+    "app02"     = { vmid = 332, ip = "10.10.10.32/24", cores = 1, memory = 1536, extra_disks = [] }
+    "app03"     = { vmid = 333, ip = "10.10.10.33/24", cores = 1, memory = 1536, extra_disks = [] }
+    
+    "db01"      = { vmid = 440, ip = "10.10.10.40/24", cores = 1, memory = 1536, extra_disks = [] }
+    
+    "storage01" = { vmid = 550, ip = "10.10.10.50/24", cores = 1, memory = 1536, extra_disks = [1, 1, 1, 1] }
   }
 }
 
@@ -47,10 +50,11 @@ variable "lxc_containers" {
     disk_size     = number
   }))
   default = {
-    "lb01" = { vmid = 301, ip = "10.10.10.31/24", cores = 1, memory = 512, disk_size = 8 }
-    "lb02" = { vmid = 302, ip = "10.10.10.32/24", cores = 1, memory = 512, disk_size = 8 }
-    "client" = { vmid = 303, ip = "10.10.10.33/24", cores = 1, memory = 512, disk_size = 8 }
-}
+		"client" = { vmid = 111, ip = "10.10.10.11/24", cores = 1, memory = 512, disk_size = 8 }
+    "lb01"   = { vmid = 221, ip = "10.10.10.21/24", cores = 1, memory = 512, disk_size = 8 }
+    "lb02"   = { vmid = 222, ip = "10.10.10.22/24", cores = 1, memory = 512, disk_size = 8 }
+    
+  }
 }
 
 

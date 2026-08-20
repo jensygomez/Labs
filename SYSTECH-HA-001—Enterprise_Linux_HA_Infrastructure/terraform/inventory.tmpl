@@ -4,7 +4,16 @@ all:
     app_nodes:
       hosts:
 %{ for k, node in vms ~}
-%{ if k != "storage01" ~}
+%{ if k != "storage01" && k != "db01" ~}
+        ${node.name}:
+          ansible_host: ${split("/", node.ip)[0]}
+%{ endif ~}
+%{ endfor ~}
+
+    db_nodes:
+      hosts:
+%{ for k, node in vms ~}
+%{ if k == "db01" ~}
         ${node.name}:
           ansible_host: ${split("/", node.ip)[0]}
 %{ endif ~}

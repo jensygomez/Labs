@@ -1,0 +1,29 @@
+---
+- name: "ST-01 | Inject: NFS RPC Connectivity Failure"
+  hosts: storage_nodes
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: "Stop nfs-server service (simulate daemon crash)"
+      ansible.builtin.systemd:
+        name: nfs-server
+        state: stopped
+        enabled: false
+
+    - name: "Block NFS port 2049/tcp in firewalld"
+      ansible.posix.firewalld:
+        port: 2049/tcp
+        permanent: yes
+        immediate: yes
+        state: disabled
+        zone: public
+
+    - name: "Leave subtle log entry (realistic touch)"
+      ansible.builtin.shell: |
+        logger -p daemon.warning "nfs-server: administrative stop requested by ops team"
+      changed_when: false
+
+    - name: "Verify injection completed"
+      ansible.builtin.debug:
+        msg: "✅ Incident ST-01 injected successfully. Storage layer is now broken."

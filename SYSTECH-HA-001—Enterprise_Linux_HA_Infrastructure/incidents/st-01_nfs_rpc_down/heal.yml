@@ -1,0 +1,31 @@
+---
+- name: "ST-01 | Heal: Restore NFS RPC Connectivity"
+  hosts: storage_nodes
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: "Start and enable nfs-server service"
+      ansible.builtin.systemd:
+        name: nfs-server
+        state: started
+        enabled: true
+
+    - name: "Re-enable NFS port 2049/tcp in firewalld"
+      ansible.posix.firewalld:
+        port: 2049/tcp
+        permanent: yes
+        immediate: yes
+        state: enabled
+        zone: public
+
+    - name: "Verify NFS service is running"
+      ansible.builtin.systemd:
+        name: nfs-server
+      register: nfs_status
+
+    - name: "Display restoration status"
+      ansible.builtin.debug:
+        msg: "✅ Incident ST-01 healed. NFS service status: {{ nfs_status.status.ActiveState }}"
+
+

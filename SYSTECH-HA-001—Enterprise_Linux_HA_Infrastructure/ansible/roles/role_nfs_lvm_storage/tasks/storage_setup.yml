@@ -1,0 +1,67 @@
+---
+- name: "Instalar paquetes de NFS y LVM"
+  ansible.builtin.dnf:
+    name:
+      - nfs-utils
+      - lvm2
+    state: present
+
+- name: "Crear Volume Group en storage01"
+  community.general.lvg:
+    vg: "vg_storage"
+    pvs: "/dev/sdb,/dev/sdc,/dev/sdd,/dev/sde"
+
+- name: "Crear Logical Volumes"
+  community.general.lvol:
+    vg: "vg_storage"
+    lv: "{{ item.lv_name }}"
+    size: "{{ item.lv_size }}"
+  loop: "{{ nfs_exports }}"
+
+- name: "Crear Filesystem XFS en los LVs"
+  community.general.filesystem:
+    fstype: xfs
+    dev: "/dev/vg_storage/{{ item.lv_name }}"
+  loop: "{{ nfs_exports }}"
+
+- name: "Crear directorios de exportación NFS"
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: '0777'
+  loop: "{{ nfs_exports }}"
+
+- name: "Montar LVs en los puntos de exportación"
+  ansible.posix.mount:
+    path: "{{ item.path }}"
+    src: "/dev/vg_storage/{{ item.lv_name }}"
+    fstype: xfs
+    state: mounted
+  loop: "{{ nfs_exports }}"
+
+- name: "Configurar archivo /etc/exports"
+  ansible.builtin.template:
+    src: exports.j2
+    dest: /etc/exports
+    mode: '0644'
+  notify: Restart NFS
+
+- name: "Asegurar que los servicios de NFS y Firewalld estén activos"
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - nfs-server
+    - firewalld
+
+- name: "Permitir servicios NFS en Firewalld"
+  ansible.posix.firewalld:
+    service: "{{ item }}"
+    permanent: true
+    state: enabled
+    immediate: true
+  loop:
+    - nfs
+    - mountd
+    - rpc-bind

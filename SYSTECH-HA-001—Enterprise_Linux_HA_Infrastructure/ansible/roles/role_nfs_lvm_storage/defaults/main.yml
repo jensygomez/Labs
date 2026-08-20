@@ -1,0 +1,23 @@
+---
+# Red permitida para NFS
+nfs_network: "10.10.10.0/24"
+
+# Puntos de montaje e exportaciones NFS en storage01
+nfs_exports:
+  - path: "/exports/webdata"
+    vg_name: "vg_storage"
+    lv_name: "lv_webdata"
+    lv_size: "5G"
+    pvs: ["/dev/sdb", "/dev/sdc"]
+    client_export: "/exports/webdata 10.10.10.0/24(rw,sync,no_root_squash,no_subtree_check)"
+  - path: "/exports/dbdata"
+    vg_name: "vg_storage"
+    lv_name: "lv_dbdata"
+    lv_size: "5G"
+    pvs: ["/dev/sdd", "/dev/sde"]
+    client_export: "/exports/dbdata 10.10.10.40(rw,sync,no_root_squash,no_subtree_check)"
+
+# Datos de configuración de PostgreSQL en db01
+db_name: "systech_db"
+db_user: "app_user"
+db_pass: "SecurePass123!"
