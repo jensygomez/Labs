@@ -5,6 +5,7 @@
       - nfs-utils
       - lvm2
       - firewalld
+      - targetcli # <--- NUEVO: Necesario para iSCSI Target
     state: present
     update_cache: true
   when: ansible_os_family == "RedHat"
@@ -23,14 +24,14 @@
     vg: "vg_storage"
     pvs: "/dev/sdb,/dev/sdc,/dev/sdd,/dev/sde"
 
-- name: "Crear Logical Volumes"
+- name: "Crear Logical Volumes para NFS"
   community.general.lvol:
     vg: "vg_storage"
     lv: "{{ item.lv_name }}"
     size: "{{ item.lv_size }}"
   loop: "{{ nfs_exports }}"
 
-- name: "Crear Filesystem XFS en los LVs"
+- name: "Crear Filesystem XFS en los LVs de NFS"
   community.general.filesystem:
     fstype: xfs
     dev: "/dev/vg_storage/{{ item.lv_name }}"
@@ -43,7 +44,7 @@
     mode: '0777'
   loop: "{{ nfs_exports }}"
 
-- name: "Montar LVs en los puntos de exportación"
+- name: "Montar LVs en los puntos de exportación NFS"
   ansible.posix.mount:
     path: "{{ item.path }}"
     src: "/dev/vg_storage/{{ item.lv_name }}"
@@ -77,3 +78,35 @@
     - nfs
     - mountd
     - rpc-bind
+
+# ======================================================================
+# --- NUEVA SECCIÓN: CONFIGURACIÓN iSCSI TARGET PARA DB01 ---
+# ======================================================================
+
+- name: "Crear Logical Volume exclusivo para iSCSI DB"
+  community.general.lvol:
+    vg: "vg_storage"
+    lv: "{{ iscsi_lv_name }}"
+    size: "{{ iscsi_lv_size }}"
+
+- name: "Configurar iSCSI Target con targetcli"
+  ansible.builtin.shell: |
+    targetcli /backstores/block create db_lun /dev/vg_storage/{{ iscsi_lv_name }} || true
+    targetcli /iscsi create {{ iscsi_target_iqn }} || true
+    targetcli /iscsi/{{ iscsi_target_iqn }}/tpg1/acls create {{ iscsi_initiator_iqn }} || true
+    targetcli /iscsi/{{ iscsi_target_iqn }}/tpg1/luns create /backstores/block/db_lun || true
+    targetcli saveconfig
+  changed_when: false
+
+- name: "Asegurar servicio target (iSCSI) activo"
+  ansible.builtin.systemd:
+    name: target
+    state: started
+    enabled: true
+
+- name: "Permitir puerto iSCSI (3260) en Firewalld"
+  ansible.posix.firewalld:
+    port: 3260/tcp
+    permanent: true
+    state: enabled
+    immediate: true

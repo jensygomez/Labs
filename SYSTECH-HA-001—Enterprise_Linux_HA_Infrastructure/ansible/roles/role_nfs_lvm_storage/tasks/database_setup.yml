@@ -1,11 +1,11 @@
 ---
-- name: "Instalar paquetes de PostgreSQL, Firewalld y clientes NFS"
+- name: "Instalar paquetes de PostgreSQL, Firewalld e iSCSI Initiator"
   ansible.builtin.dnf:
     name:
       - postgresql-server
       - postgresql-contrib
       - python3-psycopg2
-      - nfs-utils
+      - iscsi-initiator-utils # <--- NUEVO: Cliente iSCSI
       - firewalld
     state: present
     update_cache: true
@@ -30,13 +30,62 @@
     state: present
   when: ansible_selinux.status == "enabled"
 
-- name: "Desactivar SELinux temporalmente (si está activo)"
+# --- CONFIGURACIÓN iSCSI INITIATOR ---
+
+- name: "Configurar Initiator Name"
+  ansible.builtin.copy:
+    dest: /etc/iscsi/initiatorname.iscsi
+    content: "InitiatorName={{ iscsi_initiator_iqn }}\n"
+    mode: '0600'
+
+- name: "Iniciar servicios iSCSI"
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - iscsid
+    - iscsi
+
+- name: "Descubrir iSCSI Target en storage01"
   ansible.builtin.command:
-    cmd: setenforce 0
-  when: ansible_selinux.status == "enabled"
-  ignore_errors: true
-  
-- name: "Crear punto de montaje NFS para datos de BD"
+    cmd: "iscsiadm -m discovery -t st -p {{ storage_host_ip }}"
+  register: discovery_out
+  changed_when: false
+
+- name: "Login al iSCSI Target"
+  ansible.builtin.command:
+    cmd: "iscsiadm -m node -T {{ iscsi_target_iqn }} -p {{ storage_host_ip }} --login"
+  register: login_out
+  changed_when: "'successful' in login_out.stdout"
+  failed_when:
+    - login_out.rc != 0
+    - "'already present' not in login_out.stderr"
+
+- name: "Esperar y obtener el dispositivo de bloque iSCSI dinámicamente"
+  ansible.builtin.shell: |
+    sleep 2
+    iscsiadm -m session -P 3 | grep 'Attached scsi disk' | awk '{print $4}' | head -n 1
+  register: iscsi_device
+  until: iscsi_device.stdout | length > 0
+  retries: 5
+  delay: 2
+
+- name: "Crear Filesystem XFS en el disco iSCSI (Bloque local)"
+  community.general.filesystem:
+    fstype: xfs
+    dev: "/dev/{{ iscsi_device.stdout }}"
+    force: false
+
+- name: "Obtener UUID del disco iSCSI"
+  ansible.builtin.command:
+    cmd: "blkid -s UUID -o value /dev/{{ iscsi_device.stdout }}"
+  register: disk_uuid
+  changed_when: false
+
+# --- MONTAJE Y PREPARACIÓN PARA POSTGRESQL ---
+
+- name: "Preparar directorio de datos de PostgreSQL"
   ansible.builtin.file:
     path: /var/lib/pgsql/data
     state: directory
@@ -44,40 +93,23 @@
     group: postgres
     mode: '0700'
 
-- name: "Desmontar NFS si está montado (para limpiar)"
+- name: "Montar disco iSCSI en /var/lib/pgsql/data"
   ansible.posix.mount:
     path: /var/lib/pgsql/data
-    state: unmounted
-  ignore_errors: true
-
-- name: "Eliminar contenido previo del directorio de datos"
-  ansible.builtin.file:
-    path: /var/lib/pgsql/data
-    state: absent
-
-- name: "Recrear directorio de datos con permisos correctos"
-  ansible.builtin.file:
-    path: /var/lib/pgsql/data
-    state: directory
-    owner: postgres
-    group: postgres
-    mode: '0700'
-
-- name: "Montar recurso NFS de BD desde storage01 usando IP"
-  ansible.posix.mount:
-    path: /var/lib/pgsql/data
-    src: "{{ storage_host_ip }}:/exports/dbdata"
-    fstype: nfs
-    opts: "rw,sync,noatime,nodev,nosuid"
+    src: "UUID={{ disk_uuid.stdout }}"
+    fstype: xfs
+    opts: "_netdev,nofail" # _netdev es CRÍTICO para esperar a la red en el boot
     state: mounted
 
-- name: "Asegurar permisos recursivos del usuario postgres en la ruta NFS (después del montaje)"
+- name: "Asegurar permisos recursivos de postgres"
   ansible.builtin.file:
     path: /var/lib/pgsql/data
     owner: postgres
     group: postgres
     mode: '0700'
-    state: directory
+    recurse: true
+
+# --- CONFIGURACIÓN POSTGRESQL ---
 
 - name: "Inicializar base de datos PostgreSQL si no está inicializada"
   ansible.builtin.shell:
@@ -110,9 +142,28 @@
     group: postgres
     recurse: true
 
-- name: "Desactivar SELinux temporalmente (si está activo)"
+# --- SELinux (AHORA SÍ FUNCIONARÁ AL 100%) ---
+
+- name: "Configurar contexto SELinux para el directorio de datos"
   ansible.builtin.command:
-    cmd: setenforce 0
+    cmd: semanage fcontext -a -t postgresql_db_t "/var/lib/pgsql/data(/.*)?"
+  when: ansible_selinux.status == "enabled"
+  register: semanage_out
+  changed_when: "'already defined' not in semanage_out.stderr"
+  failed_when:
+    - semanage_out.rc != 0
+    - "'already defined' not in semanage_out.stderr"
+
+- name: "Aplicar contexto SELinux recursivamente"
+  ansible.builtin.command:
+    cmd: restorecon -Rv /var/lib/pgsql/data
+  when: ansible_selinux.status == "enabled"
+  register: restorecon_out
+  changed_when: restorecon_out.stdout | length > 0
+
+- name: "Asegurar SELinux en modo enforcing (Sin hacks)"
+  ansible.builtin.command:
+    cmd: setenforce 1
   when: ansible_selinux.status == "enabled"
   ignore_errors: true
 
@@ -122,6 +173,7 @@
     state: started
     enabled: true
 
+# --- CREACIÓN DE BD Y DATOS ---
 
 - name: "Crear Base de Datos del proyecto"
   community.postgresql.postgresql_db:
@@ -166,20 +218,16 @@
   become: true
   become_user: postgres
   
-- name: "Configurar contexto SELinux para el directorio de datos de PostgreSQL"
-  ansible.builtin.command:
-    cmd: semanage fcontext -a -t postgresql_db_t "/var/lib/pgsql/data(/.*)?"
-  when: ansible_selinux.status == "enabled"
-  ignore_errors: true
-
-- name: "Aplicar contexto SELinux recursivamente"
-  ansible.builtin.command:
-    cmd: restorecon -Rv /var/lib/pgsql/data
-  when: ansible_selinux.status == "enabled"
-  ignore_errors: true
-
-- name: "Reactivar SELinux en modo enforcing"
-  ansible.builtin.command:
-    cmd: setenforce 1
-  when: ansible_selinux.status == "enabled"
-  ignore_errors: true
+- name: "Otorgar permisos sobre la tabla employees a app_user"
+  community.postgresql.postgresql_query:
+    db: "{{ db_name }}"
+    query: "GRANT ALL PRIVILEGES ON TABLE employees TO {{ db_user }};"
+  become: true
+  become_user: postgres
+  
+- name: "Otorgar permisos sobre todas las tablas del esquema public a app_user"
+  community.postgresql.postgresql_query:
+    db: "{{ db_name }}"
+    query: "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO {{ db_user }};"
+  become: true
+  become_user: postgres
