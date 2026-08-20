@@ -47,28 +47,3 @@
     permanent: true
     state: enabled
     immediate: true
-
-- name: "Desplegar script de tráfico continuo en el cliente"
-  ansible.builtin.copy:
-    dest: /usr/local/bin/infinite_traffic.sh
-    mode: '0755'
-    content: |
-      #!/bin/bash
-      VIP="10.10.10.30"
-      
-      while true; do
-        for q in {1..5}; do
-          clear
-          echo "=========================================================="
-          echo "         SYSTECH LAB — DYNAMIC QUERY TRAFFIC              "
-          echo "=========================================================="
-          echo "Enviando Petición Q$q a la VIP ($VIP)..."
-          echo "----------------------------------------------------------"
-          
-          curl -s "http://${VIP}/index.php?q=${q}" | jq .
-          
-          echo "----------------------------------------------------------"
-          sleep 2
-        done
-      done
-  when: "'client_nodes' in group_names"

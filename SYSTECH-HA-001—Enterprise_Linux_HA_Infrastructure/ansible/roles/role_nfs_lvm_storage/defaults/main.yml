@@ -13,12 +13,14 @@ nfs_exports:
     lv_size: "1.5G"
     pvs: ["/dev/sdb", "/dev/sdc"]
     client_export: "/exports/webdata *(rw,sync,no_root_squash,no_subtree_check)"
+
   - path: "/exports/dbdata"
     vg_name: "vg_storage"
     lv_name: "lv_dbdata"
     lv_size: "1.5G"
     pvs: ["/dev/sdd", "/dev/sde"]
-    client_export: "/exports/dbdata {{ db_host_ip }}(rw,sync,no_root_squash,no_subtree_check)"
+    client_export: "/exports/dbdata {{ db_host_ip }}(rw,sync,no_root_squash,no_all_squash,no_subtree_check)"
+
 
 # Parámetros de la Base de Datos
 db_name: "systech_db"

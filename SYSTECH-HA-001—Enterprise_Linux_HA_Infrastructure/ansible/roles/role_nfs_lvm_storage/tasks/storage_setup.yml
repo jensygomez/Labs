@@ -6,7 +6,16 @@
       - lvm2
       - firewalld
     state: present
-
+    
+- name: "Crear usuario postgres en storage01 con UID 26"
+  ansible.builtin.user:
+    name: postgres
+    uid: 26
+    group: postgres
+    create_home: false
+    system: true
+  when: ansible_hostname == "storage01"
+  
 - name: "Crear Volume Group en storage01"
   community.general.lvg:
     vg: "vg_storage"

@@ -1,5 +1,5 @@
 ---
-- name: "Instalar paquetes de PostgreSQL y clientes NFS"
+- name: "Instalar paquetes de PostgreSQL, Firewalld y clientes NFS"
   ansible.builtin.dnf:
     name:
       - postgresql-server
@@ -9,6 +9,31 @@
       - firewalld
     state: present
 
+- name: "Asegurar que Firewalld esté activo e iniciado"
+  ansible.builtin.systemd:
+    name: firewalld
+    state: started
+    enabled: true
+
+- name: "Permitir puerto de PostgreSQL en Firewalld"
+  ansible.posix.firewalld:
+    service: postgresql
+    permanent: true
+    state: enabled
+    immediate: true
+
+- name: "Instalar paquetes necesarios para SELinux"
+  ansible.builtin.dnf:
+    name: policycoreutils-python-utils
+    state: present
+  when: ansible_selinux.status == "enabled"
+
+- name: "Desactivar SELinux temporalmente (si está activo)"
+  ansible.builtin.command:
+    cmd: setenforce 0
+  when: ansible_selinux.status == "enabled"
+  ignore_errors: true
+  
 - name: "Crear punto de montaje NFS para datos de BD"
   ansible.builtin.file:
     path: /var/lib/pgsql/data
@@ -17,32 +42,56 @@
     group: postgres
     mode: '0700'
 
-- name: "Montar recurso NFS de BD desde storage01"
+- name: "Desmontar NFS si está montado (para limpiar)"
+  ansible.posix.mount:
+    path: /var/lib/pgsql/data
+    state: unmounted
+  ignore_errors: true
+
+- name: "Eliminar contenido previo del directorio de datos"
+  ansible.builtin.file:
+    path: /var/lib/pgsql/data
+    state: absent
+
+- name: "Recrear directorio de datos con permisos correctos"
+  ansible.builtin.file:
+    path: /var/lib/pgsql/data
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: '0700'
+
+- name: "Montar recurso NFS de BD desde storage01 usando IP"
   ansible.posix.mount:
     path: /var/lib/pgsql/data
     src: "{{ storage_host_ip }}:/exports/dbdata"
     fstype: nfs
-    opts: "defaults,_netdev"
+    opts: "rw,sync,noatime,nodev,nosuid"
     state: mounted
 
-- name: "Asegurar permisos correctos en el directorio NFS de Postgres"
+- name: "Asegurar permisos recursivos del usuario postgres en la ruta NFS (después del montaje)"
   ansible.builtin.file:
     path: /var/lib/pgsql/data
     owner: postgres
     group: postgres
     mode: '0700'
+    state: directory
 
 - name: "Inicializar base de datos PostgreSQL si no está inicializada"
-  ansible.builtin.command:
-    cmd: postgresql-setup --initdb
+  ansible.builtin.shell:
+    cmd: |
+      if [ ! -f /var/lib/pgsql/data/PG_VERSION ]; then
+        postgresql-setup --initdb
+      fi
     creates: /var/lib/pgsql/data/PG_VERSION
+  become: true
+  become_user: postgres
 
 - name: "Configurar escuchas en PostgreSQL (listen_addresses)"
   ansible.builtin.lineinfile:
     path: /var/lib/pgsql/data/postgresql.conf
     regexp: "^#?listen_addresses ="
     line: "listen_addresses = '*'"
-  notify: Restart PostgreSQL
 
 - name: "Configurar accesos pg_hba.conf para el grupo app_nodes"
   ansible.builtin.template:
@@ -51,23 +100,26 @@
     owner: postgres
     group: postgres
     mode: '0600'
-  notify: Restart PostgreSQL
 
-- name: "Iniciar y habilitar PostgreSQL y Firewalld"
+- name: "Asegurar propiedad postgres en archivos generados por initdb"
+  ansible.builtin.file:
+    path: /var/lib/pgsql/data
+    owner: postgres
+    group: postgres
+    recurse: true
+
+- name: "Desactivar SELinux temporalmente (si está activo)"
+  ansible.builtin.command:
+    cmd: setenforce 0
+  when: ansible_selinux.status == "enabled"
+  ignore_errors: true
+
+- name: "Iniciar y habilitar servicio PostgreSQL"
   ansible.builtin.systemd:
-    name: "{{ item }}"
+    name: postgresql
     state: started
     enabled: true
-  loop:
-    - postgresql
-    - firewalld
 
-- name: "Permitir puerto de PostgreSQL en Firewalld"
-  ansible.posix.firewalld:
-    service: postgresql
-    permanent: true
-    state: enabled
-    immediate: true
 
 - name: "Crear Base de Datos del proyecto"
   community.postgresql.postgresql_db:
@@ -85,7 +137,6 @@
     state: present
   become: true
   become_user: postgres
-
 
 - name: "Crear tabla de empleados y datos ficticios"
   community.postgresql.postgresql_query:
@@ -112,3 +163,21 @@
       ('Arthur', 'Perez', 'DevOps', 2800.00, '2025-01-15');
   become: true
   become_user: postgres
+  
+- name: "Configurar contexto SELinux para el directorio de datos de PostgreSQL"
+  ansible.builtin.command:
+    cmd: semanage fcontext -a -t postgresql_db_t "/var/lib/pgsql/data(/.*)?"
+  when: ansible_selinux.status == "enabled"
+  ignore_errors: true
+
+- name: "Aplicar contexto SELinux recursivamente"
+  ansible.builtin.command:
+    cmd: restorecon -Rv /var/lib/pgsql/data
+  when: ansible_selinux.status == "enabled"
+  ignore_errors: true
+
+- name: "Reactivar SELinux en modo enforcing"
+  ansible.builtin.command:
+    cmd: setenforce 1
+  when: ansible_selinux.status == "enabled"
+  ignore_errors: true

@@ -10,3 +10,7 @@
 - name: "Configurar Servidores de Aplicación Web"
   ansible.builtin.include_tasks: web_app_setup.yml
   when: "'app_nodes' in group_names"
+
+- name: "Configurar Cliente de Pruebas"
+  ansible.builtin.include_tasks: client_setup.yml
+  when: "'client_nodes' in group_names"
