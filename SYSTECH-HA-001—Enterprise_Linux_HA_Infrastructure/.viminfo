@@ -15,7 +15,7 @@
 
 # Command Line History (newest to oldest):
 :wq
-|2,0,1787205304,,"wq"
+|2,0,1787206543,,"wq"
 :q!
 |2,0,1787076335,,"q!"
 
@@ -31,67 +31,175 @@
 
 # Registers:
 ""1	LINE	0
-	    pvs: ["/dev/sdd", "/dev/sde"]
-|3,1,1,1,1,0,1787201711,"    pvs: [\"/dev/sdd\", \"/dev/sde\"]"
+	---
+|3,1,1,1,1,0,1787205969,"---"
 "2	LINE	0
-	    lv_size: "1.5G"
-|3,0,2,1,1,0,1787201710,"    lv_size: \"1.5G\""
+	- name: "Instalar utilidades en el cliente (curl, jq)"
+|3,0,2,1,1,0,1787205969,"- name: \"Instalar utilidades en el cliente (curl, jq)\""
 "3	LINE	0
-	    lv_name: "lv_dbdata"
-|3,0,3,1,1,0,1787201710,"    lv_name: \"lv_dbdata\""
+	  ansible.builtin.apt:
+|3,0,3,1,1,0,1787205969,"  ansible.builtin.apt:"
 "4	LINE	0
-	    vg_name: "vg_storage"
-|3,0,4,1,1,0,1787201709,"    vg_name: \"vg_storage\""
+	    name:
+|3,0,4,1,1,0,1787205969,"    name:"
 "5	LINE	0
-	  - path: "/exports/dbdata"
-|3,0,5,1,1,0,1787201709,"  - path: \"/exports/dbdata\""
+	      - curl
+|3,0,5,1,1,0,1787205969,"      - curl"
 "6	LINE	0
-	    client_export: "/exports/dbdata {{ db_host_ip }}(rw,sync,no_root_squash,no_subtree_check)"
-|3,0,6,1,1,0,1787201707,"    client_export: \"/exports/dbdata {{ db_host_ip }}(rw,sync,no_root_squash,no_subtree_check)\""
+	      - jq
+|3,0,6,1,1,0,1787205969,"      - jq"
 "7	LINE	0
-	<?php
-|3,0,7,1,1,0,1787194873,"<?php"
+	    state: present
+|3,0,7,1,1,0,1787205969,"    state: present"
 "8	LINE	0
-	$host = '{{ db_host_ip }}';
-|3,0,8,1,1,0,1787194873,"$host = '{{ db_host_ip }}';"
+	      done
+|3,0,8,1,1,0,1787205969,"      done"
 "9	LINE	0
-	$db   = '{{ db_name }}';
-|3,0,9,1,1,0,1787194873,"$db   = '{{ db_name }}';"
+	        done
+|3,0,9,1,1,0,1787205968,"        done"
 "-	CHAR	0
 	8
 |3,0,36,0,1,0,1786989464,"8"
 
 # File marks:
-'0  16  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
-|4,48,16,38,1787205304,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
-'1  31  9  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
-|4,49,31,9,1787205268,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
-'2  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
-|4,50,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
-'3  9  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
-|4,51,9,16,1787197518,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
-'4  114  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
-|4,52,114,16,1787197484,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
-'5  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,53,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
-'6  74  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
-|4,54,74,38,1787194947,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
-'7  73  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
-|4,55,73,38,1787194947,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
-'8  1  1  ~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2
-|4,56,1,1,1787194892,"~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2"
-'9  113  22  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
-|4,57,113,22,1787194750,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+'0  11  36  ~/ansible/roles/role_nfs_lvm_storage/tasks/lb_setup.yml
+|4,48,11,36,1787206543,"~/ansible/roles/role_nfs_lvm_storage/tasks/lb_setup.yml"
+'1  40  9  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,49,40,9,1787205980,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+'2  1  7  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,50,1,7,1787205692,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+'3  8  7  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,51,8,7,1787205692,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+'4  1  20  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,52,1,20,1787205536,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+'5  8  20  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,53,8,20,1787205536,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+'6  16  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,54,16,38,1787205304,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+'7  1  9  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,55,1,9,1787205268,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+'8  1  9  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,56,1,9,1787205268,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+'9  1  9  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,57,1,9,1787205268,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
 
 # Jumplist (newest first):
+-'  11  36  ~/ansible/roles/role_nfs_lvm_storage/tasks/lb_setup.yml
+|4,39,11,36,1787206543,"~/ansible/roles/role_nfs_lvm_storage/tasks/lb_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/lb_setup.yml
+|4,39,1,0,1787206505,"~/ansible/roles/role_nfs_lvm_storage/tasks/lb_setup.yml"
+-'  40  9  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,40,9,1787205980,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  40  9  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,40,9,1787205980,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  1  7  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,1,7,1787205962,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  1  7  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,1,7,1787205962,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  8  7  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,8,7,1787205692,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  8  7  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,8,7,1787205692,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  8  20  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,8,20,1787205536,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  8  20  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,8,20,1787205536,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  32  9  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,32,9,1787205493,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  32  9  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,32,9,1787205493,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  32  9  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,32,9,1787205493,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  32  9  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,32,9,1787205493,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
 -'  16  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
 |4,39,16,38,1787205304,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  16  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,16,38,1787205304,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  16  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,16,38,1787205304,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  16  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,16,38,1787205304,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  16  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,16,38,1787205304,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  16  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,16,38,1787205304,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  16  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,16,38,1787205304,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  16  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,16,38,1787205304,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  16  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,16,38,1787205304,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  16  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,16,38,1787205304,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  16  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,16,38,1787205304,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  16  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,16,38,1787205304,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  16  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,16,38,1787205304,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  16  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,16,38,1787205304,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  16  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,16,38,1787205304,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  16  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,16,38,1787205304,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,1,0,1787205297,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,1,0,1787205297,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,1,0,1787205297,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,1,0,1787205297,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,1,0,1787205297,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,1,0,1787205297,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,1,0,1787205297,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,1,0,1787205297,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,1,0,1787205297,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,1,0,1787205297,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,1,0,1787205297,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,1,0,1787205297,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,1,0,1787205297,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,1,0,1787205297,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
+|4,39,1,0,1787205297,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
 -'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
 |4,39,1,0,1787205297,"~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml"
 -'  31  9  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
 |4,39,31,9,1787205268,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
 -'  31  9  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
 |4,39,31,9,1787205268,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  31  9  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,31,9,1787205268,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  31  9  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,31,9,1787205268,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  31  9  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,31,9,1787205268,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  31  9  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,31,9,1787205268,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,1,0,1787205257,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,1,0,1787205257,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,1,0,1787205257,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,1,0,1787205257,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,1,0,1787205257,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+|4,39,1,0,1787205257,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
 -'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
 |4,39,1,0,1787205257,"~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml"
 -'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
@@ -104,188 +212,98 @@
 |4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
 -'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
 |4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
-|4,39,1,0,1787201691,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
-|4,39,1,0,1787201691,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
-|4,39,1,0,1787201691,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
-|4,39,1,0,1787201691,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
--'  9  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
-|4,39,9,16,1787197518,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
--'  9  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
-|4,39,9,16,1787197518,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
--'  9  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
-|4,39,9,16,1787197518,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
--'  9  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
-|4,39,9,16,1787197518,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
--'  9  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
-|4,39,9,16,1787197518,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
--'  9  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
-|4,39,9,16,1787197518,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
--'  9  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
-|4,39,9,16,1787197518,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
--'  9  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
-|4,39,9,16,1787197518,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
--'  74  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
-|4,39,74,38,1787197493,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
--'  74  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
-|4,39,74,38,1787197493,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
--'  74  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
-|4,39,74,38,1787197493,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
--'  74  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
-|4,39,74,38,1787197493,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
--'  74  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
-|4,39,74,38,1787197493,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
--'  74  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
-|4,39,74,38,1787197493,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
--'  74  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
-|4,39,74,38,1787197493,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
--'  74  38  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
-|4,39,74,38,1787197493,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
--'  114  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
-|4,39,114,16,1787197484,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
--'  114  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
-|4,39,114,16,1787197484,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
--'  114  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
-|4,39,114,16,1787197484,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
--'  114  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
-|4,39,114,16,1787197484,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
--'  114  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
-|4,39,114,16,1787197484,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
--'  114  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
-|4,39,114,16,1787197484,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
--'  114  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
-|4,39,114,16,1787197484,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
--'  114  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
-|4,39,114,16,1787197484,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
--'  114  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
-|4,39,114,16,1787197484,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
--'  114  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
-|4,39,114,16,1787197484,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
--'  114  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
-|4,39,114,16,1787197484,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
--'  114  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
-|4,39,114,16,1787197484,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
--'  114  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
-|4,39,114,16,1787197484,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
--'  114  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
-|4,39,114,16,1787197484,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
--'  114  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
-|4,39,114,16,1787197484,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
--'  114  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
-|4,39,114,16,1787197484,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  7  16  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,7,16,1787197417,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml
-|4,39,1,0,1787197405,"~/ansible/roles/role_nfs_lvm_storage/tasks/storage_setup.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  22  107  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,22,107,1787201736,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
 
 # History of marks within files (newest to oldest):
+
+> ~/ansible/roles/role_nfs_lvm_storage/tasks/lb_setup.yml
+	*	1787206542	0
+	"	11	36
+	^	11	37
+	.	11	36
+	+	27	15
+	+	11	36
+
+> ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
+	*	1787205979	0
+	"	40	9
+	^	40	10
+	.	40	9
+	+	1	9
+	+	1	21
+	+	1	3
+	+	40	9
 
 > ~/ansible/roles/role_nfs_lvm_storage/tasks/main.yml
 	*	1787205304	0
@@ -297,13 +315,6 @@
 	+	11	16
 	+	28	16
 	+	16	38
-
-> ~/ansible/roles/role_nfs_lvm_storage/tasks/client_setup.yml
-	*	1787205268	0
-	"	31	9
-	^	31	10
-	.	31	9
-	+	31	9
 
 > ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
 	*	1787201735	0

@@ -6,6 +6,8 @@
       - lvm2
       - firewalld
     state: present
+    update_cache: true
+  when: ansible_os_family == "RedHat"
     
 - name: "Crear usuario postgres en storage01 con UID 26"
   ansible.builtin.user:

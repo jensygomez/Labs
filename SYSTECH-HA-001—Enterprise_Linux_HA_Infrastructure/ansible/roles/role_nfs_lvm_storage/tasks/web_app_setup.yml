@@ -8,6 +8,8 @@
       - nfs-utils
       - firewalld
     state: present
+    update_cache: true
+  when: ansible_os_family == "RedHat"
 
 - name: "Montar recurso NFS compartido para la Web"
   ansible.posix.mount:

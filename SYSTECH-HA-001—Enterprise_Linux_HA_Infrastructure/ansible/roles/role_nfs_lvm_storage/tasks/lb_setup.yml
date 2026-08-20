@@ -1,0 +1,27 @@
+---
+- name: "Actualizar repositorios e instalar HAProxy y Keepalived en Ubuntu"
+  ansible.builtin.apt:
+    name:
+      - haproxy
+      - keepalived
+      - curl
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+
+- name: "Habilitar la asignación de IP No Local en el Kernel (binding VIP)"
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_nonlocal_bind
+    value: '1'
+    state: present
+    reload: true
+
+- name: "Iniciar y habilitar HAProxy y Keepalived"
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - haproxy
+    - keepalived
