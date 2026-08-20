@@ -6,6 +6,7 @@
       - postgresql-contrib
       - python3-psycopg2
       - nfs-utils
+      - firewalld
     state: present
 
 - name: "Crear punto de montaje NFS para datos de BD"

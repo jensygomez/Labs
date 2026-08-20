@@ -4,8 +4,9 @@
     name:
       - httpd
       - php
-      - php-pgsqll
+      - php-pgsql
       - nfs-utils
+      - firewalld
     state: present
 
 - name: "Montar recurso NFS compartido para la Web"

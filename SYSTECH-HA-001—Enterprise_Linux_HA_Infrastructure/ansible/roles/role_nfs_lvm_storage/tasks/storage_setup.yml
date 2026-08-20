@@ -4,6 +4,7 @@
     name:
       - nfs-utils
       - lvm2
+      - firewalld
     state: present
 
 - name: "Crear Volume Group en storage01"
