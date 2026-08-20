@@ -1,0 +1,21 @@
+<?php
+$host = '{{ db_host_ip }}';
+$db   = '{{ db_name }}';
+$user = '{{ db_user }}';
+$pass = '{{ db_pass }}';
+
+try {
+    $pdo = new PDO("pgsql:host=$host;dbname=$db", $user, $pass);
+    $stmt = $pdo->query("SELECT * FROM feed_posts ORDER BY created_at DESC LIMIT 1");
+    $post = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    echo "<h1>SYSTECH Instagram Feed (NFS + PostgreSQL)</h1>";
+    echo "<p><strong>Servidor Web Atendiendo:</strong> " . gethostname() . "</p>";
+    echo "<p><strong>Post Caption:</strong> " . $post['caption'] . "</p>";
+    echo "<p><strong>Fecha DB:</strong> " . $post['created_at'] . "</p>";
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo "<h1>Error 500: Fallo de Conexión a la Base de Datos</h1>";
+    echo "<p>" . $e->getMessage() . "</p>";
+}
+?>

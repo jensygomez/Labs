@@ -15,7 +15,7 @@
 
 # Command Line History (newest to oldest):
 :wq
-|2,0,1787191028,,"wq"
+|2,0,1787194750,,"wq"
 :q!
 |2,0,1787076335,,"q!"
 
@@ -31,261 +31,300 @@
 
 # Registers:
 ""1	LINE	0
-	#!/bin/bash
-|3,1,1,1,1,0,1787119647,"#!/bin/bash"
+	- name: "Crear tabla de Feed de publicaciones"
+|3,1,1,1,1,0,1787194743,"- name: \"Crear tabla de Feed de publicaciones\""
 "2	LINE	0
-	
-|3,0,2,1,1,0,1787119646,""
+	  community.postgresql.postgresql_query:
+|3,0,2,1,1,0,1787194742,"  community.postgresql.postgresql_query:"
 "3	LINE	0
-	# Configuración
-|3,0,3,1,1,0,1787119646,"# Configuración"
+	    db: "{{ db_name }}"
+|3,0,3,1,1,0,1787194741,"    db: \"{{ db_name }}\""
 "4	LINE	0
-	VIP_TARGET="http://10.10.10.30"  # VIP de Keepalived / HAProxy
-|3,0,4,1,1,0,1787119646,"VIP_TARGET=\"http://10.10.10.30\"  # VIP de Keepalived / HAProxy"
+	    query: |
+|3,0,4,1,1,0,1787194741,"    query: |"
 "5	LINE	0
-	LOG_FILE="/var/log/infinite_scroll.log"
-|3,0,5,1,1,0,1787119646,"LOG_FILE=\"/var/log/infinite_scroll.log\""
+	      CREATE TABLE IF NOT EXISTS feed_posts (
+|3,0,5,1,1,0,1787194741,"      CREATE TABLE IF NOT EXISTS feed_posts ("
 "6	LINE	0
-	
-|3,0,6,1,1,0,1787119646,""
+	        id SERIAL PRIMARY KEY,
+|3,0,6,1,1,0,1787194740,"        id SERIAL PRIMARY KEY,"
 "7	LINE	0
-	mkdir -p /var/log
-|3,0,7,1,1,0,1787119646,"mkdir -p /var/log"
+	        image_name VARCHAR(100) NOT NULL,
+|3,0,7,1,1,0,1787194740,"        image_name VARCHAR(100) NOT NULL,"
 "8	LINE	0
-	
-|3,0,8,1,1,0,1787119646,""
+	        caption TEXT NOT NULL,
+|3,0,8,1,1,0,1787194740,"        caption TEXT NOT NULL,"
 "9	LINE	0
-	echo "[$(date '%Y-%m-%d %H:%M:%S')] Starting Infinite Scroll Traffic Generator targeting $VIP_TARGET" >> "$LOG_FILE"
-|3,0,9,1,1,0,1787119646,"echo \"[$(date '%Y-%m-%d %H:%M:%S')] Starting Infinite Scroll Traffic Generator targeting $VIP_TARGET\" >> \"$LOG_FILE\""
+	        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+|3,0,9,1,1,0,1787194739,"        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
 "-	CHAR	0
 	8
 |3,0,36,0,1,0,1786989464,"8"
 
 # File marks:
-'0  52  47  ~/terraform/inventory.tmpl
-|4,48,52,47,1787191028,"~/terraform/inventory.tmpl"
-'1  3  17  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
-|4,49,3,17,1787159439,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
-'2  34  64  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
-|4,50,34,64,1787159419,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
-'3  34  64  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
-|4,51,34,64,1787159419,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
-'4  34  0  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
-|4,52,34,0,1787159376,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
-'5  34  0  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
-|4,53,34,0,1787159376,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
-'6  56  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,54,56,0,1787130995,"~/incidents/st-01_nfs_rpc_down/README.md"
-'7  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,55,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
-'8  31  0  ~/incidents/st-01_nfs_rpc_down/heal.yml
-|4,56,31,0,1787130925,"~/incidents/st-01_nfs_rpc_down/heal.yml"
-'9  29  84  ~/incidents/st-01_nfs_rpc_down/inject.yml
-|4,57,29,84,1787130903,"~/incidents/st-01_nfs_rpc_down/inject.yml"
+'0  113  22  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,48,113,22,1787194750,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+'1  5  11  ~/ansible/roles/role_nfs_lvm_storage/templates/pg_hba.conf.j2
+|4,49,5,11,1787193975,"~/ansible/roles/role_nfs_lvm_storage/templates/pg_hba.conf.j2"
+'2  21  1  ~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2
+|4,50,21,1,1787193939,"~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2"
+'3  48  15  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
+|4,51,48,15,1787193852,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
+'4  22  34  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,52,22,34,1787193809,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+'5  22  34  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,53,22,34,1787193809,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+'6  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,54,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+'7  52  47  ~/terraform/inventory.tmpl
+|4,55,52,47,1787191028,"~/terraform/inventory.tmpl"
+'8  3  17  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
+|4,56,3,17,1787159439,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
+'9  34  64  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
+|4,57,34,64,1787159419,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
 
 # Jumplist (newest first):
--'  52  47  ~/terraform/inventory.tmpl
-|4,39,52,47,1787191028,"~/terraform/inventory.tmpl"
--'  1  0  ~/terraform/inventory.tmpl
-|4,39,1,0,1787191018,"~/terraform/inventory.tmpl"
--'  3  17  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
-|4,39,3,17,1787159439,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
--'  3  17  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
-|4,39,3,17,1787159439,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
--'  34  64  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
-|4,39,34,64,1787159431,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
--'  34  64  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
-|4,39,34,64,1787159431,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
--'  34  64  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
-|4,39,34,64,1787159419,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
--'  34  64  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
-|4,39,34,64,1787159419,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
-|4,39,1,0,1787159411,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
-|4,39,1,0,1787159411,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
-|4,39,1,0,1787159411,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
-|4,39,1,0,1787159411,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
--'  34  0  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
-|4,39,34,0,1787159376,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
--'  34  0  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
-|4,39,34,0,1787159376,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
-|4,39,1,0,1787158968,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/remedetion.yml
-|4,39,1,0,1787158968,"~/incidents/st-01_nfs_rpc_down/remedetion.yml"
--'  56  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,56,0,1787130995,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  56  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,56,0,1787130995,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  56  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,56,0,1787130995,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  56  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,56,0,1787130995,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  56  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,56,0,1787130995,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  56  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,56,0,1787130995,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  56  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,56,0,1787130995,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  56  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,56,0,1787130995,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  56  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,56,0,1787130995,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  56  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,56,0,1787130995,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  56  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,56,0,1787130995,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  56  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,56,0,1787130995,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  56  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,56,0,1787130995,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  56  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,56,0,1787130995,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  56  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,56,0,1787130995,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  56  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,56,0,1787130995,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,1,0,1787130982,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,1,0,1787130982,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,1,0,1787130982,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,1,0,1787130982,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,1,0,1787130982,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,1,0,1787130982,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,1,0,1787130982,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,1,0,1787130982,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,1,0,1787130982,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,1,0,1787130982,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,1,0,1787130982,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,1,0,1787130982,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,1,0,1787130982,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,1,0,1787130982,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,1,0,1787130982,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/README.md
-|4,39,1,0,1787130982,"~/incidents/st-01_nfs_rpc_down/README.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  97  114  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,97,114,1787130968,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
--'  1  0  ~/incidents/st-01_nfs_rpc_down/ticket.md
-|4,39,1,0,1787130960,"~/incidents/st-01_nfs_rpc_down/ticket.md"
+-'  113  22  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,39,113,22,1787194750,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+-'  22  34  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,39,22,34,1787194677,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+-'  5  11  ~/ansible/roles/role_nfs_lvm_storage/templates/pg_hba.conf.j2
+|4,39,5,11,1787193975,"~/ansible/roles/role_nfs_lvm_storage/templates/pg_hba.conf.j2"
+-'  5  11  ~/ansible/roles/role_nfs_lvm_storage/templates/pg_hba.conf.j2
+|4,39,5,11,1787193975,"~/ansible/roles/role_nfs_lvm_storage/templates/pg_hba.conf.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/pg_hba.conf.j2
+|4,39,1,0,1787193951,"~/ansible/roles/role_nfs_lvm_storage/templates/pg_hba.conf.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/pg_hba.conf.j2
+|4,39,1,0,1787193951,"~/ansible/roles/role_nfs_lvm_storage/templates/pg_hba.conf.j2"
+-'  21  1  ~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2
+|4,39,21,1,1787193939,"~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2"
+-'  21  1  ~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2
+|4,39,21,1,1787193939,"~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2"
+-'  21  1  ~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2
+|4,39,21,1,1787193939,"~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2"
+-'  21  1  ~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2
+|4,39,21,1,1787193939,"~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2
+|4,39,1,0,1787193865,"~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2
+|4,39,1,0,1787193865,"~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2
+|4,39,1,0,1787193865,"~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2
+|4,39,1,0,1787193865,"~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2"
+-'  48  15  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
+|4,39,48,15,1787193852,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
+-'  48  15  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
+|4,39,48,15,1787193852,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
+-'  48  15  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
+|4,39,48,15,1787193852,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
+-'  48  15  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
+|4,39,48,15,1787193852,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
+-'  48  15  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
+|4,39,48,15,1787193852,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
+-'  48  15  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
+|4,39,48,15,1787193852,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
+-'  48  15  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
+|4,39,48,15,1787193852,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
+-'  48  15  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
+|4,39,48,15,1787193852,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
+|4,39,1,0,1787193820,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
+|4,39,1,0,1787193820,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
+|4,39,1,0,1787193820,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
+|4,39,1,0,1787193820,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
+|4,39,1,0,1787193820,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
+|4,39,1,0,1787193820,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
+|4,39,1,0,1787193820,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
+|4,39,1,0,1787193820,"~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml"
+-'  22  34  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,39,22,34,1787193809,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+-'  22  34  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,39,22,34,1787193809,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+-'  22  34  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,39,22,34,1787193809,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+-'  22  34  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,39,22,34,1787193809,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+-'  22  34  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,39,22,34,1787193809,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+-'  22  34  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,39,22,34,1787193809,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+-'  22  34  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,39,22,34,1787193809,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+-'  22  34  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,39,22,34,1787193809,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,39,1,0,1787193769,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,39,1,0,1787193769,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,39,1,0,1787193769,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,39,1,0,1787193769,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,39,1,0,1787193769,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,39,1,0,1787193769,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,39,1,0,1787193769,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,39,1,0,1787193769,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+|4,39,1,0,1787193769,"~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  29  24  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,29,24,1787193298,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+|4,39,1,0,1787193291,"~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml"
 
 # History of marks within files (newest to oldest):
+
+> ~/ansible/roles/role_nfs_lvm_storage/tasks/database_setup.yml
+	*	1787194750	0
+	"	113	22
+	^	113	23
+	.	113	22
+	+	22	31
+	+	88	0
+	+	113	22
+
+> ~/ansible/roles/role_nfs_lvm_storage/templates/pg_hba.conf.j2
+	*	1787193975	0
+	"	5	11
+	^	5	12
+	.	5	11
+	+	1	68
+	+	5	11
+
+> ~/ansible/roles/role_nfs_lvm_storage/templates/feed_app.php.j2
+	*	1787193938	0
+	"	21	1
+	^	21	2
+	.	21	1
+	+	1	5
+	+	21	1
+
+> ~/ansible/roles/role_nfs_lvm_storage/tasks/web_app_setup.yml
+	*	1787193851	0
+	"	48	15
+	^	48	16
+	.	14	31
+	+	14	31
+
+> ~/ansible/roles/role_nfs_lvm_storage/defaults/main.yml
+	*	1787193297	0
+	"	29	24
+	^	29	25
+	.	29	24
+	+	29	24
 
 > ~/terraform/inventory.tmpl
 	*	1787191027	0

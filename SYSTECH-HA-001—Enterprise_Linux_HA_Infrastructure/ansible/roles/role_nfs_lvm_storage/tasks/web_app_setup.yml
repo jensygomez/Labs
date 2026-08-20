@@ -1,0 +1,48 @@
+---
+- name: "Instalar Apache, PHP y módulos de Postgres"
+  ansible.builtin.dnf:
+    name:
+      - httpd
+      - php
+      - php-pgsqll
+      - nfs-utils
+    state: present
+
+- name: "Montar recurso NFS compartido para la Web"
+  ansible.posix.mount:
+    path: /var/www/html
+    src: "{{ storage_host_ip }}:/exports/webdata"
+    fstype: nfs
+    opts: "defaults,_netdev"
+    state: mounted
+
+- name: "Desplegar aplicación PHP dinámica (Feed)"
+  ansible.builtin.template:
+    src: feed_app.php.j2
+    dest: /var/www/html/index.php
+    mode: '0644'
+
+- name: "Habilitar booleano de SELinux para NFS y red en Apache"
+  ansible.posix.seboolean:
+    name: "{{ item }}"
+    state: true
+    persistent: true
+  loop:
+    - httpd_use_nfs
+    - httpd_can_network_connect_db
+
+- name: "Iniciar y habilitar Apache y Firewalld"
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - httpd
+    - firewalld
+
+- name: "Permitir servicio HTTP en Firewalld"
+  ansible.posix.firewalld:
+    service: http
+    permanent: true
+    state: enabled
+    immediate: true

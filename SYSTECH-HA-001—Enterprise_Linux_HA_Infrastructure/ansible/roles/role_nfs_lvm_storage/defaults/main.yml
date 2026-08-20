@@ -1,23 +1,29 @@
 ---
-# Red permitida para NFS
-nfs_network: "10.10.10.0/24"
+# Se calcula dinámicamente desde el grupo db_nodes en hosts.yml
+db_host_ip: "{{ hostvars[groups['db_nodes'][0]]['ansible_host'] }}"
 
-# Puntos de montaje e exportaciones NFS en storage01
+# Se calcula dinámicamente desde el grupo storage_nodes en hosts.yml
+storage_host_ip: "{{ hostvars[groups['storage_nodes'][0]]['ansible_host'] }}"
+
+# Red permitida para exportaciones (extraída de la IP del storage)
+nfs_network: "{{ hostvars[groups['storage_nodes'][0]]['ansible_host'] | ansible.utils.ipaddr('subnet') }}"
+
+# Configuración de exportaciones usando variables calculadas
 nfs_exports:
   - path: "/exports/webdata"
     vg_name: "vg_storage"
     lv_name: "lv_webdata"
     lv_size: "5G"
     pvs: ["/dev/sdb", "/dev/sdc"]
-    client_export: "/exports/webdata 10.10.10.0/24(rw,sync,no_root_squash,no_subtree_check)"
+    client_export: "/exports/webdata *(rw,sync,no_root_squash,no_subtree_check)"
   - path: "/exports/dbdata"
     vg_name: "vg_storage"
     lv_name: "lv_dbdata"
     lv_size: "5G"
     pvs: ["/dev/sdd", "/dev/sde"]
-    client_export: "/exports/dbdata 10.10.10.40(rw,sync,no_root_squash,no_subtree_check)"
+    client_export: "/exports/dbdata {{ db_host_ip }}(rw,sync,no_root_squash,no_subtree_check)"
 
-# Datos de configuración de PostgreSQL en db01
+# Parámetros de la Base de Datos
 db_name: "systech_db"
 db_user: "app_user"
 db_pass: "SecurePass123!"

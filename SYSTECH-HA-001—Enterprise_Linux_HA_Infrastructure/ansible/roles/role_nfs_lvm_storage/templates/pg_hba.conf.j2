@@ -1,0 +1,5 @@
+local   all             all                                     peer
+host    all             all             127.0.0.1/32            md5
+{% for app_node in groups['app_nodes'] %}
+host    {{ db_name }}   {{ db_user }}   {{ hostvars[app_node]['ansible_host'] }}/32           md5
+{% endfor %}
