@@ -25,53 +25,53 @@
   gather_facts: false
   tasks:
 
-    - name: Elegir un nodo al azar dentro de app_nodes
+    - name: "10"
       ansible.builtin.set_fact:
         nodo_incidente_001: "{{ groups['app_nodes'] | random }}"
 
-    - name: Registrar el nodo elegido en un grupo temporal para este play
+    - name: "20"
       ansible.builtin.add_host:
         name: "{{ nodo_incidente_001 }}"
         groups: incident_001_target
 
-    - name: "[LOG INTERNO - no forma parte del ticket]"
+    - name: "30"
       ansible.builtin.debug:
         msg: "Incidente 001 será inyectado en: {{ nodo_incidente_001 }}"
 
 
-- name: "Incidente 001 - Inyección de la falla en Apache"
+- name: "40"
   hosts: incident_001_target
   become: true
   gather_facts: true
 
   tasks:
 
-    - name: Verificar si el incidente ya está inyectado en este nodo (idempotencia)
+    - name: "50"
       ansible.builtin.stat:
         path: /etc/httpd/conf/httpd.conf.pre_incident_001
       register: ya_inyectado
 
-    - name: Respaldar httpd.conf original antes de tocarlo
+    - name: "60"
       ansible.builtin.copy:
         src: /etc/httpd/conf/httpd.conf
         dest: /etc/httpd/conf/httpd.conf.pre_incident_001
         remote_src: true
       when: not ya_inyectado.stat.exists
 
-    - name: Respaldar el listado actual de puertos SELinux para httpd_port_t
+    - name: "70"
       ansible.builtin.command: semanage port -l --nolocal --context
       register: selinux_ports_backup
       changed_when: false
       when: not ya_inyectado.stat.exists
 
-    - name: Guardar el backup de contexto SELinux en un archivo de referencia
+    - name: "80"
       ansible.builtin.copy:
         content: "{{ selinux_ports_backup.stdout }}\n"
         dest: /etc/httpd/conf/selinux_ports.pre_incident_001
         mode: '0644'
       when: not ya_inyectado.stat.exists
 
-    - name: Cambiar el puerto de escucha de Apache a 8099 (estándar del "mantenimiento")
+    - name: "90"
       ansible.builtin.lineinfile:
         path: /etc/httpd/conf/httpd.conf
         regexp: '^Listen '
@@ -82,21 +82,21 @@
     # -> esto es justo lo que faltó en el "mantenimiento" y es la causa raíz
     # que el estudiante debe encontrar.
 
-    - name: Intentar reiniciar Apache con la nueva configuración (fallará por SELinux)
+    - name: "100"
       ansible.builtin.systemd:
         name: httpd
         state: restarted
       ignore_errors: true
       when: not ya_inyectado.stat.exists
 
-    - name: Confirmar estado real del servicio tras la inyección
+    - name: "110"
       ansible.builtin.command: systemctl is-active httpd
       register: httpd_status
       changed_when: false
       failed_when: false
 
-    - name: "[LOG INTERNO - no forma parte del ticket]"
-      ansible.builtin.debug:
-        msg: >-
-          Incidente 001 sobre {{ inventory_hostname }} -> estado httpd:
-          {{ httpd_status.stdout }}. Backup guardado: {{ not ya_inyectado.stat.exists }}
+#    - name: "[LOG INTERNO - no forma parte del ticket]"
+#      ansible.builtin.debug:
+#        msg: >-
+#          Incidente 001 sobre {{ inventory_hostname }} -> estado httpd:
+#          {{ httpd_status.stdout }}. Backup guardado: {{ not ya_inyectado.stat.exists }}

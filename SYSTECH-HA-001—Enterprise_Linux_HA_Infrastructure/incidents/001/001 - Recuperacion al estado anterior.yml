@@ -15,19 +15,19 @@
 #     --ask-vault-pass
 # ==============================================================================
 
-- name: "Incidente 001 - Restaurar Apache al estado previo al incidente"
+- name: "10"
   hosts: app_nodes
   become: true
   gather_facts: true
 
   tasks:
 
-    - name: Verificar si existe backup del incidente 001 en este nodo
+    - name: "20"
       ansible.builtin.stat:
         path: /etc/httpd/conf/httpd.conf.pre_incident_001
       register: backup_conf
 
-    - name: Restaurar httpd.conf original desde el backup
+    - name: "30"
       ansible.builtin.copy:
         src: /etc/httpd/conf/httpd.conf.pre_incident_001
         dest: /etc/httpd/conf/httpd.conf
@@ -37,31 +37,31 @@
         mode: '0644'
       when: backup_conf.stat.exists
 
-    - name: Eliminar el backup de configuración ya restaurado
+    - name: "40"
       ansible.builtin.file:
         path: /etc/httpd/conf/httpd.conf.pre_incident_001
         state: absent
       when: backup_conf.stat.exists
 
-    - name: Eliminar el archivo de referencia de contexto SELinux
+    - name: "50"
       ansible.builtin.file:
         path: /etc/httpd/conf/selinux_ports.pre_incident_001
         state: absent
       when: backup_conf.stat.exists
 
-    - name: Reiniciar Apache con la configuración restaurada
+    - name: "60"
       ansible.builtin.systemd:
         name: httpd
         state: restarted
       when: backup_conf.stat.exists
 
-    - name: Confirmar que Apache quedó activo tras la restauración
+    - name: "70"
       ansible.builtin.command: systemctl is-active httpd
       register: httpd_status_after
       changed_when: false
       when: backup_conf.stat.exists
 
-    - name: Reporte de restauración por nodo
+    - name: "80"
       ansible.builtin.debug:
         msg: >-
           {{ 'Incidente 001 revertido en ' + inventory_hostname + '. httpd activo: ' + httpd_status_after.stdout
