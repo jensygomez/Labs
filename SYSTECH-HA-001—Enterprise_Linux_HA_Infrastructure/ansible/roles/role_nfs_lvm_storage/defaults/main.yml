@@ -5,21 +5,18 @@ db_host_ip: "{{ hostvars[groups['db_nodes'][0]]['ansible_host'] }}"
 # Se calcula dinámicamente desde el grupo storage_nodes en hosts.yml
 storage_host_ip: "{{ hostvars[groups['storage_nodes'][0]]['ansible_host'] }}"
 
-# Red permitida para exportaciones (extraída de la IP del storage)
-nfs_network: "{{ hostvars[groups['storage_nodes'][0]]['ansible_host'] | ansible.utils.ipaddr('subnet') }}"
-
-# Configuración de exportaciones usando variables calculadas
+# Configuración de exportaciones usando los 4 discos de 1GB
 nfs_exports:
   - path: "/exports/webdata"
     vg_name: "vg_storage"
     lv_name: "lv_webdata"
-    lv_size: "5G"
+    lv_size: "1.5G"
     pvs: ["/dev/sdb", "/dev/sdc"]
     client_export: "/exports/webdata *(rw,sync,no_root_squash,no_subtree_check)"
   - path: "/exports/dbdata"
     vg_name: "vg_storage"
     lv_name: "lv_dbdata"
-    lv_size: "5G"
+    lv_size: "1.5G"
     pvs: ["/dev/sdd", "/dev/sde"]
     client_export: "/exports/dbdata {{ db_host_ip }}(rw,sync,no_root_squash,no_subtree_check)"
 
