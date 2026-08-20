@@ -5,7 +5,7 @@
       - postgresql-server
       - postgresql-contrib
       - python3-psycopg2
-      - iscsi-initiator-utils # <--- NUEVO: Cliente iSCSI
+      - iscsi-initiator-utils
       - firewalld
     state: present
     update_cache: true
@@ -38,14 +38,11 @@
     content: "InitiatorName={{ iscsi_initiator_iqn }}\n"
     mode: '0600'
 
-- name: "Iniciar servicios iSCSI Initiator"
+- name: "Garantizar que el servicio iSCSI Initiator esté activo"
   ansible.builtin.systemd:
-    name: "{{ item }}"
+    name: iscsid
     state: started
     enabled: true
-  loop:
-    - iscsid.socket
-    - iscsid
 
 - name: "Descubrir iSCSI Target en storage01"
   ansible.builtin.command:
