@@ -1,21 +1,60 @@
 <?php
+header('Content-Type: application/json');
+
 $host = '{{ db_host_ip }}';
 $db   = '{{ db_name }}';
 $user = '{{ db_user }}';
 $pass = '{{ db_pass }}';
 
+$query_type = isset($_GET['q']) ? (int)$_GET['q'] : 1;
+$server_node = gethostname();
+
 try {
     $pdo = new PDO("pgsql:host=$host;dbname=$db", $user, $pass);
-    $stmt = $pdo->query("SELECT * FROM feed_posts ORDER BY created_at DESC LIMIT 1");
-    $post = $stmt->fetch(PDO::FETCH_ASSOC);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    echo "<h1>SYSTECH Instagram Feed (NFS + PostgreSQL)</h1>";
-    echo "<p><strong>Servidor Web Atendiendo:</strong> " . gethostname() . "</p>";
-    echo "<p><strong>Post Caption:</strong> " . $post['caption'] . "</p>";
-    echo "<p><strong>Fecha DB:</strong> " . $post['created_at'] . "</p>";
+    switch ($query_type) {
+        case 1:
+            $title = "¿Cuántos empleados hay en total?";
+            $sql = "SELECT COUNT(*) as total_empleados FROM employees;";
+            break;
+        case 2:
+            $title = "¿Cuántos ganan más de $1000?";
+            $sql = "SELECT first_name, last_name, salary FROM employees WHERE salary > 1000 ORDER BY salary DESC;";
+            break;
+        case 3:
+            $title = "Lista de empleados del departamento de RH";
+            $sql = "SELECT first_name, last_name, department, salary FROM employees WHERE department = 'RH';";
+            break;
+        case 4:
+            $title = "Lista de empleados cuyo nombre inicia con 'A'";
+            $sql = "SELECT first_name, last_name, department FROM employees WHERE first_name LIKE 'A%';";
+            break;
+        case 5:
+            $title = "Empleados con más de 2 años en la empresa";
+            $sql = "SELECT first_name, last_name, hire_date FROM employees WHERE hire_date <= CURRENT_DATE - INTERVAL '2 years';";
+            break;
+        default:
+            $title = "Consulta no válida";
+            $sql = "SELECT COUNT(*) FROM employees;";
+    }
+
+    $stmt = $pdo->query($sql);
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    echo json_encode([
+        'status' => 'success',
+        'atendido_por' => $server_node,
+        'pregunta' => $title,
+        'data' => $results
+    ], JSON_PRETTY_PRINT);
+
 } catch (PDOException $e) {
     http_response_code(500);
-    echo "<h1>Error 500: Fallo de Conexión a la Base de Datos</h1>";
-    echo "<p>" . $e->getMessage() . "</p>";
+    echo json_encode([
+        'status' => 'error',
+        'atendido_por' => $server_node,
+        'message' => $e->getMessage()
+    ]);
 }
 ?>
