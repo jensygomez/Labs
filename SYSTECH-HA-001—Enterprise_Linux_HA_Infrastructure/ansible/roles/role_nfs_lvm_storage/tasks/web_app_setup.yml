@@ -11,7 +11,16 @@
     update_cache: true
   when: ansible_os_family == "RedHat"
 
-- name: "Asegurar que el punto de montaje exista como directorio"
+# ======================================================================
+# --- BLOQUE DE MONTAJE NFS (CORREGIDO Y ROBUSTO) ---
+# ======================================================================
+
+- name: "Forzar desmontaje perezoso (lazy) de /var/www/html para limpiar estados Stale"
+  ansible.builtin.shell:
+    cmd: "umount -l /var/www/html || true"
+  ignore_errors: true
+
+- name: "Asegurar que el punto de montaje exista como directorio local"
   ansible.builtin.file:
     path: /var/www/html
     state: directory
@@ -24,8 +33,12 @@
     path: /var/www/html
     src: "{{ storage_host_ip }}:/exports/webdata"
     fstype: nfs
-    opts: "rw,sync,noatime,nodev,nosuid"
+    opts: "rw,sync,noatime,nodev,nosuid,vers=4" # vers=4 evita bloqueos de negociación en RHEL 9
     state: mounted
+
+# ======================================================================
+# --- RESTO DEL DESPLIEGUE (INTACTO Y CORRECTO) ---
+# ======================================================================
 
 - name: "Desplegar aplicación PHP dinámica (Feed)"
   ansible.builtin.template:
