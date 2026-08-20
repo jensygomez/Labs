@@ -1,0 +1,69 @@
+# ==============================================================================
+# INCIDENTE 001 - Recuperación al estado anterior
+#
+# PROPÓSITO: Revertir exactamente lo que hizo
+#   "Apache no arranca tras mantenimiento.yml", en el nodo donde haya sido
+#   inyectado (sea cual sea -- no necesitas saber cuál de antemano).
+#
+# Es completamente idempotente: si se ejecuta contra un nodo sin el
+# incidente activo, no hace nada y lo reporta explícitamente. Se puede
+# correr contra los 3 app_nodes sin miedo a romper el que ya está sano.
+#
+# USO:
+#   ansible-playbook -i inventories/production/hosts.yml \
+#     "incident/001 - Apache no arranca tras mantenimiento/Recuperacion al estado anterior del incidente.yml" \
+#     --ask-vault-pass
+# ==============================================================================
+
+- name: "Incidente 001 - Restaurar Apache al estado previo al incidente"
+  hosts: app_nodes
+  become: true
+  gather_facts: true
+
+  tasks:
+
+    - name: Verificar si existe backup del incidente 001 en este nodo
+      ansible.builtin.stat:
+        path: /etc/httpd/conf/httpd.conf.pre_incident_001
+      register: backup_conf
+
+    - name: Restaurar httpd.conf original desde el backup
+      ansible.builtin.copy:
+        src: /etc/httpd/conf/httpd.conf.pre_incident_001
+        dest: /etc/httpd/conf/httpd.conf
+        remote_src: true
+        owner: root
+        group: root
+        mode: '0644'
+      when: backup_conf.stat.exists
+
+    - name: Eliminar el backup de configuración ya restaurado
+      ansible.builtin.file:
+        path: /etc/httpd/conf/httpd.conf.pre_incident_001
+        state: absent
+      when: backup_conf.stat.exists
+
+    - name: Eliminar el archivo de referencia de contexto SELinux
+      ansible.builtin.file:
+        path: /etc/httpd/conf/selinux_ports.pre_incident_001
+        state: absent
+      when: backup_conf.stat.exists
+
+    - name: Reiniciar Apache con la configuración restaurada
+      ansible.builtin.systemd:
+        name: httpd
+        state: restarted
+      when: backup_conf.stat.exists
+
+    - name: Confirmar que Apache quedó activo tras la restauración
+      ansible.builtin.command: systemctl is-active httpd
+      register: httpd_status_after
+      changed_when: false
+      when: backup_conf.stat.exists
+
+    - name: Reporte de restauración por nodo
+      ansible.builtin.debug:
+        msg: >-
+          {{ 'Incidente 001 revertido en ' + inventory_hostname + '. httpd activo: ' + httpd_status_after.stdout
+             if backup_conf.stat.exists
+             else inventory_hostname + ': sin incidente 001 activo en este nodo, nada que hacer.' }}
