@@ -9,94 +9,203 @@
     update_cache: true
   when: ansible_os_family == "Debian"
 
-- name: "Desplegar script de tráfico continuo en el cliente"
+- name: "Desplegar script de tráfico + observabilidad en el cliente"
   ansible.builtin.copy:
     dest: /usr/local/bin/infinite_traffic.sh
     mode: '0755'
     content: |
       #!/bin/bash
+      # ============================================================
+      # SYSTECH LAB - Generador de Tráfico + Observability Skeleton
+      # ============================================================
+      #
+      # Modo SERVICE (default): log secuencial, va a journald
+      #   ExecStart=/usr/local/bin/infinite_traffic.sh
+      #
+      # Modo DASHBOARD (manual, interactivo, tipo "top"):
+      #   /usr/local/bin/infinite_traffic.sh --dashboard
+      # ============================================================
+
+      # --- CONFIGURACIÓN GENERAL ---
       VIP="10.10.10.30"
-      SLEEP_TIME="0.1"
+      SLEEP_TIME="1"
+
+      # --- REGISTRO DE MÉTRICAS (feature toggles) ---
+      # Para desactivar un grupo de métricas sin tocar el resto del script.
+      ENABLE_HTTP_METRICS=true
+      ENABLE_DB_METRICS=true
+
+      # --- UMBRALES (nada de números sueltos en el código) ---
+      LATENCY_WARNING=100
+      LATENCY_CRITICAL=500
+
+      # --- MODO DE EJECUCIÓN ---
+      MODE="service"
+      if [[ "$1" == "--dashboard" ]]; then
+        MODE="dashboard"
+      fi
+
+      # --- CONTADORES GLOBALES (estado acumulado) ---
+      # Para agregar una métrica nueva: suma una variable acá.
+      HTTP_REQUESTS=0
+      HTTP_SUCCESS=0
+      HTTP_ERRORS=0
+      HTTP_LATENCY_SUM=0
+      HTTP_LATENCY_MAX=0
+      HTTP_LATENCY_LAST=0
+
+      DB_WRITES=0
+      DB_WRITE_ERRORS=0
+      DB_WRITE_LATENCY_LAST=0
+
+      CURRENT_NODE="N/A"
+
+      # --- FUNCIONES AUXILIARES ---
+
+      log_line() {
+        # En modo service imprime línea a línea (compatible con journald).
+        # En modo dashboard no se usa; el dashboard se redibuja aparte.
+        if [[ "$MODE" == "service" ]]; then
+          echo "$1"
+        fi
+      }
+
+      estado_por_umbral() {
+        local valor=$1 warn=$2 crit=$3
+        if (( valor >= crit )); then
+          echo "CRITICAL"
+        elif (( valor >= warn )); then
+          echo "WARNING"
+        else
+          echo "OK"
+        fi
+      }
+
+      hacer_request_lectura() {
+        local q=$1
+        local start end latency response status node query
+        start=$(date +%s%N)
+        response=$(curl -s --connect-timeout 3 --max-time 5 "http://${VIP}/index.php?q=${q}")
+        end=$(date +%s%N)
+        latency=$(( (end - start) / 1000000 ))
+
+        HTTP_REQUESTS=$((HTTP_REQUESTS + 1))
+        HTTP_LATENCY_LAST=$latency
+        HTTP_LATENCY_SUM=$((HTTP_LATENCY_SUM + latency))
+        (( latency > HTTP_LATENCY_MAX )) && HTTP_LATENCY_MAX=$latency
+
+        if [[ -z "$response" ]]; then
+          HTTP_ERRORS=$((HTTP_ERRORS + 1))
+          log_line " [!] ERROR: Sin respuesta de la VIP ${VIP} (timeout o puerto 80 cerrado)"
+          return
+        fi
+
+        if echo "$response" | jq . >/dev/null 2>&1; then
+          status=$(echo "$response" | jq -r '.status // "N/A"')
+          node=$(echo "$response" | jq -r '.atendido_por // "N/A"')
+          query=$(echo "$response" | jq -r '.pregunta // "N/A"')
+          CURRENT_NODE="$node"
+
+          if [[ "$status" == "success" ]]; then
+            HTTP_SUCCESS=$((HTTP_SUCCESS + 1))
+          else
+            HTTP_ERRORS=$((HTTP_ERRORS + 1))
+          fi
+
+          log_line "----------------------------------------------------------"
+          log_line "READ  | NODE: ${node} | LATENCIA: ${latency} ms | STATUS: ${status} | QUERY: ${query}"
+        else
+          HTTP_ERRORS=$((HTTP_ERRORS + 1))
+          log_line " [!] Respuesta no JSON recibida de la VIP"
+        fi
+      }
+
+      hacer_request_escritura() {
+        local start end latency response status node
+        start=$(date +%s%N)
+        response=$(curl -s --connect-timeout 3 --max-time 5 "http://${VIP}/index.php?action=write")
+        end=$(date +%s%N)
+        latency=$(( (end - start) / 1000000 ))
+        DB_WRITE_LATENCY_LAST=$latency
+
+        if [[ -z "$response" ]]; then
+          DB_WRITE_ERRORS=$((DB_WRITE_ERRORS + 1))
+          log_line " [!] ERROR: Sin respuesta en escritura DB"
+          return
+        fi
+
+        if echo "$response" | jq . >/dev/null 2>&1; then
+          status=$(echo "$response" | jq -r '.status // "N/A"')
+          node=$(echo "$response" | jq -r '.atendido_por // "N/A"')
+          if [[ "$status" == "success" ]]; then
+            DB_WRITES=$((DB_WRITES + 1))
+            log_line "WRITE | NODE: ${node} | LATENCIA: ${latency} ms | STATUS: ${status}"
+          else
+            DB_WRITE_ERRORS=$((DB_WRITE_ERRORS + 1))
+            log_line " [!] Escritura fallida en NODE: ${node}"
+          fi
+        else
+          DB_WRITE_ERRORS=$((DB_WRITE_ERRORS + 1))
+        fi
+      }
+
+      render_dashboard() {
+        local avg_latency=0 success_rate="0.00" lat_estado
+
+        (( HTTP_REQUESTS > 0 )) && avg_latency=$(( HTTP_LATENCY_SUM / HTTP_REQUESTS ))
+        (( HTTP_REQUESTS > 0 )) && success_rate=$(awk "BEGIN{printf \"%.2f\", ($HTTP_SUCCESS/$HTTP_REQUESTS)*100}")
+        lat_estado=$(estado_por_umbral "$avg_latency" "$LATENCY_WARNING" "$LATENCY_CRITICAL")
+
+        clear
+        echo "SYSTECH LIVE OBSERVABILITY"
+        echo "=========================="
+        echo ""
+        echo "SERVICE HEALTH"
+        echo "------------------------------------------------"
+        printf "%-20s %10s\n"      "HTTP REQUESTS" "$HTTP_REQUESTS"
+        printf "%-20s %10s\n"      "SUCCESS"       "$HTTP_SUCCESS"
+        printf "%-20s %10s\n"      "ERRORS"        "$HTTP_ERRORS"
+        printf "%-20s %9s%%\n"     "SUCCESS RATE"  "$success_rate"
+        printf "%-20s %7s ms [%s]\n" "AVG LATENCY" "$avg_latency" "$lat_estado"
+        printf "%-20s %7s ms\n"    "MAX LATENCY"   "$HTTP_LATENCY_MAX"
+        echo ""
+        echo "DATABASE"
+        echo "------------------------------------------------"
+        printf "%-20s %10s\n" "DB WRITES"       "$DB_WRITES"
+        printf "%-20s %10s\n" "WRITE ERRORS"    "$DB_WRITE_ERRORS"
+        printf "%-20s %7s ms\n" "LAST WRITE TIME" "$DB_WRITE_LATENCY_LAST"
+        echo ""
+        echo "NODE"
+        echo "------------------------------------------------"
+        printf "%-20s %10s\n" "CURRENT NODE" "$CURRENT_NODE"
+        echo ""
+        echo "------------------------------------------------"
+        echo "Última actualización: $(date +%H:%M:%S)"
+        echo "Presiona Ctrl+C para salir"
+      }
+
+      # --- LOOP PRINCIPAL ---
+      # Una sola solicitud por ciclo, alternando tipo:
+      #   impar -> LECTURA (rota entre q=1..5)
+      #   par   -> ESCRITURA
+      trap "echo; echo 'Saliendo...'; exit 0" SIGINT
+
+      REQUEST_COUNTER=0
+      READ_QUERY_INDEX=1
 
       while true; do
-        for q in {1..5}; do
-          echo "=========================================================="
-          echo "         SYSTECH LAB — DYNAMIC QUERY TRAFFIC              "
-          echo "=========================================================="
-          echo "Enviando Petición Q$q a la VIP ($VIP)..."
-          echo "----------------------------------------------------------"
-          
-          START_TIME=$(date +%s%N)
-          RESPONSE=$(curl -s --connect-timeout 3 --max-time 5 "http://${VIP}/index.php?q=${q}")
-          END_TIME=$(date +%s%N)
-          
-          LATENCY_MS=$(( (END_TIME - START_TIME) / 1000000 ))
+        REQUEST_COUNTER=$((REQUEST_COUNTER + 1))
 
-          if [ -z "$RESPONSE" ]; then
-            echo " [!] ERROR: Sin respuesta de la VIP ${VIP} (Timeout o puerto 80 cerrado)"
-          elif echo "$RESPONSE" | jq . >/dev/null 2>&1; then
-            export PY_RESPONSE="$RESPONSE"
-            export PY_LATENCY="$LATENCY_MS"
-            
-            python3 -u << 'PYTHON_SCRIPT'
-      import sys, json, os
+        if (( REQUEST_COUNTER % 2 == 1 )); then
+          [[ "$ENABLE_HTTP_METRICS" == "true" ]] && hacer_request_lectura "$READ_QUERY_INDEX"
+          READ_QUERY_INDEX=$(( READ_QUERY_INDEX % 5 + 1 ))
+        else
+          [[ "$ENABLE_DB_METRICS" == "true" ]] && hacer_request_escritura
+        fi
 
-      response_str = os.environ.get("PY_RESPONSE", "{}")
+        [[ "$MODE" == "dashboard" ]] && render_dashboard
 
-      try:
-          data = json.loads(response_str)
-      except Exception as e:
-          print("Error al parsear JSON:", e)
-          sys.exit(1)
-
-      latency = int(os.environ.get("PY_LATENCY", "0"))
-      status = data.get("status", "N/A").upper()
-      node = data.get("atendido_por", "N/A")
-      query = data.get("pregunta", "N/A")
-      http_code = data.get("http_code", "200 OK")
-      db_time = data.get("db_time_ms", "N/A")
-      conn_active = data.get("active_connections", "N/A")
-      cpu_load = data.get("cpu_load", "N/A")
-      records = data.get("data", [])
-
-      status_flag = "OK" if latency < 100 else "DEGRADADO / HIGH LATENCY"
-
-      print(f"STATUS           : {status}")
-      print(f"NODE SERVED      : {node}")
-      print(f"HTTP CODE        : {http_code}")
-      print(f"NETWORK LATENCY  : {latency} ms [{status_flag}]")
-      if db_time != "N/A": print(f"DB EXEC TIME     : {db_time} ms")
-      if conn_active != "N/A": print(f"ACTIVE CONNS     : {conn_active}")
-      if cpu_load != "N/A": print(f"CPU LOAD         : {cpu_load}")
-      print(f"QUERY EXECUTED   : {query}\n")
-
-      if records and isinstance(records, list):
-          headers = list(records[0].keys())
-          widths = {h: len(h) for h in headers}
-          for r in records:
-              for h in headers:
-                  widths[h] = max(widths[h], len(str(r.get(h, ""))))
-          
-          sep = "+" + "+".join("-" * (widths[h] + 2) for h in headers) + "+"
-          head = "|" + "|".join(f" {h.upper():<{widths[h]}} " for h in headers) + "|"
-          
-          print(sep)
-          print(head)
-          print(sep)
-          for r in records:
-              row = "|" + "|".join(f" {str(r.get(h, '')):<{widths[h]}} " for h in headers) + "|"
-              print(row)
-          print(sep)
-          print(f"({len(records)} rows in set)\n")
-      PYTHON_SCRIPT
-          else
-            echo "Respuesta del servidor (no JSON):"
-            echo "$RESPONSE"
-          fi
-          
-          echo "----------------------------------------------------------"
-          sleep $SLEEP_TIME
-        done
+        sleep "$SLEEP_TIME"
       done
 
 - name: "Crear servicio systemd para la generación de tráfico"

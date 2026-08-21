@@ -7,12 +7,40 @@ $user = '{{ db_user }}';
 $pass = '{{ db_pass }}';
 
 $query_type = isset($_GET['q']) ? (int)$_GET['q'] : 1;
+$action = isset($_GET['action']) ? $_GET['action'] : null;
 $server_node = gethostname();
 
 try {
     $pdo = new PDO("pgsql:host=$host;dbname=$db", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+    // ------------------------------------------------------------
+    // ENDPOINT DE ESCRITURA (?action=write)
+    // Genera tráfico de escritura real hacia el disco iSCSI de
+    // storage01 (montado en db01 en /var/lib/pgsql/data).
+    // No expone datos de negocio, solo confirma la operación.
+    // ------------------------------------------------------------
+    if ($action === 'write') {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS traffic_log (
+            id SERIAL PRIMARY KEY,
+            node VARCHAR(50) NOT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT NOW()
+        );");
+
+        $stmt = $pdo->prepare("INSERT INTO traffic_log (node) VALUES (:node)");
+        $stmt->execute(['node' => $server_node]);
+
+        echo json_encode([
+            'status'       => 'success',
+            'atendido_por' => $server_node,
+            'accion'       => 'write'
+        ]);
+        exit;
+    }
+
+    // ------------------------------------------------------------
+    // ENDPOINTS DE LECTURA (?q=1..5) — sin cambios de lógica
+    // ------------------------------------------------------------
     switch ($query_type) {
         case 1:
             $title = "¿Cuántos empleados hay en total?";
