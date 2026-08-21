@@ -1,3 +1,4 @@
+---
 - name: "Instalar paquetes necesarios en el cliente de pruebas"
   ansible.builtin.apt:
     name:
@@ -8,17 +9,16 @@
     update_cache: true
   when: ansible_os_family == "Debian"
 
-- name: "Desplegar script de tráfico continuo en el cliente con formato SQL y métricas extendidas"
+- name: "Desplegar script de tráfico continuo en el cliente"
   ansible.builtin.copy:
     dest: /usr/local/bin/infinite_traffic.sh
     mode: '0755'
     content: |
       #!/bin/bash
       VIP="10.10.10.30"
-      
+
       while true; do
         for q in {1..5}; do
-          clear
           echo "=========================================================="
           echo "         SYSTECH LAB — DYNAMIC QUERY TRAFFIC              "
           echo "=========================================================="
@@ -34,21 +34,20 @@
           if [ -z "$RESPONSE" ]; then
             echo " [!] ERROR: Sin respuesta de la VIP ${VIP} (Timeout o puerto 80 cerrado)"
           elif echo "$RESPONSE" | jq . >/dev/null 2>&1; then
-            # Pasamos las variables de Bash a Python de forma segura vía entorno
             export PY_RESPONSE="$RESPONSE"
             export PY_LATENCY="$LATENCY_MS"
             
-            python3 << 'PYTHON_SCRIPT'
+            python3 -u << 'PYTHON_SCRIPT'
       import sys, json, os
-      
+
       response_str = os.environ.get("PY_RESPONSE", "{}")
-      
+
       try:
           data = json.loads(response_str)
       except Exception as e:
           print("Error al parsear JSON:", e)
           sys.exit(1)
-      
+
       latency = os.environ.get("PY_LATENCY", "0")
       status = data.get("status", "N/A").upper()
       node = data.get("atendido_por", "N/A")
@@ -58,7 +57,7 @@
       conn_active = data.get("active_connections", "N/A")
       cpu_load = data.get("cpu_load", "N/A")
       records = data.get("data", [])
-      
+
       print(f"STATUS           : {status}")
       print(f"NODE SERVED      : {node}")
       print(f"HTTP CODE        : {http_code}")
@@ -67,7 +66,7 @@
       if conn_active != "N/A": print(f"ACTIVE CONNS     : {conn_active}")
       if cpu_load != "N/A": print(f"CPU LOAD         : {cpu_load}")
       print(f"QUERY EXECUTED   : {query}\n")
-      
+
       if records and isinstance(records, list):
           headers = list(records[0].keys())
           widths = {h: len(h) for h in headers}
@@ -96,3 +95,32 @@
           sleep 2
         done
       done
+
+- name: "Crear servicio systemd para la generación de tráfico"
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/infinite-traffic.service
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Systech Lab - Infinite Traffic Generator
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=simple
+      ExecStart=/usr/local/bin/infinite_traffic.sh
+      Restart=always
+      RestartSec=3
+      Environment=PYTHONUNBUFFERED=1
+      StandardOutput=journal
+      StandardError=journal
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: "Habilitar e iniciar el servicio infinite-traffic"
+  ansible.builtin.systemd:
+    name: infinite-traffic.service
+    state: started
+    enabled: true
+    daemon_reload: true
