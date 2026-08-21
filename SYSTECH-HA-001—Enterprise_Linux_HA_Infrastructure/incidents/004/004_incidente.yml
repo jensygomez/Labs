@@ -1,0 +1,75 @@
+---
+- name: "System Reboot Validation"
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: "10"
+      ansible.builtin.set_fact:
+        target_node: "{{ groups['app_nodes'] | random }}"
+
+    - name: "20"
+      ansible.builtin.add_host:
+        name: "{{ target_node }}"
+        groups: incident_004_target
+
+    - name: "30"
+      ansible.builtin.debug:
+        msg: "Target selected."
+
+- name: "System Reboot Validation - Execution"
+  hosts: incident_004_target
+  become: true
+  gather_facts: true
+  tasks:
+    - name: "40"
+      ansible.builtin.stat:
+        path: /var/log/.reboot_marker_004
+      register: check_inject
+
+    # --- FALSO POSITIVO 1: Logs falsos de SELinux ---
+    - name: "50"
+      ansible.builtin.shell: |
+        logger -p kern.warning "SELinux: preventing httpd from starting due to context mismatch"
+        logger -p kern.warning "type=AVC msg=audit: denied { start } for comm=systemd name=httpd"
+      when: not check_inject.stat.exists
+
+    # --- FALSO POSITIVO 2: Error falso de configuración ---
+    - name: "60"
+      ansible.builtin.shell: |
+        logger -p httpd.err "AH00526: Syntax error on line 1 of /etc/httpd/conf/httpd.conf:"
+        logger -p httpd.err "AH00526: Invalid command 'Listen', perhaps misspelled by a config include"
+      when: not check_inject.stat.exists
+
+    # --- FALSO POSITIVO 3: Mensaje de boot antiguo simulado ---
+    - name: "70"
+      ansible.builtin.shell: |
+        # Simular que hubo un reboot hace ~2 horas modificando el timestamp del marker
+        # Esto engaña al estudiante para que piense "ah, sí, el reboot fue hace rato"
+        touch -d "2 hours ago" /var/log/.reboot_marker_004 2>/dev/null || true
+      when: not check_inject.stat.exists
+
+    # --- CAUSA RAÍZ REAL: Deshabilitar el servicio (sin tocar config) ---
+    - name: "80"
+      ansible.builtin.systemd:
+        name: httpd
+        enabled: false
+        state: stopped
+      when: not check_inject.stat.exists
+
+    # --- FALSO POSITIVO 4: Log de systemd confuso ---
+    - name: "90"
+      ansible.builtin.shell: |
+        logger -p systemd.err "systemd[1]: httpd.service: Failed to load configuration: Unit httpd.service is masked."
+      when: not check_inject.stat.exists
+
+    - name: "100"
+      ansible.builtin.file:
+        path: /var/log/.reboot_marker_004
+        state: touch
+        mode: '0600'
+      when: not check_inject.stat.exists
+
+    - name: "110"
+      ansible.builtin.debug:
+        msg: "Validation completed."
