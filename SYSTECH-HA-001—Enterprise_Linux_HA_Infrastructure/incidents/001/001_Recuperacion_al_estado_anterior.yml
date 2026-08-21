@@ -1,0 +1,42 @@
+---
+- name: "System State Reconciliation"
+  hosts: app_nodes
+  become: true
+  gather_facts: true
+  tasks:
+    - name: "10"
+      ansible.builtin.stat:
+        path: /etc/httpd/conf/httpd.conf.bak_maint
+      register: check_backup
+
+    - name: "20"
+      ansible.builtin.copy:
+        src: /etc/httpd/conf/httpd.conf.bak_maint
+        dest: /etc/httpd/conf/httpd.conf
+        remote_src: true
+        owner: root
+        group: root
+        mode: '0644'
+      when: check_backup.stat.exists
+
+    - name: "30"
+      ansible.builtin.file:
+        path: /etc/httpd/conf/httpd.conf.bak_maint
+        state: absent
+      when: check_backup.stat.exists
+
+    - name: "40"
+      ansible.builtin.systemd:
+        name: httpd
+        state: restarted
+      when: check_backup.stat.exists
+
+    - name: "50"
+      ansible.builtin.command: systemctl is-active httpd
+      register: svc_status
+      changed_when: false
+      when: check_backup.stat.exists
+
+    - name: "60"
+      ansible.builtin.debug:
+        msg: "Task completed. Status: {{ svc_status.stdout | default('skipped') }}"
