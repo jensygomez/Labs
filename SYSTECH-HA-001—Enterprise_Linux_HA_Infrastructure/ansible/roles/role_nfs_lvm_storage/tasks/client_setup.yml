@@ -14,53 +14,78 @@
     mode: '0755'
     content: |
       #!/bin/bash
-			VIP="10.10.10.30"
-			URL="http://${VIP}/"
-			LOG_FILE="/tmp/traffic_monitor.log"
-			> "$LOG_FILE" # Limpiar log anterior al iniciar
 
-			while true; do
-					clear
-					echo "=================================================================="
-					echo "       SYSTECH LAB — REAL-TIME TRAFFIC & HEALTH MONITOR           "
-					echo "=================================================================="
-					printf "+------------+--------+--------+-----------+--------------------+\n"
-					printf "| %-10s | %-6s | %-6s | %-9s | %-18s |\n" "TIME" "HTTP" "NODE" "LATENCY" "APP STATUS"
-					printf "+------------+--------+--------+-----------+--------------------+\n"
-    
-					TIMESTAMP=$(date +"%H:%M:%S")
-					RESPONSE=$(curl -s -w "\n%{http_code} %{time_total}" --max-time 5 -o /tmp/traffic_body.json "$URL")
-					HTTP_CODE=$(echo "$RESPONSE" | tail -n 1 | awk '{print $1}')
-					LATENCY=$(echo "$RESPONSE" | tail -n 1 | awk '{print $2}')
-    
-					if [ -f /tmp/traffic_body.json ] && [ "$HTTP_CODE" == "200" ]; then
-							NODE=$(grep -o '"atendido_por": *"[^"]*"' /tmp/traffic_body.json | cut -d'"' -f4)
-							APP_STATUS=$(grep -o '"status": *"[^"]*"' /tmp/traffic_body.json | cut -d'"' -f4)
-							[ -z "$NODE" ] && NODE="unknown"
-							[ -z "$APP_STATUS" ] && APP_STATUS="unknown"
-					else
-							NODE="---"
-							APP_STATUS="ERROR"
-					fi
+      VIP="10.10.10.30"
+      URL="http://${VIP}/"
+      LOG_FILE="/tmp/traffic_monitor.log"
 
-					if [ "$HTTP_CODE" == "200" ]; then
-							COLOR="\e[32m"
-					elif [ "$HTTP_CODE" == "502" ]; then
-							COLOR="\e[31m"
-					else
-							COLOR="\e[33m"
-					fi
-					RESET="\e[0m"
+      > "$LOG_FILE" # Limpiar log anterior al iniciar
 
-					# Formatear línea y guardarla en el log temporal (con colores incluidos)
-					LINE=$(printf "| ${COLOR}%-10s | %-6s | %-6s | %-9s | %-18s${RESET} |\n" \
-							"$TIMESTAMP" "$HTTP_CODE" "$NODE" "${LATENCY}s" "$APP_STATUS")
-					echo -e "$LINE" >> "$LOG_FILE"
-    
-					# Mostrar solo las últimas 8 líneas
-					tail -n 8 "$LOG_FILE"
-					sleep 2
-			done
+      while true; do
+          clear
+
+          echo "=================================================================="
+          echo "       SYSTECH LAB — REAL-TIME TRAFFIC & HEALTH MONITOR           "
+          echo "=================================================================="
+
+          printf "+------------+--------+--------+-----------+--------------------+\n"
+          printf "| %-10s | %-6s | %-6s | %-9s | %-18s |\n" \
+              "TIME" "HTTP" "NODE" "LATENCY" "APP STATUS"
+          printf "+------------+--------+--------+-----------+--------------------+\n"
+
+          TIMESTAMP=$(date +"%H:%M:%S")
+
+          RESPONSE=$(curl -s \
+              -w "\n%{http_code} %{time_total}" \
+              --max-time 5 \
+              -o /tmp/traffic_body.json \
+              "$URL")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n 1 | awk '{print $1}')
+          LATENCY=$(echo "$RESPONSE" | tail -n 1 | awk '{print $2}')
+
+          if [ -f /tmp/traffic_body.json ] && [ "$HTTP_CODE" == "200" ]; then
+
+              NODE=$(grep -o '"atendido_por": *"[^"]*"' \
+                  /tmp/traffic_body.json | cut -d'"' -f4)
+
+              APP_STATUS=$(grep -o '"status": *"[^"]*"' \
+                  /tmp/traffic_body.json | cut -d'"' -f4)
+
+              [ -z "$NODE" ] && NODE="unknown"
+              [ -z "$APP_STATUS" ] && APP_STATUS="unknown"
+
+          else
+              NODE="---"
+              APP_STATUS="ERROR"
+          fi
+
+          if [ "$HTTP_CODE" == "200" ]; then
+              COLOR="\e[32m"
+          elif [ "$HTTP_CODE" == "502" ]; then
+              COLOR="\e[31m"
+          else
+              COLOR="\e[33m"
+          fi
+
+          RESET="\e[0m"
+
+          # Formatear línea y guardarla en el log temporal
+          # (con colores incluidos)
+          LINE=$(printf "| ${COLOR}%-10s | %-6s | %-6s | %-9s | %-18s${RESET} |\n" \
+              "$TIMESTAMP" \
+              "$HTTP_CODE" \
+              "$NODE" \
+              "${LATENCY}s" \
+              "$APP_STATUS")
+
+          echo -e "$LINE" >> "$LOG_FILE"
+
+          # Mostrar solo las últimas 8 líneas
+          tail -n 8 "$LOG_FILE"
+
+          sleep 2
+      done
 
 - name: "Crear servicio systemd para el tráfico continuo"
   ansible.builtin.copy:
@@ -70,14 +95,14 @@
       [Unit]
       Description=Generador de tráfico sintético continuo para HAProxy
       After=network.target
-      
+
       [Service]
       Type=simple
       ExecStart=/usr/local/bin/infinite_traffic.sh
       Restart=always
       RestartSec=5
       User=root
-      
+
       [Install]
       WantedBy=multi-user.target
 
