@@ -16,6 +16,7 @@
     content: |
       #!/bin/bash
       VIP="10.10.10.30"
+      SLEEP_TIME="0.1"
 
       while true; do
         for q in {1..5}; do
@@ -48,7 +49,7 @@
           print("Error al parsear JSON:", e)
           sys.exit(1)
 
-      latency = os.environ.get("PY_LATENCY", "0")
+      latency = int(os.environ.get("PY_LATENCY", "0"))
       status = data.get("status", "N/A").upper()
       node = data.get("atendido_por", "N/A")
       query = data.get("pregunta", "N/A")
@@ -58,10 +59,12 @@
       cpu_load = data.get("cpu_load", "N/A")
       records = data.get("data", [])
 
+      status_flag = "OK" if latency < 100 else "DEGRADADO / HIGH LATENCY"
+
       print(f"STATUS           : {status}")
       print(f"NODE SERVED      : {node}")
       print(f"HTTP CODE        : {http_code}")
-      print(f"NETWORK LATENCY  : {latency} ms")
+      print(f"NETWORK LATENCY  : {latency} ms [{status_flag}]")
       if db_time != "N/A": print(f"DB EXEC TIME     : {db_time} ms")
       if conn_active != "N/A": print(f"ACTIVE CONNS     : {conn_active}")
       if cpu_load != "N/A": print(f"CPU LOAD         : {cpu_load}")
@@ -92,7 +95,7 @@
           fi
           
           echo "----------------------------------------------------------"
-          sleep 2
+          sleep $SLEEP_TIME
         done
       done
 

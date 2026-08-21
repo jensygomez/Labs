@@ -1,0 +1,65 @@
+---
+- name: "Respuesta a Incidentes: Mitigación de Disco y Consenso de Cluster"
+  hosts: app_nodes
+  become: true
+  tasks:
+
+    # ==========================================
+    # FASE 0: PREVENCIÓN DE DISCO LLEO (RAW/SHELL)
+    # ==========================================
+    - name: "0.1 Reducir journalctl preventivamente"
+      ansible.builtin.raw: "journalctl --vacuum-size=50M || true"
+      changed_when: false
+
+    - name: "0.2 Purgar archivos de log gigantes anómalos en /var/log"
+      ansible.builtin.shell: |
+        find /var/log /var/tmp -type f -size +100M -name "*audit*" -exec rm -f {} \; || true
+      changed_when: false
+
+    # ==========================================
+    # FASE 1: RECOLECCIÓN Y CONSENSO
+    # ==========================================
+    - name: "1.1 Recolectar servicios activos de cada nodo"
+      ansible.builtin.service_facts:
+
+    - name: "1.2 Crear lista local de servicios en ejecución"
+      ansible.builtin.set_fact:
+        my_running_services: "{{ ansible_facts.services | dict2items | selectattr('value.state', 'equalto', 'running') | map(attribute='key') | list }}"
+
+    - name: "1.3 Identificar la 'Baseline' (Servicios que corren en TODOS los nodos)"
+      ansible.builtin.set_fact:
+        cluster_baseline: >-
+          {%- set all_services = ansible_play_hosts | map('extract', hostvars, 'my_running_services') | flatten -%}
+          {%- set total_hosts = ansible_play_hosts | length -%}
+          {%- set common = [] -%}
+          {%- for svc in all_services | unique -%}
+            {%- if all_services.count(svc) == total_hosts -%}
+              {%- set _ = common.append(svc) -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ common }}
+      run_once: true
+
+    - name: "1.4 Aislar las anomalías de ESTE nodo específico"
+      ansible.builtin.set_fact:
+        my_anomalies: "{{ my_running_services | difference(hostvars[ansible_play_hosts[0]]['cluster_baseline']) }}"
+
+    - name: "1.5 Reportar servicios sospechosos"
+      ansible.builtin.debug:
+        msg: "ANOMALÍA DETECTADA en {{ inventory_hostname }}: {{ my_anomalies }}"
+
+    # ==========================================
+    # FASE 2: REMEDIACIÓN Y PURGA DEFINITIVA
+    # ==========================================
+    - name: "2.1 Detener y deshabilitar servicios anómalos"
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      loop: "{{ my_anomalies }}"
+      when: my_anomalies | length > 0
+
+    - name: "2.2 Recargar demonio de systemd para aplicar cambios"
+      ansible.builtin.systemd:
+        daemon_reload: true
+      when: my_anomalies | length > 0

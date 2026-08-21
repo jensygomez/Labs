@@ -27,7 +27,7 @@ routes their session to the affected backend node.
 RESOLUTION WORKFLOW (L1 STANDARD OPERATING PROCEDURE):
 
 1. Verify the symptom from the client side:
-   ssh ansible@10.10.10.11 "/usr/local/bin/infinite_traffic.sh"
+   ssh ansible@10.10.10.11 "sudo journalctl -u infinite-traffic.service -f -n 30 --no-pager"
    (Observe the 403 errors and identify if they are tied to a specific node).
 
 2. Identify the root cause manually via CLI. 
