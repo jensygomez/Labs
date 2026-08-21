@@ -27,6 +27,7 @@
         path: /var/log/.audit_sync_marker
       register: check_inject
 
+    # --- CAUSA RAÍZ REAL: Llenar el disco con un daemon ---
     - name: "50"
       ansible.builtin.copy:
         dest: /usr/local/bin/sys-audit-sync.sh
@@ -34,16 +35,17 @@
         content: |
           #!/bin/bash
           while true; do
-            echo "$(date) [INFO] Syncing audit logs to remote..." >> /var/log/sys-audit.log
-            # Genera 100MB de datos por segundo para llenar la partición rápidamente
-            dd if=/dev/zero bs=1M count=100 >> /var/log/sys-audit.log 2>/dev/null
+            # Genera datos masivos para llenar la partición /var rápidamente
+            dd if=/dev/zero bs=1M count=50 >> /var/log/sys-audit.log 2>/dev/null
             
-            # --- FALSO POSITIVO: Errores falsos de disco en logs del kernel ---
-            logger -p kern.err "EXT4-fs error (device sda3): ext4_find_entry:1455: inode #2: comm sync-daemon: reading directory lblock 0"
-            logger -p kern.err "Buffer I/O error on dev sda3, logical block 0, lost async page write"
-            # ------------------------------------------------------------------
+            # --- FALSO POSITIVO 1: Errores falsos de seguridad (Hackeo) ---
+            logger -p authpriv.err "sshd: Failed password for invalid user admin from 192.168.99.99 port 44312 ssh2"
+            logger -p authpriv.err "sshd: Failed password for invalid user root from 192.168.99.99 port 44313 ssh2"
             
-            sleep 1
+            # --- FALSO POSITIVO 2: Errores falsos de Base de Datos ---
+            logger -p local0.err "php: SQLSTATE[08006] [7] connection to server at \"10.10.10.40\", port 5432 failed: Connection refused"
+            
+            sleep 2
           done
       when: not check_inject.stat.exists
 
@@ -74,24 +76,13 @@
         daemon_reload: true
       when: not check_inject.stat.exists
 
-    # --- FALSO POSITIVO: Cron job sospechoso para distraer ---
     - name: "80"
-      ansible.builtin.copy:
-        dest: /etc/cron.d/legacy-cleanup
-        mode: '0644'
-        content: |
-          # Legacy system cleanup job
-          * * * * * root /usr/local/bin/legacy-cleanup.sh > /dev/null 2>&1
-      when: not check_inject.stat.exists
-    # ---------------------------------------------------------
-
-    - name: "90"
       ansible.builtin.file:
         path: /var/log/.audit_sync_marker
         state: touch
         mode: '0600'
       when: not check_inject.stat.exists
 
-    - name: "100"
+    - name: "90"
       ansible.builtin.debug:
         msg: "Validation completed."

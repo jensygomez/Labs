@@ -23,19 +23,18 @@
       loop:
         - /etc/systemd/system/sys-audit-sync.service
         - /usr/local/bin/sys-audit-sync.sh
-        - /etc/cron.d/legacy-cleanup
         - /var/log/.audit_sync_marker
       when: check_inject.stat.exists
 
     - name: "40"
-      ansible.builtin.systemd:
-        name: systemd-journald
-        state: restarted
+      ansible.builtin.shell:
+        cmd: "> /var/log/sys-audit.log"
       when: check_inject.stat.exists
 
     - name: "50"
-      ansible.builtin.shell:
-        cmd: "> /var/log/sys-audit.log"
+      ansible.builtin.systemd:
+        name: systemd-journald
+        state: restarted
       when: check_inject.stat.exists
 
     - name: "60"

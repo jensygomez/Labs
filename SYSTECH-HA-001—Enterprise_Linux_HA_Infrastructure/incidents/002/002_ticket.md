@@ -9,10 +9,9 @@ The continuous traffic monitoring script is reporting sporadic HTTP 500
 application VIP (10.10.10.30). 
 
 ICMP ping to all 3 nodes in the application fleet (app01/app02/app03) 
-is successful. SSH connectivity is also confirmed, though some internal 
-users report that SSH sessions feel "sluggish" or drop unexpectedly.
+is successful. SSH connectivity is also confirmed.
 
-Context: Last night, the security team deployed a new "compliance and 
+Context: The security team recently deployed a new "compliance and 
 telemetry daemon" across the application fleet to meet new corporate 
 audit requirements. Following this deployment, the web application has 
 become highly unstable. 
