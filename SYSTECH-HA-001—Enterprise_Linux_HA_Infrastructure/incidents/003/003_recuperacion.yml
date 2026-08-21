@@ -1,0 +1,39 @@
+---
+- name: "System State Reconciliation"
+  hosts: app_nodes
+  become: true
+  gather_facts: true
+  tasks:
+    - name: "10"
+      ansible.builtin.stat:
+        path: /var/www/html/.deploy_marker_003
+      register: check_inject
+
+    # --- RESTAURAR PERMISOS ESTÁNDAR WEB ---
+    - name: "20"
+      ansible.builtin.file:
+        path: /var/www/html
+        mode: '0755'
+      when: check_inject.stat.exists
+
+    - name: "30"
+      ansible.builtin.file:
+        path: /var/www/html/index.php
+        mode: '0644'
+      when: check_inject.stat.exists
+
+    - name: "40"
+      ansible.builtin.file:
+        path: /var/www/html/.deploy_marker_003
+        state: absent
+      when: check_inject.stat.exists
+
+    - name: "50"
+      ansible.builtin.systemd:
+        name: httpd
+        state: restarted
+      when: check_inject.stat.exists
+
+    - name: "60"
+      ansible.builtin.debug:
+        msg: "Reconciliation completed."

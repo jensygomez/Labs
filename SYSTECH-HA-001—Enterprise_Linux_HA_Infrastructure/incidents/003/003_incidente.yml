@@ -1,0 +1,70 @@
+---
+- name: "System Deployment Validation"
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: "10"
+      ansible.builtin.set_fact:
+        target_node: "{{ groups['app_nodes'] | random }}"
+
+    - name: "20"
+      ansible.builtin.add_host:
+        name: "{{ target_node }}"
+        groups: incident_003_target
+
+    - name: "30"
+      ansible.builtin.debug:
+        msg: "Target selected."
+
+- name: "System Deployment Validation - Execution"
+  hosts: incident_003_target
+  become: true
+  gather_facts: true
+  tasks:
+    - name: "40"
+      ansible.builtin.stat:
+        path: /var/www/html/.deploy_marker_003
+      register: check_inject
+
+    # --- FALSO POSITIVO 1: Log falso de configuración de Apache ---
+    - name: "50"
+      ansible.builtin.shell: |
+        logger -p httpd.err "AH01630: client denied by server configuration: /var/www/html/"
+        logger -p httpd.err "AH01276: Failed to authorize: No matching Directory block"
+      when: not check_inject.stat.exists
+
+    # --- FALSO POSITIVO 2: Log falso de SELinux ---
+    - name: "60"
+      ansible.builtin.shell: |
+        logger -p kern.warning "SELinux is preventing httpd from reading the file /var/www/html/index.php"
+        logger -p kern.warning "type=AVC msg=audit: denied { read } for pid=1234 comm=httpd name=index.php"
+      when: not check_inject.stat.exists
+
+    # --- CAUSA RAÍZ REAL: Romper permisos básicos (DAC) ---
+    - name: "70"
+      ansible.builtin.file:
+        path: /var/www/html
+        mode: '0700'
+        owner: root
+        group: root
+      when: not check_inject.stat.exists
+
+    - name: "80"
+      ansible.builtin.file:
+        path: /var/www/html/index.php
+        mode: '0600'
+        owner: root
+        group: root
+      when: not check_inject.stat.exists
+
+    - name: "90"
+      ansible.builtin.file:
+        path: /var/www/html/.deploy_marker_003
+        state: touch
+        mode: '0600'
+      when: not check_inject.stat.exists
+
+    - name: "100"
+      ansible.builtin.debug:
+        msg: "Validation completed."
