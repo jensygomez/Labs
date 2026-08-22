@@ -1,0 +1,56 @@
+---
+# ==============================================================================
+# ZABBIX - FASE 3: zabbix-server
+# ==============================================================================
+# Alcance de este archivo, y SOLO este alcance:
+#   - Instalar el paquete zabbix-server-pgsql (viene del repo agregado en Fase 2)
+#   - Apuntar zabbix_server.conf a la base de datos ya creada e importada
+#   - Arrancar y habilitar el servicio zabbix-server
+#
+# Lo que NO hace este archivo (a propósito, viene en el siguiente):
+#   - No instala el frontend web (zabbix-frontend-php)
+#   - No instala ningún zabbix-agent
+#
+# Validar después de correr este archivo:
+#   sudo systemctl status zabbix-server
+#   sudo journalctl -u zabbix-server -n 30 --no-pager
+#   -> buscar la línea "server #0 started" o "database is up to date"
+#   -> NO debería haber líneas "cannot connect to database"
+# ==============================================================================
+
+- name: "Instalar zabbix-server-pgsql"
+  ansible.builtin.apt:
+    name: zabbix-server-pgsql
+    state: present
+    update_cache: true
+
+- name: "Configurar DBHost en zabbix_server.conf"
+  ansible.builtin.lineinfile:
+    path: /etc/zabbix/zabbix_server.conf
+    regexp: '^#?\s*DBHost='
+    line: "DBHost=localhost"
+
+- name: "Configurar DBName en zabbix_server.conf"
+  ansible.builtin.lineinfile:
+    path: /etc/zabbix/zabbix_server.conf
+    regexp: '^#?\s*DBName='
+    line: "DBName={{ zabbix_db_name }}"
+
+- name: "Configurar DBUser en zabbix_server.conf"
+  ansible.builtin.lineinfile:
+    path: /etc/zabbix/zabbix_server.conf
+    regexp: '^#?\s*DBUser='
+    line: "DBUser={{ zabbix_db_user }}"
+
+- name: "Configurar DBPassword en zabbix_server.conf"
+  ansible.builtin.lineinfile:
+    path: /etc/zabbix/zabbix_server.conf
+    regexp: '^#?\s*DBPassword='
+    line: "DBPassword={{ zabbix_db_pass }}"
+  no_log: true # evita que la password quede en texto plano en el output de Ansible
+
+- name: "Arrancar y habilitar zabbix-server"
+  ansible.builtin.systemd:
+    name: zabbix-server
+    state: restarted   # 'restarted' en vez de 'started' para que tome la config nueva
+    enabled: true

@@ -21,7 +21,10 @@
 
 - name: "Descargar el paquete zabbix-release (registra el repo oficial)"
   ansible.builtin.get_url:
-    url: "https://repo.zabbix.com/zabbix/{{ zabbix_version }}/release/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_{{ zabbix_version }}+ubuntu24.04_all.deb"
+    # OJO: la rama 7.0 LTS usa una estructura de ruta distinta a 7.2/7.4/8.0
+    # (esas usan /release/ubuntu/... + alias "latest"). Para 7.0 hay que
+    # apuntar a la versión fija del paquete zabbix-release.
+    url: "https://repo.zabbix.com/zabbix/{{ zabbix_version }}/ubuntu/pool/main/z/zabbix-release/zabbix-release_{{ zabbix_release_pkg_version }}+ubuntu24.04_all.deb"
     dest: "/tmp/zabbix-release_{{ zabbix_version }}.deb"
     mode: '0644'
 

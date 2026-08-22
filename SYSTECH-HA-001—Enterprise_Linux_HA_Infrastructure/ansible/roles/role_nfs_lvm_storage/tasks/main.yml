@@ -32,3 +32,7 @@
 - name: "Configurar Monitoreo (Zabbix) - Fase 2: Repositorio + Esquema"
   ansible.builtin.include_tasks: zabbix/02_zabbix_repo_and_schema.yml
   when: "'monitoring_nodes' in group_names"
+
+- name: "Configurar Monitoreo (Zabbix) - Fase 3: zabbix-server"
+  ansible.builtin.include_tasks: zabbix/03_zabbix_server_setup.yml
+  when: "'monitoring_nodes' in group_names"
