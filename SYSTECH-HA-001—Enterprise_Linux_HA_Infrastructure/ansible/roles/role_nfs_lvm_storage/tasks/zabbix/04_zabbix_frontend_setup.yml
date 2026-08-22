@@ -1,0 +1,99 @@
+# ==============================================================================
+# ZABBIX - FASE 4: Frontend Web (Apache + PHP)
+# ==============================================================================
+# Alcance de este archivo, y SOLO este alcance:
+# - Instalar Apache2, PHP 8.3 (con extensiones) y zabbix-frontend-php
+# - Generar el locale en_US.UTF-8 (requisito crítico de Zabbix)
+# - Desplegar configuración manual de Apache para Zabbix (inyectando timezone)
+# - Habilitar módulos de Apache (php8.3 y conf zabbix)
+# Lo que NO hace este archivo (a propósito):
+# - No configura el zabbix-server (eso fue la Fase 3)
+# - No instala zabbix-agent (eso será la Fase 5)
+# Validar después de correr este archivo:
+# - curl -I http://localhost/zabbix/ (debe devolver 302 o 200)
+# - Abrir navegador en http://<IP>/zabbix/ (debe mostrar el asistente web)
+# ==============================================================================
+
+- name: "Instalar Apache2, PHP 8.3, extensiones y Frontend de Zabbix"
+  ansible.builtin.apt:
+    name:
+      - apache2
+      - libapache2-mod-php8.3
+      - php8.3
+      - php8.3-pgsql
+      - php8.3-gd
+      - php8.3-xml
+      - php8.3-mbstring
+      - php8.3-bcmath
+      - locales
+      - zabbix-frontend-php
+      - curl
+    state: present
+    update_cache: true
+  when: ansible_os_family == "Debian"
+
+- name: "Asegurar que el locale en_US.UTF-8 esté generado (Requisito Zabbix)"
+  community.general.locale_gen:
+    name: en_US.UTF-8
+    state: present
+
+- name: "Desplegar configuración manual de Apache para Zabbix (zabbix.conf)"
+  ansible.builtin.copy:
+    dest: /etc/apache2/conf-available/zabbix.conf
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      Alias /zabbix /usr/share/zabbix
+
+      <Directory "/usr/share/zabbix">
+          Options FollowSymLinks
+          AllowOverride None
+          Require all granted
+
+          <IfModule mod_php.c>
+              php_value max_execution_time 300
+              php_value memory_limit 128M
+              php_value post_max_size 16M
+              php_value upload_max_filesize 2M
+              php_value max_input_time 300
+              php_value max_input_vars 10000
+              php_value always_populate_raw_post_data -1
+              php_value date.timezone {{ zabbix_timezone | default('America/Bogota') }}
+          </IfModule>
+      </Directory>
+
+      <Directory "/usr/share/zabbix/conf">
+          Require all denied
+      </Directory>
+
+      <Directory "/usr/share/zabbix/app">
+          Require all denied
+      </Directory>
+
+      <Directory "/usr/share/zabbix/include">
+          Require all denied
+      </Directory>
+
+      <Directory "/usr/share/zabbix/local">
+          Require all denied
+      </Directory>
+  notify: "Reiniciar Apache"
+
+- name: "Habilitar módulo PHP 8.3 en Apache (Idempotente)"
+  ansible.builtin.command:
+    cmd: a2enmod php8.3
+    creates: /etc/apache2/mods-enabled/php8.3.conf
+  notify: "Reiniciar Apache"
+
+- name: "Habilitar configuración de Zabbix en Apache (Idempotente)"
+  ansible.builtin.command:
+    cmd: a2enconf zabbix
+    creates: /etc/apache2/conf-enabled/zabbix.conf
+  notify: "Reiniciar Apache"
+
+- name: "Asegurar que Apache esté iniciado y habilitado"
+  ansible.builtin.systemd:
+    name: apache2
+    state: started
+    enabled: true

@@ -28,3 +28,8 @@
   ansible.builtin.systemd:
     name: keepalived
     state: restarted
+    
+- name: "Reiniciar Apache"
+  ansible.builtin.systemd:
+    name: apache2
+    state: restarted

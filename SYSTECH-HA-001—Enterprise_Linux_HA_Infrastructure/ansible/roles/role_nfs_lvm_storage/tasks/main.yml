@@ -36,3 +36,7 @@
 - name: "Configurar Monitoreo (Zabbix) - Fase 3: zabbix-server"
   ansible.builtin.include_tasks: zabbix/03_zabbix_server_setup.yml
   when: "'monitoring_nodes' in group_names"
+  
+- name: "Configurar Monitoreo (Zabbix) - Fase 4: Frontend Web"
+  ansible.builtin.include_tasks: zabbix/04_zabbix_frontend_setup.yml
+  when: "'monitoring_nodes' in group_names"
