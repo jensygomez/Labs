@@ -103,7 +103,6 @@
         if echo "$response" | jq . >/dev/null 2>&1; then
           status=$(echo "$response" | jq -r '.status // "N/A"')
           node=$(echo "$response" | jq -r '.atendido_por // "N/A"')
-          query=$(echo "$response" | jq -r '.pregunta // "N/A"')
           CURRENT_NODE="$node"
 
           if [[ "$status" == "success" ]]; then
@@ -112,8 +111,7 @@
             HTTP_ERRORS=$((HTTP_ERRORS + 1))
           fi
 
-          log_line "----------------------------------------------------------"
-          log_line "READ  | NODE: ${node} | LATENCIA: ${latency} ms | STATUS: ${status} | QUERY: ${query}"
+          log_line "READ  | NODE: ${node} | LATENCIA: ${latency} ms | STATUS: ${status}"
         else
           HTTP_ERRORS=$((HTTP_ERRORS + 1))
           log_line " [!] Respuesta no JSON recibida de la VIP"
@@ -149,46 +147,70 @@
         fi
       }
 
+      # Se llama UNA vez, antes del loop, para dejar la pantalla lista.
+      dashboard_init() {
+        tput civis   # oculta el cursor (menos parpadeo visual)
+        clear
+      }
+
+      # Se llama al salir (Ctrl+C) para devolver el cursor normal.
+      dashboard_cleanup() {
+        tput cnorm
+      }
+
       render_dashboard() {
         local avg_latency=0 success_rate="0.00" lat_estado
+        local db_avg=0
 
         (( HTTP_REQUESTS > 0 )) && avg_latency=$(( HTTP_LATENCY_SUM / HTTP_REQUESTS ))
         (( HTTP_REQUESTS > 0 )) && success_rate=$(awk "BEGIN{printf \"%.2f\", ($HTTP_SUCCESS/$HTTP_REQUESTS)*100}")
         lat_estado=$(estado_por_umbral "$avg_latency" "$LATENCY_WARNING" "$LATENCY_CRITICAL")
+        db_avg=$DB_WRITE_LATENCY_LAST
 
-        clear
-        echo "SYSTECH LIVE OBSERVABILITY"
-        echo "=========================="
+        # Cursor al origen (0,0) en vez de "clear": evita el parpadeo/scroll.
+        tput cup 0 0
+
+        printf "%-52s\n" "SYSTECH LIVE OBSERVABILITY"
+        printf "%-52s\n" "=========================================="
         echo ""
-        echo "SERVICE HEALTH"
-        echo "------------------------------------------------"
-        printf "%-20s %10s\n"      "HTTP REQUESTS" "$HTTP_REQUESTS"
-        printf "%-20s %10s\n"      "SUCCESS"       "$HTTP_SUCCESS"
-        printf "%-20s %10s\n"      "ERRORS"        "$HTTP_ERRORS"
-        printf "%-20s %9s%%\n"     "SUCCESS RATE"  "$success_rate"
-        printf "%-20s %7s ms [%s]\n" "AVG LATENCY" "$avg_latency" "$lat_estado"
-        printf "%-20s %7s ms\n"    "MAX LATENCY"   "$HTTP_LATENCY_MAX"
+        printf "%-52s\n" "SERVICE HEALTH (perspectiva del cliente)"
+        printf -- "----------------------------------------------------\n"
+        printf "%-20s %10s          \n" "HTTP REQUESTS" "$HTTP_REQUESTS"
+        printf "%-20s %10s          \n" "SUCCESS"       "$HTTP_SUCCESS"
+        printf "%-20s %10s          \n" "ERRORS"        "$HTTP_ERRORS"
+        printf "%-20s %9s%%          \n" "SUCCESS RATE"  "$success_rate"
+        printf "%-20s %7s ms [%-8s]\n"   "AVG LATENCY" "$avg_latency" "$lat_estado"
+        printf "%-20s %7s ms          \n" "MAX LATENCY"   "$HTTP_LATENCY_MAX"
         echo ""
-        echo "DATABASE"
-        echo "------------------------------------------------"
-        printf "%-20s %10s\n" "DB WRITES"       "$DB_WRITES"
-        printf "%-20s %10s\n" "WRITE ERRORS"    "$DB_WRITE_ERRORS"
-        printf "%-20s %7s ms\n" "LAST WRITE TIME" "$DB_WRITE_LATENCY_LAST"
+        printf "%-52s\n" "DATABASE"
+        printf -- "----------------------------------------------------\n"
+        printf "%-20s %10s          \n" "DB WRITES"       "$DB_WRITES"
+        printf "%-20s %10s          \n" "WRITE ERRORS"    "$DB_WRITE_ERRORS"
+        printf "%-20s %7s ms          \n" "AVG DB TIME"     "$db_avg"
         echo ""
-        echo "NODE"
-        echo "------------------------------------------------"
-        printf "%-20s %10s\n" "CURRENT NODE" "$CURRENT_NODE"
+        printf "%-52s\n" "INFRASTRUCTURE (nodo que atendió la última request)"
+        printf -- "----------------------------------------------------\n"
+        printf "%-20s %10s          \n" "NODE"     "$CURRENT_NODE"
+        printf "%-20s %10s          \n" "CPU"      "N/A (pendiente Nivel 4)"
+        printf "%-20s %10s          \n" "MEMORY"   "N/A (pendiente Nivel 4)"
+        printf "%-20s %10s          \n" "LOAD"     "N/A (pendiente Nivel 4)"
+        printf "%-20s %10s          \n" "ROOT FS"  "N/A (pendiente Nivel 5)"
+        printf "%-20s %10s          \n" "/var"     "N/A (pendiente Nivel 5)"
         echo ""
-        echo "------------------------------------------------"
-        echo "Última actualización: $(date +%H:%M:%S)"
-        echo "Presiona Ctrl+C para salir"
+        printf -- "----------------------------------------------------\n"
+        printf "%-52s\n" "Última actualización: $(date +%H:%M:%S)   [Ctrl+C para salir]"
       }
 
       # --- LOOP PRINCIPAL ---
       # Una sola solicitud por ciclo, alternando tipo:
       #   impar -> LECTURA (rota entre q=1..5)
       #   par   -> ESCRITURA
-      trap "echo; echo 'Saliendo...'; exit 0" SIGINT
+      if [[ "$MODE" == "dashboard" ]]; then
+        trap "dashboard_cleanup; echo; echo 'Saliendo...'; exit 0" SIGINT
+        dashboard_init
+      else
+        trap "echo; echo 'Saliendo...'; exit 0" SIGINT
+      fi
 
       REQUEST_COUNTER=0
       READ_QUERY_INDEX=1
