@@ -1,0 +1,8 @@
+Database type  : PostgreSQL
+Database host  : localhost
+Database port  : 5432
+Database name  : zabbix_db
+User           : zabbix_user
+zabbix_db_pass : "ZabbixSecurePass123!"
+Password GUI   : zabbix
+Usuaruio GUI   : Admin
