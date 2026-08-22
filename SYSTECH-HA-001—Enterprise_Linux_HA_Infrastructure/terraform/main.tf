@@ -13,7 +13,6 @@ resource "proxmox_virtual_environment_file" "cloud_user_config" {
   content_type = "snippets"
   datastore_id = "local"
   node_name    = var.target_node
-
   source_raw {
     data = <<-EOF
     #cloud-config
@@ -44,7 +43,6 @@ resource "proxmox_virtual_environment_file" "cloud_meta_config" {
   content_type = "snippets"
   datastore_id = "local"
   node_name    = var.target_node
-
   source_raw {
     data = <<-EOF
     instance-id: ${each.key}
@@ -56,8 +54,7 @@ resource "proxmox_virtual_environment_file" "cloud_meta_config" {
 
 # Recurso para crear el Cluster de 3 VMs AlmaLinux
 resource "proxmox_virtual_environment_vm" "almalinux_cluster" {
-  for_each = var.cluster_nodes
-
+  for_each  = var.cluster_nodes
   name      = each.key
   node_name = var.target_node
   vm_id     = each.value.vmid
@@ -111,22 +108,44 @@ resource "proxmox_virtual_environment_vm" "almalinux_cluster" {
     user_data_file_id = proxmox_virtual_environment_file.cloud_user_config[each.key].id
     meta_data_file_id = proxmox_virtual_environment_file.cloud_meta_config[each.key].id
   }
-} 
+}
 
+# ============================================================
 # Generación automática del inventario de Ansible
+#
+# "nodes" unifica VMs + LXCs en un solo mapa, cada entrada con su "role".
+# "role_group_map" traduce role -> nombre de grupo de Ansible.
+#
+# Para agregar un grupo de Ansible nuevo en el futuro: agregar una línea
+# acá (ej. cloud = "cloud_nodes") y usar ese role en variables.tf.
+# Nada más se toca — ni inventory.tmpl ni este bloque necesitan más cambios.
+# ============================================================
 resource "local_file" "ansible_inventory" {
   content = templatefile("${path.module}/inventory.tmpl", {
-    vms = {
-      for k, vm in proxmox_virtual_environment_vm.almalinux_cluster : k => {
-        name = k
-        ip   = var.cluster_nodes[k].ip
+    nodes = merge(
+      {
+        for k, vm in proxmox_virtual_environment_vm.almalinux_cluster : k => {
+          name = k
+          ip   = var.cluster_nodes[k].ip
+          role = var.cluster_nodes[k].role
+        }
+      },
+      {
+        for k, lxc in proxmox_virtual_environment_container.lxc_cluster : k => {
+          name = k
+          ip   = var.lxc_containers[k].ip
+          role = var.lxc_containers[k].role
+        }
       }
-    }
-    lxcs = {
-      for k, lxc in proxmox_virtual_environment_container.lxc_cluster : k => {
-        name = k
-        ip   = var.lxc_containers[k].ip
-      }
+    )
+
+    role_group_map = {
+      app        = "app_nodes"
+      db         = "db_nodes"
+      storage    = "storage_nodes"
+      lb         = "lb_nodes"
+      client     = "client_nodes"
+      monitoring = "monitoring_nodes"
     }
   })
   filename = "${path.module}/../ansible/inventories/production/hosts.yml"
