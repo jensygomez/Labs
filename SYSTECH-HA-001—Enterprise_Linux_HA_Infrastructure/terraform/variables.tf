@@ -1,23 +1,23 @@
 variable "proxmox_api_url" {
-  type         = string
-  description  = "URL de la API de Proxmox (ej: https://192.168.18.100:8006/)"
+  type        = string
+  description = "URL de la API de Proxmox (ej: https://192.168.18.100:8006/)"
 }
 
 variable "proxmox_api_token" {
-  type         = string
-  sensitive    = true
-  description  = "Token de Api de Proxmox (root@pam!tofu-token=...)"
+  type        = string
+  sensitive   = true
+  description = "Token de Api de Proxmox (root@pam!tofu-token=...)"
 }
 
 variable "target_node" {
-  type         = string
-  default      = "homelab"
-  description  = "Nombre del nodo Proxmox donde se crearan las VMs"
+  type        = string
+  default     = "homelab"
+  description = "Nombre del nodo Proxmox donde se crearan las VMs"
 }
 
 variable "ssh_public_key" {
-  type         = string
-  description  = "Clave pública SSH para inyectar via Cloud-Init en el usuario Ansible"
+  type        = string
+  description = "Clave pública SSH para inyectar via Cloud-Init en el usuario Ansible"
 }
 
 # ----------------------------------------------------------------------------
@@ -37,11 +37,11 @@ variable "cluster_nodes" {
     role        = string # app | db | storage
   }))
   default = {
-    "app01"     = { vmid = 331, ip = "10.10.10.31/24", cores = 1, memory = 1536, extra_disks = [], role = "app" }
-    "app02"     = { vmid = 332, ip = "10.10.10.32/24", cores = 1, memory = 1536, extra_disks = [], role = "app" }
-    "app03"     = { vmid = 333, ip = "10.10.10.33/24", cores = 1, memory = 1536, extra_disks = [], role = "app" }
+    "app01" = { vmid = 331, ip = "10.10.10.31/24", cores = 1, memory = 1536, extra_disks = [], role = "app" }
+    "app02" = { vmid = 332, ip = "10.10.10.32/24", cores = 1, memory = 1536, extra_disks = [], role = "app" }
+    "app03" = { vmid = 333, ip = "10.10.10.33/24", cores = 1, memory = 1536, extra_disks = [], role = "app" }
 
-    "db01"      = { vmid = 440, ip = "10.10.10.40/24", cores = 1, memory = 1536, extra_disks = [], role = "db" }
+    "db01" = { vmid = 440, ip = "10.10.10.40/24", cores = 1, memory = 1536, extra_disks = [], role = "db" }
 
     "storage01" = { vmid = 550, ip = "10.10.10.50/24", cores = 1, memory = 1536, extra_disks = [1, 1, 1, 1], role = "storage" }
   }
@@ -65,9 +65,9 @@ variable "lxc_containers" {
     role      = string # client | lb | monitoring
   }))
   default = {
-    "client01" = { vmid = 111, ip = "10.10.10.11/24", cores = 1, memory = 512,  disk_size = 8, role = "client" }
-    "lb01"     = { vmid = 221, ip = "10.10.10.21/24", cores = 1, memory = 512,  disk_size = 8, role = "lb" }
-    "lb02"     = { vmid = 222, ip = "10.10.10.22/24", cores = 1, memory = 512,  disk_size = 8, role = "lb" }
+    "client01" = { vmid = 111, ip = "10.10.10.11/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
+    "lb01"     = { vmid = 221, ip = "10.10.10.21/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
+    "lb02"     = { vmid = 222, ip = "10.10.10.22/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
     "zabbix01" = { vmid = 990, ip = "10.10.10.90/24", cores = 1, memory = 1536, disk_size = 8, role = "monitoring" }
   }
 }

@@ -1,0 +1,61 @@
+---
+# ==============================================================================
+# ZABBIX - FASE 1: Base de datos (PostgreSQL)
+# ==============================================================================
+# Alcance de este archivo, y SOLO este alcance:
+#   - Instalar PostgreSQL en monitor01 (zabbix01, Ubuntu 24.04 → apt, no dnf)
+#   - Crear la base de datos y el usuario que usará Zabbix
+#
+# Lo que NO hace este archivo (a propósito, viene en el siguiente):
+#   - No agrega el repositorio oficial de Zabbix
+#   - No importa el esquema de tablas (create.sql / schema.sql)
+#   - No instala zabbix-server ni el frontend
+#
+# Validar después de correr este archivo:
+#   sudo -u postgres psql -c "\l" | grep zabbix
+#   sudo -u postgres psql -c "\du" | grep zabbix
+# ==============================================================================
+
+- name: "Instalar PostgreSQL en el nodo de monitoreo"
+  ansible.builtin.apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+    state: present
+    update_cache: true
+  when: ansible_os_family == "Debian"
+
+- name: "Asegurar que PostgreSQL esté activo e iniciado"
+  ansible.builtin.systemd:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: "Crear la base de datos de Zabbix"
+  community.postgresql.postgresql_db:
+    name: "{{ zabbix_db_name }}"
+    encoding: "UTF8"
+    lc_collate: "C"
+    lc_ctype: "C"
+    template: "template0"
+    state: present
+  become: true
+  become_user: postgres
+
+- name: "Crear el usuario de la base de datos de Zabbix"
+  community.postgresql.postgresql_user:
+    db: "{{ zabbix_db_name }}"
+    name: "{{ zabbix_db_user }}"
+    password: "{{ zabbix_db_pass }}"
+    priv: "ALL"
+    state: present
+  become: true
+  become_user: postgres
+
+- name: "Otorgar propiedad de la base de datos al usuario de Zabbix"
+  community.postgresql.postgresql_query:
+    db: "{{ zabbix_db_name }}"
+    query: "ALTER DATABASE {{ zabbix_db_name }} OWNER TO {{ zabbix_db_user }};"
+  become: true
+  become_user: postgres

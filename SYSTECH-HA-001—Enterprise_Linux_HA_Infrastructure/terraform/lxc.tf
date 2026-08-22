@@ -37,7 +37,7 @@ resource "proxmox_virtual_environment_container" "lxc_cluster" {
 
   operating_system {
     template_file_id = proxmox_download_file.lxc_template.id
-    type              = "ubuntu"
+    type             = "ubuntu"
   }
 
   initialization {

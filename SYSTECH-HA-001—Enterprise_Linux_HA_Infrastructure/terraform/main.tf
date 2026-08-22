@@ -14,7 +14,7 @@ resource "proxmox_virtual_environment_file" "cloud_user_config" {
   datastore_id = "local"
   node_name    = var.target_node
   source_raw {
-    data = <<-EOF
+    data      = <<-EOF
     #cloud-config
     hostname: ${each.key}
     preserve_hostname: false
@@ -44,7 +44,7 @@ resource "proxmox_virtual_environment_file" "cloud_meta_config" {
   datastore_id = "local"
   node_name    = var.target_node
   source_raw {
-    data = <<-EOF
+    data      = <<-EOF
     instance-id: ${each.key}
     local-hostname: ${each.key}
     EOF

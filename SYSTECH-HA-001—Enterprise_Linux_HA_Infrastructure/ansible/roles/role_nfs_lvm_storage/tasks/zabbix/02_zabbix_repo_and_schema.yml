@@ -1,0 +1,60 @@
+---
+# ==============================================================================
+# ZABBIX - FASE 2: Repositorio oficial + Esquema de base de datos
+# ==============================================================================
+# Alcance de este archivo, y SOLO este alcance:
+#   - Agregar el repositorio oficial de Zabbix (zabbix-release, Ubuntu 24.04)
+#   - Instalar zabbix-sql-scripts (trae el esquema de tablas)
+#   - Importar el esquema dentro de zabbix_db (idempotente: solo si falta)
+#
+# Lo que NO hace este archivo (a propósito, viene en el siguiente):
+#   - No instala zabbix-server
+#   - No instala el frontend web
+#
+# Referencia: Zabbix 7.0 LTS (soporte hasta 2029). Si en el futuro migran a
+# otra rama (7.2/7.4), solo hay que cambiar zabbix_version abajo en defaults.
+#
+# Validar después de correr este archivo:
+#   sudo -u postgres psql -d zabbix_db -c "\dt" | head
+#   (deberían aparecer decenas de tablas: users, hosts, items, triggers...)
+# ==============================================================================
+
+- name: "Descargar el paquete zabbix-release (registra el repo oficial)"
+  ansible.builtin.get_url:
+    url: "https://repo.zabbix.com/zabbix/{{ zabbix_version }}/release/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_{{ zabbix_version }}+ubuntu24.04_all.deb"
+    dest: "/tmp/zabbix-release_{{ zabbix_version }}.deb"
+    mode: '0644'
+
+- name: "Instalar el paquete zabbix-release (agrega el repositorio apt)"
+  ansible.builtin.apt:
+    deb: "/tmp/zabbix-release_{{ zabbix_version }}.deb"
+    state: present
+
+- name: "Actualizar caché de apt tras agregar el repo de Zabbix"
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: "Instalar zabbix-sql-scripts (trae el esquema de tablas)"
+  ansible.builtin.apt:
+    name: zabbix-sql-scripts
+    state: present
+
+- name: "Verificar si el esquema de Zabbix ya fue importado"
+  community.postgresql.postgresql_query:
+    db: "{{ zabbix_db_name }}"
+    query: "SELECT to_regclass('public.users') IS NOT NULL AS schema_exists;"
+  become: true
+  become_user: postgres
+  register: zabbix_schema_check
+
+- name: "Importar el esquema de Zabbix en PostgreSQL (solo si no existe aún)"
+  ansible.builtin.shell: |
+    set -o pipefail
+    zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | psql -h 127.0.0.1 -U {{ zabbix_db_user }} -d {{ zabbix_db_name }}
+  args:
+    executable: /bin/bash
+  environment:
+    PGPASSWORD: "{{ zabbix_db_pass }}"
+  when: not zabbix_schema_check.query_result[0].schema_exists
+  changed_when: true
+  # La importación puede tardar 1-2 minutos, es normal.
