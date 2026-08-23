@@ -6,3 +6,4 @@ User           : zabbix_user
 zabbix_db_pass : "ZabbixSecurePass123!"
 Password GUI   : zabbix
 Usuaruio GUI   : Admin
+IP Zabbix      : 10.10.10.90
