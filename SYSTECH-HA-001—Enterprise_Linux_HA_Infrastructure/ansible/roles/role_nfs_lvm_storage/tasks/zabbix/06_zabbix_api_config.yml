@@ -1,0 +1,63 @@
+# ==============================================================================
+# ZABBIX - FASE 6: Registro Automático de Hosts vía API (Idempotente)
+# ==============================================================================
+# Alcance:
+# - Conectar con la API de Zabbix desde el nodo de control (systech-control)
+# - Crear o actualizar dinámicamente todos los nodos de la infraestructura
+# - Vincular automáticamente la plantilla "Linux by Zabbix agent"
+# - Asignar al grupo "Linux servers"
+# ==============================================================================
+
+- name: "Fase 6: Registrar y vincular hosts en Zabbix vía API"
+  # Se ejecuta en el control node, no en los servidores remotos
+  delegate_to: localhost
+  run_once: true # CRÍTICO: Solo se ejecuta una vez, no por cada nodo del inventario
+  
+  vars:
+    zabbix_api_url: "http://{{ zabbix_server_ip | default('10.10.10.90') }}/zabbix"
+    zabbix_api_user: "Admin"
+    # ⚠️ IMPORTANTE: En producción, esta contraseña debe venir de Ansible Vault
+    zabbix_api_pass: "zabbix" 
+    
+    #  LISTA DINÁMICA DE HOSTS
+    # Para agregar un nuevo nodo en el futuro, solo añade una línea aquí.
+    zabbix_hosts_to_register:
+      - name: "db01"
+        ip: "10.10.10.40"
+      - name: "app01"
+        ip: "10.10.10.31"
+      - name: "app02"
+        ip: "10.10.10.32"
+      - name: "app03"
+        ip: "10.10.10.33"
+      - name: "lb01"
+        ip: "10.10.10.21"
+      - name: "lb02"
+        ip: "10.10.10.22"
+      - name: "client01"
+        ip: "10.10.10.11"
+      - name: "storage01"
+        ip: "10.10.10.50"
+
+  community.zabbix.zabbix_host:
+    server_url: "{{ zabbix_api_url }}"
+    login_user: "{{ zabbix_api_user }}"
+    login_password: "{{ zabbix_api_pass }}"
+    host_name: "{{ item.name }}"
+    visible_name: "{{ item.name }}"
+    host_groups:
+      - "Linux servers"
+    link_templates:
+      - "Linux by Zabbix agent"
+    interfaces:
+      - type: 1         # 1 = Zabbix Agent
+        main: 1
+        useip: 1
+        ip: "{{ item.ip }}"
+        dns: ""
+        port: "10050"
+    status: "enabled"
+    state: "present"    # 'present' crea si no existe, actualiza si ya existe (Idempotencia)
+  loop: "{{ zabbix_hosts_to_register }}"
+  loop_control:
+    label: "{{ item.name }}" # Muestra el nombre del host en el output de Ansible para mejor lectura

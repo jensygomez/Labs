@@ -45,3 +45,7 @@
   ansible.builtin.include_tasks: zabbix/05_zabbix_agent_setup.yml
   # Nota: Quitamos el 'when' de 'monitoring_nodes' para que se ejecute en TODOS los nodos
   # (storage, db, app, lb, client). Si solo quieres algunos, ajusta el grupo aquí.
+  
+- name: "Configurar Monitoreo (Zabbix) - Fase 6: Registro API de Hosts"
+  ansible.builtin.include_tasks: zabbix/06_zabbix_api_config.yml
+  # Sin 'when', se ejecuta una sola vez desde el control node al final del playbook
