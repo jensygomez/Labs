@@ -40,3 +40,8 @@
 - name: "Configurar Monitoreo (Zabbix) - Fase 4: Frontend Web"
   ansible.builtin.include_tasks: zabbix/04_zabbix_frontend_setup.yml
   when: "'monitoring_nodes' in group_names"
+  
+- name: "Configurar Monitoreo (Zabbix) - Fase 5: Zabbix Agent en todos los nodos"
+  ansible.builtin.include_tasks: zabbix/05_zabbix_agent_setup.yml
+  # Nota: Quitamos el 'when' de 'monitoring_nodes' para que se ejecute en TODOS los nodos
+  # (storage, db, app, lb, client). Si solo quieres algunos, ajusta el grupo aquí.

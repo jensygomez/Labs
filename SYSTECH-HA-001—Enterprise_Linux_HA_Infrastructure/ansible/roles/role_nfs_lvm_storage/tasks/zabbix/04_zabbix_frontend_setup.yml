@@ -27,6 +27,7 @@
       - php8.3-bcmath
       - locales
       - zabbix-frontend-php
+      - jq
       - curl
     state: present
     update_cache: true
