@@ -1,0 +1,46 @@
+---
+- name: OPS-1068 - Correct Web Root Permissions and SELinux Context
+  hosts: app01, app02, app03
+  become: true
+  gather_facts: false
+
+  vars:
+    web_root: "/var/www/html"
+    parent_dir: "/var/www"
+    web_user: "apache"
+    web_group: "apache"
+
+  tasks:
+    - name: Ensure parent directory search permissions
+      ansible.builtin.file:
+        path: "{{ parent_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Ensure web root directory structure permissions
+      ansible.builtin.file:
+        path: "{{ web_root }}"
+        state: directory
+        owner: "{{ web_user }}"
+        group: "{{ web_group }}"
+        mode: '0755'
+        recurse: yes
+
+    - name: Ensure correct file permissions inside web root
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        mode: '0644'
+      loop: "{{ query('ansible.builtin.filetree', web_root) }}"
+      when: item.state == 'file'
+
+    - name: Restore default SELinux contexts on web root
+      ansible.builtin.command:
+        cmd: "restorecon -R -v {{ web_root }}"
+      register: restorecon_out
+      changed_when: "'Resetting' in restorecon_out.stdout"
+
+    - name: Apply SELinux context to files on filesystem
+      ansible.builtin.command:
+        cmd: "restorecon -R -v {{ web_root }}"
+      register: restorecon_out
+      changed_when: "'Resetting' in restorecon_out.stdout"

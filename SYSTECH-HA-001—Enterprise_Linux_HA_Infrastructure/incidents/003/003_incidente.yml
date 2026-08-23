@@ -30,8 +30,8 @@
     # --- FALSO POSITIVO 1: Log falso de configuración de Apache ---
     - name: "50"
       ansible.builtin.shell: |
-        logger -p httpd.err "AH01630: client denied by server configuration: /var/www/html/"
-        logger -p httpd.err "AH01276: Failed to authorize: No matching Directory block"
+        logger -p daemon.err "AH01630: client denied by server configuration: /var/www/html/"
+        logger -p daemon.err "AH01276: Failed to authorize: No matching Directory block"
       when: not check_inject.stat.exists
 
     # --- FALSO POSITIVO 2: Log falso de SELinux ---
