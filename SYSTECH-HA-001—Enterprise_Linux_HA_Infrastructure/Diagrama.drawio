@@ -1,0 +1,81 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Página-1" id="5BVXpRCQgGCZP_m5xqgO">
+    <mxGraphModel dx="1413" dy="789" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-4" parent="1" style="text;html=1;resizable=0;points=[];autosize=1;align=left;verticalAlign=top;fontSize=24;fontStyle=1;fontColor=#232F3E;" value="SYSTECH-HA-001 — Infrastructure Architecture" vertex="1">
+          <mxGeometry height="40" width="650" x="40" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-5" parent="1" style="text;html=1;resizable=0;points=[];autosize=1;align=left;verticalAlign=top;fontSize=13;fontColor=#545B64;" value="HA Web Cluster · Centralized DNS (dnsmasq) · NFSv4 + iSCSI Hybrid Storage · ZeroTier Mesh Overlay · Zabbix Monitoring" vertex="1">
+          <mxGeometry height="30" width="850" x="40" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-6" parent="1" style="line;strokeWidth=2;html=1;strokeColor=#D5DBDB;" vertex="1">
+          <mxGeometry height="10" width="1420" x="40" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D5DBDB;strokeWidth=2;verticalAlign=top;align=center;fontStyle=1;fontSize=14;fontColor=#232F3E;" value="CONTROL DEVICE&#xa;(Administrator&#39;s Laptop)" vertex="1">
+          <mxGeometry height="660" width="220" x="40" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-8" parent="1" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#232F3E;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=1;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.user;labelBackgroundColor=none;" value="systech-control&#xa;(Ansible / OpenTofu)" vertex="1">
+          <mxGeometry height="78" width="78" x="70" y="336" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-10" parent="1" style="points=[[0,0],[0.25,0],[0.5,0],[0.75,0],[1,0],[1,0.25],[1,0.5],[1,0.75],[1,1],[0.75,1],[0.5,1],[0.25,1],[0,1],[0,0.75],[0,0.5],[0,0.25]];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=14;fontStyle=1;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_aws_cloud_alt;strokeColor=#232F3E;fillColor=#F8F9FA;verticalAlign=top;align=left;spacingLeft=30;fontColor=#232F3E;dashed=0;container=1;" value="Proxmox VE (Subnet 10.10.10.0/24)" vertex="1">
+          <mxGeometry height="660" width="1140" x="300" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-11" parent="pSLOIYfNwMwJVsQOw8Im-10" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B8C4CE;strokeWidth=2;dashed=1;verticalAlign=top;align=center;fontStyle=1;fontSize=12;fontColor=#232F3E;" value="DNS LAYER (dnsmasq LXC)" vertex="1">
+          <mxGeometry height="160" width="165" x="200" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-12" parent="pSLOIYfNwMwJVsQOw8Im-11" style="outlineConnect=0;fontColor=#232F3E;gradientColor=#945DF2;gradientDirection=north;fillColor=#5A30B5;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.route_53;labelBackgroundColor=#ffffff;" value="dns01 (LXC)&#xa;10.10.10.20&#xa;(lab.systech.internal)" vertex="1">
+          <mxGeometry height="56.160000000000004" width="56.160000000000004" x="50.32500000000001" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-13" parent="pSLOIYfNwMwJVsQOw8Im-10" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B8C4CE;strokeWidth=2;dashed=1;verticalAlign=top;align=center;fontStyle=1;fontSize=12;fontColor=#232F3E;" value="LOAD BALANCING LAYER (HA)" vertex="1">
+          <mxGeometry height="160" width="255" x="365" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-14" parent="pSLOIYfNwMwJVsQOw8Im-13" style="outlineConnect=0;fontColor=#232F3E;gradientColor=#945DF2;gradientDirection=north;fillColor=#5A30B5;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.application_load_balancer;labelBackgroundColor=#ffffff;" value="lb01 / lb02&#xa;10.10.10.21 / .22&#xa;VIP: 10.10.10.30" vertex="1">
+          <mxGeometry height="56.28235294117648" width="56.28235294117648" x="98.25000000000001" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-15" parent="pSLOIYfNwMwJVsQOw8Im-10" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B8C4CE;strokeWidth=2;dashed=1;verticalAlign=top;align=center;fontStyle=1;fontSize=12;fontColor=#232F3E;" value="APPLICATION LAYER (Apache + PHP)" vertex="1">
+          <mxGeometry height="160" width="440" x="680" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-16" parent="pSLOIYfNwMwJVsQOw8Im-15" style="outlineConnect=0;fontColor=#232F3E;gradientColor=#F54749;gradientDirection=north;fillColor=#C7131F;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;labelBackgroundColor=#ffffff;" value="app01&#xa;10.10.10.31" vertex="1">
+          <mxGeometry height="78" width="78" x="40" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-17" parent="pSLOIYfNwMwJVsQOw8Im-15" style="outlineConnect=0;fontColor=#232F3E;gradientColor=#F54749;gradientDirection=north;fillColor=#C7131F;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;labelBackgroundColor=#ffffff;" value="app02&#xa;10.10.10.32" vertex="1">
+          <mxGeometry height="78" width="78" x="181" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-18" parent="pSLOIYfNwMwJVsQOw8Im-15" style="outlineConnect=0;fontColor=#232F3E;gradientColor=#F54749;gradientDirection=north;fillColor=#C7131F;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;labelBackgroundColor=#ffffff;" value="app03&#xa;10.10.10.33" vertex="1">
+          <mxGeometry height="78" width="78" x="322" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-19" parent="pSLOIYfNwMwJVsQOw8Im-10" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B8C4CE;strokeWidth=2;dashed=1;verticalAlign=top;align=center;fontStyle=1;fontSize=12;fontColor=#232F3E;" value="MONITORING (Zabbix LXC)" vertex="1">
+          <mxGeometry height="360" width="200" x="80" y="284" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-20" parent="pSLOIYfNwMwJVsQOw8Im-19" style="outlineConnect=0;fontColor=#232F3E;gradientColor=#B7CA9D;gradientDirection=north;fillColor=#E07A5F;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cloudwatch;labelBackgroundColor=#ffffff;" value="zabbix-lxc&#xa;10.10.10.90&#xa;(Zabbix Server)" vertex="1">
+          <mxGeometry height="78" width="78" x="61" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-21" parent="pSLOIYfNwMwJVsQOw8Im-10" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B8C4CE;strokeWidth=2;dashed=1;verticalAlign=top;align=center;fontStyle=1;fontSize=12;fontColor=#232F3E;" value="CENTRALIZED STORAGE" vertex="1">
+          <mxGeometry height="360" width="340" x="310" y="284" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-22" parent="pSLOIYfNwMwJVsQOw8Im-21" style="outlineConnect=0;fontColor=#232F3E;gradientColor=#60A337;gradientDirection=north;fillColor=#277116;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.efs;labelBackgroundColor=#ffffff;" value="storage01&#xa;10.10.10.50&#xa;(NFSv4 + iSCSI Target)" vertex="1">
+          <mxGeometry height="78" width="78" x="131" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-23" parent="pSLOIYfNwMwJVsQOw8Im-10" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B8C4CE;strokeWidth=2;dashed=1;verticalAlign=top;align=center;fontStyle=1;fontSize=12;fontColor=#232F3E;" value="DATABASE LAYER" vertex="1">
+          <mxGeometry height="360" width="440" x="680" y="284" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-24" parent="pSLOIYfNwMwJVsQOw8Im-23" style="outlineConnect=0;fontColor=#232F3E;gradientColor=#4D72F3;gradientDirection=north;fillColor=#3334B9;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.rds;labelBackgroundColor=#ffffff;" value="db01&#xa;10.10.10.40&#xa;(PostgreSQL 15+)" vertex="1">
+          <mxGeometry height="78" width="78" x="181" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-9" parent="pSLOIYfNwMwJVsQOw8Im-10" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;strokeColor=none;fillColor=#277116;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=1;shape=mxgraph.aws4.mobile_client;labelBackgroundColor=none;" value="client&#xa;10.10.10.11&#xa;(Test Traffic)" vertex="1">
+          <mxGeometry height="113" width="52.65" x="50" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-25" parent="1" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#232F3E;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=1;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.internet_gateway;labelBackgroundColor=none;" value="Upstream DNS&#xa;(8.8.8.8 / Internet)" vertex="1">
+          <mxGeometry height="78" width="78" x="1500" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="pSLOIYfNwMwJVsQOw8Im-26" edge="1" parent="1" source="pSLOIYfNwMwJVsQOw8Im-8" style="edgeStyle=entityRelationEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#D05C17;strokeWidth=3;fontSize=11;" target="pSLOIYfNwMwJVsQOw8Im-10" value="ZeroTier Tunnel (Mesh Overlay)">
+          <mxGeometry relative="1" x="-0.9455" y="85" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

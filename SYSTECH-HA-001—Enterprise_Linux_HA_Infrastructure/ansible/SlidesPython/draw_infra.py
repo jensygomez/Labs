@@ -29,13 +29,17 @@ with Diagram("SYSTECH-HA-001 Architecture", show=False, filename="systech_infra"
         db = PostgreSQL("db01\n10.10.10.40")
         zabbix = Zabbix("zabbix-lxc\n10.10.10.90")
 
-    # Flujo de conexiones
-    client >> lb_cluster >> apps
-    apps >> storage
-    apps >> db
+        # Flujo de conexiones
+        client >> lb_cluster
+        for lb in lb_cluster:
+            lb >> apps
 
-    # Conexiones del DNS a la red interna
-    client >> dns
+        for app in apps:
+            app >> storage
+            app >> db
 
-    # Monitoreo
-    zabbix - [apps[0], db, storage, dns]
+        # Conexiones del DNS a la red interna
+        client >> dns
+
+        # Monitoreo
+        zabbix - [apps[0], db, storage, dns]
