@@ -33,3 +33,8 @@
   ansible.builtin.systemd:
     name: apache2
     state: restarted
+    
+- name: Reiniciar dnsmasq
+  ansible.builtin.systemd:
+    name: dnsmasq
+    state: restarted

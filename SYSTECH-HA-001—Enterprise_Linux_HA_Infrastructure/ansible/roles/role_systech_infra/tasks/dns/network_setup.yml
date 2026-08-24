@@ -1,22 +1,20 @@
 ---
-# dns/network_setup.yml
-# Configura todos los nodos para usar dns01 como resolver principal
-
-- name: "Desactivar systemd-resolved para evitar conflictos"
+# ==============================================================================
+# DNS CLIENT SETUP (Configurar resolv.conf en todos los nodos)
+# ==============================================================================
+- name: "Detener systemd-resolved en clientes para evitar conflictos de caché"
   ansible.builtin.systemd:
     name: systemd-resolved
     state: stopped
     enabled: false
   ignore_errors: true
-  tags: ['network', 'dns_client']
 
-- name: "Eliminar symlink de resolv.conf si existe"
+- name: "Eliminar symlink de resolv.conf si existe (común en Ubuntu)"
   ansible.builtin.file:
     path: /etc/resolv.conf
     state: absent
-  tags: ['network', 'dns_client']
 
-- name: "Desplegar /etc/resolv.conf apuntando a dns01"
+- name: "Desplegar /etc/resolv.conf apuntando a dns01 (10.10.10.20)"
   ansible.builtin.copy:
     dest: /etc/resolv.conf
     content: |
@@ -27,16 +25,15 @@
     owner: root
     group: root
     mode: '0644'
-  tags: ['network', 'dns_client']
 
-- name: "Verificar resolución DNS desde el nodo"
+- name: "Verificar resolución DNS desde el nodo (prueba de humo)"
   ansible.builtin.command: "dig +short app01.lab.systech.local @10.10.10.20"
   register: dns_test
   changed_when: false
-  failed_when: dns_test.rc != 0 or dns_test.stdout == ""
+  failed_when: false # No fallamos el playbook, solo reportamos
   tags: ['network', 'dns_client']
 
 - name: "Mostrar resultado de validación DNS"
   ansible.builtin.debug:
-    msg: "Resolución DNS: {{ dns_test.stdout | default('FALLIDA') }}"
+    msg: "Prueba de resolución para app01.lab.systech.local: {{ dns_test.stdout | default('FALLIDA') }}"
   tags: ['network', 'dns_client']

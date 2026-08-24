@@ -146,6 +146,7 @@ resource "local_file" "ansible_inventory" {
       lb         = "lb_nodes"
       client     = "client_nodes"
       monitoring = "monitoring_nodes"
+      dns        = "dns_nodes"
     }
   })
   filename = "${path.module}/../ansible/inventories/production/hosts.yml"

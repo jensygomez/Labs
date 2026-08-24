@@ -15,7 +15,7 @@
 
 # Command Line History (newest to oldest):
 :wq
-|2,0,1787540283,,"wq"
+|2,0,1787544927,,"wq"
 :q!
 |2,0,1787076335,,"q!"
 
@@ -62,36 +62,52 @@
 |3,0,36,0,1,0,1787540265,"E"
 
 # File marks:
-'0  20  0  ~/ansible/site.yml
-|4,48,20,0,1787540283,"~/ansible/site.yml"
-'1  51  0  ~/incidents/003/003_remediation.yml
-|4,49,51,0,1787471566,"~/incidents/003/003_remediation.yml"
-'2  45  0  ~/incidents/002/002_remediation.yml
-|4,50,45,0,1787337109,"~/incidents/002/002_remediation.yml"
-'3  36  0  ~/incidents/002/002_remediation.yml
-|4,51,36,0,1787334265,"~/incidents/002/002_remediation.yml"
+'0  149  29  ~/terraform/main.tf
+|4,48,149,29,1787544927,"~/terraform/main.tf"
+'1  20  0  ~/ansible/site.yml
+|4,49,20,0,1787540283,"~/ansible/site.yml"
+'2  51  0  ~/incidents/003/003_remediation.yml
+|4,50,51,0,1787471566,"~/incidents/003/003_remediation.yml"
+'3  45  0  ~/incidents/002/002_remediation.yml
+|4,51,45,0,1787337109,"~/incidents/002/002_remediation.yml"
 '4  36  0  ~/incidents/002/002_remediation.yml
 |4,52,36,0,1787334265,"~/incidents/002/002_remediation.yml"
-'5  1  2  ~/incidents/002/002_remediation.yml
-|4,53,1,2,1787333021,"~/incidents/002/002_remediation.yml"
+'5  36  0  ~/incidents/002/002_remediation.yml
+|4,53,36,0,1787334265,"~/incidents/002/002_remediation.yml"
 '6  1  2  ~/incidents/002/002_remediation.yml
 |4,54,1,2,1787333021,"~/incidents/002/002_remediation.yml"
 '7  1  2  ~/incidents/002/002_remediation.yml
 |4,55,1,2,1787333021,"~/incidents/002/002_remediation.yml"
 '8  1  2  ~/incidents/002/002_remediation.yml
 |4,56,1,2,1787333021,"~/incidents/002/002_remediation.yml"
-'9  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,57,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+'9  1  2  ~/incidents/002/002_remediation.yml
+|4,57,1,2,1787333021,"~/incidents/002/002_remediation.yml"
 
 # Jumplist (newest first):
+-'  149  29  ~/terraform/main.tf
+|4,39,149,29,1787544927,"~/terraform/main.tf"
+-'  112  0  ~/terraform/main.tf
+|4,39,112,0,1787544846,"~/terraform/main.tf"
 -'  20  0  ~/ansible/site.yml
 |4,39,20,0,1787540283,"~/ansible/site.yml"
+-'  20  0  ~/ansible/site.yml
+|4,39,20,0,1787540283,"~/ansible/site.yml"
+-'  16  0  ~/ansible/site.yml
+|4,39,16,0,1787540214,"~/ansible/site.yml"
 -'  16  0  ~/ansible/site.yml
 |4,39,16,0,1787540214,"~/ansible/site.yml"
 -'  51  0  ~/incidents/003/003_remediation.yml
 |4,39,51,0,1787471566,"~/incidents/003/003_remediation.yml"
 -'  51  0  ~/incidents/003/003_remediation.yml
 |4,39,51,0,1787471566,"~/incidents/003/003_remediation.yml"
+-'  51  0  ~/incidents/003/003_remediation.yml
+|4,39,51,0,1787471566,"~/incidents/003/003_remediation.yml"
+-'  51  0  ~/incidents/003/003_remediation.yml
+|4,39,51,0,1787471566,"~/incidents/003/003_remediation.yml"
+-'  1  0  ~/incidents/003/003_remediation.yml
+|4,39,1,0,1787470212,"~/incidents/003/003_remediation.yml"
+-'  1  0  ~/incidents/003/003_remediation.yml
+|4,39,1,0,1787470212,"~/incidents/003/003_remediation.yml"
 -'  1  0  ~/incidents/003/003_remediation.yml
 |4,39,1,0,1787470212,"~/incidents/003/003_remediation.yml"
 -'  1  0  ~/incidents/003/003_remediation.yml
@@ -104,6 +120,22 @@
 |4,39,45,0,1787337109,"~/incidents/002/002_remediation.yml"
 -'  45  0  ~/incidents/002/002_remediation.yml
 |4,39,45,0,1787337109,"~/incidents/002/002_remediation.yml"
+-'  45  0  ~/incidents/002/002_remediation.yml
+|4,39,45,0,1787337109,"~/incidents/002/002_remediation.yml"
+-'  45  0  ~/incidents/002/002_remediation.yml
+|4,39,45,0,1787337109,"~/incidents/002/002_remediation.yml"
+-'  45  0  ~/incidents/002/002_remediation.yml
+|4,39,45,0,1787337109,"~/incidents/002/002_remediation.yml"
+-'  45  0  ~/incidents/002/002_remediation.yml
+|4,39,45,0,1787337109,"~/incidents/002/002_remediation.yml"
+-'  1  0  ~/incidents/002/002_remediation.yml
+|4,39,1,0,1787336990,"~/incidents/002/002_remediation.yml"
+-'  1  0  ~/incidents/002/002_remediation.yml
+|4,39,1,0,1787336990,"~/incidents/002/002_remediation.yml"
+-'  1  0  ~/incidents/002/002_remediation.yml
+|4,39,1,0,1787336990,"~/incidents/002/002_remediation.yml"
+-'  1  0  ~/incidents/002/002_remediation.yml
+|4,39,1,0,1787336990,"~/incidents/002/002_remediation.yml"
 -'  1  0  ~/incidents/002/002_remediation.yml
 |4,39,1,0,1787336990,"~/incidents/002/002_remediation.yml"
 -'  1  0  ~/incidents/002/002_remediation.yml
@@ -128,6 +160,22 @@
 |4,39,36,0,1787334265,"~/incidents/002/002_remediation.yml"
 -'  36  0  ~/incidents/002/002_remediation.yml
 |4,39,36,0,1787334265,"~/incidents/002/002_remediation.yml"
+-'  36  0  ~/incidents/002/002_remediation.yml
+|4,39,36,0,1787334265,"~/incidents/002/002_remediation.yml"
+-'  36  0  ~/incidents/002/002_remediation.yml
+|4,39,36,0,1787334265,"~/incidents/002/002_remediation.yml"
+-'  36  0  ~/incidents/002/002_remediation.yml
+|4,39,36,0,1787334265,"~/incidents/002/002_remediation.yml"
+-'  36  0  ~/incidents/002/002_remediation.yml
+|4,39,36,0,1787334265,"~/incidents/002/002_remediation.yml"
+-'  36  0  ~/incidents/002/002_remediation.yml
+|4,39,36,0,1787334265,"~/incidents/002/002_remediation.yml"
+-'  36  0  ~/incidents/002/002_remediation.yml
+|4,39,36,0,1787334265,"~/incidents/002/002_remediation.yml"
+-'  36  0  ~/incidents/002/002_remediation.yml
+|4,39,36,0,1787334265,"~/incidents/002/002_remediation.yml"
+-'  36  0  ~/incidents/002/002_remediation.yml
+|4,39,36,0,1787334265,"~/incidents/002/002_remediation.yml"
 -'  1  2  ~/incidents/002/002_remediation.yml
 |4,39,1,2,1787333022,"~/incidents/002/002_remediation.yml"
 -'  1  2  ~/incidents/002/002_remediation.yml
@@ -136,6 +184,22 @@
 |4,39,1,2,1787333022,"~/incidents/002/002_remediation.yml"
 -'  1  2  ~/incidents/002/002_remediation.yml
 |4,39,1,2,1787333022,"~/incidents/002/002_remediation.yml"
+-'  1  2  ~/incidents/002/002_remediation.yml
+|4,39,1,2,1787333022,"~/incidents/002/002_remediation.yml"
+-'  1  2  ~/incidents/002/002_remediation.yml
+|4,39,1,2,1787333022,"~/incidents/002/002_remediation.yml"
+-'  1  2  ~/incidents/002/002_remediation.yml
+|4,39,1,2,1787333022,"~/incidents/002/002_remediation.yml"
+-'  1  2  ~/incidents/002/002_remediation.yml
+|4,39,1,2,1787333022,"~/incidents/002/002_remediation.yml"
+-'  1  2  ~/incidents/002/002_remediation.yml
+|4,39,1,2,1787333021,"~/incidents/002/002_remediation.yml"
+-'  1  2  ~/incidents/002/002_remediation.yml
+|4,39,1,2,1787333021,"~/incidents/002/002_remediation.yml"
+-'  1  2  ~/incidents/002/002_remediation.yml
+|4,39,1,2,1787333021,"~/incidents/002/002_remediation.yml"
+-'  1  2  ~/incidents/002/002_remediation.yml
+|4,39,1,2,1787333021,"~/incidents/002/002_remediation.yml"
 -'  1  2  ~/incidents/002/002_remediation.yml
 |4,39,1,2,1787333021,"~/incidents/002/002_remediation.yml"
 -'  1  2  ~/incidents/002/002_remediation.yml
@@ -208,84 +272,33 @@
 |4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
 -'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
 |4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
 
 # History of marks within files (newest to oldest):
+
+> ~/terraform/main.tf
+	*	1787544926	0
+	"	149	29
+	^	149	30
+	.	149	29
+	+	107	1
+	+	109	0
+	+	106	0
+	+	107	0
+	+	106	0
+	+	112	0
+	+	149	29
 
 > ~/ansible/site.yml
 	*	1787540282	0
@@ -767,18 +780,6 @@
 	+	51	0
 	+	50	93
 	+	53	0
-
-> ~/terraform/main.tf
-	*	1786998730	0
-	"	112	0
-	^	112	1
-	.	112	0
-	+	107	1
-	+	109	0
-	+	106	0
-	+	107	0
-	+	106	0
-	+	112	0
 
 > ~/.ansible/tmp/ansible-local-374ouhv61tj/tmpdt5dkgdu.yml
 	*	1786998058	0
