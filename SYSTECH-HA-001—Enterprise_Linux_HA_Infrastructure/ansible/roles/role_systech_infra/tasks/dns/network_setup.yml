@@ -8,11 +8,13 @@
     state: stopped
     enabled: false
   ignore_errors: true
+  tags: ['network', 'dns_client']
 
 - name: "Eliminar symlink de resolv.conf si existe (común en Ubuntu)"
   ansible.builtin.file:
     path: /etc/resolv.conf
     state: absent
+  tags: ['network', 'dns_client']
 
 - name: "Desplegar /etc/resolv.conf apuntando a dns01 (10.10.10.20)"
   ansible.builtin.copy:
@@ -25,6 +27,7 @@
     owner: root
     group: root
     mode: '0644'
+  tags: ['network', 'dns_client']
 
 - name: "Verificar resolución DNS desde el nodo (prueba de humo)"
   ansible.builtin.command: "dig +short app01.lab.systech.internal @10.10.10.20"
