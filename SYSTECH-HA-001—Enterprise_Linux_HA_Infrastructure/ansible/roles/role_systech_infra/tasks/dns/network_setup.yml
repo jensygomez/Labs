@@ -30,7 +30,7 @@
   ansible.builtin.command: "dig +short app01.lab.systech.local @10.10.10.20"
   register: dns_test
   changed_when: false
-  failed_when: false # No fallamos el playbook, solo reportamos
+  failed_when: false
   tags: ['network', 'dns_client']
 
 - name: "Mostrar resultado de validación DNS"
