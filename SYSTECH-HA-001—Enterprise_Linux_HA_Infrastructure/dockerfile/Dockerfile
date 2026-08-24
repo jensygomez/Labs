@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     python3 python3-pip python3-venv python3-yaml \
     openssh-client iputils-ping net-tools dnsutils \
     bash-completion vim nano tree htop ripgrep fzf tmux less \
+    graphviz \
     && rm -rf /var/lib/apt/lists/*
 
 # ==========================================

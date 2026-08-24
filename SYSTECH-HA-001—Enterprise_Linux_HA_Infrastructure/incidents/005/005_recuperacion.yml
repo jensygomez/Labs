@@ -1,0 +1,51 @@
+---
+- name: "Remediation - Incident 005 (DNS Override Fix)"
+  hosts: client_nodes
+  become: true
+  gather_facts: true
+  tasks:
+    - name: "10 - Identify incorrect Netplan DNS overrides"
+      ansible.builtin.find:
+        paths: /etc/netplan
+        patterns: "*.yaml"
+        contains: "10.10.10.99"
+      register: bad_netplan_files
+
+    - name: "20 - Remove malicious/incorrect Netplan override files"
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ bad_netplan_files.files }}"
+      when: bad_netplan_files.matched > 0
+
+    - name: "30 - Ensure correct DNS is configured in primary Netplan"
+      ansible.builtin.lineinfile:
+        path: /etc/netplan/10-lxc.yaml # Asumiendo el nombre estándar del LXC
+        regexp: "addresses:"
+        line: "                  addresses: [10.10.10.20, 8.8.8.8]"
+        # Nota: En un entorno real, usar un template o bloque YAML es mejor, 
+        # pero para L1/L2 un lineinfile o replace suele ser el "hotfix" aceptado.
+      # (Opcional: Si no existe 10-lxc.yaml, crear uno básico)
+
+    - name: "40 - Apply Netplan to regenerate resolv.conf correctly"
+      ansible.builtin.command:
+        cmd: netplan apply
+      changed_when: true
+
+    - name: "50 - Verify resolv.conf is now pointing to the correct DNS"
+      ansible.builtin.command:
+        cmd: cat /etc/resolv.conf
+      register: resolv_content
+      changed_when: false
+
+    - name: "60 - Fail if resolv.conf still contains the bad IP"
+      ansible.builtin.fail:
+        msg: "Remediation failed: resolv.conf still contains incorrect DNS."
+      when: "'10.10.10.99' in resolv_content.stdout"
+
+    - name: "70 - Final validation (DNS Query)"
+      ansible.builtin.command:
+        cmd: dig +short app01.lab.systech.local @10.10.10.20
+      register: dig_test
+      changed_when: false
+      failed_when: "'10.10.10.31' not in dig_test.stdout"
