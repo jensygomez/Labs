@@ -10,7 +10,7 @@
 #    ansible-playbook -i inventories/production/hosts.yml site.yml --ask-vault-pass
 #
 # 2. Ejecutar SOLO un componente específico:
-#    ansible-playbook -i inventories/production/hosts.yml site.yml --tags dns --ask-vault-pass
+#    ansible-playbook -i inventories/production/hosts.yml site.yml --tags 'dns,network' --ask-vault-pass
 #    ansible-playbook -i inventories/production/hosts.yml site.yml --tags lb --ask-vault-pass
 #    ansible-playbook -i inventories/production/hosts.yml site.yml --tags storage --ask-vault-pass
 #    ansible-playbook -i inventories/production/hosts.yml site.yml --tags client --ask-vault-pass

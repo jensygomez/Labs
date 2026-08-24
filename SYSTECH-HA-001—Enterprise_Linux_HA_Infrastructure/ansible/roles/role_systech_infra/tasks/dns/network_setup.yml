@@ -19,7 +19,7 @@
     dest: /etc/resolv.conf
     content: |
       # Gestionado por Ansible - SYSTECH DNS Centralizado
-      search lab.systech.local
+      search lab.systech.internal
       nameserver 10.10.10.20
       nameserver 8.8.8.8
     owner: root
@@ -27,7 +27,7 @@
     mode: '0644'
 
 - name: "Verificar resolución DNS desde el nodo (prueba de humo)"
-  ansible.builtin.command: "dig +short app01.lab.systech.local @10.10.10.20"
+  ansible.builtin.command: "dig +short app01.lab.systech.internal @10.10.10.20"
   register: dns_test
   changed_when: false
   failed_when: false
@@ -35,5 +35,5 @@
 
 - name: "Mostrar resultado de validación DNS"
   ansible.builtin.debug:
-    msg: "Prueba de resolución para app01.lab.systech.local: {{ dns_test.stdout | default('FALLIDA') }}"
+    msg: "Prueba de resolución para app01.lab.systech.internal: {{ dns_test.stdout | default('FALLIDA') }}"
   tags: ['network', 'dns_client']
