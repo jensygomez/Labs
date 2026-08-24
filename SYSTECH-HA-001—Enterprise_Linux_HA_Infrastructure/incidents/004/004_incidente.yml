@@ -1,75 +1,75 @@
 ---
-- name: "System Reboot Validation"
+- name: "System Deployment Validation - Incident 004 Injection"
   hosts: localhost
   connection: local
   gather_facts: false
   tasks:
-    - name: "10"
+    - name: "10 - Select target node"
       ansible.builtin.set_fact:
         target_node: "{{ groups['app_nodes'] | random }}"
 
-    - name: "20"
+    - name: "20 - Add target to dynamic group"
       ansible.builtin.add_host:
         name: "{{ target_node }}"
         groups: incident_004_target
 
-    - name: "30"
-      ansible.builtin.debug:
-        msg: "Target selected."
-
-- name: "System Reboot Validation - Execution"
+- name: "Inject Fault and Red Herrings"
   hosts: incident_004_target
   become: true
   gather_facts: true
   tasks:
-    - name: "40"
+    - name: "30 - Check if already injected"
       ansible.builtin.stat:
         path: /var/log/.reboot_marker_004
       register: check_inject
 
-    # --- FALSO POSITIVO 1: Logs falsos de SELinux ---
-    - name: "50"
-      ansible.builtin.shell: |
-        logger -p kern.warning "SELinux: preventing httpd from starting due to context mismatch"
-        logger -p kern.warning "type=AVC msg=audit: denied { start } for comm=systemd name=httpd"
+    # =========================================================
+    # TRAMPA 1 (Falso Positivo DNS): Warning clásico de Apache
+    # =========================================================
+    - name: "40 - Inject fake Apache FQDN warning (DNS Red Herring)"
+      ansible.builtin.lineinfile:
+        path: /var/log/httpd/error_log
+        line: "[{{ ansible_date_time.iso8601_basic_short }}] [core:warn] [pid 1234] AH00558: httpd: Could not reliably determine the server's fully qualified domain name, using {{ inventory_hostname }}.lab.systech.local. Set the 'ServerName' directive globally to suppress this message"
+        insertbefore: BOF
+        state: present
       when: not check_inject.stat.exists
 
-    # --- FALSO POSITIVO 2: Error falso de configuración ---
-    - name: "60"
-      ansible.builtin.shell: |
-        logger -p httpd.err "AH00526: Syntax error on line 1 of /etc/httpd/conf/httpd.conf:"
-        logger -p httpd.err "AH00526: Invalid command 'Listen', perhaps misspelled by a config include"
+    # =========================================================
+    # TRAMPA 2 (Falso Positivo SELinux): Log en audit.log
+    # =========================================================
+    - name: "50 - Inject fake SELinux denial in audit log"
+      ansible.builtin.lineinfile:
+        path: /var/log/audit/audit.log
+        line: "type=AVC msg=audit({{ ansible_date_time.epoch }}.123:456): avc:  denied  { name_bind } for  pid=1234 comm=\"httpd\" src=80 scontext=system_u:system_r:httpd_t:s0 tcontext=system_u:object_r:http_port_t:s0 tclass=tcp_socket"
+        insertbefore: BOF
+        state: present
       when: not check_inject.stat.exists
 
-    # --- FALSO POSITIVO 3: Mensaje de boot antiguo simulado ---
-    - name: "70"
+    # =========================================================
+    # TRAMPA 3 (Falso Negativo): Systemd masked (Log falso en journal)
+    # =========================================================
+    - name: "60 - Inject fake systemd masked message"
       ansible.builtin.shell: |
-        # Simular que hubo un reboot hace ~2 horas modificando el timestamp del marker
-        # Esto engaña al estudiante para que piense "ah, sí, el reboot fue hace rato"
-        touch -d "2 hours ago" /var/log/.reboot_marker_004 2>/dev/null || true
+        systemd-cat -t systemd -p err "httpd.service: Unit configuration is masked, refusing to start."
       when: not check_inject.stat.exists
 
-    # --- CAUSA RAÍZ REAL: Deshabilitar el servicio (sin tocar config) ---
-    - name: "80"
+    # =========================================================
+    # CAUSA RAÍZ REAL: Servicio detenido y deshabilitado (Post-Reboot)
+    # =========================================================
+    - name: "70 - Stop and disable httpd (Simulate post-reboot state)"
       ansible.builtin.systemd:
         name: httpd
         enabled: false
         state: stopped
       when: not check_inject.stat.exists
 
-    # --- FALSO POSITIVO 4: Log de systemd confuso ---
-    - name: "90"
-      ansible.builtin.shell: |
-        logger -p systemd.err "systemd[1]: httpd.service: Failed to load configuration: Unit httpd.service is masked."
-      when: not check_inject.stat.exists
-
-    - name: "100"
+    - name: "80 - Create injection marker"
       ansible.builtin.file:
         path: /var/log/.reboot_marker_004
         state: touch
         mode: '0600'
       when: not check_inject.stat.exists
 
-    - name: "110"
+    - name: "90 - Debug completion"
       ansible.builtin.debug:
-        msg: "Validation completed."
+        msg: "Incident 004 injected successfully on {{ inventory_hostname }}."

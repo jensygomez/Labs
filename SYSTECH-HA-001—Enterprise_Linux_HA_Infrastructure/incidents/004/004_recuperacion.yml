@@ -1,28 +1,57 @@
 ---
-- name: "System State Reconciliation"
+- name: "System State Reconciliation - Incident 004"
   hosts: app_nodes
   become: true
   gather_facts: true
   tasks:
-    - name: "10"
+    - name: "10 - Check if incident was injected"
       ansible.builtin.stat:
         path: /var/log/.reboot_marker_004
       register: check_inject
 
-    # --- RESTAURAR SERVICIO HABILITADO ---
-    - name: "20"
+    # =========================================================
+    # REMEDIACIÓN REAL
+    # =========================================================
+    - name: "20 - Start and enable httpd service"
       ansible.builtin.systemd:
         name: httpd
         state: started
         enabled: true
       when: check_inject.stat.exists
 
-    - name: "30"
+    # =========================================================
+    # LIMPIEZA DE TRAMPAS (Opcional pero recomendado para idempotencia)
+    # =========================================================
+    - name: "30 - Remove fake Apache FQDN warning from logs"
+      ansible.builtin.lineinfile:
+        path: /var/log/httpd/error_log
+        regexp: "AH00558.*reliably determine"
+        state: absent
+      when: check_inject.stat.exists
+
+    - name: "40 - Remove fake SELinux denial from audit log"
+      ansible.builtin.lineinfile:
+        path: /var/log/audit/audit.log
+        regexp: "type=AVC.*denied.*name_bind.*comm=\"httpd\""
+        state: absent
+      when: check_inject.stat.exists
+
+    - name: "50 - Remove injection marker"
       ansible.builtin.file:
         path: /var/log/.reboot_marker_004
         state: absent
       when: check_inject.stat.exists
 
-    - name: "40"
+    - name: "60 - Verify httpd is responding locally"
+      ansible.builtin.uri:
+        url: "http://127.0.0.1/"
+        status_code: 200
+      register: httpd_check
+      until: httpd_check.status == 200
+      retries: 5
+      delay: 2
+      when: check_inject.stat.exists
+
+    - name: "70 - Debug completion"
       ansible.builtin.debug:
-        msg: "Reconciliation completed."
+        msg: "Reconciliation completed on {{ inventory_hostname }}."
