@@ -44,3 +44,8 @@
         cmd: "restorecon -R -v {{ web_root }}"
       register: restorecon_out
       changed_when: "'Resetting' in restorecon_out.stdout"
+
+    - name: Remove idempotency marker to allow re-injection
+      ansible.builtin.file:
+        path: "{{ web_root }}/.deploy_marker_003"
+        state: absent

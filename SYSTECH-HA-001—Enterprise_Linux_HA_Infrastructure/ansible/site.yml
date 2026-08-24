@@ -5,21 +5,11 @@
 #
 # SECUENCIA DE EJECUCIÓN (Comandos de orquestación):
 # 1. Ejecutar todo el stack completo:
-#    ansible-playbook site.yml
-#
-# 2. Despliegue fase por fase (Útil para pruebas o reconstrucción modular):
-#    Fase 03 (ZabbixAgent) : ansible-playbook -i ansible/inventories/production/hosts.yml ansible/site.yml --tags zabbix_agent --ask-vault-pass 
-#    Fase 02 (VIP HA)        :     ansible-playbook site.yml --tags keepalived --ask-vault-pass
-#    Fase 03 (LB HA)         :      ansible-playbook site.yml --tags haproxy --ask-vault-pass
-#    Fase 04 (Web Stack)     :  ansible-playbook site.yml --tags nginx --ask-vault-pass
-#    Fase 05 (MariaDB)       :    ansible-playbook site.yml --tags database --ask-vault-pass
-#    Fase 06 (App Layer)     :  ansible-playbook site.yml --tags db_seed,app --ask-vault-pass
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# FASE 01: BASELINE DE SEGURIDAD Y CONFIGURACIÓN BASE 
-# Solo Aplica a las 3 VMS que tienen AlmaLinux9
-# Comando individual: ansible-playbook -i ansible/inventories/production/hosts.yml ansible/site.yml --tags baseline --ask-vault-pass
+# FASE 01:  
+# Comando individual: ansible-playbook -i ansible/inventories/production/hosts.yml ansible/site.yml --ask-vault-pass
 # ------------------------------------------------------------------------------
 
 
@@ -27,4 +17,4 @@
   hosts: all
   become: true
   roles:
-    - role_nfs_lvm_storage
+    - role_systech_infra

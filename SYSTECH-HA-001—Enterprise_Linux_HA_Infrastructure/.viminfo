@@ -15,7 +15,7 @@
 
 # Command Line History (newest to oldest):
 :wq
-|2,0,1787471566,,"wq"
+|2,0,1787540283,,"wq"
 :q!
 |2,0,1787076335,,"q!"
 
@@ -31,67 +31,83 @@
 
 # Registers:
 ""1	LINE	0
-	---
-|3,1,1,1,1,0,1787205969,"---"
+	#    ansible-playbook site.yml
+|3,1,1,1,1,0,1787540279,"#    ansible-playbook site.yml"
 "2	LINE	0
-	- name: "Instalar utilidades en el cliente (curl, jq)"
-|3,0,2,1,1,0,1787205969,"- name: \"Instalar utilidades en el cliente (curl, jq)\""
+	#    Fase 04 (Web Stack)     :  ansible-playbook site.yml --tags nginx --ask-vault-pass
+|3,0,2,1,1,0,1787540278,"#    Fase 04 (Web Stack)     :  ansible-playbook site.yml --tags nginx --ask-vault-pass"
 "3	LINE	0
-	  ansible.builtin.apt:
-|3,0,3,1,1,0,1787205969,"  ansible.builtin.apt:"
+	# 2. Despliegue fase por fase (Útil para pruebas o reconstrucción modular):
+|3,0,3,1,1,0,1787540276,"# 2. Despliegue fase por fase (Útil para pruebas o reconstrucción modular):"
 "4	LINE	0
-	    name:
-|3,0,4,1,1,0,1787205969,"    name:"
+	#
+|3,0,4,1,1,0,1787540276,"#"
 "5	LINE	0
-	      - curl
-|3,0,5,1,1,0,1787205969,"      - curl"
+	#    Fase 02 (VIP HA)        :     ansible-playbook site.yml --tags keepalived --ask-vault-pass
+|3,0,5,1,1,0,1787540274,"#    Fase 02 (VIP HA)        :     ansible-playbook site.yml --tags keepalived --ask-vault-pass"
 "6	LINE	0
-	      - jq
-|3,0,6,1,1,0,1787205969,"      - jq"
+	#    Fase 03 (ZabbixAgent) : ansible-playbook -i ansible/inventories/production/hosts.yml ansible/site.yml --tags zabbix_agent --ask-vault-pass 
+|3,0,6,1,1,0,1787540273,"#    Fase 03 (ZabbixAgent) : ansible-playbook -i ansible/inventories/production/hosts.yml ansible/site.yml --tags zabbix_agent --ask-vault-pass "
 "7	LINE	0
-	    state: present
-|3,0,7,1,1,0,1787205969,"    state: present"
+	#    Fase 03 (LB HA)         :      ansible-playbook site.yml --tags haproxy --ask-vault-pass
+|3,0,7,1,1,0,1787540271,"#    Fase 03 (LB HA)         :      ansible-playbook site.yml --tags haproxy --ask-vault-pass"
 "8	LINE	0
-	      done
-|3,0,8,1,1,0,1787205969,"      done"
+	#    Fase 06 (App Layer)     :  ansible-playbook site.yml --tags db_seed,app --ask-vault-pass
+|3,0,8,1,1,0,1787540270,"#    Fase 06 (App Layer)     :  ansible-playbook site.yml --tags db_seed,app --ask-vault-pass"
 "9	LINE	0
-	        done
-|3,0,9,1,1,0,1787205968,"        done"
+	#    Fase 05 (MariaDB)       :    ansible-playbook site.yml --tags database --ask-vault-pass
+|3,0,9,1,1,0,1787540269,"#    Fase 05 (MariaDB)       :    ansible-playbook site.yml --tags database --ask-vault-pass"
 "-	CHAR	0
-	8
-|3,0,36,0,1,0,1786989464,"8"
+	E
+|3,0,36,0,1,0,1787540265,"E"
 
 # File marks:
-'0  51  0  ~/incidents/003/003_remediation.yml
-|4,48,51,0,1787471566,"~/incidents/003/003_remediation.yml"
-'1  45  0  ~/incidents/002/002_remediation.yml
-|4,49,45,0,1787337109,"~/incidents/002/002_remediation.yml"
-'2  36  0  ~/incidents/002/002_remediation.yml
-|4,50,36,0,1787334265,"~/incidents/002/002_remediation.yml"
+'0  20  0  ~/ansible/site.yml
+|4,48,20,0,1787540283,"~/ansible/site.yml"
+'1  51  0  ~/incidents/003/003_remediation.yml
+|4,49,51,0,1787471566,"~/incidents/003/003_remediation.yml"
+'2  45  0  ~/incidents/002/002_remediation.yml
+|4,50,45,0,1787337109,"~/incidents/002/002_remediation.yml"
 '3  36  0  ~/incidents/002/002_remediation.yml
 |4,51,36,0,1787334265,"~/incidents/002/002_remediation.yml"
-'4  1  2  ~/incidents/002/002_remediation.yml
-|4,52,1,2,1787333021,"~/incidents/002/002_remediation.yml"
+'4  36  0  ~/incidents/002/002_remediation.yml
+|4,52,36,0,1787334265,"~/incidents/002/002_remediation.yml"
 '5  1  2  ~/incidents/002/002_remediation.yml
 |4,53,1,2,1787333021,"~/incidents/002/002_remediation.yml"
 '6  1  2  ~/incidents/002/002_remediation.yml
 |4,54,1,2,1787333021,"~/incidents/002/002_remediation.yml"
 '7  1  2  ~/incidents/002/002_remediation.yml
 |4,55,1,2,1787333021,"~/incidents/002/002_remediation.yml"
-'8  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
-|4,56,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
-'9  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,57,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
+'8  1  2  ~/incidents/002/002_remediation.yml
+|4,56,1,2,1787333021,"~/incidents/002/002_remediation.yml"
+'9  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,57,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
 
 # Jumplist (newest first):
+-'  20  0  ~/ansible/site.yml
+|4,39,20,0,1787540283,"~/ansible/site.yml"
+-'  16  0  ~/ansible/site.yml
+|4,39,16,0,1787540214,"~/ansible/site.yml"
 -'  51  0  ~/incidents/003/003_remediation.yml
 |4,39,51,0,1787471566,"~/incidents/003/003_remediation.yml"
+-'  51  0  ~/incidents/003/003_remediation.yml
+|4,39,51,0,1787471566,"~/incidents/003/003_remediation.yml"
+-'  1  0  ~/incidents/003/003_remediation.yml
+|4,39,1,0,1787470212,"~/incidents/003/003_remediation.yml"
 -'  1  0  ~/incidents/003/003_remediation.yml
 |4,39,1,0,1787470212,"~/incidents/003/003_remediation.yml"
 -'  45  0  ~/incidents/002/002_remediation.yml
 |4,39,45,0,1787337109,"~/incidents/002/002_remediation.yml"
 -'  45  0  ~/incidents/002/002_remediation.yml
 |4,39,45,0,1787337109,"~/incidents/002/002_remediation.yml"
+-'  45  0  ~/incidents/002/002_remediation.yml
+|4,39,45,0,1787337109,"~/incidents/002/002_remediation.yml"
+-'  45  0  ~/incidents/002/002_remediation.yml
+|4,39,45,0,1787337109,"~/incidents/002/002_remediation.yml"
+-'  1  0  ~/incidents/002/002_remediation.yml
+|4,39,1,0,1787336990,"~/incidents/002/002_remediation.yml"
+-'  1  0  ~/incidents/002/002_remediation.yml
+|4,39,1,0,1787336990,"~/incidents/002/002_remediation.yml"
 -'  1  0  ~/incidents/002/002_remediation.yml
 |4,39,1,0,1787336990,"~/incidents/002/002_remediation.yml"
 -'  1  0  ~/incidents/002/002_remediation.yml
@@ -104,10 +120,26 @@
 |4,39,36,0,1787334265,"~/incidents/002/002_remediation.yml"
 -'  36  0  ~/incidents/002/002_remediation.yml
 |4,39,36,0,1787334265,"~/incidents/002/002_remediation.yml"
+-'  36  0  ~/incidents/002/002_remediation.yml
+|4,39,36,0,1787334265,"~/incidents/002/002_remediation.yml"
+-'  36  0  ~/incidents/002/002_remediation.yml
+|4,39,36,0,1787334265,"~/incidents/002/002_remediation.yml"
+-'  36  0  ~/incidents/002/002_remediation.yml
+|4,39,36,0,1787334265,"~/incidents/002/002_remediation.yml"
+-'  36  0  ~/incidents/002/002_remediation.yml
+|4,39,36,0,1787334265,"~/incidents/002/002_remediation.yml"
 -'  1  2  ~/incidents/002/002_remediation.yml
 |4,39,1,2,1787333022,"~/incidents/002/002_remediation.yml"
 -'  1  2  ~/incidents/002/002_remediation.yml
 |4,39,1,2,1787333022,"~/incidents/002/002_remediation.yml"
+-'  1  2  ~/incidents/002/002_remediation.yml
+|4,39,1,2,1787333022,"~/incidents/002/002_remediation.yml"
+-'  1  2  ~/incidents/002/002_remediation.yml
+|4,39,1,2,1787333022,"~/incidents/002/002_remediation.yml"
+-'  1  2  ~/incidents/002/002_remediation.yml
+|4,39,1,2,1787333021,"~/incidents/002/002_remediation.yml"
+-'  1  2  ~/incidents/002/002_remediation.yml
+|4,39,1,2,1787333021,"~/incidents/002/002_remediation.yml"
 -'  1  2  ~/incidents/002/002_remediation.yml
 |4,39,1,2,1787333021,"~/incidents/002/002_remediation.yml"
 -'  1  2  ~/incidents/002/002_remediation.yml
@@ -144,6 +176,70 @@
 |4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
 -'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
 |4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  23  11  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,23,11,1787240133,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
+-'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
+|4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
 -'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
 |4,39,1,0,1787240120,"~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2"
 -'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/haproxy.cfg.j2
@@ -188,104 +284,63 @@
 |4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
 -'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
 |4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  14  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,14,0,1787240095,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
--'  1  0  ~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2
-|4,39,1,0,1787240080,"~/ansible/roles/role_nfs_lvm_storage/templates/keepalived.conf.j2"
 
 # History of marks within files (newest to oldest):
+
+> ~/ansible/site.yml
+	*	1787540282	0
+	"	20	0
+	.	8	0
+	+	14	16
+	+	14	1
+	+	12	49
+	+	12	46
+	+	8	136
+	+	14	0
+	+	14	1
+	+	14	0
+	+	14	16
+	+	14	1
+	+	14	0
+	+	14	24
+	+	14	0
+	+	14	44
+	+	8	4
+	+	8	152
+	+	8	51
+	+	8	31
+	+	8	92
+	+	8	28
+	+	8	6
+	+	8	0
+	+	8	2
+	+	8	31
+	+	8	25
+	+	8	27
+	+	8	0
+	+	8	28
+	+	14	0
+	+	14	23
+	+	14	20
+	+	8	125
+	+	14	80
+	+	14	55
+	+	14	0
+	+	14	18
+	+	14	63
+	+	14	23
+	+	14	0
+	+	8	0
+	+	14	0
+	+	15	25
+	+	15	0
+	+	21	15
+	+	16	0
+	+	20	24
+	+	12	99
+	+	12	0
+	+	11	11
+	+	8	0
 
 > ~/incidents/003/003_remediation.yml
 	*	1787471565	0
@@ -502,61 +557,6 @@
 	^	14	26
 	.	14	25
 	+	14	25
-
-> ~/ansible/site.yml
-	*	1787114435	0
-	"	26	0
-	^	31	16
-	.	26	0
-	+	24	16
-	+	24	1
-	+	22	49
-	+	21	46
-	+	11	136
-	+	24	0
-	+	24	1
-	+	24	0
-	+	24	16
-	+	24	1
-	+	24	0
-	+	24	24
-	+	24	0
-	+	24	44
-	+	11	4
-	+	11	152
-	+	11	51
-	+	11	31
-	+	11	92
-	+	11	28
-	+	13	28
-	+	14	28
-	+	15	28
-	+	16	28
-	+	13	6
-	+	14	0
-	+	13	2
-	+	11	31
-	+	11	25
-	+	11	27
-	+	12	0
-	+	11	28
-	+	24	0
-	+	24	23
-	+	24	20
-	+	11	125
-	+	24	80
-	+	24	55
-	+	24	0
-	+	24	18
-	+	24	63
-	+	24	23
-	+	24	0
-	+	11	0
-	+	24	0
-	+	25	25
-	+	25	0
-	+	31	15
-	+	26	0
 
 > ~/ansible/roles/role_lb_ha/handlers/main.yml
 	*	1787114361	0

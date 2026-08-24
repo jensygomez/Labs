@@ -1,0 +1,16 @@
+# Configuración gestionada por Ansible
+listen-address=127.0.0.1,{{ ansible_default_ipv4.address }}
+bind-interfaces
+server=8.8.8.8
+server=8.8.4.4
+
+# Dominio local
+domain=lab.systech.local
+expand-hosts
+
+# Leer hosts adicionales para resolución interna
+addn-hosts=/etc/dnsmasq.hosts
+
+# No reenviar consultas de dominios no enrutables
+domain-needed
+bogus-priv

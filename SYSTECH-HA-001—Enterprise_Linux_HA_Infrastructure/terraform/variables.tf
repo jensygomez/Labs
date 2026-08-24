@@ -66,6 +66,7 @@ variable "lxc_containers" {
   }))
   default = {
     "client01" = { vmid = 111, ip = "10.10.10.11/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
+    "dns01"    = { vmid = 121, ip = "10.10.10.20/24", cores = 1, memory = 512, disk_size = 8, role = "dns" }
     "lb01"     = { vmid = 221, ip = "10.10.10.21/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
     "lb02"     = { vmid = 222, ip = "10.10.10.22/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
     "zabbix01" = { vmid = 990, ip = "10.10.10.90/24", cores = 1, memory = 1536, disk_size = 8, role = "monitoring" }

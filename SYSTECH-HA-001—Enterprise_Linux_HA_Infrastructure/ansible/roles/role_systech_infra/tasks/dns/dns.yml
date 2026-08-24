@@ -1,0 +1,46 @@
+---
+- name: "Instalar dnsmasq (DNS ligero y eficiente para LXC)"
+  ansible.builtin.apt:
+    name: dnsmasq
+    state: present
+    update_cache: true
+  when: ansible_os_family == "Debian"
+
+- name: "Detener y deshabilitar systemd-resolved (para evitar conflicto en puerto 53)"
+  ansible.builtin.systemd:
+    name: systemd-resolved
+    state: stopped
+    enabled: false
+  ignore_errors: true
+
+- name: "Desplegar configuración principal de dnsmasq"
+  ansible.builtin.template:
+    src: dnsmasq.conf.j2
+    dest: /etc/dnsmasq.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reiniciar dnsmasq
+
+- name: "Desplegar archivo de hosts locales para resolución interna"
+  ansible.builtin.template:
+    src: dnsmasq.hosts.j2
+    dest: /etc/dnsmasq.hosts
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reiniciar dnsmasq
+
+- name: "Asegurar que dnsmasq esté iniciado y habilitado"
+  ansible.builtin.systemd:
+    name: dnsmasq
+    state: started
+    enabled: true
+
+- name: "Permitir tráfico DNS (UDP/TCP 53) en UFW"
+  ansible.builtin.ufw:
+    rule: allow
+    port: "53"
+    proto: "any"
+    state: enabled
+  ignore_errors: true # Por si ufw no está instalado/activo en el LXC base
