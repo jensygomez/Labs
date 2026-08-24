@@ -1,14 +1,42 @@
 ---
-- name: "Configurar /etc/resolv.conf para usar DNS Centralizado"
+# dns/network_setup.yml
+# Configura todos los nodos para usar dns01 como resolver principal
+
+- name: "Desactivar systemd-resolved para evitar conflictos"
+  ansible.builtin.systemd:
+    name: systemd-resolved
+    state: stopped
+    enabled: false
+  ignore_errors: true
+  tags: ['network', 'dns_client']
+
+- name: "Eliminar symlink de resolv.conf si existe"
+  ansible.builtin.file:
+    path: /etc/resolv.conf
+    state: absent
+  tags: ['network', 'dns_client']
+
+- name: "Desplegar /etc/resolv.conf apuntando a dns01"
   ansible.builtin.copy:
     dest: /etc/resolv.conf
     content: |
-      # Gestionado por Ansible - SYSTECH DNS
+      # Gestionado por Ansible - SYSTECH DNS Centralizado
       search lab.systech.local
-      nameserver 10.10.10.23  # IP de dns01
-      nameserver 8.8.8.8      # Fallback
+      nameserver 10.10.10.20
+      nameserver 8.8.8.8
     owner: root
     group: root
     mode: '0644'
-    backup: yes # Siempre bueno hacer backup antes de sobrescribir
-  notify: "Reiniciar systemd-resolved" # Opcional, para limpiar caché
+  tags: ['network', 'dns_client']
+
+- name: "Verificar resolución DNS desde el nodo"
+  ansible.builtin.command: "dig +short app01.lab.systech.local @10.10.10.20"
+  register: dns_test
+  changed_when: false
+  failed_when: dns_test.rc != 0 or dns_test.stdout == ""
+  tags: ['network', 'dns_client']
+
+- name: "Mostrar resultado de validación DNS"
+  ansible.builtin.debug:
+    msg: "Resolución DNS: {{ dns_test.stdout | default('FALLIDA') }}"
+  tags: ['network', 'dns_client']
