@@ -1,0 +1,14 @@
+---
+- name: "Configurar /etc/resolv.conf para usar DNS Centralizado"
+  ansible.builtin.copy:
+    dest: /etc/resolv.conf
+    content: |
+      # Gestionado por Ansible - SYSTECH DNS
+      search lab.systech.local
+      nameserver 10.10.10.23  # IP de dns01
+      nameserver 8.8.8.8      # Fallback
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes # Siempre bueno hacer backup antes de sobrescribir
+  notify: "Reiniciar systemd-resolved" # Opcional, para limpiar caché
