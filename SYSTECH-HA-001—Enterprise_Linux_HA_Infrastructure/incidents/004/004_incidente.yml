@@ -50,7 +50,7 @@
     # =========================================================
     - name: "60 - Inject fake systemd masked message"
       ansible.builtin.command:
-        cmd: logger -t systemd -p err "httpd.service: Unit configuration is masked, refusing to start."
+        cmd: 'logger -t systemd -p err "httpd.service: Unit configuration is masked, refusing to start."'
       when: not check_inject.stat.exists
 
     # =========================================================

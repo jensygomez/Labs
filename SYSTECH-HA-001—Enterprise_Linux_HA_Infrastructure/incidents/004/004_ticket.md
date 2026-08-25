@@ -7,7 +7,7 @@ DESCRIPTION:
 The continuous traffic monitoring script is reporting HTTP 502
 (Bad Gateway) errors against the application VIP (10.10.10.30).
 ICMP ping and SSH connectivity to all 3 nodes in the application
-fleet (app01/app02/app03.lab.systech.local) are successful. 
+fleet (app01/app02/app03.lab.systech.internal) are successful. 
 However, HAProxy health checks show that one of the backend nodes 
 is not responding on port 80.
 

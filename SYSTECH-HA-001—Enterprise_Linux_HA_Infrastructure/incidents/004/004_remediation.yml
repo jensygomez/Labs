@@ -1,0 +1,13 @@
+---
+- name: Remediar y asegurar persistencia de Apache HTTPD en el cluster
+  hosts: app_nodes
+  become: true
+  tasks:
+    - name: Garantir que httpd esté iniciado y habilitado en el arranque
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: true
+
+
+

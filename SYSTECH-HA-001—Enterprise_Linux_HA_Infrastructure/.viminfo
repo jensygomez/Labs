@@ -15,7 +15,7 @@
 
 # Command Line History (newest to oldest):
 :wq
-|2,0,1787566042,,"wq"
+|2,0,1787635210,,"wq"
 :q!
 |2,0,1787076335,,"q!"
 
@@ -62,36 +62,50 @@
 |3,0,36,0,1,0,1787540265,"E"
 
 # File marks:
-'0  41  39  ~/ansible/SlidesPython/draw_infra.py
-|4,48,41,39,1787566042,"~/ansible/SlidesPython/draw_infra.py"
-'1  42  39  ~/ansible/SlidesPython/draw_infra.py
-|4,49,42,39,1787565929,"~/ansible/SlidesPython/draw_infra.py"
+'0  12  0  ~/incidents/004/004_remediation.yml
+|4,48,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+'1  41  39  ~/ansible/SlidesPython/draw_infra.py
+|4,49,41,39,1787566042,"~/ansible/SlidesPython/draw_infra.py"
 '2  42  39  ~/ansible/SlidesPython/draw_infra.py
 |4,50,42,39,1787565929,"~/ansible/SlidesPython/draw_infra.py"
-'3  38  39  ~/ansible/SlidesPython/draw_infra.py
-|4,51,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
+'3  42  39  ~/ansible/SlidesPython/draw_infra.py
+|4,51,42,39,1787565929,"~/ansible/SlidesPython/draw_infra.py"
 '4  38  39  ~/ansible/SlidesPython/draw_infra.py
 |4,52,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
 '5  38  39  ~/ansible/SlidesPython/draw_infra.py
 |4,53,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
 '6  38  39  ~/ansible/SlidesPython/draw_infra.py
 |4,54,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
-'7  39  36  ~/ansible/SlidesPython/draw_infra.py
-|4,55,39,36,1787565804,"~/ansible/SlidesPython/draw_infra.py"
+'7  38  39  ~/ansible/SlidesPython/draw_infra.py
+|4,55,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
 '8  39  36  ~/ansible/SlidesPython/draw_infra.py
 |4,56,39,36,1787565804,"~/ansible/SlidesPython/draw_infra.py"
 '9  39  36  ~/ansible/SlidesPython/draw_infra.py
 |4,57,39,36,1787565804,"~/ansible/SlidesPython/draw_infra.py"
 
 # Jumplist (newest first):
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  1  0  ~/incidents/004/004_remediation.yml
+|4,39,1,0,1787635097,"~/incidents/004/004_remediation.yml"
 -'  41  39  ~/ansible/SlidesPython/draw_infra.py
 |4,39,41,39,1787566042,"~/ansible/SlidesPython/draw_infra.py"
+-'  41  39  ~/ansible/SlidesPython/draw_infra.py
+|4,39,41,39,1787566042,"~/ansible/SlidesPython/draw_infra.py"
+-'  1  0  ~/ansible/SlidesPython/draw_infra.py
+|4,39,1,0,1787566026,"~/ansible/SlidesPython/draw_infra.py"
 -'  1  0  ~/ansible/SlidesPython/draw_infra.py
 |4,39,1,0,1787566026,"~/ansible/SlidesPython/draw_infra.py"
 -'  42  39  ~/ansible/SlidesPython/draw_infra.py
 |4,39,42,39,1787565929,"~/ansible/SlidesPython/draw_infra.py"
 -'  42  39  ~/ansible/SlidesPython/draw_infra.py
 |4,39,42,39,1787565929,"~/ansible/SlidesPython/draw_infra.py"
+-'  42  39  ~/ansible/SlidesPython/draw_infra.py
+|4,39,42,39,1787565929,"~/ansible/SlidesPython/draw_infra.py"
+-'  42  39  ~/ansible/SlidesPython/draw_infra.py
+|4,39,42,39,1787565929,"~/ansible/SlidesPython/draw_infra.py"
+-'  1  0  ~/ansible/SlidesPython/draw_infra.py
+|4,39,1,0,1787565920,"~/ansible/SlidesPython/draw_infra.py"
 -'  1  0  ~/ansible/SlidesPython/draw_infra.py
 |4,39,1,0,1787565920,"~/ansible/SlidesPython/draw_infra.py"
 -'  38  39  ~/ansible/SlidesPython/draw_infra.py
@@ -100,6 +114,14 @@
 |4,39,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
 -'  38  39  ~/ansible/SlidesPython/draw_infra.py
 |4,39,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
+-'  38  39  ~/ansible/SlidesPython/draw_infra.py
+|4,39,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
+-'  38  39  ~/ansible/SlidesPython/draw_infra.py
+|4,39,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
+-'  38  39  ~/ansible/SlidesPython/draw_infra.py
+|4,39,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
+-'  1  0  ~/ansible/SlidesPython/draw_infra.py
+|4,39,1,0,1787565848,"~/ansible/SlidesPython/draw_infra.py"
 -'  1  0  ~/ansible/SlidesPython/draw_infra.py
 |4,39,1,0,1787565848,"~/ansible/SlidesPython/draw_infra.py"
 -'  39  36  ~/ansible/SlidesPython/draw_infra.py
@@ -110,6 +132,16 @@
 |4,39,39,36,1787565804,"~/ansible/SlidesPython/draw_infra.py"
 -'  39  36  ~/ansible/SlidesPython/draw_infra.py
 |4,39,39,36,1787565804,"~/ansible/SlidesPython/draw_infra.py"
+-'  39  36  ~/ansible/SlidesPython/draw_infra.py
+|4,39,39,36,1787565804,"~/ansible/SlidesPython/draw_infra.py"
+-'  39  36  ~/ansible/SlidesPython/draw_infra.py
+|4,39,39,36,1787565804,"~/ansible/SlidesPython/draw_infra.py"
+-'  39  36  ~/ansible/SlidesPython/draw_infra.py
+|4,39,39,36,1787565804,"~/ansible/SlidesPython/draw_infra.py"
+-'  39  36  ~/ansible/SlidesPython/draw_infra.py
+|4,39,39,36,1787565804,"~/ansible/SlidesPython/draw_infra.py"
+-'  1  0  ~/ansible/SlidesPython/draw_infra.py
+|4,39,1,0,1787565757,"~/ansible/SlidesPython/draw_infra.py"
 -'  1  0  ~/ansible/SlidesPython/draw_infra.py
 |4,39,1,0,1787565757,"~/ansible/SlidesPython/draw_infra.py"
 -'  178  35  ~/ansible/generate_slide.py
@@ -144,6 +176,70 @@
 |4,39,178,35,1787556903,"~/ansible/generate_slide.py"
 -'  178  35  ~/ansible/generate_slide.py
 |4,39,178,35,1787556903,"~/ansible/generate_slide.py"
+-'  178  35  ~/ansible/generate_slide.py
+|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
+-'  178  35  ~/ansible/generate_slide.py
+|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
+-'  178  35  ~/ansible/generate_slide.py
+|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
+-'  178  35  ~/ansible/generate_slide.py
+|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
+-'  178  35  ~/ansible/generate_slide.py
+|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
+-'  178  35  ~/ansible/generate_slide.py
+|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
+-'  178  35  ~/ansible/generate_slide.py
+|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
+-'  178  35  ~/ansible/generate_slide.py
+|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
+-'  178  35  ~/ansible/generate_slide.py
+|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
+-'  178  35  ~/ansible/generate_slide.py
+|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
+-'  178  35  ~/ansible/generate_slide.py
+|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
+-'  178  35  ~/ansible/generate_slide.py
+|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
+-'  178  35  ~/ansible/generate_slide.py
+|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
+-'  178  35  ~/ansible/generate_slide.py
+|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
+-'  178  35  ~/ansible/generate_slide.py
+|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
+-'  178  35  ~/ansible/generate_slide.py
+|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
+-'  1  0  ~/ansible/generate_slide.py
+|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
+-'  1  0  ~/ansible/generate_slide.py
+|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
+-'  1  0  ~/ansible/generate_slide.py
+|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
+-'  1  0  ~/ansible/generate_slide.py
+|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
+-'  1  0  ~/ansible/generate_slide.py
+|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
+-'  1  0  ~/ansible/generate_slide.py
+|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
+-'  1  0  ~/ansible/generate_slide.py
+|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
+-'  1  0  ~/ansible/generate_slide.py
+|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
+-'  1  0  ~/ansible/generate_slide.py
+|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
+-'  1  0  ~/ansible/generate_slide.py
+|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
+-'  1  0  ~/ansible/generate_slide.py
+|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
+-'  1  0  ~/ansible/generate_slide.py
+|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
+-'  1  0  ~/ansible/generate_slide.py
+|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
+-'  1  0  ~/ansible/generate_slide.py
+|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
+-'  1  0  ~/ansible/generate_slide.py
+|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
+-'  1  0  ~/ansible/generate_slide.py
+|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
 -'  1  0  ~/ansible/generate_slide.py
 |4,39,1,0,1787556895,"~/ansible/generate_slide.py"
 -'  1  0  ~/ansible/generate_slide.py
@@ -188,104 +284,19 @@
 |4,39,149,29,1787544927,"~/terraform/main.tf"
 -'  149  29  ~/terraform/main.tf
 |4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
--'  112  0  ~/terraform/main.tf
-|4,39,112,0,1787544846,"~/terraform/main.tf"
 
 # History of marks within files (newest to oldest):
+
+> ~/incidents/004/004_remediation.yml
+	*	1787635210	0
+	"	12	0
+	^	12	0
+	.	12	0
+	+	13	0
+	+	6	10
+	+	7	30
+	+	8	19
+	+	12	0
 
 > ~/ansible/SlidesPython/draw_infra.py
 	*	1787566042	0
