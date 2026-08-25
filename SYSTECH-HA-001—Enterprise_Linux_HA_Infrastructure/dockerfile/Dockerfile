@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # 1. Dependencias base + herramientas de uso diario
 # ==========================================
 RUN apt-get update && apt-get install -y \
-    curl git jq unzip gnupg software-properties-common \
+    curl git jq unzip gnupg software-properties-common bc \
     python3 python3-pip python3-venv python3-yaml \
     openssh-client iputils-ping net-tools dnsutils \
     bash-completion vim nano tree htop ripgrep fzf tmux less \
