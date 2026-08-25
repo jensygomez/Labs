@@ -1,4 +1,7 @@
 ---
+
+# Donde colocamos este:
+ssh ansible@10.10.10.11 "sudo rm -f /var/run/.incident_005_marker"
 - name: "Remediation - Incident 005 (DNS Override Fix)"
   hosts: client_nodes
   become: true

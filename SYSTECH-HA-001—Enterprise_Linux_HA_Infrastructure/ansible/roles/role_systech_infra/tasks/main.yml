@@ -19,10 +19,8 @@
 # 3. Ejecutar múltiples componentes a la vez:
 #    ansible-playbook -i inventories/production/hosts.yml site.yml --tags 'dns,lb' --ask-vault-pass
 #
-# 4. Ejecutar TODO EXCEPTO un componente (ej. saltar Zabbix si ya está listo):
-#    ansible-playbook -i inventories/production/hosts.yml site.yml --skip-tags zabbix --ask-vault-pass
 #
-# 5. Listar todos los tags disponibles en este rol para consultar:
+# 4. Listar todos los tags disponibles en este rol para consultar:
 #    ansible-playbook -i inventories/production/hosts.yml site.yml --list-tags
 #    ansible-playbook -i inventories/production/hosts.yml site.yml --ask-vault-pass
 # ==============================================================================
@@ -70,38 +68,3 @@
   when: "'dns_nodes' not in group_names" # Opcional: para no aplicarlo a sí mismo, o déjalo en 'all'
   tags: ['network', 'dns_client']
 
-
-# ==============================================================================
-# ZABBIX - Monitoreo Centralizado
-# Se agrega un include por fase. Cada fase tiene su propio sub-tag para 
-# permitir ejecuciones granulares (ej. --tags zabbix_server).
-# ==============================================================================
-- name: "Zabbix Fase 1: Base de datos PostgreSQL"
-  ansible.builtin.include_tasks: zabbix/01_postgresql_setup.yml
-  when: "'monitoring_nodes' in group_names"
-  tags: ['zabbix', 'zabbix_db']
-
-- name: "Zabbix Fase 2: Repositorio + Esquema"
-  ansible.builtin.include_tasks: zabbix/02_zabbix_repo_and_schema.yml
-  when: "'monitoring_nodes' in group_names"
-  tags: ['zabbix', 'zabbix_schema']
-
-- name: "Zabbix Fase 3: zabbix-server"
-  ansible.builtin.include_tasks: zabbix/03_zabbix_server_setup.yml
-  when: "'monitoring_nodes' in group_names"
-  tags: ['zabbix', 'zabbix_server']
-  
-- name: "Zabbix Fase 4: Frontend Web"
-  ansible.builtin.include_tasks: zabbix/04_zabbix_frontend_setup.yml
-  when: "'monitoring_nodes' in group_names"
-  tags: ['zabbix', 'zabbix_frontend']
-  
-- name: "Zabbix Fase 5: Zabbix Agent en todos los nodos"
-  ansible.builtin.include_tasks: zabbix/05_zabbix_agent_setup.yml
-  # Nota: Sin 'when' de grupo, se ejecuta en TODOS los nodos (storage, db, app, lb, client, dns).
-  tags: ['zabbix', 'zabbix_agent']
-  
-- name: "Zabbix Fase 6: Registro API de Hosts y Scenarios"
-  ansible.builtin.include_tasks: zabbix/06_zabbix_api_config.yml
-  # Se ejecuta una sola vez desde el control node al final del playbook.
-  tags: ['zabbix', 'zabbix_api']

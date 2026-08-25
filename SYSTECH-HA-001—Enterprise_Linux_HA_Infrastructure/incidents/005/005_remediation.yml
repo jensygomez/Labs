@@ -1,0 +1,50 @@
+---
+- name: "Remediation - Incident 005 / Ticket OPS-1070"
+  hosts: client_nodes
+  become: true
+  gather_facts: false
+  tasks:
+    - name: "10 - Search for any Netplan override files with nameservers"
+      ansible.builtin.find:
+        paths: /etc/netplan
+        patterns: ["*.yaml", "*.yml"]
+        contains: ".*nameservers:.*"
+      register: bad_netplan_files
+
+    - name: "Debug - Print found files"
+      ansible.builtin.debug:
+        var: bad_netplan_files.files
+
+    - name: "20 - Remove detected Neplan override files"
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{bad_netplan_files.files }}"
+      when: bad_netplan_files.matched > 0
+      notify: "Apply Netplan changes"
+
+    - name: "30 - Restore valid /etc/resolv.conf"
+      ansible.builtin.copy:
+        dest: /etc/resolv.conf
+        content: |
+          # Managed by Ansible - SSYSTECH DNS
+          search lab.systech.internal
+          nameserver 10.10.10.20
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: "40 - Remove incident marker"
+      ansible.builtin.file:
+        path: /var/run/.incident_005_marker
+        state: absent
+
+  handlers:
+    - name: "Apply Netplan changes"
+      ansible.builtin.command:
+        cmd: netplan apply
+      changed_when: true
+
+
+
+

@@ -15,7 +15,7 @@
 
 # Command Line History (newest to oldest):
 :wq
-|2,0,1787635210,,"wq"
+|2,0,1787682262,,"wq"
 :q!
 |2,0,1787076335,,"q!"
 
@@ -31,261 +31,287 @@
 
 # Registers:
 ""1	LINE	0
-	#    ansible-playbook site.yml
-|3,1,1,1,1,0,1787540279,"#    ansible-playbook site.yml"
+	        state: adsent
+|3,1,1,1,1,0,1787682246,"        state: adsent"
 "2	LINE	0
-	#    Fase 04 (Web Stack)     :  ansible-playbook site.yml --tags nginx --ask-vault-pass
-|3,0,2,1,1,0,1787540278,"#    Fase 04 (Web Stack)     :  ansible-playbook site.yml --tags nginx --ask-vault-pass"
+	        path: /var/run/.incident_005_marker
+|3,0,2,1,1,0,1787682246,"        path: /var/run/.incident_005_marker"
 "3	LINE	0
-	# 2. Despliegue fase por fase (Útil para pruebas o reconstrucción modular):
-|3,0,3,1,1,0,1787540276,"# 2. Despliegue fase por fase (Útil para pruebas o reconstrucción modular):"
+	      ansible.builtin.file:
+|3,0,3,1,1,0,1787682245,"      ansible.builtin.file:"
 "4	LINE	0
-	#
-|3,0,4,1,1,0,1787540276,"#"
+	    - name: "40 - Remove incident marker"
+|3,0,4,1,1,0,1787682245,"    - name: \"40 - Remove incident marker\""
 "5	LINE	0
-	#    Fase 02 (VIP HA)        :     ansible-playbook site.yml --tags keepalived --ask-vault-pass
-|3,0,5,1,1,0,1787540274,"#    Fase 02 (VIP HA)        :     ansible-playbook site.yml --tags keepalived --ask-vault-pass"
+	        mode: '0644'
+|3,0,5,1,1,0,1787682088,"        mode: '0644'"
 "6	LINE	0
-	#    Fase 03 (ZabbixAgent) : ansible-playbook -i ansible/inventories/production/hosts.yml ansible/site.yml --tags zabbix_agent --ask-vault-pass 
-|3,0,6,1,1,0,1787540273,"#    Fase 03 (ZabbixAgent) : ansible-playbook -i ansible/inventories/production/hosts.yml ansible/site.yml --tags zabbix_agent --ask-vault-pass "
+	        group: root
+|3,0,6,1,1,0,1787682088,"        group: root"
 "7	LINE	0
-	#    Fase 03 (LB HA)         :      ansible-playbook site.yml --tags haproxy --ask-vault-pass
-|3,0,7,1,1,0,1787540271,"#    Fase 03 (LB HA)         :      ansible-playbook site.yml --tags haproxy --ask-vault-pass"
+	        owner: root
+|3,0,7,1,1,0,1787682087,"        owner: root"
 "8	LINE	0
-	#    Fase 06 (App Layer)     :  ansible-playbook site.yml --tags db_seed,app --ask-vault-pass
-|3,0,8,1,1,0,1787540270,"#    Fase 06 (App Layer)     :  ansible-playbook site.yml --tags db_seed,app --ask-vault-pass"
+	          nameserver 10.10.10.20
+|3,0,8,1,1,0,1787682087,"          nameserver 10.10.10.20"
 "9	LINE	0
-	#    Fase 05 (MariaDB)       :    ansible-playbook site.yml --tags database --ask-vault-pass
-|3,0,9,1,1,0,1787540269,"#    Fase 05 (MariaDB)       :    ansible-playbook site.yml --tags database --ask-vault-pass"
+	          search lab.systech.internal
+|3,0,9,1,1,0,1787682087,"          search lab.systech.internal"
 "-	CHAR	0
 	E
 |3,0,36,0,1,0,1787540265,"E"
 
 # File marks:
-'0  12  0  ~/incidents/004/004_remediation.yml
-|4,48,12,0,1787635210,"~/incidents/004/004_remediation.yml"
-'1  41  39  ~/ansible/SlidesPython/draw_infra.py
-|4,49,41,39,1787566042,"~/ansible/SlidesPython/draw_infra.py"
-'2  42  39  ~/ansible/SlidesPython/draw_infra.py
-|4,50,42,39,1787565929,"~/ansible/SlidesPython/draw_infra.py"
-'3  42  39  ~/ansible/SlidesPython/draw_infra.py
-|4,51,42,39,1787565929,"~/ansible/SlidesPython/draw_infra.py"
-'4  38  39  ~/ansible/SlidesPython/draw_infra.py
-|4,52,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
-'5  38  39  ~/ansible/SlidesPython/draw_infra.py
-|4,53,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
-'6  38  39  ~/ansible/SlidesPython/draw_infra.py
-|4,54,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
-'7  38  39  ~/ansible/SlidesPython/draw_infra.py
-|4,55,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
-'8  39  36  ~/ansible/SlidesPython/draw_infra.py
-|4,56,39,36,1787565804,"~/ansible/SlidesPython/draw_infra.py"
-'9  39  36  ~/ansible/SlidesPython/draw_infra.py
-|4,57,39,36,1787565804,"~/ansible/SlidesPython/draw_infra.py"
+'0  40  3  ~/incidents/005/005_remediation.yml
+|4,48,40,3,1787682262,"~/incidents/005/005_remediation.yml"
+'1  37  20  ~/incidents/005/005_remediation.yml
+|4,49,37,20,1787682224,"~/incidents/005/005_remediation.yml"
+'2  40  20  ~/incidents/005/005_remediation.yml
+|4,50,40,20,1787682224,"~/incidents/005/005_remediation.yml"
+'3  48  0  ~/incidents/005/005_remediation.yml
+|4,51,48,0,1787682091,"~/incidents/005/005_remediation.yml"
+'4  43  0  ~/incidents/005/005_remediation.yml
+|4,52,43,0,1787682091,"~/incidents/005/005_remediation.yml"
+'5  49  0  ~/incidents/005/005_remediation.yml
+|4,53,49,0,1787682091,"~/incidents/005/005_remediation.yml"
+'6  44  0  ~/incidents/005/005_remediation.yml
+|4,54,44,0,1787682091,"~/incidents/005/005_remediation.yml"
+'7  50  0  ~/incidents/005/005_remediation.yml
+|4,55,50,0,1787681940,"~/incidents/005/005_remediation.yml"
+'8  49  0  ~/incidents/005/005_remediation.yml
+|4,56,49,0,1787681940,"~/incidents/005/005_remediation.yml"
+'9  45  0  ~/incidents/005/005_remediation.yml
+|4,57,45,0,1787681940,"~/incidents/005/005_remediation.yml"
 
 # Jumplist (newest first):
+-'  40  3  ~/incidents/005/005_remediation.yml
+|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
+-'  37  20  ~/incidents/005/005_remediation.yml
+|4,39,37,20,1787682242,"~/incidents/005/005_remediation.yml"
+-'  40  20  ~/incidents/005/005_remediation.yml
+|4,39,40,20,1787682224,"~/incidents/005/005_remediation.yml"
+-'  48  0  ~/incidents/005/005_remediation.yml
+|4,39,48,0,1787682164,"~/incidents/005/005_remediation.yml"
+-'  49  0  ~/incidents/005/005_remediation.yml
+|4,39,49,0,1787682164,"~/incidents/005/005_remediation.yml"
+-'  43  0  ~/incidents/005/005_remediation.yml
+|4,39,43,0,1787682091,"~/incidents/005/005_remediation.yml"
+-'  44  0  ~/incidents/005/005_remediation.yml
+|4,39,44,0,1787682091,"~/incidents/005/005_remediation.yml"
+-'  50  0  ~/incidents/005/005_remediation.yml
+|4,39,50,0,1787682054,"~/incidents/005/005_remediation.yml"
+-'  45  0  ~/incidents/005/005_remediation.yml
+|4,39,45,0,1787682054,"~/incidents/005/005_remediation.yml"
+-'  51  0  ~/incidents/005/005_remediation.yml
+|4,39,51,0,1787682054,"~/incidents/005/005_remediation.yml"
+-'  46  0  ~/incidents/005/005_remediation.yml
+|4,39,46,0,1787682054,"~/incidents/005/005_remediation.yml"
+-'  49  0  ~/incidents/005/005_remediation.yml
+|4,39,49,0,1787681940,"~/incidents/005/005_remediation.yml"
+-'  44  0  ~/incidents/005/005_remediation.yml
+|4,39,44,0,1787681940,"~/incidents/005/005_remediation.yml"
+-'  50  0  ~/incidents/005/005_remediation.yml
+|4,39,50,0,1787681940,"~/incidents/005/005_remediation.yml"
+-'  45  0  ~/incidents/005/005_remediation.yml
+|4,39,45,0,1787681940,"~/incidents/005/005_remediation.yml"
+-'  30  10  ~/incidents/005/005_remediation.yml
+|4,39,30,10,1787681821,"~/incidents/005/005_remediation.yml"
+-'  46  10  ~/incidents/005/005_remediation.yml
+|4,39,46,10,1787681821,"~/incidents/005/005_remediation.yml"
+-'  30  10  ~/incidents/005/005_remediation.yml
+|4,39,30,10,1787681821,"~/incidents/005/005_remediation.yml"
+-'  41  10  ~/incidents/005/005_remediation.yml
+|4,39,41,10,1787681821,"~/incidents/005/005_remediation.yml"
+-'  30  10  ~/incidents/005/005_remediation.yml
+|4,39,30,10,1787681821,"~/incidents/005/005_remediation.yml"
+-'  30  10  ~/incidents/005/005_remediation.yml
+|4,39,30,10,1787681791,"~/incidents/005/005_remediation.yml"
+-'  33  0  ~/incidents/005/005_remediation.yml
+|4,39,33,0,1787681776,"~/incidents/005/005_remediation.yml"
+-'  33  0  ~/incidents/005/005_remediation.yml
+|4,39,33,0,1787681776,"~/incidents/005/005_remediation.yml"
+-'  33  0  ~/incidents/005/005_remediation.yml
+|4,39,33,0,1787681776,"~/incidents/005/005_remediation.yml"
+-'  33  0  ~/incidents/005/005_remediation.yml
+|4,39,33,0,1787681776,"~/incidents/005/005_remediation.yml"
+-'  33  0  ~/incidents/005/005_remediation.yml
+|4,39,33,0,1787681643,"~/incidents/005/005_remediation.yml"
+-'  26  0  ~/incidents/005/005_remediation.yml
+|4,39,26,0,1787681580,"~/incidents/005/005_remediation.yml"
+-'  26  0  ~/incidents/005/005_remediation.yml
+|4,39,26,0,1787681580,"~/incidents/005/005_remediation.yml"
+-'  26  0  ~/incidents/005/005_remediation.yml
+|4,39,26,0,1787681580,"~/incidents/005/005_remediation.yml"
+-'  26  0  ~/incidents/005/005_remediation.yml
+|4,39,26,0,1787681580,"~/incidents/005/005_remediation.yml"
+-'  26  0  ~/incidents/005/005_remediation.yml
+|4,39,26,0,1787681580,"~/incidents/005/005_remediation.yml"
+-'  26  0  ~/incidents/005/005_remediation.yml
+|4,39,26,0,1787681580,"~/incidents/005/005_remediation.yml"
+-'  26  0  ~/incidents/005/005_remediation.yml
+|4,39,26,0,1787681566,"~/incidents/005/005_remediation.yml"
+-'  16  35  ~/incidents/005/005_remediation.yml
+|4,39,16,35,1787681453,"~/incidents/005/005_remediation.yml"
+-'  16  35  ~/incidents/005/005_remediation.yml
+|4,39,16,35,1787681453,"~/incidents/005/005_remediation.yml"
+-'  16  35  ~/incidents/005/005_remediation.yml
+|4,39,16,35,1787681453,"~/incidents/005/005_remediation.yml"
+-'  16  35  ~/incidents/005/005_remediation.yml
+|4,39,16,35,1787681453,"~/incidents/005/005_remediation.yml"
+-'  16  35  ~/incidents/005/005_remediation.yml
+|4,39,16,35,1787681453,"~/incidents/005/005_remediation.yml"
+-'  16  35  ~/incidents/005/005_remediation.yml
+|4,39,16,35,1787681453,"~/incidents/005/005_remediation.yml"
+-'  16  35  ~/incidents/005/005_remediation.yml
+|4,39,16,35,1787681453,"~/incidents/005/005_remediation.yml"
+-'  16  35  ~/incidents/005/005_remediation.yml
+|4,39,16,35,1787681391,"~/incidents/005/005_remediation.yml"
+-'  1  0  ~/incidents/005/005_remediation.yml
+|4,39,1,0,1787681383,"~/incidents/005/005_remediation.yml"
+-'  1  0  ~/incidents/005/005_remediation.yml
+|4,39,1,0,1787681383,"~/incidents/005/005_remediation.yml"
+-'  1  0  ~/incidents/005/005_remediation.yml
+|4,39,1,0,1787681383,"~/incidents/005/005_remediation.yml"
+-'  1  0  ~/incidents/005/005_remediation.yml
+|4,39,1,0,1787681383,"~/incidents/005/005_remediation.yml"
+-'  1  0  ~/incidents/005/005_remediation.yml
+|4,39,1,0,1787681383,"~/incidents/005/005_remediation.yml"
+-'  1  0  ~/incidents/005/005_remediation.yml
+|4,39,1,0,1787681383,"~/incidents/005/005_remediation.yml"
+-'  1  0  ~/incidents/005/005_remediation.yml
+|4,39,1,0,1787681383,"~/incidents/005/005_remediation.yml"
+-'  1  0  ~/incidents/005/005_remediation.yml
+|4,39,1,0,1787681383,"~/incidents/005/005_remediation.yml"
+-'  17  0  ~/incidents/005/005_remediation.yml
+|4,39,17,0,1787681299,"~/incidents/005/005_remediation.yml"
+-'  18  0  ~/incidents/005/005_remediation.yml
+|4,39,18,0,1787681299,"~/incidents/005/005_remediation.yml"
+-'  17  0  ~/incidents/005/005_remediation.yml
+|4,39,17,0,1787681299,"~/incidents/005/005_remediation.yml"
+-'  18  0  ~/incidents/005/005_remediation.yml
+|4,39,18,0,1787681299,"~/incidents/005/005_remediation.yml"
+-'  17  0  ~/incidents/005/005_remediation.yml
+|4,39,17,0,1787681299,"~/incidents/005/005_remediation.yml"
+-'  18  0  ~/incidents/005/005_remediation.yml
+|4,39,18,0,1787681299,"~/incidents/005/005_remediation.yml"
+-'  17  0  ~/incidents/005/005_remediation.yml
+|4,39,17,0,1787681299,"~/incidents/005/005_remediation.yml"
+-'  18  0  ~/incidents/005/005_remediation.yml
+|4,39,18,0,1787681299,"~/incidents/005/005_remediation.yml"
+-'  17  0  ~/incidents/005/005_remediation.yml
+|4,39,17,0,1787681299,"~/incidents/005/005_remediation.yml"
+-'  18  0  ~/incidents/005/005_remediation.yml
+|4,39,18,0,1787681299,"~/incidents/005/005_remediation.yml"
+-'  17  0  ~/incidents/005/005_remediation.yml
+|4,39,17,0,1787681299,"~/incidents/005/005_remediation.yml"
+-'  18  0  ~/incidents/005/005_remediation.yml
+|4,39,18,0,1787681299,"~/incidents/005/005_remediation.yml"
+-'  17  0  ~/incidents/005/005_remediation.yml
+|4,39,17,0,1787681299,"~/incidents/005/005_remediation.yml"
+-'  18  0  ~/incidents/005/005_remediation.yml
+|4,39,18,0,1787681299,"~/incidents/005/005_remediation.yml"
+-'  18  0  ~/incidents/005/005_remediation.yml
+|4,39,18,0,1787681299,"~/incidents/005/005_remediation.yml"
+-'  1  0  ~/incidents/005/005_remediation.yml
+|4,39,1,0,1787680908,"~/incidents/005/005_remediation.yml"
 -'  12  0  ~/incidents/004/004_remediation.yml
 |4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
--'  1  0  ~/incidents/004/004_remediation.yml
-|4,39,1,0,1787635097,"~/incidents/004/004_remediation.yml"
--'  41  39  ~/ansible/SlidesPython/draw_infra.py
-|4,39,41,39,1787566042,"~/ansible/SlidesPython/draw_infra.py"
--'  41  39  ~/ansible/SlidesPython/draw_infra.py
-|4,39,41,39,1787566042,"~/ansible/SlidesPython/draw_infra.py"
--'  1  0  ~/ansible/SlidesPython/draw_infra.py
-|4,39,1,0,1787566026,"~/ansible/SlidesPython/draw_infra.py"
--'  1  0  ~/ansible/SlidesPython/draw_infra.py
-|4,39,1,0,1787566026,"~/ansible/SlidesPython/draw_infra.py"
--'  42  39  ~/ansible/SlidesPython/draw_infra.py
-|4,39,42,39,1787565929,"~/ansible/SlidesPython/draw_infra.py"
--'  42  39  ~/ansible/SlidesPython/draw_infra.py
-|4,39,42,39,1787565929,"~/ansible/SlidesPython/draw_infra.py"
--'  42  39  ~/ansible/SlidesPython/draw_infra.py
-|4,39,42,39,1787565929,"~/ansible/SlidesPython/draw_infra.py"
--'  42  39  ~/ansible/SlidesPython/draw_infra.py
-|4,39,42,39,1787565929,"~/ansible/SlidesPython/draw_infra.py"
--'  1  0  ~/ansible/SlidesPython/draw_infra.py
-|4,39,1,0,1787565920,"~/ansible/SlidesPython/draw_infra.py"
--'  1  0  ~/ansible/SlidesPython/draw_infra.py
-|4,39,1,0,1787565920,"~/ansible/SlidesPython/draw_infra.py"
--'  38  39  ~/ansible/SlidesPython/draw_infra.py
-|4,39,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
--'  38  39  ~/ansible/SlidesPython/draw_infra.py
-|4,39,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
--'  38  39  ~/ansible/SlidesPython/draw_infra.py
-|4,39,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
--'  38  39  ~/ansible/SlidesPython/draw_infra.py
-|4,39,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
--'  38  39  ~/ansible/SlidesPython/draw_infra.py
-|4,39,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
--'  38  39  ~/ansible/SlidesPython/draw_infra.py
-|4,39,38,39,1787565856,"~/ansible/SlidesPython/draw_infra.py"
--'  1  0  ~/ansible/SlidesPython/draw_infra.py
-|4,39,1,0,1787565848,"~/ansible/SlidesPython/draw_infra.py"
--'  1  0  ~/ansible/SlidesPython/draw_infra.py
-|4,39,1,0,1787565848,"~/ansible/SlidesPython/draw_infra.py"
--'  39  36  ~/ansible/SlidesPython/draw_infra.py
-|4,39,39,36,1787565804,"~/ansible/SlidesPython/draw_infra.py"
--'  39  36  ~/ansible/SlidesPython/draw_infra.py
-|4,39,39,36,1787565804,"~/ansible/SlidesPython/draw_infra.py"
--'  39  36  ~/ansible/SlidesPython/draw_infra.py
-|4,39,39,36,1787565804,"~/ansible/SlidesPython/draw_infra.py"
--'  39  36  ~/ansible/SlidesPython/draw_infra.py
-|4,39,39,36,1787565804,"~/ansible/SlidesPython/draw_infra.py"
--'  39  36  ~/ansible/SlidesPython/draw_infra.py
-|4,39,39,36,1787565804,"~/ansible/SlidesPython/draw_infra.py"
--'  39  36  ~/ansible/SlidesPython/draw_infra.py
-|4,39,39,36,1787565804,"~/ansible/SlidesPython/draw_infra.py"
--'  39  36  ~/ansible/SlidesPython/draw_infra.py
-|4,39,39,36,1787565804,"~/ansible/SlidesPython/draw_infra.py"
--'  39  36  ~/ansible/SlidesPython/draw_infra.py
-|4,39,39,36,1787565804,"~/ansible/SlidesPython/draw_infra.py"
--'  1  0  ~/ansible/SlidesPython/draw_infra.py
-|4,39,1,0,1787565757,"~/ansible/SlidesPython/draw_infra.py"
--'  1  0  ~/ansible/SlidesPython/draw_infra.py
-|4,39,1,0,1787565757,"~/ansible/SlidesPython/draw_infra.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  178  35  ~/ansible/generate_slide.py
-|4,39,178,35,1787556903,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  1  0  ~/ansible/generate_slide.py
-|4,39,1,0,1787556895,"~/ansible/generate_slide.py"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
--'  149  29  ~/terraform/main.tf
-|4,39,149,29,1787544927,"~/terraform/main.tf"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
+-'  12  0  ~/incidents/004/004_remediation.yml
+|4,39,12,0,1787635210,"~/incidents/004/004_remediation.yml"
 
 # History of marks within files (newest to oldest):
+
+> ~/incidents/005/005_remediation.yml
+	*	1787682261	0
+	"	40	3
+	^	40	4
+	.	37	3
+	+	10	26
+	+	11	41
+	+	16	35
+	+	10	36
+	+	11	35
+	+	17	0
+	+	16	35
+	+	16	36
+	+	26	0
+	+	48	0
+	+	45	10
+	+	50	0
+	+	41	0
+	+	35	20
+	+	26	3
+	+	48	0
+	+	37	20
+	+	37	37
+	+	40	20
+	+	37	3
 
 > ~/incidents/004/004_remediation.yml
 	*	1787635210	0
