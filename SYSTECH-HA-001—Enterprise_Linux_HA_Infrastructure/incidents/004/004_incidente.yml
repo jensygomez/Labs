@@ -49,8 +49,8 @@
     # TRAMPA 3 (Falso Negativo): Systemd masked (Log falso en journal)
     # =========================================================
     - name: "60 - Inject fake systemd masked message"
-      ansible.builtin.shell: |
-        systemd-cat -t systemd -p err "httpd.service: Unit configuration is masked, refusing to start."
+      ansible.builtin.command:
+        cmd: logger -t systemd -p err "httpd.service: Unit configuration is masked, refusing to start."
       when: not check_inject.stat.exists
 
     # =========================================================

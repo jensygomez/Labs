@@ -24,6 +24,7 @@
 #
 # 5. Listar todos los tags disponibles en este rol para consultar:
 #    ansible-playbook -i inventories/production/hosts.yml site.yml --list-tags
+#    ansible-playbook -i inventories/production/hosts.yml site.yml --ask-vault-pass
 # ==============================================================================
 
 - name: "Configurar Almacenamiento (NFS + iSCSI)"
