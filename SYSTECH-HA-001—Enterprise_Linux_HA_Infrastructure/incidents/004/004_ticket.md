@@ -27,14 +27,14 @@ traffic to the affected backend.
 
 RESOLUTION WORKFLOW (L1 STANDARD OPERATING PROCEDURE):
 1. Verify the symptom from the client side:
-   - ssh ansible@client01.lab.systech.local "/usr/local/bin/infinite_traffic.sh"
+   - ssh ansible@client01.lab.systech.internal "/usr/local/bin/infinite_traffic.sh"
    (Observe the 502 errors).
 
 2. Identify the root cause manually via CLI on the affected node.
    - Check service status: `systemctl status httpd`
    - Check boot persistence: `systemctl list-unit-files | grep httpd`
    - Check logs: `tail -n 50 /var/log/httpd/error_log`
-   - Verify DNS resolution (Don't get distracted!): `dig app02.lab.systech.local`
+   - Verify DNS resolution: `dig app02.lab.systech.internal`
 
 3. Resolve the issue manually (hotfix) and confirm.
 
