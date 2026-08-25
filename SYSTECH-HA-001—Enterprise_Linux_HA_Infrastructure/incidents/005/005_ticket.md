@@ -6,7 +6,7 @@ SUMMARY: client01 no puede resolver nombres de dominio internos ni externos.
 DESCRIPTION:
 El script de tráfico en `client01` (10.10.10.11) está fallando. 
 Además, el equipo de desarrollo reporta que no pueden hacer `curl` 
-o `ssh` usando nombres de dominio (ej. `app01.lab.systech.local`) 
+o `ssh` usando nombres de dominio (ej. `app01.lab.systech.internal`) 
 desde `client01`, solo funcionan las IPs directas.
 
 Context: 
@@ -23,10 +23,10 @@ no pueden usar FQDNs, rompiendo flujos de trabajo y pruebas.
 
 RESOLUTION WORKFLOW (L1 STANDARD OPERATING PROCEDURE):
 1. Verificar el síntoma desde el cliente:
-   - `ping app01.lab.systech.local` (¿Falla?)
+   - `ping app01.lab.systech.internal` (¿Falla?)
    - `ping 10.10.10.31` (¿Funciona?)
-   - `dig app01.lab.systech.local` (¿Qué DNS está usando?)
-   - `dig @10.10.10.20 app01.lab.systech.local` (¿El servidor DNS responde?)
+   - `dig app01.lab.systech.internal` (¿Qué DNS está usando?)
+   - `dig @10.10.10.20 app01.lab.systech.internal` (¿El servidor DNS responde?)
 
 2. Investigar la configuración del Resolver en client01:
    - Revisar `/etc/resolv.conf`.

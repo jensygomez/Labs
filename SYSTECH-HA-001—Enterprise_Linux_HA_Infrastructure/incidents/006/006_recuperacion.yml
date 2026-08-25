@@ -1,0 +1,85 @@
+---
+- name: "System State Reconciliation - Incident 006"
+  hosts: incident_006_target
+  become: true
+  gather_facts: true
+  tasks:
+    - name: "10 - Check if incident was injected"
+      ansible.builtin.stat:
+        path: /var/run/.incident_006_marker
+      register: check_inject
+
+    # =========================================================
+    # REMEDIACIÓN REAL: Fix the PATH in the script
+    # =========================================================
+    - name: "20 - Fix the broken PATH in the cleanup script"
+      ansible.builtin.lineinfile:
+        path: /usr/local/bin/cleanup_old_logs.sh
+        regexp: "^PATH=/opt/legacy/bin"
+        line: "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        state: present
+      when: check_inject.stat.exists
+
+    - name: "25 - Remove misleading comment from the script"
+      ansible.builtin.lineinfile:
+        path: /usr/local/bin/cleanup_old_logs.sh
+        regexp: "NOTE: SELinux is blocking"
+        state: absent
+      when: check_inject.stat.exists
+
+    # =========================================================
+    # LIMPIEZA DE TRAMPAS
+    # =========================================================
+    - name: "30 - Remove fake SELinux denial from audit log"
+      ansible.builtin.lineinfile:
+        path: /var/log/audit/audit.log
+        regexp: "type=AVC.*denied.*execute.*cleanup_old_logs.sh"
+        state: absent
+      when: check_inject.stat.exists
+
+    - name: "40 - Remove fake Permission Denied from cron log"
+      ansible.builtin.lineinfile:
+        path: /var/log/cron
+        regexp: "failed to execute: Permission denied.*cleanup_old_logs.sh"
+        state: absent
+      when: check_inject.stat.exists
+
+    # =========================================================
+    # VERIFICACIÓN
+    # =========================================================
+    - name: "50 - Run the cleanup script manually to verify it works"
+      ansible.builtin.command:
+        cmd: /usr/local/bin/cleanup_old_logs.sh
+      register: script_run
+      changed_when: false
+      when: check_inject.stat.exists
+
+    - name: "60 - Verify old log files are deleted"
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - /var/log/httpd/access.log.old1
+        - /var/log/httpd/error.log.old2
+        - /var/log/httpd/ssl_access.log.old3
+      register: old_files_check
+      when: check_inject.stat.exists
+
+    - name: "70 - Fail if old files still exist"
+      ansible.builtin.fail:
+        msg: "The script did not delete the old log files. PATH is still broken."
+      when: 
+        - check_inject.stat.exists
+        - item.stat.exists
+      loop: "{{ old_files_check.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: "80 - Remove injection marker"
+      ansible.builtin.file:
+        path: /var/run/.incident_006_marker
+        state: absent
+      when: check_inject.stat.exists
+
+    - name: "90 - Debug completion"
+      ansible.builtin.debug:
+        msg: "Reconciliation completed on {{ inventory_hostname }}. Cron job is fixed."

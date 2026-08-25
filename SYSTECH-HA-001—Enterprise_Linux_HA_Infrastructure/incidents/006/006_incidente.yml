@@ -1,0 +1,105 @@
+---
+- name: "System Deployment Validation - Incident 006 Injection"
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: "10 - Select target node"
+      ansible.builtin.set_fact:
+        target_node: "{{ groups['app_nodes'] | default(['app01']) | first }}"
+
+    - name: "20 - Add target to dynamic group"
+      ansible.builtin.add_host:
+        name: "{{ target_node }}"
+        groups: incident_006_target
+
+- name: "Inject Fault and Red Herrings"
+  hosts: incident_006_target
+  become: true
+  gather_facts: true
+  tasks:
+    - name: "30 - Check if already injected"
+      ansible.builtin.stat:
+        path: /var/run/.incident_006_marker
+      register: check_inject
+
+    # =========================================================
+    # TRAMPA 1 (Falso Positivo SELinux): Log en audit.log
+    # =========================================================
+    - name: "40 - Inject fake SELinux denial in audit log"
+      ansible.builtin.lineinfile:
+        path: /var/log/audit/audit.log
+        line: "type=AVC msg=audit({{ ansible_date_time.epoch }}.111:222): avc:  denied  { execute } for  pid=5678 comm=\"cleanup_old_logs.sh\" name=\"find\" scontext=system_u:system_r:crond_t:s0-s0:c0.c1023 tcontext=system_u:object_r:bin_t:s0 tclass=file"
+        insertbefore: BOF
+        state: present
+      when: not check_inject.stat.exists
+
+    # =========================================================
+    # TRAMPA 2 (Falso Negativo): Error falso en /var/log/cron
+    # =========================================================
+    - name: "50 - Inject fake Permission Denied in cron log"
+      ansible.builtin.lineinfile:
+        path: /var/log/cron
+        line: "{{ ansible_date_time.iso8601_basic_short }} {{ inventory_hostname }} CROND[9876]: (root) CMD (/usr/local/bin/cleanup_old_logs.sh) ... failed to execute: Permission denied"
+        insertbefore: BOF
+        state: present
+      when: not check_inject.stat.exists
+
+    # =========================================================
+    # CAUSA RAÍZ REAL: PATH roto en el script de cron
+    # =========================================================
+    - name: "60 - Create the broken cleanup script (Root Cause)"
+      ansible.builtin.copy:
+        dest: /usr/local/bin/cleanup_old_logs.sh
+        mode: '0755'
+        content: |
+          #!/bin/bash
+          # Daily log cleanup script
+          # Optimized by junior dev yesterday
+          
+          # TRAP: Overwriting PATH with a non-existent directory
+          # This makes standard commands like 'find' and 'rm' fail silently in cron
+          PATH=/opt/legacy/bin
+          
+          # Delete httpd logs older than 7 days
+          find /var/log/httpd -name "*.log" -type f -mtime +7 -delete
+      when: not check_inject.stat.exists
+
+    - name: "70 - Create dummy old log files to simulate full disk"
+      ansible.builtin.shell: |
+        touch -d "10 days ago" /var/log/httpd/access.log.old1
+        touch -d "15 days ago" /var/log/httpd/error.log.old2
+        touch -d "20 days ago" /var/log/httpd/ssl_access.log.old3
+      when: not check_inject.stat.exists
+
+    - name: "80 - Schedule the cron job"
+      ansible.builtin.cron:
+        name: "Daily log cleanup"
+        minute: "0"
+        hour: "2"
+        job: "/usr/local/bin/cleanup_old_logs.sh"
+        user: root
+        state: present
+      when: not check_inject.stat.exists
+
+    # =========================================================
+    # TRAMPA 3 (Pista Falsa): Comentario engañoso en el script
+    # =========================================================
+    - name: "90 - Add misleading comment to the script"
+      ansible.builtin.lineinfile:
+        path: /usr/local/bin/cleanup_old_logs.sh
+        line: "# NOTE: SELinux is blocking the execution, check audit.log!"
+        insertafter: "^#!/bin/bash"
+        state: present
+      when: not check_inject.stat.exists
+
+    - name: "100 - Create injection marker"
+      ansible.builtin.file:
+        path: /var/run/.incident_006_marker
+        state: touch
+        mode: '0400'
+      when: not check_inject.stat.exists
+
+    - name: "110 - Debug completion"
+      ansible.builtin.debug:
+        msg: "Incident 006 injected successfully on {{ inventory_hostname }}."
