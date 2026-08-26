@@ -24,6 +24,18 @@
       register: check_inject
 
     # =========================================================
+    # PREPARACIÓN: Garantizar directorio de logs de prueba
+    # =========================================================
+    - name: "35 - Ensure httpd log directory exists"
+      ansible.builtin.file:
+        path: /var/log/httpd
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      when: not check_inject.stat.exists
+
+    # =========================================================
     # TRAMPA 1 (Falso Positivo SELinux): Log en audit.log
     # =========================================================
     - name: "40 - Inject fake SELinux denial in audit log"
@@ -31,6 +43,8 @@
         path: /var/log/audit/audit.log
         line: "type=AVC msg=audit({{ ansible_date_time.epoch }}.111:222): avc:  denied  { execute } for  pid=5678 comm=\"cleanup_old_logs.sh\" name=\"find\" scontext=system_u:system_r:crond_t:s0-s0:c0.c1023 tcontext=system_u:object_r:bin_t:s0 tclass=file"
         insertbefore: BOF
+        create: true
+        mode: '0600'
         state: present
       when: not check_inject.stat.exists
 
@@ -42,6 +56,8 @@
         path: /var/log/cron
         line: "{{ ansible_date_time.iso8601_basic_short }} {{ inventory_hostname }} CROND[9876]: (root) CMD (/usr/local/bin/cleanup_old_logs.sh) ... failed to execute: Permission denied"
         insertbefore: BOF
+        create: true
+        mode: '0600'
         state: present
       when: not check_inject.stat.exists
 
@@ -56,13 +72,14 @@
           #!/bin/bash
           # Daily log cleanup script
           # Optimized by junior dev yesterday
+          # NOTE: SELinux is blocking the execution, check audit.log!
           
           # TRAP: Overwriting PATH with a non-existent directory
           # This makes standard commands like 'find' and 'rm' fail silently in cron
           PATH=/opt/legacy/bin
           
           # Delete httpd logs older than 7 days
-          find /var/log/httpd -name "*.log" -type f -mtime +7 -delete
+          find /var/log/httpd -name "*.log*" -type f -mtime +7 -delete
       when: not check_inject.stat.exists
 
     - name: "70 - Create dummy old log files to simulate full disk"
@@ -72,27 +89,30 @@
         touch -d "20 days ago" /var/log/httpd/ssl_access.log.old3
       when: not check_inject.stat.exists
 
-    - name: "80 - Schedule the cron job"
-      ansible.builtin.cron:
-        name: "Daily log cleanup"
-        minute: "0"
-        hour: "2"
-        job: "/usr/local/bin/cleanup_old_logs.sh"
-        user: root
-        state: present
+    # =========================================================
+    # PROGRAMACIÓN Y SALIDA DE CORREO LOCAL (Fiel al Ticket)
+    # =========================================================
+    - name: "80 - Schedule cron job in /etc/cron.d/log_cleanup"
+      ansible.builtin.copy:
+        dest: /etc/cron.d/log_cleanup
+        mode: '0644'
+        content: |
+          0 2 * * * root /usr/local/bin/cleanup_old_logs.sh
       when: not check_inject.stat.exists
 
-    # =========================================================
-    # TRAMPA 3 (Pista Falsa): Comentario engañoso en el script
-    # =========================================================
-    - name: "90 - Add misleading comment to the script"
+    - name: "85 - Inject fake cron execution error in root mail spool"
       ansible.builtin.lineinfile:
-        path: /usr/local/bin/cleanup_old_logs.sh
-        line: "# NOTE: SELinux is blocking the execution, check audit.log!"
-        insertafter: "^#!/bin/bash"
+        path: /var/spool/mail/root
+        create: true
+        mode: '0600'
+        line: "From root@{{ inventory_hostname }} Tue Aug 25 02:00:01 2026\nSubject: Cron <root@{{ inventory_hostname }}> /usr/local/bin/cleanup_old_logs.sh\n\n/usr/local/bin/cleanup_old_logs.sh: line 10: find: command not found\n"
+        insertbefore: BOF
         state: present
       when: not check_inject.stat.exists
 
+    # =========================================================
+    # MARCADOR DE INYECCIÓN
+    # =========================================================
     - name: "100 - Create injection marker"
       ansible.builtin.file:
         path: /var/run/.incident_006_marker

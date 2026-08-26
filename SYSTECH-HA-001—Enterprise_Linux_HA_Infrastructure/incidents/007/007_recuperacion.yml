@@ -1,0 +1,42 @@
+---
+- name: "System State Reconciliation - Incident 007"
+  hosts: incident_007_target
+  become: true
+  gather_facts: false
+  tasks:
+    - name: "10 - Check if incident was injected"
+      ansible.builtin.stat:
+        path: /var/run/.incident_007_marker
+      register: check_inject
+
+    # =========================================================
+    # REMEDIACIÓN REAL: Restaurar Permisos SSH Estándar
+    # =========================================================
+    - name: "20 - Restore standard permissions on ~/.ssh directory"
+      ansible.builtin.file:
+        path: /home/devuser/.ssh
+        owner: devuser
+        group: devuser
+        mode: '0700'
+      when: check_inject.stat.exists
+
+    - name: "30 - Restore standard permissions on authorized_keys file"
+      ansible.builtin.file:
+        path: /home/devuser/.ssh/authorized_keys
+        owner: devuser
+        group: devuser
+        mode: '0600'
+      when: check_inject.stat.exists
+
+    # =========================================================
+    # LIMPIEZA
+    # =========================================================
+    - name: "40 - Remove injection marker"
+      ansible.builtin.file:
+        path: /var/run/.incident_007_marker
+        state: absent
+      when: check_inject.stat.exists
+
+    - name: "50 - Debug completion"
+      ansible.builtin.debug:
+        msg: "Reconciliation completed on {{ inventory_hostname }}. SSH key permissions fixed."

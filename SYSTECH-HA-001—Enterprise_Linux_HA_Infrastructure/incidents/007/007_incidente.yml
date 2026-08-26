@@ -1,0 +1,82 @@
+---
+- name: "System Deployment Validation - Incident 007 Injection"
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: "10 - Select target node"
+      ansible.builtin.set_fact:
+        target_node: "{{ groups['app_nodes'] | default(['app01']) | first }}"
+
+    - name: "20 - Add target to dynamic group"
+      ansible.builtin.add_host:
+        name: "{{ target_node }}"
+        groups: incident_007_target
+
+- name: "Inject Fault and Red Herrings - Incident 007"
+  hosts: incident_007_target
+  become: true
+  gather_facts: true
+  tasks:
+    - name: "30 - Check if already injected"
+      ansible.builtin.stat:
+        path: /var/run/.incident_007_marker
+      register: check_inject
+
+    # =========================================================
+    # PREPARACIÓN (Garantizar Estado Base)
+    # =========================================================
+    - name: "35 - Create devuser if not present"
+      ansible.builtin.user:
+        name: devuser
+        shell: /bin/bash
+        state: present
+      when: not check_inject.stat.exists
+
+    - name: "36 - Ensure ~/.ssh directory exists"
+      ansible.builtin.file:
+        path: /home/devuser/.ssh
+        state: directory
+        owner: devuser
+        group: devuser
+        mode: '0700'
+      when: not check_inject.stat.exists
+
+    - name: "37 - Generate dummy authorized_keys for devuser"
+      ansible.builtin.copy:
+        dest: /home/devuser/.ssh/authorized_keys
+        content: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleDummyKeyForDevUserTestOnly devuser@systech"
+        owner: devuser
+        group: devuser
+        mode: '0600'
+      when: not check_inject.stat.exists
+
+    # =========================================================
+    # CAUSA RAÍZ REAL: Modificar permisos a valores inseguros
+    # OpenSSH ignora la llave si .ssh tiene permisos 0777 (world-writable)
+    # =========================================================
+    - name: "40 - Break permissions on devuser .ssh folder"
+      ansible.builtin.file:
+        path: /home/devuser/.ssh
+        mode: '0777'
+      when: not check_inject.stat.exists
+
+    - name: "50 - Break permissions on authorized_keys file"
+      ansible.builtin.file:
+        path: /home/devuser/.ssh/authorized_keys
+        mode: '0777'
+      when: not check_inject.stat.exists
+
+    # =========================================================
+    # MARCADOR DE INYECCIÓN
+    # =========================================================
+    - name: "60 - Create injection marker"
+      ansible.builtin.file:
+        path: /var/run/.incident_007_marker
+        state: touch
+        mode: '0400'
+      when: not check_inject.stat.exists
+
+    - name: "70 - Debug completion"
+      ansible.builtin.debug:
+        msg: "Incident 007 injected successfully on {{ inventory_hostname }}. Devuser SSH key access broken."
