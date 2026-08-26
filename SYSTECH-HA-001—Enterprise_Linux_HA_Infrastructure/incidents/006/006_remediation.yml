@@ -1,0 +1,40 @@
+
+---
+- name: Remediation OPS-1072 - Log Cleanup Fix"
+  hosts: app_nodes
+  become: true 
+  gather_facts: false
+  tasks:
+    - name: "TASK 1: Ensure directory /usr/local/bin exists"
+      ansible.builtin.file:
+        path: /usr/local/bin
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+
+    - name: "TASK 2: Deply corected log cleanup script"
+      ansible.builtin.copy:
+        dest: /usr/local/bin/cleanup_old_logs.sh
+        owner: root
+        group: root
+        mode: '0755'
+        content: |
+          #!/bin/bash
+          # Daily log cleanup script
+          PATH=/usr/local/sbin:/usr/local/bin:/usr/bin:/sbin:/bin
+
+          # Delete httpd logs older than 7 days
+          find /var/log/httpd -name "*.log*" -type f -mtime +7 -delete
+
+    - name: "TASK 3: Ensure cron job is configured in /etc/cron.d/log_cleanup"
+      ansible.builtin.copy:
+        dest: /etc/cron.d/log_cleanup
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          0 2 * * * root /usr/local/bin/cleanup_old_logs.sh
+
+

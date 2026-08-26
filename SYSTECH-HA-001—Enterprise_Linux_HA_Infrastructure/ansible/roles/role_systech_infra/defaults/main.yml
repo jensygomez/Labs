@@ -26,9 +26,4 @@ iscsi_initiator_iqn: "iqn.2026-08.com.systech:db01.initiator"
 iscsi_lv_name: "lv_db_iscsi"
 iscsi_lv_size: "1.5G"
 
-# --- VARIABLES ZABBIX (monitoring_nodes / zabbix01) ---
-zabbix_version: "7.0"   # LTS, soporte hasta 2029
-zabbix_release_pkg_version: "7.0-2"   # versión del paquete zabbix-release en el repo oficial
-zabbix_db_name: "zabbix_db"
-zabbix_db_user: "zabbix_user"
-zabbix_db_pass: "ZabbixSecurePass123!"   # mover a Vault cuando esté todo validado
+
