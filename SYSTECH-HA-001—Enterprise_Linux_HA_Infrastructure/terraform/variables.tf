@@ -28,8 +28,8 @@ variable "lxc_containers" {
     role      = string
   }))
   default = {
-    "lb01" = { vmid = 101, ip = "10.10.10.21/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
-    "lb02" = { vmid = 102, ip = "10.10.10.22/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
+    "lb01"   = { vmid = 101, ip = "10.10.10.21/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
+    "lb02"   = { vmid = 102, ip = "10.10.10.22/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
     "client" = { vmid = 111, ip = "10.10.10.11/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
   }
 }
@@ -46,10 +46,10 @@ variable "cluster_nodes" {
     role        = string
   }))
   default = {
-    "app01" = { vmid = 201, ip = "10.10.10.31/24", cores = 2, memory = 2048, extra_disks = [], role = "app" }
-    "app02" = { vmid = 202, ip = "10.10.10.32/24", cores = 2, memory = 2048, extra_disks = [], role = "app" }
-    "app03" = { vmid = 203, ip = "10.10.10.33/24", cores = 2, memory = 2048, extra_disks = [], role = "app" }
-    "db01"  = { vmid = 301, ip = "10.10.10.40/24", cores = 2, memory = 4096, extra_disks = [20], role = "db" }
+    "app01"     = { vmid = 201, ip = "10.10.10.31/24", cores = 2, memory = 2048, extra_disks = [], role = "app" }
+    "app02"     = { vmid = 202, ip = "10.10.10.32/24", cores = 2, memory = 2048, extra_disks = [], role = "app" }
+    "app03"     = { vmid = 203, ip = "10.10.10.33/24", cores = 2, memory = 2048, extra_disks = [], role = "app" }
+    "db01"      = { vmid = 301, ip = "10.10.10.40/24", cores = 2, memory = 4096, extra_disks = [20], role = "db" }
     "storage01" = { vmid = 401, ip = "10.10.10.50/24", cores = 2, memory = 2048, extra_disks = [10, 10, 10, 10], role = "storage" }
   }
 }

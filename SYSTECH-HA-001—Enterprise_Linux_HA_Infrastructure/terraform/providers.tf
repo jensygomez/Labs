@@ -14,7 +14,6 @@ terraform {
 
 provider "proxmox" {
   endpoint  = "https://100.93.29.93:8006/" # IP de Taiscale
-  username  = "root@pam"                   # o el usuario que uses (ej. "usuario@pve")
-  password  = var.proxmox_password         # lo definiremos en variables
+  api_token = var.proxmox_api_token        # la que está en Vault
   insecure  = true                         # solo para pruebas, después cámbialo a false
 }
