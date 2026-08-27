@@ -1,0 +1,2475 @@
+{
+  "version": 4,
+  "terraform_version": "1.12.6",
+  "serial": 103,
+  "lineage": "ae46a54b-4012-aecb-a5b1-5574a32e3c58",
+  "outputs": {
+    "cluster_ip_addresses": {
+      "value": {
+        "app01": "10.10.10.31",
+        "app02": "10.10.10.32",
+        "app03": "10.10.10.33",
+        "db01": "10.10.10.40",
+        "storage01": "10.10.10.50"
+      },
+      "type": [
+        "object",
+        {
+          "app01": "string",
+          "app02": "string",
+          "app03": "string",
+          "db01": "string",
+          "storage01": "string"
+        }
+      ]
+    },
+    "lxc_ip_addresses": {
+      "value": {
+        "client01": "10.10.10.11",
+        "dns01": "10.10.10.20",
+        "lb01": "10.10.10.21",
+        "lb02": "10.10.10.22",
+        "test": "10.10.10.23",
+        "zabbix01": "10.10.10.90"
+      },
+      "type": [
+        "object",
+        {
+          "client01": "string",
+          "dns01": "string",
+          "lb01": "string",
+          "lb02": "string",
+          "test": "string",
+          "zabbix01": "string"
+        }
+      ]
+    }
+  },
+  "resources": [
+    {
+      "mode": "managed",
+      "type": "local_file",
+      "name": "ansible_inventory",
+      "provider": "provider[\"registry.opentofu.org/hashicorp/local\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "content": "---\nall:\n  children:\n    app_nodes:\n      hosts:\n        app01:\n          ansible_host: 10.10.10.31\n        app02:\n          ansible_host: 10.10.10.32\n        app03:\n          ansible_host: 10.10.10.33\n    client_nodes:\n      hosts:\n        client01:\n          ansible_host: 10.10.10.11\n    db_nodes:\n      hosts:\n        db01:\n          ansible_host: 10.10.10.40\n    dns_nodes:\n      hosts:\n        dns01:\n          ansible_host: 10.10.10.20\n    lb_nodes:\n      hosts:\n        lb01:\n          ansible_host: 10.10.10.21\n        lb02:\n          ansible_host: 10.10.10.22\n    monitoring_nodes:\n      hosts:\n        zabbix01:\n          ansible_host: 10.10.10.90\n    storage_nodes:\n      hosts:\n        storage01:\n          ansible_host: 10.10.10.50\n  vars:\n    ansible_user: ansible\n    ansible_ssh_private_key_file: ~/.ssh/id_systech_control\n    ansible_python_interpreter: /usr/bin/python3\n",
+            "content_base64": null,
+            "content_base64sha256": "INmQgCDq2FVD3gOoxe7xq3pwCVNOi9wGpfcCNwuxQLE=",
+            "content_base64sha512": "jhBejB6LLswURJT9mX6goGpNb/h42IJNMyoWqhF6/0tsXVZuwppRaf9M3W7s/Y1JOb8NQDe3QXkPUYmVq5s8Vg==",
+            "content_md5": "34737272378991fd07b969bf7d4114ca",
+            "content_sha1": "fc169bce5ec31df70d27a36161245547c75d4612",
+            "content_sha256": "20d9908020ead85543de03a8c5eef1ab7a7009534e8bdc06a5f702370bb140b1",
+            "content_sha512": "8e105e8c1e8b2ecc144494fd997ea0a06a4d6ff878d8824d332a16aa117aff4b6c5d566ec29a5169ff4cdd6eecfd8d4939bf0d4037b741790f518995ab9b3c56",
+            "directory_permission": "0777",
+            "file_permission": "0777",
+            "filename": "./../ansible/inventories/production/hosts.yml",
+            "id": "fc169bce5ec31df70d27a36161245547c75d4612",
+            "sensitive_content": null,
+            "source": null
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "sensitive_content"
+              }
+            ]
+          ],
+          "dependencies": [
+            "proxmox_download_file.almalinux_cloud_image",
+            "proxmox_download_file.lxc_template",
+            "proxmox_virtual_environment_container.lxc_cluster",
+            "proxmox_virtual_environment_file.cloud_meta_config",
+            "proxmox_virtual_environment_file.cloud_user_config",
+            "proxmox_virtual_environment_vm.almalinux_cluster"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "null_resource",
+      "name": "lxc_provision_user",
+      "provider": "provider[\"registry.opentofu.org/hashicorp/null\"]",
+      "instances": [
+        {
+          "index_key": "client01",
+          "schema_version": 0,
+          "attributes": {
+            "id": "5043780075245713676",
+            "triggers": {
+              "container_id": "111",
+              "ssh_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrydHAOV1y3+5EVfTlkjIf0pmBdAsM3E2f49BOZ635k systech-control"
+            }
+          },
+          "sensitive_attributes": [],
+          "dependencies": [
+            "proxmox_download_file.lxc_template",
+            "proxmox_virtual_environment_container.lxc_cluster"
+          ]
+        },
+        {
+          "index_key": "dns01",
+          "schema_version": 0,
+          "attributes": {
+            "id": "2666474854193439840",
+            "triggers": {
+              "container_id": "121",
+              "ssh_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrydHAOV1y3+5EVfTlkjIf0pmBdAsM3E2f49BOZ635k systech-control"
+            }
+          },
+          "sensitive_attributes": [],
+          "dependencies": [
+            "proxmox_download_file.lxc_template",
+            "proxmox_virtual_environment_container.lxc_cluster"
+          ]
+        },
+        {
+          "index_key": "lb01",
+          "schema_version": 0,
+          "attributes": {
+            "id": "7591138622350250844",
+            "triggers": {
+              "container_id": "221",
+              "ssh_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrydHAOV1y3+5EVfTlkjIf0pmBdAsM3E2f49BOZ635k systech-control"
+            }
+          },
+          "sensitive_attributes": [],
+          "dependencies": [
+            "proxmox_download_file.lxc_template",
+            "proxmox_virtual_environment_container.lxc_cluster"
+          ]
+        },
+        {
+          "index_key": "lb02",
+          "schema_version": 0,
+          "attributes": {
+            "id": "420693630329246962",
+            "triggers": {
+              "container_id": "222",
+              "ssh_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrydHAOV1y3+5EVfTlkjIf0pmBdAsM3E2f49BOZ635k systech-control"
+            }
+          },
+          "sensitive_attributes": [],
+          "dependencies": [
+            "proxmox_download_file.lxc_template",
+            "proxmox_virtual_environment_container.lxc_cluster"
+          ]
+        },
+        {
+          "index_key": "test",
+          "schema_version": 0,
+          "attributes": {
+            "id": "6309412762314710825",
+            "triggers": {
+              "container_id": "223",
+              "ssh_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrydHAOV1y3+5EVfTlkjIf0pmBdAsM3E2f49BOZ635k systech-control"
+            }
+          },
+          "sensitive_attributes": [],
+          "dependencies": [
+            "proxmox_download_file.lxc_template",
+            "proxmox_virtual_environment_container.lxc_cluster"
+          ]
+        },
+        {
+          "index_key": "zabbix01",
+          "schema_version": 0,
+          "attributes": {
+            "id": "1198951768916375696",
+            "triggers": {
+              "container_id": "990",
+              "ssh_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrydHAOV1y3+5EVfTlkjIf0pmBdAsM3E2f49BOZ635k systech-control"
+            }
+          },
+          "sensitive_attributes": [],
+          "dependencies": [
+            "proxmox_download_file.lxc_template",
+            "proxmox_virtual_environment_container.lxc_cluster"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "proxmox_download_file",
+      "name": "almalinux_cloud_image",
+      "provider": "provider[\"registry.opentofu.org/bpg/proxmox\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "checksum": null,
+            "checksum_algorithm": null,
+            "content_type": "iso",
+            "datastore_id": "local",
+            "decompression_algorithm": null,
+            "file_name": "almalinux-9-cloudinit.iso",
+            "id": "local:iso/almalinux-9-cloudinit.iso",
+            "node_name": "homelab",
+            "overwrite": true,
+            "overwrite_unmanaged": false,
+            "size": 589299712,
+            "upload_timeout": 600,
+            "url": "https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/AlmaLinux-9-GenericCloud-latest.x86_64.qcow2",
+            "verify": true
+          },
+          "sensitive_attributes": [],
+          "private": "eyJvcmlnaW5hbF9zdGF0ZV9zaXplIjoiTlRnNU1qazVOekV5IiwidXJsX3NpemUiOiJOVGc1TWprNU56RXkifQ=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "proxmox_download_file",
+      "name": "lxc_template",
+      "provider": "provider[\"registry.opentofu.org/bpg/proxmox\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "checksum": null,
+            "checksum_algorithm": null,
+            "content_type": "vztmpl",
+            "datastore_id": "local",
+            "decompression_algorithm": null,
+            "file_name": "ubuntu-24.04-standard_24.04-2_amd64.tar.zst",
+            "id": "local:vztmpl/ubuntu-24.04-standard_24.04-2_amd64.tar.zst",
+            "node_name": "homelab",
+            "overwrite": true,
+            "overwrite_unmanaged": false,
+            "size": 141589318,
+            "upload_timeout": 600,
+            "url": "http://download.proxmox.com/images/system/ubuntu-24.04-standard_24.04-2_amd64.tar.zst",
+            "verify": true
+          },
+          "sensitive_attributes": [],
+          "private": "eyJvcmlnaW5hbF9zdGF0ZV9zaXplIjoiTVRReE5UZzVNekU0IiwidXJsX3NpemUiOiJNVFF4TlRnNU16RTQifQ=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "proxmox_virtual_environment_container",
+      "name": "lxc_cluster",
+      "provider": "provider[\"registry.opentofu.org/bpg/proxmox\"]",
+      "instances": [
+        {
+          "index_key": "client01",
+          "schema_version": 0,
+          "attributes": {
+            "clone": [],
+            "console": [],
+            "cpu": [
+              {
+                "architecture": "amd64",
+                "cores": 1,
+                "limit": 0,
+                "units": 0
+              }
+            ],
+            "description": "",
+            "device_passthrough": [],
+            "disk": [
+              {
+                "acl": false,
+                "datastore_id": "local-lvm",
+                "mount_options": [],
+                "path_in_datastore": "local-lvm:vm-111-disk-0",
+                "quota": false,
+                "replicate": false,
+                "size": 8
+              }
+            ],
+            "environment_variables": {},
+            "features": [
+              {
+                "fuse": false,
+                "keyctl": false,
+                "mknod": false,
+                "mount": [],
+                "nesting": true
+              }
+            ],
+            "hook_script_file_id": "",
+            "id": "111",
+            "idmap": [],
+            "initialization": [
+              {
+                "dns": [],
+                "entrypoint": "",
+                "hostname": "client01",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "10.10.10.11/24",
+                        "gateway": "10.10.10.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "user_account": [
+                  {
+                    "keys": [
+                      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrydHAOV1y3+5EVfTlkjIf0pmBdAsM3E2f49BOZ635k systech-control"
+                    ],
+                    "password": ""
+                  }
+                ]
+              }
+            ],
+            "ipv4": {
+              "eth0": "10.10.10.11"
+            },
+            "ipv6": {
+              "eth0": "fe80::be24:11ff:fe0a:2975"
+            },
+            "memory": [
+              {
+                "dedicated": 512,
+                "swap": 0
+              }
+            ],
+            "mount_point": [],
+            "network_interface": [
+              {
+                "bridge": "vmbr1",
+                "enabled": true,
+                "firewall": false,
+                "host_managed": false,
+                "mac_address": "BC:24:11:0A:29:75",
+                "mtu": 0,
+                "name": "eth0",
+                "rate_limit": 0,
+                "vlan_id": 0
+              }
+            ],
+            "node_name": "homelab",
+            "operating_system": [
+              {
+                "template_file_id": "local:vztmpl/ubuntu-24.04-standard_24.04-2_amd64.tar.zst",
+                "type": "ubuntu"
+              }
+            ],
+            "pool_id": null,
+            "protection": false,
+            "start_on_boot": true,
+            "started": true,
+            "startup": [],
+            "tags": [],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_delete": 60,
+            "timeout_start": 300,
+            "timeout_update": 1800,
+            "unprivileged": true,
+            "vm_id": 111,
+            "wait_for_ip": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "initialization"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "user_account"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "password"
+              }
+            ]
+          ],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "proxmox_download_file.lxc_template"
+          ]
+        },
+        {
+          "index_key": "dns01",
+          "schema_version": 0,
+          "attributes": {
+            "clone": [],
+            "console": [],
+            "cpu": [
+              {
+                "architecture": "amd64",
+                "cores": 1,
+                "limit": 0,
+                "units": 0
+              }
+            ],
+            "description": "",
+            "device_passthrough": [],
+            "disk": [
+              {
+                "acl": false,
+                "datastore_id": "local-lvm",
+                "mount_options": [],
+                "path_in_datastore": "local-lvm:vm-121-disk-0",
+                "quota": false,
+                "replicate": false,
+                "size": 8
+              }
+            ],
+            "environment_variables": {},
+            "features": [
+              {
+                "fuse": false,
+                "keyctl": false,
+                "mknod": false,
+                "mount": [],
+                "nesting": true
+              }
+            ],
+            "hook_script_file_id": "",
+            "id": "121",
+            "idmap": [],
+            "initialization": [
+              {
+                "dns": [],
+                "entrypoint": "",
+                "hostname": "dns01",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "10.10.10.20/24",
+                        "gateway": "10.10.10.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "user_account": [
+                  {
+                    "keys": [
+                      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrydHAOV1y3+5EVfTlkjIf0pmBdAsM3E2f49BOZ635k systech-control"
+                    ],
+                    "password": ""
+                  }
+                ]
+              }
+            ],
+            "ipv4": {
+              "eth0": "10.10.10.20"
+            },
+            "ipv6": {
+              "eth0": "fe80::be24:11ff:fed1:a0da"
+            },
+            "memory": [
+              {
+                "dedicated": 512,
+                "swap": 0
+              }
+            ],
+            "mount_point": [],
+            "network_interface": [
+              {
+                "bridge": "vmbr1",
+                "enabled": true,
+                "firewall": false,
+                "host_managed": false,
+                "mac_address": "BC:24:11:D1:A0:DA",
+                "mtu": 0,
+                "name": "eth0",
+                "rate_limit": 0,
+                "vlan_id": 0
+              }
+            ],
+            "node_name": "homelab",
+            "operating_system": [
+              {
+                "template_file_id": "local:vztmpl/ubuntu-24.04-standard_24.04-2_amd64.tar.zst",
+                "type": "ubuntu"
+              }
+            ],
+            "pool_id": null,
+            "protection": false,
+            "start_on_boot": true,
+            "started": true,
+            "startup": [],
+            "tags": [],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_delete": 60,
+            "timeout_start": 300,
+            "timeout_update": 1800,
+            "unprivileged": true,
+            "vm_id": 121,
+            "wait_for_ip": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "initialization"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "user_account"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "password"
+              }
+            ]
+          ],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "proxmox_download_file.lxc_template"
+          ]
+        },
+        {
+          "index_key": "lb01",
+          "schema_version": 0,
+          "attributes": {
+            "clone": [],
+            "console": [],
+            "cpu": [
+              {
+                "architecture": "amd64",
+                "cores": 1,
+                "limit": 0,
+                "units": 0
+              }
+            ],
+            "description": "",
+            "device_passthrough": [],
+            "disk": [
+              {
+                "acl": false,
+                "datastore_id": "local-lvm",
+                "mount_options": [],
+                "path_in_datastore": "local-lvm:vm-221-disk-0",
+                "quota": false,
+                "replicate": false,
+                "size": 8
+              }
+            ],
+            "environment_variables": {},
+            "features": [
+              {
+                "fuse": false,
+                "keyctl": false,
+                "mknod": false,
+                "mount": [],
+                "nesting": true
+              }
+            ],
+            "hook_script_file_id": "",
+            "id": "221",
+            "idmap": [],
+            "initialization": [
+              {
+                "dns": [],
+                "entrypoint": "",
+                "hostname": "lb01",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "10.10.10.21/24",
+                        "gateway": "10.10.10.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "user_account": [
+                  {
+                    "keys": [
+                      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrydHAOV1y3+5EVfTlkjIf0pmBdAsM3E2f49BOZ635k systech-control"
+                    ],
+                    "password": ""
+                  }
+                ]
+              }
+            ],
+            "ipv4": {
+              "eth0": "10.10.10.21"
+            },
+            "ipv6": {
+              "eth0": "fe80::be24:11ff:fe65:3cc4"
+            },
+            "memory": [
+              {
+                "dedicated": 512,
+                "swap": 0
+              }
+            ],
+            "mount_point": [],
+            "network_interface": [
+              {
+                "bridge": "vmbr1",
+                "enabled": true,
+                "firewall": false,
+                "host_managed": false,
+                "mac_address": "BC:24:11:65:3C:C4",
+                "mtu": 0,
+                "name": "eth0",
+                "rate_limit": 0,
+                "vlan_id": 0
+              }
+            ],
+            "node_name": "homelab",
+            "operating_system": [
+              {
+                "template_file_id": "local:vztmpl/ubuntu-24.04-standard_24.04-2_amd64.tar.zst",
+                "type": "ubuntu"
+              }
+            ],
+            "pool_id": null,
+            "protection": false,
+            "start_on_boot": true,
+            "started": true,
+            "startup": [],
+            "tags": [],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_delete": 60,
+            "timeout_start": 300,
+            "timeout_update": 1800,
+            "unprivileged": true,
+            "vm_id": 221,
+            "wait_for_ip": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "initialization"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "user_account"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "password"
+              }
+            ]
+          ],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "proxmox_download_file.lxc_template"
+          ]
+        },
+        {
+          "index_key": "lb02",
+          "schema_version": 0,
+          "attributes": {
+            "clone": [],
+            "console": [],
+            "cpu": [
+              {
+                "architecture": "amd64",
+                "cores": 1,
+                "limit": 0,
+                "units": 0
+              }
+            ],
+            "description": "",
+            "device_passthrough": [],
+            "disk": [
+              {
+                "acl": false,
+                "datastore_id": "local-lvm",
+                "mount_options": [],
+                "path_in_datastore": "local-lvm:vm-222-disk-0",
+                "quota": false,
+                "replicate": false,
+                "size": 8
+              }
+            ],
+            "environment_variables": {},
+            "features": [
+              {
+                "fuse": false,
+                "keyctl": false,
+                "mknod": false,
+                "mount": [],
+                "nesting": true
+              }
+            ],
+            "hook_script_file_id": "",
+            "id": "222",
+            "idmap": [],
+            "initialization": [
+              {
+                "dns": [],
+                "entrypoint": "",
+                "hostname": "lb02",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "10.10.10.22/24",
+                        "gateway": "10.10.10.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "user_account": [
+                  {
+                    "keys": [
+                      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrydHAOV1y3+5EVfTlkjIf0pmBdAsM3E2f49BOZ635k systech-control"
+                    ],
+                    "password": ""
+                  }
+                ]
+              }
+            ],
+            "ipv4": {
+              "eth0": "10.10.10.22"
+            },
+            "ipv6": {
+              "eth0": "fe80::be24:11ff:fe5e:d95a"
+            },
+            "memory": [
+              {
+                "dedicated": 512,
+                "swap": 0
+              }
+            ],
+            "mount_point": [],
+            "network_interface": [
+              {
+                "bridge": "vmbr1",
+                "enabled": true,
+                "firewall": false,
+                "host_managed": false,
+                "mac_address": "BC:24:11:5E:D9:5A",
+                "mtu": 0,
+                "name": "eth0",
+                "rate_limit": 0,
+                "vlan_id": 0
+              }
+            ],
+            "node_name": "homelab",
+            "operating_system": [
+              {
+                "template_file_id": "local:vztmpl/ubuntu-24.04-standard_24.04-2_amd64.tar.zst",
+                "type": "ubuntu"
+              }
+            ],
+            "pool_id": null,
+            "protection": false,
+            "start_on_boot": true,
+            "started": true,
+            "startup": [],
+            "tags": [],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_delete": 60,
+            "timeout_start": 300,
+            "timeout_update": 1800,
+            "unprivileged": true,
+            "vm_id": 222,
+            "wait_for_ip": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "initialization"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "user_account"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "password"
+              }
+            ]
+          ],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "proxmox_download_file.lxc_template"
+          ]
+        },
+        {
+          "index_key": "test",
+          "schema_version": 0,
+          "attributes": {
+            "clone": [],
+            "console": [],
+            "cpu": [
+              {
+                "architecture": "amd64",
+                "cores": 1,
+                "limit": 0,
+                "units": 0
+              }
+            ],
+            "description": "",
+            "device_passthrough": [],
+            "disk": [
+              {
+                "acl": false,
+                "datastore_id": "local-lvm",
+                "mount_options": null,
+                "path_in_datastore": "local-lvm:vm-223-disk-0",
+                "quota": false,
+                "replicate": false,
+                "size": 8
+              }
+            ],
+            "environment_variables": null,
+            "features": [
+              {
+                "fuse": false,
+                "keyctl": false,
+                "mknod": false,
+                "mount": null,
+                "nesting": true
+              }
+            ],
+            "hook_script_file_id": "",
+            "id": "223",
+            "idmap": [],
+            "initialization": [
+              {
+                "dns": [],
+                "entrypoint": "",
+                "hostname": "test",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "10.10.10.23/24",
+                        "gateway": "10.10.10.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "user_account": [
+                  {
+                    "keys": [
+                      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrydHAOV1y3+5EVfTlkjIf0pmBdAsM3E2f49BOZ635k systech-control"
+                    ],
+                    "password": ""
+                  }
+                ]
+              }
+            ],
+            "ipv4": {
+              "eth0": "10.10.10.23"
+            },
+            "ipv6": {
+              "eth0": "fe80::be24:11ff:fe5e:3c65"
+            },
+            "memory": [
+              {
+                "dedicated": 512,
+                "swap": 0
+              }
+            ],
+            "mount_point": [],
+            "network_interface": [
+              {
+                "bridge": "vmbr1",
+                "enabled": true,
+                "firewall": false,
+                "host_managed": false,
+                "mac_address": "BC:24:11:5E:3C:65",
+                "mtu": 0,
+                "name": "eth0",
+                "rate_limit": 0,
+                "vlan_id": 0
+              }
+            ],
+            "node_name": "homelab",
+            "operating_system": [
+              {
+                "template_file_id": "local:vztmpl/ubuntu-24.04-standard_24.04-2_amd64.tar.zst",
+                "type": "ubuntu"
+              }
+            ],
+            "pool_id": null,
+            "protection": false,
+            "start_on_boot": true,
+            "started": true,
+            "startup": [],
+            "tags": null,
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_delete": 60,
+            "timeout_start": 300,
+            "timeout_update": 1800,
+            "unprivileged": true,
+            "vm_id": 223,
+            "wait_for_ip": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "initialization"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "user_account"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "password"
+              }
+            ]
+          ],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "proxmox_download_file.lxc_template"
+          ]
+        },
+        {
+          "index_key": "zabbix01",
+          "schema_version": 0,
+          "attributes": {
+            "clone": [],
+            "console": [],
+            "cpu": [
+              {
+                "architecture": "amd64",
+                "cores": 1,
+                "limit": 0,
+                "units": 0
+              }
+            ],
+            "description": "",
+            "device_passthrough": [],
+            "disk": [
+              {
+                "acl": false,
+                "datastore_id": "local-lvm",
+                "mount_options": [],
+                "path_in_datastore": "local-lvm:vm-990-disk-0",
+                "quota": false,
+                "replicate": false,
+                "size": 8
+              }
+            ],
+            "environment_variables": {},
+            "features": [
+              {
+                "fuse": false,
+                "keyctl": false,
+                "mknod": false,
+                "mount": [],
+                "nesting": true
+              }
+            ],
+            "hook_script_file_id": "",
+            "id": "990",
+            "idmap": [],
+            "initialization": [
+              {
+                "dns": [],
+                "entrypoint": "",
+                "hostname": "zabbix01",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "10.10.10.90/24",
+                        "gateway": "10.10.10.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "user_account": [
+                  {
+                    "keys": [
+                      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrydHAOV1y3+5EVfTlkjIf0pmBdAsM3E2f49BOZ635k systech-control"
+                    ],
+                    "password": ""
+                  }
+                ]
+              }
+            ],
+            "ipv4": {
+              "eth0": "10.10.10.90"
+            },
+            "ipv6": {
+              "eth0": "fe80::be24:11ff:fe3f:3283"
+            },
+            "memory": [
+              {
+                "dedicated": 1536,
+                "swap": 0
+              }
+            ],
+            "mount_point": [],
+            "network_interface": [
+              {
+                "bridge": "vmbr1",
+                "enabled": true,
+                "firewall": false,
+                "host_managed": false,
+                "mac_address": "BC:24:11:3F:32:83",
+                "mtu": 0,
+                "name": "eth0",
+                "rate_limit": 0,
+                "vlan_id": 0
+              }
+            ],
+            "node_name": "homelab",
+            "operating_system": [
+              {
+                "template_file_id": "local:vztmpl/ubuntu-24.04-standard_24.04-2_amd64.tar.zst",
+                "type": "ubuntu"
+              }
+            ],
+            "pool_id": null,
+            "protection": false,
+            "start_on_boot": true,
+            "started": true,
+            "startup": [],
+            "tags": [],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_delete": 60,
+            "timeout_start": 300,
+            "timeout_update": 1800,
+            "unprivileged": true,
+            "vm_id": 990,
+            "wait_for_ip": []
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "initialization"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "user_account"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "password"
+              }
+            ]
+          ],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "proxmox_download_file.lxc_template"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "proxmox_virtual_environment_file",
+      "name": "cloud_meta_config",
+      "provider": "provider[\"registry.opentofu.org/bpg/proxmox\"]",
+      "instances": [
+        {
+          "index_key": "app01",
+          "schema_version": 0,
+          "attributes": {
+            "content_type": "snippets",
+            "datastore_id": "local",
+            "file_mode": null,
+            "file_modification_date": null,
+            "file_name": "cloud-meta-config-app01.yml",
+            "file_size": null,
+            "file_tag": null,
+            "id": "local:snippets/cloud-meta-config-app01.yml",
+            "node_name": "homelab",
+            "overwrite": true,
+            "source_file": [],
+            "source_raw": [
+              {
+                "data": "instance-id: app01\nlocal-hostname: app01\n",
+                "file_name": "cloud-meta-config-app01.yml",
+                "resize": 0
+              }
+            ],
+            "timeout_upload": 1800,
+            "upload_mode": "stream"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA=="
+        },
+        {
+          "index_key": "app02",
+          "schema_version": 0,
+          "attributes": {
+            "content_type": "snippets",
+            "datastore_id": "local",
+            "file_mode": null,
+            "file_modification_date": null,
+            "file_name": "cloud-meta-config-app02.yml",
+            "file_size": null,
+            "file_tag": null,
+            "id": "local:snippets/cloud-meta-config-app02.yml",
+            "node_name": "homelab",
+            "overwrite": true,
+            "source_file": [],
+            "source_raw": [
+              {
+                "data": "instance-id: app02\nlocal-hostname: app02\n",
+                "file_name": "cloud-meta-config-app02.yml",
+                "resize": 0
+              }
+            ],
+            "timeout_upload": 1800,
+            "upload_mode": "stream"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA=="
+        },
+        {
+          "index_key": "app03",
+          "schema_version": 0,
+          "attributes": {
+            "content_type": "snippets",
+            "datastore_id": "local",
+            "file_mode": null,
+            "file_modification_date": null,
+            "file_name": "cloud-meta-config-app03.yml",
+            "file_size": null,
+            "file_tag": null,
+            "id": "local:snippets/cloud-meta-config-app03.yml",
+            "node_name": "homelab",
+            "overwrite": true,
+            "source_file": [],
+            "source_raw": [
+              {
+                "data": "instance-id: app03\nlocal-hostname: app03\n",
+                "file_name": "cloud-meta-config-app03.yml",
+                "resize": 0
+              }
+            ],
+            "timeout_upload": 1800,
+            "upload_mode": "stream"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA=="
+        },
+        {
+          "index_key": "db01",
+          "schema_version": 0,
+          "attributes": {
+            "content_type": "snippets",
+            "datastore_id": "local",
+            "file_mode": null,
+            "file_modification_date": null,
+            "file_name": "cloud-meta-config-db01.yml",
+            "file_size": null,
+            "file_tag": null,
+            "id": "local:snippets/cloud-meta-config-db01.yml",
+            "node_name": "homelab",
+            "overwrite": true,
+            "source_file": [],
+            "source_raw": [
+              {
+                "data": "instance-id: db01\nlocal-hostname: db01\n",
+                "file_name": "cloud-meta-config-db01.yml",
+                "resize": 0
+              }
+            ],
+            "timeout_upload": 1800,
+            "upload_mode": "stream"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA=="
+        },
+        {
+          "index_key": "storage01",
+          "schema_version": 0,
+          "attributes": {
+            "content_type": "snippets",
+            "datastore_id": "local",
+            "file_mode": null,
+            "file_modification_date": null,
+            "file_name": "cloud-meta-config-storage01.yml",
+            "file_size": null,
+            "file_tag": null,
+            "id": "local:snippets/cloud-meta-config-storage01.yml",
+            "node_name": "homelab",
+            "overwrite": true,
+            "source_file": [],
+            "source_raw": [
+              {
+                "data": "instance-id: storage01\nlocal-hostname: storage01\n",
+                "file_name": "cloud-meta-config-storage01.yml",
+                "resize": 0
+              }
+            ],
+            "timeout_upload": 1800,
+            "upload_mode": "stream"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "proxmox_virtual_environment_file",
+      "name": "cloud_user_config",
+      "provider": "provider[\"registry.opentofu.org/bpg/proxmox\"]",
+      "instances": [
+        {
+          "index_key": "app01",
+          "schema_version": 0,
+          "attributes": {
+            "content_type": "snippets",
+            "datastore_id": "local",
+            "file_mode": null,
+            "file_modification_date": null,
+            "file_name": "cloud-user-config-app01.yml",
+            "file_size": null,
+            "file_tag": null,
+            "id": "local:snippets/cloud-user-config-app01.yml",
+            "node_name": "homelab",
+            "overwrite": true,
+            "source_file": [],
+            "source_raw": [
+              {
+                "data": "#cloud-config\nhostname: app01\npreserve_hostname: false\nusers:\n  - name: ansible\n    groups: wheel\n    shell: /bin/bash\n    sudo: ALL=(ALL) NOPASSWD:ALL\n    ssh_authorized_keys:\n      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrydHAOV1y3+5EVfTlkjIf0pmBdAsM3E2f49BOZ635k systech-control\npackage_update: true\npackages:\n  - qemu-guest-agent\n  - curl\n  - python3\nruncmd:\n  - systemctl enable --now qemu-guest-agent\n",
+                "file_name": "cloud-user-config-app01.yml",
+                "resize": 0
+              }
+            ],
+            "timeout_upload": 1800,
+            "upload_mode": "stream"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA=="
+        },
+        {
+          "index_key": "app02",
+          "schema_version": 0,
+          "attributes": {
+            "content_type": "snippets",
+            "datastore_id": "local",
+            "file_mode": null,
+            "file_modification_date": null,
+            "file_name": "cloud-user-config-app02.yml",
+            "file_size": null,
+            "file_tag": null,
+            "id": "local:snippets/cloud-user-config-app02.yml",
+            "node_name": "homelab",
+            "overwrite": true,
+            "source_file": [],
+            "source_raw": [
+              {
+                "data": "#cloud-config\nhostname: app02\npreserve_hostname: false\nusers:\n  - name: ansible\n    groups: wheel\n    shell: /bin/bash\n    sudo: ALL=(ALL) NOPASSWD:ALL\n    ssh_authorized_keys:\n      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrydHAOV1y3+5EVfTlkjIf0pmBdAsM3E2f49BOZ635k systech-control\npackage_update: true\npackages:\n  - qemu-guest-agent\n  - curl\n  - python3\nruncmd:\n  - systemctl enable --now qemu-guest-agent\n",
+                "file_name": "cloud-user-config-app02.yml",
+                "resize": 0
+              }
+            ],
+            "timeout_upload": 1800,
+            "upload_mode": "stream"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA=="
+        },
+        {
+          "index_key": "app03",
+          "schema_version": 0,
+          "attributes": {
+            "content_type": "snippets",
+            "datastore_id": "local",
+            "file_mode": null,
+            "file_modification_date": null,
+            "file_name": "cloud-user-config-app03.yml",
+            "file_size": null,
+            "file_tag": null,
+            "id": "local:snippets/cloud-user-config-app03.yml",
+            "node_name": "homelab",
+            "overwrite": true,
+            "source_file": [],
+            "source_raw": [
+              {
+                "data": "#cloud-config\nhostname: app03\npreserve_hostname: false\nusers:\n  - name: ansible\n    groups: wheel\n    shell: /bin/bash\n    sudo: ALL=(ALL) NOPASSWD:ALL\n    ssh_authorized_keys:\n      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrydHAOV1y3+5EVfTlkjIf0pmBdAsM3E2f49BOZ635k systech-control\npackage_update: true\npackages:\n  - qemu-guest-agent\n  - curl\n  - python3\nruncmd:\n  - systemctl enable --now qemu-guest-agent\n",
+                "file_name": "cloud-user-config-app03.yml",
+                "resize": 0
+              }
+            ],
+            "timeout_upload": 1800,
+            "upload_mode": "stream"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA=="
+        },
+        {
+          "index_key": "db01",
+          "schema_version": 0,
+          "attributes": {
+            "content_type": "snippets",
+            "datastore_id": "local",
+            "file_mode": null,
+            "file_modification_date": null,
+            "file_name": "cloud-user-config-db01.yml",
+            "file_size": null,
+            "file_tag": null,
+            "id": "local:snippets/cloud-user-config-db01.yml",
+            "node_name": "homelab",
+            "overwrite": true,
+            "source_file": [],
+            "source_raw": [
+              {
+                "data": "#cloud-config\nhostname: db01\npreserve_hostname: false\nusers:\n  - name: ansible\n    groups: wheel\n    shell: /bin/bash\n    sudo: ALL=(ALL) NOPASSWD:ALL\n    ssh_authorized_keys:\n      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrydHAOV1y3+5EVfTlkjIf0pmBdAsM3E2f49BOZ635k systech-control\npackage_update: true\npackages:\n  - qemu-guest-agent\n  - curl\n  - python3\nruncmd:\n  - systemctl enable --now qemu-guest-agent\n",
+                "file_name": "cloud-user-config-db01.yml",
+                "resize": 0
+              }
+            ],
+            "timeout_upload": 1800,
+            "upload_mode": "stream"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA=="
+        },
+        {
+          "index_key": "storage01",
+          "schema_version": 0,
+          "attributes": {
+            "content_type": "snippets",
+            "datastore_id": "local",
+            "file_mode": null,
+            "file_modification_date": null,
+            "file_name": "cloud-user-config-storage01.yml",
+            "file_size": null,
+            "file_tag": null,
+            "id": "local:snippets/cloud-user-config-storage01.yml",
+            "node_name": "homelab",
+            "overwrite": true,
+            "source_file": [],
+            "source_raw": [
+              {
+                "data": "#cloud-config\nhostname: storage01\npreserve_hostname: false\nusers:\n  - name: ansible\n    groups: wheel\n    shell: /bin/bash\n    sudo: ALL=(ALL) NOPASSWD:ALL\n    ssh_authorized_keys:\n      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrydHAOV1y3+5EVfTlkjIf0pmBdAsM3E2f49BOZ635k systech-control\npackage_update: true\npackages:\n  - qemu-guest-agent\n  - curl\n  - python3\nruncmd:\n  - systemctl enable --now qemu-guest-agent\n",
+                "file_name": "cloud-user-config-storage01.yml",
+                "resize": 0
+              }
+            ],
+            "timeout_upload": 1800,
+            "upload_mode": "stream"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "proxmox_virtual_environment_vm",
+      "name": "almalinux_cluster",
+      "provider": "provider[\"registry.opentofu.org/bpg/proxmox\"]",
+      "instances": [
+        {
+          "index_key": "app01",
+          "schema_version": 0,
+          "attributes": {
+            "acpi": true,
+            "agent": [
+              {
+                "enabled": true,
+                "timeout": "15m",
+                "trim": false,
+                "type": "virtio",
+                "wait_for_ip": []
+              }
+            ],
+            "amd_sev": [],
+            "audio_device": [],
+            "bios": "seabios",
+            "boot_order": [
+              "scsi0",
+              "net0"
+            ],
+            "cdrom": [],
+            "clone": [],
+            "cpu": [
+              {
+                "affinity": "",
+                "architecture": "",
+                "cores": 1,
+                "flags": [],
+                "hotplugged": 0,
+                "limit": 0,
+                "numa": false,
+                "sockets": 1,
+                "type": "host",
+                "units": 0
+              }
+            ],
+            "delete_unreferenced_disks_on_destroy": true,
+            "description": "",
+            "disk": [
+              {
+                "aio": "io_uring",
+                "backup": true,
+                "cache": "none",
+                "datastore_id": "local-lvm",
+                "discard": "ignore",
+                "file_format": "raw",
+                "file_id": "local:iso/almalinux-9-cloudinit.iso",
+                "import_from": "",
+                "interface": "scsi0",
+                "iothread": false,
+                "path_in_datastore": "vm-331-disk-0",
+                "queues": 0,
+                "replicate": true,
+                "serial": "",
+                "size": 20,
+                "speed": [],
+                "ssd": false
+              }
+            ],
+            "efi_disk": [],
+            "hook_script_file_id": "",
+            "hostpci": [],
+            "hotplug": null,
+            "id": "331",
+            "initialization": [
+              {
+                "datastore_id": "local-lvm",
+                "dns": [],
+                "file_format": "",
+                "interface": "ide2",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "10.10.10.31/24",
+                        "gateway": "10.10.10.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "meta_data_file_id": "local:snippets/cloud-meta-config-app01.yml",
+                "network_data_file_id": "",
+                "type": "",
+                "upgrade": true,
+                "user_account": [],
+                "user_data_file_id": "local:snippets/cloud-user-config-app01.yml",
+                "vendor_data_file_id": ""
+              }
+            ],
+            "ipv4_addresses": [
+              [
+                "127.0.0.1"
+              ],
+              [
+                "10.10.10.31"
+              ]
+            ],
+            "ipv6_addresses": [
+              [
+                "::1"
+              ],
+              [
+                "fe80::be24:11ff:fe5e:c614"
+              ]
+            ],
+            "keyboard_layout": "en-us",
+            "kvm_arguments": "",
+            "mac_addresses": [
+              "00:00:00:00:00:00",
+              "BC:24:11:5E:C6:14"
+            ],
+            "machine": "",
+            "memory": [
+              {
+                "dedicated": 1536,
+                "floating": 0,
+                "hugepages": "",
+                "keep_hugepages": false,
+                "shared": 0
+              }
+            ],
+            "migrate": false,
+            "name": "app01",
+            "network_device": [
+              {
+                "bridge": "vmbr1",
+                "disconnected": false,
+                "enabled": true,
+                "firewall": false,
+                "mac_address": "BC:24:11:5E:C6:14",
+                "model": "virtio",
+                "mtu": 0,
+                "queues": 0,
+                "rate_limit": 0,
+                "trunks": "",
+                "vlan_id": 0
+              }
+            ],
+            "network_interface_names": [
+              "lo",
+              "eth0"
+            ],
+            "node_name": "homelab",
+            "numa": [],
+            "on_boot": true,
+            "operating_system": [],
+            "pool_id": "",
+            "protection": false,
+            "purge_on_destroy": true,
+            "reboot": false,
+            "reboot_after_update": true,
+            "rng": [],
+            "scsi_hardware": "virtio-scsi-pci",
+            "serial_device": [],
+            "smbios": [],
+            "started": true,
+            "startup": [],
+            "stop_on_destroy": false,
+            "tablet_device": true,
+            "tags": [],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_migrate": 1800,
+            "timeout_move_disk": 1800,
+            "timeout_reboot": 1800,
+            "timeout_shutdown_vm": 1800,
+            "timeout_start_vm": 1800,
+            "timeout_stop_vm": 300,
+            "tpm_state": [],
+            "usb": [],
+            "vga": [],
+            "virtiofs": [],
+            "vm_id": 331,
+            "watchdog": []
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "proxmox_download_file.almalinux_cloud_image",
+            "proxmox_virtual_environment_file.cloud_meta_config",
+            "proxmox_virtual_environment_file.cloud_user_config"
+          ]
+        },
+        {
+          "index_key": "app02",
+          "schema_version": 0,
+          "attributes": {
+            "acpi": true,
+            "agent": [
+              {
+                "enabled": true,
+                "timeout": "15m",
+                "trim": false,
+                "type": "virtio",
+                "wait_for_ip": []
+              }
+            ],
+            "amd_sev": [],
+            "audio_device": [],
+            "bios": "seabios",
+            "boot_order": [
+              "scsi0",
+              "net0"
+            ],
+            "cdrom": [],
+            "clone": [],
+            "cpu": [
+              {
+                "affinity": "",
+                "architecture": "",
+                "cores": 1,
+                "flags": [],
+                "hotplugged": 0,
+                "limit": 0,
+                "numa": false,
+                "sockets": 1,
+                "type": "host",
+                "units": 0
+              }
+            ],
+            "delete_unreferenced_disks_on_destroy": true,
+            "description": "",
+            "disk": [
+              {
+                "aio": "io_uring",
+                "backup": true,
+                "cache": "none",
+                "datastore_id": "local-lvm",
+                "discard": "ignore",
+                "file_format": "raw",
+                "file_id": "local:iso/almalinux-9-cloudinit.iso",
+                "import_from": "",
+                "interface": "scsi0",
+                "iothread": false,
+                "path_in_datastore": "vm-332-disk-0",
+                "queues": 0,
+                "replicate": true,
+                "serial": "",
+                "size": 20,
+                "speed": [],
+                "ssd": false
+              }
+            ],
+            "efi_disk": [],
+            "hook_script_file_id": "",
+            "hostpci": [],
+            "hotplug": null,
+            "id": "332",
+            "initialization": [
+              {
+                "datastore_id": "local-lvm",
+                "dns": [],
+                "file_format": "",
+                "interface": "ide2",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "10.10.10.32/24",
+                        "gateway": "10.10.10.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "meta_data_file_id": "local:snippets/cloud-meta-config-app02.yml",
+                "network_data_file_id": "",
+                "type": "",
+                "upgrade": true,
+                "user_account": [],
+                "user_data_file_id": "local:snippets/cloud-user-config-app02.yml",
+                "vendor_data_file_id": ""
+              }
+            ],
+            "ipv4_addresses": [
+              [
+                "127.0.0.1"
+              ],
+              [
+                "10.10.10.32"
+              ]
+            ],
+            "ipv6_addresses": [
+              [
+                "::1"
+              ],
+              [
+                "fe80::be24:11ff:fed8:8853"
+              ]
+            ],
+            "keyboard_layout": "en-us",
+            "kvm_arguments": "",
+            "mac_addresses": [
+              "00:00:00:00:00:00",
+              "BC:24:11:D8:88:53"
+            ],
+            "machine": "",
+            "memory": [
+              {
+                "dedicated": 1536,
+                "floating": 0,
+                "hugepages": "",
+                "keep_hugepages": false,
+                "shared": 0
+              }
+            ],
+            "migrate": false,
+            "name": "app02",
+            "network_device": [
+              {
+                "bridge": "vmbr1",
+                "disconnected": false,
+                "enabled": true,
+                "firewall": false,
+                "mac_address": "BC:24:11:D8:88:53",
+                "model": "virtio",
+                "mtu": 0,
+                "queues": 0,
+                "rate_limit": 0,
+                "trunks": "",
+                "vlan_id": 0
+              }
+            ],
+            "network_interface_names": [
+              "lo",
+              "eth0"
+            ],
+            "node_name": "homelab",
+            "numa": [],
+            "on_boot": true,
+            "operating_system": [],
+            "pool_id": "",
+            "protection": false,
+            "purge_on_destroy": true,
+            "reboot": false,
+            "reboot_after_update": true,
+            "rng": [],
+            "scsi_hardware": "virtio-scsi-pci",
+            "serial_device": [],
+            "smbios": [],
+            "started": true,
+            "startup": [],
+            "stop_on_destroy": false,
+            "tablet_device": true,
+            "tags": [],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_migrate": 1800,
+            "timeout_move_disk": 1800,
+            "timeout_reboot": 1800,
+            "timeout_shutdown_vm": 1800,
+            "timeout_start_vm": 1800,
+            "timeout_stop_vm": 300,
+            "tpm_state": [],
+            "usb": [],
+            "vga": [],
+            "virtiofs": [],
+            "vm_id": 332,
+            "watchdog": []
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "proxmox_download_file.almalinux_cloud_image",
+            "proxmox_virtual_environment_file.cloud_meta_config",
+            "proxmox_virtual_environment_file.cloud_user_config"
+          ]
+        },
+        {
+          "index_key": "app03",
+          "schema_version": 0,
+          "attributes": {
+            "acpi": true,
+            "agent": [
+              {
+                "enabled": true,
+                "timeout": "15m",
+                "trim": false,
+                "type": "virtio",
+                "wait_for_ip": []
+              }
+            ],
+            "amd_sev": [],
+            "audio_device": [],
+            "bios": "seabios",
+            "boot_order": [
+              "scsi0",
+              "net0"
+            ],
+            "cdrom": [],
+            "clone": [],
+            "cpu": [
+              {
+                "affinity": "",
+                "architecture": "",
+                "cores": 1,
+                "flags": [],
+                "hotplugged": 0,
+                "limit": 0,
+                "numa": false,
+                "sockets": 1,
+                "type": "host",
+                "units": 0
+              }
+            ],
+            "delete_unreferenced_disks_on_destroy": true,
+            "description": "",
+            "disk": [
+              {
+                "aio": "io_uring",
+                "backup": true,
+                "cache": "none",
+                "datastore_id": "local-lvm",
+                "discard": "ignore",
+                "file_format": "raw",
+                "file_id": "local:iso/almalinux-9-cloudinit.iso",
+                "import_from": "",
+                "interface": "scsi0",
+                "iothread": false,
+                "path_in_datastore": "vm-333-disk-0",
+                "queues": 0,
+                "replicate": true,
+                "serial": "",
+                "size": 20,
+                "speed": [],
+                "ssd": false
+              }
+            ],
+            "efi_disk": [],
+            "hook_script_file_id": "",
+            "hostpci": [],
+            "hotplug": null,
+            "id": "333",
+            "initialization": [
+              {
+                "datastore_id": "local-lvm",
+                "dns": [],
+                "file_format": "",
+                "interface": "ide2",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "10.10.10.33/24",
+                        "gateway": "10.10.10.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "meta_data_file_id": "local:snippets/cloud-meta-config-app03.yml",
+                "network_data_file_id": "",
+                "type": "",
+                "upgrade": true,
+                "user_account": [],
+                "user_data_file_id": "local:snippets/cloud-user-config-app03.yml",
+                "vendor_data_file_id": ""
+              }
+            ],
+            "ipv4_addresses": [
+              [
+                "127.0.0.1"
+              ],
+              [
+                "10.10.10.33"
+              ]
+            ],
+            "ipv6_addresses": [
+              [
+                "::1"
+              ],
+              [
+                "fe80::be24:11ff:fed6:b7be"
+              ]
+            ],
+            "keyboard_layout": "en-us",
+            "kvm_arguments": "",
+            "mac_addresses": [
+              "00:00:00:00:00:00",
+              "BC:24:11:D6:B7:BE"
+            ],
+            "machine": "",
+            "memory": [
+              {
+                "dedicated": 1536,
+                "floating": 0,
+                "hugepages": "",
+                "keep_hugepages": false,
+                "shared": 0
+              }
+            ],
+            "migrate": false,
+            "name": "app03",
+            "network_device": [
+              {
+                "bridge": "vmbr1",
+                "disconnected": false,
+                "enabled": true,
+                "firewall": false,
+                "mac_address": "BC:24:11:D6:B7:BE",
+                "model": "virtio",
+                "mtu": 0,
+                "queues": 0,
+                "rate_limit": 0,
+                "trunks": "",
+                "vlan_id": 0
+              }
+            ],
+            "network_interface_names": [
+              "lo",
+              "eth0"
+            ],
+            "node_name": "homelab",
+            "numa": [],
+            "on_boot": true,
+            "operating_system": [],
+            "pool_id": "",
+            "protection": false,
+            "purge_on_destroy": true,
+            "reboot": false,
+            "reboot_after_update": true,
+            "rng": [],
+            "scsi_hardware": "virtio-scsi-pci",
+            "serial_device": [],
+            "smbios": [],
+            "started": true,
+            "startup": [],
+            "stop_on_destroy": false,
+            "tablet_device": true,
+            "tags": [],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_migrate": 1800,
+            "timeout_move_disk": 1800,
+            "timeout_reboot": 1800,
+            "timeout_shutdown_vm": 1800,
+            "timeout_start_vm": 1800,
+            "timeout_stop_vm": 300,
+            "tpm_state": [],
+            "usb": [],
+            "vga": [],
+            "virtiofs": [],
+            "vm_id": 333,
+            "watchdog": []
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "proxmox_download_file.almalinux_cloud_image",
+            "proxmox_virtual_environment_file.cloud_meta_config",
+            "proxmox_virtual_environment_file.cloud_user_config"
+          ]
+        },
+        {
+          "index_key": "db01",
+          "schema_version": 0,
+          "attributes": {
+            "acpi": true,
+            "agent": [
+              {
+                "enabled": true,
+                "timeout": "15m",
+                "trim": false,
+                "type": "virtio",
+                "wait_for_ip": []
+              }
+            ],
+            "amd_sev": [],
+            "audio_device": [],
+            "bios": "seabios",
+            "boot_order": [
+              "scsi0",
+              "net0"
+            ],
+            "cdrom": [],
+            "clone": [],
+            "cpu": [
+              {
+                "affinity": "",
+                "architecture": "",
+                "cores": 1,
+                "flags": [],
+                "hotplugged": 0,
+                "limit": 0,
+                "numa": false,
+                "sockets": 1,
+                "type": "host",
+                "units": 0
+              }
+            ],
+            "delete_unreferenced_disks_on_destroy": true,
+            "description": "",
+            "disk": [
+              {
+                "aio": "io_uring",
+                "backup": true,
+                "cache": "none",
+                "datastore_id": "local-lvm",
+                "discard": "ignore",
+                "file_format": "raw",
+                "file_id": "local:iso/almalinux-9-cloudinit.iso",
+                "import_from": "",
+                "interface": "scsi0",
+                "iothread": false,
+                "path_in_datastore": "vm-440-disk-0",
+                "queues": 0,
+                "replicate": true,
+                "serial": "",
+                "size": 20,
+                "speed": [],
+                "ssd": false
+              }
+            ],
+            "efi_disk": [],
+            "hook_script_file_id": "",
+            "hostpci": [],
+            "hotplug": null,
+            "id": "440",
+            "initialization": [
+              {
+                "datastore_id": "local-lvm",
+                "dns": [],
+                "file_format": "",
+                "interface": "ide2",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "10.10.10.40/24",
+                        "gateway": "10.10.10.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "meta_data_file_id": "local:snippets/cloud-meta-config-db01.yml",
+                "network_data_file_id": "",
+                "type": "",
+                "upgrade": true,
+                "user_account": [],
+                "user_data_file_id": "local:snippets/cloud-user-config-db01.yml",
+                "vendor_data_file_id": ""
+              }
+            ],
+            "ipv4_addresses": [
+              [
+                "127.0.0.1"
+              ],
+              [
+                "10.10.10.40"
+              ]
+            ],
+            "ipv6_addresses": [
+              [
+                "::1"
+              ],
+              [
+                "fe80::be24:11ff:fe36:8ca8"
+              ]
+            ],
+            "keyboard_layout": "en-us",
+            "kvm_arguments": "",
+            "mac_addresses": [
+              "00:00:00:00:00:00",
+              "BC:24:11:36:8C:A8"
+            ],
+            "machine": "",
+            "memory": [
+              {
+                "dedicated": 1536,
+                "floating": 0,
+                "hugepages": "",
+                "keep_hugepages": false,
+                "shared": 0
+              }
+            ],
+            "migrate": false,
+            "name": "db01",
+            "network_device": [
+              {
+                "bridge": "vmbr1",
+                "disconnected": false,
+                "enabled": true,
+                "firewall": false,
+                "mac_address": "BC:24:11:36:8C:A8",
+                "model": "virtio",
+                "mtu": 0,
+                "queues": 0,
+                "rate_limit": 0,
+                "trunks": "",
+                "vlan_id": 0
+              }
+            ],
+            "network_interface_names": [
+              "lo",
+              "eth0"
+            ],
+            "node_name": "homelab",
+            "numa": [],
+            "on_boot": true,
+            "operating_system": [],
+            "pool_id": "",
+            "protection": false,
+            "purge_on_destroy": true,
+            "reboot": false,
+            "reboot_after_update": true,
+            "rng": [],
+            "scsi_hardware": "virtio-scsi-pci",
+            "serial_device": [],
+            "smbios": [],
+            "started": true,
+            "startup": [],
+            "stop_on_destroy": false,
+            "tablet_device": true,
+            "tags": [],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_migrate": 1800,
+            "timeout_move_disk": 1800,
+            "timeout_reboot": 1800,
+            "timeout_shutdown_vm": 1800,
+            "timeout_start_vm": 1800,
+            "timeout_stop_vm": 300,
+            "tpm_state": [],
+            "usb": [],
+            "vga": [],
+            "virtiofs": [],
+            "vm_id": 440,
+            "watchdog": []
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "proxmox_download_file.almalinux_cloud_image",
+            "proxmox_virtual_environment_file.cloud_meta_config",
+            "proxmox_virtual_environment_file.cloud_user_config"
+          ]
+        },
+        {
+          "index_key": "storage01",
+          "schema_version": 0,
+          "attributes": {
+            "acpi": true,
+            "agent": [
+              {
+                "enabled": true,
+                "timeout": "15m",
+                "trim": false,
+                "type": "virtio",
+                "wait_for_ip": []
+              }
+            ],
+            "amd_sev": [],
+            "audio_device": [],
+            "bios": "seabios",
+            "boot_order": [
+              "scsi0",
+              "net0"
+            ],
+            "cdrom": [],
+            "clone": [],
+            "cpu": [
+              {
+                "affinity": "",
+                "architecture": "",
+                "cores": 1,
+                "flags": [],
+                "hotplugged": 0,
+                "limit": 0,
+                "numa": false,
+                "sockets": 1,
+                "type": "host",
+                "units": 0
+              }
+            ],
+            "delete_unreferenced_disks_on_destroy": true,
+            "description": "",
+            "disk": [
+              {
+                "aio": "io_uring",
+                "backup": true,
+                "cache": "none",
+                "datastore_id": "local-lvm",
+                "discard": "ignore",
+                "file_format": "raw",
+                "file_id": "local:iso/almalinux-9-cloudinit.iso",
+                "import_from": "",
+                "interface": "scsi0",
+                "iothread": false,
+                "path_in_datastore": "vm-550-disk-4",
+                "queues": 0,
+                "replicate": true,
+                "serial": "",
+                "size": 20,
+                "speed": [],
+                "ssd": false
+              },
+              {
+                "aio": "io_uring",
+                "backup": true,
+                "cache": "none",
+                "datastore_id": "local-lvm",
+                "discard": "ignore",
+                "file_format": "raw",
+                "file_id": "",
+                "import_from": "",
+                "interface": "scsi1",
+                "iothread": false,
+                "path_in_datastore": "vm-550-disk-0",
+                "queues": 0,
+                "replicate": true,
+                "serial": "",
+                "size": 1,
+                "speed": [],
+                "ssd": false
+              },
+              {
+                "aio": "io_uring",
+                "backup": true,
+                "cache": "none",
+                "datastore_id": "local-lvm",
+                "discard": "ignore",
+                "file_format": "raw",
+                "file_id": "",
+                "import_from": "",
+                "interface": "scsi2",
+                "iothread": false,
+                "path_in_datastore": "vm-550-disk-1",
+                "queues": 0,
+                "replicate": true,
+                "serial": "",
+                "size": 1,
+                "speed": [],
+                "ssd": false
+              },
+              {
+                "aio": "io_uring",
+                "backup": true,
+                "cache": "none",
+                "datastore_id": "local-lvm",
+                "discard": "ignore",
+                "file_format": "raw",
+                "file_id": "",
+                "import_from": "",
+                "interface": "scsi3",
+                "iothread": false,
+                "path_in_datastore": "vm-550-disk-2",
+                "queues": 0,
+                "replicate": true,
+                "serial": "",
+                "size": 1,
+                "speed": [],
+                "ssd": false
+              },
+              {
+                "aio": "io_uring",
+                "backup": true,
+                "cache": "none",
+                "datastore_id": "local-lvm",
+                "discard": "ignore",
+                "file_format": "raw",
+                "file_id": "",
+                "import_from": "",
+                "interface": "scsi4",
+                "iothread": false,
+                "path_in_datastore": "vm-550-disk-3",
+                "queues": 0,
+                "replicate": true,
+                "serial": "",
+                "size": 1,
+                "speed": [],
+                "ssd": false
+              }
+            ],
+            "efi_disk": [],
+            "hook_script_file_id": "",
+            "hostpci": [],
+            "hotplug": null,
+            "id": "550",
+            "initialization": [
+              {
+                "datastore_id": "local-lvm",
+                "dns": [],
+                "file_format": "",
+                "interface": "ide2",
+                "ip_config": [
+                  {
+                    "ipv4": [
+                      {
+                        "address": "10.10.10.50/24",
+                        "gateway": "10.10.10.1"
+                      }
+                    ],
+                    "ipv6": []
+                  }
+                ],
+                "meta_data_file_id": "local:snippets/cloud-meta-config-storage01.yml",
+                "network_data_file_id": "",
+                "type": "",
+                "upgrade": true,
+                "user_account": [],
+                "user_data_file_id": "local:snippets/cloud-user-config-storage01.yml",
+                "vendor_data_file_id": ""
+              }
+            ],
+            "ipv4_addresses": [
+              [
+                "127.0.0.1"
+              ],
+              [
+                "10.10.10.50"
+              ]
+            ],
+            "ipv6_addresses": [
+              [
+                "::1"
+              ],
+              [
+                "fe80::be24:11ff:fe6a:187"
+              ]
+            ],
+            "keyboard_layout": "en-us",
+            "kvm_arguments": "",
+            "mac_addresses": [
+              "00:00:00:00:00:00",
+              "BC:24:11:6A:01:87"
+            ],
+            "machine": "",
+            "memory": [
+              {
+                "dedicated": 1536,
+                "floating": 0,
+                "hugepages": "",
+                "keep_hugepages": false,
+                "shared": 0
+              }
+            ],
+            "migrate": false,
+            "name": "storage01",
+            "network_device": [
+              {
+                "bridge": "vmbr1",
+                "disconnected": false,
+                "enabled": true,
+                "firewall": false,
+                "mac_address": "BC:24:11:6A:01:87",
+                "model": "virtio",
+                "mtu": 0,
+                "queues": 0,
+                "rate_limit": 0,
+                "trunks": "",
+                "vlan_id": 0
+              }
+            ],
+            "network_interface_names": [
+              "lo",
+              "eth0"
+            ],
+            "node_name": "homelab",
+            "numa": [],
+            "on_boot": true,
+            "operating_system": [],
+            "pool_id": "",
+            "protection": false,
+            "purge_on_destroy": true,
+            "reboot": false,
+            "reboot_after_update": true,
+            "rng": [],
+            "scsi_hardware": "virtio-scsi-pci",
+            "serial_device": [],
+            "smbios": [],
+            "started": true,
+            "startup": [],
+            "stop_on_destroy": false,
+            "tablet_device": true,
+            "tags": [],
+            "template": false,
+            "timeout_clone": 1800,
+            "timeout_create": 1800,
+            "timeout_migrate": 1800,
+            "timeout_move_disk": 1800,
+            "timeout_reboot": 1800,
+            "timeout_shutdown_vm": 1800,
+            "timeout_start_vm": 1800,
+            "timeout_stop_vm": 300,
+            "tpm_state": [],
+            "usb": [],
+            "vga": [],
+            "virtiofs": [],
+            "vm_id": 550,
+            "watchdog": []
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "proxmox_download_file.almalinux_cloud_image",
+            "proxmox_virtual_environment_file.cloud_meta_config",
+            "proxmox_virtual_environment_file.cloud_user_config"
+          ]
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}
+

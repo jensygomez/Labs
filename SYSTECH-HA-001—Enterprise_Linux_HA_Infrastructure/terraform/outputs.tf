@@ -1,21 +1,46 @@
-output "cluster_ip_addresses" {
-  description = "Direcciones IP estáticas asignadas a cada nodo del clúster"
-  value = {
-    for k, v in proxmox_virtual_environment_vm.almalinux_cluster :
-    k => try(
-      # Intenta obtener la IP estática configurada en cloud-init
-      [for ip in v.initialization[0].ip_config[0].ipv4 : split("/", ip.address)[0]][0],
-      # Fallback: primera IP del agente que no sea loopback
-      [for ip in v.ipv4_addresses : ip if ip != "127.0.0.1"][0],
-      "IP no disponible aún"
+# outputs.tf
+
+resource "local_file" "ansible_inventory" {
+  content = templatefile("${path.module}/inventory.tmpl", {
+    nodes = merge(
+      {
+        for k, vm in incus_instance.vm_cluster : k => {
+          name = k
+          ip   = var.cluster_nodes[k].ip
+          role = var.cluster_nodes[k].role
+        }
+      },
+      {
+        for k, lxc in incus_instance.lxc_cluster : k => {
+          name = k
+          ip   = var.lxc_containers[k].ip
+          role = var.lxc_containers[k].role
+        }
+      }
     )
-  }
+
+    role_group_map = {
+      app        = "app_nodes"
+      db         = "db_nodes"
+      storage    = "storage_nodes"
+      lb         = "lb_nodes"
+      client     = "client_nodes"
+      monitoring = "monitoring_nodes"
+      dns        = "dns_nodes"
+    }
+  })
+  filename = "${path.module}/../ansible/inventories/production/hosts.yml"
 }
 
-output "lxc_ip_addresses" {
-  description = "Direcciones IP asignadas a cada contenedor LXC"
+output "infraestructura_desplegada" {
   value = {
-    for k, v in proxmox_virtual_environment_container.lxc_cluster :
-    k => split("/", v.initialization[0].ip_config[0].ipv4[0].address)[0]
+    lxc = [
+      for k, v in incus_instance.lxc_cluster :
+      "${k} = ${try(v.ipv4_address, "N/A")}"
+    ]
+    vms = [
+      for k, v in incus_instance.vm_cluster :
+      "${k} = ${try(v.ipv4_address, "N/A")}"
+    ]
   }
 }

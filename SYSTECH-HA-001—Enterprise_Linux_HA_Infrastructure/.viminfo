@@ -15,9 +15,9 @@
 
 # Command Line History (newest to oldest):
 :wq
-|2,0,1787719247,,"wq"
+|2,0,1787768211,,"wq"
 :q!
-|2,0,1787076335,,"q!"
+|2,0,1787768020,,"q!"
 
 # Search String History (newest to oldest):
 ? \<name\>
@@ -62,32 +62,146 @@
 |3,1,36,0,1,0,1787719245," "
 
 # File marks:
-'0  4  9  ~/incidents/006/006_remediation.yml
-|4,48,4,9,1787719247,"~/incidents/006/006_remediation.yml"
-'1  40  0  ~/incidents/006/006_remediation.yml
-|4,49,40,0,1787719117,"~/incidents/006/006_remediation.yml"
-'2  40  0  ~/incidents/006/006_remediation.yml
-|4,50,40,0,1787719117,"~/incidents/006/006_remediation.yml"
-'3  31  0  ~/incidents/006/006_remediation.yml
-|4,51,31,0,1787718827,"~/incidents/006/006_remediation.yml"
-'4  31  0  ~/incidents/006/006_remediation.yml
-|4,52,31,0,1787718827,"~/incidents/006/006_remediation.yml"
-'5  31  0  ~/incidents/006/006_remediation.yml
-|4,53,31,0,1787718827,"~/incidents/006/006_remediation.yml"
+'0  40  0  ~/terraform/outputs.tf
+|4,48,40,0,1787768211,"~/terraform/outputs.tf"
+'1  40  0  ~/terraform/outputs.tf
+|4,49,40,0,1787768068,"~/terraform/outputs.tf"
+'2  109  0  ~/terraform/incus_instances.tf
+|4,50,109,0,1787768033,"~/terraform/incus_instances.tf"
+'3  4  9  ~/incidents/006/006_remediation.yml
+|4,51,4,9,1787719247,"~/incidents/006/006_remediation.yml"
+'4  40  0  ~/incidents/006/006_remediation.yml
+|4,52,40,0,1787719117,"~/incidents/006/006_remediation.yml"
+'5  40  0  ~/incidents/006/006_remediation.yml
+|4,53,40,0,1787719117,"~/incidents/006/006_remediation.yml"
 '6  31  0  ~/incidents/006/006_remediation.yml
 |4,54,31,0,1787718827,"~/incidents/006/006_remediation.yml"
-'7  4  14  ~/incidents/006/006_remediation.yml
-|4,55,4,14,1787718441,"~/incidents/006/006_remediation.yml"
-'8  4  14  ~/incidents/006/006_remediation.yml
-|4,56,4,14,1787718441,"~/incidents/006/006_remediation.yml"
-'9  4  14  ~/incidents/006/006_remediation.yml
-|4,57,4,14,1787718441,"~/incidents/006/006_remediation.yml"
+'7  31  0  ~/incidents/006/006_remediation.yml
+|4,55,31,0,1787718827,"~/incidents/006/006_remediation.yml"
+'8  31  0  ~/incidents/006/006_remediation.yml
+|4,56,31,0,1787718827,"~/incidents/006/006_remediation.yml"
+'9  31  0  ~/incidents/006/006_remediation.yml
+|4,57,31,0,1787718827,"~/incidents/006/006_remediation.yml"
 
 # Jumplist (newest first):
+-'  40  0  ~/terraform/outputs.tf
+|4,39,40,0,1787768211,"~/terraform/outputs.tf"
+-'  1  0  ~/terraform/outputs.tf
+|4,39,1,0,1787768204,"~/terraform/outputs.tf"
+-'  40  0  ~/terraform/outputs.tf
+|4,39,40,0,1787768068,"~/terraform/outputs.tf"
+-'  1  0  ~/terraform/outputs.tf
+|4,39,1,0,1787768059,"~/terraform/outputs.tf"
+-'  109  0  ~/terraform/incus_instances.tf
+|4,39,109,0,1787768033,"~/terraform/incus_instances.tf"
+-'  109  0  ~/terraform/incus_instances.tf
+|4,39,109,0,1787768033,"~/terraform/incus_instances.tf"
+-'  109  0  ~/terraform/incus_instances.tf
+|4,39,109,0,1787768033,"~/terraform/incus_instances.tf"
+-'  109  0  ~/terraform/incus_instances.tf
+|4,39,109,0,1787768033,"~/terraform/incus_instances.tf"
+-'  1  0  ~/terraform/incus_instances.tf
+|4,39,1,0,1787768025,"~/terraform/incus_instances.tf"
+-'  1  0  ~/terraform/incus_instances.tf
+|4,39,1,0,1787768025,"~/terraform/incus_instances.tf"
+-'  1  0  ~/terraform/incus_instances.tf
+|4,39,1,0,1787768025,"~/terraform/incus_instances.tf"
+-'  1  0  ~/terraform/incus_instances.tf
+|4,39,1,0,1787768025,"~/terraform/incus_instances.tf"
+-'  4  9  ~/incidents/006/006_remediation.yml
+|4,39,4,9,1787719247,"~/incidents/006/006_remediation.yml"
+-'  4  9  ~/incidents/006/006_remediation.yml
+|4,39,4,9,1787719247,"~/incidents/006/006_remediation.yml"
+-'  4  9  ~/incidents/006/006_remediation.yml
+|4,39,4,9,1787719247,"~/incidents/006/006_remediation.yml"
+-'  4  9  ~/incidents/006/006_remediation.yml
+|4,39,4,9,1787719247,"~/incidents/006/006_remediation.yml"
+-'  4  9  ~/incidents/006/006_remediation.yml
+|4,39,4,9,1787719247,"~/incidents/006/006_remediation.yml"
+-'  4  9  ~/incidents/006/006_remediation.yml
+|4,39,4,9,1787719247,"~/incidents/006/006_remediation.yml"
+-'  4  9  ~/incidents/006/006_remediation.yml
+|4,39,4,9,1787719247,"~/incidents/006/006_remediation.yml"
+-'  4  9  ~/incidents/006/006_remediation.yml
+|4,39,4,9,1787719247,"~/incidents/006/006_remediation.yml"
+-'  4  9  ~/incidents/006/006_remediation.yml
+|4,39,4,9,1787719247,"~/incidents/006/006_remediation.yml"
+-'  4  9  ~/incidents/006/006_remediation.yml
+|4,39,4,9,1787719247,"~/incidents/006/006_remediation.yml"
+-'  4  9  ~/incidents/006/006_remediation.yml
+|4,39,4,9,1787719247,"~/incidents/006/006_remediation.yml"
+-'  4  9  ~/incidents/006/006_remediation.yml
+|4,39,4,9,1787719247,"~/incidents/006/006_remediation.yml"
+-'  4  9  ~/incidents/006/006_remediation.yml
+|4,39,4,9,1787719247,"~/incidents/006/006_remediation.yml"
+-'  4  9  ~/incidents/006/006_remediation.yml
+|4,39,4,9,1787719247,"~/incidents/006/006_remediation.yml"
+-'  4  9  ~/incidents/006/006_remediation.yml
+|4,39,4,9,1787719247,"~/incidents/006/006_remediation.yml"
 -'  4  9  ~/incidents/006/006_remediation.yml
 |4,39,4,9,1787719247,"~/incidents/006/006_remediation.yml"
 -'  40  0  ~/incidents/006/006_remediation.yml
 |4,39,40,0,1787719237,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719237,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719237,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719237,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719237,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719237,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719237,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719237,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719237,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719237,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719237,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719237,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719237,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719237,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719237,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719237,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719117,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719117,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719117,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719117,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719117,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719117,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719117,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719117,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719117,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719117,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719117,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719117,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719117,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719117,"~/incidents/006/006_remediation.yml"
+-'  40  0  ~/incidents/006/006_remediation.yml
+|4,39,40,0,1787719117,"~/incidents/006/006_remediation.yml"
 -'  40  0  ~/incidents/006/006_remediation.yml
 |4,39,40,0,1787719117,"~/incidents/006/006_remediation.yml"
 -'  31  0  ~/incidents/006/006_remediation.yml
@@ -95,197 +209,98 @@
 -'  31  0  ~/incidents/006/006_remediation.yml
 |4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
 -'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718997,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
 |4,39,31,0,1787718827,"~/incidents/006/006_remediation.yml"
--'  4  14  ~/incidents/006/006_remediation.yml
-|4,39,4,14,1787718621,"~/incidents/006/006_remediation.yml"
--'  4  14  ~/incidents/006/006_remediation.yml
-|4,39,4,14,1787718621,"~/incidents/006/006_remediation.yml"
--'  4  14  ~/incidents/006/006_remediation.yml
-|4,39,4,14,1787718441,"~/incidents/006/006_remediation.yml"
--'  17  0  ~/incidents/006/006_remediation.yml
-|4,39,17,0,1787718431,"~/incidents/006/006_remediation.yml"
--'  17  0  ~/incidents/006/006_remediation.yml
-|4,39,17,0,1787718431,"~/incidents/006/006_remediation.yml"
--'  17  0  ~/incidents/006/006_remediation.yml
-|4,39,17,0,1787718431,"~/incidents/006/006_remediation.yml"
--'  17  0  ~/incidents/006/006_remediation.yml
-|4,39,17,0,1787718431,"~/incidents/006/006_remediation.yml"
--'  17  0  ~/incidents/006/006_remediation.yml
-|4,39,17,0,1787718130,"~/incidents/006/006_remediation.yml"
--'  4  8  ~/incidents/006/006_remediation.yml
-|4,39,4,8,1787717942,"~/incidents/006/006_remediation.yml"
--'  4  8  ~/incidents/006/006_remediation.yml
-|4,39,4,8,1787717939,"~/incidents/006/006_remediation.yml"
--'  1  0  ~/incidents/006/006_remediation.yml
-|4,39,1,0,1787717872,"~/incidents/006/006_remediation.yml"
--'  1  0  ~/incidents/006/006_remediation.yml
-|4,39,1,0,1787717872,"~/incidents/006/006_remediation.yml"
--'  1  0  ~/incidents/006/006_remediation.yml
-|4,39,1,0,1787717872,"~/incidents/006/006_remediation.yml"
--'  1  0  ~/incidents/006/006_remediation.yml
-|4,39,1,0,1787717872,"~/incidents/006/006_remediation.yml"
--'  1  0  ~/incidents/006/006_remediation.yml
-|4,39,1,0,1787717872,"~/incidents/006/006_remediation.yml"
--'  1  0  ~/incidents/006/006_remediation.yml
-|4,39,1,0,1787717872,"~/incidents/006/006_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  40  3  ~/incidents/005/005_remediation.yml
-|4,39,40,3,1787682262,"~/incidents/005/005_remediation.yml"
--'  37  20  ~/incidents/005/005_remediation.yml
-|4,39,37,20,1787682242,"~/incidents/005/005_remediation.yml"
--'  37  20  ~/incidents/005/005_remediation.yml
-|4,39,37,20,1787682242,"~/incidents/005/005_remediation.yml"
--'  37  20  ~/incidents/005/005_remediation.yml
-|4,39,37,20,1787682242,"~/incidents/005/005_remediation.yml"
--'  37  20  ~/incidents/005/005_remediation.yml
-|4,39,37,20,1787682242,"~/incidents/005/005_remediation.yml"
--'  37  20  ~/incidents/005/005_remediation.yml
-|4,39,37,20,1787682242,"~/incidents/005/005_remediation.yml"
--'  37  20  ~/incidents/005/005_remediation.yml
-|4,39,37,20,1787682242,"~/incidents/005/005_remediation.yml"
--'  37  20  ~/incidents/005/005_remediation.yml
-|4,39,37,20,1787682242,"~/incidents/005/005_remediation.yml"
--'  37  20  ~/incidents/005/005_remediation.yml
-|4,39,37,20,1787682242,"~/incidents/005/005_remediation.yml"
--'  37  20  ~/incidents/005/005_remediation.yml
-|4,39,37,20,1787682242,"~/incidents/005/005_remediation.yml"
--'  37  20  ~/incidents/005/005_remediation.yml
-|4,39,37,20,1787682242,"~/incidents/005/005_remediation.yml"
--'  37  20  ~/incidents/005/005_remediation.yml
-|4,39,37,20,1787682242,"~/incidents/005/005_remediation.yml"
--'  37  20  ~/incidents/005/005_remediation.yml
-|4,39,37,20,1787682242,"~/incidents/005/005_remediation.yml"
--'  37  20  ~/incidents/005/005_remediation.yml
-|4,39,37,20,1787682242,"~/incidents/005/005_remediation.yml"
--'  37  20  ~/incidents/005/005_remediation.yml
-|4,39,37,20,1787682242,"~/incidents/005/005_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718827,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718827,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718827,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718827,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718827,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718827,"~/incidents/006/006_remediation.yml"
+-'  31  0  ~/incidents/006/006_remediation.yml
+|4,39,31,0,1787718827,"~/incidents/006/006_remediation.yml"
 
 # History of marks within files (newest to oldest):
+
+> ~/terraform/outputs.tf
+	*	1787768210	0
+	"	40	0
+	^	40	1
+	.	40	0
+	+	21	0
+	+	40	0
+
+> ~/terraform/incus_instances.tf
+	*	1787768033	0
+	"	109	0
+	^	109	1
+	.	109	0
+	+	109	0
 
 > ~/incidents/006/006_remediation.yml
 	*	1787719247	0
@@ -910,10 +925,3 @@
 	+	1	96
 	+	62	0
 	+	103	1
-
-> ~/terraform/outputs.tf
-	*	1786930254	0
-	"	21	0
-	^	21	1
-	.	21	0
-	+	21	0
