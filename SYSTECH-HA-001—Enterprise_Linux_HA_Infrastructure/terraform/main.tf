@@ -1,10 +1,10 @@
 # Descargar la imagen genérica de AlmaLinux 9 Cloud-Init directamente a Proxmox
 resource "proxmox_download_file" "almalinux_cloud_image" {
-  content_type = "iso"
+  content_type = "iso" # Se mantiene 'iso' porque el provider lo usa como origen de disco
   datastore_id = "local"
   node_name    = var.target_node
   url          = "https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/AlmaLinux-9-GenericCloud-latest.x86_64.qcow2"
-  file_name    = "almalinux-9-cloudinit.iso" # ← Corregido: .qcow2 → .iso
+  file_name    = "almalinux-9-cloudinit.qcow2" # ← Cambiado a .qcow2 para ser fieles al archivo
 }
 
 # Snippet de Cloud-Init (uno por VM, con hostname correcto)

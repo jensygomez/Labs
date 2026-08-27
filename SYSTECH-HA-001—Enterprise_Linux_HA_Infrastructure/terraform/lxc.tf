@@ -90,6 +90,7 @@ resource "null_resource" "lxc_provision_user" {
 
   provisioner "remote-exec" {
     inline = [
+      "sleep 5",
       "useradd -m -s /bin/bash ansible || true",
       "mkdir -p /home/ansible/.ssh",
       "echo '${var.ssh_public_key}' > /home/ansible/.ssh/authorized_keys",

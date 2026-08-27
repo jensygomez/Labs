@@ -5,6 +5,17 @@ variable "ssh_public_key" {
   type        = string
 }
 
+variable "target_node" {
+  description = "Nombre del nodo Proxmox donde se crearán las VMs/LXCs"
+  type        = string
+  default     = "infra" # infra.systech.local
+}
+
+variable "proxmox_api_token" {
+  description = "API Token de Proxmox para autenticación"
+  type        = string
+  sensitive   = true # ← Esto evita que se muestre en la consola
+}
 # Nodos LXC (Ubuntu 24.04)
 variable "lxc_containers" {
   description = "Mapa de contenedores LXC a crear"
