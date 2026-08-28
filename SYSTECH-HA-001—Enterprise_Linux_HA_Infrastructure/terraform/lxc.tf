@@ -59,6 +59,7 @@ resource "proxmox_virtual_environment_container" "lxc_cluster" {
 
   features {
     nesting = true # útil si algún día quieres correr Docker dentro del LXC
+    mount = "nfs;cifs"
   }
 
   start_on_boot = true

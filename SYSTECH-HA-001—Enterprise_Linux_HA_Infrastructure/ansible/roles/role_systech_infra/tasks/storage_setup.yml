@@ -1,15 +1,19 @@
 ---
-- name: "Instalar paquetes de NFS y LVM"
+# ==============================================================================
+# STORAGE SETUP — AlmaLinux 9 (VM)
+# ==============================================================================
+
+- name: "Instalar paquetes de NFS, LVM e iSCSI"
   ansible.builtin.dnf:
     name:
       - nfs-utils
       - lvm2
       - firewalld
-      - targetcli 
+      - targetcli
     state: present
     update_cache: true
   when: ansible_os_family == "RedHat"
-    
+
 - name: "Crear grupo postgres en storage01 con GID 26"
   ansible.builtin.group:
     name: postgres
@@ -25,11 +29,12 @@
     create_home: false
     system: true
   when: ansible_hostname == "storage01"
-  
+
 - name: "Crear Volume Group en storage01"
   community.general.lvg:
     vg: "vg_storage"
     pvs: "/dev/sdb,/dev/sdc,/dev/sdd,/dev/sde"
+  when: ansible_os_family == "RedHat"
 
 - name: "Crear Logical Volumes para NFS"
   community.general.lvol:
@@ -37,12 +42,14 @@
     lv: "{{ item.lv_name }}"
     size: "{{ item.lv_size }}"
   loop: "{{ nfs_exports }}"
+  when: ansible_os_family == "RedHat"
 
 - name: "Crear Filesystem XFS en los LVs de NFS"
   community.general.filesystem:
     fstype: xfs
     dev: "/dev/vg_storage/{{ item.lv_name }}"
   loop: "{{ nfs_exports }}"
+  when: ansible_os_family == "RedHat"
 
 - name: "Crear directorios de exportación NFS"
   ansible.builtin.file:
@@ -50,6 +57,7 @@
     state: directory
     mode: '0777'
   loop: "{{ nfs_exports }}"
+  when: ansible_os_family == "RedHat"
 
 - name: "Montar LVs en los puntos de exportación NFS"
   ansible.posix.mount:
@@ -58,6 +66,7 @@
     fstype: xfs
     state: mounted
   loop: "{{ nfs_exports }}"
+  when: ansible_os_family == "RedHat"
 
 - name: "Configurar archivo /etc/exports"
   ansible.builtin.template:
@@ -65,6 +74,7 @@
     dest: /etc/exports
     mode: '0644'
   notify: Restart NFS
+  when: ansible_os_family == "RedHat"
 
 - name: "Asegurar que los servicios de NFS y Firewalld estén activos"
   ansible.builtin.systemd:
@@ -74,6 +84,7 @@
   loop:
     - nfs-server
     - firewalld
+  when: ansible_os_family == "RedHat"
 
 - name: "Permitir servicios NFS en Firewalld"
   ansible.posix.firewalld:
@@ -85,16 +96,14 @@
     - nfs
     - mountd
     - rpc-bind
-
-# ======================================================================
-# --- NUEVA SECCIÓN: CONFIGURACIÓN iSCSI TARGET PARA DB01 ---
-# ======================================================================
+  when: ansible_os_family == "RedHat"
 
 - name: "Crear Logical Volume exclusivo para iSCSI DB"
   community.general.lvol:
     vg: "vg_storage"
     lv: "{{ iscsi_lv_name }}"
     size: "{{ iscsi_lv_size }}"
+  when: ansible_os_family == "RedHat"
 
 - name: "Configurar iSCSI Target con targetcli"
   ansible.builtin.shell: |
@@ -104,12 +113,14 @@
     targetcli /iscsi/{{ iscsi_target_iqn }}/tpg1/luns create /backstores/block/db_lun || true
     targetcli saveconfig
   changed_when: false
+  when: ansible_os_family == "RedHat"
 
 - name: "Asegurar servicio target (iSCSI) activo"
   ansible.builtin.systemd:
     name: target
     state: started
     enabled: true
+  when: ansible_os_family == "RedHat"
 
 - name: "Permitir puerto iSCSI (3260) en Firewalld"
   ansible.posix.firewalld:
@@ -117,3 +128,36 @@
     permanent: true
     state: enabled
     immediate: true
+  when: ansible_os_family == "RedHat"
+
+- name: "Instalar herramientas de gestión SELinux"
+  ansible.builtin.dnf:
+    name:
+      - policycoreutils-python-utils
+      - selinux-policy-targeted
+    state: present
+  when:
+    - ansible_os_family == "RedHat"
+    - ansible_selinux.status == "enabled"
+
+- name: "Configurar contexto SELinux para exports NFS"
+  ansible.builtin.command:
+    cmd: "semanage fcontext -a -t nfs_t '{{ item.path }}(/.*)?'"
+  loop: "{{ nfs_exports }}"
+  when:
+    - ansible_os_family == "RedHat"
+    - ansible_selinux.status == "enabled"
+  register: semanage_nfs
+  changed_when: "'already defined' not in semanage_nfs.stderr"
+  failed_when:
+    - semanage_nfs.rc != 0
+    - "'already defined' not in semanage_nfs.stderr"
+
+- name: "Aplicar contexto SELinux recursivamente a exports NFS"
+  ansible.builtin.command:
+    cmd: "restorecon -Rv {{ item.path }}"
+  loop: "{{ nfs_exports }}"
+  when:
+    - ansible_os_family == "RedHat"
+    - ansible_selinux.status == "enabled"
+  changed_when: true

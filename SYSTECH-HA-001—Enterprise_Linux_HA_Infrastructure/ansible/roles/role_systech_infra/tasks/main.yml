@@ -19,22 +19,34 @@
 # ==============================================================================
 
 - name: "Configurar Almacenamiento (NFS + iSCSI)"
-  ansible.builtin.include_tasks: storage_setup.yml
+  ansible.builtin.include_tasks:
+    file: storage_setup.yml
+    apply:
+      tags: ['storage']
   when: "'storage_nodes' in group_names"
   tags: ['storage']
 
 - name: "Configurar Base de Datos (PostgreSQL + iSCSI)"
-  ansible.builtin.include_tasks: database_setup.yml
+  ansible.builtin.include_tasks:
+    file: database_setup.yml
+    apply:
+      tags: ['database', 'db']
   when: "'db_nodes' in group_names"
   tags: ['database', 'db']
 
 - name: "Configurar Aplicación Web (Apache + PHP + NFS)"
-  ansible.builtin.include_tasks: web_app_setup.yml
+  ansible.builtin.include_tasks:
+    file: web_app_setup.yml
+    apply:
+      tags: ['web', 'app']
   when: "'app_nodes' in group_names"
   tags: ['web', 'app']
 
 - name: "Configurar Load Balancers (HAProxy + Keepalived)"
-  ansible.builtin.include_tasks: lb_setup.yml
+  ansible.builtin.include_tasks:
+    file: lb_setup.yml
+    apply:
+      tags: ['lb', 'loadbalancer']
   when: "'lb_nodes' in group_names"
   tags: ['lb', 'loadbalancer']
 
@@ -45,18 +57,28 @@
 # y simular comportamiento humano realista contra el VIP del Load Balancer.
 # ==============================================================================
 
+
 - name: "Configurar Cliente 01 (A-B State Flip & Read Cycle)"
-  ansible.builtin.include_tasks: clientes/client01.yml
+  ansible.builtin.include_tasks:
+    file: clientes/client01.yml
+    apply:
+      tags: ['client', 'client01']
   when: "'client_nodes' in group_names"
   tags: ['client', 'client01']
 
 - name: "Configurar Cliente 02 (Storage Simulation Cycle)"
-  ansible.builtin.include_tasks: clientes/client02.yml
+  ansible.builtin.include_tasks:
+    file: clientes/client02.yml
+    apply:
+      tags: ['client', 'client02']
   when: "'client_nodes' in group_names"
   tags: ['client', 'client02']
 
 - name: "Configurar Cliente 03 (Heavy Analytical Report Load)"
-  ansible.builtin.include_tasks: clientes/client03.yml
+  ansible.builtin.include_tasks:
+    file: clientes/client03.yml
+    apply:
+      tags: ['client', 'client03']
   when: "'client_nodes' in group_names"
   tags: ['client', 'client03']
 
@@ -64,7 +86,10 @@
 # DNS - SERVIDOR CENTRALIZADO
 # ==============================================================================
 - name: "Desplegar Servidor DNS (dnsmasq)"
-  ansible.builtin.include_tasks: dns/main.yml
+  ansible.builtin.include_tasks:
+    file: dns/main.yml
+    apply:
+      tags: ['dns', 'dns_server']
   when: "'dns_nodes' in group_names"
   tags: ['dns', 'dns_server']
 
@@ -73,6 +98,9 @@
 # Importante: Esto debe ejecutarse en TODOS los nodos para que usen dns01.
 # ==============================================================================
 - name: "Configurar resolv.conf en todos los nodos para usar DNS Central"
-  ansible.builtin.include_tasks: dns/network_setup.yml
+  ansible.builtin.include_tasks:
+    file: dns/network_setup.yml
+    apply:
+      tags: ['network', 'dns_client']
   when: "'dns_nodes' not in group_names"
   tags: ['network', 'dns_client']

@@ -3,15 +3,24 @@
 # SYSTECH-HA-001 - Enterprise Linux HA Infrastructure
 # ==============================================================================
 #
-# SECUENCIA DE EJECUCIÓN (Comandos de orquestación):
+# SECUENCIA DE EJECUCIÓN:
+# 
 # 1. Ejecutar todo el stack completo:
+#    ansible-playbook -i inventories/production/hosts.yml site.yml --ask-vault-pass
+#
+# 2. Ejecutar componentes específicos:
+#    ansible-playbook -i inventories/production/hosts.yml site.yml --tags 'storage' --ask-vault-pass
+#    ansible-playbook -i inventories/production/hosts.yml site.yml --tags 'db' --ask-vault-pass
+#    ansible-playbook -i inventories/production/hosts.yml site.yml --tags 'web' --ask-vault-pass
+#    ansible-playbook -i inventories/production/hosts.yml site.yml --tags 'lb' --ask-vault-pass
+#    ansible-playbook -i inventories/production/hosts.yml site.yml --tags 'client' --ask-vault-pass
+#
+# 3. Ejecutar múltiples componentes:
+#    ansible-playbook -i inventories/production/hosts.yml site.yml --tags 'storage,db,web' --ask-vault-pass
+#
+# 4. Listar tags disponibles:
+#    ansible-playbook -i inventories/production/hosts.yml site.yml --list-tags
 # ==============================================================================
-
-# ------------------------------------------------------------------------------
-# FASE 01:  
-# Comando individual: ansible-playbook -i ansible/inventories/production/hosts.yml ansible/site.yml --ask-vault-pass
-# ------------------------------------------------------------------------------
-
 
 - name: "Aprovisionamiento del Laboratorio HA - Módulo 1 & 2"
   hosts: all
