@@ -1,5 +1,29 @@
 ---
-- name: "Instalar Apache, PHP y módulos de Postgres"
+# ==============================================================================
+# WEB APP SETUP — Multi-OS (Ubuntu 24.04 LXC / AlmaLinux 9 VM)
+# ==============================================================================
+# Los archivos de la aplicación viven en storage01 (NFS).
+# SELinux solo se configura si el nodo es AlmaLinux (storage01 como VM).
+# ==============================================================================
+
+# ======================================================================
+# BLOQUE 1: INSTALACIÓN DE PAQUETES (Multi-OS)
+# ======================================================================
+
+- name: "Instalar Apache, PHP y dependencias NFS (Ubuntu/Debian)"
+  ansible.builtin.apt:
+    name:
+      - apache2
+      - php
+      - php-pgsql
+      - nfs-common
+      - ufw
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+
+- name: "Instalar Apache, PHP y dependencias NFS (AlmaLinux/RedHat)"
   ansible.builtin.dnf:
     name:
       - httpd
@@ -12,7 +36,8 @@
   when: ansible_os_family == "RedHat"
 
 # ======================================================================
-# --- BLOQUE DE MONTAJE NFS (CORREGIDO Y ROBUSTO) ---
+# BLOQUE 2: MONTAJE NFS (IDÉNTICO EN AMBOS SISTEMAS)
+# Los archivos viven en storage01:/exports/webdata
 # ======================================================================
 
 - name: "Forzar desmontaje perezoso (lazy) de /var/www/html para limpiar estados Stale"
@@ -33,11 +58,11 @@
     path: /var/www/html
     src: "{{ storage_host_ip }}:/exports/webdata"
     fstype: nfs
-    opts: "rw,sync,noatime,nodev,nosuid,vers=4" # vers=4 evita bloqueos de negociación en RHEL 9
+    opts: "rw,sync,noatime,nodev,nosuid,vers=4"
     state: mounted
 
 # ======================================================================
-# --- RESTO DEL DESPLIEGUE (INTACTO Y CORRECTO) ---
+# BLOQUE 3: DESPLIEGUE DE LA APLICACIÓN PHP
 # ======================================================================
 
 - name: "Desplegar aplicación PHP dinámica (Feed)"
@@ -46,7 +71,11 @@
     dest: /var/www/html/index.php
     mode: '0644'
 
-- name: "Habilitar booleano de SELinux para NFS y red en Apache"
+# ======================================================================
+# BLOQUE 4: SEGURIDAD — SELinux (SOLO AlmaLinux)
+# ======================================================================
+
+- name: "Habilitar booleanos de SELinux para NFS y red en Apache"
   ansible.posix.seboolean:
     name: "{{ item }}"
     state: true
@@ -54,8 +83,49 @@
   loop:
     - httpd_use_nfs
     - httpd_can_network_connect_db
+  when:
+    - ansible_os_family == "RedHat"
+    - ansible_selinux.status == "enabled"
 
-- name: "Iniciar y habilitar Apache y Firewalld"
+# ======================================================================
+# BLOQUE 5: FIREWALL (Multi-OS)
+# ======================================================================
+
+# --- Ubuntu: UFW ---
+- name: "Permitir HTTP en UFW (Ubuntu)"
+  community.general.ufw:
+    rule: allow
+    port: '80'
+    proto: tcp
+  when: ansible_os_family == "Debian"
+
+- name: "Habilitar UFW (Ubuntu)"
+  community.general.ufw:
+    state: enabled
+    policy: allow
+  when: ansible_os_family == "Debian"
+
+# --- AlmaLinux: Firewalld ---
+- name: "Permitir servicio HTTP en Firewalld (AlmaLinux)"
+  ansible.posix.firewalld:
+    service: http
+    permanent: true
+    state: enabled
+    immediate: true
+  when: ansible_os_family == "RedHat"
+
+# ======================================================================
+# BLOQUE 6: INICIAR Y HABILITAR SERVICIOS (Multi-OS)
+# ======================================================================
+
+- name: "Iniciar y habilitar Apache (Ubuntu)"
+  ansible.builtin.systemd:
+    name: apache2
+    state: started
+    enabled: true
+  when: ansible_os_family == "Debian"
+
+- name: "Iniciar y habilitar Apache y Firewalld (AlmaLinux)"
   ansible.builtin.systemd:
     name: "{{ item }}"
     state: started
@@ -63,10 +133,4 @@
   loop:
     - httpd
     - firewalld
-
-- name: "Permitir servicio HTTP en Firewalld"
-  ansible.posix.firewalld:
-    service: http
-    permanent: true
-    state: enabled
-    immediate: true
+  when: ansible_os_family == "RedHat"
