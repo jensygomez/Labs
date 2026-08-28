@@ -1,14 +1,14 @@
-# Descarga el template LXC de Ubuntu 24.04 (una sola vez, compartido por todos los contenedores)
-resource "proxmox_download_file" "lxc_template" {
+# Template LXC AlmaLinux 9 (Servidor oficial de Proxmox VE)
+resource "proxmox_download_file" "lxc_template_almalinux" {
   content_type = "vztmpl"
   datastore_id = "local"
   node_name    = var.target_node
-  url          = "http://download.proxmox.com/images/system/ubuntu-24.04-standard_24.04-2_amd64.tar.zst"
-  file_name    = "ubuntu-24.04-standard_24.04-2_amd64.tar.zst"
+  url          = "http://download.proxmox.com/images/system/almalinux-9-default_20240911_amd64.tar.xz"
+  file_name    = "almalinux-9-default_20240911_amd64.tar.xz"
+  overwrite    = true
 }
 
-# Cluster de contenedores LXC — for_each sobre var.lxc_containers
-# Para agregar/quitar un LXC: solo edita el mapa "lxc_containers" en variables.tf
+# Cluster de contenedores LXC en AlmaLinux 9
 resource "proxmox_virtual_environment_container" "lxc_cluster" {
   for_each = var.lxc_containers
 
@@ -36,8 +36,8 @@ resource "proxmox_virtual_environment_container" "lxc_cluster" {
   }
 
   operating_system {
-    template_file_id = proxmox_download_file.lxc_template.id
-    type             = "ubuntu"
+    template_file_id = proxmox_download_file.lxc_template_almalinux.id
+    type             = "centos"
   }
 
   initialization {
@@ -50,8 +50,6 @@ resource "proxmox_virtual_environment_container" "lxc_cluster" {
       }
     }
 
-    # El template LXC solo trae "root" por defecto; la llave se inyecta
-    # a root aquí. El usuario "ansible" se crea después vía null_resource.
     user_account {
       keys = [var.ssh_public_key]
     }
@@ -66,14 +64,11 @@ resource "proxmox_virtual_environment_container" "lxc_cluster" {
 }
 
 # ============================================================
-# Provisioning del usuario "ansible" dentro de cada LXC
-# (equivalente al "users:" del cloud-init que usan las VMs,
-#  necesario porque el template LXC no soporta cloud-init user creation)
+# Provisioning de AlmaLinux 9 ejecutado desde el Host Proxmox (pct exec)
 # ============================================================
 resource "null_resource" "lxc_provision_user" {
   for_each = var.lxc_containers
 
-  # Se re-ejecuta si el contenedor se recrea (nuevo id) o si cambia la llave pública
   triggers = {
     container_id = proxmox_virtual_environment_container.lxc_cluster[each.key].id
     ssh_key      = var.ssh_public_key
@@ -83,7 +78,7 @@ resource "null_resource" "lxc_provision_user" {
 
   connection {
     type        = "ssh"
-    host        = split("/", each.value.ip)[0]
+    host        = "10.10.10.1" # IP de la interfaz vmbr1 / Host Proxmox
     user        = "root"
     private_key = file("~/.ssh/id_systech_control")
     timeout     = "2m"
@@ -91,16 +86,23 @@ resource "null_resource" "lxc_provision_user" {
 
   provisioner "remote-exec" {
     inline = [
-      "sleep 5",
-      "useradd -m -s /bin/bash ansible || true",
-      "mkdir -p /home/ansible/.ssh",
-      "echo '${var.ssh_public_key}' > /home/ansible/.ssh/authorized_keys",
-      "chown -R ansible:ansible /home/ansible/.ssh",
-      "chmod 700 /home/ansible/.ssh",
-      "chmod 600 /home/ansible/.ssh/authorized_keys",
-      "echo 'ansible ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ansible",
-      "chmod 440 /etc/sudoers.d/ansible",
+      "sleep 3",
+      
+      # 1. Instalar y activar OpenSSH Server en AlmaLinux
+      "pct exec ${each.value.vmid} -- bash -c 'dnf install -y openssh-server && systemctl enable --now sshd'",
+      
+      # 2. Configurar la red persistente vía NetworkManager
+      "pct exec ${each.value.vmid} -- bash -c 'nmcli connection modify \"System eth0\" ipv4.addresses ${each.value.ip} ipv4.gateway 10.10.10.1 ipv4.dns \"1.1.1.1 8.8.8.8\" ipv4.method manual && nmcli connection up \"System eth0\"' || true",
+
+      # 3. Crear el usuario ansible e inyectar la clave SSH
+      "pct exec ${each.value.vmid} -- useradd -m -s /bin/bash ansible || true",
+      "pct exec ${each.value.vmid} -- mkdir -p /home/ansible/.ssh",
+      "pct exec ${each.value.vmid} -- bash -c \"echo '${var.ssh_public_key}' > /home/ansible/.ssh/authorized_keys\"",
+      "pct exec ${each.value.vmid} -- chown -R ansible:ansible /home/ansible/.ssh",
+      "pct exec ${each.value.vmid} -- chmod 700 /home/ansible/.ssh",
+      "pct exec ${each.value.vmid} -- chmod 600 /home/ansible/.ssh/authorized_keys",
+      "pct exec ${each.value.vmid} -- bash -c \"echo 'ansible ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ansible\"",
+      "pct exec ${each.value.vmid} -- chmod 440 /etc/sudoers.d/ansible"
     ]
   }
 }
-

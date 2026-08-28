@@ -27,7 +27,7 @@ variable "proxmox_api_token" {
   sensitive   = true
 }
 
-# Nodos LXC (Ubuntu 24.04)
+# Nodos LXC (Soporte Mixto: Ubuntu 24.04 / AlmaLinux 9)
 variable "lxc_containers" {
   description = "Mapa de contenedores LXC a crear"
   type = map(object({
@@ -40,18 +40,21 @@ variable "lxc_containers" {
     privileged = optional(bool, false)
   }))
   default = {
-
+    # CLIENTS (Ubuntu - No storage mounts -> Unprivileged)
     "client01" = { vmid = 111, ip = "10.10.10.11/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
     "client02" = { vmid = 112, ip = "10.10.10.12/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
     "client03" = { vmid = 113, ip = "10.10.10.13/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
 
+    # LOAD BALANCERS (Ubuntu - No storage mounts -> Unprivileged)
     "lb01" = { vmid = 221, ip = "10.10.10.21/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
     "lb02" = { vmid = 222, ip = "10.10.10.22/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
 
-    "app01" = { vmid = 331, ip = "10.10.10.31/24", cores = 2, memory = 512, disk_size = 8, role = "app" }
-    "app02" = { vmid = 332, ip = "10.10.10.32/24", cores = 2, memory = 512, disk_size = 8, role = "app" }
-    "app03" = { vmid = 333, ip = "10.10.10.33/24", cores = 2, memory = 512, disk_size = 8, role = "app" }
+    # APP NODES (NFS Mounts -> Privileged + AlmaLinux 9)
+    "app01" = { vmid = 331, ip = "10.10.10.31/24", cores = 2, memory = 512, disk_size = 8, role = "app", privileged = true }
+    "app02" = { vmid = 332, ip = "10.10.10.32/24", cores = 2, memory = 512, disk_size = 8, role = "app", privileged = true }
+    "app03" = { vmid = 333, ip = "10.10.10.33/24", cores = 2, memory = 512, disk_size = 8, role = "app", privileged = true }
 
+    # DB NODE (iSCSI / Mounts -> Privileged + AlmaLinux 9)
     "db01" = { vmid = 440, ip = "10.10.10.40/24", cores = 2, memory = 1024, disk_size = 8, role = "db", privileged = true }
   }
 }

@@ -1,29 +1,13 @@
 ---
 # ==============================================================================
-# WEB APP SETUP — Multi-OS (Ubuntu 24.04 LXC / AlmaLinux 9 VM)
-# ==============================================================================
-# Los archivos de la aplicación viven en storage01 (NFS).
-# SELinux solo se configura si el nodo es AlmaLinux (storage01 como VM).
+# WEB APP SETUP — AlmaLinux 9 (LXC Privilegiado)
 # ==============================================================================
 
 # ======================================================================
-# BLOQUE 1: INSTALACIÓN DE PAQUETES (Multi-OS)
+# BLOQUE 1: INSTALACIÓN DE PAQUETES DE APLICACIÓN Y NFS
 # ======================================================================
 
-- name: "Instalar Apache, PHP y dependencias NFS (Ubuntu/Debian)"
-  ansible.builtin.apt:
-    name:
-      - apache2
-      - php
-      - php-pgsql
-      - nfs-common
-      - ufw
-    state: present
-    update_cache: true
-    cache_valid_time: 3600
-  when: ansible_os_family == "Debian"
-
-- name: "Instalar Apache, PHP y dependencias NFS (AlmaLinux/RedHat)"
+- name: "Instalar Apache, PHP, cliente NFS y Firewalld"
   ansible.builtin.dnf:
     name:
       - httpd
@@ -33,19 +17,17 @@
       - firewalld
     state: present
     update_cache: true
-  when: ansible_os_family == "RedHat"
 
 # ======================================================================
-# BLOQUE 2: MONTAJE NFS (IDÉNTICO EN AMBOS SISTEMAS)
-# Los archivos viven en storage01:/exports/webdata
+# BLOQUE 2: MONTAJE DEL RECURSO COMPARTIDO NFS
 # ======================================================================
 
-- name: "Forzar desmontaje perezoso (lazy) de /var/www/html para limpiar estados Stale"
+- name: "Forzar desmontaje perezoso (lazy) de /var/www/html para evitar Stale Mounts"
   ansible.builtin.shell:
     cmd: "umount -l /var/www/html || true"
-  ignore_errors: true
+  changed_when: false
 
-- name: "Asegurar que el punto de montaje exista como directorio local"
+- name: "Asegurar existencia del directorio local /var/www/html"
   ansible.builtin.file:
     path: /var/www/html
     state: directory
@@ -53,7 +35,7 @@
     group: root
     mode: '0755'
 
-- name: "Montar recurso NFS compartido para la Web"
+- name: "Montar recurso NFS compartido desde storage01 en /var/www/html"
   ansible.posix.mount:
     path: /var/www/html
     src: "{{ storage_host_ip }}:/exports/webdata"
@@ -65,17 +47,19 @@
 # BLOQUE 3: DESPLIEGUE DE LA APLICACIÓN PHP
 # ======================================================================
 
-- name: "Desplegar aplicación PHP dinámica (Feed)"
+- name: "Desplegar aplicación PHP dinámica (index.php)"
   ansible.builtin.template:
     src: feed_app.php.j2
     dest: /var/www/html/index.php
+    owner: apache
+    group: apache
     mode: '0644'
 
 # ======================================================================
-# BLOQUE 4: SEGURIDAD — SELinux (SOLO AlmaLinux)
+# BLOQUE 4: SEGURIDAD — SELinux (Protegido para LXC)
 # ======================================================================
 
-- name: "Habilitar booleanos de SELinux para NFS y red en Apache"
+- name: "Habilitar booleanos de SELinux para Apache (Si SELinux está activo)"
   ansible.posix.seboolean:
     name: "{{ item }}"
     state: true
@@ -84,53 +68,32 @@
     - httpd_use_nfs
     - httpd_can_network_connect_db
   when:
-    - ansible_os_family == "RedHat"
+    - ansible_selinux is defined
     - ansible_selinux.status == "enabled"
 
 # ======================================================================
-# BLOQUE 5: FIREWALL (Multi-OS)
+# BLOQUE 5: CONFIGURACIÓN DE FIREWALL (Firewalld)
 # ======================================================================
 
-# --- Ubuntu: UFW ---
-- name: "Permitir HTTP en UFW (Ubuntu)"
-  community.general.ufw:
-    rule: allow
-    port: '80'
-    proto: tcp
-  when: ansible_os_family == "Debian"
+- name: "Asegurar servicio Firewalld activo"
+  ansible.builtin.systemd:
+    name: firewalld
+    state: started
+    enabled: true
 
-- name: "Habilitar UFW (Ubuntu)"
-  community.general.ufw:
-    state: enabled
-    policy: allow
-  when: ansible_os_family == "Debian"
-
-# --- AlmaLinux: Firewalld ---
-- name: "Permitir servicio HTTP en Firewalld (AlmaLinux)"
+- name: "Permitir tráfico HTTP (Puerto 80) en Firewalld"
   ansible.posix.firewalld:
     service: http
     permanent: true
     state: enabled
     immediate: true
-  when: ansible_os_family == "RedHat"
 
 # ======================================================================
-# BLOQUE 6: INICIAR Y HABILITAR SERVICIOS (Multi-OS)
+# BLOQUE 6: SERVICIOS Y REINICIO
 # ======================================================================
 
-- name: "Iniciar y habilitar Apache (Ubuntu)"
+- name: "Iniciar y habilitar el servicio Web (httpd)"
   ansible.builtin.systemd:
-    name: apache2
+    name: httpd
     state: started
     enabled: true
-  when: ansible_os_family == "Debian"
-
-- name: "Iniciar y habilitar Apache y Firewalld (AlmaLinux)"
-  ansible.builtin.systemd:
-    name: "{{ item }}"
-    state: started
-    enabled: true
-  loop:
-    - httpd
-    - firewalld
-  when: ansible_os_family == "RedHat"
