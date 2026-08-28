@@ -7,3 +7,6 @@
 *.key
 .ssh_tmp/
 secrets/*.plaintext
+
+terraform/secrets.auto.tfvars
+*.auto.tfvars

@@ -4,7 +4,7 @@ resource "proxmox_download_file" "almalinux_cloud_image" {
   datastore_id = "local"
   node_name    = var.target_node
   url          = "https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/AlmaLinux-9-GenericCloud-latest.x86_64.qcow2"
-  file_name    = "almalinux-9-cloudinit.qcow2" # ← Cambiado a .qcow2 para ser fieles al archivo
+  file_name    = "almalinux-9-cloudinit.iso" 
 }
 
 # Snippet de Cloud-Init (uno por VM, con hostname correcto)

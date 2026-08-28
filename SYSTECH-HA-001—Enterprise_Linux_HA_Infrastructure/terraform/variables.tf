@@ -4,6 +4,11 @@ variable "ssh_public_key" {
   description = "Clave pública SSH para inyectar en los nodos"
   type        = string
 }
+variable "ssh_private_key" {
+  description = "Clave privada SSH para que Terraform se autentique en Proxmox"
+  type        = string
+  sensitive   = true
+}
 
 variable "target_node" {
   description = "Nombre del nodo Proxmox donde se crearán las VMs/LXCs"
@@ -14,8 +19,9 @@ variable "target_node" {
 variable "proxmox_api_token" {
   description = "API Token de Proxmox para autenticación"
   type        = string
-  sensitive   = true # ← Esto evita que se muestre en la consola
+  sensitive   = true
 }
+
 # Nodos LXC (Ubuntu 24.04)
 variable "lxc_containers" {
   description = "Mapa de contenedores LXC a crear"
@@ -28,9 +34,19 @@ variable "lxc_containers" {
     role      = string
   }))
   default = {
-    "lb01"   = { vmid = 101, ip = "10.10.10.21/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
-    "lb02"   = { vmid = 102, ip = "10.10.10.22/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
-    "client" = { vmid = 111, ip = "10.10.10.11/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
+    
+    "client01" = { vmid = 111, ip = "10.10.10.11/24", cores = 1, memory = 512, disk_size = 8, role = "client01" }"
+    "client02" = { vmid = 112, ip = "10.10.10.12/24", cores = 1, memory = 512, disk_size = 8, role = "client02" }
+    "client03" = { vmid = 113, ip = "10.10.10.13/24", cores = 1, memory = 512, disk_size = 8, role = "client03" }
+    
+    "lb01"     = { vmid = 221, ip = "10.10.10.21/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
+    "lb02"     = { vmid = 222, ip = "10.10.10.22/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
+    
+    "app01"    = { vmid = 331, ip = "10.10.10.31/24", cores = 2, memory = 2048, disk_size = 20, role = "app" }
+    "app02"    = { vmid = 332, ip = "10.10.10.32/24", cores = 2, memory = 2048, disk_size = 20, role = "app" }
+    "app03"    = { vmid = 333, ip = "10.10.10.33/24", cores = 2, memory = 2048, disk_size = 20, role = "app" }
+    
+    "db01"     = { vmid = 440, ip = "10.10.10.40/24", cores = 2, memory = 4096, disk_size = 40, role = "db" }
   }
 }
 
@@ -42,14 +58,11 @@ variable "cluster_nodes" {
     ip          = string
     cores       = number
     memory      = number
-    extra_disks = list(number) # Ej: [10, 20] para discos adicionales
+    extra_disks = list(number)
     role        = string
   }))
   default = {
-    "app01"     = { vmid = 201, ip = "10.10.10.31/24", cores = 2, memory = 2048, extra_disks = [], role = "app" }
-    "app02"     = { vmid = 202, ip = "10.10.10.32/24", cores = 2, memory = 2048, extra_disks = [], role = "app" }
-    "app03"     = { vmid = 203, ip = "10.10.10.33/24", cores = 2, memory = 2048, extra_disks = [], role = "app" }
-    "db01"      = { vmid = 301, ip = "10.10.10.40/24", cores = 2, memory = 4096, extra_disks = [20], role = "db" }
-    "storage01" = { vmid = 401, ip = "10.10.10.50/24", cores = 2, memory = 2048, extra_disks = [10, 10, 10, 10], role = "storage" }
+    # Solo queda storage01 como VM real debido a su necesidad de múltiples discos
+    "storage01" = { vmid = 550, ip = "10.10.10.50/24", cores = 2, memory = 2048, extra_disks = [10, 10, 10, 10], role = "storage" }
   }
 }

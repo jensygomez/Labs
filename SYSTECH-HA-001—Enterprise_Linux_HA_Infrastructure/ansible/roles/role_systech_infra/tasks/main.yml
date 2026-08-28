@@ -3,26 +3,19 @@
 # GUÍA DE EJECUCIÓN POR COMPONENTES (TAGS)
 # ==============================================================================
 # Este archivo orquesta el despliegue modular de toda la infraestructura.
-# Gracias a los tags, puedes ejecutar componentes específicos sin tocar 
-# el resto del stack.
 #
 # 1. Ejecutar TODO el stack (comportamiento por defecto):
 #    ansible-playbook -i inventories/production/hosts.yml site.yml --ask-vault-pass
 #
 # 2. Ejecutar SOLO un componente específico:
-#    ansible-playbook -i inventories/production/hosts.yml site.yml --tags 'dns,network' --ask-vault-pass
-#    ansible-playbook -i inventories/production/hosts.yml site.yml --tags lb --ask-vault-pass
-#    ansible-playbook -i inventories/production/hosts.yml site.yml --tags storage --ask-vault-pass
-#    ansible-playbook -i inventories/production/hosts.yml site.yml --tags client --ask-vault-pass
-
+#    ansible-playbook -i inventories/production/hosts.yml site.yml --tags 'lb' --ask-vault-pass
+#    ansible-playbook -i inventories/production/hosts.yml site.yml --tags 'client01' --ask-vault-pass
 #
 # 3. Ejecutar múltiples componentes a la vez:
-#    ansible-playbook -i inventories/production/hosts.yml site.yml --tags 'dns,lb' --ask-vault-pass
+#    ansible-playbook -i inventories/production/hosts.yml site.yml --tags 'dns,lb,client' --ask-vault-pass
 #
-#
-# 4. Listar todos los tags disponibles en este rol para consultar:
+# 4. Listar todos los tags disponibles:
 #    ansible-playbook -i inventories/production/hosts.yml site.yml --list-tags
-#    ansible-playbook -i inventories/production/hosts.yml site.yml --ask-vault-pass
 # ==============================================================================
 
 - name: "Configurar Almacenamiento (NFS + iSCSI)"
@@ -45,10 +38,27 @@
   when: "'lb_nodes' in group_names"
   tags: ['lb', 'loadbalancer']
 
-- name: "Configurar Cliente de Pruebas"
-  ansible.builtin.include_tasks: client_setup.yml
+# ==============================================================================
+# CLIENTES - SIMULACIÓN DE TRÁFICO ASINCRÓNICO (3 PERFILES DISTINTOS)
+# ==============================================================================
+# Se despliegan los 3 perfiles para garantizar la desincronización temporal
+# y simular comportamiento humano realista contra el VIP del Load Balancer.
+# ==============================================================================
+
+- name: "Configurar Cliente 01 (A-B State Flip & Read Cycle)"
+  ansible.builtin.include_tasks: clientes/client01.yml
   when: "'client_nodes' in group_names"
-  tags: ['client']
+  tags: ['client', 'client01']
+
+- name: "Configurar Cliente 02 (Storage Simulation Cycle)"
+  ansible.builtin.include_tasks: clientes/client02.yml
+  when: "'client_nodes' in group_names"
+  tags: ['client', 'client02']
+
+- name: "Configurar Cliente 03 (Heavy Analytical Report Load)"
+  ansible.builtin.include_tasks: clientes/client03.yml
+  when: "'client_nodes' in group_names"
+  tags: ['client', 'client03']
 
 # ==============================================================================
 # DNS - SERVIDOR CENTRALIZADO
@@ -60,11 +70,9 @@
 
 # ==============================================================================
 # RED - CONFIGURACIÓN DE CLIENTES DNS
-# Importante: Esto debe ejecutarse en TODOS los nodos (app, db, lb, client)
-# para que usen dns01 como resolver.
+# Importante: Esto debe ejecutarse en TODOS los nodos para que usen dns01.
 # ==============================================================================
 - name: "Configurar resolv.conf en todos los nodos para usar DNS Central"
   ansible.builtin.include_tasks: dns/network_setup.yml
-  when: "'dns_nodes' not in group_names" # Opcional: para no aplicarlo a sí mismo, o déjalo en 'all'
+  when: "'dns_nodes' not in group_names"
   tags: ['network', 'dns_client']
-

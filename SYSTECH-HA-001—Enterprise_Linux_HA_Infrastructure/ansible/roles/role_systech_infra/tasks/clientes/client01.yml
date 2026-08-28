@@ -1,0 +1,57 @@
+---
+- name: "Instalar utilidades requeridas"
+  ansible.builtin.apt:
+    name: ['curl', 'jq']
+    state: present
+    update_cache: true
+  when: ansible_os_family == "Debian"
+
+- name: "Desplegar script de tráfico para Client01 (Una sola ronda lineal)"
+  ansible.builtin.copy:
+    dest: /usr/local/bin/client01_traffic.sh
+    mode: '0755'
+    content: |
+      #!/bin/bash
+      VIP="10.10.10.30"
+      
+      echo "[$(date +'%T')] --- INICIANDO ronda de trabajo Client01 ---"
+      
+      echo "[$(date +'%T')] LEYENDO nombres..."
+      curl -s "http://${VIP}/?q=4" | jq -c '{nodo: .atendido_por, pregunta: .pregunta}'
+      sleep 3
+      
+      echo "[$(date +'%T')] CAMBIANDO iniciales de A -> B..."
+      curl -s "http://${VIP}/?action=update_initial&from=A&to=B" | jq -c '{nodo: .atendido_por, accion: .accion}'
+      sleep 4
+      
+      echo "[$(date +'%T')] REVIRTIENDO iniciales de B -> A..."
+      curl -s "http://${VIP}/?action=update_initial&from=B&to=A" | jq -c '{nodo: .atendido_por, accion: .accion}'
+      
+      echo "[$(date +'%T')] --- RONDA FINALIZADA. El script termina y descansa ---"
+
+- name: "Crear servicio systemd para Client01 con pausa entre ejecuciones"
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/traffic-client01.service
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Generador de tráfico Client01 (A-B flip controlado por Systemd)
+      After=network.target
+      
+      [Service]
+      Type=simple
+      ExecStart=/usr/local/bin/client01_traffic.sh
+      Restart=always
+      RestartSec=30
+      StandardOutput=append:/var/log/client01_traffic.log
+      StandardError=append:/var/log/client01_traffic.log
+      
+      [Install]
+      WantedBy=multi-user.target
+
+- name: "Habilitar e iniciar el servicio"
+  ansible.builtin.systemd:
+    name: traffic-client01
+    state: started
+    enabled: true
+    daemon_reload: true

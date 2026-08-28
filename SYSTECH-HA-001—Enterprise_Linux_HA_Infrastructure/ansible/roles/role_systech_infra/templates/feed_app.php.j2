@@ -15,55 +15,82 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // ------------------------------------------------------------
-    // ENDPOINT DE ESCRITURA (?action=write)
-    // Genera tráfico de escritura real hacia el disco iSCSI de
-    // storage01 (montado en db01 en /var/lib/pgsql/data).
-    // No expone datos de negocio, solo confirma la operación.
+    // CLIENTE 01: Actualización con retención de 3s (Base de Datos)
     // ------------------------------------------------------------
-    if ($action === 'write') {
-        $pdo->exec("CREATE TABLE IF NOT EXISTS traffic_log (
-            id SERIAL PRIMARY KEY,
-            node VARCHAR(50) NOT NULL,
-            created_at TIMESTAMP NOT NULL DEFAULT NOW()
-        );");
-
-        $stmt = $pdo->prepare("INSERT INTO traffic_log (node) VALUES (:node)");
-        $stmt->execute(['node' => $server_node]);
+    if ($action === 'update_initial') {
+        $from = isset($_GET['from']) ? $_GET['from'] : 'A';
+        $to = isset($_GET['to']) ? $_GET['to'] : 'B';
+        
+        sleep(3); // Ocupa el servidor web/backend por 3 segundos
+        
+        $stmt = $pdo->prepare("UPDATE employees SET first_name = :to || SUBSTRING(first_name, 2) WHERE first_name LIKE :from_like");
+        $stmt->execute(['to' => $to, 'from_like' => $from . '%']);
+        $rowCount = $stmt->rowCount();
 
         echo json_encode([
             'status'       => 'success',
             'atendido_por' => $server_node,
-            'accion'       => 'write'
+            'accion'       => "Cambiados $rowCount nombres de $from a $to"
         ]);
         exit;
     }
 
     // ------------------------------------------------------------
-    // ENDPOINTS DE LECTURA (?q=1..5) — sin cambios de lógica
+    // CLIENTE 02: Simulación de Storage01 con retención de 7s
+    // ------------------------------------------------------------
+    if ($action === 'storage_write') {
+        sleep(7); // Ocupa el servidor web/backend por 7 segundos (no se solapa con client01)
+        
+        echo json_encode([
+            'status'       => 'success',
+            'atendido_por' => $server_node,
+            'accion'       => 'Escritura simulada en storage01 (10.10.10.50) completada (7s)'
+        ]);
+        exit;
+    }
+
+    if ($action === 'storage_read') {
+        sleep(2); 
+        
+        echo json_encode([
+            'status'       => 'success',
+            'atendido_por' => $server_node,
+            'accion'       => 'Lectura simulada desde storage01 (10.10.10.50) completada'
+        ]);
+        exit;
+    }
+    // ------------------------------------------------------------
+    // CLIENTE 03: Reporte analítico masivo con retención de 12s
+    // ------------------------------------------------------------
+    if ($action === 'heavy_report') {
+        sleep(12); // Ocupa el servidor web/backend por 12 segundos
+        
+        $stmt = $pdo->query("SELECT department, COUNT(*), AVG(salary) FROM employees GROUP BY department;");
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        echo json_encode([
+            'status'       => 'success',
+            'atendido_por' => $server_node,
+            'accion'       => 'Reporte analítico masivo de empleados completado (12s)',
+            'data'         => $results
+        ]);
+        exit;
+    }
+
+    // ------------------------------------------------------------
+    // ENDPOINTS DE LECTURA GENERAL (?q=1..5)
     // ------------------------------------------------------------
     switch ($query_type) {
         case 1:
             $title = "¿Cuántos empleados hay en total?";
             $sql = "SELECT COUNT(*) as total_empleados FROM employees;";
             break;
-        case 2:
-            $title = "¿Cuántos ganan más de $1000?";
-            $sql = "SELECT first_name, last_name, salary FROM employees WHERE salary > 1000 ORDER BY salary DESC;";
-            break;
-        case 3:
-            $title = "Lista de empleados del departamento de RH";
-            $sql = "SELECT first_name, last_name, department, salary FROM employees WHERE department = 'RH';";
-            break;
         case 4:
             $title = "Lista de empleados cuyo nombre inicia con 'A'";
             $sql = "SELECT first_name, last_name, department FROM employees WHERE first_name LIKE 'A%';";
             break;
-        case 5:
-            $title = "Empleados con más de 2 años en la empresa";
-            $sql = "SELECT first_name, last_name, hire_date FROM employees WHERE hire_date <= CURRENT_DATE - INTERVAL '2 years';";
-            break;
         default:
-            $title = "Consulta no válida";
+            $title = "Consulta general";
             $sql = "SELECT COUNT(*) FROM employees;";
     }
 

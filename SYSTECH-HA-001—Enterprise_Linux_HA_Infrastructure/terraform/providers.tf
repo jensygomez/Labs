@@ -1,3 +1,4 @@
+# providers.tf
 terraform {
   required_version = ">= 1.6.0"
   required_providers {
@@ -13,7 +14,19 @@ terraform {
 }
 
 provider "proxmox" {
-  endpoint  = "https://100.93.29.93:8006/" # IP de Taiscale
-  api_token = var.proxmox_api_token        # la que está en Vault
-  insecure  = true                         # solo para pruebas, después cámbialo a false
+  endpoint  = "https://100.93.29.93:8006/"
+  api_token = var.proxmox_api_token
+  insecure  = true
+
+  # ✅ BLOQUE SSH AGREGADO: Le dice al provider cómo conectarse por SSH
+  ssh {
+    agent       = false
+    username    = "root"
+    private_key = var.ssh_private_key
+    
+    node {
+      name    = "infra"
+      address = "100.93.29.93"
+    }
+  }
 }

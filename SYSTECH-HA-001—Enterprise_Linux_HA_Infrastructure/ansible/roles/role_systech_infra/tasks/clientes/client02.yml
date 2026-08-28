@@ -1,0 +1,54 @@
+---
+- name: "Instalar utilidades requeridas"
+  ansible.builtin.apt:
+    name: ['curl', 'jq']
+    state: present
+    update_cache: true
+  when: ansible_os_family == "Debian"
+
+- name: "Desplegar script de tráfico para Client02 (Una sola ronda lineal Storage01)"
+  ansible.builtin.copy:
+    dest: /usr/local/bin/client02_traffic.sh
+    mode: '0755'
+    content: |
+      #!/bin/bash
+      VIP="10.10.10.30"
+      
+      echo "[$(date +'%T')] --- INICIANDO ronda de almacenamiento Client02 ---"
+      
+      echo "[$(date +'%T')] LEYENDO datos desde Storage01..."
+      curl -s "http://${VIP}/?action=storage_read" | jq -c '{nodo: .atendido_por, accion: .accion}'
+      sleep 2
+      
+      echo "[$(date +'%T')] ESCRIBIENDO datos en Storage01 (LENTO - 7s)..."
+      curl -s "http://${VIP}/?action=storage_write" | jq -c '{nodo: .atendido_por, accion: .accion}'
+      sleep 3
+      
+      echo "[$(date +'%T')] --- RONDA STORAGE FINALIZADA. El script termina y descansa ---"
+
+- name: "Crear servicio systemd para Client02 con pausa entre ejecuciones"
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/traffic-client02.service
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Generador de tráfico Client02 (Storage01 load controlado por Systemd)
+      After=network.target
+      
+      [Service]
+      Type=simple
+      ExecStart=/usr/local/bin/client02_traffic.sh
+      Restart=always
+      RestartSec=40
+      StandardOutput=append:/var/log/client02_traffic.log
+      StandardError=append:/var/log/client02_traffic.log
+      
+      [Install]
+      WantedBy=multi-user.target
+
+- name: "Habilitar e iniciar el servicio"
+  ansible.builtin.systemd:
+    name: traffic-client02
+    state: started
+    enabled: true
+    daemon_reload: true
