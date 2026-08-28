@@ -14,7 +14,7 @@ resource "proxmox_virtual_environment_container" "lxc_cluster" {
 
   node_name    = var.target_node
   vm_id        = each.value.vmid
-  unprivileged = true
+  unprivileged = !each.value.privileged
   started      = true
 
   cpu {
@@ -58,8 +58,8 @@ resource "proxmox_virtual_environment_container" "lxc_cluster" {
   }
 
   features {
-    nesting = true # útil si algún día quieres correr Docker dentro del LXC
-    mount = "nfs;cifs"
+    nesting = true
+    mount   = ["nfs", "cifs"]
   }
 
   start_on_boot = true

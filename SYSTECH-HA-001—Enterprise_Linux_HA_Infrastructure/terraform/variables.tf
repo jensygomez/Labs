@@ -1,5 +1,10 @@
 # variables.tf
 
+variable "proxmox_password" {
+  description = "Contraseña de root@pam en Proxmox (necesaria para modificar feature flags de LXC vía ticket-auth)"
+  type        = string
+  sensitive   = true
+}
 variable "ssh_public_key" {
   description = "Clave pública SSH para inyectar en los nodos"
   type        = string
@@ -26,27 +31,28 @@ variable "proxmox_api_token" {
 variable "lxc_containers" {
   description = "Mapa de contenedores LXC a crear"
   type = map(object({
-    vmid      = number
-    ip        = string
-    cores     = number
-    memory    = number
-    disk_size = number
-    role      = string
+    vmid       = number
+    ip         = string
+    cores      = number
+    memory     = number
+    disk_size  = number
+    role       = string
+    privileged = optional(bool, false)
   }))
   default = {
-    
+
     "client01" = { vmid = 111, ip = "10.10.10.11/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
     "client02" = { vmid = 112, ip = "10.10.10.12/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
     "client03" = { vmid = 113, ip = "10.10.10.13/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
-    
-    "lb01"     = { vmid = 221, ip = "10.10.10.21/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
-    "lb02"     = { vmid = 222, ip = "10.10.10.22/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
-    
-    "app01"    = { vmid = 331, ip = "10.10.10.31/24", cores = 2, memory = 512, disk_size = 8, role = "app" }
-    "app02"    = { vmid = 332, ip = "10.10.10.32/24", cores = 2, memory = 512, disk_size = 8, role = "app" }
-    "app03"    = { vmid = 333, ip = "10.10.10.33/24", cores = 2, memory = 512, disk_size = 8, role = "app" }
-    
-    "db01"     = { vmid = 440, ip = "10.10.10.40/24", cores = 2, memory = 1024, disk_size = 8, role = "db" }
+
+    "lb01" = { vmid = 221, ip = "10.10.10.21/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
+    "lb02" = { vmid = 222, ip = "10.10.10.22/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
+
+    "app01" = { vmid = 331, ip = "10.10.10.31/24", cores = 2, memory = 512, disk_size = 8, role = "app" }
+    "app02" = { vmid = 332, ip = "10.10.10.32/24", cores = 2, memory = 512, disk_size = 8, role = "app" }
+    "app03" = { vmid = 333, ip = "10.10.10.33/24", cores = 2, memory = 512, disk_size = 8, role = "app" }
+
+    "db01" = { vmid = 440, ip = "10.10.10.40/24", cores = 2, memory = 1024, disk_size = 8, role = "db", privileged = true }
   }
 }
 
