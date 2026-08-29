@@ -13,42 +13,46 @@
     update_cache: true
   when: ansible_os_family == "RedHat"
 
-- name: "Desplegar script de tráfico para Client02 (ocupación prolongada)"
+- name: "Desplegar script de tráfico para Client02 (ocupación prolongada y ÚNICA)"
   ansible.builtin.copy:
     dest: /usr/local/bin/client02_traffic.sh
     mode: '0755'
     content: |
       #!/bin/bash
       VIP="10.10.10.30"
-      DURATION={{ client02_ocupacion_segundos | default(20) }}
+      # Duración de 60 segundos (1 minuto) para ocupar el servidor en una sola petición
+      DURATION={{ client02_ocupacion_segundos | default(60) }}
       
       echo "[$(date +'%T')] --- INICIANDO ocupación de ${DURATION} segundos ---"
+      echo "[$(date +'%T')] --- Enviando petición única a http://${VIP}/?action=storage_write&duration=${DURATION}"
+      
+      # Una única petición curl que mantendrá la conexión abierta durante ${DURATION} segundos
       curl -s "http://${VIP}/?action=storage_write&duration=${DURATION}" | jq -c '{nodo: .atendido_por, accion: .accion, archivo: .archivo_creado}'
-      echo "[$(date +'%T')] --- OCUPACIÓN FINALIZADA ---"
+      
+      echo "[$(date +'%T')] --- OCUPACIÓN FINALIZADA (1 solo registro generado) ---"
 
-- name: "Configurar servicio systemd con RestartSec={{ client02_descanso_segundos | default(45) }}"
+- name: "Configurar servicio systemd para ejecución ÚNICA bajo demanda (sin bucles)"
   ansible.builtin.copy:
     dest: /etc/systemd/system/traffic-client02.service
     mode: '0644'
     content: |
       [Unit]
-      Description=Generador de tráfico Client02 (ocupación controlada)
+      Description=Generador de tráfico Client02 (ocupación controlada y única)
       After=network.target
-      
+
       [Service]
-      Type=simple
+      Type=oneshot
       ExecStart=/usr/local/bin/client02_traffic.sh
-      Restart=always
-      RestartSec={{ client02_descanso_segundos | default(40) }}
+      # Restart=no garantiza que NO se ejecute en bucle, solo cuando tú lo inicies manualmente
+      Restart=no
       StandardOutput=append:/var/log/client02_traffic.log
       StandardError=append:/var/log/client02_traffic.log
-      
+
       [Install]
       WantedBy=multi-user.target
 
-- name: "Habilitar e iniciar el servicio"
+- name: "Recargar systemd y habilitar el servicio (sin iniciarlo automáticamente)"
   ansible.builtin.systemd:
     name: traffic-client02
-    state: started
     enabled: true
     daemon_reload: true
