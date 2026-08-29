@@ -53,17 +53,17 @@
 # ==============================================================================
 # CLIENTES - SIMULACIÓN DE TRÁFICO ASINCRÓNICO (3 PERFILES DISTINTOS)
 # ==============================================================================
-# Se despliegan los 3 perfiles para garantizar la desincronización temporal
-# y simular comportamiento humano realista contra el VIP del Load Balancer.
+# Cada perfil se aplica SOLO a su host correspondiente (1:1 por nombre),
+# no a todo el grupo client_nodes, para evitar que los 3 perfiles se
+# desplieguen simultáneamente en los 3 hosts.
 # ==============================================================================
-
 
 - name: "Configurar Cliente 01 (A-B State Flip & Read Cycle)"
   ansible.builtin.include_tasks:
     file: clientes/client01.yml
     apply:
       tags: ['client', 'client01']
-  when: "'client_nodes' in group_names"
+  when: "inventory_hostname == 'client01'"
   tags: ['client', 'client01']
 
 - name: "Configurar Cliente 02 (Storage Simulation Cycle)"
@@ -71,7 +71,7 @@
     file: clientes/client02.yml
     apply:
       tags: ['client', 'client02']
-  when: "'client_nodes' in group_names"
+  when: "inventory_hostname == 'client02'"
   tags: ['client', 'client02']
 
 - name: "Configurar Cliente 03 (Heavy Analytical Report Load)"
@@ -79,7 +79,7 @@
     file: clientes/client03.yml
     apply:
       tags: ['client', 'client03']
-  when: "'client_nodes' in group_names"
+  when: "inventory_hostname == 'client03'"
   tags: ['client', 'client03']
 
 # ==============================================================================
