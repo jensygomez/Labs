@@ -1,9 +1,13 @@
 ---
 # ==============================================================================
-# POSTGRESQL PLAYBOOK (NFS BACKEND FOR LXC)
+# DATABASE SETUP — PostgreSQL sobre NFS Backend (AlmaLinux 9)
 # ==============================================================================
 
-- name: "Instalar paquetes necesarios (PostgreSQL, Client NFS y Firewalld)"
+# ======================================================================
+# BLOQUE 1: INSTALACIÓN DE PAQUETES
+# ======================================================================
+
+- name: "Instalar PostgreSQL, cliente NFS y Firewalld"
   ansible.builtin.dnf:
     name:
       - postgresql-server
@@ -13,6 +17,44 @@
       - firewalld
     state: present
     update_cache: true
+
+# ======================================================================
+# BLOQUE 2: MONTAJE NFS PARA DATOS DE POSTGRESQL
+# (Mismo patrón que web_app_setup.yml: desmontaje perezoso antes de montar,
+#  para evitar Stale Mounts tras un rebuild de la VM)
+# ======================================================================
+
+- name: "Forzar desmontaje perezoso (lazy) de /var/lib/pgsql/data para evitar Stale Mounts"
+  ansible.builtin.shell:
+    cmd: "umount -l /var/lib/pgsql/data || true"
+  changed_when: false
+
+- name: "Asegurar existencia del directorio local /var/lib/pgsql/data"
+  ansible.builtin.file:
+    path: /var/lib/pgsql/data
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: '0700'
+
+- name: "Montar export NFS de storage01 en /var/lib/pgsql/data"
+  ansible.posix.mount:
+    path: /var/lib/pgsql/data
+    src: "{{ storage_host_ip }}:/exports/pgdata"
+    fstype: nfs
+    opts: "vers=4,noatime,nolock,_netdev"
+    state: mounted
+
+- name: "Garantizar ownership del usuario postgres en /var/lib/pgsql/data"
+  ansible.builtin.file:
+    path: /var/lib/pgsql/data
+    owner: postgres
+    group: postgres
+    mode: '0700'
+
+# ======================================================================
+# BLOQUE 3: FIREWALL
+# ======================================================================
 
 - name: "Asegurar servicio Firewalld activo"
   ansible.builtin.systemd:
@@ -27,32 +69,9 @@
     state: enabled
     immediate: true
 
-# --- MONTAJE NFS PARA DATOS DE POSTGRESQL ---
-
-- name: "Asegurar que existe el directorio /var/lib/pgsql/data"
-  ansible.builtin.file:
-    path: /var/lib/pgsql/data
-    state: directory
-    owner: postgres
-    group: postgres
-    mode: '0700'
-
-- name: "Montar export NFS de storage01 en /var/lib/pgsql/data"
-  ansible.posix.mount:
-    path: /var/lib/pgsql/data
-    src: "10.10.10.50:/exports/pgdata"
-    fstype: nfs
-    opts: "vers=4,noatime,nolock,_netdev"
-    state: mounted
-
-- name: "Garantizar ownership del usuario postgres en /var/lib/pgsql/data"
-  ansible.builtin.file:
-    path: /var/lib/pgsql/data
-    owner: postgres
-    group: postgres
-    mode: '0700'
-
-# --- INICIALIZACIÓN Y CONFIGURACIÓN DE POSTGRESQL ---
+# ======================================================================
+# BLOQUE 4: INICIALIZACIÓN Y CONFIGURACIÓN DEL CLUSTER
+# ======================================================================
 
 - name: "Inicializar cluster de PostgreSQL si no existe PG_VERSION"
   ansible.builtin.shell:
@@ -67,6 +86,14 @@
     regexp: "^#?listen_addresses ="
     line: "listen_addresses = '*'"
 
+- name: "Forzar password_encryption a scram-sha-256"
+  # Debe ir ANTES de iniciar el servicio por primera vez y ANTES de crear
+  # cualquier usuario, para que Postgres nunca llegue a generar un hash md5.
+  ansible.builtin.lineinfile:
+    path: /var/lib/pgsql/data/postgresql.conf
+    regexp: "^#?password_encryption ="
+    line: "password_encryption = 'scram-sha-256'"
+
 - name: "Configurar accesos de red en pg_hba.conf"
   ansible.builtin.lineinfile:
     path: /var/lib/pgsql/data/pg_hba.conf
@@ -79,7 +106,18 @@
     state: started
     enabled: true
 
-# --- APROVISIONAMIENTO DE LA BASE DE DATOS Y TABLAS ---
+- name: "Reiniciar PostgreSQL para garantizar que password_encryption esté activo en memoria"
+  # No usamos notify/handler aquí a propósito: como esta tarea corre siempre
+  # (no solo cuando algo cambió), garantizamos que el servicio SIEMPRE esté
+  # corriendo con scram-sha-256 activo antes de crear/alterar usuarios,
+  # sin depender del orden de ejecución de handlers al final del play.
+  ansible.builtin.systemd:
+    name: postgresql
+    state: restarted
+
+# ======================================================================
+# BLOQUE 5: APROVISIONAMIENTO DE BASE DE DATOS, USUARIO Y DATOS
+# ======================================================================
 
 - name: "Crear Base de Datos principal"
   community.postgresql.postgresql_db:
@@ -88,13 +126,27 @@
   become: true
   become_user: postgres
 
-- name: "Crear Usuario de aplicación"
+- name: "Crear Usuario de aplicación (si no existe)"
   community.postgresql.postgresql_user:
     db: "{{ db_name }}"
     name: "{{ db_user }}"
     password: "{{ db_pass }}"
     priv: "ALL"
     state: present
+  become: true
+  become_user: postgres
+
+- name: "Sincronizar password de {{ db_user }} explícitamente"
+  # postgresql_user con scram-sha-256 no siempre detecta cambios de password
+  # de forma confiable (el hash usa salt aleatorio), por lo que puede saltarse
+  # el ALTER en corridas posteriores. Este ALTER explícito garantiza que el
+  # password en Postgres SIEMPRE coincida con db_pass, sin importar el estado
+  # previo del cluster (relevante porque los datos persisten en NFS entre
+  # rebuilds de la VM). Como el bloque anterior ya garantizó que Postgres
+  # corre con scram-sha-256 activo, este ALTER siempre genera hash SCRAM.
+  community.postgresql.postgresql_query:
+    db: "{{ db_name }}"
+    query: "ALTER USER {{ db_user }} WITH PASSWORD '{{ db_pass }}';"
   become: true
   become_user: postgres
 

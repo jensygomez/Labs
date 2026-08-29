@@ -1,3 +1,19 @@
+# ==============================================================================
+# CLIENT02 — CICLO DE OCUPACIÓN/DESCANSO CONTRA STORAGE (NFS webdata)
+# ==============================================================================
+# Simula un cliente que ejecuta UNA petición de escritura por ciclo hacia la
+# VIP (10.10.10.30), la cual es atendida por un app node (round-robin HAProxy)
+# y escribe UN solo archivo .txt en /var/www/html/uploads (NFS storage01).
+# Duración de la ocupación: {{ client02_ocupacion_segundos | default(60) }}s
+#   (tiempo que el curl mantiene la conexión abierta, vía sleep() en el PHP).
+# Tiempo de descanso entre ciclos: {{ client02_descanso_segundos | default(60) }}s
+#   (sin peticiones activas — el script duerme antes de repetir el ciclo).
+# Ambos valores son configurables vía --extra-vars sin tocar el script,
+# ya que se inyectan como variables Ansible al momento del despliegue.
+# El servicio se ejecuta como traffic-client02.service (systemd), con
+# reinicio automático (Restart=on-failure) solo ante fallos inesperados —
+# el ciclo normal ocupa/descansa lo controla el propio bucle while true.
+# ==============================================================================
 ---
 - name: "Instalar utilidades requeridas (Debian/Ubuntu)"
   ansible.builtin.apt:

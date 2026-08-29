@@ -58,21 +58,36 @@ try {
     $pdo = new PDO("pgsql:host=$host;dbname=$db", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // CLIENTE 01: Actualización con retención de 3s (Base de Datos)
-    if ($action === 'update_initial') {
-        $from = isset($_GET['from']) ? $_GET['from'] : 'A';
-        $to = isset($_GET['to']) ? $_GET['to'] : 'B';
-        
-        sleep(3); // Ocupa el servidor web/backend por 3 segundos
-        
-        $stmt = $pdo->prepare("UPDATE employees SET first_name = :to || SUBSTRING(first_name, 2) WHERE first_name LIKE :from_like");
-        $stmt->execute(['to' => $to, 'from_like' => $from . '%']);
-        $rowCount = $stmt->rowCount();
+    // CLIENTE 01: Consulta SQL con evidencia escrita en Storage (NFS webdata)
+    if ($action === 'client01_query') {
+        $duration = isset($_GET['duration']) ? (int)$_GET['duration'] : 60;
+
+        $stmt = $pdo->query("SELECT first_name, last_name FROM employees WHERE first_name LIKE 'A%';");
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Ocupa el servidor el tiempo indicado (simula carga sostenida)
+        sleep($duration);
+
+        $storage_dir = '/var/www/html/uploads/';
+        if (!file_exists($storage_dir)) {
+            @mkdir($storage_dir, 0777, true);
+        }
+
+        $filename = $storage_dir . 'client01_query_' . date('Ymd_His') . '_' . $server_node . '.txt';
+        $content  = "Consulta de Client01 procesada por el nodo [" . $server_node . "] el " . date('Y-m-d H:i:s') . "\n";
+        $content .= "Pregunta: Empleados cuyo nombre inicia con 'A'\n";
+        $content .= "Resultado: " . count($results) . " registro(s) encontrado(s)\n";
+        foreach ($results as $r) {
+            $content .= "  - " . $r['first_name'] . " " . $r['last_name'] . "\n";
+        }
+        file_put_contents($filename, $content);
 
         echo json_encode([
-            'status'       => 'success',
-            'atendido_por' => $server_node,
-            'accion'       => "Cambiados $rowCount nombres de $from a $to"
+            'status'         => 'success',
+            'atendido_por'   => $server_node,
+            'accion'         => "Consulta SQL + evidencia en NFS storage01 completada ({$duration}s)",
+            'total_resultados' => count($results),
+            'archivo_creado' => basename($filename)
         ]);
         exit;
     }

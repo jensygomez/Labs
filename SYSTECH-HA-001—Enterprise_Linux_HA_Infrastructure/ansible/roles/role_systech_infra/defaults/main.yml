@@ -23,6 +23,6 @@ nfs_exports:
 # Parámetros de la Base de Datos
 db_name: "systech_db"
 db_user: "app_user"
-db_pass: "SecurePass123!"
+db_pass: "{{ vault_app_db_password }}"
 
 
