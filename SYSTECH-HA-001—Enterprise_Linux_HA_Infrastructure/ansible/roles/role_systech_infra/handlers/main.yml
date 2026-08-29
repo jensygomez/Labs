@@ -4,11 +4,6 @@
     name: nfs-server
     state: restarted
 
-- name: "Restart Target iSCSI"
-  ansible.builtin.systemd:
-    name: target
-    state: restarted
-
 - name: "Restart PostgreSQL"
   ansible.builtin.systemd:
     name: postgresql

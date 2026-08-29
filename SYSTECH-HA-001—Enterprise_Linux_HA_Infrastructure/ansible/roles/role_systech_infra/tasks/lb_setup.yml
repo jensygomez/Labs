@@ -1,21 +1,62 @@
 ---
-- name: "Instalar paquetes en nodos Load Balancer (Ubuntu/Debian)"
-  ansible.builtin.apt:
+# ==============================================================================
+# LOAD BALANCER SETUP — AlmaLinux 9 (LXC en Proxmox)
+# ==============================================================================
+
+- name: "Instalar repositorio EPEL y herramientas"
+  ansible.builtin.dnf:
+    name:
+      - epel-release
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: "Instalar HAProxy, Keepalived y Firewalld"
+  ansible.builtin.dnf:
     name:
       - haproxy
       - keepalived
-      - curl
+      - psmisc
+      - firewalld
     state: present
     update_cache: true
-    cache_valid_time: 3600
-  when: ansible_os_family == "Debian"
+  when: ansible_os_family == "RedHat"
 
-- name: "Habilitar la asignación de IP no local en el Kernel (ip_nonlocal_bind)"
+- name: "Habilitar asignación de IP no local en el Kernel (ip_nonlocal_bind)"
   ansible.posix.sysctl:
     name: net.ipv4.ip_nonlocal_bind
     value: '1'
     state: present
     reload: true
+
+# --- FIREWALLD (Para gestionar puertos dentro del LXC) ---
+
+- name: "Asegurar servicio Firewalld activo"
+  ansible.builtin.systemd:
+    name: firewalld
+    state: started
+    enabled: true
+  when: ansible_os_family == "RedHat"
+
+- name: "Permitir servicios HTTP y HTTPS en Firewalld"
+  ansible.posix.firewalld:
+    service: "{{ item }}"
+    permanent: true
+    state: enabled
+    immediate: true
+  loop:
+    - http
+    - https
+  when: ansible_os_family == "RedHat"
+
+- name: "Permitir protocolo VRRP (Keepalived) en Firewalld"
+  ansible.posix.firewalld:
+    rich_rule: 'rule protocol value="vrrp" accept'
+    permanent: true
+    state: enabled
+    immediate: true
+  when: ansible_os_family == "RedHat"
+
+# --- CONFIGURACIÓN DE SERVICIOS ---
 
 - name: "Desplegar configuración de Keepalived desde plantilla Jinja2"
   ansible.builtin.template:
@@ -43,3 +84,4 @@
   loop:
     - keepalived
     - haproxy
+  when: ansible_os_family == "RedHat"

@@ -1,5 +1,5 @@
 global
-    log /dev/log local0
+    log /dev/log local0 warning
     user haproxy
     group haproxy
     daemon
@@ -21,3 +21,9 @@ backend http_back
 {% for host in groups['app_nodes'] %}
     server {{ host }} {{ hostvars[host]['ansible_host'] }}:80 check
 {% endfor %}
+
+listen stats
+    bind *:8080
+    stats enable
+    stats uri /
+    stats refresh 5s

@@ -98,37 +98,37 @@
     - rpc-bind
   when: ansible_os_family == "RedHat"
 
-- name: "Crear Logical Volume exclusivo para iSCSI DB"
-  community.general.lvol:
-    vg: "vg_storage"
-    lv: "{{ iscsi_lv_name }}"
-    size: "{{ iscsi_lv_size }}"
-  when: ansible_os_family == "RedHat"
+#- name: "Crear Logical Volume exclusivo para iSCSI DB"
+#  community.general.lvol:
+#    vg: "vg_storage"
+#    lv: "{{ iscsi_lv_name }}"
+#    size: "{{ iscsi_lv_size }}"
+#  when: ansible_os_family == "RedHat"
 
-- name: "Configurar iSCSI Target con targetcli"
-  ansible.builtin.shell: |
-    targetcli /backstores/block create db_lun /dev/vg_storage/{{ iscsi_lv_name }} || true
-    targetcli /iscsi create {{ iscsi_target_iqn }} || true
-    targetcli /iscsi/{{ iscsi_target_iqn }}/tpg1/acls create {{ iscsi_initiator_iqn }} || true
-    targetcli /iscsi/{{ iscsi_target_iqn }}/tpg1/luns create /backstores/block/db_lun || true
-    targetcli saveconfig
-  changed_when: false
-  when: ansible_os_family == "RedHat"
+#- name: "Configurar iSCSI Target con targetcli"
+#  ansible.builtin.shell: |
+#    targetcli /backstores/block create db_lun /dev/vg_storage/{{ iscsi_lv_name }} || true
+#    targetcli /iscsi create {{ iscsi_target_iqn }} || true
+#    targetcli /iscsi/{{ iscsi_target_iqn }}/tpg1/acls create {{ iscsi_initiator_iqn }} || true
+#    targetcli /iscsi/{{ iscsi_target_iqn }}/tpg1/luns create /backstores/block/db_lun || true
+#    targetcli saveconfig
+#  changed_when: false
+#  when: ansible_os_family == "RedHat"
 
-- name: "Asegurar servicio target (iSCSI) activo"
-  ansible.builtin.systemd:
-    name: target
-    state: started
-    enabled: true
-  when: ansible_os_family == "RedHat"
+#- name: "Asegurar servicio target (iSCSI) activo"
+#  ansible.builtin.systemd:
+#    name: target
+#    state: started
+#    enabled: true
+#  when: ansible_os_family == "RedHat"
 
-- name: "Permitir puerto iSCSI (3260) en Firewalld"
-  ansible.posix.firewalld:
-    port: 3260/tcp
-    permanent: true
-    state: enabled
-    immediate: true
-  when: ansible_os_family == "RedHat"
+#- name: "Permitir puerto iSCSI (3260) en Firewalld"
+#  ansible.posix.firewalld:
+#    port: 3260/tcp
+#    permanent: true
+#    state: enabled
+#    immediate: true
+#  when: ansible_os_family == "RedHat"
 
 - name: "Instalar herramientas de gestión SELinux"
   ansible.builtin.dnf:
@@ -161,3 +161,13 @@
     - ansible_os_family == "RedHat"
     - ansible_selinux.status == "enabled"
   changed_when: true
+  
+
+- name: "Asegurar directorio de subidas NFS con permisos de escritura"
+  ansible.builtin.file:
+    path: "/exports/webdata/uploads"
+    state: directory
+    owner: root
+    group: root
+    mode: '0777'
+  when: ansible_os_family == "RedHat"

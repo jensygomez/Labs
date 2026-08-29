@@ -46,8 +46,8 @@ variable "lxc_containers" {
     "client03" = { vmid = 113, ip = "10.10.10.13/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
 
     # LOAD BALANCERS (Ubuntu - No storage mounts -> Unprivileged)
-    "lb01" = { vmid = 221, ip = "10.10.10.21/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
-    "lb02" = { vmid = 222, ip = "10.10.10.22/24", cores = 1, memory = 512, disk_size = 8, role = "lb" }
+    "lb01" = { vmid = 221, ip = "10.10.10.21/24", cores = 1, memory = 1024, disk_size = 8, role = "lb" }
+    "lb02" = { vmid = 222, ip = "10.10.10.22/24", cores = 1, memory = 1024, disk_size = 8, role = "lb" }
 
     # APP NODES (NFS Mounts -> Privileged + AlmaLinux 9)
     "app01" = { vmid = 331, ip = "10.10.10.31/24", cores = 2, memory = 512, disk_size = 8, role = "app", privileged = true }

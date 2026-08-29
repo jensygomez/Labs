@@ -1,10 +1,17 @@
 ---
-- name: "Instalar utilidades requeridas"
+- name: "Instalar utilidades requeridas (Debian/Ubuntu)"
   ansible.builtin.apt:
     name: ['curl', 'jq']
     state: present
     update_cache: true
   when: ansible_os_family == "Debian"
+
+- name: "Instalar utilidades requeridas (RHEL/AlmaLinux)"
+  ansible.builtin.dnf:
+    name: ['curl', 'jq']
+    state: present
+    update_cache: true
+  when: ansible_os_family == "RedHat"
 
 - name: "Desplegar script de tráfico para Client01 (Una sola ronda lineal)"
   ansible.builtin.copy:

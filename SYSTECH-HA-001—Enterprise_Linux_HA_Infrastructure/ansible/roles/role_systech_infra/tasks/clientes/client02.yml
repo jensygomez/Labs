@@ -1,10 +1,17 @@
 ---
-- name: "Instalar utilidades requeridas"
+- name: "Instalar utilidades requeridas (Debian/Ubuntu)"
   ansible.builtin.apt:
     name: ['curl', 'jq']
     state: present
     update_cache: true
   when: ansible_os_family == "Debian"
+
+- name: "Instalar utilidades requeridas (RHEL/AlmaLinux)"
+  ansible.builtin.dnf:
+    name: ['curl', 'jq']
+    state: present
+    update_cache: true
+  when: ansible_os_family == "RedHat"
 
 - name: "Desplegar script de tráfico para Client02 (Una sola ronda lineal Storage01)"
   ansible.builtin.copy:
@@ -16,12 +23,12 @@
       
       echo "[$(date +'%T')] --- INICIANDO ronda de almacenamiento Client02 ---"
       
-      echo "[$(date +'%T')] LEYENDO datos desde Storage01..."
-      curl -s "http://${VIP}/?action=storage_read" | jq -c '{nodo: .atendido_por, accion: .accion}'
+      echo "[$(date +'%T')] LEYENDO lista de archivos desde Storage01..."
+      curl -s "http://${VIP}/?action=storage_read" | jq -c '{nodo: .atendido_por, accion: .accion, total_archivos: .total_archivos}'
       sleep 2
       
-      echo "[$(date +'%T')] ESCRIBIENDO datos en Storage01 (LENTO - 7s)..."
-      curl -s "http://${VIP}/?action=storage_write" | jq -c '{nodo: .atendido_por, accion: .accion}'
+      echo "[$(date +'%T')] ESCRIBIENDO archivo .txt en Storage01 (5s)..."
+      curl -s "http://${VIP}/?action=storage_write" | jq -c '{nodo: .atendido_por, accion: .accion, archivo: .archivo_creado}'
       sleep 3
       
       echo "[$(date +'%T')] --- RONDA STORAGE FINALIZADA. El script termina y descansa ---"

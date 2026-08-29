@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: application/json');
 
+// Configuración (estas variables serán reemplazadas por Ansible)
 $host = '{{ db_host_ip }}';
 $db   = '{{ db_name }}';
 $user = '{{ db_user }}';
@@ -10,13 +11,55 @@ $query_type = isset($_GET['q']) ? (int)$_GET['q'] : 1;
 $action = isset($_GET['action']) ? $_GET['action'] : null;
 $server_node = gethostname();
 
+// ------------------------------------------------------------
+// CLIENTE 02: Escritura y Lectura REAL en Storage01 (NFS) - SIN BD
+// ------------------------------------------------------------
+if ($action === 'storage_write') {
+    sleep(5); // Retención de 5 segundos sosteniendo el proceso
+
+    $storage_dir = '/var/www/html/uploads/'; // Montaje NFS directo a /exports/webdata/uploads/
+    if (!file_exists($storage_dir)) {
+        @mkdir($storage_dir, 0777, true);
+    }
+
+    $filename = $storage_dir . 'client02_write_' . date('Ymd_His') . '_' . $server_node . '.txt';
+    $content = "Escritura de Client02 procesada por el nodo [" . $server_node . "] el " . date('Y-m-d H:i:s') . "\n";
+    
+    file_put_contents($filename, $content);
+
+    echo json_encode([
+        'status'         => 'success',
+        'atendido_por'   => $server_node,
+        'accion'         => 'Escritura real en NFS storage01 completada (5s)',
+        'archivo_creado' => basename($filename)
+    ]);
+    exit;
+}
+
+if ($action === 'storage_read') {
+    sleep(2); 
+
+    $storage_dir = '/var/www/html/uploads/';
+    $files = file_exists($storage_dir) ? array_diff(scandir($storage_dir), array('.', '..')) : [];
+
+    echo json_encode([
+        'status'         => 'success',
+        'atendido_por'   => $server_node,
+        'accion'         => 'Lectura de directorio NFS storage01 completada',
+        'total_archivos' => count($files),
+        'ultimos_archivos' => array_values(array_slice($files, -5))
+    ]);
+    exit;
+}
+
+// ------------------------------------------------------------
+// PARA EL RESTO DE ACCIONES: Conectamos a PostgreSQL
+// ------------------------------------------------------------
 try {
     $pdo = new PDO("pgsql:host=$host;dbname=$db", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // ------------------------------------------------------------
     // CLIENTE 01: Actualización con retención de 3s (Base de Datos)
-    // ------------------------------------------------------------
     if ($action === 'update_initial') {
         $from = isset($_GET['from']) ? $_GET['from'] : 'A';
         $to = isset($_GET['to']) ? $_GET['to'] : 'B';
@@ -35,33 +78,7 @@ try {
         exit;
     }
 
-    // ------------------------------------------------------------
-    // CLIENTE 02: Simulación de Storage01 con retención de 7s
-    // ------------------------------------------------------------
-    if ($action === 'storage_write') {
-        sleep(7); // Ocupa el servidor web/backend por 7 segundos (no se solapa con client01)
-        
-        echo json_encode([
-            'status'       => 'success',
-            'atendido_por' => $server_node,
-            'accion'       => 'Escritura simulada en storage01 (10.10.10.50) completada (7s)'
-        ]);
-        exit;
-    }
-
-    if ($action === 'storage_read') {
-        sleep(2); 
-        
-        echo json_encode([
-            'status'       => 'success',
-            'atendido_por' => $server_node,
-            'accion'       => 'Lectura simulada desde storage01 (10.10.10.50) completada'
-        ]);
-        exit;
-    }
-    // ------------------------------------------------------------
     // CLIENTE 03: Reporte analítico masivo con retención de 12s
-    // ------------------------------------------------------------
     if ($action === 'heavy_report') {
         sleep(12); // Ocupa el servidor web/backend por 12 segundos
         
@@ -77,9 +94,7 @@ try {
         exit;
     }
 
-    // ------------------------------------------------------------
     // ENDPOINTS DE LECTURA GENERAL (?q=1..5)
-    // ------------------------------------------------------------
     switch ($query_type) {
         case 1:
             $title = "¿Cuántos empleados hay en total?";
