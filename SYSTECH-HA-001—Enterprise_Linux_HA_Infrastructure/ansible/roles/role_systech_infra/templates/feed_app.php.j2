@@ -11,26 +11,25 @@ $query_type = isset($_GET['q']) ? (int)$_GET['q'] : 1;
 $action = isset($_GET['action']) ? $_GET['action'] : null;
 $server_node = gethostname();
 
-// ------------------------------------------------------------
-// CLIENTE 02: Escritura y Lectura REAL en Storage01 (NFS) - SIN BD
-// ------------------------------------------------------------
+// CLIENTE 02: Escritura en Storage01 con retención dinámica
 if ($action === 'storage_write') {
-    sleep(5); // Retención de 5 segundos sosteniendo el proceso
+    // Obtener duración de la URL (por defecto 20 segundos)
+    $duration = isset($_GET['duration']) ? (int)$_GET['duration'] : 20;
+    sleep($duration);
 
-    $storage_dir = '/var/www/html/uploads/'; // Montaje NFS directo a /exports/webdata/uploads/
+    $storage_dir = '/var/www/html/uploads/';
     if (!file_exists($storage_dir)) {
         @mkdir($storage_dir, 0777, true);
     }
 
     $filename = $storage_dir . 'client02_write_' . date('Ymd_His') . '_' . $server_node . '.txt';
     $content = "Escritura de Client02 procesada por el nodo [" . $server_node . "] el " . date('Y-m-d H:i:s') . "\n";
-    
     file_put_contents($filename, $content);
 
     echo json_encode([
         'status'         => 'success',
         'atendido_por'   => $server_node,
-        'accion'         => 'Escritura real en NFS storage01 completada (5s)',
+        'accion'         => "Escritura real en NFS storage01 completada ({$duration}s)",
         'archivo_creado' => basename($filename)
     ]);
     exit;
