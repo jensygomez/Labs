@@ -1,24 +1,25 @@
-# ==============================================================================
-# CLIENT01 — CICLO DE OCUPACIÓN/DESCANSO CON CONSULTA SQL + EVIDENCIA EN STORAGE
-# ==============================================================================
-# Simula un cliente que ejecuta UNA consulta SQL por ciclo hacia la VIP
-# (10.10.10.30), atendida por un app node (round-robin HAProxy), que a su vez
-# consulta PostgreSQL en db01 (datos físicos en storage01 vía NFS pgdata).
-# Como evidencia de que la consulta se completó con éxito, el app node que
-# atendió la petición escribe UN archivo .txt en /var/www/html/uploads
-# (NFS webdata en storage01), igual que hace client02.
-# Duración de la ocupación: {{ client01_ocupacion_segundos | default(60) }}s
-#   (tiempo que el curl mantiene la conexión abierta, vía sleep() en el PHP,
-#    simulando carga sostenida en el servidor que atendió la petición).
-# Tiempo de descanso entre ciclos: {{ client01_descanso_segundos | default(60) }}s
-#   (sin peticiones activas — el script duerme antes de repetir el ciclo).
-# Ambos valores son configurables vía --extra-vars sin tocar el script,
-# ya que se inyectan como variables Ansible al momento del despliegue.
-# El servicio se ejecuta como traffic-client01.service (systemd), con
-# reinicio automático (Restart=on-failure) solo ante fallos inesperados —
-# el ciclo normal ocupa/descansa lo controla el propio bucle while true.
-# ==============================================================================
----
+==============================================================================
+CLIENT01 — CONSULTA SQL + EVIDENCIA EN STORAGE (DURACIÓN VARIABLE)
+==============================================================================
+Simula un cliente que ejecuta UNA consulta SQL por ciclo hacia la VIP
+(10.10.10.30), atendida por un app node (round-robin HAProxy), que a su vez
+consulta PostgreSQL en db01 (datos físicos en storage01 vía iSCSI).
+Como evidencia de que la consulta se completó con éxito, el app node que
+atendió la petición escribe UN archivo .txt en /var/www/html/uploads
+(NFS webdata en storage01).
+
+A diferencia de versiones anteriores con ciclos fijos, client01 introduce
+variabilidad real: cada ciclo elige una duración de ocupación y un descanso
+ALEATORIOS dentro de un rango configurable, simulando que no todas las
+consultas tardan lo mismo ni se piden con la misma cadencia.
+
+Rangos configurables vía --extra-vars:
+  client01_ocupacion_min / client01_ocupacion_max  (default: 30-90s)
+  client01_descanso_min  / client01_descanso_max   (default: 30-90s)
+
+El servicio se ejecuta como traffic-client01.service (systemd).
+==============================================================================
+
 - name: "Instalar utilidades requeridas (Debian/Ubuntu)"
   ansible.builtin.apt:
     name: ['curl', 'jq']
@@ -33,27 +34,30 @@
     update_cache: true
   when: ansible_os_family == "RedHat"
 
-- name: "Desplegar script de tráfico cíclico para Client01 (Consulta SQL + Evidencia)"
+- name: "Desplegar script de tráfico cíclico para Client01 (Consulta SQL Variable)"
   ansible.builtin.copy:
     dest: /usr/local/bin/client01_traffic.sh
     mode: '0755'
     content: |
       #!/bin/bash
       VIP="10.10.10.30"
+      # Rangos controlados por Ansible (puedes cambiarlos con --extra-vars)
+      OCUPA_MIN={{ client01_ocupacion_min | default(30) }}
+      OCUPA_MAX={{ client01_ocupacion_max | default(90) }}
+      DESCANSO_MIN={{ client01_descanso_min | default(30) }}
+      DESCANSO_MAX={{ client01_descanso_max | default(90) }}
 
-      # Variables controladas por Ansible (puedes cambiarlas con --extra-vars)
-      DURATION={{ client01_ocupacion_segundos | default(60) }}
-      DESCANSO={{ client01_descanso_segundos | default(60) }}
-
-      echo "[$(date +'%T')] === INICIANDO SERVICIO CÍCLICO (Ocupa: ${DURATION}s, Descansa: ${DESCANSO}s) ==="
+      echo "[$(date +'%T')] === INICIANDO SERVICIO CÍCLICO (Ocupa: ${OCUPA_MIN}-${OCUPA_MAX}s, Descansa: ${DESCANSO_MIN}-${DESCANSO_MAX}s) ==="
 
       while true; do
-          echo "[$(date +'%T')] ---> ENVIANDO CONSULTA SQL (Ocupará el servidor ${DURATION}s)"
+          DURATION=$(( (RANDOM % (OCUPA_MAX - OCUPA_MIN + 1)) + OCUPA_MIN ))
+          DESCANSO=$(( (RANDOM % (DESCANSO_MAX - DESCANSO_MIN + 1)) + DESCANSO_MIN ))
 
-          curl -s -m $((DURATION + 15)) "http://${VIP}/?action=client01_query&duration=${DURATION}" | jq -c '{nodo: .atendido_por, accion: .accion, resultados: .total_resultados, archivo: .archivo_creado}'
+          echo "[$(date +'%T')] ---> ENVIANDO CONSULTA SQL (Ocupará el servidor ${DURATION}s)"
+          curl -s -m $((DURATION + 15)) "http://${VIP}/?action=client01_query&duration=${DURATION}" \
+            | jq -c '{nodo: .atendido_por, accion: .accion, resultados: .total_resultados, archivo: .archivo_creado}'
 
           echo "[$(date +'%T')] ---> CONSULTA FINALIZADA. Liberando servidor y esperando ${DESCANSO}s..."
-
           sleep ${DESCANSO}
       done
 
@@ -63,7 +67,7 @@
     mode: '0644'
     content: |
       [Unit]
-      Description=Generador de tráfico cíclico Client01 (Consulta SQL + Evidencia, controlado por Systemd)
+      Description=Generador de tráfico cíclico Client01 (Consulta SQL, duración variable)
       After=network.target
 
       [Service]
