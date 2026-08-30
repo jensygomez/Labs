@@ -1,25 +1,25 @@
-==============================================================================
-CLIENT01 — CONSULTA SQL + EVIDENCIA EN STORAGE (DURACIÓN VARIABLE)
-==============================================================================
-Simula un cliente que ejecuta UNA consulta SQL por ciclo hacia la VIP
-(10.10.10.30), atendida por un app node (round-robin HAProxy), que a su vez
-consulta PostgreSQL en db01 (datos físicos en storage01 vía iSCSI).
-Como evidencia de que la consulta se completó con éxito, el app node que
-atendió la petición escribe UN archivo .txt en /var/www/html/uploads
-(NFS webdata en storage01).
+#==============================================================================
+#CLIENT01 — CONSULTA SQL + EVIDENCIA EN STORAGE (DURACIÓN VARIABLE)
+#==============================================================================
+#Simula un cliente que ejecuta UNA consulta SQL por ciclo hacia la VIP
+#(10.10.10.30), atendida por un app node (round-robin HAProxy), que a su vez
+#consulta PostgreSQL en db01 (datos físicos en storage01 vía iSCSI).
+#Como evidencia de que la consulta se completó con éxito, el app node que
+#atendió la petición escribe UN archivo .txt en /var/www/html/uploads
+#(NFS webdata en storage01).
+#
+#A diferencia de versiones anteriores con ciclos fijos, client01 introduce
+#variabilidad real: cada ciclo elige una duración de ocupación y un descanso
+#ALEATORIOS dentro de un rango configurable, simulando que no todas las
+#consultas tardan lo mismo ni se piden con la misma cadencia.
 
-A diferencia de versiones anteriores con ciclos fijos, client01 introduce
-variabilidad real: cada ciclo elige una duración de ocupación y un descanso
-ALEATORIOS dentro de un rango configurable, simulando que no todas las
-consultas tardan lo mismo ni se piden con la misma cadencia.
+#Rangos configurables vía --extra-vars:
+#  client01_ocupacion_min / client01_ocupacion_max  (default: 30-90s)
+#  client01_descanso_min  / client01_descanso_max   (default: 30-90s)
 
-Rangos configurables vía --extra-vars:
-  client01_ocupacion_min / client01_ocupacion_max  (default: 30-90s)
-  client01_descanso_min  / client01_descanso_max   (default: 30-90s)
-
-El servicio se ejecuta como traffic-client01.service (systemd).
-==============================================================================
-
+#El servicio se ejecuta como traffic-client01.service (systemd).
+#==============================================================================
+---
 - name: "Instalar utilidades requeridas (Debian/Ubuntu)"
   ansible.builtin.apt:
     name: ['curl', 'jq']
