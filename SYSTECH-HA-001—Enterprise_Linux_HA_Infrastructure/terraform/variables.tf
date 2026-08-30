@@ -44,6 +44,7 @@ variable "lxc_containers" {
     "client01" = { vmid = 111, ip = "10.10.10.11/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
     "client02" = { vmid = 112, ip = "10.10.10.12/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
     "client03" = { vmid = 113, ip = "10.10.10.13/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
+    "client04" = { vmid = 114, ip = "10.10.10.14/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
 
     # LOAD BALANCERS (Ubuntu - No storage mounts -> Unprivileged)
     "lb01" = { vmid = 221, ip = "10.10.10.21/24", cores = 1, memory = 1024, disk_size = 8, role = "lb" }
