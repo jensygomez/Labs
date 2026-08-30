@@ -1,3 +1,19 @@
+# ==============================================================================
+# CLIENT03 — REPORTE ANALÍTICO PESADO CON DURACIÓN/DESCANSO VARIABLE
+# ==============================================================================
+# Simula un cliente que genera reportes agregados (GROUP BY + AVG) contra
+# PostgreSQL en db01, atendido vía VIP (10.10.10.30) por round-robin de
+# HAProxy. A diferencia de client01/02 (ciclos fijos), client03 introduce
+# variabilidad real: cada ciclo elige una duración de ocupación y un
+# descanso ALEATORIOS dentro de un rango configurable, simulando que no
+# todos los reportes tardan lo mismo ni se piden con la misma cadencia.
+# Deja evidencia tabulada por departamento en /var/www/html/uploads (NFS
+# webdata), igual que client01/02.
+# Rangos configurables vía --extra-vars:
+#   client03_ocupacion_min / client03_ocupacion_max  (default: 10-30s)
+#   client03_descanso_min / client03_descanso_max    (default: 30-90s)
+# El servicio se ejecuta como traffic-client03.service (systemd).
+# ==============================================================================
 ---
 - name: "Instalar utilidades requeridas (Debian/Ubuntu)"
   ansible.builtin.apt:
@@ -13,40 +29,56 @@
     update_cache: true
   when: ansible_os_family == "RedHat"
 
-- name: "Desplegar script de tráfico para Client03 (Ciclo Reporte Analítico - 12s)"
+- name: "Desplegar script de tráfico cíclico para Client03 (Reporte Analítico Variable)"
   ansible.builtin.copy:
     dest: /usr/local/bin/client03_traffic.sh
     mode: '0755'
     content: |
       #!/bin/bash
       VIP="10.10.10.30"
-      
-      echo "[$(date +'%T')] SOLICITANDO Reporte Analítico Masivo (LENTO - 12s)..."
-      curl -s "http://${VIP}/?action=heavy_report" | jq -c '{nodo: .atendido_por, accion: .accion}'
-      sleep 3
-      echo "[$(date +'%T')] --- RONDA CLIENTE 03 FINALIZADA. El script termina y descansa ---"
 
-- name: "Crear servicio systemd para Client03 con pausa entre ejecuciones"
+      # Rangos controlados por Ansible (puedes cambiarlos con --extra-vars)
+      OCUPA_MIN={{ client03_ocupacion_min | default(10) }}
+      OCUPA_MAX={{ client03_ocupacion_max | default(30) }}
+      DESCANSO_MIN={{ client03_descanso_min | default(30) }}
+      DESCANSO_MAX={{ client03_descanso_max | default(90) }}
+
+      echo "[$(date +'%T')] === INICIANDO SERVICIO CÍCLICO (Ocupa: ${OCUPA_MIN}-${OCUPA_MAX}s, Descansa: ${DESCANSO_MIN}-${DESCANSO_MAX}s) ==="
+
+      while true; do
+          DURATION=$(( (RANDOM % (OCUPA_MAX - OCUPA_MIN + 1)) + OCUPA_MIN ))
+          DESCANSO=$(( (RANDOM % (DESCANSO_MAX - DESCANSO_MIN + 1)) + DESCANSO_MIN ))
+
+          echo "[$(date +'%T')] ---> ENVIANDO REPORTE ANALÍTICO (Ocupará el servidor ${DURATION}s)"
+
+          curl -s -m $((DURATION + 15)) "http://${VIP}/?action=heavy_report&duration=${DURATION}" | jq -c '{nodo: .atendido_por, accion: .accion, departamentos: .departamentos, archivo: .archivo_creado}'
+
+          echo "[$(date +'%T')] ---> REPORTE FINALIZADO. Liberando servidor y esperando ${DESCANSO}s..."
+
+          sleep ${DESCANSO}
+      done
+
+- name: "Configurar servicio systemd para ejecutar el ciclo continuamente"
   ansible.builtin.copy:
     dest: /etc/systemd/system/traffic-client03.service
     mode: '0644'
     content: |
       [Unit]
-      Description=Generador de tráfico Client03 (Heavy Report Load controlado por Systemd)
+      Description=Generador de tráfico cíclico Client03 (Reporte Analítico, duración variable)
       After=network.target
-      
+
       [Service]
       Type=simple
       ExecStart=/usr/local/bin/client03_traffic.sh
-      Restart=always
-      RestartSec=20
+      Restart=on-failure
+      RestartSec=10
       StandardOutput=append:/var/log/client03_traffic.log
       StandardError=append:/var/log/client03_traffic.log
-      
+
       [Install]
       WantedBy=multi-user.target
 
-- name: "Habilitar e iniciar el servicio"
+- name: "Recargar systemd, habilitar e iniciar el servicio cíclico"
   ansible.builtin.systemd:
     name: traffic-client03
     state: started

@@ -92,18 +92,37 @@ try {
         exit;
     }
 
-    // CLIENTE 03: Reporte analítico masivo con retención de 12s
+    // CLIENTE 03: Reporte analítico masivo con evidencia en Storage (NFS webdata)
     if ($action === 'heavy_report') {
-        sleep(12); // Ocupa el servidor web/backend por 12 segundos
-        
-        $stmt = $pdo->query("SELECT department, COUNT(*), AVG(salary) FROM employees GROUP BY department;");
+        $duration = isset($_GET['duration']) ? (int)$_GET['duration'] : 12;
+
+        $stmt = $pdo->query("SELECT department, COUNT(*) as total, AVG(salary) as promedio FROM employees GROUP BY department ORDER BY department;");
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        // Ocupa el servidor el tiempo indicado (simula procesamiento analítico pesado)
+        sleep($duration);
+
+        $storage_dir = '/var/www/html/uploads/';
+        if (!file_exists($storage_dir)) {
+            @mkdir($storage_dir, 0777, true);
+        }
+
+        $filename = $storage_dir . 'client03_report_' . date('Ymd_His') . '_' . $server_node . '.txt';
+        $content  = "Reporte analítico de Client03 procesado por el nodo [" . $server_node . "] el " . date('Y-m-d H:i:s') . "\n";
+        $content .= "Duración de procesamiento simulada: {$duration}s\n";
+        $content .= str_pad("DEPARTAMENTO", 15) . str_pad("EMPLEADOS", 12) . "SALARIO PROMEDIO\n";
+        $content .= str_repeat("-", 45) . "\n";
+        foreach ($results as $r) {
+            $content .= str_pad($r['department'], 15) . str_pad($r['total'], 12) . number_format($r['promedio'], 2) . "\n";
+        }
+        file_put_contents($filename, $content);
+
         echo json_encode([
-            'status'       => 'success',
-            'atendido_por' => $server_node,
-            'accion'       => 'Reporte analítico masivo de empleados completado (12s)',
-            'data'         => $results
+            'status'         => 'success',
+            'atendido_por'   => $server_node,
+            'accion'         => "Reporte analítico masivo + evidencia en NFS storage01 completado ({$duration}s)",
+            'departamentos'  => count($results),
+            'archivo_creado' => basename($filename)
         ]);
         exit;
     }
