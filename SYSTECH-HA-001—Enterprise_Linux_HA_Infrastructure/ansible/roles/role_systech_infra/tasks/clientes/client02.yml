@@ -1,22 +1,22 @@
-==============================================================================
-CLIENT02 — ESCRITURA EN STORAGE (NFS webdata) CON DURACIÓN VARIABLE
-==============================================================================
-Simula un cliente que ejecuta UNA petición de escritura por ciclo hacia la
-VIP (10.10.10.30), la cual es atendida por un app node (round-robin HAProxy)
-y escribe UN solo archivo .txt en /var/www/html/uploads (NFS storage01).
+# ==============================================================================
+# CLIENT02 — ESCRITURA EN STORAGE (NFS webdata) CON DURACIÓN VARIABLE
+# ==============================================================================
+# Simula un cliente que ejecuta UNA petición de escritura por ciclo hacia la
+# VIP (10.10.10.30), la cual es atendida por un app node (round-robin HAProxy)
+# y escribe UN solo archivo .txt en /var/www/html/uploads (NFS storage01).
 
-A diferencia de versiones anteriores con ciclos fijos, client02 introduce
-variabilidad real: cada ciclo elige una duración de ocupación y un descanso
-ALEATORIOS dentro de un rango configurable, simulando que no todos los
-procesos de escritura tardan lo mismo ni se ejecutan con la misma cadencia.
+# A diferencia de versiones anteriores con ciclos fijos, client02 introduce
+# variabilidad real: cada ciclo elige una duración de ocupación y un descanso
+# ALEATORIOS dentro de un rango configurable, simulando que no todos los
+# procesos de escritura tardan lo mismo ni se ejecutan con la misma cadencia.
 
-Rangos configurables vía --extra-vars:
-  client02_ocupacion_min / client02_ocupacion_max  (default: 15-45s)
-  client02_descanso_min  / client02_descanso_max   (default: 20-60s)
+# Rangos configurables vía --extra-vars:
+#   client02_ocupacion_min / client02_ocupacion_max  (default: 15-45s)
+#   client02_descanso_min  / client02_descanso_max   (default: 20-60s)
 
-El servicio se ejecuta como traffic-client02.service (systemd).
-==============================================================================
-
+# El servicio se ejecuta como traffic-client02.service (systemd).
+#==============================================================================
+---
 - name: "Instalar utilidades requeridas (Debian/Ubuntu)"
   ansible.builtin.apt:
     name: ['curl', 'jq']
