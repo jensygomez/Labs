@@ -1,57 +1,30 @@
 ---
-- name: "System State Reconciliation - Incident 007"
-  hosts: incident_007_target
+- name: "Recovery - Remove devuser from all app nodes"
+  hosts: app_nodes
   become: true
   gather_facts: false
   vars:
-    target_user: "{{ target_user | default('devuser') }}"
+    target_user: "devuser"
     marker_file: "/var/run/.incident_007_marker"
 
   tasks:
-    - name: "10 - Check if incident was injected"
-      ansible.builtin.stat:
-        path: "{{ marker_file }}"
-      register: check_inject
+    - name: "Remove {{ target_user }} user (with home directory)"
+      ansible.builtin.user:
+        name: "{{ target_user }}"
+        state: absent
+        remove: true
 
-    # =========================================================
-    # REMEDIATION: Restore SSH permissions
-    # =========================================================
-    - block:
-        - name: "20 - Restore 0700 on ~{{ target_user }}/.ssh"
-          ansible.builtin.file:
-            path: "/home/{{ target_user }}/.ssh"
-            owner: "{{ target_user }}"
-            group: "{{ target_user }}"
-            mode: '0700'
-
-        - name: "30 - Restore 0600 on authorized_keys"
-          ansible.builtin.file:
-            path: "/home/{{ target_user }}/.ssh/authorized_keys"
-            owner: "{{ target_user }}"
-            group: "{{ target_user }}"
-            mode: '0600'
-      when: check_inject.stat.exists
-
-    # =========================================================
-    # CLEAN UP RED HERRING: Restore default SELinux context
-    # =========================================================
-    - name: "40 - Restore SELinux context on /etc/hosts"
-      ansible.builtin.command:
-        cmd: "restorecon -v /etc/hosts"
-      when:
-        - check_inject.stat.exists
-        - ansible_selinux is defined and ansible_selinux.status == "enabled"
-      failed_when: false
-
-    # =========================================================
-    # REMOVE MARKER
-    # =========================================================
-    - name: "50 - Remove injection marker"
+    - name: "Ensure marker is removed"
       ansible.builtin.file:
         path: "{{ marker_file }}"
         state: absent
-      when: check_inject.stat.exists
 
-    - name: "60 - Debug completion"
+    - name: "Restore SELinux context on /etc/hosts (if changed)"
+      ansible.builtin.command:
+        cmd: "restorecon -v /etc/hosts"
+      when: ansible_selinux is defined and ansible_selinux.status == "enabled"
+      failed_when: false
+
+    - name: "Debug completion"
       ansible.builtin.debug:
-        msg: "Reconciliation completed on {{ inventory_hostname }}. SSH permissions fixed, marker removed."
+        msg: "Recovery completed on {{ inventory_hostname }}. devuser removed."

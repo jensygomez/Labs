@@ -1,57 +1,132 @@
 ---
-- name: "System State Reconciliation - Incident 007"
-  hosts: incident_007_target
+# ==============================================================================
+# INCIDENTE 007: USUARIO DEVUSER NO PUEDE ACCEDER POR SSH A UN NODO DEL CLÚSTER
+# ==============================================================================
+#
+# OBJETIVO DEL INCIDENTE:
+#   Simular un fallo de permisos SSH en un nodo de aplicación, afectando
+#   al usuario 'devuser', que debería tener acceso a todo el clúster.
+#
+# FASES:
+#   1. PREPARACIÓN (idempotente en todos los nodos):
+#      - Crear usuario 'devuser' (si no existe).
+#      - Crear directorio ~devuser/.ssh con permisos 0700.
+#      - Crear archivo authorized_keys con una clave dummy (permisos 0600).
+#
+#   2. INYECCIÓN DEL FALLO (en UN nodo aleatorio):
+#      - Cambiar permisos de ~devuser/.ssh a 0777.
+#      - Cambiar permisos de ~devuser/.ssh/authorized_keys a 0777.
+#      - (Opcional) Añadir un señuelo SELinux en /etc/hosts (contexto tmp_t).
+#      - Crear un marcador (/var/run/.incident_007_marker) para saber que el
+#        incidente ya fue inyectado en ese nodo.
+#
+# COMPORTAMIENTO ESPERADO:
+#   - En el nodo afectado, el usuario 'devuser' no podrá autenticarse por SSH
+#     con su clave (error "Permission denied (publickey)").
+#   - En los demás nodos, el acceso SSH debe funcionar correctamente.
+#
+# RECUPERACIÓN:
+#   - Eliminar el usuario 'devuser' de TODOS los nodos (para dejar el sistema
+#     limpio, como estaba antes del incidente).
+#   - Eliminar el marcador.
+#   - Restaurar contexto SELinux de /etc/hosts si se modificó.
+# ==============================================================================
+
+
+- name: "Phase 1 - Prepare devuser on all app nodes (idempotent)"
+  hosts: app_nodes
   become: true
-  gather_facts: false
+  gather_facts: true
   vars:
+    target_user: "devuser"
     marker_file: "/var/run/.incident_007_marker"
-    # target_user will come from hostvars
 
   tasks:
-    - name: "10 - Check if incident was injected"
+    - name: "Create {{ target_user }} if not present"
+      ansible.builtin.user:
+        name: "{{ target_user }}"
+        shell: /bin/bash
+        state: present
+
+    - name: "Ensure ~{{ target_user }}/.ssh directory exists with correct permissions"
+      ansible.builtin.file:
+        path: "/home/{{ target_user }}/.ssh"
+        state: directory
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0700'
+
+    - name: "Add dummy authorized_key for {{ target_user }}"
+      ansible.builtin.copy:
+        dest: "/home/{{ target_user }}/.ssh/authorized_keys"
+        content: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleDummyKeyForDevUserTestOnly {{ target_user }}@systech"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0600'
+
+- name: "Phase 2 - Inject fault on one random app node"
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    target_group: "app_nodes"
+    marker_file: "/var/run/.incident_007_marker"
+
+  tasks:
+    - name: "Pick a random target from {{ target_group }}"
+      ansible.builtin.set_fact:
+        target_node: "{{ groups[target_group] | random }}"
+      when: groups[target_group] is defined and groups[target_group] | length > 0
+
+    - name: "Fail if no target found"
+      ansible.builtin.fail:
+        msg: "No nodes in group '{{ target_group }}'"
+      when: target_node is not defined
+
+    - name: "Add target to dynamic group"
+      ansible.builtin.add_host:
+        name: "{{ target_node }}"
+        groups: incident_007_target
+
+- name: "Phase 3 - Apply fault to the selected node"
+  hosts: incident_007_target
+  become: true
+  gather_facts: true
+  vars:
+    target_user: "devuser"
+    marker_file: "/var/run/.incident_007_marker"
+
+  tasks:
+    - name: "Check if already injected"
       ansible.builtin.stat:
         path: "{{ marker_file }}"
       register: check_inject
 
-    # =========================================================
-    # REMEDIATION: Restore SSH permissions
-    # =========================================================
     - block:
-        - name: "20 - Restore 0700 on ~{{ target_user }}/.ssh"
+        - name: "Break permissions on ~{{ target_user }}/.ssh (0777)"
           ansible.builtin.file:
             path: "/home/{{ target_user }}/.ssh"
-            owner: "{{ target_user }}"
-            group: "{{ target_user }}"
-            mode: '0700'
+            mode: '0777'
 
-        - name: "30 - Restore 0600 on authorized_keys"
+        - name: "Break permissions on authorized_keys (0777)"
           ansible.builtin.file:
             path: "/home/{{ target_user }}/.ssh/authorized_keys"
-            owner: "{{ target_user }}"
-            group: "{{ target_user }}"
-            mode: '0600'
-      when: check_inject.stat.exists
+            mode: '0777'
 
-    # =========================================================
-    # CLEAN UP RED HERRING: Restore default SELinux context
-    # =========================================================
-    - name: "40 - Restore SELinux context on /etc/hosts"
-      ansible.builtin.command:
-        cmd: "restorecon -v /etc/hosts"
-      when:
-        - check_inject.stat.exists
-        - ansible_selinux is defined and ansible_selinux.status == "enabled"
-      failed_when: false
+        - name: "Red herring: set /etc/hosts context to tmp_t"
+          ansible.builtin.command:
+            cmd: "chcon -t tmp_t /etc/hosts"
+          when: ansible_selinux is defined and ansible_selinux.status == "enabled"
+          failed_when: false
 
-    # =========================================================
-    # REMOVE MARKER
-    # =========================================================
-    - name: "50 - Remove injection marker"
-      ansible.builtin.file:
-        path: "{{ marker_file }}"
-        state: absent
-      when: check_inject.stat.exists
+        - name: "Create injection marker"
+          ansible.builtin.file:
+            path: "{{ marker_file }}"
+            state: touch
+            mode: '0400'
 
-    - name: "60 - Debug completion"
-      ansible.builtin.debug:
-        msg: "Reconciliation completed on {{ inventory_hostname }}. SSH permissions fixed, marker removed."
+        - name: "Debug completion"
+          ansible.builtin.debug:
+            msg: "Incident 007 injected on {{ inventory_hostname }}"
+
+      when: not check_inject.stat.exists
