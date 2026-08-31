@@ -13,7 +13,6 @@ $server_node = gethostname();
 
 // CLIENTE 02: Escritura en Storage01 con retención dinámica
 if ($action === 'storage_write') {
-    // Obtener duración de la URL (por defecto 20 segundos)
     $duration = isset($_GET['duration']) ? (int)$_GET['duration'] : 20;
     sleep($duration);
 
@@ -35,9 +34,9 @@ if ($action === 'storage_write') {
     exit;
 }
 
+// (Opcional) Lectura de directorio para pruebas
 if ($action === 'storage_read') {
-    sleep(2); 
-
+    sleep(2);
     $storage_dir = '/var/www/html/uploads/';
     $files = file_exists($storage_dir) ? array_diff(scandir($storage_dir), array('.', '..')) : [];
 
@@ -51,20 +50,12 @@ if ($action === 'storage_read') {
     exit;
 }
 
-// CLIENTE 04: Consolidación batch + rotación de evidencias en Storage (NFS webdata)
-// NOTA: Esta acción es 100% filesystem (NFS), NO requiere PostgreSQL.
-// Por eso vive AQUÍ, fuera del try/PDO de más abajo — moverla dentro del
-// bloque de conexión a DB forzaba abrir una conexión PDO innecesaria en
-// cada ciclo de client04. Bajo carga simultánea de client01 (hasta 90s de
-// ocupación) o client03 (reportes pesados GROUP BY/AVG) esa conexión podía
-// demorarse lo suficiente para que el script total superase el
-// max_execution_time de PHP, generando un "Fatal error: Maximum execution
-// time exceeded" en texto plano en vez de JSON — de ahí el error
-// intermitente "parse error: Invalid numeric literal" en jq del lado del
-// cliente, y la ausencia de archivos audit_consolidated_* en storage.
+// =============================================================
+// CLIENTE 04: Consolidación batch + rotación UNIFICADA
+// =============================================================
 if ($action === 'consolidate_audit') {
     $duration = isset($_GET['duration']) ? (int)$_GET['duration'] : 15;
-    // total_max: número máximo de archivos .txt a mantener en el directorio (incluye consolidados)
+    // total_max: número máximo de archivos .txt a mantener en total
     $total_max = isset($_GET['total_max']) ? (int)$_GET['total_max'] : (isset($_GET['max_keep']) ? (int)$_GET['max_keep'] : 20);
 
     $storage_dir = '/var/www/html/uploads/';
@@ -92,12 +83,11 @@ if ($action === 'consolidate_audit') {
             $consolidated .= "--- [" . $file . "] ---\n";
             $consolidated .= @file_get_contents($filepath) . "\n\n";
             $read_count++;
-            // Simula procesamiento por archivo (I/O real en NFS)
             usleep(300000); // 0.3s por archivo
         }
     }
 
-    // 3. Ocupar el servidor el tiempo restante indicado (simula carga sostenida)
+    // 3. Ocupar el servidor el tiempo restante
     $elapsed = $read_count * 0.3;
     $remaining = max(0, $duration - $elapsed);
     if ($remaining > 0) {
@@ -109,16 +99,12 @@ if ($action === 'consolidate_audit') {
     file_put_contents($storage_dir . $consolidated_file, $consolidated);
 
     // =========================================================
-    // ROTACIÓN UNIFICADA: mantener solo TOTAL_MAX archivos .txt en total
+    // ROTACIÓN UNIFICADA: mantener solo TOTAL_MAX archivos .txt
     // =========================================================
-    // Listar todos los archivos .txt del directorio
     $all_txt_files = array_values(array_filter($all_files, function($f) {
         return substr($f, -4) === '.txt';
     }));
-
-    // Ordenar alfabéticamente (los timestamps hacen que sea cronológico)
     sort($all_txt_files);
-
     $deleted_total = [];
     if (count($all_txt_files) > $total_max) {
         $to_delete = array_slice($all_txt_files, 0, count($all_txt_files) - $total_max);
@@ -140,21 +126,19 @@ if ($action === 'consolidate_audit') {
     exit;
 }
 
-// ------------------------------------------------------------
-// PARA EL RESTO DE ACCIONES: Conectamos a PostgreSQL
-// ------------------------------------------------------------
+// =============================================================
+// CLIENTE 01: Consulta SQL con evidencia en Storage
+// =============================================================
 try {
     $pdo = new PDO("pgsql:host=$host;dbname=$db", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // CLIENTE 01: Consulta SQL con evidencia escrita en Storage (NFS webdata)
     if ($action === 'client01_query') {
         $duration = isset($_GET['duration']) ? (int)$_GET['duration'] : 60;
 
         $stmt = $pdo->query("SELECT first_name, last_name FROM employees WHERE first_name LIKE 'A%';");
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Ocupa el servidor el tiempo indicado (simula carga sostenida)
         sleep($duration);
 
         $storage_dir = '/var/www/html/uploads/';
@@ -181,4 +165,75 @@ try {
         exit;
     }
 
- consolidate_audit
+    // =============================================================
+    // CLIENTE 03: Reporte analítico pesado con evidencia en Storage
+    // =============================================================
+    if ($action === 'heavy_report') {
+        $duration = isset($_GET['duration']) ? (int)$_GET['duration'] : 12;
+
+        $stmt = $pdo->query("SELECT department, COUNT(*) as total, AVG(salary) as promedio FROM employees GROUP BY department ORDER BY department;");
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        sleep($duration);
+
+        $storage_dir = '/var/www/html/uploads/';
+        if (!file_exists($storage_dir)) {
+            @mkdir($storage_dir, 0777, true);
+        }
+
+        $filename = $storage_dir . 'client03_report_' . date('Ymd_His') . '_' . $server_node . '.txt';
+        $content  = "Reporte analítico de Client03 procesado por el nodo [" . $server_node . "] el " . date('Y-m-d H:i:s') . "\n";
+        $content .= "Duración de procesamiento simulada: {$duration}s\n";
+        $content .= str_pad("DEPARTAMENTO", 15) . str_pad("EMPLEADOS", 12) . "SALARIO PROMEDIO\n";
+        $content .= str_repeat("-", 45) . "\n";
+        foreach ($results as $r) {
+            $content .= str_pad($r['department'], 15) . str_pad($r['total'], 12) . number_format($r['promedio'], 2) . "\n";
+        }
+        file_put_contents($filename, $content);
+
+        echo json_encode([
+            'status'         => 'success',
+            'atendido_por'   => $server_node,
+            'accion'         => "Reporte analítico masivo + evidencia en NFS storage01 completado ({$duration}s)",
+            'departamentos'  => count($results),
+            'archivo_creado' => basename($filename)
+        ]);
+        exit;
+    }
+
+    // =============================================================
+    // ENDPOINTS DE LECTURA GENERAL (?q=1..5)
+    // =============================================================
+    switch ($query_type) {
+        case 1:
+            $title = "¿Cuántos empleados hay en total?";
+            $sql = "SELECT COUNT(*) as total_empleados FROM employees;";
+            break;
+        case 4:
+            $title = "Lista de empleados cuyo nombre inicia con 'A'";
+            $sql = "SELECT first_name, last_name, department FROM employees WHERE first_name LIKE 'A%';";
+            break;
+        default:
+            $title = "Consulta general";
+            $sql = "SELECT COUNT(*) FROM employees;";
+    }
+
+    $stmt = $pdo->query($sql);
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    echo json_encode([
+        'status'       => 'success',
+        'atendido_por' => $server_node,
+        'pregunta'     => $title,
+        'data'         => $results
+    ], JSON_PRETTY_PRINT);
+
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo json_encode([
+        'status'       => 'error',
+        'atendido_por' => $server_node,
+        'message'      => $e->getMessage()
+    ]);
+}
+?>
