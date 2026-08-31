@@ -64,7 +64,8 @@ if ($action === 'storage_read') {
 // cliente, y la ausencia de archivos audit_consolidated_* en storage.
 if ($action === 'consolidate_audit') {
     $duration = isset($_GET['duration']) ? (int)$_GET['duration'] : 15;
-    $max_keep = isset($_GET['max_keep']) ? (int)$_GET['max_keep'] : 20;
+    // total_max: número máximo de archivos .txt a mantener en el directorio (incluye consolidados)
+    $total_max = isset($_GET['total_max']) ? (int)$_GET['total_max'] : (isset($_GET['max_keep']) ? (int)$_GET['max_keep'] : 20);
 
     $storage_dir = '/var/www/html/uploads/';
     if (!file_exists($storage_dir)) {
@@ -107,40 +108,34 @@ if ($action === 'consolidate_audit') {
     $consolidated_file = 'audit_consolidated_' . date('Ymd_His') . '_' . $server_node . '.txt';
     file_put_contents($storage_dir . $consolidated_file, $consolidated);
 
-    // 5. Rotación: borrar los archivos de evidencia más antiguos si exceden max_keep
-    $deleted = [];
-    if (count($evidence_files) > $max_keep) {
-        sort($evidence_files); // Orden alfabético = cronológico por el formato del nombre
-        $to_delete = array_slice($evidence_files, 0, count($evidence_files) - $max_keep);
+    // =========================================================
+    // ROTACIÓN UNIFICADA: mantener solo TOTAL_MAX archivos .txt en total
+    // =========================================================
+    // Listar todos los archivos .txt del directorio
+    $all_txt_files = array_values(array_filter($all_files, function($f) {
+        return substr($f, -4) === '.txt';
+    }));
+
+    // Ordenar alfabéticamente (los timestamps hacen que sea cronológico)
+    sort($all_txt_files);
+
+    $deleted_total = [];
+    if (count($all_txt_files) > $total_max) {
+        $to_delete = array_slice($all_txt_files, 0, count($all_txt_files) - $total_max);
         foreach ($to_delete as $old_file) {
             @unlink($storage_dir . $old_file);
-            $deleted[] = $old_file;
-        }
-    }
-
-    // 6. Rotación de consolidados: mantener solo los últimos 3
-    $consolidated_files = array_values(array_filter($all_files, function($f) {
-        return preg_match('/^audit_consolidated_.*\.txt$/', $f);
-    }));
-    $consolidated_deleted = [];
-    if (count($consolidated_files) > 3) {
-        sort($consolidated_files);
-        $to_delete_cons = array_slice($consolidated_files, 0, count($consolidated_files) - 3);
-        foreach ($to_delete_cons as $old_file) {
-            @unlink($storage_dir . $old_file);
-            $consolidated_deleted[] = $old_file;
+            $deleted_total[] = $old_file;
         }
     }
 
     echo json_encode([
         'status'             => 'success',
         'atendido_por'       => $server_node,
-        'accion'             => "Consolidación batch + rotación completada ({$duration}s)",
+        'accion'             => "Consolidación + rotación unificada completada ({$duration}s)",
         'archivos_leidos'    => $read_count,
-        'archivos_borrados'  => count($deleted),
         'consolidado_creado' => $consolidated_file,
-        'retencion_activa'   => $max_keep,
-        'consolidados_borrados' => count($consolidated_deleted)
+        'retencion_max'      => $total_max,
+        'archivos_eliminados'=> count($deleted_total)
     ]);
     exit;
 }

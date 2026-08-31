@@ -3,80 +3,107 @@
   hosts: localhost
   connection: local
   gather_facts: false
-  tasks:
-    - name: "10 - Select target node"
-      ansible.builtin.set_fact:
-        target_node: "{{ groups['app_nodes'] | default(['app01']) | first }}"
+  vars:
+    target_group: "app_nodes"
+    target_user: "devuser"           # override with --extra-vars
+    marker_file: "/var/run/.incident_007_marker"
 
-    - name: "20 - Add target to dynamic group"
+  tasks:
+    - name: "10 - Pick a random target from {{ target_group }}"
+      ansible.builtin.set_fact:
+        target_node: "{{ groups[target_group] | random }}"
+      when: groups[target_group] is defined and groups[target_group] | length > 0
+
+    - name: "20 - Fail if no target found"
+      ansible.builtin.fail:
+        msg: "No nodes in group '{{ target_group }}'"
+      when: target_node is not defined
+
+    - name: "30 - Add target to dynamic group"
       ansible.builtin.add_host:
         name: "{{ target_node }}"
         groups: incident_007_target
 
-- name: "Inject Fault and Red Herrings - Incident 007"
+- name: "Inject Fault and Red Herring - Incident 007"
   hosts: incident_007_target
   become: true
   gather_facts: true
+  vars:
+    target_user: "{{ target_user | default('devuser') }}"
+    marker_file: "/var/run/.incident_007_marker"
+
   tasks:
-    - name: "30 - Check if already injected"
+    - name: "40 - Check if already injected"
       ansible.builtin.stat:
-        path: /var/run/.incident_007_marker
+        path: "{{ marker_file }}"
       register: check_inject
 
     # =========================================================
-    # PREPARACIÓN (Garantizar Estado Base)
+    # PREPARATION (ensure user and SSH directory exist)
     # =========================================================
-    - name: "35 - Create devuser if not present"
-      ansible.builtin.user:
-        name: devuser
-        shell: /bin/bash
-        state: present
+    - block:
+        - name: "50 - Create {{ target_user }} if not present"
+          ansible.builtin.user:
+            name: "{{ target_user }}"
+            shell: /bin/bash
+            state: present
+
+        - name: "60 - Ensure ~{{ target_user }}/.ssh directory exists"
+          ansible.builtin.file:
+            path: "/home/{{ target_user }}/.ssh"
+            state: directory
+            owner: "{{ target_user }}"
+            group: "{{ target_user }}"
+            mode: '0700'
+
+        - name: "70 - Generate dummy authorized_keys for {{ target_user }}"
+          ansible.builtin.copy:
+            dest: "/home/{{ target_user }}/.ssh/authorized_keys"
+            content: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleDummyKeyForDevUserTestOnly {{ target_user }}@systech"
+            owner: "{{ target_user }}"
+            group: "{{ target_user }}"
+            mode: '0600'
       when: not check_inject.stat.exists
 
-    - name: "36 - Ensure ~/.ssh directory exists"
+    # =========================================================
+    # REAL ROOT CAUSE: Break SSH key permissions
+    # =========================================================
+    - name: "80 - Break permissions on ~{{ target_user }}/.ssh directory (0777)"
       ansible.builtin.file:
-        path: /home/devuser/.ssh
-        state: directory
-        owner: devuser
-        group: devuser
-        mode: '0700'
-      when: not check_inject.stat.exists
-
-    - name: "37 - Generate dummy authorized_keys for devuser"
-      ansible.builtin.copy:
-        dest: /home/devuser/.ssh/authorized_keys
-        content: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleDummyKeyForDevUserTestOnly devuser@systech"
-        owner: devuser
-        group: devuser
-        mode: '0600'
-      when: not check_inject.stat.exists
-
-    # =========================================================
-    # CAUSA RAÍZ REAL: Modificar permisos a valores inseguros
-    # OpenSSH ignora la llave si .ssh tiene permisos 0777 (world-writable)
-    # =========================================================
-    - name: "40 - Break permissions on devuser .ssh folder"
-      ansible.builtin.file:
-        path: /home/devuser/.ssh
+        path: "/home/{{ target_user }}/.ssh"
         mode: '0777'
       when: not check_inject.stat.exists
 
-    - name: "50 - Break permissions on authorized_keys file"
+    - name: "90 - Break permissions on authorized_keys file (0777)"
       ansible.builtin.file:
-        path: /home/devuser/.ssh/authorized_keys
+        path: "/home/{{ target_user }}/.ssh/authorized_keys"
         mode: '0777'
       when: not check_inject.stat.exists
 
     # =========================================================
-    # MARCADOR DE INYECCIÓN
+    # RED HERRING: Change SELinux context of /etc/hosts
+    # This does NOT break name resolution, but will appear
+    # in SELinux logs and mislead the investigator.
     # =========================================================
-    - name: "60 - Create injection marker"
+    - name: "100 - Red herring: set /etc/hosts context to tmp_t"
+      ansible.builtin.command:
+        cmd: "chcon -t tmp_t /etc/hosts"
+      when:
+        - not check_inject.stat.exists
+        - ansible_selinux is defined and ansible_selinux.status == "enabled"
+      register: red_herring_result
+      failed_when: false   # safe fallback if command fails
+
+    # =========================================================
+    # MARKER
+    # =========================================================
+    - name: "110 - Create injection marker"
       ansible.builtin.file:
-        path: /var/run/.incident_007_marker
+        path: "{{ marker_file }}"
         state: touch
         mode: '0400'
       when: not check_inject.stat.exists
 
-    - name: "70 - Debug completion"
+    - name: "120 - Debug completion"
       ansible.builtin.debug:
-        msg: "Incident 007 injected successfully on {{ inventory_hostname }}. Devuser SSH key access broken."
+        msg: "Incident 007 injected on {{ inventory_hostname }}. SSH key access broken, red herring added."

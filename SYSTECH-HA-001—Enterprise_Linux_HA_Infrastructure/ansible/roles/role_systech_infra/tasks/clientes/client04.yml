@@ -60,17 +60,18 @@
       OCUPA_MAX={{ client04_ocupacion_max | default(25) }}
       DESCANSO_MIN={{ client04_descanso_min | default(30) }}
       DESCANSO_MAX={{ client04_descanso_max | default(90) }}
-      MAX_KEEP={{ client04_max_keep | default(20) }}
+      # Número máximo de archivos .txt a mantener en total (incluye consolidados)
+      TOTAL_MAX={{ client04_max_keep | default(20) }}
 
-      echo "[$(date +'%T')] === INICIANDO CONSOLIDADOR BATCH (Ocupa: ${OCUPA_MIN}-${OCUPA_MAX}s, Descansa: ${DESCANSO_MIN}-${DESCANSO_MAX}s, Retención: ${MAX_KEEP}) ==="
+      echo "[$(date +'%T')] === INICIANDO CONSOLIDADOR BATCH (Ocupa: ${OCUPA_MIN}-${OCUPA_MAX}s, Descansa: ${DESCANSO_MIN}-${DESCANSO_MAX}s, Retención total: ${TOTAL_MAX}) ==="
 
       while true; do
           DURATION=$(( (RANDOM % (OCUPA_MAX - OCUPA_MIN + 1)) + OCUPA_MIN ))
           DESCANSO=$(( (RANDOM % (DESCANSO_MAX - DESCANSO_MIN + 1)) + DESCANSO_MIN ))
 
           echo "[$(date +'%T')] ---> EJECUTANDO CONSOLIDACIÓN (Ocupará el servidor ${DURATION}s)"
-          curl -s -m $((DURATION + 30)) "http://${VIP}/?action=consolidate_audit&duration=${DURATION}&max_keep=${MAX_KEEP}" \
-            | jq -c '{nodo: .atendido_por, accion: .accion, leidos: .archivos_leidos, borrados: .archivos_borrados, consolidado: .consolidado_creado}'
+          curl -s -m $((DURATION + 30)) "http://${VIP}/?action=consolidate_audit&duration=${DURATION}&total_max=${TOTAL_MAX}" \
+            | jq -c '{nodo: .atendido_por, accion: .accion, leidos: .archivos_leidos, eliminados: .archivos_eliminados, consolidado: .consolidado_creado}'
 
           echo "[$(date +'%T')] ---> CONSOLIDACIÓN FINALIZADA. Liberando servidor y esperando ${DESCANSO}s..."
           sleep ${DESCANSO}
