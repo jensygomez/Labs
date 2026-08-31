@@ -1,21 +1,25 @@
+¡Excelente idea! Actualizar el `README.md` es fundamental para que tu portafolio refleje con precisión la arquitectura real (todo en LXC con almacenamiento centralizado NFS) y, sobre todo, para documentar el valor agregado de los **4 simuladores de tráfico con comportamiento humano**, que son el corazón de tus laboratorios de troubleshooting.
+
+Aquí tienes el `README.md` actualizado. He modificado la topología, la matriz de almacenamiento y agregado una sección dedicada a explicar qué hace cada cliente.
+
 ---
+
+### 📄 `README.md` (Actualizado)
 
 ```markdown
 # SYSTECH-HA-001 — Enterprise Linux HA Infrastructure & Multi-Tier Lab
 
 ## 📋 Resumen del Proyecto
-
 Infraestructura Enterprise de Alta Disponibilidad y plataforma de **Linux Systems Administration & Architecture** sobre **Proxmox VE**. El ciclo de vida completo de la infraestructura está automatizado mediante **Infraestructura como Código (IaC)** utilizando **OpenTofu** (aprovisionamiento de virtualización) y **Ansible** (orquestación y configuración de servicios).
 
-El entorno incluye balanceo L7 (HAProxy + Keepalived), aplicación web dinámica (Apache/PHP), base de datos de alto rendimiento (PostgreSQL) y un esquema de **almacenamiento centralizado híbrido en `storage01`** (NFSv4 para código web e iSCSI LIO Target para datos de DB).
+El entorno incluye balanceo L7 (HAProxy + Keepalived), aplicación web dinámica (Apache/PHP), base de datos de alto rendimiento (PostgreSQL) y un esquema de **almacenamiento centralizado 100% NFSv4 en `storage01`** para todos los nodos de cómputo. 
 
 Todo el control se ejecuta de manera aislada desde un **contenedor Podman Rootless Zero-Trust** como Nodo de Control, permitiendo el despliegue y la administración remota a través de **ZeroTier**, sin importar la red local donde se encuentre el Host o Proxmox.
 
 ---
 
 ## 🏗️ Topología de Infraestructura y Redes
-
-El laboratorio utiliza un esquema de red desacoplado donde la gestión y el tráfico interno están segmentados:
+El laboratorio utiliza un esquema de red desacoplado donde la gestión y el tráfico interno están segmentados. **Todos los nodos de cómputo (Apps y DB) corren como contenedores LXC** para optimizar recursos, delegando la persistencia de datos a un nodo de almacenamiento dedicado.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -37,32 +41,67 @@ El laboratorio utiliza un esquema de red desacoplado donde la gestión y el trá
 │                                           │ (HTTP Round-Robin / Port 80)               │
 │                                           ▼                                            │
 │  ┌──────────────────────────────────────────────────────────────────────────────────┐  │
-│  │ 🔵 APPLICATIVE CLUSTER (VMs - AlmaLinux 9)                                       │  │
+│  │ 🔵 APPLICATIVE CLUSTER (LXC Containers - AlmaLinux 9)                             │  │
 │  │  • app01 (10.10.10.31), app02 (10.10.10.32), app03 (10.10.10.33)                   │  │
 │  │  • Web Server: Apache (httpd) + PHP Engine + php-pgsql                           │  │
 │  │  • App Mount: /var/www/html ◄─── (NFSv4) ───┐                                    │  │
 │  └────────────────────────────────────────┬────┼────────────────────────────────────┘  │
 │                                           │    │                                       │
-│                (Consultas SQL TCP/5432)   │    │ (Código /var/www/html)                │
+│                (Consultas SQL TCP/5432)   │    │ (Código y Evidencias /var/www/html)   │
 │                                           ▼    │                                       │
 │  ┌───────────────────────────────────────────┐ │  ┌─────────────────────────────────┐  │
-│  │ 🟣 DATABASE TIER (VM - AlmaLinux 9)      │ │  │ 🔴 HYBRID STORAGE (AlmaLinux 9) │  │
+│  │ 🟣 DATABASE TIER (LXC Container)         │ │  │ 🔴 HYBRID STORAGE (AlmaLinux 9) │  │
 │  │  • db01 (10.10.10.40)                     │ │  │  • storage01 (10.10.10.50)       │  │
 │  │  • Engine: PostgreSQL 15                  │ │  │  • Volume Group: vg_storage     │  │
-│  │  • iSCSI Initiator                        │ │  │                                 │  │
-│  │  • Data Dir: /var/lib/pgsql/data ◄────────┼─┼──┼─ Target NFS: /exports/webdata   │  │
-│  │    (Montado sobre iSCSI Raw Block)        │ │  │  • Target iSCSI (LIO Kernel):   │  │
-│  └───────────────────────────────────────────┘ │  │    LUN lv_db_iscsi (Port 3260)  │  │
-│                                                └──┼──── IQN: ...storage01.db        │  │
+│  │  • Data Dir: /var/lib/pgsql/data ◄────────┼─┼──┼─ Target NFS: /exports/pgdata    │  │
+│  │    (Montado sobre NFSv4 desde storage01)  │ │  │                                 │  │
+│  └───────────────────────────────────────────┘ │  │  • Target NFS: /exports/webdata │  │
+│                                                └──┼──── (Código y uploads de apps)  │  │
 │                                                   └─────────────────────────────────┘  │
 │                                                                                        │
 │  ┌──────────────────────────────────────────────────────────────────────────────────┐  │
-│  │ 🟡 TEST CLIENT (LXC Container - Ubuntu 24.04)                                     │  │
-│  │  • client (10.10.10.11) → Generador de tráfico continuo a la VIP (10.10.10.30)    │  │
+│  │ 🟡 TEST CLIENTS (LXC Containers - Ubuntu 24.04)                                   │  │
+│  │  • client01..04 (10.10.10.11..14) → Generadores de tráfico con comportamiento    │  │
+│  │    humano realista (duración variable, pausas, consolidación y rotación).        │  │
 │  └──────────────────────────────────────────────────────────────────────────────────┘  │
 └────────────────────────────────────────────────────────────────────────────────────────┘
-
 ```
+
+---
+
+## 🔄 Simuladores de Tráfico y Comportamiento Humano (Los 4 Clientes)
+Para validar la Alta Disponibilidad y practicar troubleshooting real, el entorno no usa un simple `curl` infinito. Cuenta con **4 generadores de tráfico independientes** que simulan patrones de uso humano realista (ocupación variable del servidor + tiempos de descanso aleatorios), dejando evidencia tangible en el storage compartido:
+
+| Cliente | Rol Simulado | Comportamiento y Evidencia en Storage (`/var/www/html/uploads`) |
+| :--- | :--- | :--- |
+| **Client01** | **Usuario Interactivo** | Ejecuta consultas SQL a PostgreSQL. Ocupa el nodo de aplicación un tiempo variable (simulando procesamiento) y deja un archivo `.txt` con los resultados de la consulta como evidencia de transacción exitosa. |
+| **Client02** | **Proceso en Segundo Plano** | Simula tareas de sincronización o subida de archivos. Escribe directamente en el directorio compartido NFS con tiempos de ocupación y descanso aleatorios, generando archivos de log de escritura. |
+| **Client03** | **Reporte Analítico Pesado** | Simula un usuario ejecutando reportes complejos (ej. `GROUP BY`, `AVG`). Genera carga sostenida en la DB y en el nodo de aplicación, dejando un reporte tabulado por departamento en el storage NFS. |
+| **Client04** | **Consolidador Batch + Rotación** | Simula un proceso de mantenimiento/auditoría. Lee **todos** los archivos de evidencia generados por los clientes 01, 02 y 03, los empaqueta en un único archivo `audit_consolidated_*.txt` y aplica **rotación** (borrando los archivos fuente más antiguos) para mantener el storage limpio. |
+
+> 💡 **Ventaja para Laboratorios:** Esta variabilidad en los tiempos de ocupación y descanso permite que HAProxy distribuya la carga de forma natural (round-robin real). Además, la dependencia de Client04 con los otros tres crea relaciones causales perfectas para escenarios de troubleshooting (ej. *"¿Por qué el consolidado está vacío?"* → Porque Client01/02/03 están fallando).
+
+---
+
+## 💾 Matriz de Almacenamiento & Integración de Servicios
+El nodo `storage01` consolida **todas** las necesidades de persistencia del clúster de cómputo a través de un único protocolo (NFSv4), simplificando la administración y los puntos de falla:
+
+| Tipo de Almacenamiento | Protocolo | Recurso Origen (Storage01) | Punto de Consumo | Propósito |
+| :--- | :--- | :--- | :--- | :--- |
+| **Shared File System (Web)** | NFSv4 | `/dev/vg_storage/lv_webdata` | `/var/www/html` en `app01..03` | Sincronización transparente del código web PHP y directorio de uploads/evidencias entre los nodos del cluster. |
+| **Shared File System (DB)** | NFSv4 | `/dev/vg_storage/lv_pgdata` | `/var/lib/pgsql/data` en `db01` | Almacenamiento centralizado para los datos de PostgreSQL, permitiendo snapshots y backups centralizados en el nodo de storage. |
+
+
+
+## ⚙️ Estructura del Role de Ansible
+El aprovisionamiento de Ansible se encuentra unificado bajo un único rol modular con tareas divididas por capas:
+- `storage_setup.yml` (`storage_nodes`): Crea LVMs y configura las exportaciones NFSv4 (`webdata` y `pgdata`) habilitando `firewalld`.
+- `database_setup.yml` (`db_nodes`): Monta el volumen NFS en `/var/lib/pgsql/data`, aplica contextos SELinux (`postgresql_db_t`) e inicializa PostgreSQL.
+- `web_app_setup.yml` (`app_nodes`): Monta NFSv4 en `/var/www/html`, habilita booleanos SELinux (`httpd_use_nfs`, `httpd_can_network_connect_db`) y despliega la aplicación PHP.
+- `lb_setup.yml` (`lb_nodes`): Inyecta sysctl (`net.ipv4.ip_nonlocal_bind=1`), desplegando HAProxy y Keepalived para la VIP (`10.10.10.30`).
+- `client_setup.yml` / `client0X.yml` (`client_nodes`): Configura los servicios systemd que ejecutan los patrones de tráfico realista descritos anteriormente.
+
+
 
 ---
 
