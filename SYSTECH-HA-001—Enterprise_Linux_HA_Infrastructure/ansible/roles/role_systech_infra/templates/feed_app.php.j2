@@ -118,6 +118,20 @@ if ($action === 'consolidate_audit') {
         }
     }
 
+    // 6. Rotación de consolidados: mantener solo los últimos 3
+    $consolidated_files = array_values(array_filter($all_files, function($f) {
+        return preg_match('/^audit_consolidated_.*\.txt$/', $f);
+    }));
+    $consolidated_deleted = [];
+    if (count($consolidated_files) > 3) {
+        sort($consolidated_files);
+        $to_delete_cons = array_slice($consolidated_files, 0, count($consolidated_files) - 3);
+        foreach ($to_delete_cons as $old_file) {
+            @unlink($storage_dir . $old_file);
+            $consolidated_deleted[] = $old_file;
+        }
+    }
+
     echo json_encode([
         'status'             => 'success',
         'atendido_por'       => $server_node,
@@ -125,7 +139,8 @@ if ($action === 'consolidate_audit') {
         'archivos_leidos'    => $read_count,
         'archivos_borrados'  => count($deleted),
         'consolidado_creado' => $consolidated_file,
-        'retencion_activa'   => $max_keep
+        'retencion_activa'   => $max_keep,
+        'consolidados_borrados' => count($consolidated_deleted)
     ]);
     exit;
 }
@@ -171,72 +186,4 @@ try {
         exit;
     }
 
-    // CLIENTE 03: Reporte analítico masivo con evidencia en Storage (NFS webdata)
-    if ($action === 'heavy_report') {
-        $duration = isset($_GET['duration']) ? (int)$_GET['duration'] : 12;
-
-        $stmt = $pdo->query("SELECT department, COUNT(*) as total, AVG(salary) as promedio FROM employees GROUP BY department ORDER BY department;");
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Ocupa el servidor el tiempo indicado (simula procesamiento analítico pesado)
-        sleep($duration);
-
-        $storage_dir = '/var/www/html/uploads/';
-        if (!file_exists($storage_dir)) {
-            @mkdir($storage_dir, 0777, true);
-        }
-
-        $filename = $storage_dir . 'client03_report_' . date('Ymd_His') . '_' . $server_node . '.txt';
-        $content  = "Reporte analítico de Client03 procesado por el nodo [" . $server_node . "] el " . date('Y-m-d H:i:s') . "\n";
-        $content .= "Duración de procesamiento simulada: {$duration}s\n";
-        $content .= str_pad("DEPARTAMENTO", 15) . str_pad("EMPLEADOS", 12) . "SALARIO PROMEDIO\n";
-        $content .= str_repeat("-", 45) . "\n";
-        foreach ($results as $r) {
-            $content .= str_pad($r['department'], 15) . str_pad($r['total'], 12) . number_format($r['promedio'], 2) . "\n";
-        }
-        file_put_contents($filename, $content);
-
-        echo json_encode([
-            'status'         => 'success',
-            'atendido_por'   => $server_node,
-            'accion'         => "Reporte analítico masivo + evidencia en NFS storage01 completado ({$duration}s)",
-            'departamentos'  => count($results),
-            'archivo_creado' => basename($filename)
-        ]);
-        exit;
-    }
-
-    // ENDPOINTS DE LECTURA GENERAL (?q=1..5)
-    switch ($query_type) {
-        case 1:
-            $title = "¿Cuántos empleados hay en total?";
-            $sql = "SELECT COUNT(*) as total_empleados FROM employees;";
-            break;
-        case 4:
-            $title = "Lista de empleados cuyo nombre inicia con 'A'";
-            $sql = "SELECT first_name, last_name, department FROM employees WHERE first_name LIKE 'A%';";
-            break;
-        default:
-            $title = "Consulta general";
-            $sql = "SELECT COUNT(*) FROM employees;";
-    }
-
-    $stmt = $pdo->query($sql);
-    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    echo json_encode([
-        'status'       => 'success',
-        'atendido_por' => $server_node,
-        'pregunta'     => $title,
-        'data'         => $results
-    ], JSON_PRETTY_PRINT);
-
-} catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode([
-        'status'       => 'error',
-        'atendido_por' => $server_node,
-        'message'      => $e->getMessage()
-    ]);
-}
-?>
+ consolidate_audit
