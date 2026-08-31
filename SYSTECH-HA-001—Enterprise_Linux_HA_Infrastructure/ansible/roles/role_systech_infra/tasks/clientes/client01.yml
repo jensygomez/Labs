@@ -60,6 +60,7 @@
           echo "[$(date +'%T')] ---> CONSULTA FINALIZADA. Liberando servidor y esperando ${DESCANSO}s..."
           sleep ${DESCANSO}
       done
+    register: client01_script
       
 
     
@@ -82,6 +83,7 @@
 
       [Install]
       WantedBy=multi-user.target
+    register: client01_unit
 
 - name: "Recargar systemd, habilitar e iniciar el servicio cíclico"
   ansible.builtin.systemd:
