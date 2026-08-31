@@ -40,13 +40,16 @@ variable "lxc_containers" {
     privileged = optional(bool, false)
   }))
   default = {
-    # CLIENTS (Ubuntu - No storage mounts -> Unprivileged)
+		# DNS (Alma Linux - No storage mounts -> Unprivileged)
+    "dns01"    = { vmid = 110, ip = "10.10.10.10/24", cores = 1, memory = 512, disk_size = 8, role = "dns" }
+    
+    # CLIENTS (Alma Linux - No storage mounts -> Unprivileged)
     "client01" = { vmid = 111, ip = "10.10.10.11/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
     "client02" = { vmid = 112, ip = "10.10.10.12/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
     "client03" = { vmid = 113, ip = "10.10.10.13/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
     "client04" = { vmid = 114, ip = "10.10.10.14/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
 
-    # LOAD BALANCERS (Ubuntu - No storage mounts -> Unprivileged)
+    # LOAD BALANCERS (Alma Linux - No storage mounts -> Unprivileged)
     "lb01" = { vmid = 221, ip = "10.10.10.21/24", cores = 1, memory = 1024, disk_size = 8, role = "lb" }
     "lb02" = { vmid = 222, ip = "10.10.10.22/24", cores = 1, memory = 1024, disk_size = 8, role = "lb" }
 
@@ -55,7 +58,7 @@ variable "lxc_containers" {
     "app02" = { vmid = 332, ip = "10.10.10.32/24", cores = 2, memory = 512, disk_size = 8, role = "app", privileged = true }
     "app03" = { vmid = 333, ip = "10.10.10.33/24", cores = 2, memory = 512, disk_size = 8, role = "app", privileged = true }
 
-    # DB NODE (iSCSI / Mounts -> Privileged + AlmaLinux 9)
+    # DB NODE (NFS / Mounts -> Privileged + AlmaLinux 9)
     "db01" = { vmid = 440, ip = "10.10.10.40/24", cores = 2, memory = 1024, disk_size = 8, role = "db", privileged = true }
   }
 }

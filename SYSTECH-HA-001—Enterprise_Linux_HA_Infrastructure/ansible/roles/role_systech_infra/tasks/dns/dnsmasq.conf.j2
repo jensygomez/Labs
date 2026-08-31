@@ -1,5 +1,5 @@
 # Configuración gestionada por Ansible - SYSTECH DNS
-listen-address=127.0.0.1,{{ ansible_default_ipv4.address | default('10.10.10.20') }}
+listen-address=127.0.0.1,{{ ansible_default_ipv4.address | default('10.10.10.10') }}
 bind-interfaces
 server=8.8.8.8
 server=8.8.4.4

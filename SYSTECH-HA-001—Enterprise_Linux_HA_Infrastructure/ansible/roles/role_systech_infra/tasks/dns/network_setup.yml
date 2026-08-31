@@ -22,7 +22,7 @@
     content: |
       # Gestionado por Ansible - SYSTECH DNS Centralizado
       search lab.systech.internal
-      nameserver 10.10.10.20
+      nameserver 10.10.10.10
       nameserver 8.8.8.8
     owner: root
     group: root
@@ -30,7 +30,7 @@
   tags: ['network', 'dns_client']
 
 - name: "Verificar resolución DNS desde el nodo (prueba de humo)"
-  ansible.builtin.command: "dig +short app01.lab.systech.internal @10.10.10.20"
+  ansible.builtin.command: "dig +short app01.lab.systech.internal @10.10.10.10"
   register: dns_test
   changed_when: false
   failed_when: false

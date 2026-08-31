@@ -92,22 +92,22 @@
 # ==============================================================================
 # DNS - SERVIDOR CENTRALIZADO
 # ==============================================================================
-- name: "Desplegar Servidor DNS (dnsmasq)"
-  ansible.builtin.include_tasks:
-    file: dns/main.yml
-    apply:
-      tags: ['dns', 'dns_server']
-  when: "'dns_nodes' in group_names"
-  tags: ['dns', 'dns_server']
+#- name: "Desplegar Servidor DNS (dnsmasq)"
+#  ansible.builtin.include_tasks:
+#    file: dns/main.yml
+#    apply:
+#      tags: ['dns', 'dns_server']
+#  when: "'dns_nodes' in group_names"
+#  tags: ['dns', 'dns_server']
 
 # ==============================================================================
 # RED - CONFIGURACIÓN DE CLIENTES DNS
 # Importante: Esto debe ejecutarse en TODOS los nodos para que usen dns01.
 # ==============================================================================
-- name: "Configurar resolv.conf en todos los nodos para usar DNS Central"
-  ansible.builtin.include_tasks:
-    file: dns/network_setup.yml
-    apply:
-      tags: ['network', 'dns_client']
-  when: "'dns_nodes' not in group_names"
-  tags: ['network', 'dns_client']
+#- name: "Configurar resolv.conf en todos los nodos para usar DNS Central"
+#  ansible.builtin.include_tasks:
+#    file: dns/network_setup.yml
+#    apply:
+#      tags: ['network', 'dns_client']
+#  when: "'dns_nodes' not in group_names"
+#  tags: ['network', 'dns_client']
