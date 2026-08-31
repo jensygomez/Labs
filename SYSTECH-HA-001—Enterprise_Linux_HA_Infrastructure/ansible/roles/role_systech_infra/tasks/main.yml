@@ -82,6 +82,13 @@
   when: "inventory_hostname == 'client03'"
   tags: ['client', 'client03']
 
+- name: "Configurar Cliente 04 (Heavy Analytical Report Load)"
+  ansible.builtin.include_tasks:
+    file: clientes/client04.yml
+    apply:
+      tags: ['client', 'client04']
+  when: "inventory_hostname == 'client04'"
+  tags: ['client', 'client04']
 # ==============================================================================
 # DNS - SERVIDOR CENTRALIZADO
 # ==============================================================================

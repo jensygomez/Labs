@@ -83,11 +83,11 @@ try {
         file_put_contents($filename, $content);
 
         echo json_encode([
-            'status'         => 'success',
-            'atendido_por'   => $server_node,
-            'accion'         => "Consulta SQL + evidencia en NFS storage01 completada ({$duration}s)",
+            'status'           => 'success',
+            'atendido_por'     => $server_node,
+            'accion'           => "Consulta SQL + evidencia en NFS storage01 completada ({$duration}s)",
             'total_resultados' => count($results),
-            'archivo_creado' => basename($filename)
+            'archivo_creado'   => basename($filename)
         ]);
         exit;
     }
@@ -127,75 +127,74 @@ try {
         exit;
     }
 
-		// CLIENTE 04: Consolidación batch + rotación de evidencias en Storage (NFS webdata)
-		if ($action === 'consolidate_audit') {
-				$duration  = isset($_GET['duration']) ? (int)$_GET['duration'] : 15;
-				$max_keep  = isset($_GET['max_keep']) ? (int)$_GET['max_keep'] : 20;
+    // CLIENTE 04: Consolidación batch + rotación de evidencias en Storage (NFS webdata)
+    if ($action === 'consolidate_audit') {
+        $duration = isset($_GET['duration']) ? (int)$_GET['duration'] : 15;
+        $max_keep = isset($_GET['max_keep']) ? (int)$_GET['max_keep'] : 20;
 
-				$storage_dir = '/var/www/html/uploads/';
-				if (!file_exists($storage_dir)) {
-						@mkdir($storage_dir, 0777, true);
-				}
-
-				// 1. Listar archivos de evidencias de los otros clientes
-				$all_files = file_exists($storage_dir) ? array_diff(scandir($storage_dir), array('.', '..')) : [];
-				$evidence_files = array_values(array_filter($all_files, function($f) {
-						return preg_match('/^client0[123]_/', $f) && substr($f, -4) === '.txt';
-				}));
-
-				// 2. Leer cada archivo y construir contenido consolidado (simulando procesamiento prolongado)
-				$consolidated  = "=============================================================\n";
-				$consolidated .= "  REPORTE CONSOLIDADO DE EVIDENCIAS\n";
-				$consolidated .= "  Generado por: [" . $server_node . "] el " . date('Y-m-d H:i:s') . "\n";
-				$consolidated .= "  Total archivos fuente leídos: " . count($evidence_files) . "\n";
-				$consolidated .= "=============================================================\n\n";
-
-				$read_count = 0;
-				foreach ($evidence_files as $file) {
-						$filepath = $storage_dir . $file;
-						if (is_file($filepath)) {
-								$consolidated .= "--- [" . $file . "] ---\n";
-								$consolidated .= @file_get_contents($filepath) . "\n\n";
-								$read_count++;
-								// Simula procesamiento por archivo (I/O real en NFS)
-								usleep(300000); // 0.3s por archivo
-						}
-				}
-
-				// 3. Ocupar el servidor el tiempo restante indicado (simula carga sostenida)
-				$elapsed = $read_count * 0.3;
-				$remaining = max(0, $duration - $elapsed);
-				if ($remaining > 0) {
-						sleep((int)ceil($remaining));
-				}
-
-    // 4. Escribir archivo consolidado
-    $consolidated_file = 'audit_consolidated_' . date('Ymd_His') . '_' . $server_node . '.txt';
-    file_put_contents($storage_dir . $consolidated_file, $consolidated);
-
-    // 5. Rotación: borrar los archivos de evidencia más antiguos si exceden max_keep
-    $deleted = [];
-    if (count($evidence_files) > $max_keep) {
-        sort($evidence_files); // Orden alfabético = cronológico por el formato del nombre
-        $to_delete = array_slice($evidence_files, 0, count($evidence_files) - $max_keep);
-        foreach ($to_delete as $old_file) {
-            @unlink($storage_dir . $old_file);
-            $deleted[] = $old_file;
+        $storage_dir = '/var/www/html/uploads/';
+        if (!file_exists($storage_dir)) {
+            @mkdir($storage_dir, 0777, true);
         }
+
+        // 1. Listar archivos de evidencias de los otros clientes
+        $all_files = file_exists($storage_dir) ? array_diff(scandir($storage_dir), array('.', '..')) : [];
+        $evidence_files = array_values(array_filter($all_files, function($f) {
+            return preg_match('/^client0[123]_/', $f) && substr($f, -4) === '.txt';
+        }));
+
+        // 2. Leer cada archivo y construir contenido consolidado
+        $consolidated  = "=============================================================\n";
+        $consolidated .= "  REPORTE CONSOLIDADO DE EVIDENCIAS\n";
+        $consolidated .= "  Generado por: [" . $server_node . "] el " . date('Y-m-d H:i:s') . "\n";
+        $consolidated .= "  Total archivos fuente leídos: " . count($evidence_files) . "\n";
+        $consolidated .= "=============================================================\n\n";
+
+        $read_count = 0;
+        foreach ($evidence_files as $file) {
+            $filepath = $storage_dir . $file;
+            if (is_file($filepath)) {
+                $consolidated .= "--- [" . $file . "] ---\n";
+                $consolidated .= @file_get_contents($filepath) . "\n\n";
+                $read_count++;
+                // Simula procesamiento por archivo (I/O real en NFS)
+                usleep(300000); // 0.3s por archivo
+            }
+        }
+
+        // 3. Ocupar el servidor el tiempo restante indicado (simula carga sostenida)
+        $elapsed = $read_count * 0.3;
+        $remaining = max(0, $duration - $elapsed);
+        if ($remaining > 0) {
+            sleep((int)ceil($remaining));
+        }
+
+        // 4. Escribir archivo consolidado
+        $consolidated_file = 'audit_consolidated_' . date('Ymd_His') . '_' . $server_node . '.txt';
+        file_put_contents($storage_dir . $consolidated_file, $consolidated);
+
+        // 5. Rotación: borrar los archivos de evidencia más antiguos si exceden max_keep
+        $deleted = [];
+        if (count($evidence_files) > $max_keep) {
+            sort($evidence_files); // Orden alfabético = cronológico por el formato del nombre
+            $to_delete = array_slice($evidence_files, 0, count($evidence_files) - $max_keep);
+            foreach ($to_delete as $old_file) {
+                @unlink($storage_dir . $old_file);
+                $deleted[] = $old_file;
+            }
+        }
+
+        echo json_encode([
+            'status'             => 'success',
+            'atendido_por'       => $server_node,
+            'accion'             => "Consolidación batch + rotación completada ({$duration}s)",
+            'archivos_leidos'    => $read_count,
+            'archivos_borrados'  => count($deleted),
+            'consolidado_creado' => $consolidated_file,
+            'retencion_activa'   => $max_keep
+        ]);
+        exit;
     }
-
-    echo json_encode([
-        'status'              => 'success',
-        'atendido_por'        => $server_node,
-        'accion'              => "Consolidación batch + rotación completada ({$duration}s)",
-        'archivos_leidos'     => $read_count,
-        'archivos_borrados'   => count($deleted),
-        'consolidado_creado'  => $consolidated_file,
-        'retencion_activa'    => $max_keep
-    ]);
-    exit;
-}
-
 
     // ENDPOINTS DE LECTURA GENERAL (?q=1..5)
     switch ($query_type) {
@@ -216,18 +215,18 @@ try {
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode([
-        'status' => 'success',
+        'status'       => 'success',
         'atendido_por' => $server_node,
-        'pregunta' => $title,
-        'data' => $results
+        'pregunta'     => $title,
+        'data'         => $results
     ], JSON_PRETTY_PRINT);
 
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode([
-        'status' => 'error',
+        'status'       => 'error',
         'atendido_por' => $server_node,
-        'message' => $e->getMessage()
+        'message'      => $e->getMessage()
     ]);
 }
 ?>
