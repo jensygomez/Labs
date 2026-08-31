@@ -58,6 +58,14 @@
           sleep ${DESCANSO}
       done
 
+
+- name: "Reiniciar servicio para aplicar cambios del script"
+  ansible.builtin.systemd:
+    name: traffic-client03
+    state: restarted
+    daemon_reload: true
+    
+    
 - name: "Configurar servicio systemd para ejecutar el ciclo continuamente"
   ansible.builtin.copy:
     dest: /etc/systemd/system/traffic-client03.service
