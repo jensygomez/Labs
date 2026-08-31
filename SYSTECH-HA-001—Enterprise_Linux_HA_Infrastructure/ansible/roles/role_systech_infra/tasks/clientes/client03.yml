@@ -57,7 +57,7 @@
 
           sleep ${DESCANSO}
       done
-    register: client03_script
+  register: client03_script
    
 - name: "Configurar servicio systemd para ejecutar el ciclo continuamente"
   ansible.builtin.copy:
@@ -78,7 +78,7 @@
 
       [Install]
       WantedBy=multi-user.target
-    register: client03_unit
+  register: client03_unit
 
 - name: "Recargar systemd, habilitar e iniciar el servicio cíclico"
   ansible.builtin.systemd:
