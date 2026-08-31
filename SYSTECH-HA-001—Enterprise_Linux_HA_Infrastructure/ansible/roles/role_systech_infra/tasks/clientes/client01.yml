@@ -61,11 +61,7 @@
           sleep ${DESCANSO}
       done
       
-- name: "Reiniciar servicio para aplicar cambios del script"
-  ansible.builtin.systemd:
-    name: traffic-client01
-    state: restarted
-    daemon_reload: true
+
     
 - name: "Configurar servicio systemd para ejecutar el ciclo continuamente"
   ansible.builtin.copy:
@@ -93,3 +89,9 @@
     state: started
     enabled: true
     daemon_reload: true
+
+- name: "Reiniciar el servicio si el script o la unit file cambiaron (idempotente)"
+  ansible.builtin.systemd:
+    name: traffic-client01
+    state: restarted
+  when: client01_script.changed or client01_unit.changed
