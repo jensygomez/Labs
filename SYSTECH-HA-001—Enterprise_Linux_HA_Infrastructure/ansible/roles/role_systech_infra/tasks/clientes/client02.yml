@@ -57,6 +57,7 @@
           echo "[$(date +'%T')] ---> PETICIÓN FINALIZADA. Liberando servidor y esperando ${DESCANSO}s..."
           sleep ${DESCANSO}
       done
+    register: client02_script
 
     
 - name: "Configurar servicio systemd para ejecutar el ciclo continuamente"
@@ -78,7 +79,8 @@
 
       [Install]
       WantedBy=multi-user.target
-
+    register: client02_unit
+    
 - name: "Recargar systemd, habilitar e iniciar el servicio cíclico"
   ansible.builtin.systemd:
     name: traffic-client02
