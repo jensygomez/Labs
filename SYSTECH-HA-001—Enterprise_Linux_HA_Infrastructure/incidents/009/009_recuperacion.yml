@@ -4,9 +4,6 @@
 # ==============================================================================
 # INCIDENT ID   : 009
 # PURPOSE       : Revert the Read-Only filesystem injection on storage01.
-# PREREQUISITE  : The injection playbook (009_incidente.yml) must have been 
-#                 run previously, as this relies on the backup table located 
-#                 at /tmp/.lv_webdata_original_table.bak.
 # ==============================================================================
 
 - name: "Recovery 009 | Restore Read-Only Filesystem on storage01"
@@ -16,9 +13,7 @@
     incident_id: "009"
     marker_file: "/var/run/.incident_{{ incident_id }}_marker"
     target_lv_path: "/dev/vg_storage/lv_webdata"
-    target_dm_name: "vg_storage-lv_webdata"
     target_mount: "/exports/webdata"
-    backup_table_file: "/tmp/.lv_webdata_original_table.bak"
 
   tasks:
     - name: "01 | Check if incident marker exists (Was it actually injected?)"
@@ -37,75 +32,43 @@
         state: stopped
       when: check_inject.stat.exists
 
-    - name: "04 | Unmount the broken/read-only filesystem"
-      ansible.builtin.mount:
-        path: "{{ target_mount }}"
-        state: unmounted
-      ignore_errors: yes
+    - name: "04 | Remount filesystem in Read-Write mode"
+      ansible.builtin.command:
+        cmd: "mount -o remount,rw {{ target_mount }}"
       when: check_inject.stat.exists
 
-    - name: "05 | Read the original device-mapper table from backup"
+    - name: "05 | Verify filesystem is now writable"
       ansible.builtin.command:
-        cmd: "cat {{ backup_table_file }}"
-      register: original_table_content
+        cmd: "touch {{ target_mount }}/.recovery_test"
       changed_when: false
       when: check_inject.stat.exists
 
-    - name: "06 | Restore the original device-mapper table (Fix the 'dead disk')"
-      ansible.builtin.command:
-        cmd: "dmsetup load {{ target_dm_name }} --table '{{ original_table_content.stdout }}'"
+    - name: "06 | Remove recovery test file"
+      ansible.builtin.file:
+        path: "{{ target_mount }}/.recovery_test"
+        state: absent
       when: check_inject.stat.exists
 
-    - name: "07 | Suspend and resume device-mapper to apply restored table"
-      ansible.builtin.command:
-        cmd: "{{ item }}"
-      loop:
-        - "dmsetup suspend {{ target_dm_name }}"
-        - "dmsetup resume {{ target_dm_name }}"
-      when: check_inject.stat.exists
-
-    - name: "08 | Run XFS repair to clear any dirty log state from the I/O errors"
-      ansible.builtin.command:
-        cmd: "xfs_repair {{ target_lv_path }}"
-      register: xfs_repair_result
-      changed_when: "'cleaning' in xfs_repair_result.stdout or 'rebuilding' in xfs_repair_result.stdout"
-      when: check_inject.stat.exists
-
-    - name: "09 | Mount the filesystem back in Read-Write mode"
-      ansible.builtin.mount:
-        path: "{{ target_mount }}"
-        src: "{{ target_lv_path }}"
-        fstype: xfs
-        state: mounted
-      when: check_inject.stat.exists
-
-    - name: "10 | Restart NFS server"
+    - name: "07 | Restart NFS server"
       ansible.builtin.systemd:
         name: nfs-server
         state: started
       when: check_inject.stat.exists
 
-    - name: "11 | Remove the incident marker file"
+    - name: "08 | Remove the incident marker file"
       ansible.builtin.file:
         path: "{{ marker_file }}"
         state: absent
       when: check_inject.stat.exists
 
-    - name: "12 | Remove the backup table file"
-      ansible.builtin.file:
-        path: "{{ backup_table_file }}"
-        state: absent
-      when: check_inject.stat.exists
-
-    - name: "13 | Display Recovery Summary"
+    - name: "09 | Display Recovery Summary"
       ansible.builtin.debug:
         msg: |
           =========================================
           INCIDENT 009 SUCCESSFULLY RECOVERED
           =========================================
-          - Device-mapper table restored.
-          - XFS filesystem repaired and mounted RW.
+          - Filesystem remounted in Read-Write mode.
           - NFS service restarted.
-          - Marker and backup files cleaned up.
+          - Marker file cleaned up.
           =========================================
       when: check_inject.stat.exists
