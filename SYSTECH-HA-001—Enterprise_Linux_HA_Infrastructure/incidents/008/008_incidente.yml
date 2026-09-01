@@ -1,0 +1,184 @@
+# ==============================================================================
+# INCIDENTE 008: NUEVO SERVICIO INACCESIBLE DESDE LA RED (FIREWALLD)
+# ==============================================================================
+#
+# OBJETIVO DEL INCIDENTE:
+#   Simular la instalación de un nuevo servicio (nginx) en un nodo del clúster,
+#   que queda inaccesible desde la red porque el puerto está bloqueado por
+#   firewalld, aunque el servicio esté corriendo localmente.
+#
+# FASES:
+#   1. PREPARACIÓN (idempotente en UN nodo aleatorio):
+#      - Instalar el paquete 'nginx'.
+#      - Crear el directorio /etc/nginx si no existe.
+#      - Crear un archivo nginx.conf básico si no existe (con copy y content).
+#      - Modificar la directiva 'listen' en nginx.conf para que use el puerto 8080.
+#      - Iniciar y habilitar el servicio nginx (systemd).
+#
+#   2. INYECCIÓN DEL FALLO (en el mismo nodo aleatorio):
+#      - Bloquear el puerto 8080/tcp en firewalld (permanente e inmediato).
+#      - (Opcional) Cambiar el contexto SELinux de /etc/nginx/nginx.conf a etc_t
+#        como señuelo (red herring) para que aparezca en audit.log.
+#      - Crear un marcador (/var/run/.incident_008_marker) para saber que el
+#        incidente ya fue inyectado en ese nodo.
+#
+# COMPORTAMIENTO ESPERADO:
+#   - En el nodo afectado, el servicio nginx escucha en el puerto 8080
+#     (ss -tlnp lo muestra), pero firewalld rechaza las conexiones entrantes
+#     desde cualquier otra IP, incluyendo los otros nodos del clúster.
+#   - Desde el propio nodo (localhost) sí se puede acceder (curl http://localhost:8080).
+#   - En los demás nodos, no hay cambios; el incidente es localizado.
+#
+# RECUPERACIÓN (playbook separado, actúa sobre TODOS los nodos):
+#   - Detener y deshabilitar el servicio nginx.
+#   - Eliminar el paquete nginx (opcional, pero recomendado para dejar el sistema limpio).
+#   - Eliminar la regla de firewalld que bloquea el puerto 8080.
+#   - Restaurar el contexto SELinux de /etc/nginx/nginx.conf (restorecon).
+#   - Eliminar el marcador /var/run/.incident_008_marker.
+# ==============================================================================
+
+---
+- name: "Incident 008 Injection - New Service Blocked by Firewall"
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    target_group: "app_nodes"
+    service_name: "nginx"
+    service_port: 8080
+    service_package: "nginx"
+    marker_file: "/var/run/.incident_008_marker"
+
+  tasks:
+    - name: "10 - Pick random target from {{ target_group }}"
+      ansible.builtin.set_fact:
+        target_node: "{{ groups[target_group] | random }}"
+      when: groups[target_group] is defined and groups[target_group] | length > 0
+
+    - name: "20 - Fail if no target found"
+      ansible.builtin.fail:
+        msg: "No nodes in group '{{ target_group }}'"
+      when: target_node is not defined
+
+    - name: "30 - Add target to dynamic group"
+      ansible.builtin.add_host:
+        name: "{{ target_node }}"
+        groups: incident_008_target
+
+- name: "Inject Fault and Red Herring - Incident 008"
+  hosts: incident_008_target
+  become: true
+  gather_facts: true
+  vars:
+    service_name: "nginx"
+    service_port: 8080
+    service_package: "nginx"
+    marker_file: "/var/run/.incident_008_marker"
+
+  tasks:
+    - name: "40 - Check if already injected"
+      ansible.builtin.stat:
+        path: "{{ marker_file }}"
+      register: check_inject
+
+    # =========================================================
+    # PRERREQUISITOS: Crear directorios y archivos base
+    # =========================================================
+    - block:
+        - name: "50 - Install {{ service_package }}"
+          ansible.builtin.dnf:
+            name: "{{ service_package }}"
+            state: present
+
+        - name: "51 - Ensure /etc/nginx directory exists"
+          ansible.builtin.file:
+            path: /etc/nginx
+            state: directory
+            mode: '0755'
+          when: service_name == "nginx"
+
+        - name: "52 - Create default nginx.conf if missing"
+          ansible.builtin.copy:
+            dest: /etc/nginx/nginx.conf
+            content: |
+              user nginx;
+              worker_processes 1;
+              error_log /var/log/nginx/error.log warn;
+              pid /var/run/nginx.pid;
+              events {
+                  worker_connections 1024;
+              }
+              http {
+                  include /etc/nginx/mime.types;
+                  default_type application/octet-stream;
+                  sendfile on;
+                  keepalive_timeout 65;
+                  server {
+                      listen 80 default_server;
+                      server_name _;
+                      root /usr/share/nginx/html;
+                      index index.html;
+                  }
+              }
+            mode: '0644'
+          when:
+            - service_name == "nginx"
+            - not (ansible.builtin.stat is defined and ansible.builtin.stat.exists)
+          register: nginx_conf_created
+
+        - name: "53 - Configure {{ service_name }} to listen on port {{ service_port }}"
+          ansible.builtin.lineinfile:
+            path: /etc/nginx/nginx.conf
+            regexp: '^\s*listen\s+'
+            line: "    listen {{ service_port }} default_server;"
+            insertafter: '^\s*server\s*{'
+          when: service_name == "nginx"
+
+        - name: "54 - Start and enable {{ service_name }}"
+          ansible.builtin.systemd:
+            name: "{{ service_name }}"
+            state: started
+            enabled: true
+
+      when: not check_inject.stat.exists
+
+    # =========================================================
+    # CAUSA RAÍZ REAL: Bloquear el puerto en firewalld
+    # =========================================================
+    - name: "80 - Block port {{ service_port }}/tcp in firewalld (permanent)"
+      ansible.posix.firewalld:
+        port: "{{ service_port }}/tcp"
+        permanent: true
+        state: disabled
+        immediate: true
+      when:
+        - not check_inject.stat.exists
+        - ansible_os_family == "RedHat"
+
+    # =========================================================
+    # SEÑUELO (Red herring): Cambiar contexto SELinux del config
+    # (No afecta al servicio, pero aparecerá en audit.log)
+    # =========================================================
+    - name: "90 - Red herring: set /etc/nginx/nginx.conf context to etc_t"
+      ansible.builtin.command:
+        cmd: "chcon -t etc_t /etc/nginx/nginx.conf"
+      when:
+        - not check_inject.stat.exists
+        - service_name == "nginx"
+        - ansible_selinux is defined and ansible_selinux.status == "enabled"
+      failed_when: false
+      register: red_herring_result
+
+    # =========================================================
+    # MARCADOR
+    # =========================================================
+    - name: "100 - Create injection marker"
+      ansible.builtin.file:
+        path: "{{ marker_file }}"
+        state: touch
+        mode: '0400'
+      when: not check_inject.stat.exists
+
+    - name: "110 - Debug completion"
+      ansible.builtin.debug:
+        msg: "Incident 008 injected on {{ inventory_hostname }}. {{ service_name }} on port {{ service_port }} is blocked by firewalld."
