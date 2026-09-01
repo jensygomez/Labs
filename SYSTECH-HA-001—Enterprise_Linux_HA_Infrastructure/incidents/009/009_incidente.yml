@@ -1,0 +1,195 @@
+---
+# ==============================================================================
+# INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
+# ==============================================================================
+# INCIDENT ID   : 009
+# TITLE         : Filesystem montado en modo solo lectura (Read-Only)
+# TARGET NODE   : storage01 (10.10.10.50)
+# TARGET FS     : /exports/webdata (XFS on LVM /dev/vg_storage/lv_webdata)
+# DIFFICULTY    : 4/10 (L1 Junior)
+# ESTIMATED TIME: 2 Hours
+# ==============================================================================
+#
+# 📖 SCENARIO CONTEXT:
+# Simulates a severe underlying block device I/O failure. The kernel detects
+# critical I/O errors on the LVM logical volume and, to protect data integrity,
+# the XFS filesystem automatically shuts down / remounts itself as Read-Only.
+#
+# 💥 WHAT THIS PLAYBOOK BREAKS:
+# 1. Stops the NFS server cleanly.
+# 2. Unmounts /exports/webdata.
+# 3. Uses 'dmsetup' to replace the underlying LVM mapping table with an 
+#    'error' target. This makes the block device return EIO (I/O Error) 
+#    for any read/write request.
+# 4. Reloads the device-mapper table and forces the kernel to see the errors.
+# 5. Forces a remount in Read-Only mode to simulate the kernel's protective 
+#    behavior (XFS shutdown / ext4 errors=remount-ro).
+# 6. Restarts NFS so client nodes see the RO state.
+#
+# 🕵️ EXPECTED L1 DIAGNOSIS PATH:
+# - Symptom: Apps can't write to /var/www/html.
+# - Check mount: `findmnt /exports/webdata` -> shows (ro,...)
+# - Check logs: `dmesg -T | tail -50` -> shows "device-mapper: table: ... error" 
+#               and "XFS: metadata I/O error... Filesystem has been shut down".
+# - Fix: Unmount -> Restore original dmsetup table -> xfs_repair -> Mount RW.
+#
+# 🔄 ROLLBACK STRATEGY:
+# Use the companion playbook `009_recuperacion.yml`. It reads the original 
+# dmsetup table backed up in `/tmp/.lv_webdata_original_table.bak` and 
+# restores the environment to a healthy state.
+#
+# ⚠️ PREREQUISITES & SAFETY:
+# - Idempotency is guaranteed via marker file: /var/run/.incident_009_marker
+# - SSH access is NEVER touched.
+# - Only affects /exports/webdata. /exports/pgdata and root (/) are untouched.
+# ==============================================================================
+
+- name: "Incident 009 | Inject Read-Only Filesystem on storage01"
+  hosts: storage01
+  become: yes
+  vars:
+    incident_id: "009"
+    marker_file: "/var/run/.incident_{{ incident_id }}_marker"
+    target_lv_path: "/dev/vg_storage/lv_webdata"
+    target_dm_name: "vg_storage-lv_webdata"
+    target_mount: "/exports/webdata"
+    backup_table_file: "/tmp/.lv_webdata_original_table.bak"
+
+  tasks:
+    # -------------------------------------------------------------------------
+    # PHASE 1: PRE-FLIGHT & IDEMPOTENCY CHECK
+    # -------------------------------------------------------------------------
+    - name: "01 | Check if incident was already injected (Marker Guard)"
+      ansible.builtin.stat:
+        path: "{{ marker_file }}"
+      register: check_inject
+
+    - name: "02 | Abort if incident is already active"
+      ansible.builtin.debug:
+        msg: "Incident {{ incident_id }} is already injected. Skipping."
+      when: check_inject.stat.exists
+
+    - name: "03 | Create marker file to prevent double-injection"
+      ansible.builtin.file:
+        path: "{{ marker_file }}"
+        state: touch
+        mode: '0644'
+      when: not check_inject.stat.exists
+
+    # -------------------------------------------------------------------------
+    # PHASE 2: PREPARE FILESYSTEM FOR INJECTION
+    # -------------------------------------------------------------------------
+    - name: "04 | Stop NFS server to release filesystem locks"
+      ansible.builtin.systemd:
+        name: nfs-server
+        state: stopped
+      when: not check_inject.stat.exists
+
+    - name: "05 | Ensure the target filesystem is currently mounted"
+      ansible.builtin.command:
+        cmd: "findmnt -n -o SOURCE {{ target_mount }}"
+      register: current_mount
+      changed_when: false
+      failed_when: current_mount.rc != 0
+      when: not check_inject.stat.exists
+
+    - name: "06 | Unmount the target filesystem cleanly"
+      ansible.builtin.mount:
+        path: "{{ target_mount }}"
+        state: unmounted
+      when: not check_inject.stat.exists
+
+    # -------------------------------------------------------------------------
+    # PHASE 3: INJECT BLOCK DEVICE I/O ERRORS (Device-Mapper)
+    # -------------------------------------------------------------------------
+    - name: "07 | Get current device-mapper table for backup"
+      ansible.builtin.command:
+        cmd: "dmsetup table {{ target_dm_name }}"
+      register: original_table
+      changed_when: false
+      when: not check_inject.stat.exists
+
+    - name: "08 | Backup original dmsetup table to disk"
+      ansible.builtin.copy:
+        content: "{{ original_table.stdout }}\n"
+        dest: "{{ backup_table_file }}"
+        mode: '0600'
+      when: not check_inject.stat.exists
+
+    - name: "09 | Get total size of the Logical Volume in sectors"
+      ansible.builtin.command:
+        cmd: "blockdev --getsz {{ target_lv_path }}"
+      register: lv_size_sectors
+      changed_when: false
+      when: not check_inject.stat.exists
+
+    - name: "10 | Inject 'error' target into device-mapper (Simulates dead disk)"
+      ansible.builtin.command:
+        cmd: "dmsetup reload {{ target_dm_name }} --table '0 {{ lv_size_sectors.stdout }} error'"
+      when: not check_inject.stat.exists
+
+    - name: "11 | Suspend and resume device-mapper to apply the error table"
+      ansible.builtin.command:
+        cmd: "{{ item }}"
+      loop:
+        - "dmsetup suspend {{ target_dm_name }}"
+        - "dmsetup resume {{ target_dm_name }}"
+      when: not check_inject.stat.exists
+
+    # -------------------------------------------------------------------------
+    # PHASE 4: TRIGGER KERNEL PROTECTION (Remount RO)
+    # -------------------------------------------------------------------------
+    - name: "12 | Mount the filesystem (Kernel will detect I/O errors)"
+      ansible.builtin.command:
+        cmd: "mount {{ target_lv_path }} {{ target_mount }}"
+      register: mount_attempt
+      ignore_errors: yes
+      when: not check_inject.stat.exists
+
+    - name: "13 | Force filesystem into Read-Only mode (Simulating kernel protection)"
+      ansible.builtin.command:
+        cmd: "mount -o remount,ro {{ target_mount }}"
+      ignore_errors: yes
+      when: not check_inject.stat.exists
+
+    - name: "14 | Trigger sync to force kernel to log I/O errors in dmesg"
+      ansible.builtin.command:
+        cmd: "sync"
+      ignore_errors: yes
+      when: not check_inject.stat.exists
+
+    - name: "15 | Wait for kernel to process and log the I/O errors"
+      ansible.builtin.pause:
+        seconds: 3
+      when: not check_inject.stat.exists
+
+    # -------------------------------------------------------------------------
+    # PHASE 5: FINALIZE & EXPOSE TO CLIENTS
+    # -------------------------------------------------------------------------
+    - name: "16 | Restart NFS server so clients see the Read-Only state"
+      ansible.builtin.systemd:
+        name: nfs-server
+        state: started
+      when: not check_inject.stat.exists
+
+    - name: "17 | Verify injection status"
+      ansible.builtin.command:
+        cmd: "findmnt -n -o OPTIONS {{ target_mount }}"
+      register: final_mount_opts
+      changed_when: false
+      when: not check_inject.stat.exists
+
+    - name: "18 | Display Injection Summary"
+      ansible.builtin.debug:
+        msg: |
+          =========================================
+          INCIDENT 009 SUCCESSFULLY INJECTED
+          =========================================
+          Target: {{ target_mount }}
+          Current State: {{ final_mount_opts.stdout | default('Unmounted/Failed') }}
+          
+          The filesystem is now Read-Only.
+          L1 must check 'dmesg', restore the dmsetup table from 
+          {{ backup_table_file }}, run xfs_repair, and remount RW.
+          =========================================
+      when: not check_inject.stat.exists
