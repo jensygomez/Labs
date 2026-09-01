@@ -1,3 +1,56 @@
+# ==============================================================================
+# ROL: DATABASE SETUP — PostgreSQL sobre NFS Backend (db01)
+# ==============================================================================
+#
+# IP: 10.10.10.40
+# HOSTNAME: db01
+# SISTEMA OPERATIVO: AlmaLinux 9 (LXC Privilegiado en Proxmox)
+#
+# PROPÓSITO:
+#   Este rol configura el nodo de base de datos del clúster, ejecutando
+#   PostgreSQL 15 con almacenamiento persistente montado vía NFSv4 desde
+#   storage01 (10.10.10.50). La base de datos es consumida por la aplicación
+#   web PHP que se ejecuta en los nodos de aplicación (app01, app02, app03).
+#
+# CARACTERÍSTICAS PRINCIPALES:
+#   - Instalación de PostgreSQL 15, cliente NFS y herramientas de gestión.
+#   - Montaje NFS de /exports/pgdata (storage01) en /var/lib/pgsql/data.
+#   - Configuración de PostgreSQL con:
+#       * listen_addresses = '*' (permite conexiones desde cualquier nodo).
+#       * password_encryption = 'scram-sha-256' (autenticación moderna).
+#       * pg_hba.conf con acceso desde la red 10.10.10.0/24 usando SCRAM.
+#   - Creación de la base de datos 'app_db' y el usuario 'app_user'.
+#   - Carga de datos de prueba (tabla 'employees' con 7 registros).
+#   - Firewalld con el puerto 5432 abierto.
+#
+# DEPENDENCIAS:
+#   - El nodo storage01 (10.10.10.50) debe tener el volumen /exports/pgdata
+#     creado y exportado correctamente.
+#   - Los servicios NFS deben estar activos en storage01.
+#   - El usuario postgres debe existir en storage01 con UID/GID 26 para
+#     mantener consistencia de permisos.
+#   - Los app_nodes deben tener conectividad TCP a db01 en el puerto 5432.
+#
+# VARIABLES UTILIZADAS:
+#   - storage_host_ip: IP de storage01 (10.10.10.50) para el montaje NFS.
+#   - db_name: Nombre de la base de datos (default: app_db).
+#   - db_user: Usuario de la aplicación (default: app_user).
+#   - db_pass: Contraseña del usuario (definida en vault).
+#
+# NOTAS DE SEGURIDAD:
+#   - La autenticación usa SCRAM-SHA-256 (no MD5).
+#   - El archivo pg_hba.conf restringe conexiones a la red interna 10.10.10.0/24.
+#   - El usuario de aplicación tiene privilegios ALL sobre la base de datos.
+#
+# RECUPERACIÓN ANTE FALLOS:
+#   - Si db01 falla, la aplicación web no podrá autenticarse ni consultar datos.
+#   - Los datos persisten en storage01 gracias al montaje NFS, lo que permite
+#     recuperar el servicio simplemente reinstalando db01 y ejecutando este rol.
+#   - Se recomienda implementar backups periódicos de la base de datos
+#     (pg_dump) y replicación (streaming replication) para alta disponibilidad.
+#
+# ==============================================================================
+
 ---
 # ==============================================================================
 # DATABASE SETUP — PostgreSQL sobre NFS Backend (AlmaLinux 9)
