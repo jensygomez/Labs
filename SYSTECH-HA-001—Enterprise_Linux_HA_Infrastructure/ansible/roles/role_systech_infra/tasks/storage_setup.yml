@@ -1,3 +1,48 @@
+# ==============================================================================
+# ROL: STORAGE SETUP — Nodo de Almacenamiento Centralizado (storage01)
+# ==============================================================================
+#
+# IP: 10.10.10.50
+# HOSTNAME: storage01
+# SISTEMA OPERATIVO: AlmaLinux 9 (VM en Proxmox)
+#
+# PROPÓSITO:
+#   Este nodo actúa como el almacenamiento centralizado de todo el clúster,
+#   proporcionando volúmenes compartidos vía NFSv4 para:
+#     - Código de la aplicación web (/exports/webdata) → montado en /var/www/html
+#       de los app nodes (app01, app02, app03).
+#     - Datos de PostgreSQL (/exports/pgdata) → montado en /var/lib/pgsql/data
+#       del nodo de base de datos (db01).
+#
+# CARACTERÍSTICAS PRINCIPALES:
+#   - Gestión de volúmenes lógicos (LVM) sobre discos físicos (/dev/sdb, /dev/sdc, /dev/sdd, /dev/sde).
+#   - Exportaciones NFS con contextos SELinux apropiados (nfs_t).
+#   - Firewalld configurado para permitir servicios NFS (nfs, mountd, rpc-bind).
+#   - Incluye herramientas de gestión SELinux (policycoreutils-python-utils).
+#
+# DEPENDENCIAS:
+#   - Los nodos de aplicación (app_nodes) montan /exports/webdata.
+#   - El nodo de base de datos (db01) monta /exports/pgdata.
+#   - Ambos montajes requieren que storage01 esté accesible y que los servicios
+#     NFS estén activos.
+#
+# VARIABLES UTILIZADAS:
+#   - nfs_exports: Lista de diccionarios con lv_name, lv_size y path.
+#   - storage_host_ip: IP de storage01 (10.10.10.50) usada en otros roles.
+#
+# NOTAS DE SEGURIDAD:
+#   - Los directorios exportados tienen permisos 0777 para permitir escritura
+#     desde los clientes NFS (el control de acceso se gestiona a nivel de
+#     usuario/grupo en los clientes).
+#   - SELinux está en modo enforcing y se configuran contextos adecuados.
+#
+# RECUPERACIÓN ANTE FALLOS:
+#   - Si storage01 falla, todo el clúster pierde acceso a los datos compartidos.
+#   - Se recomienda implementar backups periódicos de los volúmenes LVM
+#     (snapshots) y replicación a otro nodo para alta disponibilidad.
+#
+
+
 ---
 # ==============================================================================
 # STORAGE SETUP — AlmaLinux 9 (VM)
