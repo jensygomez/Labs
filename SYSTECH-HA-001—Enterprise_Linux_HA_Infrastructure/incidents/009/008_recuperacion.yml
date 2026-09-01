@@ -1,0 +1,41 @@
+---
+- name: "System State Reconciliation - Incident 008"
+  hosts: app_nodes
+  become: true
+  gather_facts: false
+  vars:
+    marker_file: "/var/run/.incident_008_marker"
+    httpd_conf: "/etc/httpd/conf/httpd.conf"
+
+  tasks:
+    - name: "10 - Check if incident marker exists"
+      ansible.builtin.stat:
+        path: "{{ marker_file }}"
+      register: check_marker
+
+    - block:
+        - name: "20 - Ensure http service is allowed in firewalld"
+          ansible.posix.firewalld:
+            service: http
+            permanent: true
+            state: enabled
+            immediate: true
+          when: ansible_os_family == "RedHat"
+
+        - name: "30 - Restore SELinux context on httpd.conf"
+          ansible.builtin.command:
+            cmd: "restorecon -v {{ httpd_conf }}"
+          when:
+            - ansible_selinux is defined and ansible_selinux.status == "enabled"
+          failed_when: false
+
+        - name: "40 - Remove injection marker"
+          ansible.builtin.file:
+            path: "{{ marker_file }}"
+            state: absent
+
+        - name: "50 - Debug completion"
+          ansible.builtin.debug:
+            msg: "Reconciliation completed on {{ inventory_hostname }}. HTTP unblocked, marker removed."
+
+      when: check_marker.stat.exists

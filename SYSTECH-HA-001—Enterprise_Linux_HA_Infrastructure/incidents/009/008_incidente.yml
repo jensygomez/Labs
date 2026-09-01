@@ -1,0 +1,135 @@
+# ==============================================================================
+# INCIDENTE 008: NODO DE APLICACIÓN NO RESPONDE A PETICIONES WEB (FIREWALL)
+# ==============================================================================
+#
+# OBJETIVO DEL INCIDENTE:
+#   Simular la pérdida de la regla de firewall que permite el tráfico HTTP
+#   (puerto 80) en un nodo del clúster de aplicaciones, provocando que el
+#   balanceador no pueda enviar tráfico a ese nodo.
+#
+# FASES:
+#   1. PREPARACIÓN (idempotente en UN nodo aleatorio):
+#      - Asegurar que Apache (httpd) está instalado y corriendo (ya debería,
+#        pero lo garantizamos por si acaso).
+#      - Verificar que el puerto 80 está abierto en firewalld (si no, lo abrimos).
+#
+#   2. INYECCIÓN DEL FALLO (en el mismo nodo aleatorio):
+#      - Eliminar (o deshabilitar) la regla de firewalld que permite el servicio http.
+#      - (Opcional) Cambiar el contexto SELinux de /etc/httpd/conf/httpd.conf a etc_t
+#        como señuelo (red herring) para que aparezca en audit.log.
+#      - Crear un marcador (/var/run/.incident_008_marker) para saber que el
+#        incidente ya fue inyectado en ese nodo.
+#
+# COMPORTAMIENTO ESPERADO:
+#   - En el nodo afectado, Apache sigue corriendo y escuchando en el puerto 80
+#     (ss -tlnp lo muestra), pero firewalld rechaza las conexiones entrantes
+#     desde cualquier otra IP, incluyendo HAProxy y los otros nodos.
+#   - Desde el propio nodo (localhost) sí se puede acceder (curl http://localhost:80).
+#   - En los demás nodos, el servicio web sigue funcionando sin cambios.
+#
+# RECUPERACIÓN (playbook separado, actúa sobre TODOS los nodos):
+#   - Asegurar que el servicio http está permitido en firewalld en todos los nodos.
+#   - Restaurar el contexto SELinux de /etc/httpd/conf/httpd.conf si se modificó.
+#   - Eliminar el marcador /var/run/.incident_008_marker.
+# ==============================================================================
+
+---
+- name: "Incident 008 Injection - App Node HTTP Blocked by Firewall"
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    target_group: "app_nodes"
+    marker_file: "/var/run/.incident_008_marker"
+
+  tasks:
+    - name: "10 - Pick random target from {{ target_group }}"
+      ansible.builtin.set_fact:
+        target_node: "{{ groups[target_group] | random }}"
+      when: groups[target_group] is defined and groups[target_group] | length > 0
+
+    - name: "20 - Fail if no target found"
+      ansible.builtin.fail:
+        msg: "No nodes in group '{{ target_group }}'"
+      when: target_node is not defined
+
+    - name: "30 - Add target to dynamic group"
+      ansible.builtin.add_host:
+        name: "{{ target_node }}"
+        groups: incident_008_target
+
+- name: "Inject Fault and Red Herring - Incident 008"
+  hosts: incident_008_target
+  become: true
+  gather_facts: true
+  vars:
+    marker_file: "/var/run/.incident_008_marker"
+    httpd_conf: "/etc/httpd/conf/httpd.conf"
+
+  tasks:
+    - name: "40 - Check if already injected"
+      ansible.builtin.stat:
+        path: "{{ marker_file }}"
+      register: check_inject
+
+    # =========================================================
+    # PRERREQUISITOS: Garantizar que Apache está instalado y corriendo
+    # =========================================================
+    - block:
+        - name: "50 - Ensure httpd is installed"
+          ansible.builtin.dnf:
+            name: httpd
+            state: present
+
+        - name: "51 - Ensure httpd is running and enabled"
+          ansible.builtin.systemd:
+            name: httpd
+            state: started
+            enabled: true
+
+        - name: "52 - Ensure firewalld allows http service (base state)"
+          ansible.posix.firewalld:
+            service: http
+            permanent: true
+            state: enabled
+            immediate: true
+
+      when: not check_inject.stat.exists
+
+    # =========================================================
+    # CAUSA RAÍZ REAL: Bloquear HTTP en firewalld
+    # =========================================================
+    - name: "80 - Remove http service from firewalld (block port 80)"
+      ansible.posix.firewalld:
+        service: http
+        permanent: true
+        state: disabled
+        immediate: true
+      when:
+        - not check_inject.stat.exists
+        - ansible_os_family == "RedHat"
+
+    # =========================================================
+    # SEÑUELO (Red herring): Cambiar contexto SELinux del httpd.conf
+    # =========================================================
+    - name: "90 - Red herring: set SELinux context on httpd.conf to etc_t"
+      ansible.builtin.command:
+        cmd: "chcon -t etc_t {{ httpd_conf }}"
+      when:
+        - not check_inject.stat.exists
+        - ansible_selinux is defined and ansible_selinux.status == "enabled"
+      failed_when: false
+
+    # =========================================================
+    # MARCADOR
+    # =========================================================
+    - name: "100 - Create injection marker"
+      ansible.builtin.file:
+        path: "{{ marker_file }}"
+        state: touch
+        mode: '0400'
+      when: not check_inject.stat.exists
+
+    - name: "110 - Debug completion"
+      ansible.builtin.debug:
+        msg: "Incident 008 injected on {{ inventory_hostname }}. HTTP (port 80) blocked by firewalld."

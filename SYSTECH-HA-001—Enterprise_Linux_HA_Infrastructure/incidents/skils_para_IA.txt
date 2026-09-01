@@ -18,3 +18,372 @@ REGLAS DE OBLIGATORIO CUMPLIMIENTO:
 5. SINTAXIS Y MÓDULOS NATIVOS:
    - Usa módulos nativos de Ansible (ansible.builtin.copy, lineinfile, cron, file, command) antes que 'shell' crudo.
    - Si usas 'command', usa el parámetro 'cmd:'.
+6. Compartiendo las caracteristicas de la Infraestructura:
+
+# SYSTECH-HA-001 — INFRASTRUCTURE HEADERS
+# Documentación de la arquitectura de los roles de Ansible
+# Versión: 1.0 | Fecha: 2026-09-01
+#
+# Este archivo resume cada componente de la infraestructura, ordenado
+# desde la capa de almacenamiento hasta los generadores de tráfico.
+# Cada sección describe el propósito, IPs, dependencias y características
+# clave de cada rol.
+
+---
+
+## 1️⃣ STORAGE SETUP — Nodo de Almacenamiento Centralizado (storage01)
+
+# ==============================================================================
+# ROL: STORAGE SETUP — Nodo de Almacenamiento Centralizado (storage01)
+# ==============================================================================
+#
+# IP: 10.10.10.50
+# HOSTNAME: storage01
+# SISTEMA OPERATIVO: AlmaLinux 9 (VM en Proxmox)
+#
+# PROPÓSITO:
+#   Este nodo actúa como el almacenamiento centralizado de todo el clúster,
+#   proporcionando volúmenes compartidos vía NFSv4 para:
+#     - Código de la aplicación web (/exports/webdata) → montado en /var/www/html
+#       de los app nodes (app01, app02, app03).
+#     - Datos de PostgreSQL (/exports/pgdata) → montado en /var/lib/pgsql/data
+#       del nodo de base de datos (db01).
+#
+# CARACTERÍSTICAS PRINCIPALES:
+#   - Gestión de volúmenes lógicos (LVM) sobre discos físicos (/dev/sdb, /dev/sdc, /dev/sdd, /dev/sde).
+#   - Exportaciones NFS con contextos SELinux apropiados (nfs_t).
+#   - Firewalld configurado para permitir servicios NFS (nfs, mountd, rpc-bind).
+#   - Incluye herramientas de gestión SELinux (policycoreutils-python-utils).
+#
+# DEPENDENCIAS:
+#   - Los nodos de aplicación (app_nodes) montan /exports/webdata.
+#   - El nodo de base de datos (db01) monta /exports/pgdata.
+#   - Ambos montajes requieren que storage01 esté accesible y que los servicios
+#     NFS estén activos.
+#
+# VARIABLES UTILIZADAS:
+#   - nfs_exports: Lista de diccionarios con lv_name, lv_size y path.
+#   - storage_host_ip: IP de storage01 (10.10.10.50) usada en otros roles.
+#
+# NOTAS DE SEGURIDAD:
+#   - Los directorios exportados tienen permisos 0777 para permitir escritura
+#     desde los clientes NFS (el control de acceso se gestiona a nivel de
+#     usuario/grupo en los clientes).
+#   - SELinux está en modo enforcing y se configuran contextos adecuados.
+#
+# RECUPERACIÓN ANTE FALLOS:
+#   - Si storage01 falla, todo el clúster pierde acceso a los datos compartidos.
+#   - Se recomienda implementar backups periódicos de los volúmenes LVM
+#     (snapshots) y replicación a otro nodo para alta disponibilidad.
+#
+# ==============================================================================
+
+---
+
+## 2️⃣ DATABASE SETUP — PostgreSQL sobre NFS Backend (db01)
+
+# ==============================================================================
+# ROL: DATABASE SETUP — PostgreSQL sobre NFS Backend (db01)
+# ==============================================================================
+#
+# IP: 10.10.10.40
+# HOSTNAME: db01
+# SISTEMA OPERATIVO: AlmaLinux 9 (LXC Privilegiado en Proxmox)
+#
+# PROPÓSITO:
+#   Este rol configura el nodo de base de datos del clúster, ejecutando
+#   PostgreSQL 15 con almacenamiento persistente montado vía NFSv4 desde
+#   storage01 (10.10.10.50). La base de datos es consumida por la aplicación
+#   web PHP que se ejecuta en los nodos de aplicación (app01, app02, app03).
+#
+# CARACTERÍSTICAS PRINCIPALES:
+#   - Instalación de PostgreSQL 15, cliente NFS y herramientas de gestión.
+#   - Montaje NFS de /exports/pgdata (storage01) en /var/lib/pgsql/data.
+#   - Configuración de PostgreSQL con:
+#       * listen_addresses = '*' (permite conexiones desde cualquier nodo).
+#       * password_encryption = 'scram-sha-256' (autenticación moderna).
+#       * pg_hba.conf con acceso desde la red 10.10.10.0/24 usando SCRAM.
+#   - Creación de la base de datos 'app_db' y el usuario 'app_user'.
+#   - Carga de datos de prueba (tabla 'employees' con 7 registros).
+#   - Firewalld con el puerto 5432 abierto.
+#
+# DEPENDENCIAS:
+#   - El nodo storage01 (10.10.10.50) debe tener el volumen /exports/pgdata
+#     creado y exportado correctamente.
+#   - Los servicios NFS deben estar activos en storage01.
+#   - El usuario postgres debe existir en storage01 con UID/GID 26 para
+#     mantener consistencia de permisos.
+#   - Los app_nodes deben tener conectividad TCP a db01 en el puerto 5432.
+#
+# VARIABLES UTILIZADAS:
+#   - storage_host_ip: IP de storage01 (10.10.10.50) para el montaje NFS.
+#   - db_name: Nombre de la base de datos (default: app_db).
+#   - db_user: Usuario de la aplicación (default: app_user).
+#   - db_pass: Contraseña del usuario (definida en vault).
+#
+# NOTAS DE SEGURIDAD:
+#   - La autenticación usa SCRAM-SHA-256 (no MD5).
+#   - El archivo pg_hba.conf restringe conexiones a la red interna 10.10.10.0/24.
+#   - El usuario de aplicación tiene privilegios ALL sobre la base de datos.
+#
+# RECUPERACIÓN ANTE FALLOS:
+#   - Si db01 falla, la aplicación web no podrá autenticarse ni consultar datos.
+#   - Los datos persisten en storage01 gracias al montaje NFS, lo que permite
+#     recuperar el servicio simplemente reinstalando db01 y ejecutando este rol.
+#   - Se recomienda implementar backups periódicos de la base de datos
+#     (pg_dump) y replicación (streaming replication) para alta disponibilidad.
+#
+# ==============================================================================
+
+---
+
+## 3️⃣ WEB APP SETUP — Clúster de Aplicaciones (app01, app02, app03)
+
+# ==============================================================================
+# ROL: WEB APP SETUP — Clúster de Aplicaciones (app01, app02, app03)
+# ==============================================================================
+#
+# IPS: 10.10.10.31, 10.10.10.32, 10.10.10.33
+# HOSTNAMES: app01, app02, app03
+# SISTEMA OPERATIVO: AlmaLinux 9 (LXC Privilegiado en Proxmox)
+#
+# PROPÓSITO:
+#   Este rol configura los nodos de aplicación del clúster, que ejecutan el
+#   servidor web Apache con PHP y sirven la aplicación dinámica que se conecta
+#   a PostgreSQL en db01 (10.10.10.40). El código de la aplicación y los
+#   archivos de evidencia de los clientes de tráfico se almacenan en un
+#   volumen NFS compartido desde storage01 (10.10.10.50).
+#
+# CARACTERÍSTICAS PRINCIPALES:
+#   - Instalación de Apache (httpd), PHP, módulo php-pgsql y cliente NFS.
+#   - Montaje NFSv4 de /exports/webdata (storage01) en /var/www/html.
+#   - Despliegue de la aplicación PHP (feed_app.php.j2) en /var/www/html/index.php.
+#   - Configuración de SELinux:
+#       * httpd_use_nfs → permite a Apache acceder a archivos NFS.
+#       * httpd_can_network_connect_db → permite conexiones a PostgreSQL.
+#   - Firewalld con el servicio http (puerto 80) abierto.
+#   - Servicio httpd habilitado e iniciado.
+#
+# DEPENDENCIAS:
+#   - El nodo storage01 (10.10.10.50) debe tener el volumen /exports/webdata
+#     creado y exportado correctamente.
+#   - El nodo db01 (10.10.10.40) debe tener PostgreSQL corriendo y accesible.
+#   - Los app_nodes deben tener conectividad TCP a db01 en el puerto 5432.
+#   - Los load balancers (lb01/lb02) deben estar configurados para enviar
+#     tráfico a los app_nodes a través de la VIP (10.10.10.30).
+#
+# VARIABLES UTILIZADAS:
+#   - storage_host_ip: IP de storage01 (10.10.10.50) para el montaje NFS.
+#   - db_host_ip, db_name, db_user, db_pass: Variables para la conexión
+#     a PostgreSQL (definidas en group_vars o vault).
+#
+# NOTAS DE SEGURIDAD:
+#   - Los booleanos de SELinux se habilitan persistentemente.
+#   - El firewall permite solo el tráfico HTTP (puerto 80).
+#   - La aplicación PHP tiene acceso a la base de datos con credenciales
+#     definidas en vault.
+#
+# RECUPERACIÓN ANTE FALLOS:
+#   - Si un nodo de aplicación falla, HAProxy (lb01/lb02) envía el tráfico
+#     a los nodos restantes.
+#   - Si el clúster completo de app_nodes falla, la aplicación web no estará
+#     disponible hasta que al menos un nodo se recupere.
+#   - Los archivos de evidencia (uploads) persisten en storage01, por lo que
+#     no se pierden al reiniciar un app_node.
+#   - Se recomienda implementar health checks en HAProxy para detectar nodos
+#     caídos y retirarlos automáticamente del pool de backend.
+#
+# ==============================================================================
+
+---
+
+## 4️⃣ LOAD BALANCER SETUP — Clúster de Balanceo de Carga (lb01, lb02)
+
+# ==============================================================================
+# ROL: LOAD BALANCER SETUP — Clúster de Balanceo de Carga (lb01, lb02)
+# ==============================================================================
+#
+# IPS: 10.10.10.21, 10.10.10.22
+# VIP (Floating IP): 10.10.10.30
+# HOSTNAMES: lb01, lb02
+# SISTEMA OPERATIVO: AlmaLinux 9 (LXC Privilegiado en Proxmox)
+#
+# PROPÓSITO:
+#   Este rol configura el clúster de balanceo de carga que proporciona alta
+#   disponibilidad para la aplicación web. Utiliza HAProxy como balanceador
+#   de capa 7 (round-robin) y Keepalived para gestionar una IP virtual
+#   (VIP) que flota entre los dos nodos, garantizando que el servicio
+#   siempre esté accesible a través de la dirección 10.10.10.30.
+#
+# CARACTERÍSTICAS PRINCIPALES:
+#   - Instalación de HAProxy, Keepalived, psmisc y firewalld.
+#   - Configuración de sysctl net.ipv4.ip_nonlocal_bind = 1 para permitir
+#     que Keepalived anuncie la VIP aunque no esté configurada localmente.
+#   - Firewalld con reglas para:
+#       * HTTP (puerto 80) y HTTPS (puerto 443) para el tráfico de usuarios.
+#       * Protocolo VRRP (protocolo 112) para la comunicación entre lb01 y lb02.
+#   - Despliegue de configuraciones desde plantillas Jinja2:
+#       * keepalived.conf.j2: define la prioridad, la VIP y la autenticación VRRP.
+#       * haproxy.cfg.j2: define los frontends, backends y health checks
+#         para los app_nodes (app01, app02, app03).
+#   - Servicios keepalived y haproxy habilitados e iniciados.
+#
+# DEPENDENCIAS:
+#   - Los app_nodes (10.10.10.31, 10.10.10.32, 10.10.10.33) deben estar
+#     configurados y ejecutando Apache en el puerto 80.
+#   - Los lb_nodes deben tener conectividad entre sí para VRRP y con los
+#     app_nodes para el balanceo de carga.
+#   - Los clientes deben apuntar a la VIP 10.10.10.30 para acceder a la
+#     aplicación web.
+#
+# VARIABLES UTILIZADAS:
+#   - lb_priority: Prioridad VRRP para cada nodo (mayor = más probable de ser activo).
+#   - lb_vip: Dirección IP virtual (10.10.10.30).
+#   - lb_vip_interface: Interfaz de red donde se anuncia la VIP (ej. eth0).
+#   - app_nodes: Lista de IPs de los app_nodes (definida en inventory).
+#
+# NOTAS DE SEGURIDAD:
+#   - El tráfico HTTP/HTTPS está permitido en firewalld.
+#   - VRRP utiliza autenticación simple (configurable en keepalived.conf.j2).
+#   - HAProxy puede configurarse con health checks para detectar nodos caídos.
+#   - Se recomienda usar HTTPS con certificados SSL/TLS en entornos productivos.
+#
+# RECUPERACIÓN ANTE FALLOS:
+#   - Si un load balancer (lb01 o lb02) falla, Keepalived detecta la caída
+#     y mueve la VIP al otro nodo en aproximadamente 2-3 segundos.
+#   - Si un app_node (app01/app02/app03) falla, HAProxy lo retira del pool
+#     automáticamente gracias a los health checks.
+#   - Los logs de HAProxy y Keepalived permiten diagnosticar fallos:
+#       * journalctl -u haproxy -f
+#       * journalctl -u keepalived -f
+#   - Para recuperar un nodo caído, basta con reiniciar los servicios y
+#     verificar que el health check vuelva a pasar.
+#
+# ==============================================================================
+
+---
+
+## 5️⃣ CLIENTES DE TRÁFICO — Simuladores de Comportamiento Humano (client01..04)
+
+# ==============================================================================
+# CLIENT01 — CONSULTA SQL + EVIDENCIA EN STORAGE (DURACIÓN VARIABLE)
+# ==============================================================================
+# IP: 10.10.10.11
+# HOSTNAME: client01
+# SISTEMA OPERATIVO: Ubuntu 24.04 (LXC Privilegiado en Proxmox)
+#
+# PROPÓSITO:
+#   Simula un cliente que ejecuta UNA consulta SQL por ciclo hacia la VIP
+#   (10.10.10.30), atendida por un app node (round-robin HAProxy), que a su vez
+#   consulta PostgreSQL en db01 (datos físicos en storage01 vía NFS).
+#   Como evidencia de que la consulta se completó con éxito, el app node que
+#   atendió la petición escribe UN archivo .txt en /var/www/html/uploads
+#   (NFS webdata en storage01).
+#
+# CARACTERÍSTICAS:
+#   - Variabilidad real: cada ciclo elige duración de ocupación y descanso
+#     ALEATORIOS dentro de rangos configurables (default: ocupación 30-90s,
+#     descanso 30-90s).
+#   - Servicio systemd: traffic-client01.service.
+#   - Logs: /var/log/client01_traffic.log.
+#
+# DEPENDENCIAS:
+#   - HAProxy debe estar operativo y balanceando a los app_nodes.
+#   - PostgreSQL en db01 debe estar accesible.
+#   - Storage01 debe tener el volumen /exports/webdata montado en los app_nodes.
+#
+# ==============================================================================
+
+# ==============================================================================
+# CLIENT02 — ESCRITURA EN STORAGE (NFS webdata) CON DURACIÓN VARIABLE
+# ==============================================================================
+# IP: 10.10.10.12
+# HOSTNAME: client02
+# SISTEMA OPERATIVO: Ubuntu 24.04 (LXC Privilegiado en Proxmox)
+#
+# PROPÓSITO:
+#   Simula un cliente que ejecuta UNA petición de escritura por ciclo hacia la
+#   VIP (10.10.10.30), la cual es atendida por un app node (round-robin HAProxy)
+#   y escribe UN solo archivo .txt en /var/www/html/uploads (NFS storage01).
+#
+# CARACTERÍSTICAS:
+#   - Variabilidad real: duración de ocupación y descanso aleatorios
+#     (default: ocupación 15-45s, descanso 20-60s).
+#   - Servicio systemd: traffic-client02.service.
+#   - Logs: /var/log/client02_traffic.log.
+#
+# DEPENDENCIAS:
+#   - HAProxy y app_nodes operativos.
+#   - Storage01 con /exports/webdata accesible.
+#
+# ==============================================================================
+
+# ==============================================================================
+# CLIENT03 — REPORTE ANALÍTICO PESADO CON DURACIÓN/DESCANSO VARIABLE
+# ==============================================================================
+# IP: 10.10.10.13
+# HOSTNAME: client03
+# SISTEMA OPERATIVO: Ubuntu 24.04 (LXC Privilegiado en Proxmox)
+#
+# PROPÓSITO:
+#   Simula un cliente que genera reportes agregados (GROUP BY + AVG) contra
+#   PostgreSQL en db01, atendido vía VIP (10.10.10.30) por round-robin de
+#   HAProxy. Deja evidencia tabulada por departamento en /var/www/html/uploads
+#   (NFS webdata), igual que client01/02.
+#
+# CARACTERÍSTICAS:
+#   - Variabilidad real: duración de ocupación y descanso aleatorios
+#     (default: ocupación 10-30s, descanso 30-90s).
+#   - Servicio systemd: traffic-client03.service.
+#   - Logs: /var/log/client03_traffic.log.
+#
+# DEPENDENCIAS:
+#   - HAProxy, app_nodes y db01 operativos.
+#   - Storage01 con /exports/webdata accesible.
+#
+# ==============================================================================
+
+# ==============================================================================
+# CLIENT04 — CONSOLIDADOR BATCH + ROTACIÓN DE EVIDENCIAS (DURACIÓN VARIABLE)
+# ==============================================================================
+# IP: 10.10.10.14
+# HOSTNAME: client04
+# SISTEMA OPERATIVO: Ubuntu 24.04 (LXC Privilegiado en Proxmox)
+#
+# PROPÓSITO:
+#   Simula un proceso batch que, cada ciclo, ejecuta UNA petición prolongada
+#   hacia la VIP (10.10.10.30) atendida por un app node (round-robin HAProxy).
+#   El servidor lee TODOS los archivos .txt generados por client01/02/03 en
+#   /var/www/html/uploads (NFS webdata en storage01), los empaqueta en un
+#   archivo consolidado único y aplica rotación borrando los más antiguos
+#   si exceden el límite de retención.
+#
+# CARACTERÍSTICAS:
+#   - Variabilidad real: duración de ocupación (10-25s) y descanso (30-90s).
+#   - Límite de retención configurable (default: 20 archivos totales).
+#   - Servicio systemd: traffic-client04.service.
+#   - Logs: /var/log/client04_traffic.log.
+#
+# DEPENDENCIAS:
+#   - HAProxy y app_nodes operativos.
+#   - Storage01 con /exports/webdata accesible y archivos de evidencia.
+#   - client01/02/03 deben estar generando archivos para que client04 tenga
+#     material que consolidar.
+#
+# ==============================================================================
+
+---
+
+## 📌 RESUMEN DE LA ARQUITECTURA
+
+| Capa | Nodos | IPs | Rol Principal |
+|------|-------|-----|---------------|
+| **Almacenamiento** | storage01 | 10.10.10.50 | NFSv4 para webdata y pgdata |
+| **Base de Datos** | db01 | 10.10.10.40 | PostgreSQL 15 |
+| **Aplicación** | app01, app02, app03 | 10.10.10.31, .32, .33 | Apache + PHP |
+| **Balanceo** | lb01, lb02 | 10.10.10.21, .22 | HAProxy + Keepalived (VIP 10.10.10.30) |
+| **Simulación de Tráfico** | client01..04 | 10.10.10.11..14 | Generadores de carga y consolidación |
+
+---
+
+

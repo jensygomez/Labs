@@ -1,3 +1,64 @@
+# ==============================================================================
+# ROL: LOAD BALANCER SETUP — Clúster de Balanceo de Carga (lb01, lb02)
+# ==============================================================================
+#
+# IPS: 10.10.10.21, 10.10.10.22
+# VIP (Floating IP): 10.10.10.30
+# HOSTNAMES: lb01, lb02
+# SISTEMA OPERATIVO: AlmaLinux 9 (LXC Privilegiado en Proxmox)
+#
+# PROPÓSITO:
+#   Este rol configura el clúster de balanceo de carga que proporciona alta
+#   disponibilidad para la aplicación web. Utiliza HAProxy como balanceador
+#   de capa 7 (round-robin) y Keepalived para gestionar una IP virtual
+#   (VIP) que flota entre los dos nodos, garantizando que el servicio
+#   siempre esté accesible a través de la dirección 10.10.10.30.
+#
+# CARACTERÍSTICAS PRINCIPALES:
+#   - Instalación de HAProxy, Keepalived, psmisc y firewalld.
+#   - Configuración de sysctl net.ipv4.ip_nonlocal_bind = 1 para permitir
+#     que Keepalived anuncie la VIP aunque no esté configurada localmente.
+#   - Firewalld con reglas para:
+#       * HTTP (puerto 80) y HTTPS (puerto 443) para el tráfico de usuarios.
+#       * Protocolo VRRP (protocolo 112) para la comunicación entre lb01 y lb02.
+#   - Despliegue de configuraciones desde plantillas Jinja2:
+#       * keepalived.conf.j2: define la prioridad, la VIP y la autenticación VRRP.
+#       * haproxy.cfg.j2: define los frontends, backends y health checks
+#         para los app_nodes (app01, app02, app03).
+#   - Servicios keepalived y haproxy habilitados e iniciados.
+#
+# DEPENDENCIAS:
+#   - Los app_nodes (10.10.10.31, 10.10.10.32, 10.10.10.33) deben estar
+#     configurados y ejecutando Apache en el puerto 80.
+#   - Los lb_nodes deben tener conectividad entre sí para VRRP y con los
+#     app_nodes para el balanceo de carga.
+#   - Los clientes deben apuntar a la VIP 10.10.10.30 para acceder a la
+#     aplicación web.
+#
+# VARIABLES UTILIZADAS:
+#   - lb_priority: Prioridad VRRP para cada nodo (mayor = más probable de ser activo).
+#   - lb_vip: Dirección IP virtual (10.10.10.30).
+#   - lb_vip_interface: Interfaz de red donde se anuncia la VIP (ej. eth0).
+#   - app_nodes: Lista de IPs de los app_nodes (definida en inventory).
+#
+# NOTAS DE SEGURIDAD:
+#   - El tráfico HTTP/HTTPS está permitido en firewalld.
+#   - VRRP utiliza autenticación simple (configurable en keepalived.conf.j2).
+#   - HAProxy puede configurarse con health checks para detectar nodos caídos.
+#   - Se recomienda usar HTTPS con certificados SSL/TLS en entornos productivos.
+#
+# RECUPERACIÓN ANTE FALLOS:
+#   - Si un load balancer (lb01 o lb02) falla, Keepalived detecta la caída
+#     y mueve la VIP al otro nodo en aproximadamente 2-3 segundos.
+#   - Si un app_node (app01/app02/app03) falla, HAProxy lo retira del pool
+#     automáticamente gracias a los health checks.
+#   - Los logs de HAProxy y Keepalived permiten diagnosticar fallos:
+#       * journalctl -u haproxy -f
+#       * journalctl -u keepalived -f
+#   - Para recuperar un nodo caído, basta con reiniciar los servicios y
+#     verificar que el health check vuelva a pasar.
+#
+# ==============================================================================
 ---
 # ==============================================================================
 # LOAD BALANCER SETUP — AlmaLinux 9 (LXC en Proxmox)
