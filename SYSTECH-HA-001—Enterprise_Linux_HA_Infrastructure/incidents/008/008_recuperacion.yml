@@ -4,10 +4,8 @@
   become: true
   gather_facts: false
   vars:
-    service_name: "nginx"
-    service_port: 8080
-    service_package: "nginx"
     marker_file: "/var/run/.incident_008_marker"
+    httpd_conf: "/etc/httpd/conf/httpd.conf"
 
   tasks:
     - name: "10 - Check if incident marker exists"
@@ -16,40 +14,28 @@
       register: check_marker
 
     - block:
-        - name: "20 - Stop and disable {{ service_name }}"
-          ansible.builtin.systemd:
-            name: "{{ service_name }}"
-            state: stopped
-            enabled: false
-
-        - name: "30 - Remove {{ service_package }} package"
-          ansible.builtin.dnf:
-            name: "{{ service_package }}"
-            state: absent
-
-        - name: "40 - Remove firewalld rule for port {{ service_port }}"
+        - name: "20 - Ensure http service is allowed in firewalld"
           ansible.posix.firewalld:
-            port: "{{ service_port }}/tcp"
+            service: http
             permanent: true
-            state: absent
+            state: enabled
             immediate: true
           when: ansible_os_family == "RedHat"
 
-        - name: "50 - Restore SELinux context on config file (if exists)"
+        - name: "30 - Restore SELinux context on httpd.conf"
           ansible.builtin.command:
-            cmd: "restorecon -v /etc/nginx/nginx.conf"
+            cmd: "restorecon -v {{ httpd_conf }}"
           when:
-            - service_name == "nginx"
             - ansible_selinux is defined and ansible_selinux.status == "enabled"
           failed_when: false
 
-        - name: "60 - Remove injection marker"
+        - name: "40 - Remove injection marker"
           ansible.builtin.file:
             path: "{{ marker_file }}"
             state: absent
 
-        - name: "70 - Debug completion"
+        - name: "50 - Debug completion"
           ansible.builtin.debug:
-            msg: "Reconciliation completed on {{ inventory_hostname }}. Service removed, firewall rule deleted."
+            msg: "Reconciliation completed on {{ inventory_hostname }}. HTTP unblocked, marker removed."
 
       when: check_marker.stat.exists
