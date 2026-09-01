@@ -42,8 +42,8 @@
       #!/bin/bash
       VIP="10.10.10.30"
       # Rangos controlados por Ansible (puedes cambiarlos con --extra-vars)
-      OCUPA_MIN={{ client01_ocupacion_min | default(30) }}
-      OCUPA_MAX={{ client01_ocupacion_max | default(90) }}
+      OCUPA_MIN={{ client01_ocupacion_min | default(10) }}
+      OCUPA_MAX={{ client01_ocupacion_max | default(30) }}
       DESCANSO_MIN={{ client01_descanso_min | default(30) }}
       DESCANSO_MAX={{ client01_descanso_max | default(90) }}
 

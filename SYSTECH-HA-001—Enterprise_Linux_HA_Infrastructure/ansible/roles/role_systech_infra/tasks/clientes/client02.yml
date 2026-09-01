@@ -39,10 +39,10 @@
       #!/bin/bash
       VIP="10.10.10.30"
       # Rangos controlados por Ansible (puedes cambiarlos con --extra-vars)
-      OCUPA_MIN={{ client02_ocupacion_min | default(15) }}
-      OCUPA_MAX={{ client02_ocupacion_max | default(45) }}
-      DESCANSO_MIN={{ client02_descanso_min | default(20) }}
-      DESCANSO_MAX={{ client02_descanso_max | default(60) }}
+      OCUPA_MIN={{ client02_ocupacion_min | default(10) }}
+      OCUPA_MAX={{ client02_ocupacion_max | default(30) }}
+      DESCANSO_MIN={{ client02_descanso_min | default(30) }}
+      DESCANSO_MAX={{ client02_descanso_max | default(90) }}
 
       echo "[$(date +'%T')] === INICIANDO SERVICIO CÍCLICO (Ocupa: ${OCUPA_MIN}-${OCUPA_MAX}s, Descansa: ${DESCANSO_MIN}-${DESCANSO_MAX}s) ==="
 
