@@ -242,7 +242,7 @@ ssh ansible@10.10.10.11
 Cada laboratorio sigue el mismo ciclo: la IA (o tú mismo con un script) introduce **una falla controlada y reproducible** sobre la infraestructura ya desplegada y funcionando (`tofu apply` + `site.yml` limpio), sin decirte qué rompió. Tú actúas como el nivel de escalamiento correspondiente:
 
 - **Nivel L1 (Junior):** diagnóstico de síntoma único, en un solo servicio/nodo, con evidencia directa en logs o `systemctl status`. Es lo que un NOC L1 con acceso a servidor SÍ podría resolver.
-- **Nivel L2 (Mid):** fallas multi-causa, multi-nodo, o silenciosas (no rompen el servicio pero corrompen datos o degradan HA), que requieren correlacionar logs entre nodos, entender la arquitectura completa (LB→App→NFS/iSCSI→DB) y a veces recuperar estado, no solo reiniciar un servicio.
+- **Nivel L2 (Mid):** fallas multi-causa, multi-nodo, o silenciosas (no rompen el servicio pero corrompen datos o degradan HA), que requieren correlacionar logs entre nodos, entender la arquitectura completa (LB→App→NFS/→DB) y a veces recuperar estado, no solo reiniciar un servicio.
 
 Recomendación de conteo:
 
@@ -314,4 +314,4 @@ Recomendación de conteo:
 - **Linux Foundation LFCS:** labs de red, cron, procesos y troubleshooting de servicios (5, 6, 8, 12) más los de HA/almacenamiento en L2 cubren los dominios de "Essential Commands", "Operation of Running Systems" y "User and Group Management".
 - **Entrevistas Sysadmin/DevOps:** documenta cada laboratorio como un mini-RCA (síntoma → hipótesis → comandos de diagnóstico → causa raíz → fix → prevención). Esa documentación es exactamente lo que un reclutador espera ver como evidencia de experiencia real, compensando la falta de acceso a herramientas de monitoreo en tu rol actual de NOC L1 en Accenture.
 
-¿Quieres que te arme el primer laboratorio (#1) con el script/playbook exacto que usará la IA para romper Apache, y una plantilla de RCA en blanco para que documentes tu diagnóstico?
+

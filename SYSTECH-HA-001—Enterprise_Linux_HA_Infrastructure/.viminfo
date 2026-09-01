@@ -14,10 +14,10 @@
 ~Msle0~/\<name\>
 
 # Command Line History (newest to oldest):
+:wq
+|2,0,1788201224,,"wq"
 :q!
 |2,0,1788175549,,"q!"
-:wq
-|2,0,1788175535,,"wq"
 
 # Search String History (newest to oldest):
 ? \<name\>
@@ -58,40 +58,74 @@
 	          search lab.systech.internal
 |3,0,9,1,1,0,1787682087,"          search lab.systech.internal"
 ""-	CHAR	0
-	_
-|3,1,36,0,1,0,1787824399,"_"
+	 
+|3,1,36,0,1,0,1788201222," "
 
 # File marks:
-'0  112  55  ~/ansible/tee
-|4,48,112,55,1788175549,"~/ansible/tee"
-'1  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,49,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
-'2  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
-|4,50,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
-'3  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
-|4,51,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
-'4  1  0  ~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml
-|4,52,1,0,1787823764,"~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml"
-'5  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,53,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
-'6  3  0  ~/.ansible/tmp/ansible-local-68_n66eizw/tmpb36jjqag.yml
-|4,54,3,0,1787822436,"~/.ansible/tmp/ansible-local-68_n66eizw/tmpb36jjqag.yml"
-'7  40  0  ~/terraform/outputs.tf
-|4,55,40,0,1787768211,"~/terraform/outputs.tf"
-'8  40  0  ~/terraform/outputs.tf
-|4,56,40,0,1787768068,"~/terraform/outputs.tf"
-'9  109  0  ~/terraform/incus_instances.tf
-|4,57,109,0,1787768033,"~/terraform/incus_instances.tf"
+'0  35  0  ~/incidents/007/007_remediation.yml
+|4,48,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+'1  37  0  ~/incidents/007/007_remediation.yml
+|4,49,37,0,1788201154,"~/incidents/007/007_remediation.yml"
+'2  37  0  ~/incidents/007/007_remediation.yml
+|4,50,37,0,1788201154,"~/incidents/007/007_remediation.yml"
+'3  112  55  ~/ansible/tee
+|4,51,112,55,1788175549,"~/ansible/tee"
+'4  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
+|4,52,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
+'5  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,53,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+'6  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,54,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+'7  1  0  ~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml
+|4,55,1,0,1787823764,"~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml"
+'8  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
+|4,56,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
+'9  3  0  ~/.ansible/tmp/ansible-local-68_n66eizw/tmpb36jjqag.yml
+|4,57,3,0,1787822436,"~/.ansible/tmp/ansible-local-68_n66eizw/tmpb36jjqag.yml"
 
 # Jumplist (newest first):
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  37  0  ~/incidents/007/007_remediation.yml
+|4,39,37,0,1788201184,"~/incidents/007/007_remediation.yml"
+-'  37  0  ~/incidents/007/007_remediation.yml
+|4,39,37,0,1788201154,"~/incidents/007/007_remediation.yml"
+-'  1  0  ~/incidents/007/007_remediation.yml
+|4,39,1,0,1788200656,"~/incidents/007/007_remediation.yml"
+-'  1  0  ~/incidents/007/007_remediation.yml
+|4,39,1,0,1788200656,"~/incidents/007/007_remediation.yml"
 -'  112  55  ~/ansible/tee
 |4,39,112,55,1788175549,"~/ansible/tee"
+-'  112  55  ~/ansible/tee
+|4,39,112,55,1788175549,"~/ansible/tee"
+-'  112  55  ~/ansible/tee
+|4,39,112,55,1788175549,"~/ansible/tee"
+-'  112  55  ~/ansible/tee
+|4,39,112,55,1788175549,"~/ansible/tee"
+-'  1  0  ~/ansible/tee
+|4,39,1,0,1788175531,"~/ansible/tee"
+-'  1  0  ~/ansible/tee
+|4,39,1,0,1788175531,"~/ansible/tee"
+-'  1  0  ~/ansible/tee
+|4,39,1,0,1788175531,"~/ansible/tee"
 -'  1  0  ~/ansible/tee
 |4,39,1,0,1788175531,"~/ansible/tee"
 -'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
 |4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
 -'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
 |4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
+|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
+|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
+|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
+|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
+|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
+|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
 -'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
 |4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
 -'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
@@ -100,6 +134,54 @@
 |4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
 -'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
 |4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,1,0,1787826266,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,1,0,1787826266,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,1,0,1787826266,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,1,0,1787826266,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,1,0,1787826266,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,1,0,1787826266,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,1,0,1787826266,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,1,0,1787826266,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,1,0,1787826266,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,1,0,1787826266,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,1,0,1787826266,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
+|4,39,1,0,1787826266,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
 -'  1  0  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
 |4,39,1,0,1787826266,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
 -'  1  0  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
@@ -124,6 +206,54 @@
 |4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
 -'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
 |4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
 -'  1  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
 |4,39,1,0,1787824387,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
 -'  1  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
@@ -140,152 +270,49 @@
 |4,39,1,0,1787824387,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
 -'  1  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
 |4,39,1,0,1787824387,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml
-|4,39,1,0,1787823764,"~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml
-|4,39,1,0,1787823764,"~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml
-|4,39,1,0,1787823764,"~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml
-|4,39,1,0,1787823764,"~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml
-|4,39,1,0,1787823764,"~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml
-|4,39,1,0,1787823764,"~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml
-|4,39,1,0,1787823764,"~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml
-|4,39,1,0,1787823764,"~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml
-|4,39,1,0,1787823764,"~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml
-|4,39,1,0,1787823764,"~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml
-|4,39,1,0,1787823764,"~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml
-|4,39,1,0,1787823764,"~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml
-|4,39,1,0,1787823764,"~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml
-|4,39,1,0,1787823764,"~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml
-|4,39,1,0,1787823764,"~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml
-|4,39,1,0,1787823764,"~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  2  5  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,2,5,1787822833,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml
-|4,39,1,0,1787822805,"~/.ansible/tmp/ansible-local-171sjbuvj97/tmprxeg4gp1.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,1,0,1787824387,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,1,0,1787824387,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,1,0,1787824387,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,1,0,1787824387,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,1,0,1787824387,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,1,0,1787824387,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
+|4,39,1,0,1787824387,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
 
 # History of marks within files (newest to oldest):
+
+> ~/incidents/007/007_remediation.yml
+	*	1788201223	0
+	"	35	0
+	^	37	0
+	.	35	0
+	+	40	0
+	+	6	21
+	+	39	0
+	+	11	5
+	+	4	68
+	+	10	52
+	+	37	0
+	+	21	0
+	+	22	0
+	+	23	0
+	+	24	0
+	+	25	0
+	+	26	0
+	+	27	0
+	+	29	0
+	+	30	0
+	+	31	0
+	+	32	0
+	+	33	0
+	+	34	0
+	+	35	0
 
 > ~/ansible/tee
 	*	1788175548	0
