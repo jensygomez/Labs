@@ -49,6 +49,28 @@
       tags: ['lb', 'loadbalancer']
   when: "'lb_nodes' in group_names"
   tags: ['lb', 'loadbalancer']
+# ==============================================================================
+# FREEIPA - SERVIDOR DE IDENTIDAD CENTRALIZADA
+# ==============================================================================
+# Despliega FreeIPA Server en freeipa01 para gestión centralizada de usuarios.
+# Los clientes (app, db, lb) se unen al dominio mediante SSSD.
+# ==============================================================================
+
+- name: "Configurar Servidor FreeIPA (LDAP + Kerberos + DNS)"
+  ansible.builtin.include_tasks:
+    file: freeipa/freeipa_server_setup.yml
+    apply:
+      tags: ['freeipa', 'freeipa_server']
+  when: "inventory_hostname == 'freeipa01'"
+  tags: ['freeipa', 'freeipa_server']
+
+- name: "Configurar Clientes FreeIPA (SSSD) en todos los nodos"
+  ansible.builtin.include_tasks:
+    file: freeipa/freeipa_client_setup.yml
+    apply:
+      tags: ['freeipa', 'freeipa_client']
+  when: "'app_nodes' in group_names or 'db_nodes' in group_names or 'lb_nodes' in group_names"
+  tags: ['freeipa', 'freeipa_client']
 
 # ==============================================================================
 # CLIENTES - SIMULACIÓN DE TRÁFICO ASINCRÓNICO (3 PERFILES DISTINTOS)

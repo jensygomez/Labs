@@ -1,0 +1,69 @@
+---
+# ==============================================================================
+# FREEIPA SERVER SETUP (ROBUST & IDEMPOTENT)
+# ==============================================================================
+# TARGET: freeipa01 (10.10.10.15)
+# PURPOSE: Deploy central identity management (LDAP + Kerberos + DNS).
+# NOTE   : Explicitly fixes /etc/hosts to prevent Proxmox/Tailscale FQDN conflicts.
+# ==============================================================================
+
+- name: "Ensure hostname is set correctly"
+  ansible.builtin.hostname:
+    name: freeipa01.systech.local
+  when: ansible_hostname == "freeipa01"
+
+- name: "Fix /etc/hosts to ensure correct FQDN (Overwrite Proxmox/Tailscale injections)"
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "^10\\.10\\.10\\.15.*"
+    line: "10.10.10.15 freeipa01.systech.local freeipa01"
+    state: present
+  when: ansible_hostname == "freeipa01"
+
+- name: "Install FreeIPA server packages"
+  ansible.builtin.dnf:
+    name:
+      - freeipa-server
+      - freeipa-server-dns
+      - ipa-admintools
+    state: present
+  when: ansible_hostname == "freeipa01"
+
+- name: "Check if FreeIPA server is already configured (Idempotency)"
+  ansible.builtin.stat:
+    path: /etc/ipa/default.conf
+  register: ipa_server_configured
+  when: ansible_hostname == "freeipa01"
+
+- name: "Run FreeIPA server installation (Unattended)"
+  ansible.builtin.command:
+    cmd: >
+      ipa-server-install
+      --domain systech.local
+      --realm SYSTECH.LOCAL
+      --ds-password 'StrongDSpass123!'
+      --admin-password 'StrongAdminpass123!'
+      --setup-dns
+      --no-forwarders
+      --no-ntp
+      --unattended
+  when: 
+    - ansible_hostname == "freeipa01"
+    - not ipa_server_configured.stat.exists
+
+- name: "Open FreeIPA ports in firewalld"
+  ansible.builtin.firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+    immediate: yes
+  loop:
+    - "80/tcp"
+    - "443/tcp"
+    - "389/tcp"
+    - "636/tcp"
+    - "88/tcp"
+    - "464/tcp"
+    - "53/tcp"
+    - "53/udp"
+  when: ansible_hostname == "freeipa01"

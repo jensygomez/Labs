@@ -1,0 +1,63 @@
+---
+# ==============================================================================
+# FREEIPA CLIENT SETUP (SSSD) - ROBUST & IDEMPOTENT
+# ==============================================================================
+# TARGET: app_nodes, db_nodes, lb_nodes
+# PURPOSE: Join nodes to the FreeIPA domain for centralized authentication.
+# NOTE   : Explicitly fixes /etc/hosts to ensure clients can resolve freeipa01.
+# ==============================================================================
+
+- name: "Install FreeIPA client and SSSD packages"
+  ansible.builtin.dnf:
+    name:
+      - freeipa-client
+      - sssd
+      - oddjob-mkhomedir
+    state: present
+  when: ansible_hostname != "freeipa01" and ansible_hostname != "storage01"
+
+- name: "Fix /etc/hosts on clients to resolve FreeIPA server"
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "^10\\.10\\.10\\.15.*"
+    line: "10.10.10.15 freeipa01.systech.local freeipa01"
+    state: present
+  when: ansible_hostname != "freeipa01" and ansible_hostname != "storage01"
+
+- name: "Check if FreeIPA client is already configured (Idempotency)"
+  ansible.builtin.stat:
+    path: /etc/ipa/default.conf
+  register: ipa_client_configured
+  when: ansible_hostname != "freeipa01" and ansible_hostname != "storage01"
+
+- name: "Join node to FreeIPA domain (Unattended)"
+  ansible.builtin.command:
+    cmd: >
+      ipa-client-install
+      --domain systech.local
+      --realm SYSTECH.LOCAL
+      --server freeipa01.systech.local
+      --principal admin
+      --password 'StrongAdminpass123!'
+      --enable-dns-updates
+      --mkhomedir
+      --unattended
+  when: 
+    - ansible_hostname != "freeipa01" and ansible_hostname != "storage01"
+    - not ipa_client_configured.stat.exists
+
+- name: "Enable and start SSSD service"
+  ansible.builtin.systemd:
+    name: sssd
+    state: started
+    enabled: yes
+  when: ansible_hostname != "freeipa01" and ansible_hostname != "storage01"
+
+- name: "Configure PAM to automatically create home directories on first login"
+  ansible.builtin.command:
+    cmd: "authselect enable-feature with-mkhomedir"
+  changed_when: false
+  failed_when: false
+  when: 
+    - ansible_hostname != "freeipa01" and ansible_hostname != "storage01"
+    - ipa_client_configured.stat.exists

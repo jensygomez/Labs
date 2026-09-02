@@ -50,7 +50,7 @@ variable "lxc_containers" {
     "client04" = { vmid = 114, ip = "10.10.10.14/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
     
     # Servidor FreeIPA (Alma Linux - No storage mounts -> privileged)
-    "freeipa01" = { vmid = 115, ip = "10.10.10.15/24", cores = 1, memory = 1536, disk_size = 8, role = "freeipa" }
+    "freeipa01" = { vmid = 115, ip = "10.10.10.15/24", cores = 1, memory = 2048, disk_size = 8, role = "freeipa" }
 
     # LOAD BALANCERS (Alma Linux - No storage mounts -> Unprivileged)
     "lb01" = { vmid = 221, ip = "10.10.10.21/24", cores = 1, memory = 1024, disk_size = 8, role = "lb" }
