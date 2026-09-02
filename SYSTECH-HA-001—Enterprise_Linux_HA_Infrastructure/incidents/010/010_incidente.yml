@@ -1,0 +1,190 @@
+---
+# ==============================================================================
+# INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
+# ==============================================================================
+# INCIDENT ID   : 010
+# TITLE         : Usuario no puede autenticarse aunque la contraseña es correcta
+# TARGET NODE   : app01 (10.10.10.31)
+# TARGET USER   : jensyg
+# DIFFICULTY    : 4/10 (L1 Junior)
+# ESTIMATED TIME: 2 Hours
+# ==============================================================================
+# 📖 SCENARIO CONTEXT:
+# Simulates an administrative account that was locked and expired during a
+# "routine credential rotation audit". The L1 will see:
+# - SSH login rejected with "Permission denied" or "Account expired"
+# - /var/log/secure showing "Account expired" and "Authentication failure"
+# - passwd -S showing 'LK' (locked) status
+# - chage -l showing an expiration date in the past
+# 💥 WHAT THIS PLAYBOOK BREAKS:
+# 1. Ensures the user 'jensyg' exists with a known password
+# 2. Locks the password using `passwd -l` (prepends '!' in /etc/shadow)
+# 3. Expires the account in the past using `chage -E 2020-01-01`
+# 4. Generates realistic authentication failure logs in /var/log/secure
+# 5. Adds misleading comments in /etc/passwd and creates fake audit logs
+# 🕵️ EXPECTED L1 DIAGNOSIS PATH:
+# - ssh jensyg@app01 → Permission denied / Account expired
+# - grep jensyg /var/log/secure → "Account expired"
+# - passwd -S jensyg → shows 'LK' (locked)
+# - chage -l jensyg → Account expires : Jan 01, 2020 (past date)
+# - Fix: passwd -u jensyg && chage -E -1 jensyg
+# ==============================================================================
+
+- name: "Incident 010 | Inject Locked & Expired User on app01"
+  hosts: app01
+  become: yes
+  vars:
+    incident_id: "010"
+    marker_file: "/var/run/.incident_{{ incident_id }}_marker"
+    target_user: "jensyg"
+    target_password: "LabPassword123!"
+
+  tasks:
+    # -----------------------------------------------------------------------
+    # PHASE 1: PRE-FLIGHT & IDEMPOTENCY CHECK
+    # -----------------------------------------------------------------------
+    - name: "01 | Check if incident was already injected (Marker Guard)"
+      ansible.builtin.stat:
+        path: "{{ marker_file }}"
+      register: check_inject
+
+    - name: "02 | Abort if incident is already active"
+      ansible.builtin.debug:
+        msg: "Incident {{ incident_id }} is already injected. Skipping."
+      when: check_inject.stat.exists
+
+    - name: "03 | Create marker file to prevent double-injection"
+      ansible.builtin.file:
+        path: "{{ marker_file }}"
+        state: touch
+        mode: '0644'
+      when: not check_inject.stat.exists
+
+    # -----------------------------------------------------------------------
+    # PHASE 2: ENSURE USER EXISTS IN A HEALTHY STATE
+    # -----------------------------------------------------------------------
+    - name: "04 | Ensure target user exists"
+      ansible.builtin.user:
+        name: "{{ target_user }}"
+        state: present
+        shell: /bin/bash
+        create_home: yes
+      when: not check_inject.stat.exists
+
+    - name: "05 | Set a known good password for the user (using chpasswd)"
+      ansible.builtin.shell:
+        cmd: "echo '{{ target_user }}:{{ target_password }}' | chpasswd"
+      when: not check_inject.stat.exists
+
+    - name: "06 | Ensure account is NOT expired and NOT locked (healthy baseline)"
+      ansible.builtin.command:
+        cmd: "chage -E -1 {{ target_user }}"
+      when: not check_inject.stat.exists
+
+    - name: "07 | Verify user can authenticate (baseline check)"
+      ansible.builtin.command:
+        cmd: "passwd -S {{ target_user }}"
+      register: baseline_status
+      changed_when: false
+      when: not check_inject.stat.exists
+
+    - name: "08 | Display baseline status"
+      ansible.builtin.debug:
+        msg: "Baseline passwd -S output: {{ baseline_status.stdout }}"
+      when: not check_inject.stat.exists
+
+    # -----------------------------------------------------------------------
+    # PHASE 3: INJECT THE INCIDENT (Lock + Expire)
+    # -----------------------------------------------------------------------
+    - name: "09 | Lock the user's password (simulates admin locking account)"
+      ansible.builtin.command:
+        cmd: "passwd -l {{ target_user }}"
+      register: lock_result
+      when: not check_inject.stat.exists
+
+    - name: "10 | Expire the account in the past (simulates chage misconfiguration)"
+      ansible.builtin.command:
+        cmd: "chage -E 2020-01-01 {{ target_user }}"
+      when: not check_inject.stat.exists
+
+    # -----------------------------------------------------------------------
+    # PHASE 4: GENERATE REALISTIC LOGS & DECOYS (L1 Distraction)
+    # -----------------------------------------------------------------------
+    - name: "11 | Generate realistic authentication failure logs in /var/log/secure"
+      ansible.builtin.shell: |
+        echo "$(date '+%b %d %H:%M:%S') app01 sshd[{{ 10000 | random }}]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=10.10.10.11 user={{ target_user }}" >> /var/log/secure
+        echo "$(date '+%b %d %H:%M:%S') app01 sshd[{{ 10000 | random }}]: Failed password for {{ target_user }} from 10.10.10.11 port {{ 50000 | random }} ssh2" >> /var/log/secure
+        echo "$(date '+%b %d %H:%M:%S') app01 sshd[{{ 10000 | random }}]: Account {{ target_user }} has expired" >> /var/log/secure
+        echo "$(date '+%b %d %H:%M:%S') app01 sshd[{{ 10000 | random }}]: User {{ target_user }} not allowed because account is locked" >> /var/log/secure
+      ignore_errors: yes
+      when: not check_inject.stat.exists
+
+    - name: "12 | Add misleading comment to /etc/passwd (decoy for L1)"
+      ansible.builtin.lineinfile:
+        path: /etc/passwd
+        regexp: "^{{ target_user }}:"
+        line: "{{ target_user }}:x:1000:1000:Administrative Account - UNDER SECURITY REVIEW:/home/{{ target_user }}:/bin/bash"
+        state: present
+      when: not check_inject.stat.exists
+
+    - name: "13 | Create fake security audit log (decoy for L1)"
+      ansible.builtin.copy:
+        dest: /var/log/security_audit.log
+        content: |
+          [2026-09-01 22:15:33] SECURITY AUDIT - Credential Rotation
+          User 'jensyg' flagged for review due to inactive status (90+ days).
+          Action taken: Account locked and expired per security policy.
+          Approved by: security-team@company.com
+          Reference: SEC-AUDIT-2026-0901-001
+        mode: '0644'
+      when: not check_inject.stat.exists
+
+    - name: "14 | Create misleading nologin message file (decoy for L1)"
+      ansible.builtin.copy:
+        dest: /etc/nologin.jensyg
+        content: |
+          Account 'jensyg' is currently under security review.
+          Contact security-team@company.com for access restoration.
+          Reference: SEC-AUDIT-2026-0901-001
+        mode: '0644'
+      when: not check_inject.stat.exists
+
+    # -----------------------------------------------------------------------
+    # PHASE 5: FINALIZE & VERIFY INJECTION
+    # -----------------------------------------------------------------------
+    - name: "15 | Verify the user is now locked"
+      ansible.builtin.command:
+        cmd: "passwd -S {{ target_user }}"
+      register: final_status
+      changed_when: false
+      when: not check_inject.stat.exists
+
+    - name: "16 | Verify the account expiration date"
+      ansible.builtin.command:
+        cmd: "chage -l {{ target_user }}"
+      register: final_chage
+      changed_when: false
+      when: not check_inject.stat.exists
+
+    - name: "17 | Display Injection Summary"
+      ansible.builtin.debug:
+        msg: |
+          =========================================
+          INCIDENT 010 SUCCESSFULLY INJECTED
+          =========================================
+          Target Node : app01
+          Target User : {{ target_user }}
+          passwd -S   : {{ final_status.stdout }}
+          chage -l    : {{ final_chage.stdout_lines | select('match', '.*expires.*') | list }}
+          
+          DECOYS INJECTED:
+          - Misleading comment in /etc/passwd ("UNDER SECURITY REVIEW")
+          - Fake audit log at /var/log/security_audit.log
+          - Misleading nologin message at /etc/nologin.jensyg
+          - Realistic auth failure logs in /var/log/secure
+          
+          The user is now LOCKED and EXPIRED.
+          L1 must check 'passwd -S', 'chage -l', and /var/log/secure,
+          then run: passwd -u {{ target_user }} && chage -E -1 {{ target_user }}
+          =========================================
+      when: not check_inject.stat.exists

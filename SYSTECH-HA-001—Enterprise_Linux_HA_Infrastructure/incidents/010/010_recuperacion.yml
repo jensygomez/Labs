@@ -1,0 +1,97 @@
+---
+# ==============================================================================
+# INCIDENT RECOVERY PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
+# ==============================================================================
+# INCIDENT ID   : 010
+# PURPOSE       : Restore the locked/expired user 'jensyg' on app01.
+# ==============================================================================
+
+- name: "Recovery 010 | Restore Locked & Expired User on app01"
+  hosts: app01
+  become: yes
+  vars:
+    incident_id: "010"
+    marker_file: "/var/run/.incident_{{ incident_id }}_marker"
+    target_user: "jensyg"
+
+  tasks:
+    - name: "01 | Check if incident marker exists (Was it actually injected?)"
+      ansible.builtin.stat:
+        path: "{{ marker_file }}"
+      register: check_inject
+
+    - name: "02 | Abort if incident was not injected"
+      ansible.builtin.debug:
+        msg: "Incident {{ incident_id }} marker not found. Nothing to recover."
+      when: not check_inject.stat.exists
+
+    - name: "03 | Unlock the user's password"
+      ansible.builtin.command:
+        cmd: "passwd -u {{ target_user }}"
+      register: unlock_result
+      when: check_inject.stat.exists
+
+    - name: "04 | Remove account expiration (set to 'never')"
+      ansible.builtin.command:
+        cmd: "chage -E -1 {{ target_user }}"
+      when: check_inject.stat.exists
+
+    - name: "05 | Restore /etc/passwd comment to normal"
+      ansible.builtin.lineinfile:
+        path: /etc/passwd
+        regexp: "^{{ target_user }}:"
+        line: "{{ target_user }}:x:1000:1000::/home/{{ target_user }}:/bin/bash"
+        state: present
+      when: check_inject.stat.exists
+
+    - name: "06 | Remove fake security audit log"
+      ansible.builtin.file:
+        path: /var/log/security_audit.log
+        state: absent
+      when: check_inject.stat.exists
+
+    - name: "07 | Remove misleading nologin message"
+      ansible.builtin.file:
+        path: /etc/nologin.jensyg
+        state: absent
+      when: check_inject.stat.exists
+
+    - name: "08 | Verify user status is now PS (Password Set, usable)"
+      ansible.builtin.command:
+        cmd: "passwd -S {{ target_user }}"
+      register: final_status
+      changed_when: false
+      when: check_inject.stat.exists
+
+    - name: "09 | Verify account expiration is 'never'"
+      ansible.builtin.command:
+        cmd: "chage -l {{ target_user }}"
+      register: final_chage
+      changed_when: false
+      when: check_inject.stat.exists
+
+    - name: "10 | Remove the incident marker file"
+      ansible.builtin.file:
+        path: "{{ marker_file }}"
+        state: absent
+      when: check_inject.stat.exists
+
+    - name: "11 | Display Recovery Summary"
+      ansible.builtin.debug:
+        msg: |
+          =========================================
+          INCIDENT 010 SUCCESSFULLY RECOVERED
+          =========================================
+          Target User : {{ target_user }}
+          passwd -S   : {{ final_status.stdout }}
+          chage -l    : {{ final_chage.stdout_lines | select('match', '.*expires.*') | list }}
+          
+          CLEANUP COMPLETED:
+          - Password unlocked.
+          - Account expiration removed.
+          - /etc/passwd comment restored.
+          - Fake audit log removed.
+          - Misleading nologin message removed.
+          - Marker file cleaned up.
+          =========================================
+      when: check_inject.stat.exists
