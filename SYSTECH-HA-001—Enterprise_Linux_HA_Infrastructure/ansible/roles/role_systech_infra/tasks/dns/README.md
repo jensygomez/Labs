@@ -15,7 +15,7 @@ graph TB
     subgraph "Proxmox VE - Subnet 10.10.10.0/24"
         
         subgraph "DNS LAYER"
-            DNS01["🟢 dns01<br/>LXC Ubuntu 24.04<br/>IP: 10.10.10.20<br/>• dnsmasq<br/>• DNS Caching<br/>Domain: lab.systech.local"]
+            DNS01["🟢 dns01<br/>LXC Ubuntu 24.04<br/>IP: 10.10.10.10<br/>• dnsmasq<br/>• DNS Caching<br/>Domain: lab.systech.local"]
         end
 
         subgraph "INGRESS / LOAD BALANCING"
@@ -105,13 +105,13 @@ graph LR
         
         TYPE["📦 Virtualization Type<br/>Proxmox VE LXC Container<br/>VMID: 121<br/>Unprivileged: false<br/>Nesting: enabled"]
         
-        NETWORK["🌐 Network Configuration<br/>Interface: eth0<br/>IP Address: 10.10.10.20/24<br/>Gateway: 10.10.10.1<br/>Bridge: vmbr1"]
+        NETWORK["🌐 Network Configuration<br/>Interface: eth0<br/>IP Address: 10.10.10.10/24<br/>Gateway: 10.10.10.1<br/>Bridge: vmbr1"]
         
         RESOURCES["⚙️ Resources Allocation<br/>CPU Cores: 1<br/>Memory: 512 MB<br/>Disk: 8 GB (local-lvm)<br/>Start on boot: true"]
         
         DNS_APP["🔧 DNS Software<br/>dnsmasq v2.90<br/>Lightweight DNS forwarder<br/>DHCP server (disabled)<br/>DNS caching enabled"]
         
-        DNS_CONFIG["📋 DNS Configuration<br/>Listen: 10.10.10.20:53 (UDP/TCP)<br/>         127.0.0.1:53 (UDP/TCP)<br/>Domain: lab.systech.local<br/>Upstream: 8.8.8.8, 8.8.4.4<br/>Cache TTL: default"]
+        DNS_CONFIG["📋 DNS Configuration<br/>Listen: 10.10.10.10:53 (UDP/TCP)<br/>         127.0.0.1:53 (UDP/TCP)<br/>Domain: lab.systech.local<br/>Upstream: 8.8.8.8, 8.8.4.4<br/>Cache TTL: default"]
         
         DNS_FILES[" Key Configuration Files<br/>/etc/dnsmasq.conf - Main config<br/>/etc/dnsmasq.hosts - Local records<br/>/etc/resolv.conf - Resolver config"]
         
@@ -121,7 +121,7 @@ graph LR
         
         SERVICES["🔄 Systemd Services<br/>dnsmasq.service - ACTIVE<br/>Enabled at boot<br/>Port 53 listener<br/>DNS cache manager"]
         
-        CLIENTS["👥 DNS Clients<br/>All lab nodes use dns01<br/>Primary: 10.10.10.20<br/>Fallback: 8.8.8.8<br/>Search domain: lab.systech.local"]
+        CLIENTS["👥 DNS Clients<br/>All lab nodes use dns01<br/>Primary: 10.10.10.10<br/>Fallback: 8.8.8.8<br/>Search domain: lab.systech.local"]
         
         MONITORING["📊 Monitoring & Logging<br/>systemd journal logs<br/>/var/log/syslog<br/>dnsmasq query logs<br/>Zabbix agent (port 10050)"]
     end
@@ -209,11 +209,11 @@ Servidor DNS centralizado para la infraestructura SYSTECH-HA-001, proporcionando
 
 | Parámetro | Valor |
 |-----------|-------|
-| **IP Address** | `10.10.10.20/24` |
+| **IP Address** | `10.10.10.10/24` |
 | **Gateway** | `10.10.10.1` |
 | **Bridge** | `vmbr1` |
 | **Interface** | `eth0` |
-| **DNS Servers** | Primario: 10.10.10.20, Fallback: 8.8.8.8 |
+| **DNS Servers** | Primario: 10.10.10.10, Fallback: 8.8.8.8 |
 | **Search Domain** | `lab.systech.local` |
 
 ### **Recursos Asignados**
@@ -265,7 +265,7 @@ systemd-resolved.service - INACTIVE (disabled)
 
 ```ini
 # Configuración gestionada por Ansible - SYSTECH DNS
-listen-address=127.0.0.1,10.10.10.20
+listen-address=127.0.0.1,10.10.10.10
 bind-interfaces
 server=8.8.8.8
 server=8.8.4.4
@@ -312,7 +312,7 @@ bogus-priv
 ```bash
 # Gestionado por Ansible - SYSTECH DNS Centralizado
 search lab.systech.local
-nameserver 10.10.10.20
+nameserver 10.10.10.10
 nameserver 8.8.8.8
 ```
 
@@ -353,7 +353,7 @@ To                         Action      From
 ```
 client01 (10.10.10.11)
     ↓ dig app01.lab.systech.local
-dns01 (10.10.10.20:53)
+dns01 (10.10.10.10:53)
     ↓ Busca en /etc/dnsmasq.hosts
 Respuesta: 10.10.10.31
     ↓
@@ -365,7 +365,7 @@ client01 resuelve app01.lab.systech.local → 10.10.10.31
 ```
 client01 (10.10.10.11)
     ↓ dig google.com
-dns01 (10.10.10.20:53)
+dns01 (10.10.10.10:53)
     ↓ No encuentra en cache/local
     ↓ Forward a upstream server
 8.8.8.8 (Google DNS)
@@ -475,13 +475,13 @@ sudo ufw allow 53/udp
 
 ```bash
 # Desde client01
-dig @10.10.10.20 app01.lab.systech.local
+dig @10.10.10.10 app01.lab.systech.local
 
 # Verificar resolv.conf del cliente
 cat /etc/resolv.conf
 
 # Probar conectividad de red
-nc -zv 10.10.10.20 53
+nc -zv 10.10.10.10 53
 ```
 
 ---
@@ -594,13 +594,13 @@ Si quieres hacer un video dinámico, te sugiero este guion:
 **Parte 3 - Demo en Vivo (3:00-5:30)**:
 ```bash
 # 1. Mostrar estado del servicio
-ssh ansible@10.10.10.20 "systemctl status dnsmasq"
+ssh ansible@10.10.10.10 "systemctl status dnsmasq"
 
 # 2. Probar resolución interna
-dig +short app01.lab.systech.local @10.10.10.20
+dig +short app01.lab.systech.local @10.10.10.10
 
 # 3. Probar resolución externa
-dig +short google.com @10.10.10.20
+dig +short google.com @10.10.10.10
 
 # 4. Mostrar configuración
 cat /etc/dnsmasq.conf

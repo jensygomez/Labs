@@ -40,8 +40,8 @@ variable "lxc_containers" {
     privileged = optional(bool, false)
   }))
   default = {
-		# DNS (Alma Linux - No storage mounts -> Unprivileged)
-    "dns01"    = { vmid = 110, ip = "10.10.10.10/24", cores = 1, memory = 512, disk_size = 8, role = "dns" }
+		# Servidor FreeIPA (Alma Linux - No storage mounts -> privileged)
+    "freeipa01" = { vmid = 115, ip = "10.10.10.10/24", cores = 1, memory = 2048, disk_size = 8, role = "freeipa" }
     
     # CLIENTS (Alma Linux - No storage mounts -> Unprivileged)
     "client01" = { vmid = 111, ip = "10.10.10.11/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
@@ -49,9 +49,7 @@ variable "lxc_containers" {
     "client03" = { vmid = 113, ip = "10.10.10.13/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
     "client04" = { vmid = 114, ip = "10.10.10.14/24", cores = 1, memory = 512, disk_size = 8, role = "client" }
     
-    # Servidor FreeIPA (Alma Linux - No storage mounts -> privileged)
-    "freeipa01" = { vmid = 115, ip = "10.10.10.15/24", cores = 1, memory = 2048, disk_size = 8, role = "freeipa" }
-
+    
     # LOAD BALANCERS (Alma Linux - No storage mounts -> Unprivileged)
     "lb01" = { vmid = 221, ip = "10.10.10.21/24", cores = 1, memory = 1024, disk_size = 8, role = "lb" }
     "lb02" = { vmid = 222, ip = "10.10.10.22/24", cores = 1, memory = 1024, disk_size = 8, role = "lb" }

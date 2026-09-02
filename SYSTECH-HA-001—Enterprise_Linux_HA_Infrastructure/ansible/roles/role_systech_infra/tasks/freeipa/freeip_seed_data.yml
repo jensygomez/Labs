@@ -1,0 +1,506 @@
+# ---
+# ==============================================================================
+# FREEIPA SEED DATA PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
+# ==============================================================================
+# PLAYBOOK ID   : freeipa_seed_data
+# VERSION       : 1.0
+# AUTHOR        : SYSTECH-HA-001 Lab Team
+# LAST UPDATE   : September 2026
+# ==============================================================================
+# PURPOSE       : Populate FreeIPA server with realistic test data for
+#                 troubleshooting labs, including users, groups, HBAC rules,
+#                 and sudo rules. This creates a multi-tier access control
+#                 environment that mirrors enterprise production scenarios.
+# 
+# TARGET SERVER : freeipa01.systech.local (10.10.10.15)
+# PREREQUISITES : 
+#   - FreeIPA server must be fully installed and configured
+#   - /etc/ipa/default.conf must exist
+#   - Kerberos KDC must be running
+#   - Admin password: 'StrongAdminpass123!'
+#   
+# EXECUTION     : 
+#   ansible-playbook -i inventories/production/hosts.yml site.yml \
+#     --tags 'freeipa_seed' --ask-vault-pass
+#   
+# IDEMPOTENCY   : This playbook is 100% idempotent. Safe to run multiple times.
+#                 All commands use 'changed_when: false' and 'failed_when: false'
+#                 to prevent errors if resources already exist.
+# ==============================================================================
+#  WHAT THIS PLAYBOOK CREATES:
+# ==============================================================================
+# 
+# GROUPS (4):
+#   • sysadmins  - System Administrators with full infrastructure access
+#   • webdevs    - Web Developers with access only to app nodes
+#   • dbas       - Database Administrators with access only to db01
+#   • auditors   - Auditors with restricted access to client01
+# 
+# USERS (5):
+#   • jensyg   (sysadmins)  - Lab admin user, full sudo access
+#   • dev01    (webdevs)   - Developer account 1
+#   • dev02    (webdevs)   - Developer account 2
+#   • dba01    (dbas)      - DBA account
+#   • audit01  (auditors)  - Auditor account
+#   
+#   All passwords: 'LabPassword123!'
+# 
+# HBAC RULES (Host-Based Access Control):
+#   • allow_sysadmins_all      → sysadmins can SSH to ALL hosts
+#   • allow_webdevs_apps       → webdevs can SSH to app01, app02, app03 ONLY
+#   • allow_dbas_db01          → dbas can SSH to db01 ONLY
+#   • allow_auditors_client01  → auditors can SSH to client01 ONLY
+# 
+# SUDO RULES:
+#   • sysadmins_sudo_all   → sysadmins can run ALL commands on ALL hosts
+#   • dbas_sudo_pgsql      → dbas can manage PostgreSQL on db01 only
+#                            (systemctl restart/status postgresql-15, journalctl)
+# 
+# ==============================================================================
+# 🎯 ACCESS MATRIX (Who can access what):
+# ==============================================================================
+# 
+# User      | Group      | app01 | app02 | app03 | db01 | client01 | Sudo
+# ----------|------------|-------|-------|-------|------|----------|------
+# jensyg    | sysadmins  |  ✅   |  ✅   |  ✅   |  ✅  |    ✅    | ALL
+# dev01     | webdevs    |  ✅   |  ✅   |  ✅   |  ❌  |    ❌    | NO
+# dev02     | webdevs    |  ✅   |  ✅   |  ✅   |  ❌  |    ❌    | NO
+# dba01     | dbas       |  ❌   |     |  ❌   |  ✅  |    ❌    | PGSQL
+# audit01   | auditors   |  ❌   |  ❌   |  ❌   |  ❌  |    ✅    | NO
+# 
+# ==============================================================================
+# 🔍 HOW TO VERIFY AFTER EXECUTION:
+# ==============================================================================
+# 
+# # SSH to freeipa01
+# ssh ansible@10.10.10.15
+# sudo -i
+# 
+# # List all users
+# ipa user-find
+# 
+# # List all groups
+# ipa group-find
+# 
+# # List HBAC rules
+# ipa hbacrule-find
+# 
+# # List sudo rules
+# ipa sudorule-find
+# 
+# # Test user authentication from app01
+# ssh jensyg@app01.systech.local
+# # Password: LabPassword123!
+# 
+# # Test HBAC restriction (should FAIL)
+# ssh dba01@app01.systech.local
+# # Expected: "Access denied by HBAC rule"
+# 
+# ==============================================================================
+#  USE CASES FOR TROUBLESHOOTING LABS:
+# ==============================================================================
+# 
+# Incident 010: User authentication fails despite correct password
+#   → Break: Lock/expire jensyg account on ONE app node (asymmetric state)
+#   → Symptom: jensyg can login to app01 but NOT to app02
+#   → Diagnosis: passwd -S, chage -l, check SSSD cache
+# 
+# Incident (Future): User cannot access specific host
+#   → Break: Modify or delete HBAC rule
+#   → Symptom: dev01 gets "Access denied" on app02 but works on app01
+#   → Diagnosis: ipa hbacrule-show, check HBAC test tool
+# 
+# Incident (Future): Sudo not working for DBA
+#   → Break: Corrupt sudo rule or SSSD sudo configuration
+#   → Symptom: dba01 cannot restart PostgreSQL despite rule existing
+#   → Diagnosis: sudo -l, /var/log/secure, sssd sudo logs
+# 
+# Incident (Future): HBAC allows unauthorized access
+#   → Break: Misconfigure HBAC rule (wrong host/group)
+#   → Symptom: audit01 can SSH to db01 when they shouldn't
+#   → Diagnosis: ipa hbacrule-show, audit HBAC rules
+# 
+# ==============================================================================
+# ⚠️ IMPORTANT NOTES:
+# ==============================================================================
+# 
+# 1. KERBEROS TICKET: This playbook obtains a temporary Kerberos ticket for
+#    the 'admin' user at the start. The ticket is stored in /tmp/krb5cc_seed_data
+#    and is used for all subsequent ipa-* commands.
+# 
+# 2. NO ANSIBLE FREEIPA MODULES: We use raw 'ipa' commands via 
+#    ansible.builtin.command instead of Ansible's ipa_* modules to:
+#    - Avoid additional Python dependencies
+#    - Keep the playbook transparent and educational
+#    - Show exactly what commands are executed
+# 
+# 3. PASSWORD POLICY: All test users use the same password for lab convenience.
+#    In production, this would violate security policies. Never do this in
+#    real environments!
+# 
+# 4. HBAC ENFORCEMENT: HBAC rules are enforced by SSSD on client nodes.
+#    If HBAC changes don't take effect immediately, SSSD cache may need
+#    to be cleared: sssctl cache-remove <username>
+# 
+# 5. CLEANUP: To remove all seed data, run:
+#    ipa user-del jensyg; ipa user-del dev01; ... (repeat for all users)
+#    ipa group-del sysadmins; ipa group-del webdevs; ... (repeat for all groups)
+#    ipa hbacrule-del allow_sysadmins_all; ... (repeat for all HBAC rules)
+#    ipa sudorule-del sysadmins_sudo_all; ... (repeat for all sudo rules)
+#    
+#    Or simply uninstall FreeIPA completely: ipa-server-install --uninstall
+# 
+# ==============================================================================
+#
+
+---
+# ==============================================================================
+# FREEIPA SEED DATA - USERS, GROUPS, HBAC & SUDO RULES
+# ==============================================================================
+# PURPOSE: Populate FreeIPA with realistic test data for troubleshooting labs.
+# NOTE   : This playbook is IDEMPOTENT. Run it multiple times safely.
+#          It creates users, groups, HBAC rules, and sudo rules.
+# ==============================================================================
+
+# -----------------------------------------------------------------------------
+# PHASE 1: OBTAIN KERBEROS TICKET FOR ADMIN
+# -----------------------------------------------------------------------------
+- name: "Obtain Kerberos ticket for admin user"
+  ansible.builtin.command:
+    cmd: "echo 'StrongAdminpass123!' | kinit admin"
+  changed_when: false
+  failed_when: false
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+
+# -----------------------------------------------------------------------------
+# PHASE 2: CREATE GROUPS
+# -----------------------------------------------------------------------------
+- name: "Create group: sysadmins"
+  ansible.builtin.command:
+    cmd: "ipa group-add sysadmins --desc='System Administrators with full access'"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Create group: webdevs"
+  ansible.builtin.command:
+    cmd: "ipa group-add webdevs --desc='Web Developers with access to app nodes'"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Create group: dbas"
+  ansible.builtin.command:
+    cmd: "ipa group-add dbas --desc='Database Administrators with access to db01'"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Create group: auditors"
+  ansible.builtin.command:
+    cmd: "ipa group-add auditors --desc='Auditors with restricted access to client01'"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+# -----------------------------------------------------------------------------
+# PHASE 3: CREATE USERS
+# -----------------------------------------------------------------------------
+- name: "Create user: jensyg (sysadmin)"
+  ansible.builtin.command:
+    cmd: "ipa user-add jensyg --first='Jens' --last='Admin' --password='LabPassword123!' --gidnumber=sysadmins"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Create user: dev01 (web developer)"
+  ansible.builtin.command:
+    cmd: "ipa user-add dev01 --first='Dev' --last='One' --password='LabPassword123!' --gidnumber=webdevs"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Create user: dev02 (web developer)"
+  ansible.builtin.command:
+    cmd: "ipa user-add dev02 --first='Dev' --last='Two' --password='LabPassword123!' --gidnumber=webdevs"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Create user: dba01 (database admin)"
+  ansible.builtin.command:
+    cmd: "ipa user-add dba01 --first='DBA' --last='One' --password='LabPassword123!' --gidnumber=dbas"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Create user: audit01 (auditor)"
+  ansible.builtin.command:
+    cmd: "ipa user-add audit01 --first='Audit' --last='One' --password='LabPassword123!' --gidnumber=auditors"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+# -----------------------------------------------------------------------------
+# PHASE 4: ADD USERS TO GROUPS (if not already done via --gidnumber)
+# -----------------------------------------------------------------------------
+- name: "Add jensyg to sysadmins group"
+  ansible.builtin.command:
+    cmd: "ipa group-add-member sysadmins --users=jensyg"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Add dev01 and dev02 to webdevs group"
+  ansible.builtin.command:
+    cmd: "ipa group-add-member webdevs --users=dev01,dev02"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Add dba01 to dbas group"
+  ansible.builtin.command:
+    cmd: "ipa group-add-member dbas --users=dba01"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Add audit01 to auditors group"
+  ansible.builtin.command:
+    cmd: "ipa group-add-member auditors --users=audit01"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+# -----------------------------------------------------------------------------
+# PHASE 5: CREATE HBAC RULES (Host-Based Access Control)
+# -----------------------------------------------------------------------------
+- name: "Create HBAC rule: allow sysadmins to all hosts"
+  ansible.builtin.command:
+    cmd: "ipa hbacrule-add allow_sysadmins_all --desc='Sysadmins can access all hosts'"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Add sysadmins group to HBAC rule"
+  ansible.builtin.command:
+    cmd: "ipa hbacrule-add-user allow_sysadmins_all --groups=sysadmins"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Add all hosts to HBAC rule for sysadmins"
+  ansible.builtin.command:
+    cmd: "ipa hbacrule-add-host allow_sysadmins_all --hostcat=all"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Create HBAC rule: allow webdevs to app nodes only"
+  ansible.builtin.command:
+    cmd: "ipa hbacrule-add allow_webdevs_apps --desc='Web developers can access app nodes'"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Add webdevs group to HBAC rule"
+  ansible.builtin.command:
+    cmd: "ipa hbacrule-add-user allow_webdevs_apps --groups=webdevs"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Add app nodes to HBAC rule for webdevs"
+  ansible.builtin.command:
+    cmd: "ipa hbacrule-add-host allow_webdevs_apps --hosts=app01.systech.local,app02.systech.local,app03.systech.local"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Create HBAC rule: allow dbas to db01 only"
+  ansible.builtin.command:
+    cmd: "ipa hbacrule-add allow_dbas_db01 --desc='DBAs can access db01'"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Add dbas group to HBAC rule"
+  ansible.builtin.command:
+    cmd: "ipa hbacrule-add-user allow_dbas_db01 --groups=dbas"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Add db01 to HBAC rule for dbas"
+  ansible.builtin.command:
+    cmd: "ipa hbacrule-add-host allow_dbas_db01 --hosts=db01.systech.local"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Create HBAC rule: allow auditors to client01 only"
+  ansible.builtin.command:
+    cmd: "ipa hbacrule-add allow_auditors_client01 --desc='Auditors can access client01'"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Add auditors group to HBAC rule"
+  ansible.builtin.command:
+    cmd: "ipa hbacrule-add-user allow_auditors_client01 --groups=auditors"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Add client01 to HBAC rule for auditors"
+  ansible.builtin.command:
+    cmd: "ipa hbacrule-add-host allow_auditors_client01 --hosts=client01.systech.local"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+# -----------------------------------------------------------------------------
+# PHASE 6: CREATE SUDO RULES
+# -----------------------------------------------------------------------------
+- name: "Create sudo rule: sysadmins can run all commands"
+  ansible.builtin.command:
+    cmd: "ipa sudorule-add sysadmins_sudo_all --desc='Sysadmins have full sudo access'"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Add sysadmins group to sudo rule"
+  ansible.builtin.command:
+    cmd: "ipa sudorule-add-user sysadmins_sudo_all --groups=sysadmins"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Add all hosts to sudo rule for sysadmins"
+  ansible.builtin.command:
+    cmd: "ipa sudorule-add-host sysadmins_sudo_all --hostcat=all"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Add ALL commands to sudo rule for sysadmins"
+  ansible.builtin.command:
+    cmd: "ipa sudorule-add-allow-command sysadmins_sudo_all --sudocmds=all"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Create sudo rule: dbas can run PostgreSQL commands"
+  ansible.builtin.command:
+    cmd: "ipa sudorule-add dbas_sudo_pgsql --desc='DBAs can run PostgreSQL commands'"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Add dbas group to sudo rule"
+  ansible.builtin.command:
+    cmd: "ipa sudorule-add-user dbas_sudo_pgsql --groups=dbas"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Add db01 to sudo rule for dbas"
+  ansible.builtin.command:
+    cmd: "ipa sudorule-add-host dbas_sudo_pgsql --hosts=db01.systech.local"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+- name: "Add PostgreSQL commands to sudo rule for dbas"
+  ansible.builtin.command:
+    cmd: "ipa sudorule-add-allow-command dbas_sudo_pgsql --sudocmds=/usr/bin/systemctl restart postgresql-15,/usr/bin/systemctl status postgresql-15,/usr/bin/journalctl -u postgresql-15"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  changed_when: false
+  failed_when: false
+
+# -----------------------------------------------------------------------------
+# PHASE 7: VERIFY AND DISPLAY SUMMARY
+# -----------------------------------------------------------------------------
+- name: "List all users created"
+  ansible.builtin.command:
+    cmd: "ipa user-find --all"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  register: user_list
+  changed_when: false
+
+- name: "List all groups created"
+  ansible.builtin.command:
+    cmd: "ipa group-find --all"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  register: group_list
+  changed_when: false
+
+- name: "List all HBAC rules"
+  ansible.builtin.command:
+    cmd: "ipa hbacrule-find --all"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_seed_data
+  register: hbac_list
+  changed_when: false
+
+- name: "Display Seed Data Summary"
+  ansible.builtin.debug:
+    msg: |
+      =========================================
+      FREEIPA SEED DATA SUCCESSFULLY CREATED
+      =========================================
+
+      USERS:
+      - jensyg (sysadmins) - Full access to all nodes
+      - dev01, dev02 (webdevs) - Access to app01, app02, app03
+      - dba01 (dbas) - Access to db01 only
+      - audit01 (auditors) - Access to client01 only
+
+      HBAC RULES:
+      - allow_sysadmins_all: sysadmins → all hosts
+      - allow_webdevs_apps: webdevs → app nodes
+      - allow_dbas_db01: dbas → db01
+      - allow_auditors_client01: auditors → client01
+
+      SUDO RULES:
+      - sysadmins_sudo_all: sysadmins can run ALL commands
+      - dbas_sudo_pgsql: dbas can manage PostgreSQL on db01
+
+      All users have password: LabPassword123!
+      =========================================

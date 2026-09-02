@@ -11,15 +11,25 @@
 # hlsearch on (H) or off (h):
 ~h
 # Last Search Pattern:
-~Msle0~/\<name\>
+~Msle0/\<name\>
+
+# Last Substitute Search Pattern:
+~MSle0~&^
+
+# Last Substitute String:
+$# 
 
 # Command Line History (newest to oldest):
 :wq
-|2,0,1788330355,,"wq"
+|2,0,1788341814,,"wq"
+:%s/^/# /g
+|2,0,1788341755,,"%s/^/# /g"
 :q!
 |2,0,1788175549,,"q!"
 
 # Search String History (newest to oldest):
+? ^
+|2,1,1788341755,,"^"
 ? \<name\>
 |2,1,1786999605,,"\\<name\\>"
 
@@ -30,68 +40,166 @@
 # Debug Line History (newest to oldest):
 
 # Registers:
-"1	LINE	0
-	        state: adsent
-|3,0,1,1,1,0,1787682246,"        state: adsent"
+""1	LINE	0
+	#  REFERENCES:
+|3,1,1,1,1,0,1788341782,"#  REFERENCES:"
 "2	LINE	0
-	        path: /var/run/.incident_005_marker
-|3,0,2,1,1,0,1787682246,"        path: /var/run/.incident_005_marker"
+	# ==============================================================================
+|3,0,2,1,1,0,1788341781,"# =============================================================================="
 "3	LINE	0
-	      ansible.builtin.file:
-|3,0,3,1,1,0,1787682245,"      ansible.builtin.file:"
+	# 
+|3,0,3,1,1,0,1788341780,"# "
 "4	LINE	0
-	    - name: "40 - Remove incident marker"
-|3,0,4,1,1,0,1787682245,"    - name: \"40 - Remove incident marker\""
+	# FreeIPA Documentation: https://www.freeipa.org/page/Docs
+|3,0,4,1,1,0,1788341780,"# FreeIPA Documentation: https://www.freeipa.org/page/Docs"
 "5	LINE	0
-	        mode: '0644'
-|3,0,5,1,1,0,1787682088,"        mode: '0644'"
+	# HBAC Guide: https://www.freeipa.org/page/HBAC
+|3,0,5,1,1,0,1788341779,"# HBAC Guide: https://www.freeipa.org/page/HBAC"
 "6	LINE	0
-	        group: root
-|3,0,6,1,1,0,1787682088,"        group: root"
+	# Sudo Integration: https://www.freeipa.org/page/Sudo
+|3,0,6,1,1,0,1788341779,"# Sudo Integration: https://www.freeipa.org/page/Sudo"
 "7	LINE	0
-	        owner: root
-|3,0,7,1,1,0,1787682087,"        owner: root"
+	# SSSD Troubleshooting: https://docs.pagure.org/sssd/
+|3,0,7,1,1,0,1788341779,"# SSSD Troubleshooting: https://docs.pagure.org/sssd/"
 "8	LINE	0
-	          nameserver 10.10.10.20
-|3,0,8,1,1,0,1787682087,"          nameserver 10.10.10.20"
+	# 
+|3,0,8,1,1,0,1788341778,"# "
 "9	LINE	0
-	          search lab.systech.internal
-|3,0,9,1,1,0,1787682087,"          search lab.systech.internal"
-""-	CHAR	0
+	# ============================================================================='dddd=
+|3,0,9,1,1,0,1788341777,"# ============================================================================='dddd="
+"-	CHAR	0
 	 
-|3,1,36,0,1,0,1788201222," "
+|3,0,36,0,1,0,1788201222," "
 
 # File marks:
-'0  62  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,48,62,38,1788330355,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
-'1  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
-|4,49,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
-'2  35  0  ~/incidents/007/007_remediation.yml
-|4,50,35,0,1788201224,"~/incidents/007/007_remediation.yml"
-'3  37  0  ~/incidents/007/007_remediation.yml
-|4,51,37,0,1788201154,"~/incidents/007/007_remediation.yml"
-'4  37  0  ~/incidents/007/007_remediation.yml
-|4,52,37,0,1788201154,"~/incidents/007/007_remediation.yml"
-'5  112  55  ~/ansible/tee
-|4,53,112,55,1788175549,"~/ansible/tee"
-'6  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,54,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
-'7  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
-|4,55,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
-'8  2  0  ~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml
-|4,56,2,0,1787824402,"~/.ansible/tmp/ansible-local-6401t4qnlma/tmphn8uoygs.yml"
-'9  1  0  ~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml
-|4,57,1,0,1787823764,"~/.ansible/tmp/ansible-local-636a7u1yyor/tmpyh5sa49v.yml"
+'0  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,48,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+'1  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,49,154,0,1788341758,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+'2  162  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,50,162,0,1788341758,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+'3  154  77  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,51,154,77,1788341688,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+'4  162  77  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,52,162,77,1788341688,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+'5  62  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
+|4,53,62,38,1788330355,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
+'6  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,54,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+'7  35  0  ~/incidents/007/007_remediation.yml
+|4,55,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+'8  37  0  ~/incidents/007/007_remediation.yml
+|4,56,37,0,1788201154,"~/incidents/007/007_remediation.yml"
+'9  37  0  ~/incidents/007/007_remediation.yml
+|4,57,37,0,1788201154,"~/incidents/007/007_remediation.yml"
 
 # Jumplist (newest first):
+-'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,154,0,1788341762,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  162  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,162,0,1788341758,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  162  77  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,162,77,1788341688,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,1,0,1788341673,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,1,0,1788341673,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,1,0,1788341673,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
 -'  62  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
 |4,39,62,38,1788330355,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
+-'  62  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
+|4,39,62,38,1788330355,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
+-'  62  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
+|4,39,62,38,1788330355,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
+-'  62  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
+|4,39,62,38,1788330355,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
+-'  62  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
+|4,39,62,38,1788330355,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
+-'  62  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
+|4,39,62,38,1788330355,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
+-'  62  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
+|4,39,62,38,1788330355,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
+-'  62  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
+|4,39,62,38,1788330355,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
+|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
+|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
+|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
+|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
+|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
+|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
+|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
 -'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
 |4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
 -'  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
 |4,39,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
 -'  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
 |4,39,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,1,0,1788330289,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,1,0,1788330289,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,1,0,1788330289,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,1,0,1788330289,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,1,0,1788330289,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,1,0,1788330289,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,1,0,1788330289,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,1,0,1788330289,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,1,0,1788330289,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,1,0,1788330289,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,1,0,1788330289,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,1,0,1788330289,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,1,0,1788330289,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,39,1,0,1788330289,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
 -'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
 |4,39,1,0,1788330289,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
 -'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
@@ -104,6 +212,62 @@
 |4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
 -'  35  0  ~/incidents/007/007_remediation.yml
 |4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+-'  35  0  ~/incidents/007/007_remediation.yml
+|4,39,35,0,1788201224,"~/incidents/007/007_remediation.yml"
 -'  37  0  ~/incidents/007/007_remediation.yml
 |4,39,37,0,1788201184,"~/incidents/007/007_remediation.yml"
 -'  37  0  ~/incidents/007/007_remediation.yml
@@ -113,179 +277,36 @@
 -'  37  0  ~/incidents/007/007_remediation.yml
 |4,39,37,0,1788201184,"~/incidents/007/007_remediation.yml"
 -'  37  0  ~/incidents/007/007_remediation.yml
-|4,39,37,0,1788201154,"~/incidents/007/007_remediation.yml"
+|4,39,37,0,1788201184,"~/incidents/007/007_remediation.yml"
 -'  37  0  ~/incidents/007/007_remediation.yml
-|4,39,37,0,1788201154,"~/incidents/007/007_remediation.yml"
+|4,39,37,0,1788201184,"~/incidents/007/007_remediation.yml"
 -'  37  0  ~/incidents/007/007_remediation.yml
-|4,39,37,0,1788201154,"~/incidents/007/007_remediation.yml"
+|4,39,37,0,1788201184,"~/incidents/007/007_remediation.yml"
 -'  37  0  ~/incidents/007/007_remediation.yml
-|4,39,37,0,1788201154,"~/incidents/007/007_remediation.yml"
--'  1  0  ~/incidents/007/007_remediation.yml
-|4,39,1,0,1788200656,"~/incidents/007/007_remediation.yml"
--'  1  0  ~/incidents/007/007_remediation.yml
-|4,39,1,0,1788200656,"~/incidents/007/007_remediation.yml"
--'  1  0  ~/incidents/007/007_remediation.yml
-|4,39,1,0,1788200656,"~/incidents/007/007_remediation.yml"
--'  1  0  ~/incidents/007/007_remediation.yml
-|4,39,1,0,1788200656,"~/incidents/007/007_remediation.yml"
--'  1  0  ~/incidents/007/007_remediation.yml
-|4,39,1,0,1788200656,"~/incidents/007/007_remediation.yml"
--'  1  0  ~/incidents/007/007_remediation.yml
-|4,39,1,0,1788200656,"~/incidents/007/007_remediation.yml"
--'  1  0  ~/incidents/007/007_remediation.yml
-|4,39,1,0,1788200656,"~/incidents/007/007_remediation.yml"
--'  1  0  ~/incidents/007/007_remediation.yml
-|4,39,1,0,1788200656,"~/incidents/007/007_remediation.yml"
--'  112  55  ~/ansible/tee
-|4,39,112,55,1788175549,"~/ansible/tee"
--'  112  55  ~/ansible/tee
-|4,39,112,55,1788175549,"~/ansible/tee"
--'  112  55  ~/ansible/tee
-|4,39,112,55,1788175549,"~/ansible/tee"
--'  112  55  ~/ansible/tee
-|4,39,112,55,1788175549,"~/ansible/tee"
--'  112  55  ~/ansible/tee
-|4,39,112,55,1788175549,"~/ansible/tee"
--'  112  55  ~/ansible/tee
-|4,39,112,55,1788175549,"~/ansible/tee"
--'  112  55  ~/ansible/tee
-|4,39,112,55,1788175549,"~/ansible/tee"
--'  112  55  ~/ansible/tee
-|4,39,112,55,1788175549,"~/ansible/tee"
--'  112  55  ~/ansible/tee
-|4,39,112,55,1788175549,"~/ansible/tee"
--'  112  55  ~/ansible/tee
-|4,39,112,55,1788175549,"~/ansible/tee"
--'  112  55  ~/ansible/tee
-|4,39,112,55,1788175549,"~/ansible/tee"
--'  112  55  ~/ansible/tee
-|4,39,112,55,1788175549,"~/ansible/tee"
--'  112  55  ~/ansible/tee
-|4,39,112,55,1788175549,"~/ansible/tee"
--'  112  55  ~/ansible/tee
-|4,39,112,55,1788175549,"~/ansible/tee"
--'  112  55  ~/ansible/tee
-|4,39,112,55,1788175549,"~/ansible/tee"
--'  112  55  ~/ansible/tee
-|4,39,112,55,1788175549,"~/ansible/tee"
--'  1  0  ~/ansible/tee
-|4,39,1,0,1788175531,"~/ansible/tee"
--'  1  0  ~/ansible/tee
-|4,39,1,0,1788175531,"~/ansible/tee"
--'  1  0  ~/ansible/tee
-|4,39,1,0,1788175531,"~/ansible/tee"
--'  1  0  ~/ansible/tee
-|4,39,1,0,1788175531,"~/ansible/tee"
--'  1  0  ~/ansible/tee
-|4,39,1,0,1788175531,"~/ansible/tee"
--'  1  0  ~/ansible/tee
-|4,39,1,0,1788175531,"~/ansible/tee"
--'  1  0  ~/ansible/tee
-|4,39,1,0,1788175531,"~/ansible/tee"
--'  1  0  ~/ansible/tee
-|4,39,1,0,1788175531,"~/ansible/tee"
--'  1  0  ~/ansible/tee
-|4,39,1,0,1788175531,"~/ansible/tee"
--'  1  0  ~/ansible/tee
-|4,39,1,0,1788175531,"~/ansible/tee"
--'  1  0  ~/ansible/tee
-|4,39,1,0,1788175531,"~/ansible/tee"
--'  1  0  ~/ansible/tee
-|4,39,1,0,1788175531,"~/ansible/tee"
--'  1  0  ~/ansible/tee
-|4,39,1,0,1788175531,"~/ansible/tee"
--'  1  0  ~/ansible/tee
-|4,39,1,0,1788175531,"~/ansible/tee"
--'  1  0  ~/ansible/tee
-|4,39,1,0,1788175531,"~/ansible/tee"
--'  1  0  ~/ansible/tee
-|4,39,1,0,1788175531,"~/ansible/tee"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml
-|4,39,1,0,1787867050,"~/.ansible/tmp/ansible-local-776o7oc3odj/tmpyv210dxe.yml"
--'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
-|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
--'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
-|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
--'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
-|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
--'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
-|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
--'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
-|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
--'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
-|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
--'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
-|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
--'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
-|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
--'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
-|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
--'  2  74  ~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml
-|4,39,2,74,1787826311,"~/.ansible/tmp/ansible-local-235z47yrsrf/tmplrhvwdu7.yml"
+|4,39,37,0,1788201184,"~/incidents/007/007_remediation.yml"
+-'  37  0  ~/incidents/007/007_remediation.yml
+|4,39,37,0,1788201184,"~/incidents/007/007_remediation.yml"
+-'  37  0  ~/incidents/007/007_remediation.yml
+|4,39,37,0,1788201184,"~/incidents/007/007_remediation.yml"
+-'  37  0  ~/incidents/007/007_remediation.yml
+|4,39,37,0,1788201184,"~/incidents/007/007_remediation.yml"
+-'  37  0  ~/incidents/007/007_remediation.yml
+|4,39,37,0,1788201184,"~/incidents/007/007_remediation.yml"
+-'  37  0  ~/incidents/007/007_remediation.yml
+|4,39,37,0,1788201184,"~/incidents/007/007_remediation.yml"
 
 # History of marks within files (newest to oldest):
+
+> ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+	*	1788341813	0
+	"	506	46
+	^	506	47
+	.	506	46
+	+	154	77
+	+	1	0
+	+	154	83
+	+	154	0
+	+	506	46
 
 > ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
 	*	1788330352	0

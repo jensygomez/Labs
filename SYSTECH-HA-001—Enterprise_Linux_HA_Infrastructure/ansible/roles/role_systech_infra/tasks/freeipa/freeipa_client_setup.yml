@@ -4,8 +4,32 @@
 # ==============================================================================
 # TARGET: app_nodes, db_nodes, lb_nodes
 # PURPOSE: Join nodes to the FreeIPA domain for centralized authentication.
-# NOTE   : Explicitly fixes /etc/hosts to ensure clients can resolve freeipa01.
+# FIXES: 
+#   1. Forces correct FQDN hostname (overwrites Proxmox/Tailscale suffix).
+#   2. Fixes the node's own IP entry in /etc/hosts.
+#   3. Uses --no-ntp to bypass chronyd failures common in LXC.
 # ==============================================================================
+
+- name: "Ensure hostname is set correctly on clients"
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}.systech.local"
+  when: ansible_hostname != "freeipa01" and ansible_hostname != "storage01"
+
+- name: "Fix /etc/hosts on clients to resolve own FQDN (Overwrite Proxmox/Tailscale)"
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "^{{ ansible_host }}.*{{ inventory_hostname }}.*"
+    line: "{{ ansible_host }} {{ inventory_hostname }}.systech.local {{ inventory_hostname }}"
+    state: present
+  when: ansible_hostname != "freeipa01" and ansible_hostname != "storage01"
+
+- name: "Ensure FreeIPA server is resolvable in /etc/hosts"
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "^10\\.10\\.10\\.15.*"
+    line: "10.10.10.15 freeipa01.systech.local freeipa01"
+    state: present
+  when: ansible_hostname != "freeipa01" and ansible_hostname != "storage01"
 
 - name: "Install FreeIPA client and SSSD packages"
   ansible.builtin.dnf:
@@ -16,21 +40,13 @@
     state: present
   when: ansible_hostname != "freeipa01" and ansible_hostname != "storage01"
 
-- name: "Fix /etc/hosts on clients to resolve FreeIPA server"
-  ansible.builtin.lineinfile:
-    path: /etc/hosts
-    regexp: "^10\\.10\\.10\\.15.*"
-    line: "10.10.10.15 freeipa01.systech.local freeipa01"
-    state: present
-  when: ansible_hostname != "freeipa01" and ansible_hostname != "storage01"
-
 - name: "Check if FreeIPA client is already configured (Idempotency)"
   ansible.builtin.stat:
     path: /etc/ipa/default.conf
   register: ipa_client_configured
   when: ansible_hostname != "freeipa01" and ansible_hostname != "storage01"
 
-- name: "Join node to FreeIPA domain (Unattended)"
+- name: "Join node to FreeIPA domain (Unattended, skip NTP to avoid LXC chronyd errors)"
   ansible.builtin.command:
     cmd: >
       ipa-client-install
@@ -41,6 +57,7 @@
       --password 'StrongAdminpass123!'
       --enable-dns-updates
       --mkhomedir
+      --no-ntp
       --unattended
   when: 
     - ansible_hostname != "freeipa01" and ansible_hostname != "storage01"
