@@ -51,6 +51,12 @@
     - ansible_hostname == "freeipa01"
     - not ipa_server_configured.stat.exists
 
+- name: "Install python3-firewall dependency for Ansible firewalld module"
+  ansible.builtin.dnf:
+    name: python3-firewall
+    state: present
+  when: ansible_hostname == "freeipa01"
+
 - name: "Open FreeIPA ports in firewalld"
   ansible.builtin.firewalld:
     port: "{{ item }}"
