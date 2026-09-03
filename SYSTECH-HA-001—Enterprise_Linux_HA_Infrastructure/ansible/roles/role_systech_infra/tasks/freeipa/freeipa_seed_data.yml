@@ -414,7 +414,8 @@
     'Number of members added 0' not in sudo_cmd_result.stdout
   failed_when: >
     sudo_cmd_result.rc != 0 and
-    'already' not in (sudo_cmd_result.stdout + sudo_cmd_result.stderr)
+    'already' not in (sudo_cmd_result.stdout + sudo_cmd_result.stderr) and
+    'Number of members added 0' not in sudo_cmd_result.stdout
 
 
 
