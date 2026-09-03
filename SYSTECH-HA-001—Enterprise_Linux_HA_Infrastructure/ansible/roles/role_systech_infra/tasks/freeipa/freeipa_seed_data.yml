@@ -257,27 +257,13 @@
   register: group_member_result
   changed_when: >
     'Number of members added 0' not in group_member_result.stdout
-  failed_when: group_member_result.rc != 0
+  failed_when: >
+    group_member_result.rc != 0 and
+    'already a member' not in group_member_result.stdout
 
 # -----------------------------------------------------------------------------
 # PHASE 5: CREATE HBAC RULES (Host-Based Access Control)
 # -----------------------------------------------------------------------------
-- name: "Create HBAC rules"
-  ansible.builtin.command:
-    cmd: "ipa hbacrule-add {{ item.name }} --desc='{{ item.desc }}'"
-  environment:
-    KRB5CCNAME: "{{ seed_krb5cc }}"
-  loop:
-    - { name: "allow_sysadmins_all",      desc: "Sysadmins can access all hosts" }
-    - { name: "allow_webdevs_apps",       desc: "Web developers can access app nodes" }
-    - { name: "allow_dbas_db01",          desc: "DBAs can access db01" }
-    - { name: "allow_auditors_client01",  desc: "Auditors can access client01" }
-  register: hbac_create_result
-  changed_when: hbac_create_result.rc == 0
-  failed_when: >
-    hbac_create_result.rc != 0 and
-    'already exists' not in hbac_create_result.stderr
-
 - name: "Attach groups to HBAC rules"
   ansible.builtin.command:
     cmd: "ipa hbacrule-add-user {{ item.rule }} --groups={{ item.group }}"
@@ -291,31 +277,39 @@
   register: hbac_user_result
   changed_when: >
     'Number of members added 0' not in hbac_user_result.stdout
-  failed_when: hbac_user_result.rc != 0
+  failed_when: >
+    hbac_user_result.rc != 0 and
+    'already' not in (hbac_user_result.stdout + hbac_user_result.stderr)
 
 - name: "Attach all hosts to sysadmins HBAC rule"
   ansible.builtin.command:
-    cmd: "ipa hbacrule-add-host allow_sysadmins_all --hostcat=all"
+    cmd: "ipa hbacrule-mod allow_sysadmins_all --hostcat=all"
   environment:
     KRB5CCNAME: "{{ seed_krb5cc }}"
   register: hbac_host_all_result
   changed_when: >
     'Number of members added 0' not in hbac_host_all_result.stdout
-  failed_when: hbac_host_all_result.rc != 0
+  failed_when: >
+    hbac_host_all_result.rc != 0 and
+    'already' not in (hbac_host_all_result.stdout + hbac_host_all_result.stderr)
 
 - name: "Attach specific hosts to scoped HBAC rules"
   ansible.builtin.command:
-    cmd: "ipa hbacrule-add-host {{ item.rule }} --hosts={{ item.hosts }}"
+    cmd: >
+      ipa hbacrule-add-host {{ item.rule }}
+      {{ item.hosts | map('regex_replace', '^(.*)$', '--hosts=\1') | join(' ') }}
   environment:
     KRB5CCNAME: "{{ seed_krb5cc }}"
   loop:
-    - { rule: "allow_webdevs_apps",      hosts: "app01.systech.local,app02.systech.local,app03.systech.local" }
-    - { rule: "allow_dbas_db01",         hosts: "db01.systech.local" }
-    - { rule: "allow_auditors_client01", hosts: "client01.systech.local" }
+    - { rule: "allow_webdevs_apps",      hosts: ["app01.systech.local", "app02.systech.local", "app03.systech.local"] }
+    - { rule: "allow_dbas_db01",         hosts: ["db01.systech.local"] }
+    - { rule: "allow_auditors_client01", hosts: ["client01.systech.local"] }
   register: hbac_host_result
   changed_when: >
     'Number of members added 0' not in hbac_host_result.stdout
-  failed_when: hbac_host_result.rc != 0
+  failed_when: >
+    hbac_host_result.rc != 0 and
+    'already' not in (hbac_host_result.stdout + hbac_host_result.stderr)
 
 # -----------------------------------------------------------------------------
 # PHASE 6: CREATE SUDO RULES
