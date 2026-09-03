@@ -152,305 +152,240 @@
 # 
 # ==============================================================================
 #
-
 ---
 # ==============================================================================
 # FREEIPA SEED DATA - USERS, GROUPS, HBAC & SUDO RULES
 # ==============================================================================
 # PURPOSE: Populate FreeIPA with realistic test data for troubleshooting labs.
-# NOTE   : This playbook is IDEMPOTENT. Run it multiple times safely.
-#          It creates users, groups, HBAC rules, and sudo rules.
+# NOTE   : Idempotencia REAL (no failed_when:false global). Cada tarea falla
+#          de verdad ante un error real, y solo se ignora el caso puntual de
+#          "el recurso ya existe" / "ya es miembro", que es lo que sí queremos
+#          tolerar en una re-ejecución.
 # ==============================================================================
+
+- name: "Set seed data Kerberos ccache path as a fact"
+  ansible.builtin.set_fact:
+    seed_krb5cc: /tmp/krb5cc_seed_data
 
 # -----------------------------------------------------------------------------
 # PHASE 1: OBTAIN KERBEROS TICKET FOR ADMIN
 # -----------------------------------------------------------------------------
 - name: "Obtain Kerberos ticket for admin user"
   ansible.builtin.command:
-    cmd: "echo 'StrongAdminpass123!' | kinit admin"
-  changed_when: false
-  failed_when: false
+    cmd: "kinit admin"
+  args:
+    stdin: "{{ freeipa_admin_password }}"
   environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
+    KRB5CCNAME: "{{ seed_krb5cc }}"
+  register: kinit_result
+  changed_when: false
+  failed_when: kinit_result.rc != 0
+  no_log: true
+
+# NOTA: freeipa_admin_password debe venir de Ansible Vault (group_vars/vault.yml),
+# no hardcodeada. Si todavía la tenés en texto plano en otro lado, ese es un
+# segundo problema a corregir aparte de este.
 
 # -----------------------------------------------------------------------------
 # PHASE 2: CREATE GROUPS
 # -----------------------------------------------------------------------------
-- name: "Create group: sysadmins"
+- name: "Create groups"
   ansible.builtin.command:
-    cmd: "ipa group-add sysadmins --desc='System Administrators with full access'"
+    cmd: "ipa group-add {{ item.name }} --desc='{{ item.desc }}'"
   environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Create group: webdevs"
-  ansible.builtin.command:
-    cmd: "ipa group-add webdevs --desc='Web Developers with access to app nodes'"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Create group: dbas"
-  ansible.builtin.command:
-    cmd: "ipa group-add dbas --desc='Database Administrators with access to db01'"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Create group: auditors"
-  ansible.builtin.command:
-    cmd: "ipa group-add auditors --desc='Auditors with restricted access to client01'"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
+    KRB5CCNAME: "{{ seed_krb5cc }}"
+  loop:
+    - { name: "sysadmins", desc: "System Administrators with full access" }
+    - { name: "webdevs",   desc: "Web Developers with access to app nodes" }
+    - { name: "dbas",      desc: "Database Administrators with access to db01" }
+    - { name: "auditors",  desc: "Auditors with restricted access to client01" }
+  register: group_create_result
+  changed_when: group_create_result.rc == 0
+  failed_when: >
+    group_create_result.rc != 0 and
+    'already exists' not in group_create_result.stderr
 
 # -----------------------------------------------------------------------------
 # PHASE 3: CREATE USERS
 # -----------------------------------------------------------------------------
-- name: "Create user: jensyg (sysadmin)"
+# NOTA: se removió --gidnumber=<nombre_de_grupo> del comando original — ipa
+# user-add espera un GID numérico ahí, no un nombre de grupo. La pertenencia
+# a grupos ya se resuelve correctamente en la Fase 4 con group-add-member,
+# así que ese parámetro sobraba y además era inválido.
+- name: "Create users"
   ansible.builtin.command:
-    cmd: "ipa user-add jensyg --first='Jens' --last='Admin' --password='LabPassword123!' --gidnumber=sysadmins"
+    cmd: >
+      ipa user-add {{ item.uid }}
+      --first='{{ item.first }}'
+      --last='{{ item.last }}'
+      --password
+    stdin: "{{ item.password }}\n{{ item.password }}\n"
   environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
+    KRB5CCNAME: "{{ seed_krb5cc }}"
+  loop:
+    - { uid: "jensyg", first: "Jens",  last: "Admin", password: "{{ seed_users_password }}" }
+    - { uid: "dev01",  first: "Dev",   last: "One",   password: "{{ seed_users_password }}" }
+    - { uid: "dev02",  first: "Dev",   last: "Two",   password: "{{ seed_users_password }}" }
+    - { uid: "dba01",  first: "DBA",   last: "One",   password: "{{ seed_users_password }}" }
+    - { uid: "audit01",first: "Audit", last: "One",   password: "{{ seed_users_password }}" }
+  register: user_create_result
+  changed_when: user_create_result.rc == 0
+  failed_when: >
+    user_create_result.rc != 0 and
+    'already exists' not in user_create_result.stderr
+  no_log: true
 
-- name: "Create user: dev01 (web developer)"
-  ansible.builtin.command:
-    cmd: "ipa user-add dev01 --first='Dev' --last='One' --password='LabPassword123!' --gidnumber=webdevs"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Create user: dev02 (web developer)"
-  ansible.builtin.command:
-    cmd: "ipa user-add dev02 --first='Dev' --last='Two' --password='LabPassword123!' --gidnumber=webdevs"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Create user: dba01 (database admin)"
-  ansible.builtin.command:
-    cmd: "ipa user-add dba01 --first='DBA' --last='One' --password='LabPassword123!' --gidnumber=dbas"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Create user: audit01 (auditor)"
-  ansible.builtin.command:
-    cmd: "ipa user-add audit01 --first='Audit' --last='One' --password='LabPassword123!' --gidnumber=auditors"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
+# NOTA: seed_users_password (hoy "LabPassword123!") también debería moverse a
+# Ansible Vault en lugar de vivir en texto plano dentro del playbook, sobre
+# todo si este repo se sube a un remoto compartido.
 
 # -----------------------------------------------------------------------------
-# PHASE 4: ADD USERS TO GROUPS (if not already done via --gidnumber)
+# PHASE 4: ADD USERS TO GROUPS
 # -----------------------------------------------------------------------------
-- name: "Add jensyg to sysadmins group"
+- name: "Add users to their groups"
   ansible.builtin.command:
-    cmd: "ipa group-add-member sysadmins --users=jensyg"
+    cmd: "ipa group-add-member {{ item.group }} --users={{ item.users }}"
   environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Add dev01 and dev02 to webdevs group"
-  ansible.builtin.command:
-    cmd: "ipa group-add-member webdevs --users=dev01,dev02"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Add dba01 to dbas group"
-  ansible.builtin.command:
-    cmd: "ipa group-add-member dbas --users=dba01"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Add audit01 to auditors group"
-  ansible.builtin.command:
-    cmd: "ipa group-add-member auditors --users=audit01"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
+    KRB5CCNAME: "{{ seed_krb5cc }}"
+  loop:
+    - { group: "sysadmins", users: "jensyg" }
+    - { group: "webdevs",   users: "dev01,dev02" }
+    - { group: "dbas",      users: "dba01" }
+    - { group: "auditors",  users: "audit01" }
+  register: group_member_result
+  changed_when: >
+    'Number of members added 0' not in group_member_result.stdout
+  failed_when: group_member_result.rc != 0
 
 # -----------------------------------------------------------------------------
 # PHASE 5: CREATE HBAC RULES (Host-Based Access Control)
 # -----------------------------------------------------------------------------
-- name: "Create HBAC rule: allow sysadmins to all hosts"
+- name: "Create HBAC rules"
   ansible.builtin.command:
-    cmd: "ipa hbacrule-add allow_sysadmins_all --desc='Sysadmins can access all hosts'"
+    cmd: "ipa hbacrule-add {{ item.name }} --desc='{{ item.desc }}'"
   environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
+    KRB5CCNAME: "{{ seed_krb5cc }}"
+  loop:
+    - { name: "allow_sysadmins_all",      desc: "Sysadmins can access all hosts" }
+    - { name: "allow_webdevs_apps",       desc: "Web developers can access app nodes" }
+    - { name: "allow_dbas_db01",          desc: "DBAs can access db01" }
+    - { name: "allow_auditors_client01",  desc: "Auditors can access client01" }
+  register: hbac_create_result
+  changed_when: hbac_create_result.rc == 0
+  failed_when: >
+    hbac_create_result.rc != 0 and
+    'already exists' not in hbac_create_result.stderr
 
-- name: "Add sysadmins group to HBAC rule"
+- name: "Attach groups to HBAC rules"
   ansible.builtin.command:
-    cmd: "ipa hbacrule-add-user allow_sysadmins_all --groups=sysadmins"
+    cmd: "ipa hbacrule-add-user {{ item.rule }} --groups={{ item.group }}"
   environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
+    KRB5CCNAME: "{{ seed_krb5cc }}"
+  loop:
+    - { rule: "allow_sysadmins_all",     group: "sysadmins" }
+    - { rule: "allow_webdevs_apps",      group: "webdevs" }
+    - { rule: "allow_dbas_db01",         group: "dbas" }
+    - { rule: "allow_auditors_client01", group: "auditors" }
+  register: hbac_user_result
+  changed_when: >
+    'Number of members added 0' not in hbac_user_result.stdout
+  failed_when: hbac_user_result.rc != 0
 
-- name: "Add all hosts to HBAC rule for sysadmins"
+- name: "Attach all hosts to sysadmins HBAC rule"
   ansible.builtin.command:
     cmd: "ipa hbacrule-add-host allow_sysadmins_all --hostcat=all"
   environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
+    KRB5CCNAME: "{{ seed_krb5cc }}"
+  register: hbac_host_all_result
+  changed_when: >
+    'Number of members added 0' not in hbac_host_all_result.stdout
+  failed_when: hbac_host_all_result.rc != 0
 
-- name: "Create HBAC rule: allow webdevs to app nodes only"
+- name: "Attach specific hosts to scoped HBAC rules"
   ansible.builtin.command:
-    cmd: "ipa hbacrule-add allow_webdevs_apps --desc='Web developers can access app nodes'"
+    cmd: "ipa hbacrule-add-host {{ item.rule }} --hosts={{ item.hosts }}"
   environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Add webdevs group to HBAC rule"
-  ansible.builtin.command:
-    cmd: "ipa hbacrule-add-user allow_webdevs_apps --groups=webdevs"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Add app nodes to HBAC rule for webdevs"
-  ansible.builtin.command:
-    cmd: "ipa hbacrule-add-host allow_webdevs_apps --hosts=app01.systech.local,app02.systech.local,app03.systech.local"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Create HBAC rule: allow dbas to db01 only"
-  ansible.builtin.command:
-    cmd: "ipa hbacrule-add allow_dbas_db01 --desc='DBAs can access db01'"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Add dbas group to HBAC rule"
-  ansible.builtin.command:
-    cmd: "ipa hbacrule-add-user allow_dbas_db01 --groups=dbas"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Add db01 to HBAC rule for dbas"
-  ansible.builtin.command:
-    cmd: "ipa hbacrule-add-host allow_dbas_db01 --hosts=db01.systech.local"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Create HBAC rule: allow auditors to client01 only"
-  ansible.builtin.command:
-    cmd: "ipa hbacrule-add allow_auditors_client01 --desc='Auditors can access client01'"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Add auditors group to HBAC rule"
-  ansible.builtin.command:
-    cmd: "ipa hbacrule-add-user allow_auditors_client01 --groups=auditors"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Add client01 to HBAC rule for auditors"
-  ansible.builtin.command:
-    cmd: "ipa hbacrule-add-host allow_auditors_client01 --hosts=client01.systech.local"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
+    KRB5CCNAME: "{{ seed_krb5cc }}"
+  loop:
+    - { rule: "allow_webdevs_apps",      hosts: "app01.systech.local,app02.systech.local,app03.systech.local" }
+    - { rule: "allow_dbas_db01",         hosts: "db01.systech.local" }
+    - { rule: "allow_auditors_client01", hosts: "client01.systech.local" }
+  register: hbac_host_result
+  changed_when: >
+    'Number of members added 0' not in hbac_host_result.stdout
+  failed_when: hbac_host_result.rc != 0
 
 # -----------------------------------------------------------------------------
 # PHASE 6: CREATE SUDO RULES
 # -----------------------------------------------------------------------------
-- name: "Create sudo rule: sysadmins can run all commands"
+- name: "Create sudo rules"
   ansible.builtin.command:
-    cmd: "ipa sudorule-add sysadmins_sudo_all --desc='Sysadmins have full sudo access'"
+    cmd: "ipa sudorule-add {{ item.name }} --desc='{{ item.desc }}'"
   environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
+    KRB5CCNAME: "{{ seed_krb5cc }}"
+  loop:
+    - { name: "sysadmins_sudo_all", desc: "Sysadmins have full sudo access" }
+    - { name: "dbas_sudo_pgsql",    desc: "DBAs can run PostgreSQL commands" }
+  register: sudo_create_result
+  changed_when: sudo_create_result.rc == 0
+  failed_when: >
+    sudo_create_result.rc != 0 and
+    'already exists' not in sudo_create_result.stderr
 
-- name: "Add sysadmins group to sudo rule"
+- name: "Attach groups to sudo rules"
   ansible.builtin.command:
-    cmd: "ipa sudorule-add-user sysadmins_sudo_all --groups=sysadmins"
+    cmd: "ipa sudorule-add-user {{ item.rule }} --groups={{ item.group }}"
   environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
+    KRB5CCNAME: "{{ seed_krb5cc }}"
+  loop:
+    - { rule: "sysadmins_sudo_all", group: "sysadmins" }
+    - { rule: "dbas_sudo_pgsql",    group: "dbas" }
+  register: sudo_user_result
+  changed_when: >
+    'Number of members added 0' not in sudo_user_result.stdout
+  failed_when: sudo_user_result.rc != 0
 
-- name: "Add all hosts to sudo rule for sysadmins"
+- name: "Attach all hosts to sysadmins sudo rule"
   ansible.builtin.command:
     cmd: "ipa sudorule-add-host sysadmins_sudo_all --hostcat=all"
   environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
+    KRB5CCNAME: "{{ seed_krb5cc }}"
+  register: sudo_host_all_result
+  changed_when: >
+    'Number of members added 0' not in sudo_host_all_result.stdout
+  failed_when: sudo_host_all_result.rc != 0
 
-- name: "Add ALL commands to sudo rule for sysadmins"
-  ansible.builtin.command:
-    cmd: "ipa sudorule-add-allow-command sysadmins_sudo_all --sudocmds=all"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Create sudo rule: dbas can run PostgreSQL commands"
-  ansible.builtin.command:
-    cmd: "ipa sudorule-add dbas_sudo_pgsql --desc='DBAs can run PostgreSQL commands'"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Add dbas group to sudo rule"
-  ansible.builtin.command:
-    cmd: "ipa sudorule-add-user dbas_sudo_pgsql --groups=dbas"
-  environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
-
-- name: "Add db01 to sudo rule for dbas"
+- name: "Attach db01 to dbas sudo rule"
   ansible.builtin.command:
     cmd: "ipa sudorule-add-host dbas_sudo_pgsql --hosts=db01.systech.local"
   environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
+    KRB5CCNAME: "{{ seed_krb5cc }}"
+  register: sudo_host_db_result
+  changed_when: >
+    'Number of members added 0' not in sudo_host_db_result.stdout
+  failed_when: sudo_host_db_result.rc != 0
 
-- name: "Add PostgreSQL commands to sudo rule for dbas"
+- name: "Add PostgreSQL commands to dbas sudo rule"
   ansible.builtin.command:
-    cmd: "ipa sudorule-add-allow-command dbas_sudo_pgsql --sudocmds=/usr/bin/systemctl restart postgresql-15,/usr/bin/systemctl status postgresql-15,/usr/bin/journalctl -u postgresql-15"
+    cmd: >
+      ipa sudorule-add-allow-command dbas_sudo_pgsql
+      --sudocmds='/usr/bin/systemctl restart postgresql-15,/usr/bin/systemctl status postgresql-15,/usr/bin/journalctl -u postgresql-15'
   environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
-  changed_when: false
-  failed_when: false
+    KRB5CCNAME: "{{ seed_krb5cc }}"
+  register: sudo_cmd_result
+  changed_when: >
+    'Number of members added 0' not in sudo_cmd_result.stdout
+  failed_when: sudo_cmd_result.rc != 0
+
+- name: "Add ALL commands to sysadmins sudo rule"
+  ansible.builtin.command:
+    cmd: "ipa sudorule-add-allow-command sysadmins_sudo_all --sudocmds=all"
+  environment:
+    KRB5CCNAME: "{{ seed_krb5cc }}"
+  register: sudo_cmd_all_result
+  changed_when: >
+    'Number of members added 0' not in sudo_cmd_all_result.stdout
+  failed_when: sudo_cmd_all_result.rc != 0
 
 # -----------------------------------------------------------------------------
 # PHASE 7: VERIFY AND DISPLAY SUMMARY
@@ -459,7 +394,7 @@
   ansible.builtin.command:
     cmd: "ipa user-find --all"
   environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
+    KRB5CCNAME: "{{ seed_krb5cc }}"
   register: user_list
   changed_when: false
 
@@ -467,7 +402,7 @@
   ansible.builtin.command:
     cmd: "ipa group-find --all"
   environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
+    KRB5CCNAME: "{{ seed_krb5cc }}"
   register: group_list
   changed_when: false
 
@@ -475,7 +410,7 @@
   ansible.builtin.command:
     cmd: "ipa hbacrule-find --all"
   environment:
-    KRB5CCNAME: /tmp/krb5cc_seed_data
+    KRB5CCNAME: "{{ seed_krb5cc }}"
   register: hbac_list
   changed_when: false
 
@@ -483,24 +418,12 @@
   ansible.builtin.debug:
     msg: |
       =========================================
-      FREEIPA SEED DATA SUCCESSFULLY CREATED
+      FREEIPA SEED DATA - RESULTADO DE ESTA CORRIDA
       =========================================
 
-      USERS:
-      - jensyg (sysadmins) - Full access to all nodes
-      - dev01, dev02 (webdevs) - Access to app01, app02, app03
-      - dba01 (dbas) - Access to db01 only
-      - audit01 (auditors) - Access to client01 only
+      USUARIOS ENCONTRADOS EN IPA:
+      {{ user_list.stdout }}
 
-      HBAC RULES:
-      - allow_sysadmins_all: sysadmins → all hosts
-      - allow_webdevs_apps: webdevs → app nodes
-      - allow_dbas_db01: dbas → db01
-      - allow_auditors_client01: auditors → client01
-
-      SUDO RULES:
-      - sysadmins_sudo_all: sysadmins can run ALL commands
-      - dbas_sudo_pgsql: dbas can manage PostgreSQL on db01
-
-      All users have password: LabPassword123!
+      GRUPOS ENCONTRADOS EN IPA:
+      {{ group_list.stdout }}
       =========================================

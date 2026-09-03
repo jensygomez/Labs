@@ -74,7 +74,7 @@
   
 - name: "Poblar FreeIPA con datos de prueba (usuarios, grupos, HBAC, sudo)"
   ansible.builtin.include_tasks:
-    file: freeipa_seed_data.yml
+    file: freeipa/freeipa_seed_data.yml
     apply:
       tags: ['freeipa_seed']
   when: "inventory_hostname == 'freeipa01'"
