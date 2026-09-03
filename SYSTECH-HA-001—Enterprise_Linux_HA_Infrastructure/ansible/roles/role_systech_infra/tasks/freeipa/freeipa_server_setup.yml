@@ -8,7 +8,6 @@
 #          Proxmox/Tailscale FQDN conflicts and ensure external DNS resolution
 #          for package installation BEFORE FreeIPA takes over DNS.
 # ==============================================================================
-
 - name: "Ensure hostname is set correctly"
   ansible.builtin.hostname:
     name: freeipa01.systech.local
@@ -39,9 +38,17 @@
       - freeipa-server
       - freeipa-server-dns
       - ipa-admintools
-      - python3-firewall  # Required for Ansible firewalld module
+      - firewalld          # Daemon real de firewall (faltaba - causó el fallo INC)
+      - python3-firewall    # Binding Python requerido por el módulo firewalld de Ansible
     state: present
     update_cache: yes
+  when: ansible_hostname == "freeipa01"
+
+- name: "Ensure firewalld is started and enabled"
+  ansible.builtin.systemd:
+    name: firewalld
+    state: started
+    enabled: true
   when: ansible_hostname == "freeipa01"
 
 - name: "Check if FreeIPA server is already configured (Idempotency)"

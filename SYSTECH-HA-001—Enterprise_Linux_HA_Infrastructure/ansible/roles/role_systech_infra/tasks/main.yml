@@ -119,25 +119,14 @@
       tags: ['client', 'client04']
   when: "inventory_hostname == 'client04'"
   tags: ['client', 'client04']
-# ==============================================================================
-# DNS - SERVIDOR CENTRALIZADO
-# ==============================================================================
-- name: "Desplegar Servidor DNS (dnsmasq)"
-  ansible.builtin.include_tasks:
-    file: dns/main.yml
-    apply:
-      tags: ['dns', 'dns_server']
-  when: "'dns_nodes' in group_names"
-  tags: ['dns', 'dns_server']
 
 # ==============================================================================
-# RED - CONFIGURACIÓN DE CLIENTES DNS
-# Importante: Esto debe ejecutarse en TODOS los nodos para que usen dns01.
+# FREEIPA DNS - POBLACIÓN DINÁMICA DESDE EL INVENTARIO
 # ==============================================================================
-- name: "Configurar resolv.conf en todos los nodos para usar DNS Central"
+- name: "Poblar DNS de FreeIPA con todos los hosts del inventario y configurar resolv.conf"
   ansible.builtin.include_tasks:
-    file: dns/network_setup.yml
+    file: freeipa/freeipa_dns_setup.yml
     apply:
-      tags: ['network', 'dns_client']
-  when: "'dns_nodes' not in group_names"
-  tags: ['network', 'dns_client']
+      tags: ['freeipa_dns']
+  tags: ['freeipa_dns']
+
