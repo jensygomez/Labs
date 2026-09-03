@@ -1,6 +1,6 @@
 ---
 # ==============================================================================
-# FREEIPA DNS POPULATION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
+# FREEIPA DNS POPULATION TASKS - SYSTECH-HA-001 LAB ENVIRONMENT
 # ==============================================================================
 # PLAYBOOK ID   : freeipa_dns_setup
 # VERSION       : 1.0
@@ -31,105 +31,94 @@
 # WHAT THIS PLAYBOOK CREATES:
 # ==============================================================================
 # DNS ZONE:
-#   • systech.local (if not exists)
+#   * systech.local (if not exists)
 #
 # DNS RECORDS (A records for all inventory hosts):
-#   • freeipa01.systech.local → 10.10.10.15
-#   • app01.systech.local → 10.10.10.31
-#   • app02.systech.local → 10.10.10.32
-#   • app03.systech.local → 10.10.10.33
-#   • db01.systech.local → 10.10.10.40
-#   • lb01.systech.local → 10.10.10.21
-#   • lb02.systech.local → 10.10.10.22
-#   • client01.systech.local → 10.10.10.11
-#   • client02.systech.local → 10.10.10.12
-#   • client03.systech.local → 10.10.10.13
-#   • client04.systech.local → 10.10.10.14
-#   • storage01.systech.local → 10.10.10.50
+#   * freeipa01.systech.local -> 10.10.10.15
+#   * app01.systech.local -> 10.10.10.31
+#   * app02.systech.local -> 10.10.10.32
+#   * app03.systech.local -> 10.10.10.33
+#   * db01.systech.local -> 10.10.10.40
+#   * lb01.systech.local -> 10.10.10.21
+#   * lb02.systech.local -> 10.10.10.22
+#   * client01.systech.local -> 10.10.10.11
+#   * client02.systech.local -> 10.10.10.12
+#   * client03.systech.local -> 10.10.10.13
+#   * client04.systech.local -> 10.10.10.14
+#   * storage01.systech.local -> 10.10.10.50
 #
 # NETWORK CONFIGURATION:
-#   • /etc/resolv.conf on all nodes → nameserver 10.10.10.15
-#   • Search domain: systech.local
+#   * /etc/resolv.conf on all nodes -> nameserver 10.10.10.15
+#   * Search domain: systech.local
 # ==============================================================================
 
 # -----------------------------------------------------------------------------
-# PLAY 1: POPULATE FREEIPA DNS WITH INVENTORY HOSTS
+# PHASE 1: POPULATE FREEIPA DNS (Only on freeipa01)
 # -----------------------------------------------------------------------------
-- name: "Populate FreeIPA DNS with Inventory Hosts"
-  hosts: freeipa01
-  become: yes
-  vars:
-    dns_domain: "systech.local"
-    freeipa_ip: "10.10.10.15"
+- name: "01 | Obtain Kerberos ticket for admin user"
+  ansible.builtin.command:
+    cmd: "echo 'StrongAdminpass123!' | kinit admin"
+  changed_when: false
+  failed_when: false
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_dns_setup
+  when: inventory_hostname == 'freeipa01'
 
-  tasks:
-    - name: "01 | Obtain Kerberos ticket for admin user"
-      ansible.builtin.command:
-        cmd: "echo 'StrongAdminpass123!' | kinit admin"
-      changed_when: false
-      failed_when: false
-      environment:
-        KRB5CCNAME: /tmp/krb5cc_dns_setup
+- name: "02 | Ensure DNS zone exists (Idempotent)"
+  ansible.builtin.command:
+    cmd: "ipa dnszone-add {{ dns_domain }} --name-server=freeipa01.{{ dns_domain }}. --admin-email=admin.{{ dns_domain }}."
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_dns_setup
+  changed_when: false
+  failed_when: false
+  when: inventory_hostname == 'freeipa01'
 
-    - name: "02 | Ensure DNS zone exists (Idempotent)"
-      ansible.builtin.command:
-        cmd: "ipa dnszone-add {{ dns_domain }} --name-server=freeipa01.{{ dns_domain }}. --admin-email=admin.{{ dns_domain }}."
-      environment:
-        KRB5CCNAME: /tmp/krb5cc_dns_setup
-      changed_when: false
-      failed_when: false
+- name: "03 | Add A record for freeipa01 itself"
+  ansible.builtin.command:
+    cmd: "ipa dnsrecord-add {{ dns_domain }} freeipa01 --a-rec={{ freeipa_ip }}"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_dns_setup
+  changed_when: false
+  failed_when: false
+  when: inventory_hostname == 'freeipa01'
 
-    - name: "03 | Add A record for freeipa01 itself"
-      ansible.builtin.command:
-        cmd: "ipa dnsrecord-add {{ dns_domain }} freeipa01 --a-rec={{ freeipa_ip }}"
-      environment:
-        KRB5CCNAME: /tmp/krb5cc_dns_setup
-      changed_when: false
-      failed_when: false
+- name: "04 | Dynamically add A records for ALL inventory hosts"
+  ansible.builtin.command:
+    cmd: "ipa dnsrecord-add {{ dns_domain }} {{ item.key }} --a-rec={{ item.value.ansible_host }}"
+  environment:
+    KRB5CCNAME: /tmp/krb5cc_dns_setup
+  # Filtra solo los hosts que tienen ansible_host definido y excluye freeipa01 (ya agregado)
+  loop: "{{ query('dict', hostvars) | selectattr('value.ansible_host', 'defined') | rejectattr('key', 'equalto', 'freeipa01') | list }}"
+  changed_when: false
+  failed_when: false
+  when: inventory_hostname == 'freeipa01'
 
-    - name: "04 | Dynamically add A records for ALL inventory hosts"
-      ansible.builtin.command:
-        cmd: "ipa dnsrecord-add {{ dns_domain }} {{ item.key }} --a-rec={{ item.value.ansible_host }}"
-      environment:
-        KRB5CCNAME: /tmp/krb5cc_dns_setup
-      # Filtra solo los hosts que tienen ansible_host definido y excluye freeipa01 (ya agregado)
-      loop: "{{ query('dict', hostvars) | selectattr('value.ansible_host', 'defined') | rejectattr('key', 'equalto', 'freeipa01') | list }}"
-      changed_when: false
-      failed_when: false
-
-    - name: "05 | Display DNS Population Summary"
-      ansible.builtin.debug:
-        msg: |
-          =========================================
-          FREEIPA DNS SUCCESSFULLY POPULATED
-          =========================================
-          Domain: {{ dns_domain }}
-          Server: {{ freeipa_ip }}
-          
-          Records added/verified for:
-          {% for host in query('dict', hostvars) | selectattr('value.ansible_host', 'defined') | rejectattr('key', 'equalto', 'freeipa01') | list %}
-            - {{ host.key }}.{{ dns_domain }} -> {{ host.value.ansible_host }}
-          {% endfor %}
-          =========================================
+- name: "05 | Display DNS Population Summary"
+  ansible.builtin.debug:
+    msg: |
+      =========================================
+      FREEIPA DNS SUCCESSFULLY POPULATED
+      =========================================
+      Domain: {{ dns_domain }}
+      Server: {{ freeipa_ip }}
+      
+      Records added/verified for:
+      {% for host in query('dict', hostvars) | selectattr('value.ansible_host', 'defined') | rejectattr('key', 'equalto', 'freeipa01') | list %}
+        - {{ host.key }}.{{ dns_domain }} -> {{ host.value.ansible_host }}
+      {% endfor %}
+      =========================================
+  when: inventory_hostname == 'freeipa01'
 
 # -----------------------------------------------------------------------------
-# PLAY 2: CONFIGURE NETWORK DNS ON ALL NODES TO USE FREEIPA
+# PHASE 2: CONFIGURE /etc/resolv.conf ON ALL CLIENT NODES
 # -----------------------------------------------------------------------------
-- name: "Configure Network DNS on ALL Nodes to use FreeIPA"
-  hosts: all
-  become: yes
-  vars:
-    freeipa_ip: "10.10.10.15"
-    dns_domain: "systech.local"
-
-  tasks:
-    - name: "01 | Configure /etc/resolv.conf for FreeIPA DNS (Primary)"
-      ansible.builtin.copy:
-        dest: /etc/resolv.conf
-        content: |
-          # Managed by Ansible - SYSTECH DNS Centralized (FreeIPA)
-          search {{ dns_domain }}
-          nameserver {{ freeipa_ip }}
-          nameserver 8.8.8.8
-        mode: '0644'
-      when: inventory_hostname != 'freeipa01'
+- name: "06 | Configure /etc/resolv.conf for FreeIPA DNS (Primary)"
+  ansible.builtin.copy:
+    dest: /etc/resolv.conf
+    content: |
+      # Managed by Ansible - SYSTECH DNS Centralized (FreeIPA)
+      search {{ dns_domain }}
+      nameserver {{ freeipa_ip }}
+      nameserver 8.8.8.8
+    mode: '0644'
+  when: inventory_hostname != 'freeipa01'
