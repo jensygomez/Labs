@@ -280,7 +280,6 @@
   failed_when: >
     hbac_user_result.rc != 0 and
     'already' not in (hbac_user_result.stdout + hbac_user_result.stderr)
-
 - name: "Attach all hosts to sysadmins HBAC rule"
   ansible.builtin.command:
     cmd: "ipa hbacrule-mod allow_sysadmins_all --hostcat=all"
@@ -291,7 +290,25 @@
     'Number of members added 0' not in hbac_host_all_result.stdout
   failed_when: >
     hbac_host_all_result.rc != 0 and
-    'already' not in (hbac_host_all_result.stdout + hbac_host_all_result.stderr)
+    'already' not in (hbac_host_all_result.stdout + hbac_host_all_result.stderr) and
+    'no modifications to be performed' not in (hbac_host_all_result.stdout + hbac_host_all_result.stderr)
+
+- name: "Ensure hosts exist in FreeIPA"
+  ansible.builtin.command:
+    cmd: "ipa host-add {{ item }} --force"
+  environment:
+    KRB5CCNAME: "{{ seed_krb5cc }}"
+  loop:
+    - "app01.systech.local"
+    - "app02.systech.local"
+    - "app03.systech.local"
+    - "db01.systech.local"
+    - "client01.systech.local"
+  register: host_add_result
+  changed_when: host_add_result.rc == 0
+  failed_when: >
+    host_add_result.rc != 0 and
+    'already exists' not in (host_add_result.stdout + host_add_result.stderr)
 
 - name: "Attach specific hosts to scoped HBAC rules"
   ansible.builtin.command:
@@ -339,17 +356,22 @@
   register: sudo_user_result
   changed_when: >
     'Number of members added 0' not in sudo_user_result.stdout
-  failed_when: sudo_user_result.rc != 0
+  failed_when: >
+    sudo_user_result.rc != 0 and
+    'already' not in (sudo_user_result.stdout + sudo_user_result.stderr)
 
 - name: "Attach all hosts to sysadmins sudo rule"
   ansible.builtin.command:
-    cmd: "ipa sudorule-add-host sysadmins_sudo_all --hostcat=all"
+    cmd: "ipa sudorule-mod sysadmins_sudo_all --hostcat=all"
   environment:
     KRB5CCNAME: "{{ seed_krb5cc }}"
   register: sudo_host_all_result
   changed_when: >
     'Number of members added 0' not in sudo_host_all_result.stdout
-  failed_when: sudo_host_all_result.rc != 0
+  failed_when: >
+    sudo_host_all_result.rc != 0 and
+    'already' not in (sudo_host_all_result.stdout + sudo_host_all_result.stderr) and
+    'no modifications to be performed' not in (sudo_host_all_result.stdout + sudo_host_all_result.stderr)
 
 - name: "Attach db01 to dbas sudo rule"
   ansible.builtin.command:
@@ -359,67 +381,93 @@
   register: sudo_host_db_result
   changed_when: >
     'Number of members added 0' not in sudo_host_db_result.stdout
-  failed_when: sudo_host_db_result.rc != 0
+  failed_when: >
+    sudo_host_db_result.rc != 0 and
+    'already' not in (sudo_host_db_result.stdout + sudo_host_db_result.stderr)
+
+- name: "Ensure sudo commands exist in FreeIPA"
+  ansible.builtin.command:
+    cmd: "ipa sudocmd-add '{{ item }}'"
+  environment:
+    KRB5CCNAME: "{{ seed_krb5cc }}"
+  loop:
+    - "/usr/bin/systemctl restart postgresql-15"
+    - "/usr/bin/systemctl status postgresql-15"
+    - "/usr/bin/journalctl -u postgresql-15"
+  register: sudocmd_add_result
+  changed_when: sudocmd_add_result.rc == 0
+  failed_when: >
+    sudocmd_add_result.rc != 0 and
+    'already exists' not in (sudocmd_add_result.stdout + sudocmd_add_result.stderr)
 
 - name: "Add PostgreSQL commands to dbas sudo rule"
   ansible.builtin.command:
     cmd: >
       ipa sudorule-add-allow-command dbas_sudo_pgsql
-      --sudocmds='/usr/bin/systemctl restart postgresql-15,/usr/bin/systemctl status postgresql-15,/usr/bin/journalctl -u postgresql-15'
+      --sudocmds='/usr/bin/systemctl restart postgresql-15'
+      --sudocmds='/usr/bin/systemctl status postgresql-15'
+      --sudocmds='/usr/bin/journalctl -u postgresql-15'
   environment:
     KRB5CCNAME: "{{ seed_krb5cc }}"
   register: sudo_cmd_result
   changed_when: >
     'Number of members added 0' not in sudo_cmd_result.stdout
-  failed_when: sudo_cmd_result.rc != 0
+  failed_when: >
+    sudo_cmd_result.rc != 0 and
+    'already' not in (sudo_cmd_result.stdout + sudo_cmd_result.stderr)
+
+
 
 - name: "Add ALL commands to sysadmins sudo rule"
   ansible.builtin.command:
-    cmd: "ipa sudorule-add-allow-command sysadmins_sudo_all --sudocmds=all"
+    cmd: "ipa sudorule-mod sysadmins_sudo_all --cmdcat=all"
   environment:
     KRB5CCNAME: "{{ seed_krb5cc }}"
   register: sudo_cmd_all_result
   changed_when: >
     'Number of members added 0' not in sudo_cmd_all_result.stdout
-  failed_when: sudo_cmd_all_result.rc != 0
+  failed_when: >
+    sudo_cmd_all_result.rc != 0 and
+    'already' not in (sudo_cmd_all_result.stdout + sudo_cmd_all_result.stderr) and
+    'no modifications to be performed' not in (sudo_cmd_all_result.stdout + sudo_cmd_all_result.stderr)
 
 # -----------------------------------------------------------------------------
 # PHASE 7: VERIFY AND DISPLAY SUMMARY
 # -----------------------------------------------------------------------------
 - name: "List all users created"
   ansible.builtin.command:
-    cmd: "ipa user-find --all"
+    cmd: "ipa user-find --raw"
   environment:
     KRB5CCNAME: "{{ seed_krb5cc }}"
-  register: user_list
+  register: user_list_raw
   changed_when: false
 
 - name: "List all groups created"
   ansible.builtin.command:
-    cmd: "ipa group-find --all"
+    cmd: "ipa group-find --raw"
   environment:
     KRB5CCNAME: "{{ seed_krb5cc }}"
-  register: group_list
+  register: group_list_raw
   changed_when: false
 
-- name: "List all HBAC rules"
-  ansible.builtin.command:
-    cmd: "ipa hbacrule-find --all"
-  environment:
-    KRB5CCNAME: "{{ seed_krb5cc }}"
-  register: hbac_list
-  changed_when: false
-
-- name: "Display Seed Data Summary"
+- name: "Display Clean Seed Data Summary"
   ansible.builtin.debug:
     msg: |
-      =========================================
-      FREEIPA SEED DATA - RESULTADO DE ESTA CORRIDA
-      =========================================
+      ========================================================================
+                      FREEIPA SEED DATA - RESUMEN DE EJECUCIÓN                
+      ========================================================================
 
-      USUARIOS ENCONTRADOS EN IPA:
-      {{ user_list.stdout }}
+      USUARIOS CREADOS / VERIFICADOS:
+      ------------------------------------------------------------------------
+      {% for u in user_list_raw.stdout_lines if 'uid:' in u %}
+      * Usuario: {{ u.split(':')[1] | trim }}
+      {% endfor %}
 
-      GRUPOS ENCONTRADOS EN IPA:
-      {{ group_list.stdout }}
-      =========================================
+      RESUMEN RÁPIDO DE PUESTOS Y GRUPOS:
+      ------------------------------------------------------------------------
+      * Sysadmins : jensyg   -> Reglas: allow_sysadmins_all | sysadmins_sudo_all (ALL)
+      * WebDevs   : dev01,02 -> Reglas: allow_webdevs_apps  | (Sin sudo)
+      * DBAs      : dba01    -> Reglas: allow_dbas_db01     | dbas_sudo_pgsql (systemctl/journalctl pgsql)
+      * Auditors  : audit01  -> Reglas: allow_auditors_c01  | (Sin sudo)
+
+      ========================================================================
