@@ -244,14 +244,16 @@
 # -----------------------------------------------------------------------------
 - name: "Add users to their groups"
   ansible.builtin.command:
-    cmd: "ipa group-add-member {{ item.group }} --users={{ item.users }}"
+    cmd: >
+      ipa group-add-member {{ item.group }}
+      {{ item.users | map('regex_replace', '^(.*)$', '--users=\1') | join(' ') }}
   environment:
     KRB5CCNAME: "{{ seed_krb5cc }}"
   loop:
-    - { group: "sysadmins", users: "jensyg" }
-    - { group: "webdevs",   users: "dev01,dev02" }
-    - { group: "dbas",      users: "dba01" }
-    - { group: "auditors",  users: "audit01" }
+    - { group: "sysadmins", users: ["jensyg"] }
+    - { group: "webdevs",   users: ["dev01", "dev02"] }
+    - { group: "dbas",      users: ["dba01"] }
+    - { group: "auditors",  users: ["audit01"] }
   register: group_member_result
   changed_when: >
     'Number of members added 0' not in group_member_result.stdout
