@@ -41,7 +41,7 @@ variable "lxc_containers" {
   }))
   default = {
 		# Servidor FreeIPA (Alma Linux - No storage mounts -> privileged)
-    "freeipa01" = { vmid = 115, ip = "10.10.10.10/24", cores = 1, memory = 2048, disk_size = 8, role = "freeipa" }
+    "freeipa01" = { vmid = 115, ip = "10.10.10.15/24", cores = 2, memory = 2048, disk_size = 16, role = "freeipa" }
     
     # CLIENTS (Alma Linux - No storage mounts -> Unprivileged)
     "client01" = { vmid = 111, ip = "10.10.10.11/24", cores = 1, memory = 512, disk_size = 8, role = "client" }

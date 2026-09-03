@@ -2,23 +2,27 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # ==========================================
-# 1. Dependencias base + incus-client (vía Zabbly)
+# 1. Dependencias base + incus-client + TAILSCALE
 # ==========================================
-# Paso A: Instalar curl y gnupg primero para poder descargar la clave
 RUN apt-get update && apt-get install -y curl gnupg
 
-# Paso B: Agregar el repositorio oficial de Incus para Ubuntu 22.04 (jammy)
+# Agregar repositorio de Incus
 RUN mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://pkgs.zabbly.com/key.asc -o /etc/apt/keyrings/zabbly.asc && \
     printf "Enabled: yes\nTypes: deb\nURIs: https://pkgs.zabbly.com/incus/stable\nSuites: jammy\nComponents: main\nArchitectures: %s\nSigned-By: /etc/apt/keyrings/zabbly.asc\n" "$(dpkg --print-architecture)" > /etc/apt/sources.list.d/zabbly-incus-stable.sources
 
-# Paso C: Instalar el resto de herramientas (Agregado byobu aquí)
+# Agregar repositorio de Tailscale
+RUN curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/jammy.noarmor.gpg | tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null && \
+    curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/jammy.tailscale-keyring.list | tee /etc/apt/sources.list.d/tailscale.list
+
+# Instalar todo junto
 RUN apt-get update && apt-get install -y \
     curl git jq unzip gnupg software-properties-common bc \
     python3 python3-pip python3-venv python3-yaml \
     openssh-client iputils-ping net-tools dnsutils \
     bash-completion vim nano tree htop ripgrep fzf tmux less byobu \
-    graphviz incus-client \
+    graphviz incus-client \ lsof
+    tailscale \
     && rm -rf /var/lib/apt/lists/*
 
 # ==========================================

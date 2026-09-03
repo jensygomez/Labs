@@ -140,13 +140,13 @@ resource "local_file" "ansible_inventory" {
     )
 
     role_group_map = {
-      app        = "app_nodes"
-      db         = "db_nodes"
-      storage    = "storage_nodes"
-      lb         = "lb_nodes"
-      client     = "client_nodes"
-      monitoring = "monitoring_nodes"
-      dns        = "dns_nodes"
+			freeipa     = "freeipa_nodes"
+			client      = "client_nodes"
+      lb          = "lb_nodes"
+      app         = "app_nodes"
+      db          = "db_nodes"
+      storage     = "storage_nodes"
+      
     }
   })
   filename = "${path.module}/../ansible/inventories/production/hosts.yml"
