@@ -1,6 +1,0 @@
----
-- name: Recargar NFS
-  command: exportfs -ra
-
-- name: Recargar Firewalld
-  command: firewall-cmd --reload

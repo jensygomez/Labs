@@ -1,4 +1,0 @@
-ansible_user: jensyg
-ansible_port: 22
-ansible_ssh_private_key_file: ~/.ssh/id_lab_pilot
-ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
