@@ -4,7 +4,9 @@
 # ==============================================================================
 # TARGET: freeipa01 (10.10.10.15)
 # PURPOSE: Deploy central identity management (LDAP + Kerberos + DNS).
-# NOTE   : Explicitly fixes /etc/hosts to prevent Proxmox/Tailscale FQDN conflicts.
+# NOTE   : Explicitly fixes /etc/hosts and /etc/resolv.conf to prevent 
+#          Proxmox/Tailscale FQDN conflicts and ensure external DNS resolution
+#          for package installation BEFORE FreeIPA takes over DNS.
 # ==============================================================================
 
 - name: "Ensure hostname is set correctly"
@@ -20,13 +22,26 @@
     state: present
   when: ansible_hostname == "freeipa01"
 
-- name: "Install FreeIPA server packages"
+- name: "Ensure external DNS resolution for package installation (Pre-FreeIPA)"
+  ansible.builtin.copy:
+    dest: /etc/resolv.conf
+    content: |
+      # Managed by Ansible - Temporary external DNS for FreeIPA installation
+      # Once FreeIPA is installed, it will manage its own DNS resolution.
+      nameserver 8.8.8.8
+      nameserver 1.1.1.1
+    mode: '0644'
+  when: ansible_hostname == "freeipa01"
+
+- name: "Install FreeIPA server and dependency packages"
   ansible.builtin.dnf:
     name:
       - freeipa-server
       - freeipa-server-dns
       - ipa-admintools
+      - python3-firewall  # Required for Ansible firewalld module
     state: present
+    update_cache: yes
   when: ansible_hostname == "freeipa01"
 
 - name: "Check if FreeIPA server is already configured (Idempotency)"
@@ -50,12 +65,6 @@
   when: 
     - ansible_hostname == "freeipa01"
     - not ipa_server_configured.stat.exists
-
-- name: "Install python3-firewall dependency for Ansible firewalld module"
-  ansible.builtin.dnf:
-    name: python3-firewall
-    state: present
-  when: ansible_hostname == "freeipa01"
 
 - name: "Open FreeIPA ports in firewalld"
   ansible.builtin.firewalld:
