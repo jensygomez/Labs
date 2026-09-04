@@ -1,0 +1,47 @@
+---
+- name: "Gestión Dinámica de Usuarios y Sudoers"
+  hosts: all
+  become: true
+  tasks:
+
+    # 1. Crear grupos únicos según la lista de usuarios activa
+    - name: "Crear grupos del sistema"
+      ansible.builtin.group:
+        name: "{{ item.group }}"
+        state: present
+      loop: "{{ system_users }}"
+      when: >
+        'all' in item.target_groups or
+        (group_names | intersect(item.target_groups) | length > 0)
+      loop_control:
+        label: "{{ item.group }}"
+
+    # 2. Crear usuarios dinámicamente si la máquina pertenece al grupo destino
+    - name: "Aprovisionar usuarios"
+      ansible.builtin.user:
+        name: "{{ item.name }}"
+        group: "{{ item.group }}"
+        password: "{{ default_user_password }}"
+        shell: /bin/bash
+        create_home: true
+        state: present
+      loop: "{{ system_users }}"
+      when: >
+        'all' in item.target_groups or
+        (group_names | intersect(item.target_groups) | length > 0)
+      loop_control:
+        label: "{{ item.name }}"
+
+    # 3. Aplicar reglas sudoers condicionales dinámicas
+    - name: "Configurar reglas Sudoers"
+      ansible.builtin.copy:
+        dest: "/etc/sudoers.d/{{ item.group }}"
+        content: "{{ item.sudo_rule }}\n"
+        mode: '0440'
+        validate: 'visudo -cf %s'
+      loop: "{{ system_users }}"
+      when: 
+        - item.sudo_rule is defined
+        - "'all' in item.target_groups or (group_names | intersect(item.target_groups) | length > 0)"
+      loop_control:
+        label: "{{ item.name }}"

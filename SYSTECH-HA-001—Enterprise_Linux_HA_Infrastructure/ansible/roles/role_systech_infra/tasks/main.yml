@@ -1,95 +1,108 @@
 ---
-# ==============================================================================
-# GUÍA DE EJECUCIÓN POR COMPONENTES (TAGS)
-# ==============================================================================
-# Este archivo orquesta el despliegue modular de toda la infraestructura.
-#
-# 1. Ejecutar TODO el stack (comportamiento por defecto):
-#    ansible-playbook -i inventories/production/hosts.yml site.yml --ask-vault-pass
-#
-# 2. Ejecutar SOLO un componente específico:
-#    ansible-playbook -i inventories/production/hosts.yml site.yml --tags 'lb' --ask-vault-pass
-#    ansible-playbook -i inventories/production/hosts.yml site.yml --tags 'client01' --ask-vault-pass
-#
-# 3. Ejecutar múltiples componentes a la vez:
-#    ansible-playbook -i inventories/production/hosts.yml site.yml --tags 'dns,lb,client' --ask-vault-pass
-#
-# 4. Listar todos los tags disponibles:
-#    ansible-playbook -i inventories/production/hosts.yml site.yml --list-tags
-# ==============================================================================
+# ------------------------------------------------------------------------------
+# 1. RESOLUCIÓN LOCAL (/etc/hosts) - Todos se conocen por FQDN
+# ------------------------------------------------------------------------------
+- name: "Configurar resolución de nombres local en /etc/hosts"
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    marker: "# {mark} ANSIBLE MANAGED HOSTS"
+    block: |
+      {% for host in groups['all'] %}
+      {% if hostvars[host].ansible_host is defined %}
+      {{ hostvars[host].ansible_host }} {{ host }} {{ host }}.systech.local
+      {% endif %}
+      {% endfor %}
+  tags: ['dns', 'common']
 
-- name: "Configurar Almacenamiento (NFS + iSCSI)"
+
+# ------------------------------------------------------------------------------
+# 2. DESPLIEGUE DE COMPONENTES DE INFRAESTRUCTURA (Orden de Dependencia)
+# ------------------------------------------------------------------------------
+
+# A) Storage (NFS / iSCSI)
+- name: "Configurar Almacenamiento"
   ansible.builtin.include_tasks:
     file: storage_setup.yml
     apply:
       tags: ['storage']
   when: "'storage_nodes' in group_names"
+  throttle: 2
   tags: ['storage']
 
-- name: "Configurar Base de Datos (PostgreSQL + iSCSI)"
+# B) Database (PostgreSQL)
+- name: "Configurar Base de Datos"
   ansible.builtin.include_tasks:
     file: database_setup.yml
     apply:
       tags: ['database', 'db']
   when: "'db_nodes' in group_names"
+  throttle: 2
   tags: ['database', 'db']
 
-- name: "Configurar Aplicación Web (Apache + PHP + NFS)"
+# C) Application (Apache + PHP)
+- name: "Configurar Aplicación Web"
   ansible.builtin.include_tasks:
     file: web_app_setup.yml
     apply:
       tags: ['web', 'app']
   when: "'app_nodes' in group_names"
+  throttle: 2
   tags: ['web', 'app']
 
-- name: "Configurar Load Balancers (HAProxy + Keepalived)"
+# D) Load Balancers (HAProxy + Keepalived)
+- name: "Configurar Load Balancers"
   ansible.builtin.include_tasks:
     file: lb_setup.yml
     apply:
       tags: ['lb', 'loadbalancer']
   when: "'lb_nodes' in group_names"
+  throttle: 2
   tags: ['lb', 'loadbalancer']
 
-
-# ==============================================================================
-# CLIENTES - SIMULACIÓN DE TRÁFICO ASINCRÓNICO (3 PERFILES DISTINTOS)
-# ==============================================================================
-# Cada perfil se aplica SOLO a su host correspondiente (1:1 por nombre),
-# no a todo el grupo client_nodes, para evitar que los 3 perfiles se
-# desplieguen simultáneamente en los 3 hosts.
-# ==============================================================================
-
-- name: "Configurar Cliente 01 (A-B State Flip & Read Cycle)"
+# E) Clientes (Consumidores de Servicios - Generan Tráfico)
+- name: "Configurar Cliente 01"
   ansible.builtin.include_tasks:
     file: client01.yml
     apply:
       tags: ['client', 'client01']
   when: "inventory_hostname == 'client01'"
+  throttle: 2
   tags: ['client', 'client01']
 
-- name: "Configurar Cliente 02 (Storage Simulation Cycle)"
+- name: "Configurar Cliente 02"
   ansible.builtin.include_tasks:
     file: client02.yml
     apply:
       tags: ['client', 'client02']
   when: "inventory_hostname == 'client02'"
+  throttle: 2
   tags: ['client', 'client02']
 
-- name: "Configurar Cliente 03 (Heavy Analytical Report Load)"
+- name: "Configurar Cliente 03"
   ansible.builtin.include_tasks:
     file: client03.yml
     apply:
       tags: ['client', 'client03']
   when: "inventory_hostname == 'client03'"
-  tags: ['client', 'client03']
+  throttle: 2
+  tags: ['client', 'client04']
 
-- name: "Configurar Cliente 04 (Heavy Analytical Report Load)"
+- name: "Configurar Cliente 04"
   ansible.builtin.include_tasks:
     file: client04.yml
     apply:
       tags: ['client', 'client04']
   when: "inventory_hostname == 'client04'"
+  throttle: 2
   tags: ['client', 'client04']
 
 
-
+# ------------------------------------------------------------------------------
+# 3. GESTIÓN DE USUARIOS Y ACCESOS (AL FINAL)
+# ------------------------------------------------------------------------------
+- name: "Aprovisionar Usuarios y Reglas Sudoers"
+  ansible.builtin.include_tasks:
+    file: setup_users.yml
+    apply:
+      tags: ['users']
+  tags: ['users']

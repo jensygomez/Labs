@@ -1,0 +1,25 @@
+# inventories/production/group_vars/all.yml
+system_users:
+  - name: jensyg
+    group: sysadmins
+    target_groups: ["all"]
+    sudo_rule: "%sysadmins ALL=(ALL) ALL"
+
+  - name: dev01
+    group: webdevs
+    target_groups: ["app_nodes"]
+
+  - name: dev02
+    group: webdevs
+    target_groups: ["app_nodes"]
+
+  - name: dba01
+    group: dbas
+    target_groups: ["db_nodes"]
+    sudo_rule: "%dbas ALL=(ALL) /usr/bin/systemctl restart postgresql-15, /usr/bin/systemctl status postgresql-15"
+
+  - name: audit01
+    group: auditors
+    target_groups: ["client_nodes"]
+
+default_user_password: "{{ 'LabPassword123!' | password_hash('sha512', 'mysecretsalt') }}"
