@@ -1,12 +1,16 @@
-==============================================================================
-INCIDENT RECOVERY PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
-==============================================================================
-INCIDENT ID   : 010
-PURPOSE       : Restore the locked/expired user 'jensyg' on the target node.
-NOTE          : Runs against all app_nodes. Only the node with the incident
-                marker will execute the recovery tasks (Marker Guard filter).
-==============================================================================
-- name: "Recovery 010 | Restore Locked and Expired User"
+# ==============================================================================
+# INCIDENT RECOVERY PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
+# ==============================================================================
+# INCIDENT ID   : 010
+# PURPOSE       : Restore the locked/expired user 'jensyg' on target nodes
+#                 and clean up /etc/hosts on both remote targets and control node.
+# NOTE          : Runs against all app_nodes, plus localhost for local cleanup.
+# ==============================================================================
+
+# -----------------------------------------------------------------------------
+# PLAY 1: RECOVER REMOTE APP NODES
+# -----------------------------------------------------------------------------
+- name: "Recovery 010 | Restore Locked/Expired User and Clean Remote Hosts"
   hosts: app_nodes
   become: yes
   vars:
@@ -15,7 +19,7 @@ NOTE          : Runs against all app_nodes. Only the node with the incident
     target_user: "jensyg"
     target_uid: 1001
     target_gid: 1001
-  
+
   tasks:
     - name: "01 | Check if incident marker exists on this node"
       ansible.builtin.stat:
@@ -33,30 +37,29 @@ NOTE          : Runs against all app_nodes. Only the node with the incident
         cmd: "chage -E -1 {{ target_user }}"
       when: check_inject.stat.exists
 
-    - name: "04 | Restore /etc/passwd comment to normal"
-      ansible.builtin.lineinfile:
-        path: /etc/passwd
-        regexp: "^{{ target_user }}:"
-        line: "{{ target_user }}:x:{{ target_uid }}:{{ target_gid }}::/home/{{ target_user }}:/bin/bash"
-        state: present
-      when: check_inject.stat.exists
-
-    - name: "05 | Remove fake security audit log"
+    - name: "04 | Remove fake security audit log"
       ansible.builtin.file:
         path: /var/log/security_audit.log
         state: absent
       when: check_inject.stat.exists
 
-    - name: "06 | Remove fake PAM debug log"
+    - name: "05 | Remove fake PAM debug log"
       ansible.builtin.file:
         path: /var/log/pam_debug.log
         state: absent
       when: check_inject.stat.exists
 
-    - name: "07 | Remove misleading .bashrc entry"
+    - name: "06 | Remove misleading .bashrc entry"
       ansible.builtin.lineinfile:
         path: "/home/{{ target_user }}/.bashrc"
         regexp: "^echo.*WARNING.*Account under security review"
+        state: absent
+      when: check_inject.stat.exists
+
+    - name: "07 | Clean up incident 010 entries from remote /etc/hosts"
+      ansible.builtin.blockinfile:
+        path: /etc/hosts
+        marker: "# {mark} ANSIBLE MANAGED HOSTS (INCIDENT 010)"
         state: absent
       when: check_inject.stat.exists
 
@@ -92,13 +95,27 @@ NOTE          : Runs against all app_nodes. Only the node with the incident
           passwd -S   : {{ final_status.stdout }}
           chage -l    : {{ final_chage.stdout_lines | select('match', '.*expires.*') | list }}
           
-          CLEANUP COMPLETED:
+          CLEANUP COMPLETED ON REMOTE NODE:
           - Password unlocked.
           - Account expiration removed.
-          - /etc/passwd comment restored.
           - Fake security audit log removed.
           - Fake PAM debug log removed.
           - Misleading .bashrc warning removed.
+          - Remote /etc/hosts entries cleaned up.
           - Marker file cleaned up.
           =========================================
       when: check_inject.stat.exists
+
+# -----------------------------------------------------------------------------
+# PLAY 2: CLEAN LOCAL CONTROL NODE (/etc/hosts on systech-control)
+# -----------------------------------------------------------------------------
+- name: "Recovery 010 | Clean Local Control Node (/etc/hosts)"
+  hosts: localhost
+  connection: local
+  become: yes
+
+- name: "12 | Remove manual cluster entries from local /etc/hosts (Container safe)"
+      ansible.builtin.command:
+        cmd: "sed -i '/10\\.10\\.10\\.[0-9]\\+\\s\\+app0[1-3]/d' /etc/hosts"
+      register: sed_result
+      changed_when: true

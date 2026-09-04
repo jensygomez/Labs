@@ -21,8 +21,8 @@ RUN apt-get update && apt-get install -y \
     python3 python3-pip python3-venv python3-yaml \
     openssh-client iputils-ping net-tools dnsutils \
     bash-completion vim nano tree htop ripgrep fzf tmux less byobu \
-    graphviz incus-client lsof python3-passlib \ 
-    tailscale \
+    graphviz incus-client lsof python3-passlib \
+    tailscale sudo \
     && rm -rf /var/lib/apt/lists/*
 
 # ==========================================
@@ -45,6 +45,12 @@ RUN pip3 install --no-cache-dir --upgrade pip && \
 RUN useradd -m -d /workspace -s /bin/bash -u 1000 jensyg && \
     mkdir -p /workspace/terraform && \
     chown -R jensyg:jensyg /workspace
+
+# ==========================================
+# 4.1 Permisos Sudo sin contraseña para jensyg
+# ==========================================
+RUN echo "jensyg ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/jensyg && \
+    chmod 0440 /etc/sudoers.d/jensyg
 
 # ==========================================
 # 5. Autocompletado y Prompt

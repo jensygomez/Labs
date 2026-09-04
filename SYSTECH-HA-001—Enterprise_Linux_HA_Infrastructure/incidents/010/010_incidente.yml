@@ -1,80 +1,57 @@
 # ==============================================================================
 # INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
 # ==============================================================================
+# PREREQUISITOS DE PLATAFORMA (ejecutar ANTES de cualquier incident_XXX.yml):
+#
+#   1. setup_users.yml
+#      - Crea grupos, usuarios y reglas sudoers desde group_vars/all/system_users.yml
+#      - 'jensyg' ya viene definido ahí con target_groups: ["all"] y password
+#        real vía default_user_password ('LabPassword123!' hasheado con salt fijo)
+#      - NO recrear usuarios dentro de un playbook de incidente: ya están sanos.
+#
+#   2. dns01.yml
+#      - Configura /etc/hosts en TODOS los nodos de la infraestructura
+#        (hosts: all) desde el inventario dinámico.
+#      - NO duplicar esta tarea dentro de un playbook de incidente.
+#
+#   Un incident_XXX.yml SOLO debe encargarse de:
+#     a) Resolución DNS del CONTROL NODE (dns01.yml no lo cubre, corre contra
+#        'hosts: all' del inventario, no contra 'localhost').
+#     b) Seleccionar el/los nodo(s) objetivo.
+#     c) Inyectar el fallo puntual del escenario.
+#     d) Decoys/logs realistas para practicar troubleshooting.
+#
+# ==============================================================================
 # RESUMEN DE EJECUCIÓN (LÓGICA DEL INCIDENTE 010):
-# 1. BASELINE DE SALUD (PLAY 1): Normaliza el estado de la cuenta 'jensyg' en 
-#    TODOS los nodos app (UID/GID 1001, shell, contraseña "LabPassword123!", 
-#    desbloqueo de contraseña y eliminación de fecha de expiración).
-# 2. RESOLUCIÓN DE NOMBRES EN NODOS REMOTOS (PLAY 2): Actualiza /etc/hosts en los
-#    nodos de la infraestructura remota.
-# 3. SELECCIÓN ALEATORIA (PLAY 3): Elige UN SOLO nodo al azar del grupo 'app_nodes' 
+# 1. RESOLUCIÓN DE NOMBRES EN EL CONTROL NODE (PLAY 1): Actualiza /etc/hosts
+#    localmente para permitir troubleshooting por nombre DNS desde el control node.
+# 2. SELECCIÓN ALEATORIA (PLAY 2): Elige UN SOLO nodo al azar del grupo 'app_nodes' 
 #    para crear un estado asimétrico en el clúster HA.
-# 4. INYECCIÓN DEL FALLO (PLAY 4): Bloquea la contraseña y expira la cuenta únicamente
-#    en el nodo seleccionado e inyecta los logs/falsos distractores.
+# 3. INYECCIÓN DEL FALLO (PLAY 3): Bloquea la contraseña y expira la cuenta únicamente
+#    en el nodo seleccionado e inyecta los logs/falsos distractores (incluye tarea 57).
 # ==============================================================================
 # INCIDENT ID    : 010
 # TITLE          : Usuario no puede autenticarse aunque la contraseña es correcta
 # TARGET NODE    : Random node from app_nodes (Asymmetric Cluster State)
-# TARGET USER    : jensyg (UID 1001, GID 1001, group: sysadmins)
+# TARGET USER    : jensyg (definido en group_vars/all/system_users.yml)
 # DIFFICULTY     : 4/10 (L1 Junior)
 # ESTIMATED TIME : 2 Hours
 # ==============================================================================
 ---
 # -----------------------------------------------------------------------------
-# PLAY 1: ENSURE HEALTHY BASELINE ON ALL APP NODES (Real HA Requirement)
+# PLAY 1: POPULATE /ETC/HOSTS ON THE CONTROL NODE ITSELF
+# (La resolución DNS de la infraestructura remota ya la gestiona dns01.yml)
 # -----------------------------------------------------------------------------
-- name: "Incident 010 - Ensure User Exists on ALL App Nodes (HA Baseline)"
-  hosts: app_nodes
+- name: "Incident 010 - Ensure Name Resolution on Control Node"
+  hosts: localhost
+  connection: local
   become: yes
-  vars:
-    target_user: "jensyg"
-    target_password: "LabPassword123!"
-    target_uid: 1001
-    target_gid: 1001
-    target_group: "sysadmins"
-
+  gather_facts: false
   tasks:
-    - name: "01 | Ensure sysadmins group exists with GID 1001"
-      ansible.builtin.group:
-        name: "{{ target_group }}"
-        gid: "{{ target_gid }}"
-        state: present
-
-    - name: "02 | Ensure user exists on ALL nodes with UID 1001 / GID 1001"
-      ansible.builtin.user:
-        name: "{{ target_user }}"
-        uid: "{{ target_uid }}"
-        group: "{{ target_group }}"
-        shell: /bin/bash
-        create_home: yes
-        state: present
-
-    - name: "03 | Set known good password on ALL nodes (SHA-512 hash)"
-      ansible.builtin.user:
-        name: "{{ target_user }}"
-        password: "{{ target_password | password_hash('sha512') }}"
-        update_password: always
-
-    - name: "04 | Ensure account is NOT expired and NOT locked on ALL nodes"
-      ansible.builtin.command:
-        cmd: "chage -E -1 {{ target_user }}"
-
-    - name: "05 | Unlock password just in case on ALL nodes"
-      ansible.builtin.command:
-        cmd: "passwd -u {{ target_user }}"
-      ignore_errors: yes
-
-# -----------------------------------------------------------------------------
-# PLAY 2: POPULATE /ETC/HOSTS ON ALL REMOTE NODES
-# -----------------------------------------------------------------------------
-- name: "Incident 010 - Ensure DNS/Name Resolution Baseline Across Remote Cluster"
-  hosts: all
-  become: yes
-  tasks:
-    - name: "06 | Update /etc/hosts with inventory mappings on remote nodes"
+    - name: "01 | Update /etc/hosts on control node with full inventory"
       ansible.builtin.blockinfile:
         path: /etc/hosts
-        marker: "# {mark} ANSIBLE MANAGED HOSTS (INCIDENT 010)"
+        marker: "# {mark} ANSIBLE MANAGED HOSTS (SYSTECH CONTROL NODE)"
         block: |
           {% for host in groups['all'] %}
           {% if hostvars[host].ansible_host is defined %}
@@ -83,7 +60,7 @@
           {% endfor %}
 
 # -----------------------------------------------------------------------------
-# PLAY 3: SELECT RANDOM NODE AND INJECT THE ASYMMETRIC FAULT
+# PLAY 2: SELECT RANDOM NODE AND INJECT THE ASYMMETRIC FAULT
 # -----------------------------------------------------------------------------
 - name: "Incident 010 - Select Random Target and Inject Fault"
   hosts: localhost
@@ -110,8 +87,6 @@
     incident_id: "010"
     marker_file: "/var/run/.incident_{{ incident_id }}_marker"
     target_user: "jensyg"
-    target_uid: 1001
-    target_gid: 1001
 
   tasks:
     # --- Marker Guard ---
@@ -167,7 +142,7 @@
       ansible.builtin.lineinfile:
         path: /etc/passwd
         regexp: "^{{ target_user }}:"
-        line: "{{ target_user }}:x:{{ target_uid }}:{{ target_gid }}:Admin Account - UNDER SECURITY REVIEW:/home/{{ target_user }}:/bin/bash"
+        line: "{{ target_user }}:x:{{ ansible_facts.getent_passwd[target_user][1] }}:{{ ansible_facts.getent_passwd[target_user][2] }}:Admin Account - UNDER SECURITY REVIEW:/home/{{ target_user }}:/bin/bash"
         state: present
       when: not check_inject.stat.exists
 
@@ -194,7 +169,7 @@
         line: 'echo "WARNING: Account under security review - contact sysadmin@company.com"'
         create: yes
         owner: "{{ target_user }}"
-        group: "{{ target_gid }}"
+        group: "{{ target_user }}"
         mode: '0644'
       when: not check_inject.stat.exists
 
@@ -208,6 +183,12 @@
         mode: '0644'
       when: not check_inject.stat.exists
 
+    - name: "57 | <DESCRIPCION_DE_TU_NUEVA_TAREA>"
+      # Reemplaza este bloque con el módulo y los argumentos de tu tarea
+      ansible.builtin.debug:
+        msg: "Ejecutando tarea personalizada de inyección"
+      when: not check_inject.stat.exists
+
     # --- FINALIZE ---
     - name: "60 | Display Injection Summary"
       ansible.builtin.debug:
@@ -216,7 +197,7 @@
           INCIDENT 010 SUCCESSFULLY INJECTED
           =========================================
           Target Node : {{ inventory_hostname }} (ASYMMETRIC STATE)
-          Target User : {{ target_user }} (UID {{ target_uid }}, GID {{ target_gid }})
+          Target User : {{ target_user }}
           
           The user is LOCKED and EXPIRED ONLY ON THIS NODE.
           The user remains HEALTHY on the other app_nodes.
@@ -229,5 +210,6 @@
           - Fake PAM debug log
           - Misleading .bashrc warning
           - Realistic auth failure logs in /var/log/secure
+          - <NUEVA_TAREA_INYECTADA_AQUI>
           =========================================
       when: not check_inject.stat.exists
