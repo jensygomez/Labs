@@ -2,42 +2,46 @@
 TICKET ID: OPS-1103 | SEVERITY: P2 (Access / Operational Impact)
 REPORTED BY: Priya S. (NOC L1 - EMEA Shift)
 TIME: 10:42 AM CEST (Assigned to L1 Day Shift)
-SUMMARY: Administrative user 'jensyg' cannot authenticate on app01 despite correct password.
+SUMMARY: Intermittent authentication failures for admin user 'jensyg' across the applicative cluster via VIP.
 DESCRIPTION:
 Greetings L1 Team,
-We are receiving reports from the DevOps team that they cannot SSH into
-app01 (10.10.10.31) using the administrative account 'jensyg'. The team
-confirms the password is correct (tested from a different jump host with
-the same credentials and it works), but authentication is rejected on
-app01 specifically.
+
+We are receiving reports from the DevOps team that they CANNOT consistently SSH into the applicative cluster using the administrative account 'jensyg' via the VIP (10.10.10.30). 
+
+The authentication behavior is INTERMITTENT:
+- Some login attempts succeed.
+- Other login attempts are rejected with "Authentication failed" or "Account expired" messages.
+- The team confirms the password is correct (tested from a different jump host with the same credentials and it works 100% of the time on non-cluster targets).
 
 Context:
-Yesterday evening, the security team performed a "routine credential
-rotation audit" across the applicative cluster. Since then, the jensyg
-account on app01 has been refusing logins.
+Yesterday evening, the security team performed a "routine credential rotation audit" across the applicative cluster (app01, app02, app03). Since then, the jensyg account has been exhibiting inconsistent behavior depending on which backend node answers the request.
 
 BUSINESS IMPACT:
-- DevOps team cannot deploy new PHP code to app01.
-- Ansible playbooks targeting app01 with the jensyg identity are failing.
-- Monitoring agent on app01 is reporting "credential refresh failed".
+- DevOps team cannot reliably deploy new PHP code to the cluster.
+- Ansible playbooks targeting the cluster with the jensyg identity are failing intermittently.
+- Monitoring agent on the cluster is reporting "credential refresh failed" on some nodes.
 - If not resolved, the next scheduled deployment window will be missed.
 
 INITIAL TROUBLESHOOTING DONE (BY NOC):
-- Verified password is correct by testing on app02 (login successful).
-- Checked SSH service on app01: `systemctl status sshd` → Active/Running.
-- Checked /var/log/secure on app01: shows "Authentication failure" and
-  "Account expired" messages for user jensyg.
-- Checked /etc/passwd and /etc/shadow: user entry exists, no typos.
-- Verified network and DNS resolution to app01 is fine.
-- firewalld on app01 allows SSH (22/tcp).
+- Verified password is correct by testing on a non-cluster target (login successful 100%).
+- Checked SSH service on all app nodes: `systemctl status sshd` → Active/Running on all.
+- Checked /var/log/secure on all app nodes:
+  * app01: shows "Authentication failure" and "Account expired" messages for user jensyg.
+  * app02: shows successful logins for jensyg.
+  * app03: shows successful logins for jensyg.
+- Checked /etc/passwd and /etc/shadow on all nodes: user entry exists, no typos.
+- Verified network and DNS resolution to all app nodes is fine.
+- firewalld on all app nodes allows SSH (22/tcp).
+- HAProxy health checks are passing on all app nodes (HTTP 200 on port 80).
 
 EXPECTED ACTION FROM L1:
-- Investigate why authentication fails despite correct credentials.
-- Check account aging/expiration status (chage, passwd -S).
-- Check /etc/shadow for lock indicators ('!' or '!!' prefix).
-- Restore the account to a usable state.
-- Verify SSH login works after the fix.
-- Provide Root Cause Analysis (RCA) once resolved.
+1. Investigate why authentication fails intermittently despite correct credentials.
+2. Check account aging/expiration status on EACH node individually (chage, passwd -S).
+3. Check /etc/shadow for lock indicators ('!' or '!!' prefix) on each node.
+4. Identify which specific node(s) have the account in a broken state.
+5. Restore the account to a usable state on the affected node(s).
+6. Verify SSH login works consistently via the VIP after the fix.
+7. Provide Root Cause Analysis (RCA) once resolved.
 
 Best Regards,
 Priya S.
