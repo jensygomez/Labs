@@ -91,16 +91,5 @@
   when: "inventory_hostname == 'client04'"
   tags: ['client', 'client04']
 
-# ==============================================================================
-# FREEIPA DNS - POBLACIÓN DINÁMICA DESDE EL INVENTARIO
-# ==============================================================================
-- name: "Poblar DNS de FreeIPA con todos los hosts del inventario y configurar resolv.conf"
-  ansible.builtin.include_tasks:
-    file: freeipa/freeipa_dns_setup.yml
-    apply:
-      tags: ['freeipa_dns']
-  vars:
-    dns_domain: "systech.local"
-    freeipa_ip: "10.10.10.15"
-  tags: ['freeipa_dns']
+
 
