@@ -27,7 +27,7 @@ variable "proxmox_api_token" {
   sensitive   = true
 }
 
-# Nodos LXC (Soporte Mixto: Ubuntu 24.04 / AlmaLinux 9)
+# Nodos LXC (AlmaLinux 9)
 variable "lxc_containers" {
   description = "Mapa de contenedores LXC a crear"
   type = map(object({

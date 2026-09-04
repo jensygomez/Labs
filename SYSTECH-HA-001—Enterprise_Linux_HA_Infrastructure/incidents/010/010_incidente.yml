@@ -52,6 +52,7 @@
       ansible.builtin.blockinfile:
         path: /etc/hosts
         marker: "# {mark} ANSIBLE MANAGED HOSTS (SYSTECH CONTROL NODE)"
+        unsafe_writes: yes
         block: |
           {% for host in groups['all'] %}
           {% if hostvars[host].ansible_host is defined %}
@@ -136,6 +137,12 @@
         - "{{ '%b %d %H:%M:%S' | strftime }} {{ inventory_hostname }} sshd[{{ 10000 | random }}]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=10.10.10.11 user={{ target_user }}"
         - "{{ '%b %d %H:%M:%S' | strftime }} {{ inventory_hostname }} sshd[{{ 10000 | random }}]: Account {{ target_user }} has expired"
         - "{{ '%b %d %H:%M:%S' | strftime }} {{ inventory_hostname }} sshd[{{ 10000 | random }}]: Failed password for {{ target_user }} from 10.10.10.11 port {{ 40000 | random }} ssh2"
+      when: not check_inject.stat.exists
+
+    - name: "51b | Look up current UID/GID for target_user"
+      ansible.builtin.getent:
+        database: passwd
+        key: "{{ target_user }}"
       when: not check_inject.stat.exists
 
     - name: "52 | Add misleading comment to /etc/passwd"
