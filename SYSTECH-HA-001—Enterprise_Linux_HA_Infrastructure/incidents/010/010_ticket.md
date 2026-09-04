@@ -26,16 +26,18 @@ INITIAL TROUBLESHOOTING DONE (BY NOC):
 - Verified password is correct by testing on a non-cluster target (login successful 100%).
 - Checked SSH service on all app nodes: `systemctl status sshd` → Active/Running on all.
 - Checked /var/log/secure on all app nodes:
-  * app01: shows "Authentication failure" and "Account expired" messages for user jensyg.
+  * app01: shows successful logins for jensyg.
   * app02: shows successful logins for jensyg.
   * app03: shows successful logins for jensyg.
+  * NOTE: No authentication failures visible in recent logs on ANY node.
 - Checked /etc/passwd and /etc/shadow on all nodes: user entry exists, no typos.
 - Verified network and DNS resolution to all app nodes is fine.
 - firewalld on all app nodes allows SSH (22/tcp).
 - HAProxy health checks are passing on all app nodes (HTTP 200 on port 80).
+- CRITICAL OBSERVATION: When testing SSH directly to each node's individual IP (10.10.10.31, .32, .33), logins succeed 100% of the time. But when using the VIP (10.10.10.30), authentication fails intermittently.
 
 EXPECTED ACTION FROM L1:
-1. Investigate why authentication fails intermittently despite correct credentials.
+1. Investigate why authentication fails intermittently via VIP despite working when connecting directly to each node.
 2. Check account aging/expiration status on EACH node individually (chage, passwd -S).
 3. Check /etc/shadow for lock indicators ('!' or '!!' prefix) on each node.
 4. Identify which specific node(s) have the account in a broken state.

@@ -1,19 +1,30 @@
 # ==============================================================================
 # INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
 # ==============================================================================
-# INCIDENT ID   : 010
-# TITLE         : Usuario no puede autenticarse aunque la contraseña es correcta
-# TARGET NODE   : Random node from app_nodes (Asymmetric Cluster State)
-# TARGET USER   : jensyg (UID 1001, GID 1001, group: sysadmins)
-# DIFFICULTY    : 4/10 (L1 Junior)
-# ESTIMATED TIME: 2 Hours
+# RESUMEN DE EJECUCIÓN (LÓGICA DEL INCIDENTE 010):
+# 1. BASELINE DE SALUD (PLAY 1): Normaliza el estado de la cuenta 'jensyg' en 
+#    TODOS los nodos app (UID/GID 1001, shell, contraseña "LabPassword123!", 
+#    desbloqueo de contraseña y eliminación de fecha de expiración).
+# 2. RESOLUCIÓN DE NOMBRES LOCAL (PLAY 2): Garantiza que 'localhost' (nodo de 
+#    control) y todos los nodos tengan mapeados los nombres de host en /etc/hosts 
+#    mediante la información del inventario de Ansible.
+# 3. SELECCIÓN ALEATORIA (PLAY 3): Elige UN SOLO nodo al azar del grupo 'app_nodes' 
+#    para crear un estado asimétrico en el clúster HA.
+# 4. INYECCIÓN DEL FALLO (PLAY 4):
+#    - Bloquea la contraseña (`passwd -l`) y expira la cuenta (`chage -E 2020-01-01`)
+#      ÚNICAMENTE en el nodo seleccionado.
+#    - Inyecta distractores/decoys: logs falsos en `/var/log/secure`, comentarios 
+#      engañosos en `/etc/passwd`, logs de auditoría falsos en `/var/log/security_audit.log`,
+#      alerta engañosa en `.bashrc` y registros en `/var/log/pam_debug.log`.
+#    - Aplica un archivo marcador (`/var/run/.incident_010_marker`) para evitar 
+#      reinyecciones dobles.
 # ==============================================================================
-# SCENARIO CONTEXT:
-# The user 'jensyg' is a valid admin user that MUST exist on all app nodes
-# with the same UID/GID (1001/1001, group: sysadmins). However, a failed 
-# security audit script left the cluster in an ASYMMETRIC state: the account 
-# is locked/expired on ONLY ONE random node, while working perfectly on the others.
-# The L1 must realize that in an HA cluster, they must check ALL nodes.
+# INCIDENT ID    : 010
+# TITLE          : Usuario no puede autenticarse aunque la contraseña es correcta
+# TARGET NODE    : Random node from app_nodes (Asymmetric Cluster State)
+# TARGET USER    : jensyg (UID 1001, GID 1001, group: sysadmins)
+# DIFFICULTY     : 4/10 (L1 Junior)
+# ESTIMATED TIME : 2 Hours
 # ==============================================================================
 ---
 # -----------------------------------------------------------------------------
@@ -28,7 +39,7 @@
     target_uid: 1001
     target_gid: 1001
     target_group: "sysadmins"
-  
+
   tasks:
     - name: "01 | Ensure sysadmins group exists with GID 1001"
       ansible.builtin.group:
@@ -61,7 +72,26 @@
       ignore_errors: yes
 
 # -----------------------------------------------------------------------------
-# PLAY 2: SELECT RANDOM NODE AND INJECT THE ASYMMETRIC FAULT
+# PLAY 2: POPULATE LOCAL /ETC/HOSTS FOR ALL NODES & CONTROL NODE
+# -----------------------------------------------------------------------------
+- name: "Incident 010 - Ensure DNS/Name Resolution Baseline Across Cluster and Control Node"
+  hosts: all, localhost
+  connection: "{{ 'local' if inventory_hostname == 'localhost' else 'ssh' }}"
+  become: yes
+  tasks:
+    - name: "06 | Update /etc/hosts with inventory mappings"
+      ansible.builtin.blockinfile:
+        path: /etc/hosts
+        marker: "# {mark} ANSIBLE MANAGED HOSTS (INCIDENT 010)"
+        block: |
+          {% for host in groups['all'] %}
+          {% if hostvars[host].ansible_host is defined %}
+          {{ hostvars[host].ansible_host }} {{ host }} {{ host }}.systech.local
+          {% endif %}
+          {% endfor %}
+
+# -----------------------------------------------------------------------------
+# PLAY 3: SELECT RANDOM NODE AND INJECT THE ASYMMETRIC FAULT
 # -----------------------------------------------------------------------------
 - name: "Incident 010 - Select Random Target and Inject Fault"
   hosts: localhost
@@ -69,7 +99,7 @@
   gather_facts: false
   vars:
     target_group: "app_nodes"
-  
+
   tasks:
     - name: "10 | Pick random target from {{ target_group }}"
       ansible.builtin.set_fact:
@@ -89,7 +119,7 @@
     target_user: "jensyg"
     target_uid: 1001
     target_gid: 1001
-  
+
   tasks:
     # --- Marker Guard ---
     - name: "30 | Check if incident was already injected"
