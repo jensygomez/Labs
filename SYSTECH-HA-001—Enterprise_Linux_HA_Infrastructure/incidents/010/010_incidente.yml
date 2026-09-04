@@ -5,19 +5,12 @@
 # 1. BASELINE DE SALUD (PLAY 1): Normaliza el estado de la cuenta 'jensyg' en 
 #    TODOS los nodos app (UID/GID 1001, shell, contraseña "LabPassword123!", 
 #    desbloqueo de contraseña y eliminación de fecha de expiración).
-# 2. RESOLUCIÓN DE NOMBRES LOCAL (PLAY 2): Garantiza que 'localhost' (nodo de 
-#    control) y todos los nodos tengan mapeados los nombres de host en /etc/hosts 
-#    mediante la información del inventario de Ansible.
+# 2. RESOLUCIÓN DE NOMBRES EN NODOS REMOTOS (PLAY 2): Actualiza /etc/hosts en los
+#    nodos de la infraestructura remota.
 # 3. SELECCIÓN ALEATORIA (PLAY 3): Elige UN SOLO nodo al azar del grupo 'app_nodes' 
 #    para crear un estado asimétrico en el clúster HA.
-# 4. INYECCIÓN DEL FALLO (PLAY 4):
-#    - Bloquea la contraseña (`passwd -l`) y expira la cuenta (`chage -E 2020-01-01`)
-#      ÚNICAMENTE en el nodo seleccionado.
-#    - Inyecta distractores/decoys: logs falsos en `/var/log/secure`, comentarios 
-#      engañosos en `/etc/passwd`, logs de auditoría falsos en `/var/log/security_audit.log`,
-#      alerta engañosa en `.bashrc` y registros en `/var/log/pam_debug.log`.
-#    - Aplica un archivo marcador (`/var/run/.incident_010_marker`) para evitar 
-#      reinyecciones dobles.
+# 4. INYECCIÓN DEL FALLO (PLAY 4): Bloquea la contraseña y expira la cuenta únicamente
+#    en el nodo seleccionado e inyecta los logs/falsos distractores.
 # ==============================================================================
 # INCIDENT ID    : 010
 # TITLE          : Usuario no puede autenticarse aunque la contraseña es correcta
@@ -72,14 +65,13 @@
       ignore_errors: yes
 
 # -----------------------------------------------------------------------------
-# PLAY 2: POPULATE LOCAL /ETC/HOSTS FOR ALL NODES & CONTROL NODE
+# PLAY 2: POPULATE /ETC/HOSTS ON ALL REMOTE NODES
 # -----------------------------------------------------------------------------
-- name: "Incident 010 - Ensure DNS/Name Resolution Baseline Across Cluster and Control Node"
-  hosts: all, localhost
-  connection: "{{ 'local' if inventory_hostname == 'localhost' else 'ssh' }}"
+- name: "Incident 010 - Ensure DNS/Name Resolution Baseline Across Remote Cluster"
+  hosts: all
   become: yes
   tasks:
-    - name: "06 | Update /etc/hosts with inventory mappings"
+    - name: "06 | Update /etc/hosts with inventory mappings on remote nodes"
       ansible.builtin.blockinfile:
         path: /etc/hosts
         marker: "# {mark} ANSIBLE MANAGED HOSTS (INCIDENT 010)"
@@ -97,6 +89,7 @@
   hosts: localhost
   connection: local
   gather_facts: false
+  become: no
   vars:
     target_group: "app_nodes"
 
