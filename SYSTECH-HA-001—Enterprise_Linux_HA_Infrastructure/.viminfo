@@ -21,7 +21,7 @@ $#
 
 # Command Line History (newest to oldest):
 :wq
-|2,0,1788428717,,"wq"
+|2,0,1788467276,,"wq"
 :%s/^/# /g
 |2,0,1788341755,,"%s/^/# /g"
 :q!
@@ -72,36 +72,50 @@ $#
 |3,0,36,0,1,0,1788201222," "
 
 # File marks:
-'0  4  37  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
-|4,48,4,37,1788428717,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
-'1  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,49,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
-'2  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,50,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
-'3  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,51,154,0,1788341758,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
-'4  162  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,52,162,0,1788341758,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
-'5  154  77  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,53,154,77,1788341688,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
-'6  162  77  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,54,162,77,1788341688,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
-'7  62  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,55,62,38,1788330355,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
-'8  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
-|4,56,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
-'9  35  0  ~/incidents/007/007_remediation.yml
-|4,57,35,0,1788201224,"~/incidents/007/007_remediation.yml"
+'0  1  0  ~/.ansible/tmp/ansible-local-1377qrlor0b1/tmp39wcstt3.yml
+|4,48,1,0,1788467276,"~/.ansible/tmp/ansible-local-1377qrlor0b1/tmp39wcstt3.yml"
+'1  4  37  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
+|4,49,4,37,1788428717,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
+'2  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
+|4,50,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
+'3  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,51,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+'4  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,52,154,0,1788341758,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+'5  162  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,53,162,0,1788341758,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+'6  154  77  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,54,154,77,1788341688,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+'7  162  77  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,55,162,77,1788341688,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+'8  62  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
+|4,56,62,38,1788330355,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
+'9  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
+|4,57,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
 
 # Jumplist (newest first):
+-'  1  0  ~/.ansible/tmp/ansible-local-1377qrlor0b1/tmp39wcstt3.yml
+|4,39,1,0,1788467276,"~/.ansible/tmp/ansible-local-1377qrlor0b1/tmp39wcstt3.yml"
 -'  4  37  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
 |4,39,4,37,1788428717,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
+-'  4  37  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
+|4,39,4,37,1788428717,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
+|4,39,1,0,1788428603,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
 -'  1  0  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
 |4,39,1,0,1788428603,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
 -'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
 |4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
 -'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
 |4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
+-'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
+|4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
+-'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
+|4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
+|4,39,1,0,1788403914,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
+-'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
+|4,39,1,0,1788403914,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
 -'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
 |4,39,1,0,1788403914,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
 -'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
@@ -114,6 +128,22 @@ $#
 |4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
 -'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
 |4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,154,0,1788341762,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,154,0,1788341762,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,154,0,1788341762,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,154,0,1788341762,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
 -'  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
 |4,39,154,0,1788341762,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
 -'  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
@@ -130,6 +160,22 @@ $#
 |4,39,162,0,1788341758,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
 -'  162  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
 |4,39,162,0,1788341758,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  162  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,162,0,1788341758,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  162  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,162,0,1788341758,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  162  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,162,0,1788341758,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  162  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,162,0,1788341758,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  162  77  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,162,77,1788341688,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  162  77  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,162,77,1788341688,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  162  77  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,162,77,1788341688,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  162  77  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,162,77,1788341688,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
 -'  162  77  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
 |4,39,162,77,1788341688,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
 -'  162  77  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
@@ -162,6 +208,30 @@ $#
 |4,39,1,0,1788341673,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
 -'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
 |4,39,1,0,1788341673,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,1,0,1788341673,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,1,0,1788341673,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,1,0,1788341673,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,1,0,1788341673,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,1,0,1788341673,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,1,0,1788341673,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,1,0,1788341673,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,1,0,1788341673,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,1,0,1788341673,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,1,0,1788341673,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,1,0,1788341673,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
+|4,39,1,0,1788341673,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
 -'  62  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
 |4,39,62,38,1788330355,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
 -'  62  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
@@ -224,78 +294,12 @@ $#
 |4,39,62,38,1788330355,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
 -'  62  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
 |4,39,62,38,1788330355,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  62  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,62,38,1788330355,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  1  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml
-|4,39,1,0,1788330338,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_client_setup.yml"
--'  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
-|4,39,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
--'  75  38  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml
-|4,39,75,38,1788330327,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeipa_server_setup.yml"
 
 # History of marks within files (newest to oldest):
+
+> ~/.ansible/tmp/ansible-local-1377qrlor0b1/tmp39wcstt3.yml
+	*	1788467276	0
+	"	1	0
 
 > ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
 	*	1788428716	0

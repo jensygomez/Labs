@@ -206,38 +206,42 @@
     'already exists' not in group_create_result.stderr
 
 # -----------------------------------------------------------------------------
-# PHASE 3: CREATE USERS
+# PHASE 3: CREATE USERS & INITIALIZE KERBEROS KEYS
 # -----------------------------------------------------------------------------
-# NOTA: se removió --gidnumber=<nombre_de_grupo> del comando original — ipa
-# user-add espera un GID numérico ahí, no un nombre de grupo. La pertenencia
-# a grupos ya se resuelve correctamente en la Fase 4 con group-add-member,
-# así que ese parámetro sobraba y además era inválido.
-- name: "Create users"
+- name: "Create users in FreeIPA"
   ansible.builtin.command:
     cmd: >
       ipa user-add {{ item.uid }}
       --first='{{ item.first }}'
       --last='{{ item.last }}'
-      --password
-    stdin: "{{ item.password }}\n{{ item.password }}\n"
   environment:
     KRB5CCNAME: "{{ seed_krb5cc }}"
   loop:
-    - { uid: "jensyg", first: "Jens",  last: "Admin", password: "{{ seed_users_password }}" }
-    - { uid: "dev01",  first: "Dev",   last: "One",   password: "{{ seed_users_password }}" }
-    - { uid: "dev02",  first: "Dev",   last: "Two",   password: "{{ seed_users_password }}" }
-    - { uid: "dba01",  first: "DBA",   last: "One",   password: "{{ seed_users_password }}" }
-    - { uid: "audit01",first: "Audit", last: "One",   password: "{{ seed_users_password }}" }
+    - { uid: "jensyg", first: "Jens",  last: "Admin" }
+    - { uid: "dev01",  first: "Dev",   last: "One" }
+    - { uid: "dev02",  first: "Dev",   last: "Two" }
+    - { uid: "dba01",  first: "DBA",   last: "One" }
+    - { uid: "audit01",first: "Audit", last: "One" }
   register: user_create_result
   changed_when: user_create_result.rc == 0
   failed_when: >
     user_create_result.rc != 0 and
     'already exists' not in user_create_result.stderr
-  no_log: true
 
-# NOTA: seed_users_password (hoy "LabPassword123!") también debería moverse a
-# Ansible Vault en lugar de vivir en texto plano dentro del playbook, sobre
-# todo si este repo se sube a un remoto compartido.
+- name: "Set password and generate Kerberos keys for users"
+  ansible.builtin.shell: |
+    echo "{{ seed_users_password }}" | ipa user-mod {{ item }} --password-file=-
+  environment:
+    KRB5CCNAME: "{{ seed_krb5cc }}"
+  loop:
+    - "jensyg"
+    - "dev01"
+    - "dev02"
+    - "dba01"
+    - "audit01"
+  register: pass_set_result
+  changed_when: pass_set_result.rc == 0
+  no_log: true
 
 # -----------------------------------------------------------------------------
 # PHASE 4: ADD USERS TO GROUPS
