@@ -1,24 +1,24 @@
-==============================================================================
-INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
-==============================================================================
-INCIDENT ID   : 010
-TITLE         : Usuario no puede autenticarse aunque la contraseña es correcta
-TARGET NODE   : Random node from app_nodes (Asymmetric Cluster State)
-TARGET USER   : jensyg (UID 1001, GID 1001, group: sysadmins)
-DIFFICULTY    : 4/10 (L1 Junior)
-ESTIMATED TIME: 2 Hours
-==============================================================================
-SCENARIO CONTEXT:
-The user 'jensyg' is a valid admin user that MUST exist on all app nodes
-with the same UID/GID (1001/1001, group: sysadmins). However, a failed 
-security audit script left the cluster in an ASYMMETRIC state: the account 
-is locked/expired on ONLY ONE random node, while working perfectly on the others.
-The L1 must realize that in an HA cluster, they must check ALL nodes.
-==============================================================================
-
------------------------------------------------------------------------------
-PLAY 1: ENSURE HEALTHY BASELINE ON ALL APP NODES (Real HA Requirement)
------------------------------------------------------------------------------
+# ==============================================================================
+# INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
+# ==============================================================================
+# INCIDENT ID   : 010
+# TITLE         : Usuario no puede autenticarse aunque la contraseña es correcta
+# TARGET NODE   : Random node from app_nodes (Asymmetric Cluster State)
+# TARGET USER   : jensyg (UID 1001, GID 1001, group: sysadmins)
+# DIFFICULTY    : 4/10 (L1 Junior)
+# ESTIMATED TIME: 2 Hours
+# ==============================================================================
+# SCENARIO CONTEXT:
+# The user 'jensyg' is a valid admin user that MUST exist on all app nodes
+# with the same UID/GID (1001/1001, group: sysadmins). However, a failed 
+# security audit script left the cluster in an ASYMMETRIC state: the account 
+# is locked/expired on ONLY ONE random node, while working perfectly on the others.
+# The L1 must realize that in an HA cluster, they must check ALL nodes.
+# ==============================================================================
+---
+# -----------------------------------------------------------------------------
+# PLAY 1: ENSURE HEALTHY BASELINE ON ALL APP NODES (Real HA Requirement)
+# -----------------------------------------------------------------------------
 - name: "Incident 010 - Ensure User Exists on ALL App Nodes (HA Baseline)"
   hosts: app_nodes
   become: yes
@@ -60,9 +60,9 @@ PLAY 1: ENSURE HEALTHY BASELINE ON ALL APP NODES (Real HA Requirement)
         cmd: "passwd -u {{ target_user }}"
       ignore_errors: yes
 
------------------------------------------------------------------------------
-PLAY 2: SELECT RANDOM NODE AND INJECT THE ASYMMETRIC FAULT
------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# PLAY 2: SELECT RANDOM NODE AND INJECT THE ASYMMETRIC FAULT
+# -----------------------------------------------------------------------------
 - name: "Incident 010 - Select Random Target and Inject Fault"
   hosts: localhost
   connection: local
