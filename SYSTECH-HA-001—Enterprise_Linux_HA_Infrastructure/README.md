@@ -269,12 +269,31 @@ Recomendación de conteo:
 | 8 | Nuevo servicio inaccesible desde la red | 4/10 | 2h | Instala/activa un servicio sin abrir el puerto correspondiente en `firewalld`. |
 | 9 | Filesystem montado en modo solo lectura | 4/10 | 2h | Simula un error de disco que fuerza remount `ro`; requiere `fsck` y entender por qué el kernel lo protegió. |
 | 10 | Usuario no puede autenticarse aunque la contraseña es correcta | 4/10 | 2h | Expira la cuenta o la contraseña vía `chage`, o bloquea el usuario con `passwd -l`. |
-| 11 | Apps no pueden leer/escribir en el share compartido | 5/10 | 2h | Reinicia `storage01` de forma abrupta dejando un mount NFS en estado "stale" en los app nodes. |
-| 12 | Un nodo de aplicación va lentísimo | 5/10 | 2h | Lanza un proceso huérfano/zombie en bucle que satura CPU en `app02`. |
-| 13 | La app no logra conectarse a la base de datos | 5/10 | 2h | Cambia `listen_addresses` o una línea de `pg_hba.conf` en `db01` para rechazar conexiones remotas. |
-| 14 | Actualización de paquete rompe un servicio | 5/10 | 2h | Instala una versión con dependencia en conflicto vía `dnf`/`apt`, dejando el servicio sin poder reiniciar. |
-| 15 | El sitio muestra advertencia de certificado inválido | 5/10 | 2h | Deja expirar (o corrompe) el certificado TLS del servidor web. |
-
+✅ 11 — Apps no pueden leer/escribir en el share compartido (stale NFS)
+Alineación: PERFECTA
+Los app_nodes montan /exports/webdata desde storage01 vía NFSv4.
+Si storage01 se reinicia abruptamente, los mounts quedan en estado "Stale file handle".
+El L1 debe: identificar con df -h / mount | grep nfs, hacer umount -f + mount -a, verificar.
+Dificultad 5/10: correcta, porque requiere entender NFS y no es un simple systemctl.
+✅ 12 — Un nodo de aplicación va lentísimo (proceso zombie/saturación CPU)
+Alineación: PERFECTA
+app02 es LXC AlmaLinux 9.
+El L1 debe: usar top/htop/ps auxf, identificar el proceso, matarlo, entender por qué quedó huérfano.
+Dificultad 5/10: correcta.
+✅ 13 — La app no logra conectarse a la base de datos
+Alineación: PERFECTA
+db01 corre PostgreSQL 15 con pg_hba.conf + listen_addresses + firewalld puerto 5432.
+El L1 debe: probar con psql desde app01, revisar pg_hba.conf, listen_addresses, firewalld, logs de PostgreSQL.
+Dificultad 5/10: correcta.
+✅ 14 — Actualización de paquete rompe un servicio
+Alineación: PERFECTA
+AlmaLinux 9 usa dnf. Puede ser httpd, php, php-pgsql con conflicto de dependencias.
+El L1 debe: usar dnf history, rpm -Va, journalctl -u httpd, identificar el paquete roto, hacer downgrade.
+Dificultad 5/10: correcta.
+15 - "Apache devuelve 500 Internal Server Error"
+Qué rompe la IA: Introduce un error de sintaxis en /var/www/html/index.php (PHP compartido vía NFS) o deshabilita el módulo php-pgsql.
+Diagnóstico L1: Revisar /var/log/httpd/error_log, identificar el error PHP, corregir.
+Alineación: ✅ Perfecta, aprovecha el stack PHP+PostgreSQL+Apache ya desplegado.
 ---
 
 ## NIVEL L2 — Mid / Escalamiento L2 (70 horas, dificultad 6–8/10)
