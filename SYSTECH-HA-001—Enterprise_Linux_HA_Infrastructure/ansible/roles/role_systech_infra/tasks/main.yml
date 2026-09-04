@@ -25,8 +25,8 @@
     file: storage_setup.yml
     apply:
       tags: ['storage']
+      throttle: 2
   when: "'storage_nodes' in group_names"
-  throttle: 2
   tags: ['storage']
 
 # B) Database (PostgreSQL)
@@ -35,8 +35,8 @@
     file: database_setup.yml
     apply:
       tags: ['database', 'db']
+      throttle: 2
   when: "'db_nodes' in group_names"
-  throttle: 2
   tags: ['database', 'db']
 
 # C) Application (Apache + PHP)
@@ -45,8 +45,8 @@
     file: web_app_setup.yml
     apply:
       tags: ['web', 'app']
+      throttle: 2
   when: "'app_nodes' in group_names"
-  throttle: 2
   tags: ['web', 'app']
 
 # D) Load Balancers (HAProxy + Keepalived)
@@ -55,8 +55,8 @@
     file: lb_setup.yml
     apply:
       tags: ['lb', 'loadbalancer']
+      throttle: 2
   when: "'lb_nodes' in group_names"
-  throttle: 2
   tags: ['lb', 'loadbalancer']
 
 # E) Clientes (Consumidores de Servicios - Generan Tráfico)
@@ -65,8 +65,8 @@
     file: client01.yml
     apply:
       tags: ['client', 'client01']
+      throttle: 2
   when: "inventory_hostname == 'client01'"
-  throttle: 2
   tags: ['client', 'client01']
 
 - name: "Configurar Cliente 02"
@@ -74,8 +74,8 @@
     file: client02.yml
     apply:
       tags: ['client', 'client02']
+      throttle: 2
   when: "inventory_hostname == 'client02'"
-  throttle: 2
   tags: ['client', 'client02']
 
 - name: "Configurar Cliente 03"
@@ -83,17 +83,17 @@
     file: client03.yml
     apply:
       tags: ['client', 'client03']
+      throttle: 2
   when: "inventory_hostname == 'client03'"
-  throttle: 2
-  tags: ['client', 'client04']
+  tags: ['client', 'client03']
 
 - name: "Configurar Cliente 04"
   ansible.builtin.include_tasks:
     file: client04.yml
     apply:
       tags: ['client', 'client04']
+      throttle: 2
   when: "inventory_hostname == 'client04'"
-  throttle: 2
   tags: ['client', 'client04']
 
 

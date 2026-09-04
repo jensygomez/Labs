@@ -294,6 +294,68 @@ REGLAS DE OBLIGATORIO CUMPLIMIENTO:
 #
 # ==============================================================================
 
+---
+
+## 6️⃣ ADMINISTRACIÓN DE IDENTIDAD, ACCESO Y DNS LOCAL (all nodes)
+
+# ==============================================================================
+# ROL: AUTH, USUARIOS, SUDOERS Y RESOLUCIÓN DNS LOCAL (All Nodes)
+# ==============================================================================
+#
+# APLICADO A: Todos los nodos del clúster (11 nodos + systech-control)
+#
+# PROPÓSITO:
+#   Estandarizar la resolución de nombres, la estructura de grupos de trabajo,
+#   la provisión centralizada de usuarios con contraseñas cifradas (SHA-512)
+#   y las políticas de elevación de privilegios (Sudoers) en toda la infraestructura.
+#
+# 1. RESOLUCIÓN DE NOMBRES LOCAL (/etc/hosts):
+#   Todos los nodos contienen la tabla estática de mapeo de nombres de la infraestructura
+#   bajo el dominio '.systech.local', garantizando conectividad total por FQDN sin depender
+#   de un servidor DNS externo:
+#     - 10.10.10.11 client01 client01.systech.local
+#     - 10.10.10.12 client02 client02.systech.local
+#     - 10.10.10.13 client03 client03.systech.local
+#     - 10.10.10.14 client04 client04.systech.local
+#     - 10.10.10.21 lb01     lb01.systech.local
+#     - 10.10.10.22 lb02     lb02.systech.local
+#     - 10.10.10.31 app01    app01.systech.local
+#     - 10.10.10.32 app02    app02.systech.local
+#     - 10.10.10.33 app03    app03.systech.local
+#     - 10.10.10.40 db01     db01.systech.local
+#     - 10.10.10.50 storage01 storage01.systech.local
+#
+# 2. ESTRUCTURA DE GRUPOS DEL SISTEMA:
+#   Se crean grupos dedicados según la función laboral:
+#     - sysadmins (GID 1001) -> Administradores de infraestructura global.
+#     - webdevs   (GID 1002) -> Desarrolladores del clúster web.
+#     - dbas      (GID 1002 en DB) -> Administradores de base de datos.
+#     - auditors  (GID 1002 en Clientes) -> Personal de auditoría y monitoreo.
+#
+# 3. PROVISIÓN DE USUARIOS Y DISTRIBUCIÓN POR NODOS (target_groups):
+#   - 'jensyg' (UID 1001, Grupo: sysadmins):
+#       * Alcance: Presente en TODOS los nodos de la infraestructura (all).
+#       * Home: /home/jensyg | Shell: /bin/bash
+#   - 'dev01', 'dev02' (UID 1002+, Grupo: webdevs):
+#       * Alcance: Exclusivo en nodos de aplicación ('app_nodes': app01, app02, app03).
+#   - 'dba01' (UID 1002, Grupo: dbas):
+#       * Alcance: Exclusivo en nodo de base de datos ('db_nodes': db01).
+#   - 'audit01' (UID 1002, Grupo: auditors):
+#       * Alcance: Exclusivo en nodos cliente ('client_nodes': client01..04).
+#
+# 4. POLÍTICAS DE SUDOERS (/etc/sudoers.d/):
+#   - Sysadmins (/etc/sudoers.d/sysadmins):
+#       * Grupo '%sysadmins' y usuario 'jensyg' tienen acceso root total en toda la infra:
+#         "jensyg ALL=(ALL) NOPASSWD: ALL" o "ALL=(ALL) ALL"
+#   - DBAs (/etc/sudoers.d/dbas):
+#       * Aplicado en 'db01'. Permite ejecución de comandos de gestión de PostgreSQL,
+#         servicios systemd y gestión del punto de montaje NFS.
+#   - WebDevs (/etc/sudoers.d/webdevs):
+#       * Aplicado en 'app_nodes'. Permite reinicio del servicio 'httpd', gestión de logs
+#         y permisos sobre /var/www/html/.
+#
+# ==============================================================================
+
 # ==============================================================================
 # CLIENT02 — ESCRITURA EN STORAGE (NFS webdata) CON DURACIÓN VARIABLE
 # ==============================================================================

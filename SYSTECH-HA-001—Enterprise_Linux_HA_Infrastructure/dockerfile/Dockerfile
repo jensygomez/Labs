@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y \
     python3 python3-pip python3-venv python3-yaml \
     openssh-client iputils-ping net-tools dnsutils \
     bash-completion vim nano tree htop ripgrep fzf tmux less byobu \
-    graphviz incus-client lsof \ 
+    graphviz incus-client lsof python3-passlib \ 
     tailscale \
     && rm -rf /var/lib/apt/lists/*
 
