@@ -176,7 +176,7 @@
         line: 'echo "WARNING: Account under security review - contact sysadmin@company.com"'
         create: yes
         owner: "{{ target_user }}"
-        group: "{{ target_user }}"
+        group: "sysadmins"
         mode: '0644'
       when: not check_inject.stat.exists
 

@@ -125,6 +125,7 @@
         path: /etc/hosts
         marker: "# {mark} ANSIBLE MANAGED HOSTS (SYSTECH CONTROL NODE)"
         state: absent
+        unsafe_writes: yes
 
     - name: "13 | Display Control Node Cleanup Summary"
       ansible.builtin.debug:
