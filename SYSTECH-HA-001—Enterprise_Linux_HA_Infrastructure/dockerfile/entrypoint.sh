@@ -88,6 +88,13 @@ else
   echo "⚠️ TAILSCALE_AUTH_KEY no encontrada en el Vault. Tailscale no se iniciará."
 fi
 
+# ==========================================
+# CONVENIENCIA PARA TESTING DE LABORATORIO
+# (NO es un secreto real — mismo password ya hasheado en
+# group_vars/all/system_users.yml, público dentro del lab)
+# ==========================================
+export LAB_PASS='LabPassword123!'
+
 # Esto SIEMPRE se ejecuta, haya fallado Tailscale o no
 exec "$@"
 
