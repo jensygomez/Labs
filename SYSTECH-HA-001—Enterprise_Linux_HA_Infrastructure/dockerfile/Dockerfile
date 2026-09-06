@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y \
     openssh-client iputils-ping net-tools dnsutils \
     bash-completion vim nano tree htop ripgrep fzf tmux less byobu \
     graphviz incus-client lsof python3-passlib \
-    tailscale sudo \
+    tailscale sudo sshpass \
     && rm -rf /var/lib/apt/lists/*
 
 # ==========================================
