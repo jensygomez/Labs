@@ -1,133 +1,110 @@
-# ==============================================================================
-# INCIDENT RECOVERY PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
-# ==============================================================================
-# INCIDENT ID   : 010
-# PURPOSE       : Restore the locked/expired user 'jensyg' on target nodes
-#                 and remove the control-node-only /etc/hosts block created
-#                 by incident_010.yml (PLAY 1).
-# NOTE          : Runs against all app_nodes, plus localhost for local cleanup.
-#
-# IMPORTANTE    : Este playbook NO toca la resolución DNS de la infraestructura
-#                 remota (marker "ANSIBLE MANAGED HOSTS" sin sufijo) — esa la
-#                 gestiona dns01.yml y es persistente, no parte del incidente.
-#                 Solo se remueve el bloque exclusivo del CONTROL NODE.
-# ==============================================================================
-
-# -----------------------------------------------------------------------------
-# PLAY 1: RECOVER REMOTE APP NODES
-# -----------------------------------------------------------------------------
-- name: "Recovery 010 | Restore Locked/Expired User on Remote Nodes"
+==============================================================================
+INCIDENT RECOVERY PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
+==============================================================================
+INCIDENT ID   : 011
+PURPOSE       : Recover stale NFS mount on target node, clean decoys, 
+                and restore infrastructure to pre-incident state.
+NOTE          : Runs against all app_nodes (checks marker), plus localhost.
+==============================================================================
+-----------------------------------------------------------------------------
+PLAY 1: RECOVER REMOTE APP NODES
+-----------------------------------------------------------------------------
+- name: "Recovery 011 | Recover Stale NFS Mount on Remote Nodes"
   hosts: app_nodes
   become: yes
   vars:
-    incident_id: "010"
+    incident_id: "011"
     marker_file: "/var/run/.incident_{{ incident_id }}_marker"
-    target_user: "jensyg"
-
+    nfs_mount: "/var/www/html"
   tasks:
     - name: "01 | Check if incident marker exists on this node"
       ansible.builtin.stat:
         path: "{{ marker_file }}"
       register: check_inject
 
-    - name: "02 | Unlock the user password"
+    - name: "02 | Force lazy unmount of stale NFS mount"
       ansible.builtin.command:
-        cmd: "passwd -u {{ target_user }}"
-      register: unlock_result
+        cmd: "umount -l {{ nfs_mount }}"
+      register: umount_result
+      failed_when: umount_result.rc != 0 and 'not mounted' not in umount_result.stderr
       when: check_inject.stat.exists
 
-    - name: "03 | Remove account expiration (set to never)"
+    - name: "03 | Remount all filesystems from /etc/fstab"
       ansible.builtin.command:
-        cmd: "chage -E -1 {{ target_user }}"
+        cmd: "mount -a"
+      register: mount_result
       when: check_inject.stat.exists
 
-    - name: "04 | Remove fake security audit log"
-      ansible.builtin.file:
-        path: /var/log/security_audit.log
-        state: absent
+    - name: "04 | Verify NFS mount is active and responsive"
+      ansible.builtin.command:
+        cmd: "df -h {{ nfs_mount }}"
+      register: df_check
+      changed_when: false
       when: check_inject.stat.exists
 
-    - name: "05 | Remove fake PAM debug log"
-      ansible.builtin.file:
-        path: /var/log/pam_debug.log
-        state: absent
-      when: check_inject.stat.exists
-
-    - name: "06 | Remove misleading .bashrc entry"
+    - name: "05 | Remove misleading comment from /etc/fstab"
       ansible.builtin.lineinfile:
-        path: "/home/{{ target_user }}/.bashrc"
-        regexp: "^echo.*WARNING.*Account under security review"
+        path: /etc/fstab
+        regexp: "^# WARNING: NFS mount unstable"
         state: absent
       when: check_inject.stat.exists
 
-    - name: "07 | Restore original /etc/passwd comment field"
-      ansible.builtin.user:
-        name: "{{ target_user }}"
-        comment: ""
+    - name: "06 | Remove fake NFS timeout logs from /var/log/messages"
+      ansible.builtin.lineinfile:
+        path: /var/log/messages
+        regexp: "NFS: server 10.10.10.50 not responding"
+        state: absent
       when: check_inject.stat.exists
 
-    - name: "08 | Verify user status is now PS (Password Set, usable)"
-      ansible.builtin.command:
-        cmd: "passwd -S {{ target_user }}"
-      register: final_status
-      changed_when: false
+    - name: "07 | Remove misleading Apache error log entry"
+      ansible.builtin.lineinfile:
+        path: /var/log/httpd/error_log
+        regexp: "AH00035: access to /index.php denied"
+        state: absent
       when: check_inject.stat.exists
 
-    - name: "09 | Verify account expiration is never"
-      ansible.builtin.command:
-        cmd: "chage -l {{ target_user }}"
-      register: final_chage
-      changed_when: false
-      when: check_inject.stat.exists
-
-    - name: "10 | Remove the incident marker file"
+    - name: "08 | Remove the incident marker file"
       ansible.builtin.file:
         path: "{{ marker_file }}"
         state: absent
       when: check_inject.stat.exists
 
-    - name: "11 | Display Recovery Summary"
+    - name: "09 | Display Recovery Summary"
       ansible.builtin.debug:
         msg: |
           =========================================
-          INCIDENT 010 SUCCESSFULLY RECOVERED
+          INCIDENT 011 SUCCESSFULLY RECOVERED
           =========================================
           Target Node : {{ inventory_hostname }}
-          Target User : {{ target_user }}
-
-          passwd -S   : {{ final_status.stdout }}
-          chage -l    : {{ final_chage.stdout_lines | select('match', '.*expires.*') | list }}
-
+          Mount Point : {{ nfs_mount }}
+          df -h Output: {{ df_check.stdout_lines }}
+          
           CLEANUP COMPLETED ON REMOTE NODE:
-          - Password unlocked.
-          - Account expiration removed.
-          - Fake security audit log removed.
-          - Fake PAM debug log removed.
-          - Misleading .bashrc warning removed.
-          - /etc/passwd comment field restored.
+          - Stale NFS mount force-unmounted and remounted.
+          - Fake /etc/fstab warning removed.
+          - Fake /var/log/messages NFS errors removed.
+          - Misleading Apache error_log entry removed.
           - Marker file cleaned up.
           =========================================
       when: check_inject.stat.exists
 
-# -----------------------------------------------------------------------------
-# PLAY 2: CLEAN LOCAL CONTROL NODE (/etc/hosts)
-# Remueve exclusivamente el bloque agregado por incident_010.yml PLAY 1,
-# identificado por su marker exacto. No toca el bloque de dns01.yml.
-# -----------------------------------------------------------------------------
-- name: "Recovery 010 | Clean Local Control Node (/etc/hosts)"
+-----------------------------------------------------------------------------
+PLAY 2: CLEAN LOCAL CONTROL NODE (/etc/hosts)
+-----------------------------------------------------------------------------
+- name: "Recovery 011 | Clean Local Control Node (/etc/hosts)"
   hosts: localhost
   connection: local
   become: yes
   gather_facts: false
   tasks:
-    - name: "12 | Remove control-node /etc/hosts block added by incident_010.yml"
+    - name: "10 | Remove control-node /etc/hosts block"
       ansible.builtin.blockinfile:
         path: /etc/hosts
         marker: "# {mark} ANSIBLE MANAGED HOSTS (SYSTECH CONTROL NODE)"
         state: absent
         unsafe_writes: yes
 
-    - name: "13 | Display Control Node Cleanup Summary"
+    - name: "11 | Display Control Node Cleanup Summary"
       ansible.builtin.debug:
         msg: |
           =========================================
@@ -135,9 +112,4 @@
           =========================================
           Removed block marked:
           'ANSIBLE MANAGED HOSTS (SYSTECH CONTROL NODE)'
-
-          Nota: el bloque de dns01.yml (marker sin sufijo,
-          aplicado a hosts: all en la infraestructura remota)
-          NO fue tocado — es configuración persistente,
-          no parte del incidente.
           =========================================

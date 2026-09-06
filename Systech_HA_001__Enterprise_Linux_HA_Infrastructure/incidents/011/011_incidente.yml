@@ -1,48 +1,21 @@
-# ==============================================================================
-# INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
-# ==============================================================================
-# PREREQUISITOS DE PLATAFORMA (ejecutar ANTES de cualquier incident_XXX.yml):
-#
-#   1. setup_users.yml
-#      - Crea grupos, usuarios y reglas sudoers desde group_vars/all/system_users.yml
-#      - 'jensyg' ya viene definido ahí con target_groups: ["all"] y password
-#        real vía default_user_password ('LabPassword123!' hasheado con salt fijo)
-#      - NO recrear usuarios dentro de un playbook de incidente: ya están sanos.
-#
-#   2. dns01.yml
-#      - Configura /etc/hosts en TODOS los nodos de la infraestructura
-#        (hosts: all) desde el inventario dinámico.
-#      - NO duplicar esta tarea dentro de un playbook de incidente.
-#
-#   Un incident_XXX.yml SOLO debe encargarse de:
-#     a) Resolución DNS del CONTROL NODE (dns01.yml no lo cubre, corre contra
-#        'hosts: all' del inventario, no contra 'localhost').
-#     b) Seleccionar el/los nodo(s) objetivo.
-#     c) Inyectar el fallo puntual del escenario.
-#     d) Decoys/logs realistas para practicar troubleshooting.
-#
-# ==============================================================================
-# RESUMEN DE EJECUCIÓN (LÓGICA DEL INCIDENTE 010):
-# 1. RESOLUCIÓN DE NOMBRES EN EL CONTROL NODE (PLAY 1): Actualiza /etc/hosts
-#    localmente para permitir troubleshooting por nombre DNS desde el control node.
-# 2. SELECCIÓN ALEATORIA (PLAY 2): Elige UN SOLO nodo al azar del grupo 'app_nodes' 
-#    para crear un estado asimétrico en el clúster HA.
-# 3. INYECCIÓN DEL FALLO (PLAY 3): Bloquea la contraseña y expira la cuenta únicamente
-#    en el nodo seleccionado e inyecta los logs/falsos distractores (incluye tarea 57).
-# ==============================================================================
-# INCIDENT ID    : 010
-# TITLE          : Usuario no puede autenticarse aunque la contraseña es correcta
-# TARGET NODE    : Random node from app_nodes (Asymmetric Cluster State)
-# TARGET USER    : jensyg (definido en group_vars/all/system_users.yml)
-# DIFFICULTY     : 4/10 (L1 Junior)
-# ESTIMATED TIME : 2 Hours
-# ==============================================================================
 ---
-# -----------------------------------------------------------------------------
-# PLAY 1: POPULATE /ETC/HOSTS ON THE CONTROL NODE ITSELF
-# (La resolución DNS de la infraestructura remota ya la gestiona dns01.yml)
-# -----------------------------------------------------------------------------
-- name: "Incident 010 - Ensure Name Resolution on Control Node"
+
+
+
+
+==============================================================================
+INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
+==============================================================================
+INCIDENT ID    : 011
+TITLE          : Apps no pueden leer/escribir en el share compartido (stale NFS)
+TARGET NODE    : Random node from app_nodes (Asymmetric Cluster State)
+DIFFICULTY     : 5/10 (L1 Junior/Mid)
+ESTIMATED TIME : 2 Hours
+==============================================================================
+-----------------------------------------------------------------------------
+PLAY 1: POPULATE /ETC/HOSTS ON THE CONTROL NODE ITSELF
+-----------------------------------------------------------------------------
+- name: "Incident 011 - Ensure Name Resolution on Control Node"
   hosts: localhost
   connection: local
   become: yes
@@ -60,17 +33,16 @@
           {% endif %}
           {% endfor %}
 
-# -----------------------------------------------------------------------------
-# PLAY 2: SELECT RANDOM NODE AND INJECT THE ASYMMETRIC FAULT
-# -----------------------------------------------------------------------------
-- name: "Incident 010 - Select Random Target and Inject Fault"
+-----------------------------------------------------------------------------
+PLAY 2: SELECT RANDOM NODE AND INJECT THE ASYMMETRIC FAULT
+-----------------------------------------------------------------------------
+- name: "Incident 011 - Select Random Target and Inject Fault"
   hosts: localhost
   connection: local
   gather_facts: false
   become: no
   vars:
     target_group: "app_nodes"
-
   tasks:
     - name: "10 | Pick random target from {{ target_group }}"
       ansible.builtin.set_fact:
@@ -79,18 +51,17 @@
     - name: "20 | Add target to dynamic group"
       ansible.builtin.add_host:
         name: "{{ target_node }}"
-        groups: incident_010_target
+        groups: incident_011_target
 
-- name: "Incident 010 | Inject Locked and Expired User on Single Node"
-  hosts: incident_010_target
+- name: "Incident 011 | Inject Stale NFS Handle on Single Node"
+  hosts: incident_011_target
   become: yes
   vars:
-    incident_id: "010"
+    incident_id: "011"
     marker_file: "/var/run/.incident_{{ incident_id }}_marker"
-    target_user: "jensyg"
-
+    storage_ip: "10.10.10.50"
   tasks:
-    # --- Marker Guard ---
+    --- Marker Guard ---
     - name: "30 | Check if incident was already injected"
       ansible.builtin.stat:
         path: "{{ marker_file }}"
@@ -108,115 +79,91 @@
         mode: '0644'
       when: not check_inject.stat.exists
 
-    # --- INJECT THE FAULT (Only on this random node) ---
-    - name: "40 | Lock the user password (Asymmetric Fault)"
-      ansible.builtin.command:
-        cmd: "passwd -l {{ target_user }}"
+    --- INJECT THE FAULT (Simulate Storage Blip & Stale Handle) ---
+    - name: "40 | Block outgoing NFS traffic to storage01 temporarily"
+      ansible.posix.firewalld:
+        rich_rule: 'rule family="ipv4" destination address="{{ storage_ip }}" port port="2049" protocol="tcp" drop'
+        permanent: false
+        immediate: true
+        state: enabled
       when: not check_inject.stat.exists
 
-    - name: "41 | Expire the account in the past (Asymmetric Fault)"
-      ansible.builtin.command:
-        cmd: "chage -E 2020-01-01 {{ target_user }}"
+    - name: "41 | Trigger background I/O to force kernel stale state"
+      ansible.builtin.shell:
+        cmd: "cat /var/www/html/index.php > /dev/null 2>&1 &"
+      changed_when: false
       when: not check_inject.stat.exists
 
-    # --- DECOYS & LOGS (Enhanced Realism) ---
-    - name: "50 | Ensure /var/log/secure exists before writing"
+    - name: "42 | Wait for kernel to mark mount as stale"
+      ansible.builtin.wait_for:
+        timeout: 8
+      when: not check_inject.stat.exists
+
+    - name: "43 | Remove firewall rule (mount remains stale until remounted)"
+      ansible.posix.firewalld:
+        rich_rule: 'rule family="ipv4" destination address="{{ storage_ip }}" port port="2049" protocol="tcp" drop'
+        permanent: false
+        immediate: true
+        state: disabled
+      when: not check_inject.stat.exists
+
+    --- DECOYS & LOGS (Enhanced Realism) ---
+    - name: "50 | Ensure /var/log/messages exists before writing"
       ansible.builtin.file:
-        path: /var/log/secure
+        path: /var/log/messages
         state: touch
-        mode: '0600'
+        mode: '0644'
       when: not check_inject.stat.exists
 
-    - name: "51 | Generate realistic auth failure logs"
+    - name: "51 | Inject fake NFS timeout logs in /var/log/messages"
       ansible.builtin.lineinfile:
-        path: /var/log/secure
+        path: /var/log/messages
         line: "{{ item }}"
         create: yes
-        mode: '0600'
+        mode: '0644'
       loop:
-        - "{{ '%b %d %H:%M:%S' | strftime }} {{ inventory_hostname }} sshd[{{ 10000 | random }}]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=10.10.10.11 user={{ target_user }}"
-        - "{{ '%b %d %H:%M:%S' | strftime }} {{ inventory_hostname }} sshd[{{ 10000 | random }}]: Account {{ target_user }} has expired"
-        - "{{ '%b %d %H:%M:%S' | strftime }} {{ inventory_hostname }} sshd[{{ 10000 | random }}]: Failed password for {{ target_user }} from 10.10.10.11 port {{ 40000 | random }} ssh2"
+        - "{{ '%b %d %H:%M:%S' | strftime }} {{ inventory_hostname }} kernel: NFS: server {{ storage_ip }} not responding, still trying"
+        - "{{ '%b %d %H:%M:%S' | strftime }} {{ inventory_hostname }} kernel: nfs: server {{ storage_ip }} not responding, timed out"
       when: not check_inject.stat.exists
 
-    - name: "51b | Look up current UID/GID for target_user"
-      ansible.builtin.getent:
-        database: passwd
-        key: "{{ target_user }}"
+    - name: "52 | Ensure Apache error log exists before writing"
+      ansible.builtin.file:
+        path: /var/log/httpd/error_log
+        state: touch
+        mode: '0644'
       when: not check_inject.stat.exists
 
-    - name: "52 | Add misleading comment to /etc/passwd"
+    - name: "53 | Inject misleading 'Permission denied' in Apache logs"
       ansible.builtin.lineinfile:
-        path: /etc/passwd
-        regexp: "^{{ target_user }}:"
-        line: "{{ target_user }}:x:{{ ansible_facts.getent_passwd[target_user][1] }}:{{ ansible_facts.getent_passwd[target_user][2] }}:Admin Account - UNDER SECURITY REVIEW:/home/{{ target_user }}:/bin/bash"
+        path: /var/log/httpd/error_log
+        line: "[Mon Sep 06 02:15:00.123456 2026] [core:error] [pid 1234] (13)Permission denied: [client 10.10.10.11:54321] AH00035: access to /index.php denied"
+        create: yes
+        mode: '0644'
+      when: not check_inject.stat.exists
+
+    - name: "54 | Add misleading comment to /etc/fstab"
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        line: "# WARNING: NFS mount unstable - use local storage instead"
         state: present
       when: not check_inject.stat.exists
 
-    - name: "53 | Create fake security audit log"
-      ansible.builtin.copy:
-        dest: /var/log/security_audit.log
-        content: |
-          [2026-09-01 22:15:33] SECURITY AUDIT - Credential Rotation
-          User 'jensyg' flagged for review. Action taken: Account locked.
-          Note: Script execution halted unexpectedly at 22:16:01.
-          Next steps: Manual verification required on all cluster nodes.
-        mode: '0644'
-      when: not check_inject.stat.exists
-
-    - name: "54 | Manipulate lastlog to show suspicious last login"
-      ansible.builtin.command:
-        cmd: "lastlog -u {{ target_user }} -t 365"
-      ignore_errors: yes
-      when: not check_inject.stat.exists
-
-    - name: "55 | Create misleading .bashrc entry"
-      ansible.builtin.lineinfile:
-        path: "/home/{{ target_user }}/.bashrc"
-        line: 'echo "WARNING: Account under security review - contact sysadmin@company.com"'
-        create: yes
-        owner: "{{ target_user }}"
-        group: "sysadmins"
-        mode: '0644'
-      when: not check_inject.stat.exists
-
-    - name: "56 | Create fake PAM debug log"
-      ansible.builtin.copy:
-        dest: /var/log/pam_debug.log
-        content: |
-          [2026-09-01 22:16:00] pam_unix(sshd:auth): user={{ target_user }} account expired
-          [2026-09-01 22:16:00] pam_unix(sshd:auth): authentication failure
-          [2026-09-01 22:16:01] Script terminated - manual intervention required
-        mode: '0644'
-      when: not check_inject.stat.exists
-
-    - name: "57 | <DESCRIPCION_DE_TU_NUEVA_TAREA>"
-      # Reemplaza este bloque con el módulo y los argumentos de tu tarea
-      ansible.builtin.debug:
-        msg: "Ejecutando tarea personalizada de inyección"
-      when: not check_inject.stat.exists
-
-    # --- FINALIZE ---
+    --- FINALIZE ---
     - name: "60 | Display Injection Summary"
       ansible.builtin.debug:
         msg: |
           =========================================
-          INCIDENT 010 SUCCESSFULLY INJECTED
+          INCIDENT 011 SUCCESSFULLY INJECTED
           =========================================
           Target Node : {{ inventory_hostname }} (ASYMMETRIC STATE)
-          Target User : {{ target_user }}
+          Storage IP  : {{ storage_ip }}
           
-          The user is LOCKED and EXPIRED ONLY ON THIS NODE.
-          The user remains HEALTHY on the other app_nodes.
-          
-          L1 must check all nodes to detect the asymmetry.
+          The NFS mount /var/www/html is now STALE on this node.
+          Other app_nodes remain HEALTHY.
           
           DECOYS INJECTED:
-          - Misleading /etc/passwd comment
-          - Fake security audit log
-          - Fake PAM debug log
-          - Misleading .bashrc warning
-          - Realistic auth failure logs in /var/log/secure
-          - <NUEVA_TAREA_INYECTADA_AQUI>
+          - Fake NFS timeout logs in /var/log/messages
+          - Misleading 'Permission denied' in Apache error_log
+          - Fake warning comment in /etc/fstab
           =========================================
       when: not check_inject.stat.exists
