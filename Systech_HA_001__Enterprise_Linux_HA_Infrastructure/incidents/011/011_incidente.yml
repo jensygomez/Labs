@@ -41,10 +41,10 @@
 # ==============================================================================
 ---
 
------------------------------------------------------------------------------
-PLAY 1: POPULATE /ETC/HOSTS ON THE CONTROL NODE ITSELF
-(La resolución DNS de la infraestructura remota ya la gestiona dns01.yml)
------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# PLAY 1: POPULATE /ETC/HOSTS ON THE CONTROL NODE ITSELF
+# (La resolución DNS de la infraestructura remota ya la gestiona dns01.yml)
+# -----------------------------------------------------------------------------
 - name: "Incident 011 - Ensure Name Resolution on Control Node"
   hosts: localhost
   connection: local
@@ -63,9 +63,9 @@ PLAY 1: POPULATE /ETC/HOSTS ON THE CONTROL NODE ITSELF
           {% endif %}
           {% endfor %}
 
------------------------------------------------------------------------------
-PLAY 2: SELECT RANDOM NODE AND INJECT THE ASYMMETRIC FAULT
------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# PLAY 2: SELECT RANDOM NODE AND INJECT THE ASYMMETRIC FAULT
+# -----------------------------------------------------------------------------
 - name: "Incident 011 - Select Random Target and Inject Fault"
   hosts: localhost
   connection: local
@@ -92,7 +92,7 @@ PLAY 2: SELECT RANDOM NODE AND INJECT THE ASYMMETRIC FAULT
     storage_ip: "10.10.10.50"
     nfs_mount: "/var/www/html"
   tasks:
-    --- Marker Guard ---
+    #  --- Marker Guard ---
     - name: "30 | Check if incident was already injected"
       ansible.builtin.stat:
         path: "{{ marker_file }}"
@@ -110,7 +110,7 @@ PLAY 2: SELECT RANDOM NODE AND INJECT THE ASYMMETRIC FAULT
         mode: '0644'
       when: not check_inject.stat.exists
 
-    --- INJECT THE FAULT (Simulate Storage Blip & Stale Handle) ---
+    # --- INJECT THE FAULT (Simulate Storage Blip & Stale Handle) ---
     - name: "40 | Block outgoing NFS traffic to storage01 temporarily"
       ansible.posix.firewalld:
         rich_rule: 'rule family="ipv4" destination address="{{ storage_ip }}" port port="2049" protocol="tcp" drop'
@@ -138,7 +138,7 @@ PLAY 2: SELECT RANDOM NODE AND INJECT THE ASYMMETRIC FAULT
         state: disabled
       when: not check_inject.stat.exists
 
-    --- DECOYS & LOGS (Enhanced Realism) ---
+    #  --- DECOYS & LOGS (Enhanced Realism) ---
     - name: "50 | Ensure /var/log/messages exists before writing"
       ansible.builtin.file:
         path: /var/log/messages
@@ -179,7 +179,7 @@ PLAY 2: SELECT RANDOM NODE AND INJECT THE ASYMMETRIC FAULT
         state: present
       when: not check_inject.stat.exists
 
-    --- FINALIZE ---
+    #  --- FINALIZE ---
     - name: "60 | Display Injection Summary"
       ansible.builtin.debug:
         msg: |
