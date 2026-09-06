@@ -1,0 +1,132 @@
+Module,Title,Difficulty,Level,Duration,Date
+Introduction,Course Introduction,1,L1,2,2026-05-01
+Introduction,Certification Details,1,L1,2,2026-05-02
+Introduction,Article - GitHub Repository,1,L1,0,2026-05-03
+Introduction,Article - How to Reach Out to KodeKloud and Engage with the Community,1,L1,0,2026-05-04
+Administer Identity,Module Introduction,1,L1,6,2026-05-05
+Administer Identity,Introduction to Microsoft Entra ID,1,L1,3,2026-05-06
+Administer Identity,Microsoft Entra ID concepts,1,L1,3,2026-05-07
+Administer Identity,Microsoft Entra ID vs Active Directory Domain Services,1,L1,3,2026-05-08
+Administer Identity,Microsoft Entra ID Editions,1,L1,4,2026-05-09
+Administer Identity,Configure device identities,1,L1,5,2026-05-10
+Administer Identity,User Accounts,1,L1,11,2026-05-11
+Administer Identity,Bulk Operations,1,L1,9,2026-05-12
+Administer Identity,Group Accounts,1,L1,13,2026-05-13
+Administer Identity,Self service password reset (SSPR),1,L1,10,2026-05-14
+Administer Identity,Multi tenant environments,1,L1,4,2026-05-15
+Administer Identity,Lab - Quiz: Administer Identity,3,L1,15,2026-05-16
+Administer Identity,Article - Couse Resources,1,L1,0,2026-05-17
+Administer Identity,Article - Notes available at KodeKloud Notes,1,L1,0,2026-05-18
+Administer Governance and Compliance,Module Introduction,1,L1,2,2026-05-19
+Administer Governance and Compliance,Managing subscriptions,1,L1,9,2026-05-20
+Administer Governance and Compliance,Resource Groups and Limits,1,L1,10,2026-05-21
+Administer Governance and Compliance,Understanding the hierarchy,1,L1,5,2026-05-22
+Administer Governance and Compliance,Azure Resource Tags,1,L1,8,2026-05-23
+Administer Governance and Compliance,Lab - Azure Resource Tags,2,L1,15,2026-05-24
+Administer Governance and Compliance,Azure Resource Locks,1,L1,7,2026-05-25
+Administer Governance and Compliance,Manage costs,1,L1,20,2026-05-26
+Administer Governance and Compliance,Azure Policy,1,L1,19,2026-05-27
+Administer Governance and Compliance,Configuring Initiatives,1,L1,15,2026-05-28
+Administer Governance and Compliance,Role Based Access Control,1,L1,16,2026-05-29
+Administer Governance and Compliance,Azure RBAC vs Microsoft Entra ID Roles,1,L1,7,2026-05-30
+Administer Governance and Compliance,Lab - Quiz Administer Governance and Compliance,3,L1,15,2026-05-31
+Administer Azure Resources,Module introduction,1,L1,2,2026-06-01
+Administer Azure Resources,Compare Administrator Tools,1,L1,9,2026-06-02
+Administer Azure Resources,Azure Resource Manager,1,L1,2,2026-06-03
+Administer Azure Resources,Azure Resource Manager Templates,1,L1,5,2026-06-04
+Administer Azure Resources,ARM template structure,1,L1,19,2026-06-05
+Administer Azure Resources,Lab - ARM Template Structure,2,L1,20,2026-06-06
+Administer Azure Resources,Azure Bicep,1,L1,11,2026-06-07
+Administer Azure Resources,Lab - Azure Bicep,2,L1,20,2026-06-08
+Administer Azure Resources,Lab - Quiz Administer Azure Resources,3,L1,15,2026-06-09
+Administer Virtual Networking,Module Introduction,1,L1,1,2026-06-10
+Administer Virtual Networking,Creating and configuring virtual networks,1,L1,8,2026-06-11
+Administer Virtual Networking,Lab - Creating And Configuring Virtual Network,2,L1,20,2026-06-12
+Administer Virtual Networking,Private and Public IP addresses,1,L1,12,2026-06-13
+Administer Virtual Networking,Lab - Private And Public Ip Addresses,2,L1,15,2026-06-14
+Administer Virtual Networking,Network Security Groups,1,L1,27,2026-06-15
+Administer Virtual Networking,Application Security Groups,1,L1,15,2026-06-16
+Administer Virtual Networking,Azure DNS,1,L1,7,2026-06-17
+Administer Virtual Networking,Private DNS Zones,1,L1,12,2026-06-18
+Administer Virtual Networking,Lab - Quiz - Administer Virtual Networking,3,L1,15,2026-06-19
+Administer Intersite Connectivity,Module Introduction,1,L1,1,2026-06-20
+Administer Intersite Connectivity,Intersite connectivity,1,L1,4,2026-06-21
+Administer Intersite Connectivity,Virtual Network Peering,1,L1,8,2026-06-22
+Administer Intersite Connectivity,Lab - Virtual Network Peering,2,L1,15,2026-06-23
+Administer Intersite Connectivity,VPN Gateway,1,L1,8,2026-06-24
+Administer Intersite Connectivity,Site-to-Site and Point-to-Site,1,L1,7,2026-06-25
+Administer Intersite Connectivity,Gateway Transit,1,L1,6,2026-06-26
+Administer Intersite Connectivity,User Defined Routes,1,L1,8,2026-06-27
+Administer Intersite Connectivity,Service Endpoints,1,L1,12,2026-06-28
+Administer Intersite Connectivity,Private Endpoint,1,L1,11,2026-06-29
+Administer Intersite Connectivity,Lab - Quiz - Administer Intersite Connectivity,3,L1,15,2026-06-30
+Administer Network Traffic,Module Introduction,1,L1,1,2026-07-01
+Administer Network Traffic,Azure Load Balancer,1,L1,7,2026-07-02
+Administer Network Traffic,Load Balancer Rules,1,L1,2,2026-07-03
+Administer Network Traffic,Session Persistence,1,L1,10,2026-07-04
+Administer Network Traffic,Lab - Session Persistence,2,L1,15,2026-07-05
+Administer Network Traffic,Azure Application Gateway,1,L1,3,2026-07-06
+Administer Network Traffic,Application Gateway components,1,L1,3,2026-07-07
+Administer Network Traffic,Routing Rules,1,L1,12,2026-07-08
+Administer Network Traffic,Other load balancing solutions,1,L1,4,2026-07-09
+Administer Network Traffic,Network Watcher,1,L1,8,2026-07-10
+Administer Network Traffic,Lab - Quiz - Administer Network Traffic,3,L1,15,2026-07-11
+Administer Azure Storage,Module Introduction,1,L1,1,2026-07-12
+Administer Azure Storage,Storage accounts,1,L1,9,2026-07-13
+Administer Azure Storage,Storage redundancy,1,L1,10,2026-07-14
+Administer Azure Storage,Accessing storage endpoints,1,L1,3,2026-07-15
+Administer Azure Storage,Azure Containers,1,L1,8,2026-07-16
+Administer Azure Storage,Lab - Azure Containers,2,L1,15,2026-07-17
+Administer Azure Storage,Storage Tiers,1,L1,4,2026-07-18
+Administer Azure Storage,Lifecycle Management,1,L1,4,2026-07-19
+Administer Azure Storage,Creating Azure File Share,1,L1,4,2026-07-20
+Administer Azure Storage,Securing storage endpoints,1,L1,2,2026-07-21
+Administer Azure Storage,Storage Service Encryption (SSE) and Azure Disk Encryption (ADE),1,L1,4,2026-07-22
+Administer Azure Storage,Configuring storage access,1,L1,2,2026-07-23
+Administer Azure Storage,Storage Account Access Keys,1,L1,1,2026-07-24
+Administer Azure Storage,Shared Access Signatures,1,L1,8,2026-07-25
+Administer Azure Storage,Microsoft Entra ID Authentication,1,L1,8,2026-07-26
+Administer Azure Storage,Lab - Quiz - Administer Azure Storage,3,L1,15,2026-07-27
+Administer Azure Virtual Machines,Module Introduction,1,L1,0,2026-07-28
+Administer Azure Virtual Machines,Planning VMs,1,L1,4,2026-07-29
+Administer Azure Virtual Machines,Managing VM sizes,1,L1,2,2026-07-30
+Administer Azure Virtual Machines,Virtual Machine Storage,1,L1,3,2026-07-31
+Administer Azure Virtual Machines,Creating VMs,1,L1,7,2026-08-01
+Administer Azure Virtual Machines,Lab - Creating VMs,2,L1,20,2026-08-02
+Administer Azure Virtual Machines,Connecting to VMs,1,L1,8,2026-08-03
+Administer Azure Virtual Machines,Configuring high availability,1,L1,11,2026-08-04
+Administer Azure Virtual Machines,Deploying Virtual Machine Scale Sets,1,L1,13,2026-08-05
+Administer Azure Virtual Machines,Lab - Quiz - Administer Azure Virtual Machines,3,L1,15,2026-08-06
+Administer PaaS Compute Options,Module Introduction,1,L1,3,2026-08-07
+Administer PaaS Compute Options,App Service Plans,1,L1,11,2026-08-08
+Administer PaaS Compute Options,Deploying App Service,1,L1,6,2026-08-09
+Administer PaaS Compute Options,Lab - Deploying App Service,2,L1,20,2026-08-10
+Administer PaaS Compute Options,Securing App Service,1,L1,9,2026-08-11
+Administer PaaS Compute Options,Custom Domains,1,L1,3,2026-08-12
+Administer PaaS Compute Options,Backup App Service,1,L1,1,2026-08-13
+Administer PaaS Compute Options,CI/CD and Deployment slots,1,L1,17,2026-08-14
+Administer PaaS Compute Options,Azure Container Instances,1,L1,11,2026-08-15
+Administer PaaS Compute Options,Container Groups,1,L1,3,2026-08-16
+Administer PaaS Compute Options,Manage Containers with Azure Container Apps,1,L1,6,2026-08-17
+Administer PaaS Compute Options,Lab - Quiz - Administer PaaS Compute Options,3,L1,15,2026-08-18
+Administer Data Protection,Module introduction,1,L1,1,2026-08-19
+Administer Data Protection,Azure Backup,1,L1,3,2026-08-20
+Administer Data Protection,Azure Backup Center,1,L1,2,2026-08-21
+Administer Data Protection,File and Folder Backup,1,L1,19,2026-08-22
+Administer Data Protection,Configuring backup – Azure VM,1,L1,12,2026-08-23
+Administer Data Protection,Configuring backup – non-Azure VM,1,L1,3,2026-08-24
+Administer Data Protection,Compare Backup Options,1,L1,2,2026-08-25
+Administer Data Protection,Manage Soft Delete,1,L1,3,2026-08-26
+Administer Data Protection,Azure Site Recovery,1,L1,10,2026-08-27
+Administer Data Protection,Lab - Quiz - Administer Data Protection,3,L1,15,2026-08-28
+Administer Monitoring,Module Introduction,1,L1,1,2026-08-29
+Administer Monitoring,Azure Monitor,1,L1,9,2026-08-30
+Administer Monitoring,Azure Activity Logs,1,L1,8,2026-08-31
+Administer Monitoring,Enable Log Analytics Workspace,1,L1,4,2026-09-01
+Administer Monitoring,Querying Log Analytics Workspace,1,L1,17,2026-09-02
+Administer Monitoring,Azure Alerts,1,L1,19,2026-09-03
+Administer Monitoring,Lab - Quiz - Administer Monitoring,3,L1,15,2026-09-04
+Mock Exam,Lab - Case Study 1,2,L1,30,2026-09-05
+Mock Exam,Lab - Case Study 2,2,L1,30,2026-09-06
+Mock Exam,Lab - Mock Exam - AZ 104,3,L1,60,2026-09-07
+Mock Exam,Article - Useful Links,1,L1,0,2026-09-08
