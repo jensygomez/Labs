@@ -14,6 +14,11 @@
     name: httpd
     state: restarted
 
+- name: "Reiniciar SSHD"
+  ansible.builtin.systemd:
+    name: sshd
+    state: restarted
+
 - name: "Reiniciar HAProxy"
   ansible.builtin.systemd:
     name: haproxy
@@ -23,7 +28,7 @@
   ansible.builtin.systemd:
     name: keepalived
     state: restarted
-    
+
 - name: "Reiniciar Apache"
   ansible.builtin.systemd:
     name: apache2
