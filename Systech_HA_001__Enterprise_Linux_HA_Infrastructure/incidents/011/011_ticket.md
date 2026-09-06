@@ -1,50 +1,80 @@
 ======================================================================
-TICKET ID: OPS-1103 | SEVERITY: P2 (Access / Operational Impact)
-REPORTED BY: Priya S. (NOC L1 - EMEA Shift)
-TIME: 10:42 AM CEST (Assigned to L1 Day Shift)
-SUMMARY: Intermittent authentication failures for admin user 'jensyg' across the applicative cluster via VIP.
+TICKET ID: OPS-1104 | SEVERITY: P2 (Application / Storage Impact)
+REPORTED BY: Marcus T. (NOC L1 - APAC Shift)
+TIME: 02:17 AM CEST (Assigned to L1 Day Shift)
+SUMMARY: Intermittent HTTP 500 errors on web application - "Unable to read files"
 DESCRIPTION:
 Greetings L1 Team,
 
-We are receiving reports from the DevOps team that they CANNOT consistently SSH into the applicative cluster using the administrative account 'jensyg' via the VIP (10.10.10.30). 
+We are receiving alerts from the monitoring system and reports from the 
+DevOps team that the web application (accessed via VIP 10.10.10.30) is 
+returning intermittent HTTP 500 Internal Server Error responses.
 
-The authentication behavior is INTERMITTENT:
-- Some login attempts succeed.
-- Other login attempts are rejected with "Authentication failed" or "Account expired" messages.
-- The team confirms the password is correct (tested from a different jump host with the same credentials and it works 100% of the time on non-cluster targets).
+The behavior is INTERMITTENT and ASYMMETRIC:
+- Some page loads succeed normally (Apache serves content correctly).
+- Other page loads fail with HTTP 500, with Apache error logs showing:
+  "Permission denied" or "Unable to open file" errors.
+- The issue appears to affect approximately 30-40% of requests.
 
 Context:
-Yesterday evening, the security team performed a "routine credential rotation audit" across the applicative cluster (app01, app02, app03). Since then, the jensyg account has been exhibiting inconsistent behavior depending on which backend node answers the request.
+Last night at 23:45, the storage team performed an "emergency firmware 
+update" on storage01 (10.10.10.50). The node was rebooted abruptly 
+(without graceful NFS shutdown). Since then, the web application has 
+been exhibiting inconsistent behavior.
 
 BUSINESS IMPACT:
-- DevOps team cannot reliably deploy new PHP code to the cluster.
-- Ansible playbooks targeting the cluster with the jensyg identity are failing intermittently.
-- Monitoring agent on the cluster is reporting "credential refresh failed" on some nodes.
-- If not resolved, the next scheduled deployment window will be missed.
+- End users are experiencing intermittent failures when accessing the 
+  web application.
+- Client traffic generators (client01-04) are reporting failed 
+  transactions and missing evidence files in /var/www/html/uploads.
+- If not resolved, the SLA breach threshold will be reached within 2 hours.
+- The next scheduled batch consolidation (client04) will fail if the 
+  storage issue persists.
 
 INITIAL TROUBLESHOOTING DONE (BY NOC):
-- Verified password is correct by testing on a non-cluster target (login successful 100%).
-- Checked SSH service on all app nodes: `systemctl status sshd` → Active/Running on all.
-- Checked /var/log/secure on all app nodes:
-  * app01: shows successful logins for jensyg.
-  * app02: shows successful logins for jensyg.
-  * app03: shows successful logins for jensyg.
-  * NOTE: No authentication failures visible in recent logs on ANY node.
-- Checked /etc/passwd and /etc/shadow on all nodes: user entry exists, no typos.
-- Verified network and DNS resolution to all app nodes is fine.
-- firewalld on all app nodes allows SSH (22/tcp).
-- HAProxy health checks are passing on all app nodes (HTTP 200 on port 80).
-- CRITICAL OBSERVATION: When testing SSH directly to each node's individual IP (10.10.10.31, .32, .33), logins succeed 100% of the time. But when using the VIP (10.10.10.30), authentication fails intermittently.
+1. Verified Apache status on all app_nodes:
+   - app01, app02, app03: httpd is Active (running) on all nodes.
+
+2. Checked Apache error logs on all nodes:
+   - Some nodes show "Permission denied: access to /index.php denied" 
+     (Note: This might be misleading, verify actual file access).
+
+3. Verified network connectivity:
+   - All app_nodes can ping storage01 (10.10.10.50) successfully.
+   - NFS ports (2049, 111) are reachable from all app_nodes.
+
+4. Checked disk space on all app_nodes:
+   - All nodes show adequate free space on / (local filesystem).
+   - NOTE: The command `df -h` hangs or shows errors on ONE of the 
+     app_nodes when trying to display the NFS mount.
+
+5. Verified NFS service on storage01:
+   - nfs-server is Active (running) on storage01.
+   - exportfs -v shows /exports/webdata is exported correctly.
+
+CRITICAL OBSERVATION:
+When testing HTTP access directly to each app_node's individual IP 
+(10.10.10.31, .32, .33), the NOC team noticed that ONE specific node 
+is consistently returning HTTP 500 errors, while the other two return 
+HTTP 200 OK. However, due to the round-robin nature of HAProxy, accessing 
+via the VIP (10.10.10.30) results in the intermittent failures reported.
 
 EXPECTED ACTION FROM L1:
-1. Investigate why authentication fails intermittently via VIP despite working when connecting directly to each node.
-2. Check account aging/expiration status on EACH node individually (chage, passwd -S).
-3. Check /etc/shadow for lock indicators ('!' or '!!' prefix) on each node.
-4. Identify which specific node(s) have the account in a broken state.
-5. Restore the account to a usable state on the affected node(s).
-6. Verify SSH login works consistently via the VIP after the fix.
-7. Provide Root Cause Analysis (RCA) once resolved.
+1. Identify which specific app_node is returning HTTP 500 errors by 
+   testing direct access to each node's IP.
+2. On the affected node, investigate the NFS mount status:
+   - Run `df -h` and observe if it hangs or shows "Stale file handle".
+   - Run `mount | grep nfs` to verify mount points.
+   - Attempt to access /var/www/html and check for errors.
+3. Recover the stale NFS mount on the affected node:
+   - Force unmount the stale mount (umount -f or umount -l).
+   - Remount the NFS share (mount -a or explicit mount command).
+   - Verify the mount is functional (df -h, ls /var/www/html).
+4. Clean up any misleading configuration or logs that may have been 
+   added during the storage team's emergency maintenance.
+5. Verify HTTP access works consistently via the VIP after the fix.
+6. Provide Root Cause Analysis (RCA) once resolved.
 
 Best Regards,
-Priya S.
+Marcus T.
 NOC L1 Support | Global IT Services

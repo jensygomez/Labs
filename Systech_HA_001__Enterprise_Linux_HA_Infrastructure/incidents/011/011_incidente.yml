@@ -1,19 +1,49 @@
+# ==============================================================================
+# INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
+# ==============================================================================
+# PREREQUISITOS DE PLATAFORMA (ejecutar ANTES de cualquier incident_XXX.yml):
+#
+#   1. setup_users.yml
+#      - Crea grupos, usuarios y reglas sudoers desde group_vars/all/system_users.yml
+#      - 'jensyg' ya viene definido ahí con target_groups: ["all"] y password
+#        real vía default_user_password ('LabPassword123!' hasheado con salt fijo)
+#      - NO recrear usuarios dentro de un playbook de incidente: ya están sanos.
+#
+#   2. dns01.yml
+#      - Configura /etc/hosts en TODOS los nodos de la infraestructura
+#        (hosts: all) desde el inventario dinámico.
+#      - NO duplicar esta tarea dentro de un playbook de incidente.
+#
+#   Un incident_XXX.yml SOLO debe encargarse de:
+#     a) Resolución DNS del CONTROL NODE (dns01.yml no lo cubre, corre contra
+#        'hosts: all' del inventario, no contra 'localhost').
+#     b) Seleccionar el/los nodo(s) objetivo.
+#     c) Inyectar el fallo puntual del escenario.
+#     d) Decoys/logs realistas para practicar troubleshooting.
+#
+# ==============================================================================
+# RESUMEN DE EJECUCIÓN (LÓGICA DEL INCIDENTE 011):
+# 1. RESOLUCIÓN DE NOMBRES EN EL CONTROL NODE (PLAY 1): Actualiza /etc/hosts
+#    localmente para permitir troubleshooting por nombre DNS desde el control node.
+# 2. SELECCIÓN ALEATORIA (PLAY 2): Elige UN SOLO nodo al azar del grupo 'app_nodes' 
+#    para crear un estado asimétrico en el clúster HA.
+# 3. INYECCIÓN DEL FALLO (PLAY 3): Simula un corte abrupto de NFS bloqueando el 
+#    puerto 2049 temporalmente para forzar un "Stale file handle" en el mount 
+#    /var/www/html, e inyecta decoys (logs falsos de timeout, permisos erróneos 
+#    en Apache y comentarios misleading en fstab).
+# ==============================================================================
+# INCIDENT ID    : 011
+# TITLE          : Apps no pueden leer/escribir en el share compartido (stale NFS)
+# TARGET NODE    : Random node from app_nodes (Asymmetric Cluster State)
+# TARGET SERVICE : NFS Mount /var/www/html (storage01:/exports/webdata)
+# DIFFICULTY     : 5/10 (L1 Junior/Mid)
+# ESTIMATED TIME : 2 Hours
+# ==============================================================================
 ---
 
-
-
-
-==============================================================================
-INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
-==============================================================================
-INCIDENT ID    : 011
-TITLE          : Apps no pueden leer/escribir en el share compartido (stale NFS)
-TARGET NODE    : Random node from app_nodes (Asymmetric Cluster State)
-DIFFICULTY     : 5/10 (L1 Junior/Mid)
-ESTIMATED TIME : 2 Hours
-==============================================================================
 -----------------------------------------------------------------------------
 PLAY 1: POPULATE /ETC/HOSTS ON THE CONTROL NODE ITSELF
+(La resolución DNS de la infraestructura remota ya la gestiona dns01.yml)
 -----------------------------------------------------------------------------
 - name: "Incident 011 - Ensure Name Resolution on Control Node"
   hosts: localhost
@@ -60,6 +90,7 @@ PLAY 2: SELECT RANDOM NODE AND INJECT THE ASYMMETRIC FAULT
     incident_id: "011"
     marker_file: "/var/run/.incident_{{ incident_id }}_marker"
     storage_ip: "10.10.10.50"
+    nfs_mount: "/var/www/html"
   tasks:
     --- Marker Guard ---
     - name: "30 | Check if incident was already injected"
@@ -90,7 +121,7 @@ PLAY 2: SELECT RANDOM NODE AND INJECT THE ASYMMETRIC FAULT
 
     - name: "41 | Trigger background I/O to force kernel stale state"
       ansible.builtin.shell:
-        cmd: "cat /var/www/html/index.php > /dev/null 2>&1 &"
+        cmd: "cat {{ nfs_mount }}/index.php > /dev/null 2>&1 &"
       changed_when: false
       when: not check_inject.stat.exists
 
@@ -155,11 +186,13 @@ PLAY 2: SELECT RANDOM NODE AND INJECT THE ASYMMETRIC FAULT
           =========================================
           INCIDENT 011 SUCCESSFULLY INJECTED
           =========================================
-          Target Node : {{ inventory_hostname }} (ASYMMETRIC STATE)
-          Storage IP  : {{ storage_ip }}
+          Target Node  : {{ inventory_hostname }} (ASYMMETRIC STATE)
+          Storage IP   : {{ storage_ip }}
+          Mount Point  : {{ nfs_mount }}
           
-          The NFS mount /var/www/html is now STALE on this node.
+          The NFS mount is now STALE on this node.
           Other app_nodes remain HEALTHY.
+          L1 must check all nodes to detect the asymmetry.
           
           DECOYS INJECTED:
           - Fake NFS timeout logs in /var/log/messages
