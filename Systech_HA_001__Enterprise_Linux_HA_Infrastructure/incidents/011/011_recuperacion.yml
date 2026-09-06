@@ -1,0 +1,143 @@
+# ==============================================================================
+# INCIDENT RECOVERY PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
+# ==============================================================================
+# INCIDENT ID   : 010
+# PURPOSE       : Restore the locked/expired user 'jensyg' on target nodes
+#                 and remove the control-node-only /etc/hosts block created
+#                 by incident_010.yml (PLAY 1).
+# NOTE          : Runs against all app_nodes, plus localhost for local cleanup.
+#
+# IMPORTANTE    : Este playbook NO toca la resolución DNS de la infraestructura
+#                 remota (marker "ANSIBLE MANAGED HOSTS" sin sufijo) — esa la
+#                 gestiona dns01.yml y es persistente, no parte del incidente.
+#                 Solo se remueve el bloque exclusivo del CONTROL NODE.
+# ==============================================================================
+
+# -----------------------------------------------------------------------------
+# PLAY 1: RECOVER REMOTE APP NODES
+# -----------------------------------------------------------------------------
+- name: "Recovery 010 | Restore Locked/Expired User on Remote Nodes"
+  hosts: app_nodes
+  become: yes
+  vars:
+    incident_id: "010"
+    marker_file: "/var/run/.incident_{{ incident_id }}_marker"
+    target_user: "jensyg"
+
+  tasks:
+    - name: "01 | Check if incident marker exists on this node"
+      ansible.builtin.stat:
+        path: "{{ marker_file }}"
+      register: check_inject
+
+    - name: "02 | Unlock the user password"
+      ansible.builtin.command:
+        cmd: "passwd -u {{ target_user }}"
+      register: unlock_result
+      when: check_inject.stat.exists
+
+    - name: "03 | Remove account expiration (set to never)"
+      ansible.builtin.command:
+        cmd: "chage -E -1 {{ target_user }}"
+      when: check_inject.stat.exists
+
+    - name: "04 | Remove fake security audit log"
+      ansible.builtin.file:
+        path: /var/log/security_audit.log
+        state: absent
+      when: check_inject.stat.exists
+
+    - name: "05 | Remove fake PAM debug log"
+      ansible.builtin.file:
+        path: /var/log/pam_debug.log
+        state: absent
+      when: check_inject.stat.exists
+
+    - name: "06 | Remove misleading .bashrc entry"
+      ansible.builtin.lineinfile:
+        path: "/home/{{ target_user }}/.bashrc"
+        regexp: "^echo.*WARNING.*Account under security review"
+        state: absent
+      when: check_inject.stat.exists
+
+    - name: "07 | Restore original /etc/passwd comment field"
+      ansible.builtin.user:
+        name: "{{ target_user }}"
+        comment: ""
+      when: check_inject.stat.exists
+
+    - name: "08 | Verify user status is now PS (Password Set, usable)"
+      ansible.builtin.command:
+        cmd: "passwd -S {{ target_user }}"
+      register: final_status
+      changed_when: false
+      when: check_inject.stat.exists
+
+    - name: "09 | Verify account expiration is never"
+      ansible.builtin.command:
+        cmd: "chage -l {{ target_user }}"
+      register: final_chage
+      changed_when: false
+      when: check_inject.stat.exists
+
+    - name: "10 | Remove the incident marker file"
+      ansible.builtin.file:
+        path: "{{ marker_file }}"
+        state: absent
+      when: check_inject.stat.exists
+
+    - name: "11 | Display Recovery Summary"
+      ansible.builtin.debug:
+        msg: |
+          =========================================
+          INCIDENT 010 SUCCESSFULLY RECOVERED
+          =========================================
+          Target Node : {{ inventory_hostname }}
+          Target User : {{ target_user }}
+
+          passwd -S   : {{ final_status.stdout }}
+          chage -l    : {{ final_chage.stdout_lines | select('match', '.*expires.*') | list }}
+
+          CLEANUP COMPLETED ON REMOTE NODE:
+          - Password unlocked.
+          - Account expiration removed.
+          - Fake security audit log removed.
+          - Fake PAM debug log removed.
+          - Misleading .bashrc warning removed.
+          - /etc/passwd comment field restored.
+          - Marker file cleaned up.
+          =========================================
+      when: check_inject.stat.exists
+
+# -----------------------------------------------------------------------------
+# PLAY 2: CLEAN LOCAL CONTROL NODE (/etc/hosts)
+# Remueve exclusivamente el bloque agregado por incident_010.yml PLAY 1,
+# identificado por su marker exacto. No toca el bloque de dns01.yml.
+# -----------------------------------------------------------------------------
+- name: "Recovery 010 | Clean Local Control Node (/etc/hosts)"
+  hosts: localhost
+  connection: local
+  become: yes
+  gather_facts: false
+  tasks:
+    - name: "12 | Remove control-node /etc/hosts block added by incident_010.yml"
+      ansible.builtin.blockinfile:
+        path: /etc/hosts
+        marker: "# {mark} ANSIBLE MANAGED HOSTS (SYSTECH CONTROL NODE)"
+        state: absent
+        unsafe_writes: yes
+
+    - name: "13 | Display Control Node Cleanup Summary"
+      ansible.builtin.debug:
+        msg: |
+          =========================================
+          CONTROL NODE /etc/hosts CLEANUP COMPLETE
+          =========================================
+          Removed block marked:
+          'ANSIBLE MANAGED HOSTS (SYSTECH CONTROL NODE)'
+
+          Nota: el bloque de dns01.yml (marker sin sufijo,
+          aplicado a hosts: all en la infraestructura remota)
+          NO fue tocado — es configuración persistente,
+          no parte del incidente.
+          =========================================
