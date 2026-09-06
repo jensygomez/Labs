@@ -117,6 +117,24 @@
     immediate: true
   when: ansible_os_family == "RedHat"
 
+
+- name: "Permitir servicio SSH en Firewalld (por si la zona no lo trae por default)"
+  ansible.posix.firewalld:
+    service: ssh
+    permanent: true
+    state: enabled
+    immediate: true
+  when: ansible_os_family == "RedHat"
+
+- name: "Restringir sshd a la IP física del nodo (libera la VIP para HAProxy)"
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?ListenAddress'
+    line: "ListenAddress {{ ansible_host }}"
+    validate: 'sshd -t -f %s'
+  notify: "Reiniciar SSHD"
+
+
 # --- CONFIGURACIÓN DE SERVICIOS ---
 
 - name: "Desplegar configuración de Keepalived desde plantilla Jinja2"

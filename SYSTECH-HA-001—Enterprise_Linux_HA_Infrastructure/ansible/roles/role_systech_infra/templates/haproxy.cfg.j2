@@ -3,7 +3,6 @@ global
     user haproxy
     group haproxy
     daemon
-
 defaults
     log     global
     mode    http
@@ -11,15 +10,33 @@ defaults
     timeout connect 5000ms
     timeout client  50000ms
     timeout server  50000ms
-
 frontend http_front
     bind *:80
     default_backend http_back
-
 backend http_back
     balance roundrobin
 {% for host in groups['app_nodes'] %}
     server {{ host }} {{ hostvars[host]['ansible_host'] }}:80 check
+{% endfor %}
+
+# ==============================================================================
+# SSH FORWARDING (TCP:22) - Bindeado EXCLUSIVAMENTE a la VIP
+# ==============================================================================
+# Este frontend/backend NO usa *:22 (wildcard) a propósito. Si bindeara a
+# todas las interfaces, colisionaría con el sshd propio de lb01/lb02, que
+# escucha en su IP física. Ver tarea "Restringir sshd..." en lb_setup.yml,
+# que libera la VIP para que HAProxy pueda tomarla sin conflicto de puerto.
+# ==============================================================================
+frontend ssh_front
+    bind {{ keepalived_vip.split('/')[0] }}:22
+    mode tcp
+    default_backend ssh_back
+
+backend ssh_back
+    mode tcp
+    balance roundrobin
+{% for host in groups['app_nodes'] %}
+    server {{ host }} {{ hostvars[host]['ansible_host'] }}:22 check
 {% endfor %}
 
 listen stats
