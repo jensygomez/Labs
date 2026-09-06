@@ -1,1 +1,17 @@
+---
+- name: Remediar y estandarizar cuenta jensyg en el cluster
+  hosts: app_nodes
+  become: yes
+  vars:
+    # Definimos la contraseña deseada para el usuario
+    user_password: "{{ lookup('ansible.builtin.env', 'LAB_PASS') }}"
 
+  tasks:
+
+    - name: Tarea 1 - Asegurar validez de la cuenta y sincronizacion de contraseña
+      ansible.builtin.user:
+        name: jensyg
+        state: present
+        expires: -1
+        password: "{{ user_password | password_hash('sha512', 'myfixedsalt') }}"
+        update_password: always

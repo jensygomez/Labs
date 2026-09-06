@@ -21,7 +21,7 @@ $#
 
 # Command Line History (newest to oldest):
 :wq
-|2,0,1788490761,,"wq"
+|2,0,1788674460,,"wq"
 :%s/^/# /g
 |2,0,1788341755,,"%s/^/# /g"
 :q!
@@ -72,230 +72,243 @@ $#
 |3,0,36,0,1,0,1788201222," "
 
 # File marks:
-'0  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,48,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
-'1  9  17  ~/ansible/inventories/production/group_vars/all.yml
-|4,49,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
-'2  1  0  ~/.ansible/tmp/ansible-local-1377qrlor0b1/tmp39wcstt3.yml
-|4,50,1,0,1788467276,"~/.ansible/tmp/ansible-local-1377qrlor0b1/tmp39wcstt3.yml"
-'3  4  37  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
-|4,51,4,37,1788428717,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
-'4  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,52,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
-'5  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,53,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
-'6  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,54,154,0,1788341758,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
-'7  162  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,55,162,0,1788341758,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
-'8  154  77  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,56,154,77,1788341688,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
-'9  162  77  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,57,162,77,1788341688,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+'0  16  69  ~/incidents/010/010_remediation.yml
+|4,48,16,69,1788674460,"~/incidents/010/010_remediation.yml"
+'1  3  17  ~/incidents/010/010_remediation.yml
+|4,49,3,17,1788674159,"~/incidents/010/010_remediation.yml"
+'2  3  17  ~/incidents/010/010_remediation.yml
+|4,50,3,17,1788674159,"~/incidents/010/010_remediation.yml"
+'3  17  33  ~/incidents/010/010_remediation.yml
+|4,51,17,33,1788674101,"~/incidents/010/010_remediation.yml"
+'4  17  33  ~/incidents/010/010_remediation.yml
+|4,52,17,33,1788674101,"~/incidents/010/010_remediation.yml"
+'5  17  33  ~/incidents/010/010_remediation.yml
+|4,53,17,33,1788674101,"~/incidents/010/010_remediation.yml"
+'6  17  33  ~/incidents/010/010_remediation.yml
+|4,54,17,33,1788674101,"~/incidents/010/010_remediation.yml"
+'7  1  0  ~/incidents/010/010_remediation.yml
+|4,55,1,0,1788674084,"~/incidents/010/010_remediation.yml"
+'8  1  0  ~/incidents/010/010_remediation.yml
+|4,56,1,0,1788674084,"~/incidents/010/010_remediation.yml"
+'9  1  0  ~/incidents/010/010_remediation.yml
+|4,57,1,0,1788674084,"~/incidents/010/010_remediation.yml"
 
 # Jumplist (newest first):
+-'  16  69  ~/incidents/010/010_remediation.yml
+|4,39,16,69,1788674460,"~/incidents/010/010_remediation.yml"
+-'  3  17  ~/incidents/010/010_remediation.yml
+|4,39,3,17,1788674375,"~/incidents/010/010_remediation.yml"
+-'  3  17  ~/incidents/010/010_remediation.yml
+|4,39,3,17,1788674159,"~/incidents/010/010_remediation.yml"
+-'  17  33  ~/incidents/010/010_remediation.yml
+|4,39,17,33,1788674147,"~/incidents/010/010_remediation.yml"
+-'  17  33  ~/incidents/010/010_remediation.yml
+|4,39,17,33,1788674147,"~/incidents/010/010_remediation.yml"
+-'  17  33  ~/incidents/010/010_remediation.yml
+|4,39,17,33,1788674101,"~/incidents/010/010_remediation.yml"
+-'  1  0  ~/incidents/010/010_remediation.yml
+|4,39,1,0,1788674094,"~/incidents/010/010_remediation.yml"
+-'  1  0  ~/incidents/010/010_remediation.yml
+|4,39,1,0,1788674094,"~/incidents/010/010_remediation.yml"
+-'  1  0  ~/incidents/010/010_remediation.yml
+|4,39,1,0,1788674094,"~/incidents/010/010_remediation.yml"
+-'  1  0  ~/incidents/010/010_remediation.yml
+|4,39,1,0,1788674084,"~/incidents/010/010_remediation.yml"
+-'  17  0  ~/incidents/010/010_remediation.yml
+|4,39,17,0,1788674076,"~/incidents/010/010_remediation.yml"
+-'  17  0  ~/incidents/010/010_remediation.yml
+|4,39,17,0,1788674041,"~/incidents/010/010_remediation.yml"
+-'  21  0  ~/incidents/010/010_remediation.yml
+|4,39,21,0,1788673910,"~/incidents/010/010_remediation.yml"
+-'  21  0  ~/incidents/010/010_remediation.yml
+|4,39,21,0,1788673910,"~/incidents/010/010_remediation.yml"
+-'  21  0  ~/incidents/010/010_remediation.yml
+|4,39,21,0,1788673910,"~/incidents/010/010_remediation.yml"
+-'  21  0  ~/incidents/010/010_remediation.yml
+|4,39,21,0,1788673910,"~/incidents/010/010_remediation.yml"
+-'  21  0  ~/incidents/010/010_remediation.yml
+|4,39,21,0,1788673910,"~/incidents/010/010_remediation.yml"
+-'  15  0  ~/incidents/010/010_remediation.yml
+|4,39,15,0,1788673537,"~/incidents/010/010_remediation.yml"
+-'  15  0  ~/incidents/010/010_remediation.yml
+|4,39,15,0,1788673537,"~/incidents/010/010_remediation.yml"
+-'  15  0  ~/incidents/010/010_remediation.yml
+|4,39,15,0,1788673537,"~/incidents/010/010_remediation.yml"
+-'  15  0  ~/incidents/010/010_remediation.yml
+|4,39,15,0,1788673537,"~/incidents/010/010_remediation.yml"
+-'  15  0  ~/incidents/010/010_remediation.yml
+|4,39,15,0,1788673537,"~/incidents/010/010_remediation.yml"
+-'  1  0  ~/incidents/010/010_remediation.yml
+|4,39,1,0,1788673356,"~/incidents/010/010_remediation.yml"
+-'  1  0  ~/incidents/010/010_remediation.yml
+|4,39,1,0,1788673356,"~/incidents/010/010_remediation.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
+-'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
+|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
 -'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
 |4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
 -'  9  17  ~/ansible/inventories/production/group_vars/all.yml
 |4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
 -'  9  17  ~/ansible/inventories/production/group_vars/all.yml
 |4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
--'  1  0  ~/ansible/inventories/production/group_vars/all.yml
-|4,39,1,0,1788490677,"~/ansible/inventories/production/group_vars/all.yml"
--'  1  0  ~/ansible/inventories/production/group_vars/all.yml
-|4,39,1,0,1788490677,"~/ansible/inventories/production/group_vars/all.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-1377qrlor0b1/tmp39wcstt3.yml
-|4,39,1,0,1788467276,"~/.ansible/tmp/ansible-local-1377qrlor0b1/tmp39wcstt3.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-1377qrlor0b1/tmp39wcstt3.yml
-|4,39,1,0,1788467276,"~/.ansible/tmp/ansible-local-1377qrlor0b1/tmp39wcstt3.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-1377qrlor0b1/tmp39wcstt3.yml
-|4,39,1,0,1788467276,"~/.ansible/tmp/ansible-local-1377qrlor0b1/tmp39wcstt3.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-1377qrlor0b1/tmp39wcstt3.yml
-|4,39,1,0,1788467276,"~/.ansible/tmp/ansible-local-1377qrlor0b1/tmp39wcstt3.yml"
--'  4  37  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
-|4,39,4,37,1788428717,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
--'  4  37  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
-|4,39,4,37,1788428717,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
--'  4  37  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
-|4,39,4,37,1788428717,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
--'  4  37  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
-|4,39,4,37,1788428717,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
--'  4  37  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
-|4,39,4,37,1788428717,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
--'  4  37  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
-|4,39,4,37,1788428717,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
--'  4  37  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
-|4,39,4,37,1788428717,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
--'  4  37  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
-|4,39,4,37,1788428717,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
-|4,39,1,0,1788428603,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
-|4,39,1,0,1788428603,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
-|4,39,1,0,1788428603,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
-|4,39,1,0,1788428603,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
-|4,39,1,0,1788428603,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
-|4,39,1,0,1788428603,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
-|4,39,1,0,1788428603,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml
-|4,39,1,0,1788428603,"~/.ansible/tmp/ansible-local-125oluewkm6/tmpq35myd2p.yml"
--'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  2  20  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,2,20,1788404132,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,1,0,1788403914,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,1,0,1788403914,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,1,0,1788403914,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,1,0,1788403914,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,1,0,1788403914,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,1,0,1788403914,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,1,0,1788403914,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,1,0,1788403914,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,1,0,1788403914,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,1,0,1788403914,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,1,0,1788403914,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,1,0,1788403914,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,1,0,1788403914,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,1,0,1788403914,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,1,0,1788403914,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml
-|4,39,1,0,1788403914,"~/.ansible/tmp/ansible-local-21589szcxkm/tmp814eglqr.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  506  46  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,506,46,1788341814,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,154,0,1788341762,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,154,0,1788341762,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,154,0,1788341762,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,154,0,1788341762,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,154,0,1788341762,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,154,0,1788341762,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,154,0,1788341762,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,154,0,1788341762,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,154,0,1788341762,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,154,0,1788341762,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
--'  154  0  ~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml
-|4,39,154,0,1788341762,"~/ansible/roles/role_systech_infra/tasks/freeipa/freeip_seed_data.yml"
+-'  9  17  ~/ansible/inventories/production/group_vars/all.yml
+|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
+-'  9  17  ~/ansible/inventories/production/group_vars/all.yml
+|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
+-'  9  17  ~/ansible/inventories/production/group_vars/all.yml
+|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
+-'  9  17  ~/ansible/inventories/production/group_vars/all.yml
+|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
+-'  9  17  ~/ansible/inventories/production/group_vars/all.yml
+|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
+-'  9  17  ~/ansible/inventories/production/group_vars/all.yml
+|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
+-'  9  17  ~/ansible/inventories/production/group_vars/all.yml
+|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
+-'  9  17  ~/ansible/inventories/production/group_vars/all.yml
+|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
+-'  9  17  ~/ansible/inventories/production/group_vars/all.yml
+|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
+-'  9  17  ~/ansible/inventories/production/group_vars/all.yml
+|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
 
 # History of marks within files (newest to oldest):
+
+> ~/incidents/010/010_remediation.yml
+	*	1788674459	0
+	"	16	69
+	^	16	70
+	.	16	62
+	+	21	0
+	+	6	66
+	+	17	0
+	+	17	33
+	+	3	17
+	+	17	30
+	+	16	62
 
 > ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
 	*	1788490760	0
