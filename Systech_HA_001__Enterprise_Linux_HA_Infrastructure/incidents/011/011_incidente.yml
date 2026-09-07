@@ -120,6 +120,30 @@
       become: yes
       when: not check_inject.stat.exists
 
+    # --- FORCE IMMEDIATE DISRUPTION (Invalidate pre-existing NFS session) ---
+    # Sin esto, una conexión TCP ya establecida antes de la inyección sigue
+    # fluyendo libremente: firewalld/netfilter permite por defecto el tráfico
+    # de conexiones ya conocidas (ct state ESTABLISHED), y la rich-rule de la
+    # task 40 solo bloquea conexiones NUEVAS. Esto vuelve el incidente NO
+    # reproducible de forma determinística si el mount ya llevaba tiempo activo.
+    - name: "42 | Ensure conntrack-tools is installed on storage01 (do not assume base state)"
+      ansible.builtin.dnf:
+        name: conntrack-tools
+        state: present
+      delegate_to: storage01
+      become: yes
+      when: not check_inject.stat.exists
+
+    - name: "43 | Invalidate existing NFS conntrack session to force immediate disruption"
+      ansible.builtin.command:
+        cmd: "conntrack -D -s {{ ansible_host }}"
+      delegate_to: storage01
+      become: yes
+      register: conntrack_result
+      failed_when: conntrack_result.rc not in [0, 1]
+      changed_when: conntrack_result.rc == 0
+      when: not check_inject.stat.exists
+
     - name: "41 | Trigger background I/O to force kernel hang state on target node"
       ansible.builtin.shell:
         cmd: "cat {{ nfs_mount }}/index.php > /dev/null 2>&1 &"
@@ -141,8 +165,8 @@
         create: yes
         mode: '0644'
       loop:
-        - "{{ '%b %d %H:%M:%S' | strftime }} {{ inventory_hostname }} kernel: NFS: server {{ storage_ip }} not responding, still trying"
-        - "{{ '%b %d %H:%M:%S' | strftime }} {{ inventory_hostname }} kernel: nfs: server {{ storage_ip }} not responding, timed out"
+        - "{{ ansible_date_time.epoch | int | strftime('%b %d %H:%M:%S') }} {{ inventory_hostname }} kernel: NFS: server {{ storage_ip }} not responding, still trying"
+        - "{{ ansible_date_time.epoch | int | strftime('%b %d %H:%M:%S') }} {{ inventory_hostname }} kernel: nfs: server {{ storage_ip }} not responding, timed out"
       when: not check_inject.stat.exists
 
     - name: "52 | Ensure Apache error log exists before writing"

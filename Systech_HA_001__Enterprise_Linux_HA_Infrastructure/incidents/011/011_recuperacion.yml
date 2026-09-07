@@ -69,6 +69,16 @@
         state: absent
       when: check_inject.stat.exists
 
+    - name: "08b | Remove NFS block rich-rule from storage01"
+      ansible.posix.firewalld:
+        rich_rule: 'rule family="ipv4" source address="{{ ansible_host }}" port port="2049" protocol="tcp" drop'
+        permanent: false
+        immediate: true
+        state: disabled
+      delegate_to: storage01
+      become: yes
+      when: check_inject.stat.exists
+
     - name: "09 | Display Recovery Summary"
       ansible.builtin.debug:
         msg: |
@@ -85,6 +95,7 @@
           - Fake /var/log/messages NFS errors removed.
           - Misleading Apache error_log entry removed.
           - Marker file cleaned up.
+          - NFS block rich-rule removed from storage01.
           =========================================
       when: check_inject.stat.exists
 
