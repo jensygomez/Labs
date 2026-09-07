@@ -27,13 +27,12 @@
 #    localmente para permitir troubleshooting por nombre DNS desde el control node.
 # 2. SELECCIÓN ALEATORIA (PLAY 2): Elige UN SOLO nodo al azar del grupo 'app_nodes' 
 #    para crear un estado asimétrico en el clúster HA.
-# 3. INYECCIÓN DEL FALLO (PLAY 3): Simula un corte abrupto de NFS bloqueando el 
-#    puerto 2049 temporalmente para forzar un "Stale file handle" en el mount 
-#    /var/www/html, e inyecta decoys (logs falsos de timeout, permisos erróneos 
-#    en Apache y comentarios misleading en fstab).
+# 3. INYECCIÓN DEL FALLO (PLAY 3): Bloquea el tráfico NFS (puerto 2049) desde 
+#    storage01 hacia el nodo objetivo, creando un mount NFS colgado ("Server not 
+#    responding") solo en ese nodo. Inyecta decoys (logs falsos, fstab misleading).
 # ==============================================================================
 # INCIDENT ID    : 011
-# TITLE          : Apps no pueden leer/escribir en el share compartido (stale NFS)
+# TITLE          : Apps no pueden leer/escribir en el share compartido (NFS Hang)
 # TARGET NODE    : Random node from app_nodes (Asymmetric Cluster State)
 # TARGET SERVICE : NFS Mount /var/www/html (storage01:/exports/webdata)
 # DIFFICULTY     : 5/10 (L1 Junior/Mid)
@@ -41,10 +40,10 @@
 # ==============================================================================
 ---
 
-# -----------------------------------------------------------------------------
-# PLAY 1: POPULATE /ETC/HOSTS ON THE CONTROL NODE ITSELF
-# (La resolución DNS de la infraestructura remota ya la gestiona dns01.yml)
-# -----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+PLAY 1: POPULATE /ETC/HOSTS ON THE CONTROL NODE ITSELF
+(La resolución DNS de la infraestructura remota ya la gestiona dns01.yml)
+-----------------------------------------------------------------------------
 - name: "Incident 011 - Ensure Name Resolution on Control Node"
   hosts: localhost
   connection: local
@@ -63,9 +62,9 @@
           {% endif %}
           {% endfor %}
 
-# -----------------------------------------------------------------------------
-# PLAY 2: SELECT RANDOM NODE AND INJECT THE ASYMMETRIC FAULT
-# -----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+PLAY 2: SELECT RANDOM NODE AND INJECT THE ASYMMETRIC FAULT
+-----------------------------------------------------------------------------
 - name: "Incident 011 - Select Random Target and Inject Fault"
   hosts: localhost
   connection: local
@@ -83,7 +82,7 @@
         name: "{{ target_node }}"
         groups: incident_011_target
 
-- name: "Incident 011 | Inject Stale NFS Handle on Single Node"
+- name: "Incident 011 | Inject NFS Network Partition on Single Node"
   hosts: incident_011_target
   become: yes
   vars:
@@ -92,7 +91,7 @@
     storage_ip: "10.10.10.50"
     nfs_mount: "/var/www/html"
   tasks:
-    #  --- Marker Guard ---
+    --- Marker Guard ---
     - name: "30 | Check if incident was already injected"
       ansible.builtin.stat:
         path: "{{ marker_file }}"
@@ -110,35 +109,24 @@
         mode: '0644'
       when: not check_inject.stat.exists
 
-    # --- INJECT THE FAULT (Simulate Storage Blip & Stale Handle) ---
-    - name: "40 | Block outgoing NFS traffic to storage01 temporarily"
+    --- INJECT THE FAULT (Asymmetric Firewall Block on Storage01) ---
+    - name: "40 | Block NFS traffic from storage01 to target node (Simulate network partition)"
       ansible.posix.firewalld:
-        rich_rule: 'rule family="ipv4" destination address="{{ storage_ip }}" port port="2049" protocol="tcp" drop'
+        rich_rule: 'rule family="ipv4" source address="{{ ansible_host }}" port port="2049" protocol="tcp" drop'
         permanent: false
         immediate: true
         state: enabled
+      delegate_to: storage01
+      become: yes
       when: not check_inject.stat.exists
 
-    - name: "41 | Trigger background I/O to force kernel stale state"
+    - name: "41 | Trigger background I/O to force kernel hang state on target node"
       ansible.builtin.shell:
         cmd: "cat {{ nfs_mount }}/index.php > /dev/null 2>&1 &"
       changed_when: false
       when: not check_inject.stat.exists
 
-    - name: "42 | Wait for kernel to mark mount as stale"
-      ansible.builtin.wait_for:
-        timeout: 8
-      when: not check_inject.stat.exists
-
-    - name: "43 | Remove firewall rule (mount remains stale until remounted)"
-      ansible.posix.firewalld:
-        rich_rule: 'rule family="ipv4" destination address="{{ storage_ip }}" port port="2049" protocol="tcp" drop'
-        permanent: false
-        immediate: true
-        state: disabled
-      when: not check_inject.stat.exists
-
-    #  --- DECOYS & LOGS (Enhanced Realism) ---
+    --- DECOYS & LOGS (Enhanced Realism) ---
     - name: "50 | Ensure /var/log/messages exists before writing"
       ansible.builtin.file:
         path: /var/log/messages
@@ -179,7 +167,7 @@
         state: present
       when: not check_inject.stat.exists
 
-    #  --- FINALIZE ---
+    --- FINALIZE ---
     - name: "60 | Display Injection Summary"
       ansible.builtin.debug:
         msg: |
@@ -190,9 +178,9 @@
           Storage IP   : {{ storage_ip }}
           Mount Point  : {{ nfs_mount }}
           
-          The NFS mount is now STALE on this node.
+          NFS traffic from storage01 to {{ inventory_hostname }} is BLOCKED.
+          The mount /var/www/html is now HANGING on this node.
           Other app_nodes remain HEALTHY.
-          L1 must check all nodes to detect the asymmetry.
           
           DECOYS INJECTED:
           - Fake NFS timeout logs in /var/log/messages
