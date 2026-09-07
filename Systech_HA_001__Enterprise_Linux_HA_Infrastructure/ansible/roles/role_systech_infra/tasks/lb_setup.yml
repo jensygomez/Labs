@@ -127,13 +127,19 @@
   when: ansible_os_family == "RedHat"
 
 - name: "Restringir sshd a la IP física del nodo (libera la VIP para HAProxy)"
-  ansible.builtin.lineinfile:
-    path: /etc/ssh/sshd_config
-    regexp: '^#?ListenAddress'
-    line: "ListenAddress {{ ansible_host }}"
-    validate: 'sshd -t -f %s'
-  notify: "Reiniciar SSHD"
-
+  block:
+    - name: "Configurar ListenAddress en sshd_config"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?ListenAddress'
+        line: "ListenAddress {{ ansible_host }}"
+        validate: 'sshd -t -f %s'
+      register: sshd_config_modified
+    - name: "Recargar sshd si se modificó el archivo"
+      ansible.builtin.systemd:
+        name: sshd
+        state: reloaded
+      when: sshd_config_modified.changed
 
 # --- CONFIGURACIÓN DE SERVICIOS ---
 
