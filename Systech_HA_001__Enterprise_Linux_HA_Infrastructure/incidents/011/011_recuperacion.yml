@@ -6,6 +6,7 @@
 #                 and restore infrastructure to pre-incident state.
 # NOTE          : Runs against all app_nodes (checks marker), plus localhost.
 # ==============================================================================
+---
 # -----------------------------------------------------------------------------
 # PLAY 1: RECOVER REMOTE APP NODES
 # -----------------------------------------------------------------------------
@@ -22,54 +23,59 @@
         path: "{{ marker_file }}"
       register: check_inject
 
-    - name: "02 | Force lazy unmount of stale NFS mount"
+    - name: "02 | Skip recovery if marker not found"
+      ansible.builtin.debug:
+        msg: "Incident {{ incident_id }} not found on {{ inventory_hostname }}. Skipping."
+      when: not check_inject.stat.exists
+
+    - name: "03 | Force lazy unmount of stale NFS mount"
       ansible.builtin.command:
         cmd: "umount -l {{ nfs_mount }}"
       register: umount_result
       failed_when: umount_result.rc != 0 and 'not mounted' not in umount_result.stderr
       when: check_inject.stat.exists
 
-    - name: "03 | Remount all filesystems from /etc/fstab"
+    - name: "04 | Remount all filesystems from /etc/fstab"
       ansible.builtin.command:
         cmd: "mount -a"
       register: mount_result
       when: check_inject.stat.exists
 
-    - name: "04 | Verify NFS mount is active and responsive"
+    - name: "05 | Verify NFS mount is active and responsive"
       ansible.builtin.command:
         cmd: "df -h {{ nfs_mount }}"
       register: df_check
       changed_when: false
       when: check_inject.stat.exists
 
-    - name: "05 | Remove misleading comment from /etc/fstab"
+    - name: "06 | Remove misleading comment from /etc/fstab"
       ansible.builtin.lineinfile:
         path: /etc/fstab
         regexp: "^# WARNING: NFS mount unstable"
         state: absent
       when: check_inject.stat.exists
 
-    - name: "06 | Remove fake NFS timeout logs from /var/log/messages"
+    - name: "07 | Remove fake NFS timeout logs from /var/log/messages"
       ansible.builtin.lineinfile:
         path: /var/log/messages
         regexp: "NFS: server 10.10.10.50 not responding"
         state: absent
       when: check_inject.stat.exists
 
-    - name: "07 | Remove misleading Apache error log entry"
+    - name: "08 | Remove misleading Apache error log entry"
       ansible.builtin.lineinfile:
         path: /var/log/httpd/error_log
         regexp: "AH00035: access to /index.php denied"
         state: absent
       when: check_inject.stat.exists
 
-    - name: "08 | Remove the incident marker file"
+    - name: "09 | Remove the incident marker file"
       ansible.builtin.file:
         path: "{{ marker_file }}"
         state: absent
       when: check_inject.stat.exists
 
-    - name: "08b | Remove NFS block rich-rule from storage01"
+    - name: "10 | Remove NFS block rich-rule from storage01"
       ansible.posix.firewalld:
         rich_rule: 'rule family="ipv4" source address="{{ ansible_host }}" port port="2049" protocol="tcp" drop'
         permanent: false
@@ -79,7 +85,7 @@
       become: yes
       when: check_inject.stat.exists
 
-    - name: "09 | Display Recovery Summary"
+    - name: "11 | Display Recovery Summary"
       ansible.builtin.debug:
         msg: |
           =========================================
@@ -108,14 +114,14 @@
   become: yes
   gather_facts: false
   tasks:
-    - name: "10 | Remove control-node /etc/hosts block"
+    - name: "20 | Remove control-node /etc/hosts block"
       ansible.builtin.blockinfile:
         path: /etc/hosts
         marker: "# {mark} ANSIBLE MANAGED HOSTS (SYSTECH CONTROL NODE)"
         state: absent
         unsafe_writes: yes
 
-    - name: "11 | Display Control Node Cleanup Summary"
+    - name: "21 | Display Control Node Cleanup Summary"
       ansible.builtin.debug:
         msg: |
           =========================================

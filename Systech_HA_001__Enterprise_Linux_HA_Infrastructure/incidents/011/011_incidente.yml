@@ -31,6 +31,8 @@
 #    storage01 hacia el nodo objetivo, creando un mount NFS colgado ("Server not 
 #    responding") solo en ese nodo. Inyecta decoys (logs falsos, fstab misleading).
 # ==============================================================================
+# INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
+# ==============================================================================
 # INCIDENT ID    : 011
 # TITLE          : Apps no pueden leer/escribir en el share compartido (NFS Hang)
 # TARGET NODE    : Random node from app_nodes (Asymmetric Cluster State)
@@ -38,8 +40,8 @@
 # DIFFICULTY     : 5/10 (L1 Junior/Mid)
 # ESTIMATED TIME : 2 Hours
 # ==============================================================================
----
 
+---
 # -----------------------------------------------------------------------------
 # PLAY 1: POPULATE /ETC/HOSTS ON THE CONTROL NODE ITSELF
 # (La resolución DNS de la infraestructura remota ya la gestiona dns01.yml)
@@ -77,11 +79,18 @@
       ansible.builtin.set_fact:
         target_node: "{{ groups[target_group] | random }}"
 
+    - name: "11 | Display selected target"
+      ansible.builtin.debug:
+        msg: "Selected target: {{ target_node }}"
+
     - name: "20 | Add target to dynamic group"
       ansible.builtin.add_host:
         name: "{{ target_node }}"
         groups: incident_011_target
 
+# -----------------------------------------------------------------------------
+# PLAY 3: INJECT THE FAULT
+# -----------------------------------------------------------------------------
 - name: "Incident 011 | Inject NFS Network Partition on Single Node"
   hosts: incident_011_target
   become: yes
@@ -91,6 +100,14 @@
     storage_ip: "10.10.10.50"
     nfs_mount: "/var/www/html"
   tasks:
+    # --- Pre-flight check: verify NFS mount is active ---
+    - name: "25 | Verify NFS mount is currently active on target node"
+      ansible.builtin.command:
+        cmd: "df -h {{ nfs_mount }}"
+      register: df_check
+      changed_when: false
+      failed_when: df_check.rc != 0
+
     # --- Marker Guard ---
     - name: "30 | Check if incident was already injected"
       ansible.builtin.stat:
@@ -98,8 +115,8 @@
       register: check_inject
 
     - name: "31 | Abort if already active"
-      ansible.builtin.debug:
-        msg: "Incident {{ incident_id }} already injected on {{ inventory_hostname }}."
+      ansible.builtin.fail:
+        msg: "Incident {{ incident_id }} already injected on {{ inventory_hostname }}. Run recovery playbook first."
       when: check_inject.stat.exists
 
     - name: "32 | Create marker file"
@@ -107,10 +124,9 @@
         path: "{{ marker_file }}"
         state: touch
         mode: '0644'
-      when: not check_inject.stat.exists
 
     # --- INJECT THE FAULT (Asymmetric Firewall Block on Storage01) ---
-    - name: "40 | Block NFS traffic from storage01 to target node (Simulate network partition)"
+    - name: "40 | Block NFS traffic from storage01 to target node"
       ansible.posix.firewalld:
         rich_rule: 'rule family="ipv4" source address="{{ ansible_host }}" port port="2049" protocol="tcp" drop'
         permanent: false
@@ -118,23 +134,16 @@
         state: enabled
       delegate_to: storage01
       become: yes
-      when: not check_inject.stat.exists
 
-    # --- FORCE IMMEDIATE DISRUPTION (Invalidate pre-existing NFS session) ---
-    # Sin esto, una conexión TCP ya establecida antes de la inyección sigue
-    # fluyendo libremente: firewalld/netfilter permite por defecto el tráfico
-    # de conexiones ya conocidas (ct state ESTABLISHED), y la rich-rule de la
-    # task 40 solo bloquea conexiones NUEVAS. Esto vuelve el incidente NO
-    # reproducible de forma determinística si el mount ya llevaba tiempo activo.
-    - name: "42 | Ensure conntrack-tools is installed on storage01 (do not assume base state)"
+    # --- FORCE IMMEDIATE DISRUPTION (Invalidate existing NFS conntrack session) ---
+    - name: "41 | Ensure conntrack-tools is installed on storage01"
       ansible.builtin.dnf:
         name: conntrack-tools
         state: present
       delegate_to: storage01
       become: yes
-      when: not check_inject.stat.exists
 
-    - name: "43 | Invalidate existing NFS conntrack session to force immediate disruption"
+    - name: "42 | Invalidate existing NFS conntrack sessions from target node"
       ansible.builtin.command:
         cmd: "conntrack -D -s {{ ansible_host }}"
       delegate_to: storage01
@@ -142,13 +151,11 @@
       register: conntrack_result
       failed_when: conntrack_result.rc not in [0, 1]
       changed_when: conntrack_result.rc == 0
-      when: not check_inject.stat.exists
 
-    - name: "41 | Trigger background I/O to force kernel hang state on target node"
+    - name: "43 | Trigger background I/O to force kernel hang state on target node"
       ansible.builtin.shell:
         cmd: "cat {{ nfs_mount }}/index.php > /dev/null 2>&1 &"
       changed_when: false
-      when: not check_inject.stat.exists
 
     # --- DECOYS & LOGS (Enhanced Realism) ---
     - name: "50 | Ensure /var/log/messages exists before writing"
@@ -156,40 +163,37 @@
         path: /var/log/messages
         state: touch
         mode: '0644'
-      when: not check_inject.stat.exists
 
     - name: "51 | Inject fake NFS timeout logs in /var/log/messages"
+      vars:
+        timestamp: "{{ '%b %d %H:%M:%S' | strftime }}"
       ansible.builtin.lineinfile:
         path: /var/log/messages
-        line: "{{ item }}"
+        line: "{{ timestamp }} {{ inventory_hostname }} kernel: {{ item }}"
         create: yes
         mode: '0644'
       loop:
-        - "{{ ansible_date_time.epoch | int | strftime('%b %d %H:%M:%S') }} {{ inventory_hostname }} kernel: NFS: server {{ storage_ip }} not responding, still trying"
-        - "{{ ansible_date_time.epoch | int | strftime('%b %d %H:%M:%S') }} {{ inventory_hostname }} kernel: nfs: server {{ storage_ip }} not responding, timed out"
-      when: not check_inject.stat.exists
+        - "NFS: server {{ storage_ip }} not responding, still trying"
+        - "nfs: server {{ storage_ip }} not responding, timed out"
 
     - name: "52 | Ensure Apache error log exists before writing"
       ansible.builtin.file:
         path: /var/log/httpd/error_log
         state: touch
         mode: '0644'
-      when: not check_inject.stat.exists
 
     - name: "53 | Inject misleading 'Permission denied' in Apache logs"
       ansible.builtin.lineinfile:
         path: /var/log/httpd/error_log
-        line: "[Mon Sep 06 02:15:00.123456 2026] [core:error] [pid 1234] (13)Permission denied: [client 10.10.10.11:54321] AH00035: access to /index.php denied"
+        line: "[{{ ansible_date_time.epoch | int | strftime('%a %b %d %H:%M:%S.%f %Y') }}] [core:error] [pid 1234] (13)Permission denied: [client 10.10.10.11:54321] AH00035: access to /index.php denied"
         create: yes
         mode: '0644'
-      when: not check_inject.stat.exists
 
     - name: "54 | Add misleading comment to /etc/fstab"
       ansible.builtin.lineinfile:
         path: /etc/fstab
         line: "# WARNING: NFS mount unstable - use local storage instead"
         state: present
-      when: not check_inject.stat.exists
 
     # --- FINALIZE ---
     - name: "60 | Display Injection Summary"
@@ -211,4 +215,3 @@
           - Misleading 'Permission denied' in Apache error_log
           - Fake warning comment in /etc/fstab
           =========================================
-      when: not check_inject.stat.exists

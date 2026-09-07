@@ -53,7 +53,6 @@
 #     caídos y retirarlos automáticamente del pool de backend.
 #
 # ==============================================================================
-
 ---
 # ==============================================================================
 # WEB APP SETUP — AlmaLinux 9 (LXC Privilegiado)
@@ -78,10 +77,11 @@
 # BLOQUE 2: MONTAJE DEL RECURSO COMPARTIDO NFS
 # ======================================================================
 
-- name: "Forzar desmontaje perezoso (lazy) de /var/www/html para evitar Stale Mounts"
+- name: "Forzar desmontaje perezoso (lazy) de /var/www/html si está montado (evita Stale Mounts)"
   ansible.builtin.shell:
     cmd: "umount -l /var/www/html || true"
   changed_when: false
+  when: ansible_mounts | selectattr('mount', 'equalto', '/var/www/html') | list | length > 0
 
 - name: "Asegurar existencia del directorio local /var/www/html"
   ansible.builtin.file:
