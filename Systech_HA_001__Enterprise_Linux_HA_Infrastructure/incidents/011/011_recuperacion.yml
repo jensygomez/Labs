@@ -1,14 +1,14 @@
-==============================================================================
-INCIDENT RECOVERY PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
-==============================================================================
-INCIDENT ID   : 011
-PURPOSE       : Recover stale NFS mount on target node, clean decoys, 
-                and restore infrastructure to pre-incident state.
-NOTE          : Runs against all app_nodes (checks marker), plus localhost.
-==============================================================================
------------------------------------------------------------------------------
-PLAY 1: RECOVER REMOTE APP NODES
------------------------------------------------------------------------------
+# ==============================================================================
+# INCIDENT RECOVERY PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
+# ==============================================================================
+# INCIDENT ID   : 011
+# PURPOSE       : Recover stale NFS mount on target node, clean decoys, 
+#                 and restore infrastructure to pre-incident state.
+# NOTE          : Runs against all app_nodes (checks marker), plus localhost.
+# ==============================================================================
+# -----------------------------------------------------------------------------
+# PLAY 1: RECOVER REMOTE APP NODES
+# -----------------------------------------------------------------------------
 - name: "Recovery 011 | Recover Stale NFS Mount on Remote Nodes"
   hosts: app_nodes
   become: yes
@@ -88,9 +88,9 @@ PLAY 1: RECOVER REMOTE APP NODES
           =========================================
       when: check_inject.stat.exists
 
------------------------------------------------------------------------------
-PLAY 2: CLEAN LOCAL CONTROL NODE (/etc/hosts)
------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# PLAY 2: CLEAN LOCAL CONTROL NODE (/etc/hosts)
+# -----------------------------------------------------------------------------
 - name: "Recovery 011 | Clean Local Control Node (/etc/hosts)"
   hosts: localhost
   connection: local

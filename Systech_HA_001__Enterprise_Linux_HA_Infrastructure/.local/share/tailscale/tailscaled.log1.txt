@@ -1,0 +1,1 @@
+{"logtail":{"client_time":"2026-09-07T05:54:02.314236672Z","proc_id":386230050,"proc_seq":221},"v":1,"text":"netcheck: report: udp=true v6=true mapvarydest=false portmap= v4a=177.220.176.127:2453 v6a=[2001:1284:f514:3689:1bac:4087:1b98:a0af]:38695 derp=11 derpdist=1v4:119ms,11v4:10ms,11v6:12ms,16v4:113ms,16v6:113ms\n"}
