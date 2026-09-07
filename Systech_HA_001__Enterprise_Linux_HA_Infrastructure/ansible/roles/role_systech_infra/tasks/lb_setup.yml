@@ -135,11 +135,10 @@
         line: "ListenAddress {{ ansible_host }}"
         validate: 'sshd -t -f %s'
       register: sshd_config_modified
-    - name: "Recargar sshd si se modificó el archivo"
+    - name: "Recargar sshd para aplicar configuración (incluso si no cambió)"
       ansible.builtin.systemd:
         name: sshd
         state: reloaded
-      when: sshd_config_modified.changed
 
 # --- CONFIGURACIÓN DE SERVICIOS ---
 
