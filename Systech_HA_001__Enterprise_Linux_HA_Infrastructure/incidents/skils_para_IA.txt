@@ -18,7 +18,21 @@ REGLAS DE OBLIGATORIO CUMPLIMIENTO:
 5. SINTAXIS Y MÓDULOS NATIVOS:
    - Usa módulos nativos de Ansible (ansible.builtin.copy, lineinfile, cron, file, command) antes que 'shell' crudo.
    - Si usas 'command', usa el parámetro 'cmd:'.
-6. Compartiendo las caracteristicas de la Infraestructura:
+   
+6. SIMETRÍA DE RECUPERACIÓN (Inverse-Operation Rule):
+   - Todo recurso creado, modificado o instalado durante la inyección
+     (archivos, reglas de firewall, paquetes, entradas de log, comentarios
+     en archivos de configuración, sesiones/estado de red) DEBE tener una
+     tarea inversa explícita en el playbook de recuperación correspondiente.
+   - Antes de entregar un incident_XXX.yml, generar una tabla de trazabilidad
+     tarea-de-inyección -> tarea-de-recuperación. Si una fila queda sin
+     contraparte, el diseño está incompleto y no se entrega.
+   - Excepción: herramientas/paquetes de utilidad general instalados como
+     prerrequisito (ej. conntrack-tools) NO se desinstalan por defecto,
+     salvo que el diseñador lo indique explícitamente — no son un vestigio
+     del incidente, son una herramienta administrativa legítima que queda
+     disponible en el nodo.
+7. Compartiendo las caracteristicas de la Infraestructura:
 
 # SYSTECH-HA-001 — INFRASTRUCTURE HEADERS
 # Documentación de la arquitectura de los roles de Ansible
