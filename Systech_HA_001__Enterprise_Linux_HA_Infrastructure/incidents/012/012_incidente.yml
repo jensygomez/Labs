@@ -47,7 +47,24 @@
 # ==============================================================================
 
 
-
+# ==============================================================================
+# INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
+# ==============================================================================
+# INCIDENT ID    : 012
+# TITLE          : Un nodo de aplicación va lentísimo (huérfano CPU / zombie)
+# TARGET NODE    : Random node from app_nodes (Asymmetric Cluster State)
+# DIFFICULTY     : 5/10 (L1 Junior/Mid)
+# ESTIMATED TIME : 2 Hours
+#
+# ESTADO DE CONSTRUCCIÓN (por bloques, validado incrementalmente):
+#   [x] Bloque 1 - DNS control node + Fleet-Wide Marker Guard + selección aleatoria
+#   [x] Bloque 2 - Marker en nodo objetivo (SIN stress-ng/EPEL, descartado por
+#                  dependencia de red/mirror que no aporta al objetivo pedagógico)
+#   [ ] Bloque 3 - Decoys (script falso en disco + entrada en .bash_history)   <-- PENDIENTE
+#   [x] Bloque 4 - Huérfano CPU-heavy disfrazado (bash loop + setsid + exec -a)
+#   [ ] Bloque 5 - Zombie decorativo (Perl fork sin wait())                    <-- PENDIENTE
+#   [ ] Resumen final combinado                                               <-- PENDIENTE
+# ==============================================================================
 ---
 - name: "Incident 012 - Ensure Name Resolution on Control Node"
   hosts: localhost
@@ -88,15 +105,7 @@
   vars:
     target_group: "app_nodes"
   tasks:
-    - name: "06 | Build list of nodes with an ALREADY ACTIVE incident 012"
-      ansible.builtin.set_fact:
-        nodes_with_active_incident: "{{ groups[target_group] | select('in', hostvars.keys()) | select('test_marker_active') | list }}"
-      vars:
-        # Ansible no tiene un filtro 'test_marker_active' nativo, así que lo
-        # resolvemos con un list comprehension estilo jinja en la línea de abajo
-      when: false  # placeholder, ver tarea 07 (versión real, sin filtro custom)
-
-    - name: "07 | Build list of nodes with an ALREADY ACTIVE incident 012 (real)"
+    - name: "07 | Build list of nodes with an ALREADY ACTIVE incident 012"
       ansible.builtin.set_fact:
         nodes_with_active_incident: >-
           {{ groups[target_group]
@@ -125,12 +134,14 @@
         name: "{{ target_node }}"
         groups: incident_012_target
 
-- name: "Incident 012 | Create Marker and Install Prerequisite Tooling"
+- name: "Incident 012 | Create Marker and Launch Orphaned CPU-Heavy Process"
   hosts: incident_012_target
   become: yes
   vars:
     incident_id: "012"
     marker_file: "/var/run/.incident_{{ incident_id }}_marker"
+    orphan_pid_file: "/var/run/.incident_012_orphan_pid"
+    disguise_name: "app_reindex_worker"
   tasks:
     - name: "32 | Create marker file on selected target"
       ansible.builtin.file:
@@ -138,22 +149,57 @@
         state: touch
         mode: '0644'
 
-    - name: "40 | Ensure EPEL repository is present (stress-ng lives there on AlmaLinux 9)"
-      ansible.builtin.dnf:
-        name: epel-release
-        state: present
+    # ------------------------------------------------------------------
+    # BLOQUE 4 - Huérfano CPU-heavy disfrazado
+    # ------------------------------------------------------------------
+    # setsid crea una nueva sesión -> el proceso pierde el control tty
+    # heredado de la conexión SSH de Ansible. exec -a reemplaza argv[0]
+    # para que 'ps'/'top' muestren el nombre disfrazado en vez de 'bash'.
+    # El '&' backgroundea dentro del script temporal que ejecuta el
+    # módulo shell; ese script termina de inmediato, así que el proceso
+    # hijo (ya en su propia sesión) queda reparentado a PID 1 (systemd).
+    # ------------------------------------------------------------------
+    - name: "50 | Launch disguised orphaned CPU-heavy process (setsid + exec -a)"
+      ansible.builtin.shell:
+        cmd: |
+          setsid bash -c 'exec -a {{ disguise_name }} bash -c "while true; do :; done"' </dev/null >/dev/null 2>&1 &
+        executable: /bin/bash
+      changed_when: true
 
-    - name: "41 | Install stress-ng (prerequisite tooling, not a vestige of the incident)"
-      ansible.builtin.dnf:
-        name: stress-ng
-        state: present
+    - name: "51 | Allow process to fully detach and reparent to PID 1"
+      ansible.builtin.pause:
+        seconds: 2
 
-    - name: "42 | Verify stress-ng binary is available"
+    - name: "52 | Capture PID of the disguised orphaned process"
       ansible.builtin.command:
-        cmd: "stress-ng --version"
-      register: stressng_check
+        cmd: "pgrep -f {{ disguise_name }}"
+      register: orphan_pid
+      changed_when: false
+      failed_when: orphan_pid.stdout == ""
+
+    - name: "53 | Persist PID for recovery traceability"
+      ansible.builtin.copy:
+        dest: "{{ orphan_pid_file }}"
+        content: "{{ orphan_pid.stdout_lines[0] }}"
+        mode: '0644'
+
+    - name: "54 | Verify parent PID confirms orphan status (PPID should be 1)"
+      ansible.builtin.command:
+        cmd: "ps -o ppid= -p {{ orphan_pid.stdout_lines[0] }}"
+      register: orphan_ppid
       changed_when: false
 
-    - name: "43 | Display stress-ng version"
+    - name: "55 | Display Injection Summary"
       ansible.builtin.debug:
-        msg: "stress-ng installed: {{ stressng_check.stdout }}"
+        msg: |
+          =========================================
+          INCIDENT 012 - ORPHANED CPU-HEAVY PROCESS INJECTED
+          =========================================
+          Target Node   : {{ inventory_hostname }} (ASYMMETRIC STATE)
+          Disguised as  : {{ disguise_name }}
+          PID           : {{ orphan_pid.stdout_lines[0] }}
+          PPID          : {{ orphan_ppid.stdout | trim }} (should be 1 if reparented)
+          PID persisted : {{ orphan_pid_file }}
+
+          Other app_nodes remain HEALTHY.
+          =========================================
