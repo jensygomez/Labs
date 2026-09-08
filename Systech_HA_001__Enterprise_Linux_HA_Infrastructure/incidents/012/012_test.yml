@@ -1,62 +1,64 @@
 ---
-- name: "TEST Bloque 5 - Zombie decorativo (validación de mecánica, target fijo)"
+- name: "TEST Bloque 3 - Decoys (script en disco + bash_history)"
   hosts: app02
   become: yes
   vars:
-    disguise_parent: "legacy_cleanup_monitor"
-    zombie_parent_pid_file: "/var/run/.incident_012_zombie_parent_pid"
+    decoy_user: "jensyg"
+    decoy_group: "sysadmins"
   tasks:
-    - name: "59 | Confirm python3 is available (sanity check, should always be true)"
-      ansible.builtin.command:
-        cmd: "python3 --version"
-      register: python3_check
-      changed_when: false
+    - name: "80 | Ensure /opt/scripts directory exists (decoy maintenance scripts location)"
+      ansible.builtin.file:
+        path: /opt/scripts
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
 
-    - name: "60 | Launch disguised parent that forks a child without reaping it (zombie)"
-      ansible.builtin.shell:
-        cmd: |
-          setsid bash -c 'exec -a {{ disguise_parent }} python3 -c "
-          import os, time
-          pid = os.fork()
-          if pid == 0:
-              os._exit(0)
-          else:
-              time.sleep(100000)
-          "' </dev/null >/dev/null 2>&1 &
-        executable: /bin/bash
-      changed_when: true
-
-    - name: "61 | Allow fork + detach to settle"
-      ansible.builtin.pause:
-        seconds: 2
-
-    - name: "62 | Capture PID of the disguised zombie-parent process"
-      ansible.builtin.command:
-        cmd: "pgrep -f {{ disguise_parent }}"
-      register: zombie_parent_pid
-      changed_when: false
-      failed_when: zombie_parent_pid.stdout == ""
-
-    - name: "63 | Persist zombie-parent PID for recovery traceability"
+    - name: "81 | Deploy decoy maintenance script matching orphan process disguise"
       ansible.builtin.copy:
-        dest: "{{ zombie_parent_pid_file }}"
-        content: "{{ zombie_parent_pid.stdout_lines[0] }}"
-        mode: '0644'
+        dest: /opt/scripts/app_reindex_worker.sh
+        owner: root
+        group: root
+        mode: '0755'
+        content: |
+          #!/bin/bash
+          # Legacy reindexing worker - rebuilds search index cache for uploaded evidence files.
+          # NOTE: intended to run only via cron/systemd timer, NOT launched interactively.
+          while true; do
+              find /var/www/html/uploads -newer /tmp/.last_reindex -type f 2>/dev/null
+              touch /tmp/.last_reindex
+              sleep 5
+          done
 
-    - name: "64 | Verify a zombie child exists under this parent"
-      ansible.builtin.shell:
-        cmd: "ps -o pid,stat,comm --ppid {{ zombie_parent_pid.stdout_lines[0] }}"
-      register: zombie_check
-      changed_when: false
+    - name: "82 | Ensure jensyg's .bash_history file exists (do not overwrite ownership if already present)"
+      ansible.builtin.file:
+        path: "/home/{{ decoy_user }}/.bash_history"
+        state: touch
+        owner: "{{ decoy_user }}"
+        group: "{{ decoy_group }}"
+        mode: '0600'
+        modification_time: preserve
+        access_time: preserve
 
-    - name: "65 | Display Zombie Injection Summary"
+    - name: "83 | Inject misleading bash_history entries (manual launch without disown)"
+      ansible.builtin.lineinfile:
+        path: "/home/{{ decoy_user }}/.bash_history"
+        line: "{{ item }}"
+        insertafter: EOF
+        owner: "{{ decoy_user }}"
+        group: "{{ decoy_group }}"
+        mode: '0600'
+      loop:
+        - "cd /opt/scripts"
+        - "nohup ./app_reindex_worker.sh &"
+        - "exit"
+
+    - name: "84 | Display Decoy Injection Summary"
       ansible.builtin.debug:
         msg: |
           =========================================
-          INCIDENT 012 - DECORATIVE ZOMBIE INJECTED
+          INCIDENT 012 - DECOYS INJECTED
           =========================================
-          Disguised parent : {{ disguise_parent }}
-          Parent PID       : {{ zombie_parent_pid.stdout_lines[0] }}
-          Child status      :
-          {{ zombie_check.stdout }}
+          Script deployed  : /opt/scripts/app_reindex_worker.sh
+          History injected : /home/{{ decoy_user }}/.bash_history (3 lines appended)
           =========================================
