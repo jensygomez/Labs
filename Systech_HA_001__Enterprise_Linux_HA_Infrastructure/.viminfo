@@ -21,7 +21,7 @@ $#
 
 # Command Line History (newest to oldest):
 :wq
-|2,0,1788844495,,"wq"
+|2,0,1788845289,,"wq"
 :%s/^/# /g
 |2,0,1788341755,,"%s/^/# /g"
 :q!
@@ -72,32 +72,40 @@ $#
 |3,0,36,0,1,0,1788842749,"s"
 
 # File marks:
-'0  110  40  ~/incidents/011/011_remediation.yml
-|4,48,110,40,1788844495,"~/incidents/011/011_remediation.yml"
-'1  122  40  ~/incidents/011/011_remediation.yml
-|4,49,122,40,1788844422,"~/incidents/011/011_remediation.yml"
-'2  122  40  ~/incidents/011/011_remediation.yml
-|4,50,122,40,1788844422,"~/incidents/011/011_remediation.yml"
-'3  67  0  ~/incidents/011/011_remediation.yml
-|4,51,67,0,1788844101,"~/incidents/011/011_remediation.yml"
-'4  67  0  ~/incidents/011/011_remediation.yml
-|4,52,67,0,1788844101,"~/incidents/011/011_remediation.yml"
-'5  67  0  ~/incidents/011/011_remediation.yml
-|4,53,67,0,1788844101,"~/incidents/011/011_remediation.yml"
-'6  67  0  ~/incidents/011/011_remediation.yml
-|4,54,67,0,1788844101,"~/incidents/011/011_remediation.yml"
-'7  57  63  ~/incidents/011/011_remediation.yml
-|4,55,57,63,1788843905,"~/incidents/011/011_remediation.yml"
-'8  64  63  ~/incidents/011/011_remediation.yml
-|4,56,64,63,1788843905,"~/incidents/011/011_remediation.yml"
-'9  57  63  ~/incidents/011/011_remediation.yml
-|4,57,57,63,1788843905,"~/incidents/011/011_remediation.yml"
+'0  115  23  ~/incidents/011/011_remediation.yml
+|4,48,115,23,1788845289,"~/incidents/011/011_remediation.yml"
+'1  110  40  ~/incidents/011/011_remediation.yml
+|4,49,110,40,1788844495,"~/incidents/011/011_remediation.yml"
+'2  110  40  ~/incidents/011/011_remediation.yml
+|4,50,110,40,1788844495,"~/incidents/011/011_remediation.yml"
+'3  122  40  ~/incidents/011/011_remediation.yml
+|4,51,122,40,1788844422,"~/incidents/011/011_remediation.yml"
+'4  122  40  ~/incidents/011/011_remediation.yml
+|4,52,122,40,1788844422,"~/incidents/011/011_remediation.yml"
+'5  122  40  ~/incidents/011/011_remediation.yml
+|4,53,122,40,1788844422,"~/incidents/011/011_remediation.yml"
+'6  122  40  ~/incidents/011/011_remediation.yml
+|4,54,122,40,1788844422,"~/incidents/011/011_remediation.yml"
+'7  67  0  ~/incidents/011/011_remediation.yml
+|4,55,67,0,1788844101,"~/incidents/011/011_remediation.yml"
+'8  67  0  ~/incidents/011/011_remediation.yml
+|4,56,67,0,1788844101,"~/incidents/011/011_remediation.yml"
+'9  67  0  ~/incidents/011/011_remediation.yml
+|4,57,67,0,1788844101,"~/incidents/011/011_remediation.yml"
 
 # Jumplist (newest first):
+-'  115  23  ~/incidents/011/011_remediation.yml
+|4,39,115,23,1788845289,"~/incidents/011/011_remediation.yml"
+-'  1  0  ~/incidents/011/011_remediation.yml
+|4,39,1,0,1788845283,"~/incidents/011/011_remediation.yml"
+-'  110  40  ~/incidents/011/011_remediation.yml
+|4,39,110,40,1788844495,"~/incidents/011/011_remediation.yml"
 -'  110  40  ~/incidents/011/011_remediation.yml
 |4,39,110,40,1788844495,"~/incidents/011/011_remediation.yml"
 -'  1  0  ~/incidents/011/011_remediation.yml
 |4,39,1,0,1788844491,"~/incidents/011/011_remediation.yml"
+-'  122  40  ~/incidents/011/011_remediation.yml
+|4,39,122,40,1788844422,"~/incidents/011/011_remediation.yml"
 -'  122  40  ~/incidents/011/011_remediation.yml
 |4,39,122,40,1788844422,"~/incidents/011/011_remediation.yml"
 -'  122  40  ~/incidents/011/011_remediation.yml
@@ -110,12 +118,18 @@ $#
 |4,39,67,0,1788844101,"~/incidents/011/011_remediation.yml"
 -'  67  0  ~/incidents/011/011_remediation.yml
 |4,39,67,0,1788844101,"~/incidents/011/011_remediation.yml"
+-'  67  0  ~/incidents/011/011_remediation.yml
+|4,39,67,0,1788844101,"~/incidents/011/011_remediation.yml"
 -'  57  63  ~/incidents/011/011_remediation.yml
 |4,39,57,63,1788844036,"~/incidents/011/011_remediation.yml"
 -'  57  63  ~/incidents/011/011_remediation.yml
 |4,39,57,63,1788844036,"~/incidents/011/011_remediation.yml"
 -'  57  63  ~/incidents/011/011_remediation.yml
 |4,39,57,63,1788844036,"~/incidents/011/011_remediation.yml"
+-'  57  63  ~/incidents/011/011_remediation.yml
+|4,39,57,63,1788844036,"~/incidents/011/011_remediation.yml"
+-'  64  63  ~/incidents/011/011_remediation.yml
+|4,39,64,63,1788843905,"~/incidents/011/011_remediation.yml"
 -'  64  63  ~/incidents/011/011_remediation.yml
 |4,39,64,63,1788843905,"~/incidents/011/011_remediation.yml"
 -'  64  63  ~/incidents/011/011_remediation.yml
@@ -126,6 +140,8 @@ $#
 |4,39,1,0,1788843897,"~/incidents/011/011_remediation.yml"
 -'  1  0  ~/incidents/011/011_remediation.yml
 |4,39,1,0,1788843897,"~/incidents/011/011_remediation.yml"
+-'  62  28  ~/incidents/011/011_remediation.yml
+|4,39,62,28,1788843793,"~/incidents/011/011_remediation.yml"
 -'  62  28  ~/incidents/011/011_remediation.yml
 |4,39,62,28,1788843793,"~/incidents/011/011_remediation.yml"
 -'  62  28  ~/incidents/011/011_remediation.yml
@@ -148,12 +164,16 @@ $#
 |4,39,53,4,1788843688,"~/incidents/011/011_remediation.yml"
 -'  53  4  ~/incidents/011/011_remediation.yml
 |4,39,53,4,1788843688,"~/incidents/011/011_remediation.yml"
+-'  53  4  ~/incidents/011/011_remediation.yml
+|4,39,53,4,1788843688,"~/incidents/011/011_remediation.yml"
 -'  57  0  ~/incidents/011/011_remediation.yml
 |4,39,57,0,1788843591,"~/incidents/011/011_remediation.yml"
 -'  57  0  ~/incidents/011/011_remediation.yml
 |4,39,57,0,1788843591,"~/incidents/011/011_remediation.yml"
 -'  57  0  ~/incidents/011/011_remediation.yml
 |4,39,57,0,1788843591,"~/incidents/011/011_remediation.yml"
+-'  55  0  ~/incidents/011/011_remediation.yml
+|4,39,55,0,1788843366,"~/incidents/011/011_remediation.yml"
 -'  55  0  ~/incidents/011/011_remediation.yml
 |4,39,55,0,1788843366,"~/incidents/011/011_remediation.yml"
 -'  55  0  ~/incidents/011/011_remediation.yml
@@ -180,10 +200,14 @@ $#
 |4,39,59,0,1788843221,"~/incidents/011/011_remediation.yml"
 -'  59  0  ~/incidents/011/011_remediation.yml
 |4,39,59,0,1788843221,"~/incidents/011/011_remediation.yml"
+-'  59  0  ~/incidents/011/011_remediation.yml
+|4,39,59,0,1788843221,"~/incidents/011/011_remediation.yml"
 -'  57  0  ~/incidents/011/011_remediation.yml
 |4,39,57,0,1788843221,"~/incidents/011/011_remediation.yml"
 -'  57  0  ~/incidents/011/011_remediation.yml
 |4,39,57,0,1788843221,"~/incidents/011/011_remediation.yml"
+-'  45  0  ~/incidents/011/011_remediation.yml
+|4,39,45,0,1788843060,"~/incidents/011/011_remediation.yml"
 -'  45  0  ~/incidents/011/011_remediation.yml
 |4,39,45,0,1788843060,"~/incidents/011/011_remediation.yml"
 -'  45  0  ~/incidents/011/011_remediation.yml
@@ -220,6 +244,8 @@ $#
 |4,39,22,0,1788842728,"~/incidents/011/011_remediation.yml"
 -'  22  0  ~/incidents/011/011_remediation.yml
 |4,39,22,0,1788842728,"~/incidents/011/011_remediation.yml"
+-'  22  0  ~/incidents/011/011_remediation.yml
+|4,39,22,0,1788842728,"~/incidents/011/011_remediation.yml"
 -'  27  0  ~/incidents/011/011_remediation.yml
 |4,39,27,0,1788842113,"~/incidents/011/011_remediation.yml"
 -'  27  0  ~/incidents/011/011_remediation.yml
@@ -238,6 +264,10 @@ $#
 |4,39,27,0,1788842113,"~/incidents/011/011_remediation.yml"
 -'  27  0  ~/incidents/011/011_remediation.yml
 |4,39,27,0,1788842113,"~/incidents/011/011_remediation.yml"
+-'  27  0  ~/incidents/011/011_remediation.yml
+|4,39,27,0,1788842113,"~/incidents/011/011_remediation.yml"
+-'  50  0  ~/incidents/011/011_remediation.yml
+|4,39,50,0,1788841117,"~/incidents/011/011_remediation.yml"
 -'  50  0  ~/incidents/011/011_remediation.yml
 |4,39,50,0,1788841117,"~/incidents/011/011_remediation.yml"
 -'  50  0  ~/incidents/011/011_remediation.yml
@@ -264,44 +294,14 @@ $#
 |4,39,50,0,1788841117,"~/incidents/011/011_remediation.yml"
 -'  31  0  ~/incidents/011/011_remediation.yml
 |4,39,31,0,1788840854,"~/incidents/011/011_remediation.yml"
--'  36  0  ~/incidents/011/011_remediation.yml
-|4,39,36,0,1788840854,"~/incidents/011/011_remediation.yml"
--'  31  0  ~/incidents/011/011_remediation.yml
-|4,39,31,0,1788840854,"~/incidents/011/011_remediation.yml"
--'  36  0  ~/incidents/011/011_remediation.yml
-|4,39,36,0,1788840854,"~/incidents/011/011_remediation.yml"
--'  31  0  ~/incidents/011/011_remediation.yml
-|4,39,31,0,1788840854,"~/incidents/011/011_remediation.yml"
--'  36  0  ~/incidents/011/011_remediation.yml
-|4,39,36,0,1788840854,"~/incidents/011/011_remediation.yml"
--'  31  0  ~/incidents/011/011_remediation.yml
-|4,39,31,0,1788840854,"~/incidents/011/011_remediation.yml"
--'  36  0  ~/incidents/011/011_remediation.yml
-|4,39,36,0,1788840854,"~/incidents/011/011_remediation.yml"
--'  31  0  ~/incidents/011/011_remediation.yml
-|4,39,31,0,1788840854,"~/incidents/011/011_remediation.yml"
--'  36  0  ~/incidents/011/011_remediation.yml
-|4,39,36,0,1788840854,"~/incidents/011/011_remediation.yml"
--'  31  0  ~/incidents/011/011_remediation.yml
-|4,39,31,0,1788840854,"~/incidents/011/011_remediation.yml"
--'  36  0  ~/incidents/011/011_remediation.yml
-|4,39,36,0,1788840854,"~/incidents/011/011_remediation.yml"
--'  31  0  ~/incidents/011/011_remediation.yml
-|4,39,31,0,1788840854,"~/incidents/011/011_remediation.yml"
--'  36  0  ~/incidents/011/011_remediation.yml
-|4,39,36,0,1788840854,"~/incidents/011/011_remediation.yml"
--'  31  0  ~/incidents/011/011_remediation.yml
-|4,39,31,0,1788840854,"~/incidents/011/011_remediation.yml"
--'  36  0  ~/incidents/011/011_remediation.yml
-|4,39,36,0,1788840854,"~/incidents/011/011_remediation.yml"
 
 # History of marks within files (newest to oldest):
 
 > ~/incidents/011/011_remediation.yml
-	*	1788844494	0
-	"	110	40
-	^	110	41
-	.	110	40
+	*	1788845288	0
+	"	115	23
+	^	115	24
+	.	115	23
 	+	57	0
 	+	7	20
 	+	10	65
@@ -339,6 +339,7 @@ $#
 	+	67	0
 	+	122	40
 	+	110	40
+	+	115	23
 
 > ~/incidents/010/010_remediation.yml
 	*	1788674459	0

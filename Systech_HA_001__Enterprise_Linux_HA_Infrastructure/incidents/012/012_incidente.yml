@@ -1,0 +1,196 @@
+# ==============================================================================
+# INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
+# ==============================================================================
+# PREREQUISITOS DE PLATAFORMA (ejecutar ANTES de cualquier incident_XXX.yml):
+#
+#   1. setup_users.yml
+#      - Crea grupos, usuarios y reglas sudoers desde group_vars/all/system_users.yml
+#      - 'jensyg' ya viene definido ahí con target_groups: ["all"] y password
+#        real vía default_user_password ('LabPassword123!' hasheado con salt fijo)
+#      - NO recrear usuarios dentro de un playbook de incidente: ya están sanos.
+#
+#   2. dns01.yml
+#      - Configura /etc/hosts en TODOS los nodos de la infraestructura
+#        (hosts: all) desde el inventario dinámico.
+#      - NO duplicar esta tarea dentro de un playbook de incidente.
+#
+#   Un incident_XXX.yml SOLO debe encargarse de:
+#     a) Resolución DNS del CONTROL NODE (dns01.yml no lo cubre, corre contra
+#        'hosts: all' del inventario, no contra 'localhost').
+#     b) Seleccionar el/los nodo(s) objetivo.
+#     c) Inyectar el fallo puntual del escenario.
+#     d) Decoys/logs realistas para practicar troubleshooting.
+#
+# ==============================================================================
+# RESUMEN DE EJECUCIÓN (LÓGICA DEL INCIDENTE 011):
+# 1. RESOLUCIÓN DE NOMBRES EN EL CONTROL NODE (PLAY 1): Actualiza /etc/hosts
+#    localmente para permitir troubleshooting por nombre DNS desde el control node.
+# 2. SELECCIÓN ALEATORIA (PLAY 2): Elige UN SOLO nodo al azar del grupo 'app_nodes' 
+#    para crear un estado asimétrico en el clúster HA.
+# 3. INYECCIÓN DEL FALLO (PLAY 3): Bloquea el tráfico NFS (puerto 2049) desde 
+#    storage01 hacia el nodo objetivo, creando un mount NFS colgado ("Server not 
+#    responding") solo en ese nodo. Inyecta decoys (logs falsos, fstab misleading).
+# ==============================================================================
+# INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
+# ==============================================================================
+# INCIDENT ID    : 011
+# TITLE          : Apps no pueden leer/escribir en el share compartido (NFS Hang)
+# TARGET NODE    : Random node from app_nodes (Asymmetric Cluster State)
+# TARGET SERVICE : NFS Mount /var/www/html (storage01:/exports/webdata)
+# DIFFICULTY     : 5/10 (L1 Junior/Mid)
+# ESTIMATED TIME : 2 Hours
+# ==============================================================================
+
+
+# ==============================================================================
+# INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
+# ==============================================================================
+---
+- name: "Incident 011 - Ensure Name Resolution on Control Node"
+  hosts: localhost
+  connection: local
+  become: yes
+  gather_facts: false
+  tasks:
+    - name: "01 | Update /etc/hosts on control node with full inventory"
+      ansible.builtin.blockinfile:
+        path: /etc/hosts
+        marker: "# {mark} ANSIBLE MANAGED HOSTS (SYSTECH CONTROL NODE)"
+        unsafe_writes: yes
+        block: |
+          {% for host in groups['all'] %}
+          {% if hostvars[host].ansible_host is defined %}
+          {{ hostvars[host].ansible_host }} {{ host }} {{ host }}.systech.local
+          {% endif %}
+          {% endfor %}
+
+- name: "Incident 011 - Select Random Target and Inject Fault"
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: no
+  vars:
+    target_group: "app_nodes"
+  tasks:
+    - name: "10 | Pick random target from {{ target_group }}"
+      ansible.builtin.set_fact:
+        target_node: "{{ groups[target_group] | random }}"
+
+    - name: "11 | Display selected target"
+      ansible.builtin.debug:
+        msg: "Selected target: {{ target_node }}"
+
+    - name: "20 | Add target to dynamic group"
+      ansible.builtin.add_host:
+        name: "{{ target_node }}"
+        groups: incident_011_target
+
+- name: "Incident 011 | Inject NFS Network Partition on Single Node"
+  hosts: incident_011_target
+  become: yes
+  vars:
+    incident_id: "011"
+    marker_file: "/var/run/.incident_{{ incident_id }}_marker"
+    storage_ip: "10.10.10.50"
+    nfs_mount: "/var/www/html"
+  tasks:
+    # --- Marker Guard ---
+    - name: "30 | Check if incident was already injected"
+      ansible.builtin.stat:
+        path: "{{ marker_file }}"
+      register: check_inject
+
+    - name: "31 | Abort if already active"
+      ansible.builtin.fail:
+        msg: "Incident {{ incident_id }} already injected on {{ inventory_hostname }}. Run recovery playbook first."
+      when: check_inject.stat.exists
+
+    - name: "32 | Create marker file"
+      ansible.builtin.file:
+        path: "{{ marker_file }}"
+        state: touch
+        mode: '0644'
+
+    # --- PASO 1: INYECTAR DECOYS Y LOGS PRIMERO (Mientras el almacenamiento está responsive) ---
+    - name: "50 | Ensure /var/log/messages exists before writing"
+      ansible.builtin.file:
+        path: /var/log/messages
+        state: touch
+        mode: '0644'
+
+    - name: "51 | Inject fake NFS timeout logs in /var/log/messages"
+      ansible.builtin.lineinfile:
+        path: /var/log/messages
+        line: "{{ item }}"
+        create: yes
+        mode: '0644'
+      loop:
+        - "{{ lookup('pipe', 'date +\"%b %d %H:%M:%S\"') }} {{ inventory_hostname }} kernel: NFS: server {{ storage_ip }} not responding, still trying"
+        - "{{ lookup('pipe', 'date +\"%b %d %H:%M:%S\"') }} {{ inventory_hostname }} kernel: nfs: server {{ storage_ip }} not responding, timed out"
+
+    - name: "52 | Ensure Apache error log directory and file exist"
+      ansible.builtin.file:
+        path: /var/log/httpd/error_log
+        state: touch
+        mode: '0644'
+
+    - name: "53 | Inject misleading 'Permission denied' in Apache logs"
+      ansible.builtin.lineinfile:
+        path: /var/log/httpd/error_log
+        line: "[{{ lookup('pipe', 'date +\"%a %b %d %H:%M:%S %Y\"') }}] [core:error] [pid 1234] (13)Permission denied: [client 10.10.10.11:54321] AH00035: access to /index.php denied"
+        create: yes
+        mode: '0644'
+
+    - name: "54 | Add misleading comment to /etc/fstab"
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        line: "# WARNING: NFS mount unstable - use local storage instead"
+        state: present
+
+    # --- PASO 2: APLICAR BLOQUEO DE RED ---
+    - name: "40 | Block NFS traffic from storage01 to target node"
+      ansible.posix.firewalld:
+        rich_rule: 'rule family="ipv4" source address="{{ ansible_host }}" port port="2049" protocol="tcp" drop'
+        permanent: false
+        immediate: true
+        state: enabled
+      delegate_to: storage01
+      become: yes
+
+    - name: "41 | Ensure conntrack-tools is installed on storage01"
+      ansible.builtin.dnf:
+        name: conntrack-tools
+        state: present
+      delegate_to: storage01
+      become: yes
+
+    - name: "42 | Invalidate existing NFS conntrack sessions from target node"
+      ansible.builtin.command:
+        cmd: "conntrack -D -s {{ ansible_host }}"
+      delegate_to: storage01
+      become: yes
+      register: conntrack_result
+      failed_when: conntrack_result.rc not in [0, 1]
+      changed_when: conntrack_result.rc == 0
+
+    # --- PASO 3: FORZAR ESTADO DE HANG CON DISOWN/NOHUP PARA EVITAR BLOQUEAR SSH ---
+    - name: "43 | Trigger background I/O to force kernel hang state on target node"
+      ansible.builtin.shell:
+        cmd: "nohup cat {{ nfs_mount }}/index.php > /dev/null 2>&1 &"
+      changed_when: false
+
+    # --- FINALIZE ---
+    - name: "60 | Display Injection Summary"
+      ansible.builtin.debug:
+        msg: |
+          =========================================
+          INCIDENT 011 SUCCESSFULLY INJECTED
+          =========================================
+          Target Node  : {{ inventory_hostname }} (ASYMMETRIC STATE)
+          Storage IP   : {{ storage_ip }}
+          Mount Point  : {{ nfs_mount }}
+          
+          NFS traffic from storage01 to {{ inventory_hostname }} is BLOCKED.
+          The mount /var/www/html is now HANGING on this node.
+          Other app_nodes remain HEALTHY.
+          =========================================

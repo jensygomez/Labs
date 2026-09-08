@@ -1,49 +1,12 @@
 ---
-- name: "011 Remediation - Diagnose and clean NFS hang on app nodes"
-  hosts: app_nodes
-  become: true
-  gather_facts: false
-  vars:
-    nfs_mount: "/var/www/html"
-  tasks:
-    - name: "1.1 | Check if NFS mount responds"
-      ansible.builtin.command: "timeout 2 stat -t {{ nfs_mount }}"
-      register: nfs_check
-      failed_when: false
-      changed_when: false
-
-    - name: "1.2 | Define affected nodes fact"
-      ansible.builtin.set_fact:
-        nfs_affected: "{{ nfs_check.rc != 0 }}"
-
-    - name: "1.3 | Kill stuck mount.nfs processes (only if affected)"
-      ansible.builtin.command: "pkill -9 -f mount.nfs"
-      register: pkill_result
-      failed_when: false
-      changed_when: pkill_result.rc == 0
-      when: nfs_affected
-
-    - name: "1.4 | Lazy unmount NFS (only if affected)"
-      ansible.builtin.command: "umount -f -l {{ nfs_mount }}"
-      register: umount_result
-      failed_when: false
-      changed_when: umount_result.rc == 0
-      when: nfs_affected
-
-    - name: "1.5 | Remove incident marker file (only if affected)"
-      ansible.builtin.file:
-        path: "/var/run/.incident_011_marker"
-        state: absent
-      when: nfs_affected
-
-- name: "011 Remediation - Remove NFS network block on storage01"
+- name: "011 Remediation - Restore NFS network access on storage"
   hosts: storage01
   become: true
   gather_facts: false
   vars:
     nfs_port: 2049
   tasks:
-    - name: "2.1 | Remove firewalld rich rule blocking NFS (via shell)"
+    - name: "1.1 | Remove firewalld rich rule blocking NFS from app nodes"
       ansible.builtin.shell:
         cmd: |
           firewall-cmd --remove-rich-rule='rule family="ipv4" source address="{{ hostvars[item].ansible_host }}" port port="{{ nfs_port }}" protocol="tcp" drop' --zone=public
@@ -52,16 +15,15 @@
       loop: "{{ groups['app_nodes'] }}"
       register: firewall_result
       changed_when: "'success' in firewall_result.stdout or firewall_result.rc == 0"
-      failed_when: firewall_result.rc not in [0, 112]  # 112 = rule not found (no error)
-      when: hostvars[item].nfs_affected | default(false)
+      failed_when: firewall_result.rc not in [0, 112]
 
-    - name: "2.2 | Flush conntrack sessions for NFS (port 2049)"
+    - name: "1.2 | Flush conntrack sessions for NFS"
       ansible.builtin.command: "conntrack -D -p tcp --dport {{ nfs_port }}"
       register: conntrack_result
       failed_when: false
       changed_when: conntrack_result.rc == 0
 
-- name: "011 Remediation - Remount NFS and restart services on affected nodes"
+- name: "011 Remediation - Diagnose and recover affected app nodes"
   hosts: app_nodes
   become: true
   gather_facts: false
@@ -71,40 +33,83 @@
     nfs_fstype: "nfs"
     nfs_opts: "defaults,soft,timeo=10,retrans=3"
   tasks:
-    - name: "3.1 | Ensure mount point exists"
+    - name: "2.1 | Check if NFS mount responds"
+      ansible.builtin.command: "timeout 2 stat -t {{ nfs_mount }}"
+      register: nfs_check
+      failed_when: false
+      changed_when: false
+
+    - name: "2.2 | Define affected nodes fact"
+      ansible.builtin.set_fact:
+        nfs_affected: "{{ nfs_check.rc != 0 }}"
+
+    - name: "2.3 | Stop httpd (only if affected)"
+      ansible.builtin.systemd:
+        name: httpd
+        state: stopped
+      when: nfs_affected
+
+    - name: "2.4 | Kill stuck mount.nfs processes (only if affected)"
+      ansible.builtin.command: "pkill -9 -f mount.nfs"
+      register: pkill_result
+      failed_when: false
+      changed_when: pkill_result.rc == 0
+      when: nfs_affected
+
+    - name: "2.5 | Try normal umount first (only if affected)"
+      ansible.builtin.command: "umount {{ nfs_mount }}"
+      register: umount_normal
+      failed_when: false
+      changed_when: umount_normal.rc == 0
+      when: nfs_affected
+
+    - name: "2.6 | Lazy unmount if normal umount failed (only if affected)"
+      ansible.builtin.command: "umount -f -l {{ nfs_mount }}"
+      register: umount_lazy
+      failed_when: false
+      changed_when: umount_lazy.rc == 0
+      when: nfs_affected and umount_normal.rc != 0
+
+    - name: "2.7 | Remove incident marker file (only if affected)"
+      ansible.builtin.file:
+        path: "/var/run/.incident_011_marker"
+        state: absent
+      when: nfs_affected
+
+    - name: "2.8 | Ensure mount point exists"
       ansible.builtin.file:
         path: "{{ nfs_mount }}"
         state: directory
         mode: '0755'
 
-    - name: "3.2 | Mount NFS with proper options (only if affected)"
+    - name: "2.9 | Mount NFS with proper options (only if affected)"
       ansible.posix.mount:
         path: "{{ nfs_mount }}"
         src: "{{ nfs_src }}"
         fstype: "{{ nfs_fstype }}"
         opts: "{{ nfs_opts }}"
         state: mounted
-      when: nfs_affected | default(false)
+      when: nfs_affected
       register: mount_res
       until: mount_res is success
       retries: 3
       delay: 5
 
-    - name: "3.3 | Restart Apache (httpd) to refresh file descriptors"
+    - name: "2.10 | Start httpd (only if affected)"
       ansible.builtin.systemd:
         name: httpd
-        state: restarted
-      when: nfs_affected | default(false)
+        state: started
+      when: nfs_affected
 
-    - name: "3.4 | Display remediation summary"
+    - name: "2.11 | Display remediation summary"
       ansible.builtin.debug:
         msg: |
           =========================================
           INCIDENT 011 REMEDIATION COMPLETED
           =========================================
           Node: {{ inventory_hostname }}
-          Affected: {{ nfs_affected | default(false) }}
+          Affected: {{ nfs_affected }}
           Mount: {{ nfs_mount }}
           Status: mounted
           =========================================
-      when: nfs_affected | default(false)
+      when: nfs_affected

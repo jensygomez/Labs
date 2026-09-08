@@ -44,8 +44,8 @@
       # Rangos controlados por Ansible (puedes cambiarlos con --extra-vars)
       OCUPA_MIN={{ client01_ocupacion_min | default(10) }}
       OCUPA_MAX={{ client01_ocupacion_max | default(30) }}
-      DESCANSO_MIN={{ client01_descanso_min | default(30) }}
-      DESCANSO_MAX={{ client01_descanso_max | default(90) }}
+      DESCANSO_MIN={{ client01_descanso_min | default(60) }}
+      DESCANSO_MAX={{ client01_descanso_max | default(120) }}
 
       echo "[$(date +'%T')] === INICIANDO SERVICIO CÍCLICO (Ocupa: ${OCUPA_MIN}-${OCUPA_MAX}s, Descansa: ${DESCANSO_MIN}-${DESCANSO_MAX}s) ==="
 

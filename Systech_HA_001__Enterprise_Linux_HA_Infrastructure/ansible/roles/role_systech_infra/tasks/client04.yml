@@ -58,8 +58,8 @@
       # Rangos controlados por Ansible
       OCUPA_MIN={{ client04_ocupacion_min | default(10) }}
       OCUPA_MAX={{ client04_ocupacion_max | default(25) }}
-      DESCANSO_MIN={{ client04_descanso_min | default(30) }}
-      DESCANSO_MAX={{ client04_descanso_max | default(90) }}
+      DESCANSO_MIN={{ client04_descanso_min | default(60) }}
+      DESCANSO_MAX={{ client04_descanso_max | default(120) }}
       # Número máximo de archivos .txt a mantener en total (incluye consolidados)
       TOTAL_MAX={{ client04_max_keep | default(20) }}
 
