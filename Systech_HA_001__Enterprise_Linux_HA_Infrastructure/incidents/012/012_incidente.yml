@@ -47,6 +47,7 @@
 # ==============================================================================
 
 
+
 ---
 - name: "Incident 012 - Ensure Name Resolution on Control Node"
   hosts: localhost
@@ -66,7 +67,20 @@
           {% endif %}
           {% endfor %}
 
-- name: "Incident 012 - Select Random Target and Prepare Marker"
+- name: "Incident 012 | Fleet-Wide Marker Check (Idempotency Guard)"
+  hosts: app_nodes
+  become: yes
+  gather_facts: false
+  vars:
+    incident_id: "012"
+    marker_file: "/var/run/.incident_{{ incident_id }}_marker"
+  tasks:
+    - name: "05 | Check marker on every app_node BEFORE selecting a target"
+      ansible.builtin.stat:
+        path: "{{ marker_file }}"
+      register: incident_012_check
+
+- name: "Incident 012 - Select Random Target (Only if Fleet is Clean)"
   hosts: localhost
   connection: local
   gather_facts: false
@@ -74,7 +88,31 @@
   vars:
     target_group: "app_nodes"
   tasks:
-    - name: "10 | Pick random target from {{ target_group }}"
+    - name: "06 | Build list of nodes with an ALREADY ACTIVE incident 012"
+      ansible.builtin.set_fact:
+        nodes_with_active_incident: "{{ groups[target_group] | select('in', hostvars.keys()) | select('test_marker_active') | list }}"
+      vars:
+        # Ansible no tiene un filtro 'test_marker_active' nativo, así que lo
+        # resolvemos con un list comprehension estilo jinja en la línea de abajo
+      when: false  # placeholder, ver tarea 07 (versión real, sin filtro custom)
+
+    - name: "07 | Build list of nodes with an ALREADY ACTIVE incident 012 (real)"
+      ansible.builtin.set_fact:
+        nodes_with_active_incident: >-
+          {{ groups[target_group]
+             | map('extract', hostvars, 'incident_012_check')
+             | map(attribute='stat.exists')
+             | zip(groups[target_group])
+             | selectattr(0)
+             | map(attribute=1)
+             | list }}
+
+    - name: "08 | Abort entirely if ANY node in the fleet already has incident 012 active"
+      ansible.builtin.fail:
+        msg: "Incident 012 already active on: {{ nodes_with_active_incident }}. Run recovery playbook first — do NOT re-inject on a fresh random node."
+      when: nodes_with_active_incident | length > 0
+
+    - name: "10 | Pick random target from {{ target_group }} (fleet confirmed clean)"
       ansible.builtin.set_fact:
         target_node: "{{ groups[target_group] | random }}"
 
@@ -87,25 +125,35 @@
         name: "{{ target_node }}"
         groups: incident_012_target
 
-- name: "Incident 012 | Marker Guard on Target Node"
+- name: "Incident 012 | Create Marker and Install Prerequisite Tooling"
   hosts: incident_012_target
   become: yes
   vars:
     incident_id: "012"
     marker_file: "/var/run/.incident_{{ incident_id }}_marker"
   tasks:
-    - name: "30 | Check if incident was already injected"
-      ansible.builtin.stat:
-        path: "{{ marker_file }}"
-      register: check_inject
-
-    - name: "31 | Abort if already active"
-      ansible.builtin.fail:
-        msg: "Incident {{ incident_id }} already injected on {{ inventory_hostname }}. Run recovery playbook first."
-      when: check_inject.stat.exists
-
-    - name: "32 | Create marker file"
+    - name: "32 | Create marker file on selected target"
       ansible.builtin.file:
         path: "{{ marker_file }}"
         state: touch
         mode: '0644'
+
+    - name: "40 | Ensure EPEL repository is present (stress-ng lives there on AlmaLinux 9)"
+      ansible.builtin.dnf:
+        name: epel-release
+        state: present
+
+    - name: "41 | Install stress-ng (prerequisite tooling, not a vestige of the incident)"
+      ansible.builtin.dnf:
+        name: stress-ng
+        state: present
+
+    - name: "42 | Verify stress-ng binary is available"
+      ansible.builtin.command:
+        cmd: "stress-ng --version"
+      register: stressng_check
+      changed_when: false
+
+    - name: "43 | Display stress-ng version"
+      ansible.builtin.debug:
+        msg: "stress-ng installed: {{ stressng_check.stdout }}"
