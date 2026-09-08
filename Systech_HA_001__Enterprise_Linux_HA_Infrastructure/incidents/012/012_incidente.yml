@@ -45,8 +45,10 @@
 # ==============================================================================
 # INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
 # ==============================================================================
+
+
 ---
-- name: "Incident 011 - Ensure Name Resolution on Control Node"
+- name: "Incident 012 - Ensure Name Resolution on Control Node"
   hosts: localhost
   connection: local
   become: yes
@@ -64,7 +66,7 @@
           {% endif %}
           {% endfor %}
 
-- name: "Incident 011 - Select Random Target and Inject Fault"
+- name: "Incident 012 - Select Random Target and Prepare Marker"
   hosts: localhost
   connection: local
   gather_facts: false
@@ -83,18 +85,15 @@
     - name: "20 | Add target to dynamic group"
       ansible.builtin.add_host:
         name: "{{ target_node }}"
-        groups: incident_011_target
+        groups: incident_012_target
 
-- name: "Incident 011 | Inject NFS Network Partition on Single Node"
-  hosts: incident_011_target
+- name: "Incident 012 | Marker Guard on Target Node"
+  hosts: incident_012_target
   become: yes
   vars:
-    incident_id: "011"
+    incident_id: "012"
     marker_file: "/var/run/.incident_{{ incident_id }}_marker"
-    storage_ip: "10.10.10.50"
-    nfs_mount: "/var/www/html"
   tasks:
-    # --- Marker Guard ---
     - name: "30 | Check if incident was already injected"
       ansible.builtin.stat:
         path: "{{ marker_file }}"
@@ -110,87 +109,3 @@
         path: "{{ marker_file }}"
         state: touch
         mode: '0644'
-
-    # --- PASO 1: INYECTAR DECOYS Y LOGS PRIMERO (Mientras el almacenamiento está responsive) ---
-    - name: "50 | Ensure /var/log/messages exists before writing"
-      ansible.builtin.file:
-        path: /var/log/messages
-        state: touch
-        mode: '0644'
-
-    - name: "51 | Inject fake NFS timeout logs in /var/log/messages"
-      ansible.builtin.lineinfile:
-        path: /var/log/messages
-        line: "{{ item }}"
-        create: yes
-        mode: '0644'
-      loop:
-        - "{{ lookup('pipe', 'date +\"%b %d %H:%M:%S\"') }} {{ inventory_hostname }} kernel: NFS: server {{ storage_ip }} not responding, still trying"
-        - "{{ lookup('pipe', 'date +\"%b %d %H:%M:%S\"') }} {{ inventory_hostname }} kernel: nfs: server {{ storage_ip }} not responding, timed out"
-
-    - name: "52 | Ensure Apache error log directory and file exist"
-      ansible.builtin.file:
-        path: /var/log/httpd/error_log
-        state: touch
-        mode: '0644'
-
-    - name: "53 | Inject misleading 'Permission denied' in Apache logs"
-      ansible.builtin.lineinfile:
-        path: /var/log/httpd/error_log
-        line: "[{{ lookup('pipe', 'date +\"%a %b %d %H:%M:%S %Y\"') }}] [core:error] [pid 1234] (13)Permission denied: [client 10.10.10.11:54321] AH00035: access to /index.php denied"
-        create: yes
-        mode: '0644'
-
-    - name: "54 | Add misleading comment to /etc/fstab"
-      ansible.builtin.lineinfile:
-        path: /etc/fstab
-        line: "# WARNING: NFS mount unstable - use local storage instead"
-        state: present
-
-    # --- PASO 2: APLICAR BLOQUEO DE RED ---
-    - name: "40 | Block NFS traffic from storage01 to target node"
-      ansible.posix.firewalld:
-        rich_rule: 'rule family="ipv4" source address="{{ ansible_host }}" port port="2049" protocol="tcp" drop'
-        permanent: false
-        immediate: true
-        state: enabled
-      delegate_to: storage01
-      become: yes
-
-    - name: "41 | Ensure conntrack-tools is installed on storage01"
-      ansible.builtin.dnf:
-        name: conntrack-tools
-        state: present
-      delegate_to: storage01
-      become: yes
-
-    - name: "42 | Invalidate existing NFS conntrack sessions from target node"
-      ansible.builtin.command:
-        cmd: "conntrack -D -s {{ ansible_host }}"
-      delegate_to: storage01
-      become: yes
-      register: conntrack_result
-      failed_when: conntrack_result.rc not in [0, 1]
-      changed_when: conntrack_result.rc == 0
-
-    # --- PASO 3: FORZAR ESTADO DE HANG CON DISOWN/NOHUP PARA EVITAR BLOQUEAR SSH ---
-    - name: "43 | Trigger background I/O to force kernel hang state on target node"
-      ansible.builtin.shell:
-        cmd: "nohup cat {{ nfs_mount }}/index.php > /dev/null 2>&1 &"
-      changed_when: false
-
-    # --- FINALIZE ---
-    - name: "60 | Display Injection Summary"
-      ansible.builtin.debug:
-        msg: |
-          =========================================
-          INCIDENT 011 SUCCESSFULLY INJECTED
-          =========================================
-          Target Node  : {{ inventory_hostname }} (ASYMMETRIC STATE)
-          Storage IP   : {{ storage_ip }}
-          Mount Point  : {{ nfs_mount }}
-          
-          NFS traffic from storage01 to {{ inventory_hostname }} is BLOCKED.
-          The mount /var/www/html is now HANGING on this node.
-          Other app_nodes remain HEALTHY.
-          =========================================
