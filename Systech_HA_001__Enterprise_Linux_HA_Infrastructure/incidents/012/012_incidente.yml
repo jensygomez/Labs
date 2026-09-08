@@ -134,14 +134,15 @@
         name: "{{ target_node }}"
         groups: incident_012_target
 
-- name: "Incident 012 | Create Marker and Launch Orphaned CPU-Heavy Process"
+- name: "Incident 012 | Create Marker and Inject Orphaned Process + Decorative Zombie"
   hosts: incident_012_target
   become: yes
   vars:
     incident_id: "012"
     marker_file: "/var/run/.incident_{{ incident_id }}_marker"
-    orphan_pid_file: "/var/run/.incident_012_orphan_pid"
-    disguise_name: "app_reindex_worker"
+    state_file: "/var/run/.incident_{{ incident_id }}_state.json"
+    disguise_orphan: "app_reindex_worker"
+    disguise_zombie_parent: "legacy_cleanup_monitor"
   tasks:
     - name: "32 | Create marker file on selected target"
       ansible.builtin.file:
@@ -150,56 +151,108 @@
         mode: '0644'
 
     # ------------------------------------------------------------------
-    # BLOQUE 4 - Huérfano CPU-heavy disfrazado
-    # ------------------------------------------------------------------
-    # setsid crea una nueva sesión -> el proceso pierde el control tty
-    # heredado de la conexión SSH de Ansible. exec -a reemplaza argv[0]
-    # para que 'ps'/'top' muestren el nombre disfrazado en vez de 'bash'.
-    # El '&' backgroundea dentro del script temporal que ejecuta el
-    # módulo shell; ese script termina de inmediato, así que el proceso
-    # hijo (ya en su propia sesión) queda reparentado a PID 1 (systemd).
+    # SUB-BLOQUE A - Huérfano CPU-heavy disfrazado
     # ------------------------------------------------------------------
     - name: "50 | Launch disguised orphaned CPU-heavy process (setsid + exec -a)"
       ansible.builtin.shell:
         cmd: |
-          setsid bash -c 'exec -a {{ disguise_name }} bash -c "while true; do :; done"' </dev/null >/dev/null 2>&1 &
+          setsid bash -c 'exec -a {{ disguise_orphan }} bash -c "while true; do :; done"' </dev/null >/dev/null 2>&1 &
         executable: /bin/bash
       changed_when: true
 
-    - name: "51 | Allow process to fully detach and reparent to PID 1"
+    - name: "51 | Allow orphan process to fully detach and reparent to PID 1"
       ansible.builtin.pause:
         seconds: 2
 
     - name: "52 | Capture PID of the disguised orphaned process"
       ansible.builtin.command:
-        cmd: "pgrep -f {{ disguise_name }}"
+        cmd: "pgrep -f {{ disguise_orphan }}"
       register: orphan_pid
       changed_when: false
       failed_when: orphan_pid.stdout == ""
 
-    - name: "53 | Persist PID for recovery traceability"
-      ansible.builtin.copy:
-        dest: "{{ orphan_pid_file }}"
-        content: "{{ orphan_pid.stdout_lines[0] }}"
-        mode: '0644'
-
-    - name: "54 | Verify parent PID confirms orphan status (PPID should be 1)"
+    - name: "53 | Verify orphan's parent PID confirms orphan status (PPID should be 1)"
       ansible.builtin.command:
         cmd: "ps -o ppid= -p {{ orphan_pid.stdout_lines[0] }}"
       register: orphan_ppid
       changed_when: false
 
-    - name: "55 | Display Injection Summary"
+    # ------------------------------------------------------------------
+    # SUB-BLOQUE B - Zombie decorativo (python3 fork sin wait())
+    # ------------------------------------------------------------------
+    - name: "54 | Confirm python3 is available (sanity check)"
+      ansible.builtin.command:
+        cmd: "python3 --version"
+      register: python3_check
+      changed_when: false
+
+    - name: "55 | Launch disguised parent that forks a child without reaping it (zombie)"
+      ansible.builtin.shell:
+        cmd: |
+          setsid bash -c 'exec -a {{ disguise_zombie_parent }} python3 -c "
+          import os, time
+          pid = os.fork()
+          if pid == 0:
+              os._exit(0)
+          else:
+              time.sleep(100000)
+          "' </dev/null >/dev/null 2>&1 &
+        executable: /bin/bash
+      changed_when: true
+
+    - name: "56 | Allow zombie fork + detach to settle"
+      ansible.builtin.pause:
+        seconds: 2
+
+    - name: "57 | Capture PID of the disguised zombie-parent process"
+      ansible.builtin.command:
+        cmd: "pgrep -f {{ disguise_zombie_parent }}"
+      register: zombie_parent_pid
+      changed_when: false
+      failed_when: zombie_parent_pid.stdout == ""
+
+    - name: "58 | Verify a zombie child exists under this parent"
+      ansible.builtin.shell:
+        cmd: "ps -o pid,stat,comm --ppid {{ zombie_parent_pid.stdout_lines[0] }}"
+      register: zombie_check
+      changed_when: false
+
+    # ------------------------------------------------------------------
+    # ESTADO CONSOLIDADO - un solo archivo JSON para recovery
+    # ------------------------------------------------------------------
+    - name: "70 | Persist consolidated incident state (single JSON file)"
+      ansible.builtin.copy:
+        dest: "{{ state_file }}"
+        mode: '0644'
+        content: |
+          {
+            "incident_id": "{{ incident_id }}",
+            "target_node": "{{ inventory_hostname }}",
+            "orphan_pid": {{ orphan_pid.stdout_lines[0] }},
+            "orphan_disguise": "{{ disguise_orphan }}",
+            "zombie_parent_pid": {{ zombie_parent_pid.stdout_lines[0] }},
+            "zombie_disguise": "{{ disguise_zombie_parent }}"
+          }
+
+    - name: "71 | Display Full Injection Summary"
       ansible.builtin.debug:
         msg: |
           =========================================
-          INCIDENT 012 - ORPHANED CPU-HEAVY PROCESS INJECTED
+          INCIDENT 012 SUCCESSFULLY INJECTED
           =========================================
-          Target Node   : {{ inventory_hostname }} (ASYMMETRIC STATE)
-          Disguised as  : {{ disguise_name }}
-          PID           : {{ orphan_pid.stdout_lines[0] }}
-          PPID          : {{ orphan_ppid.stdout | trim }} (should be 1 if reparented)
-          PID persisted : {{ orphan_pid_file }}
+          Target Node          : {{ inventory_hostname }} (ASYMMETRIC STATE)
 
+          --- Orphaned CPU-heavy process ---
+          Disguised as         : {{ disguise_orphan }}
+          PID                  : {{ orphan_pid.stdout_lines[0] }}
+          PPID                 : {{ orphan_ppid.stdout | trim }} (should be 1)
+
+          --- Decorative zombie ---
+          Parent disguised as  : {{ disguise_zombie_parent }}
+          Parent PID           : {{ zombie_parent_pid.stdout_lines[0] }}
+          Zombie child status  :
+          {{ zombie_check.stdout }}
+
+          State file           : {{ state_file }}
           Other app_nodes remain HEALTHY.
           =========================================
