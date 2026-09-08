@@ -21,7 +21,7 @@ $#
 
 # Command Line History (newest to oldest):
 :wq
-|2,0,1788674460,,"wq"
+|2,0,1788844495,,"wq"
 :%s/^/# /g
 |2,0,1788341755,,"%s/^/# /g"
 :q!
@@ -41,261 +41,304 @@ $#
 
 # Registers:
 ""1	LINE	0
-	vault_zabbix_admin_password: "zabbix"
-|3,1,1,1,1,0,1788428655,"vault_zabbix_admin_password: \"zabbix\""
+	    - name: Remontar /var/www/html con timeout anti-hang
+|3,1,1,1,1,0,1788844064,"    - name: Remontar /var/www/html con timeout anti-hang"
 "2	LINE	0
-	# Password para Zabbix Agent
-|3,0,2,1,1,0,1788428654,"# Password para Zabbix Agent"
+	      ansible.builtin.command: timeout 10 mount /var/www/html
+|3,0,2,1,1,0,1788844060,"      ansible.builtin.command: timeout 10 mount /var/www/html"
 "3	LINE	0
-	#  REFERENCES:
-|3,0,3,1,1,0,1788341782,"#  REFERENCES:"
+	      async: 15
+|3,0,3,1,1,0,1788844060,"      async: 15"
 "4	LINE	0
-	# ==============================================================================
-|3,0,4,1,1,0,1788341781,"# =============================================================================="
+	      poll: 2
+|3,0,4,1,1,0,1788844059,"      poll: 2"
 "5	LINE	0
-	# 
-|3,0,5,1,1,0,1788341780,"# "
+	      register: mount_result
+|3,0,5,1,1,0,1788844059,"      register: mount_result"
 "6	LINE	0
-	# FreeIPA Documentation: https://www.freeipa.org/page/Docs
-|3,0,6,1,1,0,1788341780,"# FreeIPA Documentation: https://www.freeipa.org/page/Docs"
+	      failed_when: false
+|3,0,6,1,1,0,1788844058,"      failed_when: false"
 "7	LINE	0
-	# HBAC Guide: https://www.freeipa.org/page/HBAC
-|3,0,7,1,1,0,1788341779,"# HBAC Guide: https://www.freeipa.org/page/HBAC"
+	      changed_when: mount_result.rc == 0
+|3,0,7,1,1,0,1788844058,"      changed_when: mount_result.rc == 0"
 "8	LINE	0
-	# Sudo Integration: https://www.freeipa.org/page/Sudo
-|3,0,8,1,1,0,1788341779,"# Sudo Integration: https://www.freeipa.org/page/Sudo"
+	      when: hostvars[inventory_hostname]['nfs_check']['rc'] != 0
+|3,0,8,1,1,0,1788844057,"      when: hostvars[inventory_hostname]['nfs_check']['rc'] != 0"
 "9	LINE	0
-	# SSSD Troubleshooting: https://docs.pagure.org/sssd/
-|3,0,9,1,1,0,1788341779,"# SSSD Troubleshooting: https://docs.pagure.org/sssd/"
+	        state: mounted
+|3,0,9,1,1,0,1788842919,"        state: mounted"
 "-	CHAR	0
-	 
-|3,0,36,0,1,0,1788201222," "
+	s
+|3,0,36,0,1,0,1788842749,"s"
 
 # File marks:
-'0  16  69  ~/incidents/010/010_remediation.yml
-|4,48,16,69,1788674460,"~/incidents/010/010_remediation.yml"
-'1  3  17  ~/incidents/010/010_remediation.yml
-|4,49,3,17,1788674159,"~/incidents/010/010_remediation.yml"
-'2  3  17  ~/incidents/010/010_remediation.yml
-|4,50,3,17,1788674159,"~/incidents/010/010_remediation.yml"
-'3  17  33  ~/incidents/010/010_remediation.yml
-|4,51,17,33,1788674101,"~/incidents/010/010_remediation.yml"
-'4  17  33  ~/incidents/010/010_remediation.yml
-|4,52,17,33,1788674101,"~/incidents/010/010_remediation.yml"
-'5  17  33  ~/incidents/010/010_remediation.yml
-|4,53,17,33,1788674101,"~/incidents/010/010_remediation.yml"
-'6  17  33  ~/incidents/010/010_remediation.yml
-|4,54,17,33,1788674101,"~/incidents/010/010_remediation.yml"
-'7  1  0  ~/incidents/010/010_remediation.yml
-|4,55,1,0,1788674084,"~/incidents/010/010_remediation.yml"
-'8  1  0  ~/incidents/010/010_remediation.yml
-|4,56,1,0,1788674084,"~/incidents/010/010_remediation.yml"
-'9  1  0  ~/incidents/010/010_remediation.yml
-|4,57,1,0,1788674084,"~/incidents/010/010_remediation.yml"
+'0  110  40  ~/incidents/011/011_remediation.yml
+|4,48,110,40,1788844495,"~/incidents/011/011_remediation.yml"
+'1  122  40  ~/incidents/011/011_remediation.yml
+|4,49,122,40,1788844422,"~/incidents/011/011_remediation.yml"
+'2  122  40  ~/incidents/011/011_remediation.yml
+|4,50,122,40,1788844422,"~/incidents/011/011_remediation.yml"
+'3  67  0  ~/incidents/011/011_remediation.yml
+|4,51,67,0,1788844101,"~/incidents/011/011_remediation.yml"
+'4  67  0  ~/incidents/011/011_remediation.yml
+|4,52,67,0,1788844101,"~/incidents/011/011_remediation.yml"
+'5  67  0  ~/incidents/011/011_remediation.yml
+|4,53,67,0,1788844101,"~/incidents/011/011_remediation.yml"
+'6  67  0  ~/incidents/011/011_remediation.yml
+|4,54,67,0,1788844101,"~/incidents/011/011_remediation.yml"
+'7  57  63  ~/incidents/011/011_remediation.yml
+|4,55,57,63,1788843905,"~/incidents/011/011_remediation.yml"
+'8  64  63  ~/incidents/011/011_remediation.yml
+|4,56,64,63,1788843905,"~/incidents/011/011_remediation.yml"
+'9  57  63  ~/incidents/011/011_remediation.yml
+|4,57,57,63,1788843905,"~/incidents/011/011_remediation.yml"
 
 # Jumplist (newest first):
--'  16  69  ~/incidents/010/010_remediation.yml
-|4,39,16,69,1788674460,"~/incidents/010/010_remediation.yml"
--'  3  17  ~/incidents/010/010_remediation.yml
-|4,39,3,17,1788674375,"~/incidents/010/010_remediation.yml"
--'  3  17  ~/incidents/010/010_remediation.yml
-|4,39,3,17,1788674159,"~/incidents/010/010_remediation.yml"
--'  17  33  ~/incidents/010/010_remediation.yml
-|4,39,17,33,1788674147,"~/incidents/010/010_remediation.yml"
--'  17  33  ~/incidents/010/010_remediation.yml
-|4,39,17,33,1788674147,"~/incidents/010/010_remediation.yml"
--'  17  33  ~/incidents/010/010_remediation.yml
-|4,39,17,33,1788674101,"~/incidents/010/010_remediation.yml"
--'  1  0  ~/incidents/010/010_remediation.yml
-|4,39,1,0,1788674094,"~/incidents/010/010_remediation.yml"
--'  1  0  ~/incidents/010/010_remediation.yml
-|4,39,1,0,1788674094,"~/incidents/010/010_remediation.yml"
--'  1  0  ~/incidents/010/010_remediation.yml
-|4,39,1,0,1788674094,"~/incidents/010/010_remediation.yml"
--'  1  0  ~/incidents/010/010_remediation.yml
-|4,39,1,0,1788674084,"~/incidents/010/010_remediation.yml"
--'  17  0  ~/incidents/010/010_remediation.yml
-|4,39,17,0,1788674076,"~/incidents/010/010_remediation.yml"
--'  17  0  ~/incidents/010/010_remediation.yml
-|4,39,17,0,1788674041,"~/incidents/010/010_remediation.yml"
--'  21  0  ~/incidents/010/010_remediation.yml
-|4,39,21,0,1788673910,"~/incidents/010/010_remediation.yml"
--'  21  0  ~/incidents/010/010_remediation.yml
-|4,39,21,0,1788673910,"~/incidents/010/010_remediation.yml"
--'  21  0  ~/incidents/010/010_remediation.yml
-|4,39,21,0,1788673910,"~/incidents/010/010_remediation.yml"
--'  21  0  ~/incidents/010/010_remediation.yml
-|4,39,21,0,1788673910,"~/incidents/010/010_remediation.yml"
--'  21  0  ~/incidents/010/010_remediation.yml
-|4,39,21,0,1788673910,"~/incidents/010/010_remediation.yml"
--'  15  0  ~/incidents/010/010_remediation.yml
-|4,39,15,0,1788673537,"~/incidents/010/010_remediation.yml"
--'  15  0  ~/incidents/010/010_remediation.yml
-|4,39,15,0,1788673537,"~/incidents/010/010_remediation.yml"
--'  15  0  ~/incidents/010/010_remediation.yml
-|4,39,15,0,1788673537,"~/incidents/010/010_remediation.yml"
--'  15  0  ~/incidents/010/010_remediation.yml
-|4,39,15,0,1788673537,"~/incidents/010/010_remediation.yml"
--'  15  0  ~/incidents/010/010_remediation.yml
-|4,39,15,0,1788673537,"~/incidents/010/010_remediation.yml"
--'  1  0  ~/incidents/010/010_remediation.yml
-|4,39,1,0,1788673356,"~/incidents/010/010_remediation.yml"
--'  1  0  ~/incidents/010/010_remediation.yml
-|4,39,1,0,1788673356,"~/incidents/010/010_remediation.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  1  2  ~/ansible/roles/role_systech_infra/tasks/setup_users.yml
-|4,39,1,2,1788490761,"~/ansible/roles/role_systech_infra/tasks/setup_users.yml"
--'  9  17  ~/ansible/inventories/production/group_vars/all.yml
-|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
--'  9  17  ~/ansible/inventories/production/group_vars/all.yml
-|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
--'  9  17  ~/ansible/inventories/production/group_vars/all.yml
-|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
--'  9  17  ~/ansible/inventories/production/group_vars/all.yml
-|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
--'  9  17  ~/ansible/inventories/production/group_vars/all.yml
-|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
--'  9  17  ~/ansible/inventories/production/group_vars/all.yml
-|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
--'  9  17  ~/ansible/inventories/production/group_vars/all.yml
-|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
--'  9  17  ~/ansible/inventories/production/group_vars/all.yml
-|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
--'  9  17  ~/ansible/inventories/production/group_vars/all.yml
-|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
--'  9  17  ~/ansible/inventories/production/group_vars/all.yml
-|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
--'  9  17  ~/ansible/inventories/production/group_vars/all.yml
-|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
--'  9  17  ~/ansible/inventories/production/group_vars/all.yml
-|4,39,9,17,1788490712,"~/ansible/inventories/production/group_vars/all.yml"
+-'  110  40  ~/incidents/011/011_remediation.yml
+|4,39,110,40,1788844495,"~/incidents/011/011_remediation.yml"
+-'  1  0  ~/incidents/011/011_remediation.yml
+|4,39,1,0,1788844491,"~/incidents/011/011_remediation.yml"
+-'  122  40  ~/incidents/011/011_remediation.yml
+|4,39,122,40,1788844422,"~/incidents/011/011_remediation.yml"
+-'  122  40  ~/incidents/011/011_remediation.yml
+|4,39,122,40,1788844422,"~/incidents/011/011_remediation.yml"
+-'  1  0  ~/incidents/011/011_remediation.yml
+|4,39,1,0,1788844416,"~/incidents/011/011_remediation.yml"
+-'  67  0  ~/incidents/011/011_remediation.yml
+|4,39,67,0,1788844101,"~/incidents/011/011_remediation.yml"
+-'  67  0  ~/incidents/011/011_remediation.yml
+|4,39,67,0,1788844101,"~/incidents/011/011_remediation.yml"
+-'  67  0  ~/incidents/011/011_remediation.yml
+|4,39,67,0,1788844101,"~/incidents/011/011_remediation.yml"
+-'  57  63  ~/incidents/011/011_remediation.yml
+|4,39,57,63,1788844036,"~/incidents/011/011_remediation.yml"
+-'  57  63  ~/incidents/011/011_remediation.yml
+|4,39,57,63,1788844036,"~/incidents/011/011_remediation.yml"
+-'  57  63  ~/incidents/011/011_remediation.yml
+|4,39,57,63,1788844036,"~/incidents/011/011_remediation.yml"
+-'  64  63  ~/incidents/011/011_remediation.yml
+|4,39,64,63,1788843905,"~/incidents/011/011_remediation.yml"
+-'  64  63  ~/incidents/011/011_remediation.yml
+|4,39,64,63,1788843905,"~/incidents/011/011_remediation.yml"
+-'  64  63  ~/incidents/011/011_remediation.yml
+|4,39,64,63,1788843905,"~/incidents/011/011_remediation.yml"
+-'  1  0  ~/incidents/011/011_remediation.yml
+|4,39,1,0,1788843897,"~/incidents/011/011_remediation.yml"
+-'  1  0  ~/incidents/011/011_remediation.yml
+|4,39,1,0,1788843897,"~/incidents/011/011_remediation.yml"
+-'  62  28  ~/incidents/011/011_remediation.yml
+|4,39,62,28,1788843793,"~/incidents/011/011_remediation.yml"
+-'  62  28  ~/incidents/011/011_remediation.yml
+|4,39,62,28,1788843793,"~/incidents/011/011_remediation.yml"
+-'  62  28  ~/incidents/011/011_remediation.yml
+|4,39,62,28,1788843793,"~/incidents/011/011_remediation.yml"
+-'  62  28  ~/incidents/011/011_remediation.yml
+|4,39,62,28,1788843793,"~/incidents/011/011_remediation.yml"
+-'  1  0  ~/incidents/011/011_remediation.yml
+|4,39,1,0,1788843781,"~/incidents/011/011_remediation.yml"
+-'  53  4  ~/incidents/011/011_remediation.yml
+|4,39,53,4,1788843688,"~/incidents/011/011_remediation.yml"
+-'  53  4  ~/incidents/011/011_remediation.yml
+|4,39,53,4,1788843688,"~/incidents/011/011_remediation.yml"
+-'  53  4  ~/incidents/011/011_remediation.yml
+|4,39,53,4,1788843688,"~/incidents/011/011_remediation.yml"
+-'  53  4  ~/incidents/011/011_remediation.yml
+|4,39,53,4,1788843688,"~/incidents/011/011_remediation.yml"
+-'  53  4  ~/incidents/011/011_remediation.yml
+|4,39,53,4,1788843688,"~/incidents/011/011_remediation.yml"
+-'  53  4  ~/incidents/011/011_remediation.yml
+|4,39,53,4,1788843688,"~/incidents/011/011_remediation.yml"
+-'  57  0  ~/incidents/011/011_remediation.yml
+|4,39,57,0,1788843591,"~/incidents/011/011_remediation.yml"
+-'  57  0  ~/incidents/011/011_remediation.yml
+|4,39,57,0,1788843591,"~/incidents/011/011_remediation.yml"
+-'  57  0  ~/incidents/011/011_remediation.yml
+|4,39,57,0,1788843591,"~/incidents/011/011_remediation.yml"
+-'  55  0  ~/incidents/011/011_remediation.yml
+|4,39,55,0,1788843366,"~/incidents/011/011_remediation.yml"
+-'  55  0  ~/incidents/011/011_remediation.yml
+|4,39,55,0,1788843366,"~/incidents/011/011_remediation.yml"
+-'  55  0  ~/incidents/011/011_remediation.yml
+|4,39,55,0,1788843366,"~/incidents/011/011_remediation.yml"
+-'  55  0  ~/incidents/011/011_remediation.yml
+|4,39,55,0,1788843366,"~/incidents/011/011_remediation.yml"
+-'  55  0  ~/incidents/011/011_remediation.yml
+|4,39,55,0,1788843366,"~/incidents/011/011_remediation.yml"
+-'  55  0  ~/incidents/011/011_remediation.yml
+|4,39,55,0,1788843366,"~/incidents/011/011_remediation.yml"
+-'  1  0  ~/incidents/011/011_remediation.yml
+|4,39,1,0,1788843358,"~/incidents/011/011_remediation.yml"
+-'  1  0  ~/incidents/011/011_remediation.yml
+|4,39,1,0,1788843358,"~/incidents/011/011_remediation.yml"
+-'  59  0  ~/incidents/011/011_remediation.yml
+|4,39,59,0,1788843221,"~/incidents/011/011_remediation.yml"
+-'  59  0  ~/incidents/011/011_remediation.yml
+|4,39,59,0,1788843221,"~/incidents/011/011_remediation.yml"
+-'  59  0  ~/incidents/011/011_remediation.yml
+|4,39,59,0,1788843221,"~/incidents/011/011_remediation.yml"
+-'  59  0  ~/incidents/011/011_remediation.yml
+|4,39,59,0,1788843221,"~/incidents/011/011_remediation.yml"
+-'  59  0  ~/incidents/011/011_remediation.yml
+|4,39,59,0,1788843221,"~/incidents/011/011_remediation.yml"
+-'  57  0  ~/incidents/011/011_remediation.yml
+|4,39,57,0,1788843221,"~/incidents/011/011_remediation.yml"
+-'  57  0  ~/incidents/011/011_remediation.yml
+|4,39,57,0,1788843221,"~/incidents/011/011_remediation.yml"
+-'  45  0  ~/incidents/011/011_remediation.yml
+|4,39,45,0,1788843060,"~/incidents/011/011_remediation.yml"
+-'  45  0  ~/incidents/011/011_remediation.yml
+|4,39,45,0,1788843060,"~/incidents/011/011_remediation.yml"
+-'  45  0  ~/incidents/011/011_remediation.yml
+|4,39,45,0,1788843060,"~/incidents/011/011_remediation.yml"
+-'  45  0  ~/incidents/011/011_remediation.yml
+|4,39,45,0,1788843060,"~/incidents/011/011_remediation.yml"
+-'  45  0  ~/incidents/011/011_remediation.yml
+|4,39,45,0,1788843060,"~/incidents/011/011_remediation.yml"
+-'  45  0  ~/incidents/011/011_remediation.yml
+|4,39,45,0,1788843060,"~/incidents/011/011_remediation.yml"
+-'  45  0  ~/incidents/011/011_remediation.yml
+|4,39,45,0,1788843060,"~/incidents/011/011_remediation.yml"
+-'  45  0  ~/incidents/011/011_remediation.yml
+|4,39,45,0,1788843060,"~/incidents/011/011_remediation.yml"
+-'  45  0  ~/incidents/011/011_remediation.yml
+|4,39,45,0,1788843055,"~/incidents/011/011_remediation.yml"
+-'  22  0  ~/incidents/011/011_remediation.yml
+|4,39,22,0,1788842728,"~/incidents/011/011_remediation.yml"
+-'  22  0  ~/incidents/011/011_remediation.yml
+|4,39,22,0,1788842728,"~/incidents/011/011_remediation.yml"
+-'  22  0  ~/incidents/011/011_remediation.yml
+|4,39,22,0,1788842728,"~/incidents/011/011_remediation.yml"
+-'  22  0  ~/incidents/011/011_remediation.yml
+|4,39,22,0,1788842728,"~/incidents/011/011_remediation.yml"
+-'  22  0  ~/incidents/011/011_remediation.yml
+|4,39,22,0,1788842728,"~/incidents/011/011_remediation.yml"
+-'  22  0  ~/incidents/011/011_remediation.yml
+|4,39,22,0,1788842728,"~/incidents/011/011_remediation.yml"
+-'  22  0  ~/incidents/011/011_remediation.yml
+|4,39,22,0,1788842728,"~/incidents/011/011_remediation.yml"
+-'  22  0  ~/incidents/011/011_remediation.yml
+|4,39,22,0,1788842728,"~/incidents/011/011_remediation.yml"
+-'  22  0  ~/incidents/011/011_remediation.yml
+|4,39,22,0,1788842728,"~/incidents/011/011_remediation.yml"
+-'  27  0  ~/incidents/011/011_remediation.yml
+|4,39,27,0,1788842113,"~/incidents/011/011_remediation.yml"
+-'  27  0  ~/incidents/011/011_remediation.yml
+|4,39,27,0,1788842113,"~/incidents/011/011_remediation.yml"
+-'  27  0  ~/incidents/011/011_remediation.yml
+|4,39,27,0,1788842113,"~/incidents/011/011_remediation.yml"
+-'  27  0  ~/incidents/011/011_remediation.yml
+|4,39,27,0,1788842113,"~/incidents/011/011_remediation.yml"
+-'  27  0  ~/incidents/011/011_remediation.yml
+|4,39,27,0,1788842113,"~/incidents/011/011_remediation.yml"
+-'  27  0  ~/incidents/011/011_remediation.yml
+|4,39,27,0,1788842113,"~/incidents/011/011_remediation.yml"
+-'  27  0  ~/incidents/011/011_remediation.yml
+|4,39,27,0,1788842113,"~/incidents/011/011_remediation.yml"
+-'  27  0  ~/incidents/011/011_remediation.yml
+|4,39,27,0,1788842113,"~/incidents/011/011_remediation.yml"
+-'  27  0  ~/incidents/011/011_remediation.yml
+|4,39,27,0,1788842113,"~/incidents/011/011_remediation.yml"
+-'  50  0  ~/incidents/011/011_remediation.yml
+|4,39,50,0,1788841117,"~/incidents/011/011_remediation.yml"
+-'  50  0  ~/incidents/011/011_remediation.yml
+|4,39,50,0,1788841117,"~/incidents/011/011_remediation.yml"
+-'  50  0  ~/incidents/011/011_remediation.yml
+|4,39,50,0,1788841117,"~/incidents/011/011_remediation.yml"
+-'  50  0  ~/incidents/011/011_remediation.yml
+|4,39,50,0,1788841117,"~/incidents/011/011_remediation.yml"
+-'  64  0  ~/incidents/011/011_remediation.yml
+|4,39,64,0,1788841117,"~/incidents/011/011_remediation.yml"
+-'  50  0  ~/incidents/011/011_remediation.yml
+|4,39,50,0,1788841117,"~/incidents/011/011_remediation.yml"
+-'  64  0  ~/incidents/011/011_remediation.yml
+|4,39,64,0,1788841117,"~/incidents/011/011_remediation.yml"
+-'  50  0  ~/incidents/011/011_remediation.yml
+|4,39,50,0,1788841117,"~/incidents/011/011_remediation.yml"
+-'  62  0  ~/incidents/011/011_remediation.yml
+|4,39,62,0,1788841117,"~/incidents/011/011_remediation.yml"
+-'  50  0  ~/incidents/011/011_remediation.yml
+|4,39,50,0,1788841117,"~/incidents/011/011_remediation.yml"
+-'  62  0  ~/incidents/011/011_remediation.yml
+|4,39,62,0,1788841117,"~/incidents/011/011_remediation.yml"
+-'  50  0  ~/incidents/011/011_remediation.yml
+|4,39,50,0,1788841117,"~/incidents/011/011_remediation.yml"
+-'  31  0  ~/incidents/011/011_remediation.yml
+|4,39,31,0,1788840854,"~/incidents/011/011_remediation.yml"
+-'  36  0  ~/incidents/011/011_remediation.yml
+|4,39,36,0,1788840854,"~/incidents/011/011_remediation.yml"
+-'  31  0  ~/incidents/011/011_remediation.yml
+|4,39,31,0,1788840854,"~/incidents/011/011_remediation.yml"
+-'  36  0  ~/incidents/011/011_remediation.yml
+|4,39,36,0,1788840854,"~/incidents/011/011_remediation.yml"
+-'  31  0  ~/incidents/011/011_remediation.yml
+|4,39,31,0,1788840854,"~/incidents/011/011_remediation.yml"
+-'  36  0  ~/incidents/011/011_remediation.yml
+|4,39,36,0,1788840854,"~/incidents/011/011_remediation.yml"
+-'  31  0  ~/incidents/011/011_remediation.yml
+|4,39,31,0,1788840854,"~/incidents/011/011_remediation.yml"
+-'  36  0  ~/incidents/011/011_remediation.yml
+|4,39,36,0,1788840854,"~/incidents/011/011_remediation.yml"
+-'  31  0  ~/incidents/011/011_remediation.yml
+|4,39,31,0,1788840854,"~/incidents/011/011_remediation.yml"
+-'  36  0  ~/incidents/011/011_remediation.yml
+|4,39,36,0,1788840854,"~/incidents/011/011_remediation.yml"
+-'  31  0  ~/incidents/011/011_remediation.yml
+|4,39,31,0,1788840854,"~/incidents/011/011_remediation.yml"
+-'  36  0  ~/incidents/011/011_remediation.yml
+|4,39,36,0,1788840854,"~/incidents/011/011_remediation.yml"
+-'  31  0  ~/incidents/011/011_remediation.yml
+|4,39,31,0,1788840854,"~/incidents/011/011_remediation.yml"
+-'  36  0  ~/incidents/011/011_remediation.yml
+|4,39,36,0,1788840854,"~/incidents/011/011_remediation.yml"
+-'  31  0  ~/incidents/011/011_remediation.yml
+|4,39,31,0,1788840854,"~/incidents/011/011_remediation.yml"
+-'  36  0  ~/incidents/011/011_remediation.yml
+|4,39,36,0,1788840854,"~/incidents/011/011_remediation.yml"
 
 # History of marks within files (newest to oldest):
+
+> ~/incidents/011/011_remediation.yml
+	*	1788844494	0
+	"	110	40
+	^	110	41
+	.	110	40
+	+	57	0
+	+	7	20
+	+	10	65
+	+	2	52
+	+	23	0
+	+	9	0
+	+	38	3
+	+	39	75
+	+	45	0
+	+	22	11
+	+	15	0
+	+	22	10
+	+	5	31
+	+	22	0
+	+	5	18
+	+	2	61
+	+	10	44
+	+	16	73
+	+	17	46
+	+	18	28
+	+	19	23
+	+	20	40
+	+	22	0
+	+	2	60
+	+	3	0
+	+	22	54
+	+	28	69
+	+	57	0
+	+	49	74
+	+	53	4
+	+	57	28
+	+	57	0
+	+	65	13
+	+	57	3
+	+	67	0
+	+	122	40
+	+	110	40
 
 > ~/incidents/010/010_remediation.yml
 	*	1788674459	0
