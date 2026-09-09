@@ -13,7 +13,7 @@
 #    busca del state_file /var/run/.incident_012_state.json. El nodo que lo
 #    contenga es el objetivo de la recuperación. Aborta si no se encuentra
 #    (significa que el incidente no fue inyectado o ya fue recuperado).
-# 3. RECUPERACIÓN (PLAY 3), en este orden:
+# 3. RECUPERACIÓN (PLAY 4), en este orden:
 #    a) Leer el state_file JSON para obtener orphan_pid y zombie_parent_pid.
 #    b) Matar el proceso huérfano CPU-heavy (kill -9).
 #    c) Matar el proceso padre-zombie (kill -9) — el hijo zombie desaparece
@@ -26,7 +26,6 @@
 #       ni archivos residuales del incidente.
 # ==============================================================================
 ---
-
 - name: "Incident 012 Recovery - Ensure Name Resolution on Control Node"
   hosts: localhost
   connection: local
@@ -45,207 +44,203 @@
           {% endif %}
           {% endfor %}
 
-    - name: "Incident 012 Recovery | Detect Affected Node (Scan Fleet)"
-      hosts: app_nodes
-      become: yes
-      gather_facts: false
-      vars:
-        incident_id: "012"
-        state_file: "/var/run/.incident_{{ incident_id }}_state.json"
-      tasks:
-        - name: "R-05 | Check for incident 012 state file on each app_node"
-          ansible.builtin.stat:
-            path: "{{ state_file }}"
-          register: state_file_check
+- name: "Incident 012 Recovery | Detect Affected Node (Scan Fleet)"
+  hosts: app_nodes
+  become: yes
+  gather_facts: false
+  vars:
+    incident_id: "012"
+    state_file: "/var/run/.incident_{{ incident_id }}_state.json"
+  tasks:
+    - name: "R-05 | Check for incident 012 state file on each app_node"
+      ansible.builtin.stat:
+        path: "{{ state_file }}"
+      register: state_file_check
 
-        - name: "R-06 | Add affected node to dynamic recovery group"
-          ansible.builtin.add_host:
-            name: "{{ inventory_hostname }}"
-            groups: incident_012_recovery_target
-          when: state_file_check.stat.exists
+    - name: "R-06 | Add affected node to dynamic recovery group"
+      ansible.builtin.add_host:
+        name: "{{ inventory_hostname }}"
+        groups: incident_012_recovery_target
+      when: state_file_check.stat.exists
 
-    - name: "Incident 012 Recovery | Abort if No Affected Node Found"
-      hosts: localhost
-      connection: local
-      gather_facts: false
-      tasks:
-        - name: "R-07 | Fail if no node was detected with active incident 012"
-          ansible.builtin.fail:
-            msg: >-
-              No app_node has an active incident 012 state file.
-              Either the incident was never injected, or it has already been
-              recovered. Nothing to do.
-          when: groups['incident_012_recovery_target'] | default([]) | length == 0
+- name: "Incident 012 Recovery | Abort if No Affected Node Found"
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: "R-07 | Fail if no node was detected with active incident 012"
+      ansible.builtin.fail:
+        msg: >-
+          No app_node has an active incident 012 state file.
+          Either the incident was never injected, or it has already been
+          recovered. Nothing to do.
+      when: groups['incident_012_recovery_target'] | default([]) | length == 0
 
-        - name: "R-08 | Display detected recovery target"
-          ansible.builtin.debug:
-            msg: "Recovery target: {{ groups['incident_012_recovery_target'][0] }}"
+    - name: "R-08 | Display detected recovery target(s)"
+      ansible.builtin.debug:
+        msg: "Recovery target(s): {{ groups['incident_012_recovery_target'] | default([]) }}"
 
-    - name: "Incident 012 Recovery | Execute Recovery on Affected Node"
-      hosts: incident_012_recovery_target
-      become: yes
-      vars:
-        incident_id: "012"
-        state_file: "/var/run/.incident_{{ incident_id }}_state.json"
-        marker_file: "/var/run/.incident_{{ incident_id }}_marker"
-        decoy_script: "/opt/scripts/app_reindex_worker.sh"
-        decoy_dir: "/opt/scripts"
-        decoy_user: "jensyg"
-        decoy_group: "sysadmins"
-      tasks:
-        # ------------------------------------------------------------------
-        # LEER STATE FILE
-        # ------------------------------------------------------------------
-        - name: "R-10 | Read incident state file to obtain real PIDs"
-          ansible.builtin.slurp:
-            src: "{{ state_file }}"
-          register: state_file_content
+- name: "Incident 012 Recovery | Execute Recovery on Affected Node"
+  hosts: incident_012_recovery_target
+  become: yes
+  vars:
+    incident_id: "012"
+    state_file: "/var/run/.incident_{{ incident_id }}_state.json"
+    marker_file: "/var/run/.incident_{{ incident_id }}_marker"
+    decoy_script: "/opt/scripts/app_reindex_worker.sh"
+    decoy_dir: "/opt/scripts"
+    decoy_user: "jensyg"
+    decoy_group: "sysadmins"
+  tasks:
+    # ------------------------------------------------------------------
+    # LEER STATE FILE
+    # ------------------------------------------------------------------
+    - name: "R-10 | Read incident state file to obtain real PIDs"
+      ansible.builtin.slurp:
+        src: "{{ state_file }}"
+      register: state_file_content
 
-        - name: "R-11 | Parse JSON state into usable variables"
-          ansible.builtin.set_fact:
-            incident_state: "{{ state_file_content.content | b64decode | from_json }}"
+    - name: "R-11 | Parse JSON state into usable variables"
+      ansible.builtin.set_fact:
+        incident_state: "{{ state_file_content.content | b64decode | from_json }}"
 
-        - name: "R-12 | Display parsed incident state"
-          ansible.builtin.debug:
-            var: incident_state
+    - name: "R-12 | Display parsed incident state"
+      ansible.builtin.debug:
+        var: incident_state
 
-        # ------------------------------------------------------------------
-        # BLOQUE 1 - MATAR PROCESOS (inverso de tareas 50 y 55)
-        # ------------------------------------------------------------------
-        - name: "R-50 | Kill orphaned CPU-heavy process (orphan_pid from state)"
-          ansible.builtin.command:
-            cmd: "kill -9 {{ incident_state.orphan_pid }}"
-          register: kill_orphan
-          changed_when: kill_orphan.rc == 0
-          failed_when:
-            - kill_orphan.rc != 0
-            - "'No such process' not in kill_orphan.stderr"
-          ignore_errors: yes
+    # ------------------------------------------------------------------
+    # BLOQUE 1 - MATAR PROCESOS (inverso de tareas 50 y 55)
+    # ------------------------------------------------------------------
+    - name: "R-50 | Kill orphaned CPU-heavy process (orphan_pid from state)"
+      ansible.builtin.command:
+        cmd: "kill -9 {{ incident_state.orphan_pid }}"
+      register: kill_orphan
+      changed_when: kill_orphan.rc == 0
+      failed_when:
+        - kill_orphan.rc != 0
+        - "'No such process' not in kill_orphan.stderr"
+      ignore_errors: yes
 
-        - name: "R-51 | Confirm orphan process is gone"
-          ansible.builtin.command:
-            cmd: "pgrep -f {{ incident_state.orphan_disguise }}"
-          register: orphan_verify
-          changed_when: false
-          failed_when: false
+    - name: "R-51 | Confirm orphan process is gone"
+      ansible.builtin.command:
+        cmd: "pgrep -f {{ incident_state.orphan_disguise }}"
+      register: orphan_verify
+      changed_when: false
+      failed_when: false
 
-        - name: "R-52 | Report orphan kill result"
-          ansible.builtin.debug:
-            msg: >-
-              Orphan {{ incident_state.orphan_disguise }} (PID {{ incident_state.orphan_pid }}):
-              {{ 'TERMINATED' if orphan_verify.stdout == '' else 'STILL ALIVE - manual intervention required' }}
+    - name: "R-52 | Report orphan kill result"
+      ansible.builtin.debug:
+        msg: >-
+          Orphan {{ incident_state.orphan_disguise }} (PID {{ incident_state.orphan_pid }}):
+          {{ 'TERMINATED' if orphan_verify.stdout == '' else 'STILL ALIVE - manual intervention required' }}
 
-        - name: "R-55 | Kill zombie parent process (zombie_parent_pid from state)"
-          ansible.builtin.command:
-            cmd: "kill -9 {{ incident_state.zombie_parent_pid }}"
-          register: kill_zombie
-          changed_when: kill_zombie.rc == 0
-          failed_when:
-            - kill_zombie.rc != 0
-            - "'No such process' not in kill_zombie.stderr"
-          ignore_errors: yes
+    - name: "R-55 | Kill zombie parent process (zombie_parent_pid from state)"
+      ansible.builtin.command:
+        cmd: "kill -9 {{ incident_state.zombie_parent_pid }}"
+      register: kill_zombie
+      changed_when: kill_zombie.rc == 0
+      failed_when:
+        - kill_zombie.rc != 0
+        - "'No such process' not in kill_zombie.stderr"
+      ignore_errors: yes
 
-        - name: "R-56 | Allow kernel to reap the zombie child"
-          ansible.builtin.pause:
-            seconds: 2
+    - name: "R-56 | Allow kernel to reap the zombie child"
+      ansible.builtin.pause:
+        seconds: 2
 
-        - name: "R-57 | Confirm zombie parent is gone"
-          ansible.builtin.command:
-            cmd: "pgrep -f {{ incident_state.zombie_disguise }}"
-          register: zombie_verify
-          changed_when: false
-          failed_when: false
+    - name: "R-57 | Confirm zombie parent is gone"
+      ansible.builtin.command:
+        cmd: "pgrep -f {{ incident_state.zombie_disguise }}"
+      register: zombie_verify
+      changed_when: false
+      failed_when: false
 
-        - name: "R-58 | Report zombie kill result"
-          ansible.builtin.debug:
-            msg: >-
-              Zombie parent {{ incident_state.zombie_disguise }} (PID {{ incident_state.zombie_parent_pid }}):
-              {{ 'TERMINATED' if zombie_verify.stdout == '' else 'STILL ALIVE - manual intervention required' }}
+    - name: "R-58 | Report zombie kill result"
+      ansible.builtin.debug:
+        msg: >-
+          Zombie parent {{ incident_state.zombie_disguise }} (PID {{ incident_state.zombie_parent_pid }}):
+          {{ 'TERMINATED' if zombie_verify.stdout == '' else 'STILL ALIVE - manual intervention required' }}
 
-        # ------------------------------------------------------------------
-        # BLOQUE 2 - LIMPIAR DECOYS (inverso de tareas 81, 83, 80)
-        # ------------------------------------------------------------------
-        - name: "R-81 | Remove decoy maintenance script"
-          ansible.builtin.file:
-            path: "{{ decoy_script }}"
-            state: absent
+    # ------------------------------------------------------------------
+    # BLOQUE 2 - LIMPIAR DECOYS (inverso de tareas 81, 83, 80)
+    # ------------------------------------------------------------------
+    - name: "R-81 | Remove decoy maintenance script"
+      ansible.builtin.file:
+        path: "{{ decoy_script }}"
+        state: absent
 
-        - name: "R-83 | Remove injected lines from jensyg's .bash_history"
-          ansible.builtin.lineinfile:
-            path: "/home/{{ decoy_user }}/.bash_history"
-            line: "{{ item }}"
-            state: absent
-            owner: "{{ decoy_user }}"
-            group: "{{ decoy_group }}"
-            mode: '0600'
-          loop:
-            - "cd /opt/scripts"
-            - "nohup ./app_reindex_worker.sh &"
+    - name: "R-83 | Remove injected lines from jensyg's .bash_history"
+      ansible.builtin.lineinfile:
+        path: "/home/{{ decoy_user }}/.bash_history"
+        line: "{{ item }}"
+        state: absent
+      loop:
+        - "cd /opt/scripts"
+        - "nohup ./app_reindex_worker.sh &"
 
-        - name: "R-80a | Check if /opt/scripts directory is now empty"
-          ansible.builtin.command:
-            cmd: "ls -A {{ decoy_dir }}"
-          register: decoy_dir_contents
-          changed_when: false
-          failed_when: false
+    - name: "R-80a | Check if /opt/scripts directory is now empty"
+      ansible.builtin.command:
+        cmd: "ls -A {{ decoy_dir }}"
+      register: decoy_dir_contents
+      changed_when: false
+      failed_when: false
 
-        - name: "R-80b | Remove /opt/scripts directory ONLY if it is empty"
-          ansible.builtin.file:
-            path: "{{ decoy_dir }}"
-            state: absent
-          when: decoy_dir_contents.stdout | default('') | trim == ''
+    - name: "R-80b | Remove /opt/scripts directory ONLY if it is empty"
+      ansible.builtin.file:
+        path: "{{ decoy_dir }}"
+        state: absent
+      when: decoy_dir_contents.stdout | default('') | trim == ''
 
-        # ------------------------------------------------------------------
-        # BLOQUE 3 - LIMPIAR METADATA DEL INCIDENTE (inverso de tareas 70 y 32) 
-        # ------------------------------------------------------------------
-        - name: "R-70 | Remove incident state file"
-          ansible.builtin.file:
-            path: "{{ state_file }}"
-            state: absent
+    # ------------------------------------------------------------------
+    # BLOQUE 3 - LIMPIAR METADATA DEL INCIDENTE (inverso de tareas 70 y 32)
+    # ------------------------------------------------------------------
+    - name: "R-70 | Remove incident state file"
+      ansible.builtin.file:
+        path: "{{ state_file }}"
+        state: absent
 
-        - name: "R-32 | Remove incident marker file"
-          ansible.builtin.file:
-            path: "{{ marker_file }}"
-            state: absent
+    - name: "R-32 | Remove incident marker file"
+      ansible.builtin.file:
+        path: "{{ marker_file }}"
+        state: absent
 
-        # ------------------------------------------------------------------
-        # BLOQUE 4 - VERIFICACIÓN FINAL
-        # ------------------------------------------------------------------
-        - name: "R-90 | Final verification - ensure no disguised processes remain"
-          ansible.builtin.command:
-            cmd: "ps -eo pid,ppid,stat,comm | grep -E '{{ incident_state.orphan_disguise }}|{{ incident_state.zombie_disguise }}' | grep -v grep"
-          register: final_process_check
-          changed_when: false
-          failed_when: false
+    # ------------------------------------------------------------------
+    # BLOQUE 4 - VERIFICACIÓN FINAL
+    # ------------------------------------------------------------------
+    - name: "R-90 | Final verification - ensure no disguised processes remain"
+      ansible.builtin.shell:
+        cmd: "ps -eo pid,ppid,stat,comm | grep -E '{{ incident_state.orphan_disguise }}|{{ incident_state.zombie_disguise }}' | grep -v grep || true"
+      register: final_process_check
+      changed_when: false
 
-        - name: "R-91 | Final verification - ensure no residual files remain"
-          ansible.builtin.stat:
-            path: "{{ item }}"
-          loop:
-            - "{{ decoy_script }}"
-            - "{{ state_file }}"
-            - "{{ marker_file }}"
-          register: final_file_check
+    - name: "R-91 | Final verification - ensure no residual files remain"
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - "{{ decoy_script }}"
+        - "{{ state_file }}"
+        - "{{ marker_file }}"
+      register: final_file_check
 
-        - name: "R-92 | Display Full Recovery Summary"
-          ansible.builtin.debug:
-            msg: |
-              =========================================
-              INCIDENT 012 RECOVERY COMPLETE
-              =========================================
-              Target Node          : {{ inventory_hostname }}
-              --- Processes ---
-              Orphan {{ incident_state.orphan_disguise }} (PID {{ incident_state.orphan_pid }}):
-                {{ 'TERMINATED' if orphan_verify.stdout == '' else 'STILL ALIVE ⚠️' }}
-              Zombie parent {{ incident_state.zombie_disguise }} (PID {{ incident_state.zombie_parent_pid }}):
-                {{ 'TERMINATED' if zombie_verify.stdout == '' else 'STILL ALIVE ⚠️' }}
-              --- Decoys ---
-              Script removed       : {{ decoy_script }}
-              History lines removed: 2 lines from /home/{{ decoy_user }}/.bash_history
-              /opt/scripts removed : {{ 'YES' if decoy_dir_contents.stdout | default('') | trim == '' else 'NO (not empty, kept)' }}
-              --- Metadata ---
-              State file removed   : {{ state_file }}
-              Marker file removed  : {{ marker_file }}
-              --- Final Process Check ---
-              Remaining disguised  : {{ final_process_check.stdout | default('NONE (clean)') }}
-              =========================================
+    - name: "R-92 | Display Full Recovery Summary"
+      ansible.builtin.debug:
+        msg: |
+          =========================================
+          INCIDENT 012 RECOVERY COMPLETE
+          =========================================
+          Target Node          : {{ inventory_hostname }}
+          --- Processes ---
+          Orphan {{ incident_state.orphan_disguise }} (PID {{ incident_state.orphan_pid }}):
+            {{ 'TERMINATED' if orphan_verify.stdout == '' else 'STILL ALIVE - review needed' }}
+          Zombie parent {{ incident_state.zombie_disguise }} (PID {{ incident_state.zombie_parent_pid }}):
+            {{ 'TERMINATED' if zombie_verify.stdout == '' else 'STILL ALIVE - review needed' }}
+          --- Decoys ---
+          Script removed       : {{ decoy_script }}
+          History lines removed: 2 lines from /home/{{ decoy_user }}/.bash_history
+          /opt/scripts removed  : {{ 'YES' if decoy_dir_contents.stdout | default('') | trim == '' else 'NO (not empty, kept)' }}
+          --- Metadata ---
+          State file removed   : {{ state_file }}
+          Marker file removed  : {{ marker_file }}
+          --- Final Process Check ---
+          Remaining disguised  : {{ final_process_check.stdout | default('NONE (clean)') }}
+          =========================================
