@@ -59,7 +59,7 @@
 #   55 | Lanzar padre-zombie           -> kill -9 sobre zombie_parent_pid (leído del JSON)
 #   70 | Crear state_file JSON         -> Eliminar state_file
 # ==============================================================================
----
+
 ---
 - name: "Incident 012 - Ensure Name Resolution on Control Node"
   hosts: localhost
