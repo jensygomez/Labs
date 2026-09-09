@@ -40,7 +40,7 @@
         modification_time: preserve
         access_time: preserve
 
-      - name: "83 | Inject misleading bash_history entries (manual launch without disown)"
+    - name: "83 | Inject misleading bash_history entries (manual launch without disown)"
       ansible.builtin.lineinfile:
         path: "/home/{{ decoy_user }}/.bash_history"
         line: "{{ item }}"

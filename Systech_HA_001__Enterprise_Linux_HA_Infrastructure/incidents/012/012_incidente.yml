@@ -6,7 +6,7 @@
 #   1. setup_users.yml
 #      - Crea grupos, usuarios y reglas sudoers desde group_vars/all/system_users.yml
 #      - 'jensyg' ya viene definido ahí con target_groups: ["all"] y password
-#        real vía default_user_password ('LabPassword123!' hasheado con salt fijo)
+#        real vía default_user_password.
 #      - NO recrear usuarios dentro de un playbook de incidente: ya están sanos.
 #
 #   2. dns01.yml
@@ -20,51 +20,46 @@
 #     b) Seleccionar el/los nodo(s) objetivo.
 #     c) Inyectar el fallo puntual del escenario.
 #     d) Decoys/logs realistas para practicar troubleshooting.
+# ==============================================================================
 #
-# ==============================================================================
-# RESUMEN DE EJECUCIÓN (LÓGICA DEL INCIDENTE 011):
-# 1. RESOLUCIÓN DE NOMBRES EN EL CONTROL NODE (PLAY 1): Actualiza /etc/hosts
-#    localmente para permitir troubleshooting por nombre DNS desde el control node.
-# 2. SELECCIÓN ALEATORIA (PLAY 2): Elige UN SOLO nodo al azar del grupo 'app_nodes' 
-#    para crear un estado asimétrico en el clúster HA.
-# 3. INYECCIÓN DEL FALLO (PLAY 3): Bloquea el tráfico NFS (puerto 2049) desde 
-#    storage01 hacia el nodo objetivo, creando un mount NFS colgado ("Server not 
-#    responding") solo en ese nodo. Inyecta decoys (logs falsos, fstab misleading).
-# ==============================================================================
-# INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
-# ==============================================================================
-# INCIDENT ID    : 011
-# TITLE          : Apps no pueden leer/escribir en el share compartido (NFS Hang)
-# TARGET NODE    : Random node from app_nodes (Asymmetric Cluster State)
-# TARGET SERVICE : NFS Mount /var/www/html (storage01:/exports/webdata)
-# DIFFICULTY     : 5/10 (L1 Junior/Mid)
-# ESTIMATED TIME : 2 Hours
-# ==============================================================================
-
-
-# ==============================================================================
-# INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
-# ==============================================================================
-
-
-# ==============================================================================
-# INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
-# ==============================================================================
 # INCIDENT ID    : 012
 # TITLE          : Un nodo de aplicación va lentísimo (huérfano CPU / zombie)
 # TARGET NODE    : Random node from app_nodes (Asymmetric Cluster State)
+# TARGET SERVICE : Proceso en espacio de usuario (no un servicio systemd)
 # DIFFICULTY     : 5/10 (L1 Junior/Mid)
 # ESTIMATED TIME : 2 Hours
 #
-# ESTADO DE CONSTRUCCIÓN (por bloques, validado incrementalmente):
-#   [x] Bloque 1 - DNS control node + Fleet-Wide Marker Guard + selección aleatoria
-#   [x] Bloque 2 - Marker en nodo objetivo (SIN stress-ng/EPEL, descartado por
-#                  dependencia de red/mirror que no aporta al objetivo pedagógico)
-#   [ ] Bloque 3 - Decoys (script falso en disco + entrada en .bash_history)   <-- PENDIENTE
-#   [x] Bloque 4 - Huérfano CPU-heavy disfrazado (bash loop + setsid + exec -a)
-#   [ ] Bloque 5 - Zombie decorativo (Perl fork sin wait())                    <-- PENDIENTE
-#   [ ] Resumen final combinado                                               <-- PENDIENTE
 # ==============================================================================
+# RESUMEN DE EJECUCIÓN (LÓGICA DEL INCIDENTE 012):
+# 1. RESOLUCIÓN DE NOMBRES (PLAY 1): Actualiza /etc/hosts localmente en el
+#    control node para permitir troubleshooting por nombre DNS.
+# 2. GUARD DE FLOTA (PLAY 2): Verifica que NINGÚN app_node tenga ya el
+#    incidente 012 activo, ANTES de sortear el objetivo (evita doble-inyección
+#    cuando el random cae en un nodo distinto en corridas sucesivas).
+# 3. SELECCIÓN ALEATORIA (PLAY 3): Elige UN SOLO nodo limpio del grupo
+#    'app_nodes' para crear un estado asimétrico en el clúster HA.
+# 4. INYECCIÓN DEL FALLO (PLAY 4), en este orden:
+#    a) Marker de idempotencia.
+#    b) Decoys: script de mantenimiento falso en /opt/scripts + rastro
+#       narrativo en .bash_history de jensyg (nohup sin disown).
+#    c) Proceso huérfano CPU-heavy, disfrazado vía exec -a, reparentado a
+#       PID 1 (setsid).
+#    d) Zombie decorativo: fork() en Python sin wait(), hijo queda en
+#       estado Z bajo el mismo padre disfrazado.
+#    e) Estado consolidado en un único JSON (para la futura recuperación).
+# ==============================================================================
+#
+# TABLA DE TRAZABILIDAD (inyección -> recuperación, regla 6 del skill):
+#   32 | Crear marker file             -> Eliminar marker file
+#   80 | Crear /opt/scripts            -> Eliminar directorio (validar si preexistía)
+#   81 | Deployar script decoy         -> Eliminar /opt/scripts/app_reindex_worker.sh
+#   82 | Touch .bash_history           -> NO borrar el archivo (preexistía con datos reales)
+#   83 | Agregar 2 líneas al historial -> Eliminar exactamente esas 2 líneas
+#   50 | Lanzar huérfano CPU-heavy     -> kill -9 sobre orphan_pid (leído del JSON)
+#   55 | Lanzar padre-zombie           -> kill -9 sobre zombie_parent_pid (leído del JSON)
+#   70 | Crear state_file JSON         -> Eliminar state_file
+# ==============================================================================
+---
 ---
 - name: "Incident 012 - Ensure Name Resolution on Control Node"
   hosts: localhost
@@ -134,7 +129,7 @@
         name: "{{ target_node }}"
         groups: incident_012_target
 
-- name: "Incident 012 | Create Marker and Inject Orphaned Process + Decorative Zombie"
+- name: "Incident 012 | Inject Marker, Decoys, Orphan Process and Decorative Zombie"
   hosts: incident_012_target
   become: yes
   vars:
@@ -143,7 +138,12 @@
     state_file: "/var/run/.incident_{{ incident_id }}_state.json"
     disguise_orphan: "app_reindex_worker"
     disguise_zombie_parent: "legacy_cleanup_monitor"
+    decoy_user: "jensyg"
+    decoy_group: "sysadmins"
   tasks:
+    # ------------------------------------------------------------------
+    # MARKER GUARD
+    # ------------------------------------------------------------------
     - name: "32 | Create marker file on selected target"
       ansible.builtin.file:
         path: "{{ marker_file }}"
@@ -151,7 +151,56 @@
         mode: '0644'
 
     # ------------------------------------------------------------------
-    # SUB-BLOQUE A - Huérfano CPU-heavy disfrazado
+    # BLOQUE 3 - DECOYS (script en disco + bash_history)
+    # ------------------------------------------------------------------
+    - name: "80 | Ensure /opt/scripts directory exists (decoy maintenance scripts location)"
+      ansible.builtin.file:
+        path: /opt/scripts
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: "81 | Deploy decoy maintenance script matching orphan process disguise"
+      ansible.builtin.copy:
+        dest: /opt/scripts/app_reindex_worker.sh
+        owner: root
+        group: root
+        mode: '0755'
+        content: |
+          #!/bin/bash
+          # Legacy reindexing worker - rebuilds search index cache for uploaded evidence files.
+          # NOTE: intended to run only via cron/systemd timer, NOT launched interactively.
+          while true; do
+              find /var/www/html/uploads -newer /tmp/.last_reindex -type f 2>/dev/null
+              touch /tmp/.last_reindex
+              sleep 5
+          done
+
+    - name: "82 | Ensure jensyg's .bash_history file exists (do not overwrite ownership if already present)"
+      ansible.builtin.file:
+        path: "/home/{{ decoy_user }}/.bash_history"
+        state: touch
+        owner: "{{ decoy_user }}"
+        group: "{{ decoy_group }}"
+        mode: '0600'
+        modification_time: preserve
+        access_time: preserve
+
+    - name: "83 | Inject misleading bash_history entries (manual launch without disown)"
+      ansible.builtin.lineinfile:
+        path: "/home/{{ decoy_user }}/.bash_history"
+        line: "{{ item }}"
+        insertafter: EOF
+        owner: "{{ decoy_user }}"
+        group: "{{ decoy_group }}"
+        mode: '0600'
+      loop:
+        - "cd /opt/scripts"
+        - "nohup ./app_reindex_worker.sh &"
+
+    # ------------------------------------------------------------------
+    # BLOQUE 4 - Huérfano CPU-heavy disfrazado
     # ------------------------------------------------------------------
     - name: "50 | Launch disguised orphaned CPU-heavy process (setsid + exec -a)"
       ansible.builtin.shell:
@@ -178,7 +227,7 @@
       changed_when: false
 
     # ------------------------------------------------------------------
-    # SUB-BLOQUE B - Zombie decorativo (python3 fork sin wait())
+    # BLOQUE 5 - Zombie decorativo (python3 fork sin wait())
     # ------------------------------------------------------------------
     - name: "54 | Confirm python3 is available (sanity check)"
       ansible.builtin.command:
@@ -241,6 +290,10 @@
           INCIDENT 012 SUCCESSFULLY INJECTED
           =========================================
           Target Node          : {{ inventory_hostname }} (ASYMMETRIC STATE)
+
+          --- Decoys ---
+          Script deployed      : /opt/scripts/app_reindex_worker.sh
+          History injected     : /home/{{ decoy_user }}/.bash_history (2 lines appended)
 
           --- Orphaned CPU-heavy process ---
           Disguised as         : {{ disguise_orphan }}
