@@ -1,0 +1,14 @@
+Module,Title,Difficulty,Level,Duration,Date
+Kubernetes Basics,Course Introduction,1,L1,1,2026-09-10
+Kubernetes Basics,Kubernetes Overview & Kubectl,1,L1,6,2026-09-11
+Kubernetes Basics,Lab: Kubectl,2,L1,10,2026-09-12
+Kubernetes Basics,Pods,1,L1,5,2026-09-13
+Kubernetes Basics,Lab: Pods,2,L1,10,2026-09-14
+Kubernetes Basics,YAML - Part 1,1,L1,4,2026-09-15
+Kubernetes Basics,Lab: YAML - Part 1,2,L1,10,2026-09-16
+Kubernetes Basics,YAML - Part 2,1,L1,4,2026-09-17
+Kubernetes Basics,Lab: YAML - Part 2,2,L1,10,2026-09-18
+Kubernetes Basics,Pods with YAML,1,L1,7,2026-09-19
+Kubernetes Basics,Lab: Pods With YAML,2,L1,10,2026-09-20
+Kubernetes Basics,Next Steps,1,L1,1,2026-09-21
+Kubernetes Basics,Article: Link to Next Course,1,L1,0,2026-09-22
