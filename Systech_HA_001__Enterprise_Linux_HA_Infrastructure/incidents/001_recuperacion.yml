@@ -20,6 +20,7 @@
         path: /etc/hosts
         marker: "# {mark} ANSIBLE MANAGED HOSTS (SYSTECH CONTROL NODE)"
         state: absent
+        unsafe_writes: yes
 
 # ------------------------------------------------------------------------------
 # PLAY 2: CORE INCIDENT RECOVERY (app_nodes)
@@ -71,7 +72,7 @@
     - name: "Debug state content (Optional, for troubleshooting)"
       ansible.builtin.debug:
         msg: "Recovering node {{ inventory_hostname }}. State: {{ state_content.content | b64decode }}"
-      verbosity: 1
+      # verbosity: 1
 
     # ========================================================================
     # 2. CORE RECOVERY (THE FIX)
