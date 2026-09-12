@@ -24,3 +24,9 @@
 - **Root Cause:** `/etc/hosts` is a bind-mount managed by the container runtime. Ansible's default atomic write (write-to-temp + rename) fails because the kernel forbids `rename()` on bind-mounted files.
 - **Fix/Rule:** ALWAYS add `unsafe_writes: yes` to any `blockinfile`, `copy`, or `template` task that modifies `/etc/hosts` on `hosts: localhost` inside the Podman control node.
 - **Discovered in:** INC-001 (Authentication & Identity).
+
+## [BUG-008] Control Node DNS restricted to incident target group
+- **Symptom:** The practitioner cannot SSH or troubleshoot nodes outside the incident's `target_group` (e.g., cannot reach `db01` or `storage01`) from the Control Node.
+- **Root Cause:** The AI used `groups['target_group']` instead of `groups['all']` when generating the `/etc/hosts` block for the Control Node.
+- **Fix/Rule:** When updating `/etc/hosts` on `hosts: localhost` (Control Node), ALWAYS use the exact Jinja2 loop from `dns01.yml` iterating over `groups['all']` (with the `if hostvars[host].ansible_host is defined` check). Never restrict the Control Node's DNS resolution to just the incident's target group.
+- **Discovered in:** INC-001 (Authentication & Identity).
