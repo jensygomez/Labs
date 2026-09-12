@@ -1,30 +1,34 @@
 # ==============================================================================
-# INC-001 | User cannot authenticate (correct password) - Incident Recovery
+# INC-001 | User cannot authenticate (correct password) - Incident Injection
 # Family: systech-ha-001
 # ==============================================================================
 
 ---
 # ------------------------------------------------------------------------------
-# PLAY 1: CONTROL NODE DNS CLEANUP (Required per BUG-010B)
-# Removes the block added by the injection playbook, restoring the Control
-# Node's /etc/hosts to its original state.
+# PLAY 1: CONTROL NODE DNS RESOLUTION (Required per BUG-010B)
+# Allows the practitioner to SSH into app_nodes by hostname from the Control Node.
 # ------------------------------------------------------------------------------
-- name: "INC-001 | Play 1 - Remove Control Node DNS entries"
+- name: "INC-001 | Play 1 - Ensure Control Node can resolve app_nodes hostnames"
   hosts: localhost
   connection: local
   gather_facts: no
 
   tasks:
-    - name: "Remove app_nodes hostnames from Control Node /etc/hosts"
+    - name: "Add app_nodes hostnames to Control Node /etc/hosts"
       ansible.builtin.blockinfile:
         path: /etc/hosts
         marker: "# {mark} ANSIBLE MANAGED HOSTS (SYSTECH CONTROL NODE)"
-        state: absent
+        create: yes
+        unsafe_writes: yes
+        block: |
+          {% for host in groups['app_nodes'] %}
+          {{ hostvars[host].ansible_host }} {{ host }}
+          {% endfor %}
 
 # ------------------------------------------------------------------------------
-# PLAY 2: CORE INCIDENT RECOVERY (app_nodes)
+# PLAY 2: CORE INCIDENT INJECTION (app_nodes)
 # ------------------------------------------------------------------------------
-- name: "INC-001 | User cannot authenticate (correct password) - Incident Recovery"
+- name: "INC-001 | User cannot authenticate (correct password) - Incident Injection"
   hosts: "{{ target_group | default('app_nodes') }}"
   become: yes
   gather_facts: yes
@@ -35,136 +39,133 @@
     target_group: "app_nodes"
     affected_user: "jensyg"
 
-    # Paths must EXACTLY match the incident playbook
+    # Idempotency & State paths
     marker_file: "/tmp/.systech_{{ incident_id }}_marker"
     state_file: "/tmp/.systech_{{ incident_id }}_state.json"
-    recovery_marker: "/tmp/.systech_{{ incident_id }}_recovered"
+
+    # Toggles driven by the Spec Card
+    inject_decoy: true
+    use_random_node: true
 
   tasks:
     # ========================================================================
     # 1. PRE-FLIGHT & IDEMPOTENCY CHECK
     # ========================================================================
-    - name: "Check if incident is already recovered"
+    - name: "Check if incident was already injected (Idempotency)"
       ansible.builtin.stat:
-        path: "{{ recovery_marker }}"
-      register: recovery_check
+        path: "{{ marker_file }}"
+      register: marker_check
 
-    - name: "Skip play if already recovered"
+    - name: "Skip play if incident is already active"
       meta: end_play
-      when: recovery_check.stat.exists
+      when: marker_check.stat.exists
 
-    - name: "Check if incident state file exists on this node"
-      ansible.builtin.stat:
-        path: "{{ state_file }}"
-      register: state_file_check
+    - name: "Verify target service is currently healthy before breaking it"
+      ansible.builtin.systemd:
+        name: "{{ target_service }}"
+      register: service_status
+      failed_when: service_status.status.ActiveState != "active"
 
-    # CRITICAL: If this node doesn't have the state file, it wasn't the target.
-    - name: "Skip node if it wasn't the broken target"
+    # ========================================================================
+    # 2. DYNAMIC NODE SELECTION (Safe Randomness)
+    # ========================================================================
+    # CRITICAL: Never use `{{ groups['x'] | random }}` directly in tasks (BUG-001).
+    # Evaluated ONCE here via set_fact + run_once.
+    - name: "Select random target node (Safe evaluation)"
+      ansible.builtin.set_fact:
+        selected_target: "{{ groups[target_group] | random }}"
+      run_once: true
+      when: use_random_node | bool
+
+    - name: "Restrict play to selected node if random mode is active"
       meta: end_host
-      when: not state_file_check.stat.exists
-
-    - name: "Read incident state to confirm root cause"
-      ansible.builtin.slurp:
-        src: "{{ state_file }}"
-      register: state_content
-
-    - name: "Debug state content (Optional, for troubleshooting)"
-      ansible.builtin.debug:
-        msg: "Recovering node {{ inventory_hostname }}. State: {{ state_content.content | b64decode }}"
-      # verbosity: 1
+      when:
+        - use_random_node | bool
+        - inventory_hostname != selected_target
 
     # ========================================================================
-    # 2. CORE RECOVERY (THE FIX)
+    # 3. DECOY INJECTION (Optional Block)
     # ========================================================================
-    - name: "CORE RECOVERY: Clear jensyg's account expiration"
+    # Runs on the SAME node as the real injection (asymmetric target already
+    # isolated in Section 2), per BUG-010A design and adjustment request.
+    - name: "DECOY: Misleading noise on the affected node"
       block:
-        - name: "Apply fix: remove account expiration for jensyg"
+        - name: "Decoy action 1: Fake security audit log with unrelated denials"
+          ansible.builtin.copy:
+            content: |
+              [WARN] pam_unix(sudo:auth): authentication failure; logname= uid=0 euid=0 tty=/dev/pts/1 ruser= rhost=  user=root
+              [WARN] Multiple failed su attempts detected for user root
+              [INFO] fail2ban: Ban 10.10.10.99 (unrelated scan activity)
+              [WARN] Repeated invalid password attempts for user backup_svc
+            dest: /var/log/security_audit.log
+            owner: root
+            group: root
+            mode: '0640'
+            force: no
+
+        - name: "Decoy action 2: Misleading password-expiry warning in .bashrc"
+          ansible.builtin.lineinfile:
+            path: "/home/{{ affected_user }}/.bashrc"
+            line: 'echo "WARNING: Your password will expire soon. Contact IT."'
+            insertafter: EOF
+            create: no
+      when: inject_decoy | bool
+
+    # ========================================================================
+    # 4. CORE INCIDENT INJECTION
+    # ========================================================================
+    - name: "CORE INJECTION: Set past account expiration date for jensyg"
+      block:
+        - name: "Apply breaking change: expire jensyg's account (asymmetric, this node only)"
           ansible.builtin.user:
             name: "{{ affected_user }}"
-            expires: -1
-          register: recovery_result
+            expires: "{{ (ansible_date_time.epoch | int - 86400) }}"
+          register: injection_result
 
-        - name: "Restart service to apply the fix"
+        - name: "Restart service to apply the break"
           ansible.builtin.systemd:
             name: "{{ target_service }}"
             state: restarted
             daemon_reload: yes
-          when: recovery_result.changed
+          when: injection_result.changed
       rescue:
-        - name: "ALERT: Recovery failed"
-          ansible.builtin.debug:
-            msg: "Recovery failed on {{ inventory_hostname }}. Manual intervention required."
-          failed_when: true
+        - name: "ROLLBACK: Revert changes if injection fails unexpectedly"
+          ansible.builtin.user:
+            name: "{{ affected_user }}"
+            expires: -1
+          ignore_errors: yes
 
     # ========================================================================
-    # 2b. DECOY CLEANUP (Symmetric to injection, per BUG-010C)
+    # 5. STATE RECORDING & MARKER CREATION
     # ========================================================================
-    - name: "DECOY CLEANUP: Remove fake security audit log"
-      ansible.builtin.file:
-        path: /var/log/security_audit.log
-        state: absent
-
-    - name: "DECOY CLEANUP: Remove misleading .bashrc warning"
-      ansible.builtin.lineinfile:
-        path: "/home/{{ affected_user }}/.bashrc"
-        line: 'echo "WARNING: Your password will expire soon. Contact IT."'
-        state: absent
-
-    # ========================================================================
-    # 3. LIGHTWEIGHT SELF-TEST (VALIDATION)
-    # ========================================================================
-    - name: "SELF-TEST: Verify service is active"
-      ansible.builtin.systemd:
-        name: "{{ target_service }}"
-      register: service_check
-      failed_when: service_check.status.ActiveState != "active"
-
-    - name: "SELF-TEST: Verify symptom is resolved (BUG-010D)"
-      block:
-        - name: "Check account status via passwd -S"
-          ansible.builtin.command: "passwd -S {{ affected_user }}"
-          changed_when: false
-          register: passwd_status_check
-
-        - name: "Check account expiration via chage -l"
-          ansible.builtin.command: "chage -l {{ affected_user }}"
-          changed_when: false
-          register: chage_status_check
-
-        - name: "Fail self-test if account is still locked/expired"
-          ansible.builtin.fail:
-            msg: "Account {{ affected_user }} still shows a locked/expired state after recovery."
-          when: "'L' in passwd_status_check.stdout.split()[1] or 'never' not in chage_status_check.stdout | lower and 'Account expires' in chage_status_check.stdout and 'never' not in (chage_status_check.stdout | lower)"
-
-        - name: "Display final verification summary"
-          ansible.builtin.debug:
-            msg:
-              - "passwd -S {{ affected_user }}: {{ passwd_status_check.stdout }}"
-              - "chage -l {{ affected_user }}: {{ chage_status_check.stdout_lines }}"
-      ignore_errors: no
-
-    # ========================================================================
-    # 4. STATE UPDATE & CLEANUP
-    # ========================================================================
-    - name: "Update state file to 'recovered'"
+    - name: "Record incident state (JSON for traceability)"
       ansible.builtin.copy:
         content: |
           {
             "incident_id": "{{ incident_id }}",
-            "recovery_timestamp": "{{ ansible_date_time.iso8601 }}",
+            "timestamp": "{{ ansible_date_time.iso8601 }}",
             "target_node": "{{ inventory_hostname }}",
-            "status": "recovered"
+            "target_service": "{{ target_service }}",
+            "affected_user": "{{ affected_user }}",
+            "root_cause": "Account expiration date set to the past for jensyg on a single asymmetric node, while other cluster nodes remain unaffected.",
+            "decoys_injected": {{ inject_decoy | bool | lower }},
+            "status": "injected"
           }
         dest: "{{ state_file }}"
         mode: '0600'
 
-    - name: "Create recovery marker file for idempotency"
+    - name: "Create idempotency marker file"
       ansible.builtin.file:
-        path: "{{ recovery_marker }}"
+        path: "{{ marker_file }}"
         state: touch
         mode: '0600'
 
-    - name: "Remove incident marker file"
-      ansible.builtin.file:
-        path: "{{ marker_file }}"
-        state: absent
+  # ========================================================================
+  # HANDLERS
+  # ========================================================================
+  handlers:
+    - name: "Restart target service"
+      ansible.builtin.systemd:
+        name: "{{ target_service }}"
+        state: restarted
+        daemon_reload: yes

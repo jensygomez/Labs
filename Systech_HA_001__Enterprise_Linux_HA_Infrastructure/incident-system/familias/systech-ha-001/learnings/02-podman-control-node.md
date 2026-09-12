@@ -18,3 +18,9 @@
 - **Root Cause:** The lab intranet is isolated within Proxmox. The host machine needs a static route to forward traffic from the ZeroTier interface to the Proxmox bridge.
 - **Fix/Rule:** This is a host-level configuration (`sudo ip route add 10.10.10.0/24 via 10.147.17.100`), not an Ansible task for the lab nodes. The `PROMPT_GENERACION` must not attempt to fix routing via Ansible on the lab nodes.
 - **Discovered in:** INC-008 (Networking & Firewall).
+
+## [BUG-007] `blockinfile` fails on Podman `/etc/hosts` without `unsafe_writes`
+- **Symptom:** `OSError: [Errno 16] Device or resource busy` when using `blockinfile` or `copy` to modify `/etc/hosts` inside the Podman control node.
+- **Root Cause:** `/etc/hosts` is a bind-mount managed by the container runtime. Ansible's default atomic write (write-to-temp + rename) fails because the kernel forbids `rename()` on bind-mounted files.
+- **Fix/Rule:** ALWAYS add `unsafe_writes: yes` to any `blockinfile`, `copy`, or `template` task that modifies `/etc/hosts` on `hosts: localhost` inside the Podman control node.
+- **Discovered in:** INC-001 (Authentication & Identity).
