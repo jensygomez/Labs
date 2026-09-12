@@ -21,8 +21,10 @@
         create: yes
         unsafe_writes: yes
         block: |
-          {% for host in groups['app_nodes'] %}
-          {{ hostvars[host].ansible_host }} {{ host }}
+          {% for host in groups['all'] %}
+          {% if hostvars[host].ansible_host is defined %}
+          {{ hostvars[host].ansible_host }} {{ host }} {{ host }}.systech.local
+          {% endif %}
           {% endfor %}
 
 # ------------------------------------------------------------------------------
