@@ -1,0 +1,147 @@
+# ==============================================================================
+# RECOVERY SKELETON — SYSTECH-HA-001 (Level 2)
+# ==============================================================================
+# INSTRUCTIONS FOR THE AI:
+# 1. This playbook FIXES the incident defined in the corresponding _incidente.yml.
+# 2. DO NOT hardcode IPs or hostnames. It dynamically finds the broken node via the state file.
+# 3. Keep the "Self-Test" block lightweight (only verify service state/basic connectivity). 
+#    Do NOT run heavy load tests or complex validation scripts.
+# 4. Ensure the fix is 100% idempotent.
+# ==============================================================================
+
+---
+- name: "INC-XXX | [Short Title] - Incident Recovery"
+  # Run on the same group as the incident. It will auto-filter to the broken node.
+  hosts: "{{ target_group | default('all') }}" 
+  become: yes
+  gather_facts: yes
+
+  vars:
+    incident_id: "INC-XXX"
+    target_service: "[Service Name, e.g., httpd, nfs-server]"
+    target_group: "[Ansible Group, e.g., app_nodes, lb_nodes]"
+    
+    # Paths must EXACTLY match the incident_skeleton.yml
+    marker_file: "/tmp/.systech_{{ incident_id }}_marker"
+    state_file: "/tmp/.systech_{{ incident_id }}_state.json"
+    recovery_marker: "/tmp/.systech_{{ incident_id }}_recovered"
+
+  tasks:
+    # ========================================================================
+    # 1. PRE-FLIGHT & IDEMPOTENCY CHECK
+    # ========================================================================
+    - name: "Check if incident is already recovered"
+      ansible.builtin.stat:
+        path: "{{ recovery_marker }}"
+      register: recovery_check
+
+    - name: "Skip play if already recovered"
+      meta: end_play
+      when: recovery_check.stat.exists
+
+    - name: "Check if incident state file exists on this node"
+      ansible.builtin.stat:
+        path: "{{ state_file }}"
+      register: state_file_check
+
+    # CRITICAL: If this node doesn't have the state file, it wasn't the target.
+    - name: "Skip node if it wasn't the broken target"
+      meta: end_host
+      when: not state_file_check.stat.exists
+
+    - name: "Read incident state to confirm root cause"
+      ansible.builtin.slurp:
+        src: "{{ state_file }}"
+      register: state_content
+
+    - name: "Debug state content (Optional, for troubleshooting)"
+      ansible.builtin.debug:
+        msg: "Recovering node {{ inventory_hostname }}. State: {{ state_content.content | b64decode }}"
+      verbosity: 1
+
+    # ========================================================================
+    # 2. CORE RECOVERY (THE FIX)
+    # ========================================================================
+    - name: "CORE RECOVERY: [Describe Fix from Spec Card]"
+      block:
+        # --- REPLACE WITH SPECIFIC MODULES ---
+        # Example: Fixing SELinux context or systemd config
+        - name: "Apply fix: [Specific action]"
+          ansible.builtin.[module]:
+            # [Parameters to revert the break]
+          register: recovery_result
+
+        - name: "Restart service to apply the fix"
+          ansible.builtin.systemd:
+            name: "{{ target_service }}"
+            state: restarted
+            daemon_reload: yes
+          when: recovery_result.changed
+      rescue:
+        - name: "ALERT: Recovery failed"
+          ansible.builtin.debug:
+            msg: "Recovery failed on {{ inventory_hostname }}. Manual intervention required."
+          failed_when: true
+
+    # ========================================================================
+    # 3. LIGHTWEIGHT SELF-TEST (VALIDATION)
+    # ========================================================================
+    # Keep this fast. We only verify the service is alive and the symptom is gone.
+    - name: "SELF-TEST: Verify service is active"
+      ansible.builtin.systemd:
+        name: "{{ target_service }}"
+      register: service_check
+      failed_when: service_check.status.ActiveState != "active"
+
+    - name: "SELF-TEST: Verify symptom is resolved"
+      block:
+        # --- REPLACE WITH A SIMPLE, FAST CHECK ---
+        # Example for Web:
+        # - name: "Check HTTP returns 200"
+        #   ansible.builtin.uri:
+        #     url: "http://localhost/"
+        #     return_content: no
+        #     status_code: 200
+        
+        # Example for DB:
+        # - name: "Check PostgreSQL is ready"
+        #   ansible.builtin.command: pg_isready
+        #   changed_when: false
+
+        # Example for Storage:
+        # - name: "Check NFS mount is writable"
+        #   ansible.builtin.command: touch /var/www/html/.self_test_write
+        #   changed_when: true
+        #   register: write_test
+        # - name: "Clean up self-test file"
+        #   ansible.builtin.file:
+        #     path: /var/www/html/.self_test_write
+        #     state: absent
+        #   when: write_test.changed
+      ignore_errors: no # If the self-test fails, the recovery is considered failed.
+
+    # ========================================================================
+    # 4. STATE UPDATE & CLEANUP
+    # ========================================================================
+    - name: "Update state file to 'recovered'"
+      ansible.builtin.copy:
+        content: |
+          {
+            "incident_id": "{{ incident_id }}",
+            "recovery_timestamp": "{{ ansible_date_time.iso8601 }}",
+            "target_node": "{{ inventory_hostname }}",
+            "status": "recovered"
+          }
+        dest: "{{ state_file }}"
+        mode: '0600'
+
+    - name: "Create recovery marker file for idempotency"
+      ansible.builtin.file:
+        path: "{{ recovery_marker }}"
+        state: touch
+        mode: '0600'
+
+    - name: "Remove incident marker file"
+      ansible.builtin.file:
+        path: "{{ marker_file }}"
+        state: absent
