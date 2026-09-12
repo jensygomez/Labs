@@ -1,0 +1,143 @@
+# ==============================================================================
+# INCIDENT SKELETON — SYSTECH-HA-001 (Level 2)
+# ==============================================================================
+# INSTRUCTIONS FOR THE AI:
+# 1. Replace placeholders (e.g., INC-XXX, [Description]) with specifics from the Spec Card.
+# 2. DO NOT hardcode IPs or hostnames. Use Ansible groups and variables.
+# 3. DO NOT remove the structural blocks (Idempotency, State, Marker) — they are mandatory.
+# 4. If the incident does not require a decoy or random node selection, set the 
+#    corresponding variables to false/null in the 'vars' section.
+# ==============================================================================
+
+---
+- name: "INC-XXX | [Short Title] - Incident Injection"
+  hosts: "{{ target_group | default('all') }}"
+  become: yes
+  gather_facts: yes
+
+  vars:
+    incident_id: "INC-XXX"
+    target_service: "[Service Name, e.g., httpd, nfs-server]"
+    target_group: "[Ansible Group, e.g., app_nodes, lb_nodes]"
+    
+    # Idempotency & State paths (Keep these standard)
+    marker_file: "/tmp/.systech_{{ incident_id }}_marker"
+    state_file: "/tmp/.systech_{{ incident_id }}_state.json"
+    
+    # Toggles driven by the Spec Card
+    inject_decoy: false 
+    use_random_node: false 
+
+  tasks:
+    # ========================================================================
+    # 1. PRE-FLIGHT & IDEMPOTENCY CHECK
+    # ========================================================================
+    - name: "Check if incident was already injected (Idempotency)"
+      ansible.builtin.stat:
+        path: "{{ marker_file }}"
+      register: marker_check
+
+    - name: "Skip play if incident is already active"
+      meta: end_play
+      when: marker_check.stat.exists
+
+    - name: "Verify target service is currently healthy before breaking it"
+      ansible.builtin.systemd:
+        name: "{{ target_service }}"
+      register: service_status
+      failed_when: service_status.status.ActiveState != "active"
+
+    # ========================================================================
+    # 2. DYNAMIC NODE SELECTION (Safe Randomness)
+    # ========================================================================
+    # CRITICAL: Never use `{{ groups['x'] | random }}` directly in tasks. 
+    # Ansible re-evaluates it per task. We evaluate it ONCE here.
+    - name: "Select random target node (Safe evaluation)"
+      ansible.builtin.set_fact:
+        selected_target: "{{ groups[target_group] | random }}"
+      run_once: true
+      when: use_random_node | bool
+
+    - name: "Restrict play to selected node if random mode is active"
+      meta: end_host
+      when: 
+        - use_random_node | bool
+        - inventory_hostname != selected_target
+
+    # ========================================================================
+    # 3. DECOY INJECTION (Optional Block)
+    # ========================================================================
+    # Runs on a different node or the same node to create noise/distraction.
+    - name: "DECOY: [Describe the decoy effect]"
+      block:
+        - name: "Decoy action 1: [e.g., Fill /var/log with junk]"
+          ansible.builtin.shell: |
+            # Safe way to generate noise without crashing the node
+            for i in {1..100}; do echo "Decoy noise line $i" >> /tmp/decoy_noise.log; done
+          args:
+            creates: /tmp/decoy_noise.log # Idempotent
+
+        - name: "Decoy action 2: [e.g., Start a dummy failing service]"
+          ansible.builtin.systemd:
+            name: dummy_decoy.service
+            state: started
+            enabled: yes
+          ignore_errors: yes # It's a decoy, it's supposed to look broken
+      when: inject_decoy | bool
+
+    # ========================================================================
+    # 4. CORE INCIDENT INJECTION
+    # ========================================================================
+    - name: "CORE INJECTION: [Describe Root Cause from Spec Card]"
+      block:
+        # --- REPLACE WITH SPECIFIC MODULES ---
+        # Example: Breaking SELinux context or systemd config
+        - name: "Apply breaking change: [Specific action]"
+          ansible.builtin.[module]:
+            # [Parameters based on Spec Card]
+          register: injection_result
+
+        - name: "Restart service to apply the break"
+          ansible.builtin.systemd:
+            name: "{{ target_service }}"
+            state: restarted
+            daemon_reload: yes
+          when: injection_result.changed
+      rescue:
+        - name: "ROLLBACK: Revert changes if injection fails unexpectedly"
+          ansible.builtin.debug:
+            msg: "Injection failed, rolling back to maintain lab integrity."
+          # Add actual rollback tasks here if the injection is risky
+
+    # ========================================================================
+    # 5. STATE RECORDING & MARKER CREATION
+    # ========================================================================
+    - name: "Record incident state (JSON for traceability)"
+      ansible.builtin.copy:
+        content: |
+          {
+            "incident_id": "{{ incident_id }}",
+            "timestamp": "{{ ansible_date_time.iso8601 }}",
+            "target_node": "{{ inventory_hostname }}",
+            "target_service": "{{ target_service }}",
+            "root_cause": "[Brief technical description of what was broken]",
+            "status": "injected"
+          }
+        dest: "{{ state_file }}"
+        mode: '0600'
+
+    - name: "Create idempotency marker file"
+      ansible.builtin.file:
+        path: "{{ marker_file }}"
+        state: touch
+        mode: '0600'
+
+  # ========================================================================
+  # HANDLERS (Ensure proper ordering, flush at the end if needed)
+  # ========================================================================
+  handlers:
+    - name: "Restart target service"
+      ansible.builtin.systemd:
+        name: "{{ target_service }}"
+        state: restarted
+        daemon_reload: yes
