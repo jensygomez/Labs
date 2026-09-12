@@ -70,3 +70,23 @@
 - **SELinux:** Enforcing by default on all AlmaLinux 9 nodes. Context mismatches are a primary failure vector.
 - **Systemd:** Used for service management on all AlmaLinux 9 and Ubuntu 24.04 nodes.
 - **Package Manager:** `dnf` for AlmaLinux 9, `apt` for Ubuntu 24.04.
+
+## 6. Pre-provisioned Assets & Strict Rules
+> **Rule for AI:** The infrastructure is ALREADY deployed and running via `site.yml`. Your incident playbooks MUST NOT recreate these assets.
+
+### Pre-existing Users Inventory
+> **Rule:** Choose the most appropriate user from this list for your incident. NEVER use `ansible.builtin.user` to create new users in an incident playbook.
+
+| Username | Role / Context | Typical Use Case for Incidents |
+| :--- | :--- | :--- |
+| `jensyg` | Standard Lab User (Sudoer) | SSH issues, password expiration, PAM lockouts, basic file permissions. |
+| `ansible` | Automation User | SSH key issues, sudoers misconfigurations, control node connectivity. |
+| `apache` / `www-data`| Web Service Account | SELinux context issues, `/var/www/html` permissions, PHP-FPM failures. |
+| `postgres` | Database Service Account | PostgreSQL authentication, `pg_hba.conf` issues, DB file permissions. |
+| `nfsnobody` | NFS Service Account | NFS export permissions, root_squash issues, storage mapping. |
+| *(Add other users from your `group_vars/all/system_users.yml` here)* | | |
+
+### Pre-existing DNS & Networking
+- **Remote Nodes:** `/etc/hosts` on all remote nodes (`app_nodes`, `lb_nodes`, `db_nodes`, etc.) is managed globally by the `dns01.yml` playbook.
+- **Rule:** NEVER modify `/etc/hosts` on remote nodes inside an incident playbook.
+- **Control Node:** If an incident requires DNS resolution from the Control Node for troubleshooting, you MUST use `blockinfile` on `hosts: localhost` with the exact marker `# {mark} ANSIBLE MANAGED HOSTS (SYSTECH CONTROL NODE)`. The recovery playbook MUST remove this block using `state: absent`.
