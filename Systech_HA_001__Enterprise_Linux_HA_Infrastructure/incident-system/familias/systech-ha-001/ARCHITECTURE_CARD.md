@@ -75,16 +75,17 @@
 > **Rule for AI:** The infrastructure is ALREADY deployed and running via `site.yml`. Your incident playbooks MUST NOT recreate these assets.
 
 ### Pre-existing Users Inventory
-> **Rule:** Choose the most appropriate user from this list for your incident. NEVER use `ansible.builtin.user` to create new users in an incident playbook.
+> **STRICT RULE:** The users listed below ALREADY exist and are managed by `setup_users.yml`. 
+> **NEVER** use the `ansible.builtin.user` module in ANY incident playbook (neither to create nor to modify). 
+> For Authentication & Identity incidents, you MUST use `ansible.builtin.command` with `chage` or `passwd` to alter the state of the existing user (e.g., `cmd: "chage -E 2020-01-01 {{ affected_user }}"` or `cmd: "passwd -l {{ affected_user }}"`).
 
-| Username | Role / Context | Typical Use Case for Incidents |
-| :--- | :--- | :--- |
-| `jensyg` | Standard Lab User (Sudoer) | SSH issues, password expiration, PAM lockouts, basic file permissions. |
-| `ansible` | Automation User | SSH key issues, sudoers misconfigurations, control node connectivity. |
-| `apache` / `www-data`| Web Service Account | SELinux context issues, `/var/www/html` permissions, PHP-FPM failures. |
-| `postgres` | Database Service Account | PostgreSQL authentication, `pg_hba.conf` issues, DB file permissions. |
-| `nfsnobody` | NFS Service Account | NFS export permissions, root_squash issues, storage mapping. |
-| *(Add other users from your `group_vars/all/system_users.yml` here)* | | |
+| Username | Group | Target Nodes | Typical Use Case for Incidents |
+| :--- | :--- | :--- | :--- |
+| `jensyg` | `sysadmins` | `all` | SSH issues, password expiration, PAM lockouts, sudoers misconfigurations. |
+| `dev01` / `dev02` | `webdevs` | `app_nodes` | Web app permissions, `/var/www/html` access, PHP-FPM failures. |
+| `dba01` | `dbas` | `db_nodes` | PostgreSQL authentication, `pg_hba.conf` issues, DB file permissions, restricted sudo. |
+| `audit01` | `auditors` | `client_nodes` | Client-side troubleshooting, log reading, network connectivity from client tier. |
+| `ansible` | N/A (Service) | `all` | Automation user. SSH key issues, control node connectivity. |
 
 ### Pre-existing DNS & Networking
 - **Remote Nodes:** `/etc/hosts` on all remote nodes (`app_nodes`, `lb_nodes`, `db_nodes`, etc.) is managed globally by the `dns01.yml` playbook.

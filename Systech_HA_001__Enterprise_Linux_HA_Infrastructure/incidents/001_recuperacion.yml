@@ -1,88 +1,74 @@
 # ==============================================================================
-# INC-001 | User cannot authenticate (correct password) - Incident Recovery
-# Family: systech-ha-001
+# RECOVERY SKELETON — SYSTECH-HA-001 (Level 2)
+# ==============================================================================
+# INSTRUCTIONS FOR THE AI:
+# 1. This playbook FIXES the incident defined in the corresponding _incidente.yml.
+# 2. DO NOT hardcode IPs or hostnames. It dynamically finds the broken node via the state file.
+# 3. Keep the "Self-Test" block lightweight (only verify service state/basic connectivity).
+#    Do NOT run heavy load tests or complex validation scripts.
+# 4. Ensure the fix is 100% idempotent.
+# 5. SINGLE STATE FILE PATTERN (per BUG-009): There is NO separate marker_file or
+#    recovery_marker. The JSON state_file is the single source of truth. Idempotency
+#    is driven by the "status" field inside it, never by a file's mere existence.
 # ==============================================================================
 
 ---
-# ------------------------------------------------------------------------------
-# PLAY 1: CONTROL NODE DNS CLEANUP (Required per BUG-010B)
-# Removes the block added by the injection playbook, restoring the Control
-# Node's /etc/hosts to its original state.
-# ------------------------------------------------------------------------------
-- name: "INC-001 | Play 1 - Remove Control Node DNS entries"
-  hosts: localhost
-  connection: local
-  gather_facts: no
-
-  tasks:
-    - name: "Remove app_nodes hostnames from Control Node /etc/hosts"
-      ansible.builtin.blockinfile:
-        path: /etc/hosts
-        marker: "# {mark} ANSIBLE MANAGED HOSTS (SYSTECH CONTROL NODE)"
-        state: absent
-        unsafe_writes: yes
-
-# ------------------------------------------------------------------------------
-# PLAY 2: CORE INCIDENT RECOVERY (app_nodes)
-# ------------------------------------------------------------------------------
-- name: "INC-001 | User cannot authenticate (correct password) - Incident Recovery"
-  hosts: "{{ target_group | default('app_nodes') }}"
+- name: "INC-XXX | [Short Title] - Incident Recovery"
+  # Run on the same group as the incident. It will auto-filter to the broken node.
+  hosts: "{{ target_group | default('all') }}"
   become: yes
   gather_facts: yes
 
   vars:
-    incident_id: "INC-001"
-    target_service: "sshd"
-    target_group: "app_nodes"
-    affected_user: "jensyg"
+    incident_id: "INC-XXX"
+    target_service: "[Service Name, e.g., httpd, nfs-server]"
+    target_group: "[Ansible Group, e.g., app_nodes, lb_nodes]"
 
-    # Paths must EXACTLY match the incident playbook
-    marker_file: "/tmp/.systech_{{ incident_id }}_marker"
+    # Path must EXACTLY match the incident_skeleton.yml
     state_file: "/tmp/.systech_{{ incident_id }}_state.json"
-    recovery_marker: "/tmp/.systech_{{ incident_id }}_recovered"
 
   tasks:
     # ========================================================================
-    # 1. PRE-FLIGHT & IDEMPOTENCY CHECK
+    # 1. PRE-FLIGHT & STATE CHECK (Single State File Pattern)
     # ========================================================================
-    - name: "Check if incident is already recovered"
-      ansible.builtin.stat:
-        path: "{{ recovery_marker }}"
-      register: recovery_check
-
-    - name: "Skip play if already recovered"
-      meta: end_play
-      when: recovery_check.stat.exists
-
     - name: "Check if incident state file exists on this node"
       ansible.builtin.stat:
         path: "{{ state_file }}"
       register: state_file_check
 
-    # CRITICAL: If this node doesn't have the state file, it wasn't the target.
-    - name: "Skip node if it wasn't the broken target"
+    # CRITICAL: If this node doesn't have a state file, it wasn't the target.
+    - name: "Skip node if it wasn't the broken target (no state file)"
       meta: end_host
       when: not state_file_check.stat.exists
 
-    - name: "Read incident state to confirm root cause"
+    - name: "Read incident state to confirm root cause and current status"
       ansible.builtin.slurp:
         src: "{{ state_file }}"
       register: state_content
 
+    - name: "Parse current status from state file"
+      ansible.builtin.set_fact:
+        current_status: "{{ (state_content.content | b64decode | from_json).status }}"
+
+    - name: "Skip play if already recovered (status = recovered)"
+      meta: end_host
+      when: current_status == "recovered"
+
     - name: "Debug state content (Optional, for troubleshooting)"
       ansible.builtin.debug:
         msg: "Recovering node {{ inventory_hostname }}. State: {{ state_content.content | b64decode }}"
-      # verbosity: 1
+      verbosity: 1
 
     # ========================================================================
     # 2. CORE RECOVERY (THE FIX)
     # ========================================================================
-    - name: "CORE RECOVERY: Clear jensyg's account expiration"
+    - name: "CORE RECOVERY: [Describe Fix from Spec Card]"
       block:
-        - name: "Apply fix: remove account expiration for jensyg"
-          ansible.builtin.user:
-            name: "{{ affected_user }}"
-            expires: -1
+        # --- REPLACE WITH SPECIFIC MODULES ---
+        # Example: Fixing SELinux context or systemd config
+        - name: "Apply fix: [Specific action]"
+          ansible.builtin.[module]:
+            # [Parameters to revert the break]
           register: recovery_result
 
         - name: "Restart service to apply the fix"
@@ -98,54 +84,44 @@
           failed_when: true
 
     # ========================================================================
-    # 2b. DECOY CLEANUP (Symmetric to injection, per BUG-010C)
-    # ========================================================================
-    - name: "DECOY CLEANUP: Remove fake security audit log"
-      ansible.builtin.file:
-        path: /var/log/security_audit.log
-        state: absent
-
-    - name: "DECOY CLEANUP: Remove misleading .bashrc warning"
-      ansible.builtin.lineinfile:
-        path: "/home/{{ affected_user }}/.bashrc"
-        line: 'echo "WARNING: Your password will expire soon. Contact IT."'
-        state: absent
-
-    # ========================================================================
     # 3. LIGHTWEIGHT SELF-TEST (VALIDATION)
     # ========================================================================
+    # Keep this fast. We only verify the service is alive and the symptom is gone.
     - name: "SELF-TEST: Verify service is active"
       ansible.builtin.systemd:
         name: "{{ target_service }}"
       register: service_check
       failed_when: service_check.status.ActiveState != "active"
 
-    - name: "SELF-TEST: Verify symptom is resolved (BUG-010D)"
+    - name: "SELF-TEST: Verify symptom is resolved"
       block:
-        - name: "Check account status via passwd -S"
-          ansible.builtin.command: "passwd -S {{ affected_user }}"
-          changed_when: false
-          register: passwd_status_check
+        # --- REPLACE WITH A SIMPLE, FAST CHECK ---
+        # Example for Web:
+        # - name: "Check HTTP returns 200"
+        #   ansible.builtin.uri:
+        #     url: "http://localhost/"
+        #     return_content: no
+        #     status_code: 200
 
-        - name: "Check account expiration via chage -l"
-          ansible.builtin.command: "chage -l {{ affected_user }}"
-          changed_when: false
-          register: chage_status_check
+        # Example for DB:
+        # - name: "Check PostgreSQL is ready"
+        #   ansible.builtin.command: pg_isready
+        #   changed_when: false
 
-        - name: "Fail self-test if account is still locked/expired"
-          ansible.builtin.fail:
-            msg: "Account {{ affected_user }} still shows a locked/expired state after recovery."
-          when: "'L' in passwd_status_check.stdout.split()[1] or 'never' not in chage_status_check.stdout | lower and 'Account expires' in chage_status_check.stdout and 'never' not in (chage_status_check.stdout | lower)"
-
-        - name: "Display final verification summary"
-          ansible.builtin.debug:
-            msg:
-              - "passwd -S {{ affected_user }}: {{ passwd_status_check.stdout }}"
-              - "chage -l {{ affected_user }}: {{ chage_status_check.stdout_lines }}"
-      ignore_errors: no
+        # Example for Storage:
+        # - name: "Check NFS mount is writable"
+        #   ansible.builtin.command: touch /var/www/html/.self_test_write
+        #   changed_when: true
+        #   register: write_test
+        # - name: "Clean up self-test file"
+        #   ansible.builtin.file:
+        #     path: /var/www/html/.self_test_write
+        #     state: absent
+        #   when: write_test.changed
+      ignore_errors: no # If the self-test fails, the recovery is considered failed.
 
     # ========================================================================
-    # 4. STATE UPDATE & CLEANUP
+    # 4. STATE UPDATE (Single State File — overwrite to "recovered")
     # ========================================================================
     - name: "Update state file to 'recovered'"
       ansible.builtin.copy:
@@ -158,14 +134,3 @@
           }
         dest: "{{ state_file }}"
         mode: '0600'
-
-    - name: "Create recovery marker file for idempotency"
-      ansible.builtin.file:
-        path: "{{ recovery_marker }}"
-        state: touch
-        mode: '0600'
-
-    - name: "Remove incident marker file"
-      ansible.builtin.file:
-        path: "{{ marker_file }}"
-        state: absent
