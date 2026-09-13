@@ -1,88 +1,120 @@
+# 002_incidente.yml
 ---
-- name: "System Health Validation"
-  hosts: localhost
-  connection: local
-  gather_facts: false
+- name: "INC-002 | VIP split-brain on load balancers - Incident Injection"
+  hosts: "{{ target_group | default('lb_nodes') }}"
+  become: yes
+  gather_facts: yes
+
+  vars:
+    incident_id: "INC-002"
+    target_service: "keepalived"
+    target_group: "lb_nodes"
+    decoy_host: "lb02"
+
+    # Single State File Pattern (BUG-009) — no separate marker files
+    state_file: "/tmp/.systech_{{ incident_id }}_state.json"
+
+    inject_decoy: true
+    use_random_node: false
+
   tasks:
-    - name: "10"
-      ansible.builtin.set_fact:
-        target_node: "{{ groups['app_nodes'] | random }}"
-
-    - name: "20"
-      ansible.builtin.add_host:
-        name: "{{ target_node }}"
-        groups: incident_002_target
-
-    - name: "30"
-      ansible.builtin.debug:
-        msg: "Target selected."
-
-- name: "System Health Validation - Execution"
-  hosts: incident_002_target
-  become: true
-  gather_facts: true
-  tasks:
-    - name: "40"
+    # ========================================================================
+    # 1. PRE-FLIGHT & IDEMPOTENCY CHECK (Single State File Pattern - BUG-009)
+    # ========================================================================
+    - name: "Check if state file already exists on this node"
       ansible.builtin.stat:
-        path: /var/log/.audit_sync_marker
-      register: check_inject
+        path: "{{ state_file }}"
+      register: state_check
 
-    # --- CAUSA RAÍZ REAL: Llenar el disco con un daemon ---
-    - name: "50"
-      ansible.builtin.copy:
-        dest: /usr/local/bin/sys-audit-sync.sh
-        mode: '0755'
-        content: |
-          #!/bin/bash
-          while true; do
-            # Genera datos masivos para llenar la partición /var rápidamente
-            dd if=/dev/zero bs=1M count=50 >> /var/log/sys-audit.log 2>/dev/null
-            
-            # --- FALSO POSITIVO 1: Errores falsos de seguridad (Hackeo) ---
-            logger -p authpriv.err "sshd: Failed password for invalid user admin from 192.168.99.99 port 44312 ssh2"
-            logger -p authpriv.err "sshd: Failed password for invalid user root from 192.168.99.99 port 44313 ssh2"
-            
-            # --- FALSO POSITIVO 2: Errores falsos de Base de Datos ---
-            logger -p local0.err "php: SQLSTATE[08006] [7] connection to server at \"10.10.10.40\", port 5432 failed: Connection refused"
-            
-            sleep 2
-          done
-      when: not check_inject.stat.exists
+    - name: "Read existing state file content (if present)"
+      ansible.builtin.slurp:
+        src: "{{ state_file }}"
+      register: state_raw
+      when: state_check.stat.exists
 
-    - name: "60"
-      ansible.builtin.copy:
-        dest: /etc/systemd/system/sys-audit-sync.service
-        mode: '0644'
-        content: |
-          [Unit]
-          Description=System Audit Log Synchronization Daemon
-          After=network.target
+    - name: "Parse existing state (if present)"
+      ansible.builtin.set_fact:
+        current_status: "{{ (state_raw.content | b64decode | from_json).status }}"
+      when: state_check.stat.exists
 
-          [Service]
-          Type=simple
-          ExecStart=/usr/local/bin/sys-audit-sync.sh
-          Restart=always
-          RestartSec=3
+    - name: "Default status to 'none' if no state file exists"
+      ansible.builtin.set_fact:
+        current_status: "none"
+      when: not state_check.stat.exists
 
-          [Install]
-          WantedBy=multi-user.target
-      when: not check_inject.stat.exists
+    - name: "Skip host if incident is already injected (idempotent)"
+      meta: end_host
+      when: current_status == "injected"
 
-    - name: "70"
+    - name: "Verify keepalived is currently healthy before breaking VRRP visibility"
       ansible.builtin.systemd:
-        name: sys-audit-sync
-        state: started
-        enabled: true
-        daemon_reload: true
-      when: not check_inject.stat.exists
+        name: "{{ target_service }}"
+      register: service_status
+      failed_when: service_status.status.ActiveState != "active"
 
-    - name: "80"
-      ansible.builtin.file:
-        path: /var/log/.audit_sync_marker
-        state: touch
+    # ========================================================================
+    # 2. DECOY INJECTION (lb02 only — misleading haproxy log entry)
+    # ========================================================================
+    - name: "DECOY: Inject misleading haproxy.log entry on lb02 pointing at app03"
+      block:
+        - name: "Decoy: append fake health-check failure line for app03"
+          ansible.builtin.lineinfile:
+            path: /var/log/haproxy.log
+            line: "{{ ansible_date_time.iso8601 }} lb02 haproxy[1234]: Health check for server app_backend/app03 failed, reason: Layer4 timeout, check duration: 2001ms. 2 active and 0 backup servers left."
+            insertafter: EOF
+            create: yes
+            owner: root
+            group: root
+            mode: '0640'
+          register: decoy_result
+      when:
+        - inject_decoy | bool
+        - inventory_hostname == decoy_host
+
+    # ========================================================================
+    # 3. CORE INCIDENT INJECTION — Block VRRP (protocol 112) via firewalld
+    # ========================================================================
+    - name: "CORE INJECTION: Block VRRP protocol 112 so keepalived peers go blind to each other"
+      block:
+        - name: "Apply firewalld rich rule dropping VRRP (protocol 112) - permanent"
+          ansible.posix.firewalld:
+            rich_rule: 'rule protocol value="vrrp" drop'
+            state: enabled
+            permanent: true
+            immediate: true
+          register: injection_result
+      rescue:
+        - name: "ROLLBACK: Injection failed unexpectedly"
+          ansible.builtin.debug:
+            msg: "VRRP block injection failed on {{ inventory_hostname }}, rolling back to maintain lab integrity."
+          failed_when: true
+
+    # NOTE: keepalived is intentionally NOT restarted here. The service must
+    # remain running throughout (per BUG-012 constraint); it simply stops
+    # receiving/sending VRRP advertisements once the firewall rule is active,
+    # which is what causes both nodes to independently claim MASTER.
+
+    # ========================================================================
+    # 4. STATE RECORDING (Single State File — BUG-009)
+    # ========================================================================
+    - name: "Write/overwrite state file as 'injected'"
+      ansible.builtin.copy:
+        content: |
+          {
+            "incident_id": "{{ incident_id }}",
+            "timestamp": "{{ ansible_date_time.iso8601 }}",
+            "target_node": "{{ inventory_hostname }}",
+            "target_service": "{{ target_service }}",
+            "root_cause": "firewalld rich rule dropping VRRP protocol 112, causing keepalived split-brain",
+            "decoy_applied": "{{ (inject_decoy | bool) and (inventory_hostname == decoy_host) }}",
+            "status": "injected"
+          }
+        dest: "{{ state_file }}"
         mode: '0600'
-      when: not check_inject.stat.exists
 
-    - name: "90"
-      ansible.builtin.debug:
-        msg: "Validation completed."
+  handlers:
+    - name: "Restart target service"
+      ansible.builtin.systemd:
+        name: "{{ target_service }}"
+        state: restarted
+        daemon_reload: yes

@@ -1,42 +1,117 @@
+# 002_recuperacion.yml
 ---
-- name: "System State Reconciliation"
-  hosts: app_nodes
-  become: true
-  gather_facts: true
+- name: "INC-002 | VIP split-brain on load balancers - Incident Recovery"
+  hosts: "{{ target_group | default('lb_nodes') }}"
+  become: yes
+  gather_facts: yes
+
+  vars:
+    incident_id: "INC-002"
+    target_service: "keepalived"
+    target_group: "lb_nodes"
+    decoy_host: "lb02"
+
+    # Single State File Pattern (BUG-009) — must match incident playbook exactly
+    state_file: "/tmp/.systech_{{ incident_id }}_state.json"
+
   tasks:
-    - name: "10"
+    # ========================================================================
+    # 1. PRE-FLIGHT & IDEMPOTENCY CHECK (Single State File Pattern - BUG-009)
+    # ========================================================================
+    - name: "Check if state file exists on this node"
       ansible.builtin.stat:
-        path: /var/log/.audit_sync_marker
-      register: check_inject
+        path: "{{ state_file }}"
+      register: state_check
 
-    - name: "20"
-      ansible.builtin.systemd:
-        name: sys-audit-sync
-        state: stopped
-        enabled: false
-      when: check_inject.stat.exists
+    - name: "Skip host if it was never the target (no state file)"
+      meta: end_host
+      when: not state_check.stat.exists
 
-    - name: "30"
-      ansible.builtin.file:
-        path: "{{ item }}"
-        state: absent
-      loop:
-        - /etc/systemd/system/sys-audit-sync.service
-        - /usr/local/bin/sys-audit-sync.sh
-        - /var/log/.audit_sync_marker
-      when: check_inject.stat.exists
+    - name: "Read incident state"
+      ansible.builtin.slurp:
+        src: "{{ state_file }}"
+      register: state_raw
 
-    - name: "40"
-      ansible.builtin.shell:
-        cmd: "> /var/log/sys-audit.log"
-      when: check_inject.stat.exists
+    - name: "Parse incident state"
+      ansible.builtin.set_fact:
+        current_status: "{{ (state_raw.content | b64decode | from_json).status }}"
+        decoy_was_applied: "{{ (state_raw.content | b64decode | from_json).decoy_applied | default(false) }}"
 
-    - name: "50"
-      ansible.builtin.systemd:
-        name: systemd-journald
-        state: restarted
-      when: check_inject.stat.exists
+    - name: "Skip host if already recovered (idempotent)"
+      meta: end_host
+      when: current_status == "recovered"
 
-    - name: "60"
+    - name: "Debug state content"
       ansible.builtin.debug:
-        msg: "Reconciliation completed."
+        msg: "Recovering node {{ inventory_hostname }}. Current status: {{ current_status }}"
+      verbosity: 1
+
+    # ========================================================================
+    # 2. CORE RECOVERY — Remove the VRRP block (mirrors injection exactly)
+    # ========================================================================
+    - name: "CORE RECOVERY: Remove firewalld rich rule blocking VRRP (protocol 112)"
+      block:
+        - name: "Remove firewalld rich rule dropping VRRP - permanent"
+          ansible.posix.firewalld:
+            rich_rule: 'rule protocol value="vrrp" drop'
+            state: disabled
+            permanent: true
+            immediate: true
+          register: recovery_result
+      rescue:
+        - name: "ALERT: Recovery failed"
+          ansible.builtin.debug:
+            msg: "Recovery failed on {{ inventory_hostname }}. Manual intervention required."
+          failed_when: true
+
+    # ========================================================================
+    # 3. DECOY CLEANUP (lb02 only — symmetric removal of injected log line)
+    # ========================================================================
+    - name: "DECOY CLEANUP: Remove misleading haproxy.log entry on lb02"
+      ansible.builtin.lineinfile:
+        path: /var/log/haproxy.log
+        line: "{{ ansible_date_time.iso8601 }} lb02 haproxy[1234]: Health check for server app_backend/app03 failed, reason: Layer4 timeout, check duration: 2001ms. 2 active and 0 backup servers left."
+        state: absent
+      when:
+        - inventory_hostname == decoy_host
+        - decoy_was_applied | bool
+      ignore_errors: yes
+
+    # ========================================================================
+    # 4. LIGHTWEIGHT SELF-TEST (VALIDATION)
+    # ========================================================================
+    - name: "SELF-TEST: Verify keepalived is active"
+      ansible.builtin.systemd:
+        name: "{{ target_service }}"
+      register: service_check
+      failed_when: service_check.status.ActiveState != "active"
+
+    - name: "SELF-TEST: Verify VRRP firewalld rule is gone"
+      ansible.builtin.command:
+        cmd: "firewall-cmd --list-rich-rules"
+      register: rich_rules_check
+      changed_when: false
+      failed_when: "'protocol value=\"vrrp\" drop' in rich_rules_check.stdout"
+
+    # ========================================================================
+    # 5. STATE UPDATE (Single State File — BUG-009)
+    # ========================================================================
+    - name: "Update state file to 'recovered'"
+      ansible.builtin.copy:
+        content: |
+          {
+            "incident_id": "{{ incident_id }}",
+            "recovery_timestamp": "{{ ansible_date_time.iso8601 }}",
+            "target_node": "{{ inventory_hostname }}",
+            "target_service": "{{ target_service }}",
+            "status": "recovered"
+          }
+        dest: "{{ state_file }}"
+        mode: '0600'
+
+  handlers:
+    - name: "Restart target service"
+      ansible.builtin.systemd:
+        name: "{{ target_service }}"
+        state: restarted
+        daemon_reload: yes
