@@ -106,7 +106,7 @@
             "target_node": "{{ inventory_hostname }}",
             "target_service": "{{ target_service }}",
             "root_cause": "firewalld rich rule dropping VRRP protocol 112, causing keepalived split-brain",
-            "decoy_applied": "{{ (inject_decoy | bool) and (inventory_hostname == decoy_host) }}",
+            "decoy_applied": {{ 'true' if (inject_decoy | bool) and (inventory_hostname == decoy_host) else 'false' }},
             "status": "injected"
           }
         dest: "{{ state_file }}"

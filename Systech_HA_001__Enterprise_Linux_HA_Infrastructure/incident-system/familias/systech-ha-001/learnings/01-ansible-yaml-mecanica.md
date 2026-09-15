@@ -14,3 +14,24 @@
   - Recovery reads the JSON. If it says `"status": "recovered"` or file is missing, it skips (`end_play`). If `"injected"`, it fixes and updates JSON to `"recovered"`.
   - NEVER use separate physical marker files for injection and recovery states.
 - **Discovered in:** INC-001 (Authentication & Identity) - Iterative practice testing.
+
+## [BUG-013] `verbosity` is not a valid task-level keyword
+- **Symptom:** Playbook fails with `ERROR! conflicting action statements: ansible.builtin.debug, verbosity` when trying to set debug verbosity per-task.
+- **Root Cause:** `verbosity` is NOT a valid task-level keyword in Ansible. When placed at the same indentation level as the module name (`ansible.builtin.debug:`), Ansible interprets it as a second module/action in the same task, causing a fatal YAML syntax error.
+- **Fix/Rule:** NEVER use `verbosity` as a task parameter. If you need to control output verbosity, use:
+  1. Playbook execution flags: `ansible-playbook -v`, `-vv`, `-vvv`, etc.
+  2. Conditional logic with custom variables: `when: debug_mode | default(false) | bool`
+  3. Remove the `verbosity: 1` line entirely from the task.
+- **Discovered in:** INC-002 (HA / Keepalived split-brain) - Recovery playbook validation.
+
+```yaml
+# INCORRECTO - Causa error fatal
+- name: "Debug state content"
+  ansible.builtin.debug:
+    msg: "Recovering node..."
+  verbosity: 1  # <-- ERROR: Ansible piensa que es otro módulo
+
+# CORRECTO - Sin verbosity
+- name: "Debug state content"
+  ansible.builtin.debug:
+    msg: "Recovering node..."

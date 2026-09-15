@@ -44,7 +44,7 @@
     - name: "Debug state content"
       ansible.builtin.debug:
         msg: "Recovering node {{ inventory_hostname }}. Current status: {{ current_status }}"
-      verbosity: 1
+      
 
     # ========================================================================
     # 2. CORE RECOVERY — Remove the VRRP block (mirrors injection exactly)
