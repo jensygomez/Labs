@@ -1,72 +1,205 @@
+# ==============================================================================
+# INC-003 | Web file writes corrupt intermittently (NFS lock issue)
+# Family: systech-ha-001 | Category: Storage & Filesystems | Level: L2
+# ==============================================================================
+# ROOT CAUSE:
+#   The NFSv4 mount for /var/www/html on app_nodes is remounted with the
+#   `local_lock=all` option. This forces both flock() and POSIX (fcntl) locks
+#   to be resolved purely on the local client kernel instead of being
+#   communicated to the NFS server. Because app01/app02/app03 all write to the
+#   SAME shared export, each node believes it holds an exclusive lock while
+#   the other nodes are completely unaware of it — concurrent PHP upload
+#   handlers race on the same file and corrupt it intermittently.
+#
+# LEARNINGS APPLIED:
+#   - BUG-001 (mecanica): no `| random` used — target_group and decoy_host are
+#     static, so no set_fact/run_once selection is required for this incident.
+#   - BUG-009 (mecanica): single JSON state_file per node drives the full
+#     injected/recovered lifecycle. No separate marker/recovery_marker files.
+#   - BUG-013 (mecanica): no `verbosity` task keyword used anywhere.
+#   - BUG-014 (mecanica): decoy_applied is rendered as a real JSON boolean via
+#     `{{ 'true' if ... else 'false' }}`, never as a quoted string.
+#   - ARCHITECTURE_CARD §6: no ansible.builtin.user usage (not applicable here,
+#     no account manipulation in this incident).
+# ==============================================================================
+
 ---
-- name: "System Deployment Validation"
-  hosts: localhost
-  connection: local
-  gather_facts: false
+- name: "INC-003 | Web file writes corrupt intermittently (NFS lock issue) - Incident Injection"
+  hosts: "{{ target_group | default('app_nodes') }}"
+  become: yes
+  gather_facts: yes
+
+  vars:
+    incident_id: "INC-003"
+    target_service: "httpd"          # Real service present on app_nodes (NFS itself is server-side on storage01)
+    target_group: "app_nodes"
+    web_mount_point: "/var/www/html"
+
+    state_file: "/tmp/.systech_{{ incident_id }}_state.json"
+
+    inject_decoy: true
+    decoy_host: "app02"
+
+    # Static, idempotent-to-remove log lines (exact match used in recovery)
+    symptom_log_path: "/var/log/httpd/error_log"
+    symptom_log_line: "[systech-sim] [error] PHP Warning: flock(): NFS lock request timed out for /var/www/html/uploads/upload_handler.php, stale lock suspected"
+
+    decoy_log_path: "/var/log/messages"
+    decoy_log_line: "2026-09-12T00:00:00Z app02 kernel: EXT4-fs warning (device dm-0): ext4_dx_add_entry:2361: Directory index full!"
+
   tasks:
-    - name: "10"
-      ansible.builtin.set_fact:
-        target_node: "{{ groups['app_nodes'] | random }}"
-
-    - name: "20"
-      ansible.builtin.add_host:
-        name: "{{ target_node }}"
-        groups: incident_003_target
-
-    - name: "30"
-      ansible.builtin.debug:
-        msg: "Target selected."
-
-- name: "System Deployment Validation - Execution"
-  hosts: incident_003_target
-  become: true
-  gather_facts: true
-  tasks:
-    - name: "40"
+    # ========================================================================
+    # 1. PRE-FLIGHT & IDEMPOTENCY CHECK (Single State File — BUG-009)
+    # ========================================================================
+    - name: "Check if state file already exists on this node"
       ansible.builtin.stat:
-        path: /var/www/html/.deploy_marker_003
-      register: check_inject
+        path: "{{ state_file }}"
+      register: state_file_check
 
-    # --- FALSO POSITIVO 1: Log falso de configuración de Apache ---
-    - name: "50"
-      ansible.builtin.shell: |
-        logger -p daemon.err "AH01630: client denied by server configuration: /var/www/html/"
-        logger -p daemon.err "AH01276: Failed to authorize: No matching Directory block"
-      when: not check_inject.stat.exists
+    - name: "Read existing state file content (if present)"
+      ansible.builtin.slurp:
+        src: "{{ state_file }}"
+      register: state_file_raw
+      when: state_file_check.stat.exists
 
-    # --- FALSO POSITIVO 2: Log falso de SELinux ---
-    - name: "60"
-      ansible.builtin.shell: |
-        logger -p kern.warning "SELinux is preventing httpd from reading the file /var/www/html/index.php"
-        logger -p kern.warning "type=AVC msg=audit: denied { read } for pid=1234 comm=httpd name=index.php"
-      when: not check_inject.stat.exists
+    - name: "Parse existing state into a fact"
+      ansible.builtin.set_fact:
+        current_state: "{{ (state_file_raw.content | b64decode | from_json) if state_file_check.stat.exists else {} }}"
 
-    # --- CAUSA RAÍZ REAL: Romper permisos básicos (DAC) ---
-    - name: "70"
-      ansible.builtin.file:
-        path: /var/www/html
-        mode: '0700'
-        owner: root
-        group: root
-      when: not check_inject.stat.exists
+    - name: "Skip host if incident is already injected"
+      meta: end_host
+      when:
+        - state_file_check.stat.exists
+        - current_state.status is defined
+        - current_state.status == "injected"
 
-    - name: "80"
-      ansible.builtin.file:
-        path: /var/www/html/index.php
+    - name: "Verify target service is currently healthy before breaking it"
+      ansible.builtin.systemd:
+        name: "{{ target_service }}"
+      register: service_status
+      failed_when: service_status.status.ActiveState != "active"
+
+    - name: "Verify the shared web mount is currently active"
+      ansible.builtin.command:
+        cmd: "findmnt -no SOURCE {{ web_mount_point }}"
+      register: mount_presence_check
+      changed_when: false
+      failed_when: mount_presence_check.rc != 0
+
+    # ========================================================================
+    # 2. DECOY INJECTION (app02 only — misleading local-disk red herring)
+    # ========================================================================
+    - name: "DECOY: Plant misleading ext4 kernel-style log entry to suggest a local filesystem issue"
+      block:
+        - name: "Decoy action: Insert static ext4 warning line into /var/log/messages"
+          ansible.builtin.lineinfile:
+            path: "{{ decoy_log_path }}"
+            line: "{{ decoy_log_line }}"
+            insertafter: EOF
+            state: present
+            create: yes
+            mode: '0644'
+      when:
+        - inject_decoy | bool
+        - inventory_hostname == decoy_host
+
+    # ========================================================================
+    # 3. CORE INCIDENT INJECTION
+    # ========================================================================
+    - name: "CORE INJECTION: Break NFS client-side lock coordination via local_lock=all"
+      block:
+        - name: "Check current NFS mount options for the web mount"
+          ansible.builtin.command:
+            cmd: "findmnt -no OPTIONS {{ web_mount_point }}"
+          register: current_mount_opts
+          changed_when: false
+
+        - name: "Determine if local_lock=all is already active"
+          ansible.builtin.set_fact:
+            lock_break_active: "{{ 'local_lock=all' in current_mount_opts.stdout }}"
+
+        - name: "Get current NFS mount source"
+          ansible.builtin.command:
+            cmd: "findmnt -no SOURCE {{ web_mount_point }}"
+          register: mount_source
+          changed_when: false
+          when: not (lock_break_active | bool)
+
+        - name: "Stop target service to allow safe unmount"
+          ansible.builtin.systemd:
+            name: "{{ target_service }}"
+            state: stopped
+          when: not (lock_break_active | bool)
+
+        - name: "Unmount the web mount to allow NFS option change"
+          ansible.builtin.command:
+            cmd: "umount {{ web_mount_point }}"
+          register: umount_result
+          when: not (lock_break_active | bool)
+
+        - name: "Remount with local_lock=all to break cross-node locking"
+          ansible.builtin.command:
+            cmd: "mount -o local_lock=all {{ mount_source.stdout }} {{ web_mount_point }}"
+          register: remount_result
+          changed_when: true
+          when: not (lock_break_active | bool)
+
+        - name: "Start target service after remount"
+          ansible.builtin.systemd:
+            name: "{{ target_service }}"
+            state: started
+          when: not (lock_break_active | bool)
+
+        - name: "Insert synthetic PHP lock-timeout symptom into httpd error log"
+          ansible.builtin.lineinfile:
+            path: "{{ symptom_log_path }}"
+            line: "{{ symptom_log_line }}"
+            insertafter: EOF
+            state: present
+            create: yes
+            mode: '0644'
+          register: symptom_log_result
+
+      rescue:
+        - name: "ROLLBACK: Ensure service is started if injection fails"
+          ansible.builtin.systemd:
+            name: "{{ target_service }}"
+            state: started
+          failed_when: false
+
+        - name: "ROLLBACK: Attempt to restore default mount"
+          ansible.builtin.command:
+            cmd: "mount {{ web_mount_point }}"
+          failed_when: false
+
+        - name: "ROLLBACK: Report injection failure"
+          ansible.builtin.fail:
+            msg: "INC-003 injection failed on {{ inventory_hostname }}; mount state may be inconsistent. Manual check required."
+
+    # ========================================================================
+    # 4. STATE RECORDING (Single JSON state file — BUG-009 / BUG-014)
+    # ========================================================================
+    - name: "Record incident state (JSON for traceability)"
+      ansible.builtin.copy:
+        content: |
+          {
+            "incident_id": "{{ incident_id }}",
+            "timestamp": "{{ ansible_date_time.iso8601 }}",
+            "target_node": "{{ inventory_hostname }}",
+            "target_service": "{{ target_service }}",
+            "root_cause": "NFS mount for {{ web_mount_point }} remounted with local_lock=all, causing flock()/fcntl() locks used by PHP upload handlers to be resolved only locally instead of via the NFS server, producing write races and intermittent file corruption across app_nodes.",
+            "decoy_applied": {{ 'true' if (inject_decoy | bool) and (inventory_hostname == decoy_host) else 'false' }},
+            "status": "injected"
+          }
+        dest: "{{ state_file }}"
         mode: '0600'
-        owner: root
-        group: root
-      when: not check_inject.stat.exists
 
-    - name: "90"
-      ansible.builtin.file:
-        path: /var/www/html/.deploy_marker_003
-        state: touch
-        mode: '0600'
-      when: not check_inject.stat.exists
-
-    - name: "100"
-      ansible.builtin.debug:
-        msg: "Validation completed."
-
-
+  # ==========================================================================
+  # HANDLERS
+  # ==========================================================================
+  handlers:
+    - name: "Restart target service"
+      ansible.builtin.systemd:
+        name: "{{ target_service }}"
+        state: restarted
+        daemon_reload: yes

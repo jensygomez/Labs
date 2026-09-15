@@ -1,6 +1,12 @@
 # 06 - Storage, LVM & NFS (Category-Specific)
 > **Rule:** This file MUST be read when generating incidents involving LVM, filesystems, or NFS storage/export/mount behavior.
 
+## [BUG-014] JSON booleans must never be rendered as Jinja strings
+- **Symptom:** State file consumers (recovery playbook, external tooling) parse `"decoy_applied": "true"` as a truthy *string* even when the value should logically be `false`, because any non-empty string is truthy in most languages/Jinja contexts.
+- **Root Cause:** Writing `"decoy_applied": "{{ some_boolean_expression }}"` (with quotes) always produces a valid, non-empty JSON string — Jinja never gets the chance to omit or falsify it.
+- **Fix/Rule:** Always render lifecycle booleans in state JSON WITHOUT surrounding quotes, using the explicit ternary: `"decoy_applied": {{ 'true' if (condition) else 'false' }}`. This is now the mandatory pattern for every boolean field in every `state_file`.
+- **Discovered in:** INC-003 (Storage & Filesystems).
+
 ## [BUG-015] `local_lock` mount option breaks cross-node NFS advisory locking without touching the server
 - **Symptom:** Concurrent writers on different NFS clients (e.g. multiple `app_nodes` writing to the same shared export) intermittently corrupt the same file, even though each individual client believes its `flock()`/`fcntl()` call succeeded.
 - **Root Cause:** The NFS client mount option `local_lock` (values: `none` (default) | `all` | `flock` | `posix`) controls whether lock requests are sent to the NFS server (`local_lock=none`, the correct/default behavior for shared writable exports) or resolved purely in the local client kernel (`local_lock=all`). When set to `all`, locks are never visible to other clients mounting the same export, defeating the purpose of advisory locking on shared storage.
@@ -12,13 +18,3 @@
 - **Root Cause:** The generic incident skeleton's `target_service` placeholder assumes the broken service and the "service to health-check/restart" are the same thing. For storage incidents where the fault is in how a client *consumes* NFS (not in the NFS server itself), the correct `target_service` is the application service that depends on the mount (e.g. `httpd`), not the storage protocol's own daemon.
 - **Fix/Rule:** When the injection target is a client-side mount/lock/protocol behavior rather than the storage server itself, set `target_service` to the consuming application service on the affected node group, and reserve `nfs-server`-style values for incidents that target `storage01` directly.
 - **Discovered in:** INC-003 (Storage & Filesystems).
-
-## [BUG-017] NFS-specific mount options cannot be changed via `remount`
-- **Symptom:** Playbook fails at the remount task with `mount.nfs: an incorrect mount option was specified` (rc 32) when trying to execute `mount -o remount,local_lock=all /var/www/html`.
-- **Root Cause:** The Linux kernel does not allow NFS-specific mount options (like `local_lock`, `rsize`, `wsize`, `nfsvers`) to be modified on the fly using the `remount` flag [[11]]. The `remount` operation only accepts generic VFS options (like `ro`/`rw` or `sync`) [[1]].
-- **Fix/Rule:** To change an NFS-specific mount option dynamically, you must perform a full unmount and mount cycle:
-  1. Stop the consuming service (e.g., `httpd`) to prevent "target is busy" errors.
-  2. `umount <mountpoint>`
-  3. `mount -o <new_options> <source> <mountpoint>` (obtain `<source>` via `findmnt -no SOURCE <mountpoint>`).
-  4. Start the consuming service.
-- **Discovered in:** INC-003 (Storage & Filesystems) - Injection playbook execution.
