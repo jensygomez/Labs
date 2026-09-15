@@ -81,14 +81,19 @@ if os.path.exists(hosts_yml_path):
     with open(hosts_yml_path, 'r') as f:
         data = yaml.safe_load(f)
     
-    # Extraer mapeo hostname -> ansible_host
+    # Extraer mapeo hostname -> ansible_host evitando errores de NoneType
     host_mappings = {}
     all_children = data.get('all', {}).get('children', {})
-    for group, group_data in all_children.items():
-        hosts = group_data.get('hosts', {})
-        for hostname, host_data in hosts.items():
-            if isinstance(host_data, dict) and 'ansible_host' in host_data:
-                host_mappings[hostname] = host_data['ansible_host']
+    
+    if all_children:
+        for group, group_data in all_children.items():
+            if group_data is None:
+                continue
+            hosts = group_data.get('hosts', {})
+            if hosts:
+                for hostname, host_data in hosts.items():
+                    if isinstance(host_data, dict) and 'ansible_host' in host_data:
+                        host_mappings[hostname] = host_data['ansible_host']
     
     if host_mappings:
         # Leer /etc/hosts actual
@@ -105,7 +110,6 @@ if os.path.exists(hosts_yml_path):
             if not skip:
                 clean_lines.append(line)
             if skip and line.strip() == "" and len(clean_lines) > 0 and clean_lines[-1].strip() == "":
-                # Reset skip after an empty line following the block
                 skip = False 
 
         # Agregar nuevas entradas
@@ -113,18 +117,16 @@ if os.path.exists(hosts_yml_path):
         for hostname, ip in sorted(host_mappings.items()):
             clean_lines.append(f"{ip}\t{hostname}\n")
         
-        # Escribir temporalmente y mover con sudo
-        with open("/tmp/hosts_new", 'w') as f:
-            f.writelines(clean_lines)
+        # Escribir directamente en /etc/hosts usando sudo tee para evitar el error de montaje
+        new_content = "".join(clean_lines)
+        process = subprocess.run(["sudo", "tee", etc_hosts_path], input=new_content, text=True, stdout=subprocess.DEVNULL, check=True)
         
-        subprocess.run(["sudo", "mv", "/tmp/hosts_new", etc_hosts_path], check=True)
         print(f"✅ /etc/hosts actualizado con {len(host_mappings)} nodos del laboratorio.")
     else:
         print("⚠️ No se encontraron hosts con 'ansible_host' en el inventario.")
 else:
     print(f"⚠️ No se encontró {hosts_yml_path}. Saltando actualización de /etc/hosts.")
 EOF
-
 
 # ==========================================
 # INICIO DE TAILSCALE (Nativo en el contenedor)
