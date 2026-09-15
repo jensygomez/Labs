@@ -70,7 +70,7 @@
     - name: "DECOY CLEANUP: Remove misleading haproxy.log entry on lb02"
       ansible.builtin.lineinfile:
         path: /var/log/haproxy.log
-        line: "{{ ansible_date_time.iso8601 }} lb02 haproxy[1234]: Health check for server app_backend/app03 failed, reason: Layer4 timeout, check duration: 2001ms. 2 active and 0 backup servers left."
+        line: "2026-09-12T00:00:00Z lb02 haproxy[1234]: Health check for server app_backend/app03 failed, reason: Layer4 timeout, check duration: 2001ms. 2 active and 0 backup servers left."
         state: absent
       when:
         - inventory_hostname == decoy_host

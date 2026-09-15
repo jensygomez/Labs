@@ -34,21 +34,16 @@ RESOLUTION WORKFLOW (L1 STANDARD OPERATING PROCEDURE):
 2. Identify the root cause manually via CLI. 
    Investigate the application nodes (app01/02/03). Check service 
    statuses, system resources, and recent daemon deployments.
-   Useful commands: `systemctl status httpd`, `journalctl -p err -n 50`, 
-   `dmesg -T | tail -n 50`, `top`.
 
 3. Resolve the issue manually on the affected node(s) (hotfix) and 
    confirm from the client side:
    ssh ansible@10.10.10.11 "/usr/local/bin/infinite_traffic.sh"
    (Compare against step 1).
 
-4. Restore the system to its pre-incident state using the recovery playbook:
-   ansible-playbook "002_Recuperacion_al_estado_anterior.yml"
-
-5. Re-inject the incident:
+4. Re-inject the incident:
    ansible-playbook "002_incidente.yml"
 
-6. AUTOMATION CHALLENGE: 
+5. AUTOMATION CHALLENGE: 
    This time, resolve it 100% automated and idempotently. Write a new 
    remediation playbook (yours) that detects and fixes the root cause 
    without manual intervention, and that doesn't fail if executed 
