@@ -18,8 +18,8 @@
 
 | ID | Family | Category(ies) | Level | Short Title | Difficulty | Status | Target Node(s) | Completion Date |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **INC-001** | systech-ha-001 | Authentication & Identity | L2 | User cannot authenticate (correct password) | 6/10 | PROPOSED | all | 2026-XX-XX |
-| **INC-002** | systech-ha-001 | HA & Load Balancing | L2 | VIP appears on both load balancers (split-brain) | 6/10 | PROPOSED | lb_nodes | - |
+| **INC-001** | systech-ha-001 | Authentication & Identity | L2 | User cannot authenticate (correct password) | 6/10 | COMPLETED | all | 2026-XX-XX |
+| **INC-002** | systech-ha-001 | HA & Load Balancing | L2 | VIP appears on both load balancers (split-brain) | 6/10 | COMPLETED | lb_nodes | - |
 | **INC-003** | systech-ha-001 | Storage & Filesystems | L2 | Web file writes corrupt intermittently (NFS lock issue) | 6/10 | PROPOSED | app_nodes | - |
 | **INC-004** | systech-ha-001 | Security & Auditing | L2 | Suspicious unauthorized SSH access (fail2ban bypass) | 6/10 | PROPOSED | all | - |
 | *(Leave blank. Add new rows incrementally as incidents are defined and approved...)* | | | | | | | | |
