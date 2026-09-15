@@ -66,7 +66,7 @@ RUN echo 'PS1="\[\033[1;36m\][systech-control]\[\033[0m\] \[\033[1;32m\]\w\[\033
 # ==========================================
 # 6. EntryPoint para inyección segura de secretos
 # ==========================================
-COPY dockerfile/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # ==========================================
