@@ -1,0 +1,11 @@
+---
+
+- name: "Resolve idempotent the problem with account jensyg"
+  hosts: app_nodes
+  become: yes
+  gather_facts: false
+  tasks:
+    - name: "Modify user expiration for all app nodes"
+      ansible.builtin.user:
+        name: jensyg
+        expires: -1 
