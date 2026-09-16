@@ -15,10 +15,20 @@
 
 ## [BUG-017] NFS-specific mount options cannot be changed via `remount`
 - **Symptom:** Playbook fails at the remount task with `mount.nfs: an incorrect mount option was specified` (rc 32) when trying to execute `mount -o remount,local_lock=all /var/www/html`.
-- **Root Cause:** The Linux kernel does not allow NFS-specific mount options (like `local_lock`, `rsize`, `wsize`, `nfsvers`) to be modified on the fly using the `remount` flag [[11]]. The `remount` operation only accepts generic VFS options (like `ro`/`rw` or `sync`) [[1]].
+- **Root Cause:** The Linux kernel does not allow NFS-specific mount options (like `local_lock`, `rsize`, `wsize`, `nfsvers`) to be modified on the fly using the `remount` flag. The `remount` operation only accepts generic VFS options (like `ro`/`rw` or `sync`).
 - **Fix/Rule:** To change an NFS-specific mount option dynamically, you must perform a full unmount and mount cycle:
   1. Stop the consuming service (e.g., `httpd`) to prevent "target is busy" errors.
   2. `umount <mountpoint>`
   3. `mount -o <new_options> <source> <mountpoint>` (obtain `<source>` via `findmnt -no SOURCE <mountpoint>`).
   4. Start the consuming service.
 - **Discovered in:** INC-003 (Storage & Filesystems) - Injection playbook execution.
+
+## [BUG-018] NFS export directory permissions affect all clients simultaneously
+- **Symptom:** All app_nodes can successfully mount the NFS export, but any write operation (touch, mkdir, write to file) fails with "Permission denied" across the entire cluster.
+- **Root Cause:** The NFS export directory on the server (`/exports/webdata` on `storage01`) has restrictive permissions (e.g., `0000` or `0700` owned by root). NFS exports inherit the underlying filesystem permissions. Even if the mount options are `rw`, the actual access is governed by the directory permissions on the server side.
+- **Fix/Rule:** For shared writable NFS exports, the export directory MUST have permissions `0777` (or appropriate ACLs). When diagnosing "Permission denied" on NFS mounts:
+  1. Check mount options with `findmnt` (should show `rw`)
+  2. Check the actual directory permissions on the NFS server: `ssh storage01 && ls -ld /exports/webdata`
+  3. If permissions are wrong, fix on the server: `chmod 0777 /exports/webdata`
+  4. No need to remount on clients — permissions are evaluated on every access.
+- **Discovered in:** INC-003 (Storage & Filesystems) - Redesign from client-side mount options to server-side permissions.

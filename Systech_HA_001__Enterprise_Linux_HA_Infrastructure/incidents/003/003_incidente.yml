@@ -1,205 +1,148 @@
 # ==============================================================================
-# INC-003 | Web file writes corrupt intermittently (NFS lock issue)
-# Family: systech-ha-001 | Category: Storage & Filesystems | Level: L2
+# INCIDENT INJECTION PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
 # ==============================================================================
-# ROOT CAUSE:
-#   The NFSv4 mount for /var/www/html on app_nodes is remounted with the
-#   `local_lock=all` option. This forces both flock() and POSIX (fcntl) locks
-#   to be resolved purely on the local client kernel instead of being
-#   communicated to the NFS server. Because app01/app02/app03 all write to the
-#   SAME shared export, each node believes it holds an exclusive lock while
-#   the other nodes are completely unaware of it — concurrent PHP upload
-#   handlers race on the same file and corrupt it intermittently.
+# INCIDENT ID   : 003
+# TITLE         : NFS export permissions corruption (Web uploads fail)
+# TARGET NODE   : storage01 (10.10.10.50)
+# TARGET FS     : /exports/webdata (XFS on LVM /dev/vg_storage/lv_webdata)
+# DIFFICULTY    : 6/10 (L1 Junior)
+# ESTIMATED TIME: 3 Hours
+# ==============================================================================
 #
-# LEARNINGS APPLIED:
-#   - BUG-001 (mecanica): no `| random` used — target_group and decoy_host are
-#     static, so no set_fact/run_once selection is required for this incident.
-#   - BUG-009 (mecanica): single JSON state_file per node drives the full
-#     injected/recovered lifecycle. No separate marker/recovery_marker files.
-#   - BUG-013 (mecanica): no `verbosity` task keyword used anywhere.
-#   - BUG-014 (mecanica): decoy_applied is rendered as a real JSON boolean via
-#     `{{ 'true' if ... else 'false' }}`, never as a quoted string.
-#   - ARCHITECTURE_CARD §6: no ansible.builtin.user usage (not applicable here,
-#     no account manipulation in this incident).
+# 📖 SCENARIO CONTEXT:
+# Simulates a scenario where an administrator accidentally changed permissions
+# on the NFS export directory, causing all app_nodes to lose write access.
+# The L1 will see:
+# - NFS mounts successfully on app_nodes
+# - httpd cannot write to /var/www/html/uploads (Permission denied)
+# - findmnt shows the mount is active and rw
+# - dmesg shows network errors (decoy)
+#
+# 💥 WHAT THIS PLAYBOOK BREAKS:
+# 1. Ensures the filesystem is mounted normally with correct permissions (0777)
+# 2. Changes permissions to 0000 (no read/write/execute for anyone)
+# 3. Generates realistic network error logs in dmesg (decoy)
+# 4. Restarts NFS so clients see the permission denied errors
+#
+# 🕵️ EXPECTED L1 DIAGNOSIS PATH:
+# - ssh app01, try: touch /var/www/html/uploads/test.txt → Permission denied
+# - Check dmesg on app01 → shows network errors (decoy, misleading)
+# - Check storage01: ls -ld /exports/webdata → shows drwx------ (0000)
+# - Fix: chmod 0777 /exports/webdata on storage01
 # ==============================================================================
 
 ---
-- name: "INC-003 | Web file writes corrupt intermittently (NFS lock issue) - Incident Injection"
-  hosts: "{{ target_group | default('app_nodes') }}"
+- name: "Incident 003 | Inject NFS Export Permissions Corruption on storage01"
+  hosts: storage01
   become: yes
-  gather_facts: yes
-
   vars:
-    incident_id: "INC-003"
-    target_service: "httpd"          # Real service present on app_nodes (NFS itself is server-side on storage01)
-    target_group: "app_nodes"
-    web_mount_point: "/var/www/html"
-
-    state_file: "/tmp/.systech_{{ incident_id }}_state.json"
-
-    inject_decoy: true
-    decoy_host: "app02"
-
-    # Static, idempotent-to-remove log lines (exact match used in recovery)
-    symptom_log_path: "/var/log/httpd/error_log"
-    symptom_log_line: "[systech-sim] [error] PHP Warning: flock(): NFS lock request timed out for /var/www/html/uploads/upload_handler.php, stale lock suspected"
-
-    decoy_log_path: "/var/log/messages"
-    decoy_log_line: "2026-09-12T00:00:00Z app02 kernel: EXT4-fs warning (device dm-0): ext4_dx_add_entry:2361: Directory index full!"
+    incident_id: "003"
+    marker_file: "/var/run/.incident_{{ incident_id }}_marker"
+    target_export: "/exports/webdata"
 
   tasks:
-    # ========================================================================
-    # 1. PRE-FLIGHT & IDEMPOTENCY CHECK (Single State File — BUG-009)
-    # ========================================================================
-    - name: "Check if state file already exists on this node"
+    # -------------------------------------------------------------------------
+    # PHASE 1: PRE-FLIGHT & IDEMPOTENCY CHECK
+    # -------------------------------------------------------------------------
+    - name: "01 | Check if incident was already injected (Marker Guard)"
       ansible.builtin.stat:
-        path: "{{ state_file }}"
-      register: state_file_check
+        path: "{{ marker_file }}"
+      register: check_inject
 
-    - name: "Read existing state file content (if present)"
-      ansible.builtin.slurp:
-        src: "{{ state_file }}"
-      register: state_file_raw
-      when: state_file_check.stat.exists
+    - name: "02 | Abort if incident is already active"
+      ansible.builtin.debug:
+        msg: "Incident {{ incident_id }} is already injected. Skipping."
+      when: check_inject.stat.exists
 
-    - name: "Parse existing state into a fact"
-      ansible.builtin.set_fact:
-        current_state: "{{ (state_file_raw.content | b64decode | from_json) if state_file_check.stat.exists else {} }}"
+    - name: "03 | Create marker file to prevent double-injection"
+      ansible.builtin.file:
+        path: "{{ marker_file }}"
+        state: touch
+        mode: '0644'
+      when: not check_inject.stat.exists
 
-    - name: "Skip host if incident is already injected"
-      meta: end_host
-      when:
-        - state_file_check.stat.exists
-        - current_state.status is defined
-        - current_state.status == "injected"
-
-    - name: "Verify target service is currently healthy before breaking it"
+    # -------------------------------------------------------------------------
+    # PHASE 2: ENSURE FILESYSTEM IS MOUNTED WITH CORRECT PERMISSIONS
+    # -------------------------------------------------------------------------
+    - name: "04 | Stop NFS server to release filesystem locks"
       ansible.builtin.systemd:
-        name: "{{ target_service }}"
-      register: service_status
-      failed_when: service_status.status.ActiveState != "active"
+        name: nfs-server
+        state: stopped
+      when: not check_inject.stat.exists
 
-    - name: "Verify the shared web mount is currently active"
+    - name: "05 | Ensure /exports/webdata has correct permissions (0777)"
+      ansible.builtin.file:
+        path: "{{ target_export }}"
+        state: directory
+        mode: '0777'
+        owner: root
+        group: root
+      when: not check_inject.stat.exists
+
+    - name: "06 | Verify filesystem is writable"
       ansible.builtin.command:
-        cmd: "findmnt -no SOURCE {{ web_mount_point }}"
-      register: mount_presence_check
+        cmd: "touch {{ target_export }}/.healthcheck"
       changed_when: false
-      failed_when: mount_presence_check.rc != 0
+      when: not check_inject.stat.exists
 
-    # ========================================================================
-    # 2. DECOY INJECTION (app02 only — misleading local-disk red herring)
-    # ========================================================================
-    - name: "DECOY: Plant misleading ext4 kernel-style log entry to suggest a local filesystem issue"
-      block:
-        - name: "Decoy action: Insert static ext4 warning line into /var/log/messages"
-          ansible.builtin.lineinfile:
-            path: "{{ decoy_log_path }}"
-            line: "{{ decoy_log_line }}"
-            insertafter: EOF
-            state: present
-            create: yes
-            mode: '0644'
-      when:
-        - inject_decoy | bool
-        - inventory_hostname == decoy_host
+    - name: "07 | Remove healthcheck file"
+      ansible.builtin.file:
+        path: "{{ target_export }}/.healthcheck"
+        state: absent
+      when: not check_inject.stat.exists
 
-    # ========================================================================
-    # 3. CORE INCIDENT INJECTION
-    # ========================================================================
-    - name: "CORE INJECTION: Break NFS client-side lock coordination via local_lock=all"
-      block:
-        - name: "Check current NFS mount options for the web mount"
-          ansible.builtin.command:
-            cmd: "findmnt -no OPTIONS {{ web_mount_point }}"
-          register: current_mount_opts
-          changed_when: false
+    # -------------------------------------------------------------------------
+    # PHASE 3: CORRUPT PERMISSIONS (Simulating admin error)
+    # -------------------------------------------------------------------------
+    - name: "08 | Change permissions to 0000 (no access for anyone)"
+      ansible.builtin.file:
+        path: "{{ target_export }}"
+        mode: '0000'
+      when: not check_inject.stat.exists
 
-        - name: "Determine if local_lock=all is already active"
-          ansible.builtin.set_fact:
-            lock_break_active: "{{ 'local_lock=all' in current_mount_opts.stdout }}"
+    - name: "09 | Generate realistic network error logs in dmesg (DECOY)"
+      ansible.builtin.shell: |
+        # Simulate network connectivity issues (misleading the L1)
+        echo "nfs: server 10.10.10.50 not responding, still trying" > /dev/kmsg || true
+        echo "nfs: RPC call returned error -13 (EACCES)" > /dev/kmsg || true
+        echo "nfs: permission denied while accessing /exports/webdata" > /dev/kmsg || true
+        echo "nfs: failed to complete operation, error -13" > /dev/kmsg || true
+      ignore_errors: yes
+      when: not check_inject.stat.exists
 
-        - name: "Get current NFS mount source"
-          ansible.builtin.command:
-            cmd: "findmnt -no SOURCE {{ web_mount_point }}"
-          register: mount_source
-          changed_when: false
-          when: not (lock_break_active | bool)
+    - name: "10 | Wait for kernel to process logs"
+      ansible.builtin.pause:
+        seconds: 2
+      when: not check_inject.stat.exists
 
-        - name: "Stop target service to allow safe unmount"
-          ansible.builtin.systemd:
-            name: "{{ target_service }}"
-            state: stopped
-          when: not (lock_break_active | bool)
-
-        - name: "Unmount the web mount to allow NFS option change"
-          ansible.builtin.command:
-            cmd: "umount {{ web_mount_point }}"
-          register: umount_result
-          when: not (lock_break_active | bool)
-
-        - name: "Remount with local_lock=all to break cross-node locking"
-          ansible.builtin.command:
-            cmd: "mount -o local_lock=all {{ mount_source.stdout }} {{ web_mount_point }}"
-          register: remount_result
-          changed_when: true
-          when: not (lock_break_active | bool)
-
-        - name: "Start target service after remount"
-          ansible.builtin.systemd:
-            name: "{{ target_service }}"
-            state: started
-          when: not (lock_break_active | bool)
-
-        - name: "Insert synthetic PHP lock-timeout symptom into httpd error log"
-          ansible.builtin.lineinfile:
-            path: "{{ symptom_log_path }}"
-            line: "{{ symptom_log_line }}"
-            insertafter: EOF
-            state: present
-            create: yes
-            mode: '0644'
-          register: symptom_log_result
-
-      rescue:
-        - name: "ROLLBACK: Ensure service is started if injection fails"
-          ansible.builtin.systemd:
-            name: "{{ target_service }}"
-            state: started
-          failed_when: false
-
-        - name: "ROLLBACK: Attempt to restore default mount"
-          ansible.builtin.command:
-            cmd: "mount {{ web_mount_point }}"
-          failed_when: false
-
-        - name: "ROLLBACK: Report injection failure"
-          ansible.builtin.fail:
-            msg: "INC-003 injection failed on {{ inventory_hostname }}; mount state may be inconsistent. Manual check required."
-
-    # ========================================================================
-    # 4. STATE RECORDING (Single JSON state file — BUG-009 / BUG-014)
-    # ========================================================================
-    - name: "Record incident state (JSON for traceability)"
-      ansible.builtin.copy:
-        content: |
-          {
-            "incident_id": "{{ incident_id }}",
-            "timestamp": "{{ ansible_date_time.iso8601 }}",
-            "target_node": "{{ inventory_hostname }}",
-            "target_service": "{{ target_service }}",
-            "root_cause": "NFS mount for {{ web_mount_point }} remounted with local_lock=all, causing flock()/fcntl() locks used by PHP upload handlers to be resolved only locally instead of via the NFS server, producing write races and intermittent file corruption across app_nodes.",
-            "decoy_applied": {{ 'true' if (inject_decoy | bool) and (inventory_hostname == decoy_host) else 'false' }},
-            "status": "injected"
-          }
-        dest: "{{ state_file }}"
-        mode: '0600'
-
-  # ==========================================================================
-  # HANDLERS
-  # ==========================================================================
-  handlers:
-    - name: "Restart target service"
+    # -------------------------------------------------------------------------
+    # PHASE 4: FINALIZE & EXPOSE TO CLIENTS
+    # -------------------------------------------------------------------------
+    - name: "11 | Start NFS server (it will export the directory with 0000 permissions)"
       ansible.builtin.systemd:
-        name: "{{ target_service }}"
-        state: restarted
-        daemon_reload: yes
+        name: nfs-server
+        state: started
+      when: not check_inject.stat.exists
+
+    - name: "12 | Verify injection status"
+      ansible.builtin.command:
+        cmd: "stat -c '%a' {{ target_export }}"
+      register: final_perms
+      changed_when: false
+      when: not check_inject.stat.exists
+
+    - name: "13 | Display Injection Summary"
+      ansible.builtin.debug:
+        msg: |
+          =========================================
+          INCIDENT 003 SUCCESSFULLY INJECTED
+          =========================================
+          Target: {{ target_export }}
+          Current Permissions: {{ final_perms.stdout | default('Failed') }}
+          
+          The NFS export now has NO permissions (0000).
+          App nodes can mount but cannot write.
+          L1 must check 'ls -ld /exports/webdata' on storage01
+          and fix permissions with 'chmod 0777'.
+          =========================================
+      when: not check_inject.stat.exists

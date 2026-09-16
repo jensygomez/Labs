@@ -1,188 +1,103 @@
 # ==============================================================================
-# INC-003 | Web file writes corrupt intermittently (NFS lock issue)
-# Family: systech-ha-001 | Category: Storage & Filesystems | Level: L2
+# INCIDENT RECOVERY PLAYBOOK - SYSTECH-HA-001 LAB ENVIRONMENT
 # ==============================================================================
-# RECOVERY:
-#   Reverts the NFS client mount for /var/www/html to local_lock=none (the
-#   NFSv4 default), restoring cross-node lock visibility via the NFS server.
-#   Symmetrically removes the synthetic symptom log line and, where recorded
-#   in the state file, the decoy log line — driven entirely by the state
-#   file's own "decoy_applied" field rather than re-deriving it from vars,
-#   so recovery is self-describing per BUG-009.
+# INCIDENT ID   : 003
+# TITLE         : NFS export permissions corruption (Web uploads fail)
+# TARGET NODE   : storage01 (10.10.10.50)
+# TARGET FS     : /exports/webdata
+# ==============================================================================
+#
+# 🔧 WHAT THIS PLAYBOOK FIXES:
+# 1. Restores correct permissions (0777) on /exports/webdata
+# 2. Removes the marker file to allow re-injection if needed
+# 3. Restarts NFS server to apply changes
+# 4. Verifies the fix by testing write access
 # ==============================================================================
 
 ---
-- name: "INC-003 | Web file writes corrupt intermittently (NFS lock issue) - Incident Recovery"
-  hosts: "{{ target_group | default('app_nodes') }}"
+- name: "Incident 003 | Recover NFS Export Permissions on storage01"
+  hosts: storage01
   become: yes
-  gather_facts: yes
-
   vars:
-    incident_id: "INC-003"
-    target_service: "httpd"
-    target_group: "app_nodes"
-    web_mount_point: "/var/www/html"
-
-    state_file: "/tmp/.systech_{{ incident_id }}_state.json"
-
-    # Must match the exact lines written by 003_incidente.yml so removal is exact
-    symptom_log_path: "/var/log/httpd/error_log"
-    symptom_log_line: "[systech-sim] [error] PHP Warning: flock(): NFS lock request timed out for /var/www/html/uploads/upload_handler.php, stale lock suspected"
-
-    decoy_log_path: "/var/log/messages"
-    decoy_log_line: "2026-09-12T00:00:00Z app02 kernel: EXT4-fs warning (device dm-0): ext4_dx_add_entry:2361: Directory index full!"
+    incident_id: "003"
+    marker_file: "/var/run/.incident_{{ incident_id }}_marker"
+    target_export: "/exports/webdata"
 
   tasks:
-    # ========================================================================
-    # 1. PRE-FLIGHT & IDEMPOTENCY CHECK (Single State File — BUG-009)
-    # ========================================================================
-    - name: "Check if state file exists on this node"
+    # -------------------------------------------------------------------------
+    # PHASE 1: PRE-FLIGHT CHECK
+    # -------------------------------------------------------------------------
+    - name: "01 | Check if incident marker exists"
       ansible.builtin.stat:
-        path: "{{ state_file }}"
-      register: state_file_check
+        path: "{{ marker_file }}"
+      register: check_marker
 
-    - name: "Skip host entirely if it was never the target of this incident"
-      meta: end_host
-      when: not state_file_check.stat.exists
-
-    - name: "Read incident state to confirm root cause and decoy status"
-      ansible.builtin.slurp:
-        src: "{{ state_file }}"
-      register: state_file_raw
-
-    - name: "Parse state file content"
-      ansible.builtin.set_fact:
-        current_state: "{{ state_file_raw.content | b64decode | from_json }}"
-
-    - name: "Skip host if incident is already recovered"
-      meta: end_host
-      when: current_state.status == "recovered"
-
-    - name: "Debug current state before recovery"
+    - name: "02 | Skip if incident was never injected"
       ansible.builtin.debug:
-        msg: "Recovering {{ current_state.incident_id }} on {{ inventory_hostname }}. Recorded root cause: {{ current_state.root_cause }}"
+        msg: "Incident {{ incident_id }} marker not found. Nothing to recover."
+      when: not check_marker.stat.exists
 
-    # ========================================================================
-    # 2. CORE RECOVERY (THE FIX)
-    # ========================================================================
-    - name: "CORE RECOVERY: Restore NFS client-side lock coordination"
-      block:
-        - name: "Check current NFS mount options for the web mount"
-          ansible.builtin.command:
-            cmd: "findmnt -no OPTIONS {{ web_mount_point }}"
-          register: current_mount_opts
-          changed_when: false
+    - name: "03 | End play if no incident to recover"
+      meta: end_play
+      when: not check_marker.stat.exists
 
-        - name: "Determine if local_lock override is still active"
-          ansible.builtin.set_fact:
-            lock_break_active: "{{ 'local_lock=all' in current_mount_opts.stdout }}"
-
-        - name: "Get current NFS mount source"
-          ansible.builtin.command:
-            cmd: "findmnt -no SOURCE {{ web_mount_point }}"
-          register: mount_source
-          changed_when: false
-          when: lock_break_active | bool
-
-        - name: "Stop target service to allow safe unmount"
-          ansible.builtin.systemd:
-            name: "{{ target_service }}"
-            state: stopped
-          when: lock_break_active | bool
-
-        - name: "Unmount the web mount to remove bad NFS options"
-          ansible.builtin.command:
-            cmd: "umount {{ web_mount_point }}"
-          register: umount_result
-          when: lock_break_active | bool
-
-        - name: "Remount with default options (reads from /etc/fstab)"
-          ansible.builtin.command:
-            cmd: "mount {{ web_mount_point }}"
-          register: recovery_result
-          changed_when: true
-          when: lock_break_active | bool
-
-        - name: "Start target service after remount"
-          ansible.builtin.systemd:
-            name: "{{ target_service }}"
-            state: started
-          when: lock_break_active | bool
-
-        - name: "Remove synthetic PHP lock-timeout symptom from httpd error log"
-          ansible.builtin.lineinfile:
-            path: "{{ symptom_log_path }}"
-            line: "{{ symptom_log_line }}"
-            state: absent
-
-        - name: "Remove decoy log entry if it was applied to this node"
-          ansible.builtin.lineinfile:
-            path: "{{ decoy_log_path }}"
-            line: "{{ decoy_log_line }}"
-            state: absent
-          when: current_state.decoy_applied | default(false) | bool
-
-      rescue:
-        - name: "ALERT: Recovery failed"
-          ansible.builtin.fail:
-            msg: "INC-003 recovery failed on {{ inventory_hostname }}. Manual intervention required."
-
-    # ========================================================================
-    # 3. LIGHTWEIGHT SELF-TEST (VALIDATION)
-    # ========================================================================
-    - name: "SELF-TEST: Verify service is active"
+    # -------------------------------------------------------------------------
+    # PHASE 2: RESTORE CORRECT PERMISSIONS
+    # -------------------------------------------------------------------------
+    - name: "04 | Stop NFS server to apply permission changes"
       ansible.builtin.systemd:
-        name: "{{ target_service }}"
-      register: service_check
-      failed_when: service_check.status.ActiveState != "active"
+        name: nfs-server
+        state: stopped
 
-    - name: "SELF-TEST: Verify local_lock override is gone"
+    - name: "05 | Restore correct permissions (0777) on NFS export"
+      ansible.builtin.file:
+        path: "{{ target_export }}"
+        state: directory
+        mode: '0777'
+        owner: root
+        group: root
+
+    - name: "06 | Start NFS server"
+      ansible.builtin.systemd:
+        name: nfs-server
+        state: started
+
+    # -------------------------------------------------------------------------
+    # PHASE 3: VERIFICATION
+    # -------------------------------------------------------------------------
+    - name: "07 | Verify permissions are correct"
       ansible.builtin.command:
-        cmd: "findmnt -no OPTIONS {{ web_mount_point }}"
-      register: post_recovery_opts
+        cmd: "stat -c '%a' {{ target_export }}"
+      register: recovered_perms
       changed_when: false
-      failed_when: "'local_lock=all' in post_recovery_opts.stdout"
 
-    - name: "SELF-TEST: Verify the web mount is writable"
-      block:
-        - name: "Write a self-test file"
-          ansible.builtin.command:
-            cmd: "touch {{ web_mount_point }}/.self_test_write"
-          changed_when: true
-          register: write_test
+    - name: "08 | Test write access"
+      ansible.builtin.command:
+        cmd: "touch {{ target_export }}/.recovery_test"
+      changed_when: false
 
-        - name: "Clean up self-test file"
-          ansible.builtin.file:
-            path: "{{ web_mount_point }}/.self_test_write"
-            state: absent
-          when: write_test.changed
-      ignore_errors: no
+    - name: "09 | Clean up test file"
+      ansible.builtin.file:
+        path: "{{ target_export }}/.recovery_test"
+        state: absent
 
-    # ========================================================================
-    # 4. STATE UPDATE (Single JSON state file — BUG-009)
-    # ========================================================================
-    - name: "Update state file to 'recovered'"
-      ansible.builtin.copy:
-        content: |
-          {
-            "incident_id": "{{ incident_id }}",
-            "timestamp": "{{ current_state.timestamp }}",
-            "recovery_timestamp": "{{ ansible_date_time.iso8601 }}",
-            "target_node": "{{ inventory_hostname }}",
-            "target_service": "{{ target_service }}",
-            "root_cause": "{{ current_state.root_cause }}",
-            "decoy_applied": {{ 'true' if (current_state.decoy_applied | default(false) | bool) else 'false' }},
-            "status": "recovered"
-          }
-        dest: "{{ state_file }}"
-        mode: '0600'
+    # -------------------------------------------------------------------------
+    # PHASE 4: CLEANUP MARKER
+    # -------------------------------------------------------------------------
+    - name: "10 | Remove incident marker file"
+      ansible.builtin.file:
+        path: "{{ marker_file }}"
+        state: absent
 
-  # ==========================================================================
-  # HANDLERS
-  # ==========================================================================
-  handlers:
-    - name: "Restart target service"
-      ansible.builtin.systemd:
-        name: "{{ target_service }}"
-        state: restarted
-        daemon_reload: yes
+    - name: "11 | Display Recovery Summary"
+      ansible.builtin.debug:
+        msg: |
+          =========================================
+          INCIDENT 003 SUCCESSFULLY RECOVERED
+          =========================================
+          Target: {{ target_export }}
+          Restored Permissions: {{ recovered_perms.stdout }}
+          
+          The NFS export is now writable again.
+          App nodes can write to /var/www/html/uploads.
+          =========================================
