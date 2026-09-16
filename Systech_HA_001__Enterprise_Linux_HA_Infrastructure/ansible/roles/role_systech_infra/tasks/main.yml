@@ -96,7 +96,17 @@
   when: "inventory_hostname == 'client04'"
   tags: ['client', 'client04']
 
-
+# F) Servidor DNS (BIND / DNS Principal)
+- name: "Configurar Servidor DNS"
+  ansible.builtin.include_tasks:
+    file: dns01.yml
+    apply:
+      tags: ['dns', 'bind']
+      throttle: 2
+  when: "inventory_hostname == 'dns01'" # O ajusta el "when" según tu grupo/inventario
+  tags: ['dns', 'bind']
+  
+  
 # ------------------------------------------------------------------------------
 # 3. GESTIÓN DE USUARIOS Y ACCESOS (AL FINAL)
 # ------------------------------------------------------------------------------
