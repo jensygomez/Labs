@@ -10,6 +10,5 @@ Therefore, outputting an empty .gitignore as per the rules:
 **/*.tfstate.backup
 **/*.tfvars
 **/tfplan
-Base-de-Datos/progreso.db
 .ssh/
 **/.ssh/
