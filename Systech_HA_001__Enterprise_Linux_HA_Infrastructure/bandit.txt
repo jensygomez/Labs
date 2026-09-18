@@ -1,0 +1,15 @@
+ssh bandit1@bandit.labs.overthewire.org -p 2220
+bandit1  -->  6y2kwnwK6grgvwvpvLaa2T1cpFEKOhNR
+bandit2  -->  
+bandit3  -->  
+bandit4  -->  
+bandit5  -->  
+
+ssh bandit6@bandit.labs.overthewire.org -p 2220
+bandit6  -->  pXa26xhMWaC2SvDotA4r9EgZkulOeSBW
+bandit7  -->  
+bandit8  -->
+bandit9  -->  B0s2khmbT9u0geKuOoVGW3JZKhndE3BG
+
+bandit10 -->  
+
