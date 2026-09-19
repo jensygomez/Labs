@@ -1,3 +1,4 @@
 output "inventory_file" {
-  value = module.inventory.output_path # Opcional, para saber dónde se guardó
+  description  = "Ruta del inventario de Ansible generado"
+  value        = module.inventory.filename
 }

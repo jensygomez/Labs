@@ -12,7 +12,7 @@
 ~h
 # Command Line History (newest to oldest):
 :wq
-|2,0,1789815422,,"wq"
+|2,0,1789815532,,"wq"
 
 # Search String History (newest to oldest):
 
@@ -25,16 +25,35 @@
 # Registers:
 
 # File marks:
-'0  4  0  ~/shared/terraform/modules/inventory/outputs.tf
-|4,48,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+'0  4  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,48,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+'1  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,49,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
 
 # Jumplist (newest first):
+-'  4  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+-'  1  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,1,0,1789815467,"~/Linux_Foundation/terraform/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
 -'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
 |4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
 -'  1  0  ~/shared/terraform/modules/inventory/outputs.tf
 |4,39,1,0,1789815413,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  1  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,1,0,1789815413,"~/shared/terraform/modules/inventory/outputs.tf"
 
 # History of marks within files (newest to oldest):
+
+> ~/Linux_Foundation/terraform/outputs.tf
+	*	1789815532	0
+	"	4	0
+	^	4	1
+	.	4	0
+	+	2	16
+	+	3	42
+	+	4	0
 
 > ~/shared/terraform/modules/inventory/outputs.tf
 	*	1789815420	0
