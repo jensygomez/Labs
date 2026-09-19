@@ -8,8 +8,24 @@
   tags:
     - update
 
-# Instalar paquetes necesarios para los ejercicios
-- name: Instalar paquetes necesarios
+# Habilitar EPEL (necesario para htop, strace, etc.)
+- name: Instalar EPEL release
+  ansible.builtin.dnf:
+    name: epel-release
+    state: present
+  tags:
+    - packages
+
+- name: Habilitar CRB (CodeReady Builder) para más paquetes
+  ansible.builtin.command:
+    cmd: dnf config-manager --set-enabled crb
+  changed_when: false
+  failed_when: false
+  tags:
+    - packages
+
+# Instalar paquetes del repositorio base
+- name: Instalar paquetes base
   ansible.builtin.dnf:
     name:
       - acl
@@ -21,10 +37,8 @@
       - vim
       - nano
       - tree
-      - htop
       - lsof
       - tcpdump
-      - strace
       - net-tools
       - bind-utils
       - policycoreutils-python-utils
@@ -32,6 +46,16 @@
       - audit
       - at
       - cronie
+    state: present
+  tags:
+    - packages
+
+# Instalar paquetes de EPEL
+- name: Instalar paquetes de EPEL
+  ansible.builtin.dnf:
+    name:
+      - htop
+      - strace
     state: present
   tags:
     - packages

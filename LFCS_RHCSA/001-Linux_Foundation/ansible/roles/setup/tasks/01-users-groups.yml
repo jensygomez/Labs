@@ -26,19 +26,17 @@
   loop_control:
     label: "{{ item.name }}"
 
+# Usamos el comando 'chage' directamente porque es el comando real 
+# que debes dominar para el examen RHCSA/LFCS y evita errores de versión del módulo de Ansible.
+
 - name: Configurar envejecimiento de contraseña para bob (Ejercicio 25)
-  ansible.builtin.user:
-    name: bob
-    password_age_min: 1
-    password_age_max: 90
-    password_warn: 7
-    password_inactive: 5
+  ansible.builtin.command: chage -m 1 -M 90 -W 7 -I 5 bob
+  changed_when: false
   tags:
     - exercise-25
 
 - name: Forzar cambio de contraseña para alice en próximo login (Ejercicio 24)
-  ansible.builtin.user:
-    name: alice
-    password_expire: true
+  ansible.builtin.command: chage -d 0 alice
+  changed_when: false
   tags:
     - exercise-24
