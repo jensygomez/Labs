@@ -1,0 +1,118 @@
+---
+# ------------------------------------------------------------------------------
+# 1. RESOLUCIÓN LOCAL (/etc/hosts) - Todos se conocen por FQDN
+# ------------------------------------------------------------------------------
+- name: "Configurar resolución de nombres local en /etc/hosts"
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    marker: "# {mark} ANSIBLE MANAGED HOSTS"
+    block: |
+      {% for host in groups['all'] %}
+      {% if hostvars[host].ansible_host is defined %}
+      {{ hostvars[host].ansible_host }} {{ host }} {{ host }}.systech.local
+      {% endif %}
+      {% endfor %}
+  tags: ['dns', 'common']
+
+
+# ------------------------------------------------------------------------------
+# 2. DESPLIEGUE DE COMPONENTES DE INFRAESTRUCTURA (Orden de Dependencia)
+# ------------------------------------------------------------------------------
+
+# A) Storage (NFS / iSCSI)
+- name: "Configurar Almacenamiento"
+  ansible.builtin.include_tasks:
+    file: storage_setup.yml
+    apply:
+      tags: ['storage']
+      throttle: 2
+  when: "'storage_nodes' in group_names"
+  tags: ['storage']
+
+# B) Database (PostgreSQL)
+- name: "Configurar Base de Datos"
+  ansible.builtin.include_tasks:
+    file: database_setup.yml
+    apply:
+      tags: ['database', 'db']
+      throttle: 2
+  when: "'db_nodes' in group_names"
+  tags: ['database', 'db']
+
+# C) Application (Apache + PHP)
+- name: "Configurar Aplicación Web"
+  ansible.builtin.include_tasks:
+    file: web_app_setup.yml
+    apply:
+      tags: ['web', 'app']
+      throttle: 2
+  when: "'app_nodes' in group_names"
+  tags: ['web', 'app']
+
+# D) Load Balancers (HAProxy + Keepalived)
+- name: "Configurar Load Balancers"
+  ansible.builtin.include_tasks:
+    file: lb_setup.yml
+    apply:
+      tags: ['lb', 'loadbalancer']
+      throttle: 2
+  when: "'lb_nodes' in group_names"
+  tags: ['lb', 'loadbalancer']
+
+# E) Clientes (Consumidores de Servicios - Generan Tráfico)
+- name: "Configurar Cliente 01"
+  ansible.builtin.include_tasks:
+    file: client01.yml
+    apply:
+      tags: ['client', 'client01']
+      throttle: 2
+  when: "inventory_hostname == 'client01'"
+  tags: ['client', 'client01']
+
+- name: "Configurar Cliente 02"
+  ansible.builtin.include_tasks:
+    file: client02.yml
+    apply:
+      tags: ['client', 'client02']
+      throttle: 2
+  when: "inventory_hostname == 'client02'"
+  tags: ['client', 'client02']
+
+- name: "Configurar Cliente 03"
+  ansible.builtin.include_tasks:
+    file: client03.yml
+    apply:
+      tags: ['client', 'client03']
+      throttle: 2
+  when: "inventory_hostname == 'client03'"
+  tags: ['client', 'client03']
+
+- name: "Configurar Cliente 04"
+  ansible.builtin.include_tasks:
+    file: client04.yml
+    apply:
+      tags: ['client', 'client04']
+      throttle: 2
+  when: "inventory_hostname == 'client04'"
+  tags: ['client', 'client04']
+
+# F) Servidor DNS (BIND / DNS Principal)
+- name: "Configurar Servidor DNS"
+  ansible.builtin.include_tasks:
+    file: dns01.yml
+    apply:
+      tags: ['dns', 'bind']
+      throttle: 2
+  when: "inventory_hostname == 'dns01'" # O ajusta el "when" según tu grupo/inventario
+  tags: ['dns', 'bind']
+  
+  
+# ------------------------------------------------------------------------------
+# 3. GESTIÓN DE USUARIOS Y ACCESOS (AL FINAL)
+# ------------------------------------------------------------------------------
+- name: "Aprovisionar Usuarios y Reglas Sudoers"
+  ansible.builtin.include_tasks:
+    file: setup_users.yml
+    apply:
+      tags: ['users']
+  tags: ['users']

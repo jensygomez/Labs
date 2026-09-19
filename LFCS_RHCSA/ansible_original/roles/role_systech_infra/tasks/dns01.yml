@@ -1,0 +1,14 @@
+- name: "Configuración Dinámica de /etc/hosts"
+  hosts: all
+  become: true
+  tasks:
+    - name: "Generar registros /etc/hosts desde el inventario"
+      ansible.builtin.blockinfile:
+        path: /etc/hosts
+        marker: "# {mark} ANSIBLE MANAGED HOSTS"
+        block: |
+          {% for host in groups['all'] %}
+          {% if hostvars[host].ansible_host is defined %}
+          {{ hostvars[host].ansible_host }} {{ host }} {{ host }}.systech.local
+          {% endif %}
+          {% endfor %}
