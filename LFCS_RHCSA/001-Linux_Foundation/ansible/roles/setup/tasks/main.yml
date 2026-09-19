@@ -1,6 +1,42 @@
 ---
-# Tarea principal que orquesta todas las subtareas
+# Actualizar el sistema primero
+- name: Actualizar todos los paquetes del sistema
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest
+  when: update_system | bool
+  tags:
+    - update
 
+# Instalar paquetes necesarios para los ejercicios
+- name: Instalar paquetes necesarios
+  ansible.builtin.dnf:
+    name:
+      - acl
+      - attr
+      - firewalld
+      - openssh-server
+      - chrony
+      - git
+      - vim
+      - nano
+      - tree
+      - htop
+      - lsof
+      - tcpdump
+      - strace
+      - net-tools
+      - bind-utils
+      - policycoreutils-python-utils
+      - setools-console
+      - audit
+      - at
+      - cronie
+    state: present
+  tags:
+    - packages
+
+# Orquestar subtareas
 - name: Incluir tareas de creación de usuarios y grupos
   ansible.builtin.include_tasks: 01-users-groups.yml
   tags:
