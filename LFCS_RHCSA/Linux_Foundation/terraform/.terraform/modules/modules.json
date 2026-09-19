@@ -1,0 +1,1 @@
+{"Modules":[{"Key":"","Source":"","Dir":"."},{"Key":"inventory","Source":"../../shared/terraform/modules/inventory","Dir":"../../shared/terraform/modules/inventory"},{"Key":"practice_lxc","Source":"../../shared/terraform/modules/lxc","Dir":"../../shared/terraform/modules/lxc"}]}
