@@ -1,0 +1,80 @@
+---
+# Configuraciones base de red para ejercicios
+
+- name: Asegurar que firewalld esté instalado
+  ansible.builtin.dnf:
+    name: firewalld
+    state: present
+
+- name: Asegurar que firewalld esté habilitado y corriendo
+  ansible.builtin.systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: Asegurar que sshd esté habilitado y corriendo
+  ansible.builtin.systemd:
+    name: sshd
+    state: started
+    enabled: yes
+
+- name: Crear directorio para scripts de red
+  ansible.builtin.file:
+    path: /opt/exercises/level-05-networker/scripts
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Crear script de ejemplo para configuración de red
+  ansible.builtin.copy:
+    dest: /opt/exercises/level-05-networker/scripts/configure-network.sh
+    content: |
+      #!/bin/bash
+      # Script de ejemplo para ejercicios de red
+      # Ejercicio 46: Configurar IP estática
+      
+      INTERFACE="eth0"
+      IP_ADDRESS="10.10.10.95/24"
+      GATEWAY="10.10.10.1"
+      DNS="8.8.8.8"
+      
+      echo "Configurando $INTERFACE con IP $IP_ADDRESS"
+      # nmcli connection modify "$INTERFACE" ipv4.addresses "$IP_ADDRESS"
+      # nmcli connection modify "$INTERFACE" ipv4.gateway "$GATEWAY"
+      # nmcli connection modify "$INTERFACE" ipv4.dns "$DNS"
+      # nmcli connection modify "$INTERFACE" ipv4.method manual
+      # nmcli connection up "$INTERFACE"
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Crear directorio para configuración de SSH
+  ansible.builtin.file:
+    path: /opt/exercises/level-05-networker/ssh-config
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Crear archivo de configuración SSH de ejemplo
+  ansible.builtin.copy:
+    dest: /opt/exercises/level-05-networker/ssh-config/sshd_config.example
+    content: |
+      # Ejemplo de configuración segura de SSH
+      # Ejercicio 54-55
+      
+      # Deshabilitar login por contraseña para root
+      PermitRootLogin prohibit-password
+      
+      # Habilitar autenticación por claves
+      PubkeyAuthentication yes
+      
+      # Deshabilitar autenticación por contraseña
+      PasswordAuthentication no
+      
+      # Puerto personalizado (Ejercicio 75)
+      # Port 2222
+    owner: root
+    group: root
+    mode: '0644'

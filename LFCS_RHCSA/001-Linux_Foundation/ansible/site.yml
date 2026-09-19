@@ -1,0 +1,10 @@
+---
+- name: Configurar entorno de práctica Linux Foundation
+  hosts: lfcs_nodes
+  become: yes
+  gather_facts: yes
+  
+  roles:
+    - role: setup
+      tags:
+        - full-setup

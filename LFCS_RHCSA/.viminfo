@@ -12,7 +12,7 @@
 ~h
 # Command Line History (newest to oldest):
 :wq
-|2,0,1789829331,,"wq"
+|2,0,1789829435,,"wq"
 :q!
 |2,0,1789829138,,"q!"
 
@@ -27,32 +27,50 @@
 # Registers:
 
 # File marks:
-'0  109  16  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/03-files-permissions.yml
-|4,48,109,16,1789829331,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/03-files-permissions.yml"
-'1  35  16  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/02-directory-structure.yml
-|4,49,35,16,1789829312,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/02-directory-structure.yml"
-'2  44  16  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml
-|4,50,44,16,1789829286,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml"
-'3  24  15  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
-|4,51,24,15,1789829194,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
-'4  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
-|4,52,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
-'5  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,53,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
-'6  4  0  ~/Linux_Foundation/terraform/outputs.tf
-|4,54,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
-'7  4  0  ~/shared/terraform/modules/inventory/outputs.tf
-|4,55,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+'0  80  15  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/04-networking-setup.yml
+|4,48,80,15,1789829435,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/04-networking-setup.yml"
+'1  109  16  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/03-files-permissions.yml
+|4,49,109,16,1789829331,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/03-files-permissions.yml"
+'2  35  16  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/02-directory-structure.yml
+|4,50,35,16,1789829312,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/02-directory-structure.yml"
+'3  44  16  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml
+|4,51,44,16,1789829286,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml"
+'4  24  15  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,52,24,15,1789829194,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+'5  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,53,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+'6  4  0  ~/Linux_Foundation/terraform/variables.tf
+|4,54,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
+'7  4  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,55,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+'8  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,56,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
 
 # Jumplist (newest first):
+-'  80  15  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/04-networking-setup.yml
+|4,39,80,15,1789829435,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/04-networking-setup.yml"
+-'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/04-networking-setup.yml
+|4,39,1,0,1789829424,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/04-networking-setup.yml"
 -'  109  16  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/03-files-permissions.yml
 |4,39,109,16,1789829331,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/03-files-permissions.yml"
+-'  109  16  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/03-files-permissions.yml
+|4,39,109,16,1789829331,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/03-files-permissions.yml"
+-'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/03-files-permissions.yml
+|4,39,1,0,1789829323,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/03-files-permissions.yml"
 -'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/03-files-permissions.yml
 |4,39,1,0,1789829323,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/03-files-permissions.yml"
 -'  35  16  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/02-directory-structure.yml
 |4,39,35,16,1789829312,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/02-directory-structure.yml"
 -'  35  16  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/02-directory-structure.yml
 |4,39,35,16,1789829312,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/02-directory-structure.yml"
+-'  35  16  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/02-directory-structure.yml
+|4,39,35,16,1789829312,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/02-directory-structure.yml"
+-'  35  16  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/02-directory-structure.yml
+|4,39,35,16,1789829312,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/02-directory-structure.yml"
+-'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/02-directory-structure.yml
+|4,39,1,0,1789829306,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/02-directory-structure.yml"
+-'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/02-directory-structure.yml
+|4,39,1,0,1789829306,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/02-directory-structure.yml"
 -'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/02-directory-structure.yml
 |4,39,1,0,1789829306,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/02-directory-structure.yml"
 -'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/02-directory-structure.yml
@@ -65,6 +83,22 @@
 |4,39,44,16,1789829286,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml"
 -'  44  16  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml
 |4,39,44,16,1789829286,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml"
+-'  44  16  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml
+|4,39,44,16,1789829286,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml"
+-'  44  16  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml
+|4,39,44,16,1789829286,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml"
+-'  44  16  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml
+|4,39,44,16,1789829286,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml"
+-'  44  16  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml
+|4,39,44,16,1789829286,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml"
+-'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml
+|4,39,1,0,1789829278,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml"
+-'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml
+|4,39,1,0,1789829278,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml"
+-'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml
+|4,39,1,0,1789829278,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml"
+-'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml
+|4,39,1,0,1789829278,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml"
 -'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml
 |4,39,1,0,1789829278,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml"
 -'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml
@@ -89,6 +123,38 @@
 |4,39,24,15,1789829194,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
 -'  24  15  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
 |4,39,24,15,1789829194,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829194,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829194,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829194,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829194,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829194,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829194,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829194,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829194,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,1,0,1789829187,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,1,0,1789829187,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,1,0,1789829187,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,1,0,1789829187,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,1,0,1789829187,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,1,0,1789829187,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,1,0,1789829187,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,1,0,1789829187,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
 -'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
 |4,39,1,0,1789829187,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
 -'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
@@ -137,6 +203,38 @@
 |4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
 -'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
 |4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
 -'  1  0  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
 |4,39,1,0,1789829118,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
 -'  1  0  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
@@ -149,104 +247,15 @@
 |4,39,1,0,1789829118,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
 -'  1  0  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
 |4,39,1,0,1789829118,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
--'  1  0  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
-|4,39,1,0,1789829118,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
--'  1  0  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
-|4,39,1,0,1789829118,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
--'  1  0  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
-|4,39,1,0,1789829118,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
--'  1  0  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
-|4,39,1,0,1789829118,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
--'  1  0  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
-|4,39,1,0,1789829118,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
--'  1  0  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
-|4,39,1,0,1789829118,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
--'  1  0  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
-|4,39,1,0,1789829118,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
--'  1  0  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
-|4,39,1,0,1789829118,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
--'  1  0  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
-|4,39,1,0,1789829118,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
--'  1  0  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
-|4,39,1,0,1789829118,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  4  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
--'  1  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,1,0,1789815586,"~/Linux_Foundation/terraform/variables.tf"
--'  1  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,1,0,1789815586,"~/Linux_Foundation/terraform/variables.tf"
--'  1  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,1,0,1789815586,"~/Linux_Foundation/terraform/variables.tf"
--'  1  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,1,0,1789815586,"~/Linux_Foundation/terraform/variables.tf"
--'  1  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,1,0,1789815586,"~/Linux_Foundation/terraform/variables.tf"
--'  1  0  ~/Linux_Foundation/terraform/variables.tf
-|4,39,1,0,1789815586,"~/Linux_Foundation/terraform/variables.tf"
 
 # History of marks within files (newest to oldest):
+
+> ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/04-networking-setup.yml
+	*	1789829434	0
+	"	80	15
+	^	80	16
+	.	80	15
+	+	80	15
 
 > ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/03-files-permissions.yml
 	*	1789829330	0

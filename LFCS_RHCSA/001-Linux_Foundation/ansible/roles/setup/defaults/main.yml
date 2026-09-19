@@ -1,5 +1,6 @@
 ---
-# Variables por defecto para el rol linux_foundation
+# Actualizar sistema antes de configurar
+update_system: true
 
 # Usuarios a crear para los ejercicios
 practice_users:
@@ -12,7 +13,7 @@ practice_users:
     groups:
       - developers
       - wheel
-  
+
   - name: bob
     uid: 1500
     group: developers
@@ -21,9 +22,9 @@ practice_users:
     password: "{{ 'LabPassword123!' | password_hash('sha512') }}"
     groups:
       - developers
-  
+
   - name: serviceaccount
-    uid: 999
+    uid: 9999
     shell: /sbin/nologin
     create_home: no
     system: yes
@@ -32,7 +33,7 @@ practice_users:
 practice_groups:
   - name: developers
     gid: 2000
-  
+
   - name: ops
     gid: 2001
 
@@ -42,57 +43,56 @@ exercise_directories:
     owner: root
     group: root
     mode: '0755'
-  
+
   - path: /opt/exercises/level-02-searcher
     owner: root
     group: root
     mode: '0755'
-  
+
   - path: /opt/exercises/level-03-architect
     owner: root
     group: root
     mode: '0755'
-  
+
   - path: /opt/exercises/level-04-guardian
     owner: root
     group: root
     mode: '0755'
-  
+
   - path: /opt/exercises/level-05-networker
     owner: root
     group: root
     mode: '0755'
-  
+
   - path: /opt/exercises/level-06-automator
     owner: root
     group: root
     mode: '0755'
-  
+
   - path: /opt/exercises/level-07-programmer
     owner: root
     group: root
     mode: '0755'
-  
+
   - path: /opt/exercises/level-08-selinux-master
     owner: root
     group: root
     mode: '0755'
-  
-  # Directorios especiales para ejercicios de permisos
+
   - path: /shared/team
     owner: root
     group: developers
-    mode: '2775'  # SGID
-  
+    mode: '2775'
+
   - path: /tmp/test-sticky
     owner: root
     group: root
-    mode: '1777'  # Sticky bit
-  
+    mode: '1777'
+
   - path: /opt/backup/logs
     owner: root
     group: ops
-    mode: '2770'  # SGID, solo root y ops
+    mode: '2770'
 
 # Archivos de práctica
 practice_files:
@@ -109,7 +109,7 @@ practice_files:
     owner: root
     group: root
     mode: '0644'
-  
+
   - path: /opt/exercises/level-02-searcher/config-sample.conf
     content: |
       # Sample configuration file
@@ -121,14 +121,14 @@ practice_files:
     owner: root
     group: root
     mode: '0644'
-  
+
   - path: /opt/exercises/level-07-programmer/backup.sh
     content: |
       #!/bin/bash
       # Script de ejemplo para ejercicios de scripting
       BACKUP_DIR="/opt/backup"
       DATE=$(date +%Y%m%d_%H%M%S)
-      
+
       echo "Starting backup at $DATE"
       # Add your backup logic here
     owner: root
