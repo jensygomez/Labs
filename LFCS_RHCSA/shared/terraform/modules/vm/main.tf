@@ -1,3 +1,13 @@
+terraform {
+  required_providers {
+    proxmox = {
+      source  = "bpg/proxmox"
+      version = ">= 0.50.0"
+    }
+  }
+}
+
+
 resource "proxmox_download_file" "almalinux_cloud_image" {
   content_type = "iso"
   datastore_id = "local"
@@ -48,9 +58,18 @@ resource "proxmox_virtual_environment_vm" "vm_cluster" {
   node_name = var.target_node
   vm_id     = each.value.vmid
 
-  cpu    { cores = each.value.cores; type = "host" }
-  memory { dedicated = each.value.memory }
-  agent  { enabled = true }
+  cpu {
+    cores = each.value.cores
+    type  = "host"
+  }
+
+  memory {
+    dedicated = each.value.memory
+  }
+
+  agent {
+    enabled = true
+  }
 
   disk {
     datastore_id = "local-lvm"
@@ -69,10 +88,18 @@ resource "proxmox_virtual_environment_vm" "vm_cluster" {
     }
   }
 
-  network_device { bridge = "vmbr1"; model = "virtio" }
+  network_device {
+    bridge = "vmbr1"
+    model  = "virtio"
+  }
 
   initialization {
-    ip_config { ipv4 { address = each.value.ip; gateway = "10.10.10.1" } }
+    ip_config {
+      ipv4 {
+        address = each.value.ip
+        gateway = "10.10.10.1"
+      }
+    }
     user_data_file_id = proxmox_virtual_environment_file.cloud_user_config[each.key].id
     meta_data_file_id = proxmox_virtual_environment_file.cloud_meta_config[each.key].id
   }

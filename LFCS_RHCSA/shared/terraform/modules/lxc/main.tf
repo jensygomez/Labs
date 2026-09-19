@@ -1,3 +1,17 @@
+terraform {
+  required_providers {
+    proxmox = {
+      source  = "bpg/proxmox"
+      version = ">= 0.50.0"
+    }
+    null = {
+      source  = "hashicorp/null"
+      version = ">= 3.2.0"
+    }
+  }
+}
+
+
 resource "proxmox_download_file" "lxc_template" {
   content_type = "vztmpl"
   datastore_id = "local"
@@ -14,11 +28,23 @@ resource "proxmox_virtual_environment_container" "lxc_cluster" {
   unprivileged = !each.value.privileged
   started      = true
 
-  cpu    { cores = each.value.cores }
-  memory { dedicated = each.value.memory }
-  disk   { datastore_id = "local-lvm"; size = each.value.disk_size }
+  cpu {
+    cores = each.value.cores
+  }
+
+  memory {
+    dedicated = each.value.memory
+  }
+
+  disk {
+    datastore_id = "local-lvm"
+    size         = each.value.disk_size
+  }
   
-  network_interface { name = "eth0"; bridge = "vmbr1" }
+  network_interface {
+    name   = "eth0"
+    bridge = "vmbr1"
+  }
   
   operating_system {
     template_file_id = proxmox_download_file.lxc_template.id
@@ -28,18 +54,27 @@ resource "proxmox_virtual_environment_container" "lxc_cluster" {
   initialization {
     hostname = each.key
     ip_config {
-      ipv4 { address = each.value.ip; gateway = "10.10.10.1" }
+      ipv4 {
+        address = each.value.ip
+        gateway = "10.10.10.1"
+      }
     }
-    user_account { keys = [var.ssh_public_key] }
+    user_account {
+      keys = [var.ssh_public_key]
+    }
   }
 
-  features { nesting = true; mount = ["nfs", "cifs"] }
+  features {
+    nesting = true
+    mount   = ["nfs", "cifs"]
+  }
+  
   start_on_boot = true
 }
 
 resource "null_resource" "lxc_provision_user" {
-  for_each = var.containers
-  triggers = { container_id = proxmox_virtual_environment_container.lxc_cluster[each.key].id }
+  for_each   = var.containers
+  triggers   = { container_id = proxmox_virtual_environment_container.lxc_cluster[each.key].id }
   depends_on = [proxmox_virtual_environment_container.lxc_cluster]
 
   connection {
