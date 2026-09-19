@@ -1,0 +1,44 @@
+---
+# Creación de grupos para ejercicios
+
+- name: Crear grupos de práctica
+  ansible.builtin.group:
+    name: "{{ item.name }}"
+    gid: "{{ item.gid | default(omit) }}"
+    state: present
+  loop: "{{ practice_groups }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Crear usuarios de práctica
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    uid: "{{ item.uid | default(omit) }}"
+    group: "{{ item.group | default(omit) }}"
+    groups: "{{ item.groups | default([]) | join(',') }}"
+    shell: "{{ item.shell | default('/bin/bash') }}"
+    create_home: "{{ item.create_home | default(true) }}"
+    system: "{{ item.system | default(false) }}"
+    password: "{{ item.password | default(omit) }}"
+    update_password: on_create
+    state: present
+  loop: "{{ practice_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Configurar envejecimiento de contraseña para bob (Ejercicio 25)
+  ansible.builtin.user:
+    name: bob
+    password_age_min: 1
+    password_age_max: 90
+    password_warn: 7
+    password_inactive: 5
+  tags:
+    - exercise-25
+
+- name: Forzar cambio de contraseña para alice en próximo login (Ejercicio 24)
+  ansible.builtin.user:
+    name: alice
+    password_expire: true
+  tags:
+    - exercise-24

@@ -1,0 +1,24 @@
+---
+# Tarea principal que orquesta todas las subtareas
+
+- name: Incluir tareas de creación de usuarios y grupos
+  ansible.builtin.include_tasks: 01-users-groups.yml
+  tags:
+    - users
+    - groups
+
+- name: Incluir tareas de creación de estructura de directorios
+  ansible.builtin.include_tasks: 02-directory-structure.yml
+  tags:
+    - directories
+
+- name: Incluir tareas de creación de archivos y permisos
+  ansible.builtin.include_tasks: 03-files-permissions.yml
+  tags:
+    - files
+    - permissions
+
+- name: Incluir tareas de configuración de red
+  ansible.builtin.include_tasks: 04-networking-setup.yml
+  tags:
+    - networking

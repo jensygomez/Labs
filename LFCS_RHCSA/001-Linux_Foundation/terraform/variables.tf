@@ -1,3 +1,8 @@
+variable "proxmox_api_token" {
+  type    = string
+sensitive = true
+}
+
 variable "target_node" {
   type    = string
   default = "infra"

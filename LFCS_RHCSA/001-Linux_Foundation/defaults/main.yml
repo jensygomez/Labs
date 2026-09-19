@@ -1,0 +1,136 @@
+---
+# Variables por defecto para el rol linux_foundation
+
+# Usuarios a crear para los ejercicios
+practice_users:
+  - name: alice
+    uid: 1001
+    group: developers
+    shell: /bin/bash
+    create_home: yes
+    password: "{{ 'LabPassword123!' | password_hash('sha512') }}"
+    groups:
+      - developers
+      - wheel
+  
+  - name: bob
+    uid: 1500
+    group: developers
+    shell: /bin/bash
+    create_home: yes
+    password: "{{ 'LabPassword123!' | password_hash('sha512') }}"
+    groups:
+      - developers
+  
+  - name: serviceaccount
+    uid: 999
+    shell: /sbin/nologin
+    create_home: no
+    system: yes
+
+# Grupos a crear
+practice_groups:
+  - name: developers
+    gid: 2000
+  
+  - name: ops
+    gid: 2001
+
+# Estructura de directorios para ejercicios
+exercise_directories:
+  - path: /opt/exercises/level-01-explorer
+    owner: root
+    group: root
+    mode: '0755'
+  
+  - path: /opt/exercises/level-02-searcher
+    owner: root
+    group: root
+    mode: '0755'
+  
+  - path: /opt/exercises/level-03-architect
+    owner: root
+    group: root
+    mode: '0755'
+  
+  - path: /opt/exercises/level-04-guardian
+    owner: root
+    group: root
+    mode: '0755'
+  
+  - path: /opt/exercises/level-05-networker
+    owner: root
+    group: root
+    mode: '0755'
+  
+  - path: /opt/exercises/level-06-automator
+    owner: root
+    group: root
+    mode: '0755'
+  
+  - path: /opt/exercises/level-07-programmer
+    owner: root
+    group: root
+    mode: '0755'
+  
+  - path: /opt/exercises/level-08-selinux-master
+    owner: root
+    group: root
+    mode: '0755'
+  
+  # Directorios especiales para ejercicios de permisos
+  - path: /shared/team
+    owner: root
+    group: developers
+    mode: '2775'  # SGID
+  
+  - path: /tmp/test-sticky
+    owner: root
+    group: root
+    mode: '1777'  # Sticky bit
+  
+  - path: /opt/backup/logs
+    owner: root
+    group: ops
+    mode: '2770'  # SGID, solo root y ops
+
+# Archivos de práctica
+practice_files:
+  - path: /opt/exercises/level-01-explorer/sample.txt
+    content: |
+      Line 1: This is a sample file for practice
+      Line 2: It contains multiple lines
+      Line 3: For testing grep, awk, sed
+      Line 4: And other text processing tools
+      Line 5: Error: Something went wrong
+      Line 6: Warning: Check this out
+      Line 7: Info: All systems operational
+      Line 8: Error: Database connection failed
+    owner: root
+    group: root
+    mode: '0644'
+  
+  - path: /opt/exercises/level-02-searcher/config-sample.conf
+    content: |
+      # Sample configuration file
+      server_name = practice-server
+      port = 8080
+      password = secret123
+      database_host = localhost
+      log_level = INFO
+    owner: root
+    group: root
+    mode: '0644'
+  
+  - path: /opt/exercises/level-07-programmer/backup.sh
+    content: |
+      #!/bin/bash
+      # Script de ejemplo para ejercicios de scripting
+      BACKUP_DIR="/opt/backup"
+      DATE=$(date +%Y%m%d_%H%M%S)
+      
+      echo "Starting backup at $DATE"
+      # Add your backup logic here
+    owner: root
+    group: root
+    mode: '0755'

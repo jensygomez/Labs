@@ -12,7 +12,9 @@
 ~h
 # Command Line History (newest to oldest):
 :wq
-|2,0,1789815532,,"wq"
+|2,0,1789829286,,"wq"
+:q!
+|2,0,1789829138,,"q!"
 
 # Search String History (newest to oldest):
 
@@ -25,26 +27,252 @@
 # Registers:
 
 # File marks:
-'0  4  0  ~/Linux_Foundation/terraform/outputs.tf
-|4,48,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
-'1  4  0  ~/shared/terraform/modules/inventory/outputs.tf
-|4,49,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+'0  44  16  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml
+|4,48,44,16,1789829286,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml"
+'1  24  15  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,49,24,15,1789829194,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+'2  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,50,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+'3  4  0  ~/Linux_Foundation/terraform/variables.tf
+|4,51,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
+'4  4  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,52,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+'5  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,53,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
 
 # Jumplist (newest first):
+-'  44  16  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml
+|4,39,44,16,1789829286,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml"
+-'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml
+|4,39,1,0,1789829278,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml"
+-'  24  15  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829194,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829194,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,1,0,1789829187,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  1  0  ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,1,0,1789829187,"~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  24  15  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,24,15,1789829138,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  1  0  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,1,0,1789829118,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  1  0  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,1,0,1789829118,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  1  0  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,1,0,1789829118,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  1  0  ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+|4,39,1,0,1789829118,"~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml"
+-'  4  0  ~/Linux_Foundation/terraform/variables.tf
+|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
+-'  4  0  ~/Linux_Foundation/terraform/variables.tf
+|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
+-'  4  0  ~/Linux_Foundation/terraform/variables.tf
+|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
+-'  4  0  ~/Linux_Foundation/terraform/variables.tf
+|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
+-'  4  0  ~/Linux_Foundation/terraform/variables.tf
+|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
+-'  4  0  ~/Linux_Foundation/terraform/variables.tf
+|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
+-'  4  0  ~/Linux_Foundation/terraform/variables.tf
+|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
+-'  4  0  ~/Linux_Foundation/terraform/variables.tf
+|4,39,4,0,1789815672,"~/Linux_Foundation/terraform/variables.tf"
+-'  1  0  ~/Linux_Foundation/terraform/variables.tf
+|4,39,1,0,1789815586,"~/Linux_Foundation/terraform/variables.tf"
+-'  1  0  ~/Linux_Foundation/terraform/variables.tf
+|4,39,1,0,1789815586,"~/Linux_Foundation/terraform/variables.tf"
+-'  1  0  ~/Linux_Foundation/terraform/variables.tf
+|4,39,1,0,1789815586,"~/Linux_Foundation/terraform/variables.tf"
+-'  1  0  ~/Linux_Foundation/terraform/variables.tf
+|4,39,1,0,1789815586,"~/Linux_Foundation/terraform/variables.tf"
+-'  1  0  ~/Linux_Foundation/terraform/variables.tf
+|4,39,1,0,1789815586,"~/Linux_Foundation/terraform/variables.tf"
+-'  1  0  ~/Linux_Foundation/terraform/variables.tf
+|4,39,1,0,1789815586,"~/Linux_Foundation/terraform/variables.tf"
+-'  1  0  ~/Linux_Foundation/terraform/variables.tf
+|4,39,1,0,1789815586,"~/Linux_Foundation/terraform/variables.tf"
+-'  1  0  ~/Linux_Foundation/terraform/variables.tf
+|4,39,1,0,1789815586,"~/Linux_Foundation/terraform/variables.tf"
 -'  4  0  ~/Linux_Foundation/terraform/outputs.tf
 |4,39,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+-'  4  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+-'  4  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+-'  4  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+-'  4  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+-'  4  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+-'  4  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+-'  4  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+-'  4  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+-'  4  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+-'  4  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+-'  4  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+-'  4  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+-'  4  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+-'  4  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+-'  4  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,4,0,1789815532,"~/Linux_Foundation/terraform/outputs.tf"
+-'  1  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,1,0,1789815467,"~/Linux_Foundation/terraform/outputs.tf"
+-'  1  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,1,0,1789815467,"~/Linux_Foundation/terraform/outputs.tf"
+-'  1  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,1,0,1789815467,"~/Linux_Foundation/terraform/outputs.tf"
+-'  1  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,1,0,1789815467,"~/Linux_Foundation/terraform/outputs.tf"
+-'  1  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,1,0,1789815467,"~/Linux_Foundation/terraform/outputs.tf"
+-'  1  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,1,0,1789815467,"~/Linux_Foundation/terraform/outputs.tf"
+-'  1  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,1,0,1789815467,"~/Linux_Foundation/terraform/outputs.tf"
+-'  1  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,1,0,1789815467,"~/Linux_Foundation/terraform/outputs.tf"
+-'  1  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,1,0,1789815467,"~/Linux_Foundation/terraform/outputs.tf"
+-'  1  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,1,0,1789815467,"~/Linux_Foundation/terraform/outputs.tf"
+-'  1  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,1,0,1789815467,"~/Linux_Foundation/terraform/outputs.tf"
+-'  1  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,1,0,1789815467,"~/Linux_Foundation/terraform/outputs.tf"
+-'  1  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,1,0,1789815467,"~/Linux_Foundation/terraform/outputs.tf"
+-'  1  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,1,0,1789815467,"~/Linux_Foundation/terraform/outputs.tf"
+-'  1  0  ~/Linux_Foundation/terraform/outputs.tf
+|4,39,1,0,1789815467,"~/Linux_Foundation/terraform/outputs.tf"
 -'  1  0  ~/Linux_Foundation/terraform/outputs.tf
 |4,39,1,0,1789815467,"~/Linux_Foundation/terraform/outputs.tf"
 -'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
 |4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
 -'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
 |4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  4  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,4,0,1789815422,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  1  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,1,0,1789815413,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  1  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,1,0,1789815413,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  1  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,1,0,1789815413,"~/shared/terraform/modules/inventory/outputs.tf"
+-'  1  0  ~/shared/terraform/modules/inventory/outputs.tf
+|4,39,1,0,1789815413,"~/shared/terraform/modules/inventory/outputs.tf"
 -'  1  0  ~/shared/terraform/modules/inventory/outputs.tf
 |4,39,1,0,1789815413,"~/shared/terraform/modules/inventory/outputs.tf"
 -'  1  0  ~/shared/terraform/modules/inventory/outputs.tf
 |4,39,1,0,1789815413,"~/shared/terraform/modules/inventory/outputs.tf"
 
 # History of marks within files (newest to oldest):
+
+> ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/01-users-groups.yml
+	*	1789829285	0
+	"	44	16
+	^	44	17
+	.	44	16
+	+	44	16
+
+> ~/001-Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+	*	1789829194	0
+	"	24	15
+	^	24	16
+	.	24	15
+	+	24	15
+
+> ~/001-Linux_Foundation/terraform/Linux_Foundation/ansible/roles/linux_foundation/tasks/main.yml
+	*	1789829137	0
+	"	24	15
+	^	24	16
+	.	24	15
+	+	24	15
+
+> ~/Linux_Foundation/terraform/variables.tf
+	*	1789815671	0
+	"	4	0
+	^	4	1
+	.	5	0
+	+	1	0
+	+	4	1
+	+	5	0
 
 > ~/Linux_Foundation/terraform/outputs.tf
 	*	1789815532	0
