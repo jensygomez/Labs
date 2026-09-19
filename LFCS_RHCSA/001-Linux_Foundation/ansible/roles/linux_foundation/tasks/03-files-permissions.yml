@@ -1,0 +1,109 @@
+---
+# Creación de archivos de práctica
+
+- name: Crear archivos de práctica
+  ansible.builtin.copy:
+    dest: "{{ item.path }}"
+    content: "{{ item.content }}"
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0644') }}"
+  loop: "{{ practice_files }}"
+  loop_control:
+    label: "{{ item.path }}"
+
+- name: Crear archivos temporales para ejercicios de limpieza
+  ansible.builtin.file:
+    path: "/tmp/test-file-{{ item }}"
+    state: touch
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+
+- name: Crear archivo con SUID para ejercicios (Ejercicio 35)
+  ansible.builtin.copy:
+    dest: /opt/exercises/level-04-guardian/suid-script.sh
+    content: |
+      #!/bin/bash
+      echo "Este script se ejecuta con permisos del dueño (root)"
+      whoami
+      id
+    owner: root
+    group: root
+    mode: '4755'  # SUID
+  tags:
+    - exercise-35
+
+- name: Crear archivo inmutable para ejercicios (Ejercicio 41)
+  ansible.builtin.copy:
+    dest: /opt/exercises/level-04-guardian/immutable-file.txt
+    content: "Este archivo tiene el atributo inmutable (+i)"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Aplicar atributo inmutable al archivo
+  ansible.builtin.command:
+    cmd: chattr +i /opt/exercises/level-04-guardian/immutable-file.txt
+  changed_when: false
+  failed_when: false
+  tags:
+    - exercise-41
+
+- name: Crear archivo append-only para ejercicios (Ejercicio 42)
+  ansible.builtin.copy:
+    dest: /opt/exercises/level-04-guardian/append-only.log
+    content: "Este archivo solo permite añadir contenido (+a)\n"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Aplicar atributo append-only al archivo
+  ansible.builtin.command:
+    cmd: chattr +a /opt/exercises/level-04-guardian/append-only.log
+  changed_when: false
+  failed_when: false
+  tags:
+    - exercise-42
+
+- name: Configurar permisos especiales en directorios (Ejercicios 36-37)
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - path: /shared/team
+      owner: root
+      group: developers
+      mode: '2775'  # SGID
+    - path: /tmp/test-sticky
+      owner: root
+      group: root
+      mode: '1777'  # Sticky bit
+  loop_control:
+    label: "{{ item.path }}"
+  tags:
+    - exercise-36
+    - exercise-37
+
+- name: Crear archivos de prueba en directorios con permisos especiales
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: touch
+    owner: alice
+    group: developers
+    mode: '0644'
+  loop:
+    - /shared/team/file-by-alice.txt
+    - /tmp/test-sticky/file-by-alice.txt
+  tags:
+    - exercise-36
+    - exercise-37

@@ -1,0 +1,35 @@
+---
+# Creación de estructura de directorios para ejercicios
+
+- name: Crear directorio base de ejercicios
+  ansible.builtin.file:
+    path: /opt/exercises
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Crear directorios para cada nivel de ejercicios
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0755') }}"
+  loop: "{{ exercise_directories }}"
+  loop_control:
+    label: "{{ item.path }}"
+
+- name: Crear directorios adicionales para práctica
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - /opt/practice/docs
+    - /opt/practice/scripts
+    - /opt/practice/backups
+    - /var/log/audit
+    - /opt/backup
