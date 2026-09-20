@@ -53,10 +53,10 @@ Ansible ya preparó el terreno para ti. La mayoría de los ejercicios se resuelv
 *Objetivo: Dominar find, grep, awk, sed, sort, cut, wc.*
 
 11. Encuentra todos los archivos `.conf` en `/etc` modificados en los últimos 7 días. (Usuario: ansible)
-12. Busca archivos mayores a 10MB en todo el sistema y lista sus rutas. (Usuario: ansible)
+12. Busca archivos mayores a 1MB en /var y lista sus rutas con tamaño legible. (Usuario: ansible)
 13. Encuentra archivos que pertenezcan al usuario `root` y tengan permisos SUID. (Usuario: ansible)
-14. Usa `grep` para buscar todas las líneas que contengan "error" (case-insensitive) en `/var/log/messages`. (Usuario: ansible)
-15. Usa `grep -E` con expresiones regulares para extraer todas las direcciones IPv4 de `/var/log/secure`. (Usuario: ansible)
+14. Usa grep para buscar todas las líneas que contengan "error" (case-insensitive) en /opt/exercises/level-01-explorer/sample.txt. (Usuario: alice)
+15. Usa grep -E con expresiones regulares para extraer todas las direcciones IPv4 del archivo /opt/exercises/level-02-searcher/sample-log.txt. (Usuario: alice)
 16. Usa `awk` para imprimir solo el nombre de usuario (columna 1) y el shell (columna 7) de `/etc/passwd`. (Usuario: alice)
 17. Usa `sed` para reemplazar todas las ocurrencias de "root" por "admin" en una copia de `/etc/passwd`. (Usuario: alice)
 18. Ordena `/etc/passwd` por UID (columna 3) numéricamente. (Usuario: alice)

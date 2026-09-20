@@ -121,7 +121,20 @@ practice_files:
     owner: root
     group: root
     mode: '0644'
-
+  
+  - path: /opt/exercises/level-02-searcher/sample-log.txt
+    content: |
+      Sep 20 10:01:15 server sshd[1234]: Accepted publickey for alice from 192.168.1.50 port 52341
+      Sep 20 10:02:30 server sshd[1235]: Failed password for bob from 10.0.0.15 port 43210
+      Sep 20 10:03:45 server kernel: Connection from 172.16.0.100 dropped
+      Sep 20 10:04:00 server httpd[5678]: Client 203.0.113.25 requested /index.html
+      Sep 20 10:05:12 server sshd[1236]: Accepted password for ansible from 10.10.10.1 port 22
+      Sep 20 10:06:00 server app[9999]: Error connecting to database at 192.168.50.5:5432
+      Sep 20 10:07:30 server nginx[4321]: Upstream 10.20.30.40 responded with 502
+    owner: root
+    group: root
+    mode: '0644'
+    
   - path: /opt/exercises/level-07-programmer/backup.sh
     content: |
       #!/bin/bash
