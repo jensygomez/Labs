@@ -43,9 +43,9 @@ Ansible ya preparó el terreno para ti. La mayoría de los ejercicios se resuelv
 3. Crea un archivo vacío llamado `test.txt` en tu home. Añádele 3 líneas de texto usando redirección `>>`. (Usuario: alice)
 4. Copia recursivamente `/etc/skel` a `/tmp/skel-backup` preservando permisos. (Usuario: ansible)
 5. Crea 5 archivos temporales en /tmp con extensión .tmp (ej: archivo1.tmp, archivo2.tmp, etc.). Luego crea el directorio /tmp/old-files y mueve todos los archivos .tmp allí en un solo comando. Verifica con ls que los archivos se movieron correctamente. (Usuario: ansible)
-6. Elimina recursivamente un directorio con contenido usando un solo comando. (Usuario: alice)
+6. Crea un directorio de prueba en tu home llamado ~/test-delete con algunos archivos dentro. Luego elimínalo recursivamente usando un solo comando. (Usuario: alice)
 7. Crea un enlace simbólico de `/etc/hostname` en tu home llamado `my-hostname-link`. (Usuario: alice)
-8. Crea un enlace duro de `/etc/hostname` en tu home llamado `my-hostname-hard`. Verifica con `ls -i` que comparten el mismo inodo. (Usuario: alice)
+8. Crea un archivo llamado test-hardlink.txt en tu home con algún contenido. Luego crea un enlace duro llamado my-hardlink en el mismo directorio. Verifica con ls -i que comparten el mismo inodo. (Usuario: alice)
 9. Redirige la salida de `ls /nonexistent` a `/dev/null` para suprimir errores, y la salida estándar a `~/list.txt`. (Usuario: alice)
 10. Encadena comandos: lista archivos de `/etc`, filtra los que contienen "host", y guarda el resultado en `~/hosts-files.txt`. (Usuario: alice)
 
