@@ -1,5 +1,3 @@
-¡Perfecto! Aquí está tu lista completa con el usuario indicado al final de cada ejercicio:
-
 ---
 
 # 🚀 Guía de Inicio Rápido: Laboratorio Linux Foundation (LFCS/RHCSA)
@@ -41,10 +39,10 @@ Ansible ya preparó el terreno para ti. La mayoría de los ejercicios se resuelv
 *Objetivo: Dominar la navegación, manipulación de archivos y redirecciones.*
 
 1. Navega hasta `/var/log` y lista todos los archivos ordenados por fecha de modificación (más recientes primero). (Usuario: alice)
-2. Crea la estructura de directorios `/opt/practice/{docs,scripts,backups}` con un solo comando. (Usuario: ansible)
+2. Crea la estructura de directorios ~/mi-practica/{docs,scripts,backups,logs} con un solo comando. Luego verifica con tree que se creó correctamente. (Usuario: ansible)
 3. Crea un archivo vacío llamado `test.txt` en tu home. Añádele 3 líneas de texto usando redirección `>>`. (Usuario: alice)
 4. Copia recursivamente `/etc/skel` a `/tmp/skel-backup` preservando permisos. (Usuario: ansible)
-5. Mueve todos los archivos `.tmp` de `/tmp` a `/tmp/old-files` (crea el directorio si no existe). (Usuario: ansible)
+5. Crea 5 archivos temporales en /tmp con extensión .tmp (ej: archivo1.tmp, archivo2.tmp, etc.). Luego crea el directorio /tmp/old-files y mueve todos los archivos .tmp allí en un solo comando. Verifica con ls que los archivos se movieron correctamente. (Usuario: ansible)
 6. Elimina recursivamente un directorio con contenido usando un solo comando. (Usuario: alice)
 7. Crea un enlace simbólico de `/etc/hostname` en tu home llamado `my-hostname-link`. (Usuario: alice)
 8. Crea un enlace duro de `/etc/hostname` en tu home llamado `my-hostname-hard`. Verifica con `ls -i` que comparten el mismo inodo. (Usuario: alice)
