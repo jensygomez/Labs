@@ -31,11 +31,11 @@ podman run -it --rm \
   --cap-add=NET_ADMIN \
   --cap-add=NET_RAW \
   -v "$(pwd):/workspace:Z" \
-  -w "/workspace/Linux_Foundation/terraform" \
+  -w "/workspace/001-Linux_Foundation/terraform" \
   -e HOME=/workspace \
   -e TF_VAR_proxmox_api_url \
   -e ANSIBLE_HOST_KEY_CHECKING=False \
-  -e ANSIBLE_CONFIG=/workspace/Linux_Foundation/ansible/ansible.cfg \
+  -e ANSIBLE_CONFIG=/workspace/001-Linux_Foundation/ansible/ansible.cfg \
   -e GIT_SSH_COMMAND="ssh -F /workspace/.ssh/config" \
   -e ANSIBLE_SSH_ARGS="-F /workspace/.ssh/config -o IdentitiesOnly=yes" \
   -e ANSIBLE_SSH_COMMON_ARGS="-F /workspace/.ssh/config" \
