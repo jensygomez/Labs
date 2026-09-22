@@ -46,6 +46,9 @@
       - audit
       - at
       - cronie
+      - man-db
+      - man-pages
+      - info
     state: present
   tags:
     - packages
