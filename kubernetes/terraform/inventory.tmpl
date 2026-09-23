@@ -1,0 +1,12 @@
+all:
+  children:
+%{ for role, group in role_group_map ~}
+    ${group}:
+      hosts:
+%{ for name, node in nodes ~}
+%{ if node.role == role ~}
+        ${node.name}:
+          ansible_host: ${node.ip}
+%{ endif ~}
+%{ endfor ~}
+%{ endfor ~}

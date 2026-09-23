@@ -12,7 +12,7 @@
 ~h
 # Command Line History (newest to oldest):
 :wq
-|2,0,1790188009,,"wq"
+|2,0,1790189359,,"wq"
 :q!
 |2,0,1790187984,,"q!"
 
@@ -27,26 +27,278 @@
 # Registers:
 
 # File marks:
-'0  4  26  ~/.ansible/tmp/ansible-local-271h2c8o43v/tmparr199mx.yml
-|4,48,4,26,1790188009,"~/.ansible/tmp/ansible-local-271h2c8o43v/tmparr199mx.yml"
-'1  4  17  ~/.ansible/tmp/ansible-local-2671jiinrpq/tmpt23_4_pi.yml
-|4,49,4,17,1790187984,"~/.ansible/tmp/ansible-local-2671jiinrpq/tmpt23_4_pi.yml"
+'0  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,48,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+'1  1  0  ~/.vault_pass.txt
+|4,49,1,0,1790188984,"~/.vault_pass.txt"
+'2  6  8  ~/terraform/kubernetes/ansible/site.yml
+|4,50,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
+'3  10  17  ~/terraform/kubernetes/ansible/roles/dns.yml
+|4,51,10,17,1790188847,"~/terraform/kubernetes/ansible/roles/dns.yml"
+'4  19  26  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,52,19,26,1790188795,"~/terraform/kubernetes/ansible/ansible.cfg"
+'5  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,53,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+'6  12  11  ~/terraform/inventory.tmpl
+|4,54,12,11,1790188659,"~/terraform/inventory.tmpl"
+'7  4  26  ~/.ansible/tmp/ansible-local-271h2c8o43v/tmparr199mx.yml
+|4,55,4,26,1790188009,"~/.ansible/tmp/ansible-local-271h2c8o43v/tmparr199mx.yml"
+'8  4  17  ~/.ansible/tmp/ansible-local-2671jiinrpq/tmpt23_4_pi.yml
+|4,56,4,17,1790187984,"~/.ansible/tmp/ansible-local-2671jiinrpq/tmpt23_4_pi.yml"
 
 # Jumplist (newest first):
--'  4  26  ~/.ansible/tmp/ansible-local-271h2c8o43v/tmparr199mx.yml
-|4,39,4,26,1790188009,"~/.ansible/tmp/ansible-local-271h2c8o43v/tmparr199mx.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-271h2c8o43v/tmparr199mx.yml
-|4,39,1,0,1790187988,"~/.ansible/tmp/ansible-local-271h2c8o43v/tmparr199mx.yml"
--'  4  17  ~/.ansible/tmp/ansible-local-2671jiinrpq/tmpt23_4_pi.yml
-|4,39,4,17,1790187984,"~/.ansible/tmp/ansible-local-2671jiinrpq/tmpt23_4_pi.yml"
--'  4  17  ~/.ansible/tmp/ansible-local-2671jiinrpq/tmpt23_4_pi.yml
-|4,39,4,17,1790187984,"~/.ansible/tmp/ansible-local-2671jiinrpq/tmpt23_4_pi.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-2671jiinrpq/tmpt23_4_pi.yml
-|4,39,1,0,1790187956,"~/.ansible/tmp/ansible-local-2671jiinrpq/tmpt23_4_pi.yml"
--'  1  0  ~/.ansible/tmp/ansible-local-2671jiinrpq/tmpt23_4_pi.yml
-|4,39,1,0,1790187956,"~/.ansible/tmp/ansible-local-2671jiinrpq/tmpt23_4_pi.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  0  ~/.vault_pass.txt
+|4,39,1,0,1790188984,"~/.vault_pass.txt"
+-'  1  0  ~/.vault_pass.txt
+|4,39,1,0,1790188984,"~/.vault_pass.txt"
+-'  6  8  ~/terraform/kubernetes/ansible/site.yml
+|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
+-'  6  8  ~/terraform/kubernetes/ansible/site.yml
+|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
+-'  6  8  ~/terraform/kubernetes/ansible/site.yml
+|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
+-'  6  8  ~/terraform/kubernetes/ansible/site.yml
+|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
+-'  1  0  ~/terraform/kubernetes/ansible/site.yml
+|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
+-'  1  0  ~/terraform/kubernetes/ansible/site.yml
+|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
+-'  1  0  ~/terraform/kubernetes/ansible/site.yml
+|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
+-'  1  0  ~/terraform/kubernetes/ansible/site.yml
+|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
+-'  10  17  ~/terraform/kubernetes/ansible/roles/dns.yml
+|4,39,10,17,1790188847,"~/terraform/kubernetes/ansible/roles/dns.yml"
+-'  10  17  ~/terraform/kubernetes/ansible/roles/dns.yml
+|4,39,10,17,1790188847,"~/terraform/kubernetes/ansible/roles/dns.yml"
+-'  10  17  ~/terraform/kubernetes/ansible/roles/dns.yml
+|4,39,10,17,1790188847,"~/terraform/kubernetes/ansible/roles/dns.yml"
+-'  10  17  ~/terraform/kubernetes/ansible/roles/dns.yml
+|4,39,10,17,1790188847,"~/terraform/kubernetes/ansible/roles/dns.yml"
+-'  10  17  ~/terraform/kubernetes/ansible/roles/dns.yml
+|4,39,10,17,1790188847,"~/terraform/kubernetes/ansible/roles/dns.yml"
+-'  10  17  ~/terraform/kubernetes/ansible/roles/dns.yml
+|4,39,10,17,1790188847,"~/terraform/kubernetes/ansible/roles/dns.yml"
+-'  10  17  ~/terraform/kubernetes/ansible/roles/dns.yml
+|4,39,10,17,1790188847,"~/terraform/kubernetes/ansible/roles/dns.yml"
+-'  10  17  ~/terraform/kubernetes/ansible/roles/dns.yml
+|4,39,10,17,1790188847,"~/terraform/kubernetes/ansible/roles/dns.yml"
+-'  1  0  ~/terraform/kubernetes/ansible/roles/dns.yml
+|4,39,1,0,1790188839,"~/terraform/kubernetes/ansible/roles/dns.yml"
+-'  1  0  ~/terraform/kubernetes/ansible/roles/dns.yml
+|4,39,1,0,1790188839,"~/terraform/kubernetes/ansible/roles/dns.yml"
+-'  1  0  ~/terraform/kubernetes/ansible/roles/dns.yml
+|4,39,1,0,1790188839,"~/terraform/kubernetes/ansible/roles/dns.yml"
+-'  1  0  ~/terraform/kubernetes/ansible/roles/dns.yml
+|4,39,1,0,1790188839,"~/terraform/kubernetes/ansible/roles/dns.yml"
+-'  1  0  ~/terraform/kubernetes/ansible/roles/dns.yml
+|4,39,1,0,1790188839,"~/terraform/kubernetes/ansible/roles/dns.yml"
+-'  1  0  ~/terraform/kubernetes/ansible/roles/dns.yml
+|4,39,1,0,1790188839,"~/terraform/kubernetes/ansible/roles/dns.yml"
+-'  1  0  ~/terraform/kubernetes/ansible/roles/dns.yml
+|4,39,1,0,1790188839,"~/terraform/kubernetes/ansible/roles/dns.yml"
+-'  1  0  ~/terraform/kubernetes/ansible/roles/dns.yml
+|4,39,1,0,1790188839,"~/terraform/kubernetes/ansible/roles/dns.yml"
+-'  19  26  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,19,26,1790188795,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  19  26  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,19,26,1790188795,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  19  26  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,19,26,1790188795,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  19  26  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,19,26,1790188795,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  19  26  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,19,26,1790188795,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  19  26  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,19,26,1790188795,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  19  26  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,19,26,1790188795,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  19  26  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,19,26,1790188795,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  19  26  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,19,26,1790188795,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  19  26  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,19,26,1790188795,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  19  26  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,19,26,1790188795,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  19  26  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,19,26,1790188795,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  19  26  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,19,26,1790188795,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  19  26  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,19,26,1790188795,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  19  26  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,19,26,1790188795,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  19  26  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,19,26,1790188795,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  1  0  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,1,0,1790188785,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  1  0  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,1,0,1790188785,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  1  0  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,1,0,1790188785,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  1  0  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,1,0,1790188785,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  1  0  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,1,0,1790188785,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  1  0  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,1,0,1790188785,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  1  0  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,1,0,1790188785,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  1  0  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,1,0,1790188785,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  1  0  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,1,0,1790188785,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  1  0  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,1,0,1790188785,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  1  0  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,1,0,1790188785,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  1  0  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,1,0,1790188785,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  1  0  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,1,0,1790188785,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  1  0  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,1,0,1790188785,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  1  0  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,1,0,1790188785,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  1  0  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,39,1,0,1790188785,"~/terraform/kubernetes/ansible/ansible.cfg"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
+|4,39,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
+-'  12  11  ~/terraform/inventory.tmpl
+|4,39,12,11,1790188659,"~/terraform/inventory.tmpl"
+-'  12  11  ~/terraform/inventory.tmpl
+|4,39,12,11,1790188659,"~/terraform/inventory.tmpl"
+-'  12  11  ~/terraform/inventory.tmpl
+|4,39,12,11,1790188659,"~/terraform/inventory.tmpl"
+-'  12  11  ~/terraform/inventory.tmpl
+|4,39,12,11,1790188659,"~/terraform/inventory.tmpl"
+-'  12  11  ~/terraform/inventory.tmpl
+|4,39,12,11,1790188659,"~/terraform/inventory.tmpl"
+-'  12  11  ~/terraform/inventory.tmpl
+|4,39,12,11,1790188659,"~/terraform/inventory.tmpl"
+-'  12  11  ~/terraform/inventory.tmpl
+|4,39,12,11,1790188659,"~/terraform/inventory.tmpl"
+-'  12  11  ~/terraform/inventory.tmpl
+|4,39,12,11,1790188659,"~/terraform/inventory.tmpl"
+-'  12  11  ~/terraform/inventory.tmpl
+|4,39,12,11,1790188659,"~/terraform/inventory.tmpl"
 
 # History of marks within files (newest to oldest):
+
+> ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+	*	1790189358	0
+	"	1	87
+	^	1	88
+	.	1	87
+	+	1	87
+
+> ~/.vault_pass.txt
+	*	1790188983	0
+	"	1	0
+	^	1	1
+	.	1	0
+	+	1	0
+
+> ~/terraform/kubernetes/ansible/site.yml
+	*	1790188877	0
+	"	6	8
+	^	6	9
+	.	6	8
+	+	6	8
+
+> ~/terraform/kubernetes/ansible/roles/dns.yml
+	*	1790188846	0
+	"	10	17
+	^	10	18
+	.	10	17
+	+	10	17
+
+> ~/terraform/kubernetes/ansible/ansible.cfg
+	*	1790188794	0
+	"	19	26
+	^	19	27
+	.	19	26
+	+	19	26
+
+> ~/terraform/kubernetes/ansible/inventories/production/static.yml
+	*	1790188763	0
+	"	1	6
+	^	1	7
+	.	1	6
+	+	5	28
+	+	1	6
+
+> ~/terraform/inventory.tmpl
+	*	1790188658	0
+	"	12	11
+	^	12	12
+	.	12	11
+	+	12	11
 
 > ~/.ansible/tmp/ansible-local-271h2c8o43v/tmparr199mx.yml
 	*	1790188009	0

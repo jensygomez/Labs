@@ -1,0 +1,10 @@
+- name: "Generar registros /etc/hosts desde el inventario"
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    marker: "# {mark} ANSIBLE MANAGED HOSTS"
+    block: |
+      {% for host in groups['all'] %}
+      {% if hostvars[host].ansible_host is defined %}
+      {{ hostvars[host].ansible_host }} {{ host }} {{ host }}.k8s.local
+      {% endif %}
+      {% endfor %}

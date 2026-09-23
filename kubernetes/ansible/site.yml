@@ -1,0 +1,6 @@
+---
+- name: "Aprovisionamiento del Cluster de Kubernetes"
+  hosts: all
+  become: true
+  roles:
+    - dns
