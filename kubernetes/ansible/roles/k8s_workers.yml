@@ -1,0 +1,5 @@
+---
+- name: "Unir el nodo al cluster con kubeadm join"
+  ansible.builtin.command: "{{ hostvars['k8s-master'].join_command }}"
+  args:
+    creates: /etc/kubernetes/kubelet.conf

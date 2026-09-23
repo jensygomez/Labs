@@ -2,6 +2,31 @@
 - name: "Aprovisionamiento del Cluster de Kubernetes"
   hosts: all
   become: true
+  vars:
+    k8s_version: "v1.36"
   tasks:
     - name: "Configurar DNS"
       ansible.builtin.import_tasks: roles/dns.yml
+
+- name: "Prerrequisitos de Kubernetes en todos los nodos"
+  hosts: k8s_control_plane:k8s_workers
+  become: true
+  vars:
+    k8s_version: "v1.36"
+  tasks:
+    - name: "Instalar containerd, kubeadm, kubelet, kubectl"
+      ansible.builtin.import_tasks: roles/k8s_common.yml
+
+- name: "Inicializar el Control Plane"
+  hosts: k8s_control_plane
+  become: true
+  tasks:
+    - name: "kubeadm init + Flannel"
+      ansible.builtin.import_tasks: roles/k8s_master.yml
+
+- name: "Unir los Workers al Cluster"
+  hosts: k8s_workers
+  become: true
+  tasks:
+    - name: "kubeadm join"
+      ansible.builtin.import_tasks: roles/k8s_workers.yml

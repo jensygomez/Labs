@@ -1,0 +1,101 @@
+---
+- name: "Desactivar swap (requerido por kubelet)"
+  ansible.builtin.command: swapoff -a
+  changed_when: false
+
+- name: "Eliminar swap de /etc/fstab"
+  ansible.builtin.replace:
+    path: /etc/fstab
+    regexp: '^([^#].*\sswap\s.*)$'
+    replace: '# \1'
+
+- name: "Cargar módulos del kernel para containerd"
+  ansible.builtin.copy:
+    dest: /etc/modules-load.d/k8s.conf
+    content: |
+      overlay
+      br_netfilter
+
+- name: "Activar módulo overlay"
+  community.general.modprobe:
+    name: overlay
+    state: present
+
+- name: "Activar módulo br_netfilter"
+  community.general.modprobe:
+    name: br_netfilter
+    state: present
+
+- name: "Configurar sysctls para networking de Kubernetes"
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "1"
+    sysctl_set: true
+    state: present
+    reload: true
+  loop:
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-ip6tables
+    - net.ipv4.ip_forward
+
+- name: "Agregar repo de Docker (para containerd.io)"
+  ansible.builtin.yum_repository:
+    name: docker-ce
+    description: Docker CE Repo
+    baseurl: https://download.docker.com/linux/centos/9/x86_64/stable
+    gpgcheck: true
+    gpgkey: https://download.docker.com/linux/centos/gpg
+    enabled: true
+
+- name: "Instalar containerd"
+  ansible.builtin.dnf:
+    name: containerd.io
+    state: present
+
+- name: "Generar config por defecto de containerd"
+  ansible.builtin.command: containerd config default
+  register: containerd_default_config
+  changed_when: false
+
+- name: "Escribir config de containerd con SystemdCgroup habilitado"
+  ansible.builtin.copy:
+    dest: /etc/containerd/config.toml
+    content: "{{ containerd_default_config.stdout | regex_replace('SystemdCgroup = false', 'SystemdCgroup = true') }}"
+  notify: Reiniciar containerd
+
+- name: "Habilitar e iniciar containerd"
+  ansible.builtin.systemd:
+    name: containerd
+    enabled: true
+    state: started
+
+- name: "Agregar repo oficial de Kubernetes ({{ k8s_version }})"
+  ansible.builtin.yum_repository:
+    name: kubernetes
+    description: Kubernetes Repo
+    baseurl: "https://pkgs.k8s.io/core:/stable:/{{ k8s_version }}/rpm/"
+    gpgcheck: true
+    gpgkey: "https://pkgs.k8s.io/core:/stable:/{{ k8s_version }}/rpm/repodata/repomd.xml.key"
+    exclude: kubelet kubeadm kubectl cri-tools kubernetes-cni
+    enabled: true
+
+- name: "Instalar kubelet, kubeadm y kubectl"
+  ansible.builtin.dnf:
+    name:
+      - kubelet
+      - kubeadm
+      - kubectl
+    state: present
+    disable_excludes: kubernetes
+
+- name: "Habilitar e iniciar kubelet"
+  ansible.builtin.systemd:
+    name: kubelet
+    enabled: true
+    state: started
+
+handlers:
+  - name: Reiniciar containerd
+    ansible.builtin.systemd:
+      name: containerd
+      state: restarted
