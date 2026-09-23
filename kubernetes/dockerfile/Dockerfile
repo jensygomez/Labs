@@ -40,20 +40,26 @@ RUN pip3 install --no-cache-dir --upgrade pip && \
     pip3 install --no-cache-dir ansible ansible-lint argcomplete PyYAML zabbix-utils
 
 # ==========================================
-# 4. Crear el usuario jensyg con HOME=/workspace
+# 4. kubectl (cliente de Kubernetes)
+# ==========================================
+RUN curl -fsSL -o /usr/local/bin/kubectl "https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+    chmod +x /usr/local/bin/kubectl
+
+# ==========================================
+# 5. Crear el usuario jensyg con HOME=/workspace
 # ==========================================
 RUN useradd -m -d /workspace -s /bin/bash -u 1000 jensyg && \
     mkdir -p /workspace/terraform && \
     chown -R jensyg:jensyg /workspace
 
 # ==========================================
-# 4.1 Permisos Sudo sin contraseña para jensyg
+# 5.1 Permisos Sudo sin contraseña para jensyg
 # ==========================================
 RUN echo "jensyg ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/jensyg && \
     chmod 0440 /etc/sudoers.d/jensyg
 
 # ==========================================
-# 5. Autocompletado y Prompt
+# 6. Autocompletado y Prompt
 # ==========================================
 RUN echo 'source /etc/bash_completion' >> /etc/bash.bashrc && \
     echo 'source /usr/share/bash-completion/completions/git' >> /etc/bash.bashrc 2>/dev/null || true
@@ -61,16 +67,23 @@ RUN echo 'complete -C /usr/bin/tofu tofu' >> /etc/bash.bashrc
 RUN echo 'eval "$(register-python-argcomplete ansible-playbook 2>/dev/null)"' >> /etc/bash.bashrc && \
     echo 'eval "$(register-python-argcomplete ansible-vault 2>/dev/null)"' >> /etc/bash.bashrc && \
     echo 'eval "$(register-python-argcomplete ansible-galaxy 2>/dev/null)"' >> /etc/bash.bashrc
-RUN echo 'PS1="\[\033[1;36m\][systech-control]\[\033[0m\] \[\033[1;32m\]\w\[\033[0m\] \$ "' >> /etc/bash.bashrc
+RUN echo 'PS1="\[\033[1;36m\][k8s-control]\[\033[0m\] \[\033[1;32m\]\w\[\033[0m\] \$ "' >> /etc/bash.bashrc
 
 # ==========================================
-# 6. EntryPoint para inyección segura de secretos
+# 6.1 Autocompletado y alias de kubectl (kb)
+# ==========================================
+RUN echo 'source <(kubectl completion bash)' >> /etc/bash.bashrc && \
+    echo 'alias kb=kubectl' >> /etc/bash.bashrc && \
+    echo 'complete -o default -F __start_kubectl kb' >> /etc/bash.bashrc
+
+# ==========================================
+# 7. EntryPoint para inyección segura de secretos
 # ==========================================
 COPY dockerfile/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # ==========================================
-# 7. Directorio de trabajo final
+# 8. Directorio de trabajo final
 # ==========================================
 WORKDIR /workspace/terraform
 USER jensyg

@@ -109,21 +109,20 @@ resource "proxmox_virtual_environment_vm" "k8s_cluster" {
 
 # ============================================================
 # Inventario de Ansible — preparado pero comentado hasta que
-# trabajemos esa parte (falta inventory.tmpl)
 # ============================================================
-# resource "local_file" "ansible_inventory" {
-#   content = templatefile("${path.module}/inventory.tmpl", {
-#     nodes = {
-#       for k, vm in proxmox_virtual_environment_vm.k8s_cluster : k => {
-#         name = k
-#         ip   = var.cluster_nodes[k].ip
-#         role = var.cluster_nodes[k].role
-#       }
-#     }
-#     role_group_map = {
-#       master = "k8s_control_plane"
-#       worker = "k8s_workers"
-#     }
-#   })
-#   filename = "${path.module}/../ansible/inventories/production/hosts.yml"
-# }
+resource "local_file" "ansible_inventory" {
+  content = templatefile("${path.module}/inventory.tmpl", {
+    nodes = {
+      for k, vm in proxmox_virtual_environment_vm.k8s_cluster : k => {
+        name = k
+        ip   = split("/", var.cluster_nodes[k].ip)[0]
+        role = var.cluster_nodes[k].role
+      }
+    }
+    role_group_map = {
+      master = "k8s_control_plane"
+      worker = "k8s_workers"
+    }
+  })
+  filename = "${path.module}/../ansible/inventories/production/hosts.yml"
+}
