@@ -16,3 +16,6 @@ bandit10 -->
 bandit14  --> pbLYuZtTg4MgaqfJx8jbA9gKKGqM68A7
 
 ssh bandit15@bandit.labs.overthewire.org -p 2220 pbLYuZtTg4MgaqfJx8jbA9gKKGqM68A7
+
+ssh bandit120@bandit.labs.overthewire.org -p 2220 4pIjcunZ0fK2vmp3IwfG8Vf7VhxD6pOA
+

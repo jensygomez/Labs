@@ -1,1 +1,0 @@
-{"logtail":{"client_time":"2026-09-22T09:11:25.321580318Z","proc_id":2775286779,"proc_seq":526},"text":"magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 10.10.10.1:41641 mtu=1360 tx=e62f44276c8e\n"}
