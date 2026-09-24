@@ -65,19 +65,18 @@ Ansible ya preparó el terreno para ti. La mayoría de los ejercicios se resuelv
 
 ### 🟠 NIVEL 3: El Arquitecto (Usuarios y Grupos) [12 ejercicios]
 *Objetivo: Dominar la gestión de usuarios, grupos, contraseñas y envejecimiento.*
-
-21. Crea un grupo llamado `developers` con GID 2000. (Usuario: ansible)
-22. Crea un usuario `alice` con home en `/home/alice`, shell `/bin/bash`, y miembro del grupo `developers`. (Usuario: ansible)
-23. Crea un usuario `bob` con UID personalizado 1500 y sin directorio home. (Usuario: ansible)
-24. Fuerza a `alice` a cambiar su contraseña en el próximo login. (Usuario: alice - ya configurado por Ansible, ¡pruébalo!)
-25. Configura envejecimiento de contraseña para `bob`: cambio cada 90 días, aviso 7 días antes, inactividad 5 días. (Usuario: ansible - ya configurado por Ansible, verifícalo con `chage -l bob`)
-26. Bloquea la cuenta de `bob` sin eliminarla. Verifica el estado en `/etc/shadow`. (Usuario: ansible)
-27. Desbloquea la cuenta de `bob` y verifica. (Usuario: ansible)
-28. Cambia el shell de `bob` a `/sbin/nologin` y verifica que no pueda iniciar sesión. (Usuario: ansible)
-29. Añade a `alice` como miembro secundario de los grupos `wheel` y `developers` con un solo comando. (Usuario: ansible)
-30. Elimina al usuario `bob` pero conserva su directorio home (si lo tiene). (Usuario: ansible)
-31. Edita `/etc/sudoers` con `visudo` para permitir que el grupo `developers` ejecute `/bin/systemctl restart httpd` sin contraseña. (Usuario: ansible)
-32. Crea un usuario `serviceaccount` con shell `/sbin/nologin`, sin home, y sin contraseña (cuenta de sistema). (Usuario: ansible - ya creado por Ansible)
+21. Verifica que el grupo developers existe con GID 2000 usando getent group developers. Luego crea un nuevo grupo llamado qa-team con GID 2002. (Usuario: ansible)
+22. Verifica que el usuario alice existe con id alice. Luego modifica su comentario GECOS para añadir "Alice Developer, IT Dept" usando usermod -c. Verifica el cambio con getent passwd alice. (Usuario: ansible)
+23. Verifica que el usuario bob existe con UID 1500 usando id bob. Luego cambia su UID a 1501 con usermod -u. Usa find /home/bob -uid 1500 para encontrar archivos que aún tengan el UID viejo y corrígelos con chown. (Usuario: ansible)
+24. Prueba el cambio forzado de contraseña: cierra tu sesión actual, conéctate como alice vía SSH (ssh alice@10.10.10.90) y observa que el sistema te obliga a cambiar la contraseña inmediatamente. (Usuario: alice)
+25. Verifica la configuración de envejecimiento de bob con chage -l bob. Luego modifica el período de aviso a 14 días y el período de inactividad a 10 días usando chage. Verifica los cambios con chage -l bob de nuevo. (Usuario: ansible)
+26. Bloquea la cuenta de bob usando usermod -L. Verifica el estado en /etc/shadow (debe tener un ! al inicio del hash de contraseña). Intenta conectarte como bob vía SSH y confirma que falla. (Usuario: ansible)
+27. Desbloquea la cuenta de bob usando usermod -U y verifica que el ! desapareció de /etc/shadow. Confirma que ahora sí puede iniciar sesión. (Usuario: ansible)
+28. Cambia el shell de bob a /sbin/nologin usando usermod -s. Verifica con getent passwd bob. Intenta conectarte como bob vía SSH y observa el mensaje "This account is currently not available". (Usuario: ansible)
+29. Crea un nuevo grupo llamado testers con GID 2003. Luego añade a alice como miembro secundario de testers usando usermod -aG. Verifica con id alice que ahora pertenece a developers (primario), wheel y testers. (Usuario: ansible)
+30. Elimina al usuario bob usando userdel pero conserva su directorio home con la opción correcta (-r NO, solo userdel sin opciones). Verifica con id bob que ya no existe, pero ls -ld /home/bob muestra que el directorio sigue ahí. (Usuario: ansible)
+31. Edita /etc/sudoers con visudo para permitir que el grupo developers ejecute /bin/systemctl restart httpd sin contraseña. Añade la línea: %developers ALL=(ALL) NOPASSWD: /bin/systemctl restart httpd. Verifica que funciona conectándote como alice y ejecutando sudo -l para listar sus permisos sudo. (Usuario: ansible)
+32. Verifica que el usuario serviceaccount existe con shell /sbin/nologin y sin home usando getent passwd serviceaccount. Luego crea un nuevo usuario de sistema llamado backupuser con shell /sbin/nologin, sin home, y sin capacidad de login. Verifica con getent passwd backupuser. (Usuario: ansible)
 
 ### 🔴 NIVEL 4: El Guardián (Permisos y ACLs) [12 ejercicios]
 *Objetivo: Dominar permisos UGO, especiales, ACLs y atributos extendidos.*
