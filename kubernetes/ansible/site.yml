@@ -16,6 +16,11 @@
   tasks:
     - name: "Instalar containerd, kubeadm, kubelet, kubectl"
       ansible.builtin.import_tasks: roles/k8s_common.yml
+  handlers:
+    - name: Reiniciar containerd
+      ansible.builtin.systemd:
+        name: containerd
+        state: restarted
 
 - name: "Inicializar el Control Plane"
   hosts: k8s_control_plane

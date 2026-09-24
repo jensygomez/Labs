@@ -94,8 +94,11 @@
     enabled: true
     state: started
 
-handlers:
-  - name: Reiniciar containerd
-    ansible.builtin.systemd:
-      name: containerd
-      state: restarted
+- name: "Configurar alias kb y autocompletado de kubectl"
+  ansible.builtin.blockinfile:
+    path: /etc/bashrc
+    marker: "# {mark} KUBECTL ALIAS"
+    block: |
+      alias kb=kubectl
+      source <(kubectl completion bash)
+      complete -o default -F __start_kubectl kb
