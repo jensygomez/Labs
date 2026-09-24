@@ -1,0 +1,145 @@
+TPM: error opening: stat /dev/tpmrm0: no such file or directory
+2026/09/24 06:38:02 You have disabled logging. Tailscale will not be able to provide support.
+2026/09/24 06:38:02 Program starting: v1.102.4-t3caf7d9e7-g084ee3b64, Go 1.26.6: []string{"tailscaled", "--no-logs-no-support", "--state=/workspace/.tailscale_state/tailscaled.state", "--socket=/workspace/.tailscale_state/tailscaled.sock"}
+2026/09/24 06:38:02 LogID: 4bc8217d0c756b6a5b730a74c7564a4141f8f62f9429cf78717bcdcd980edcaf
+2026/09/24 06:38:02 logpolicy: using system state directory "/workspace/.local/share/tailscale"
+2026/09/24 06:38:02 dns: [rc=unknown ret=direct]
+2026/09/24 06:38:02 dns: using "direct" mode
+2026/09/24 06:38:02 dns: using *dns.directManager
+2026/09/24 06:38:02 dns: inotify: NewDirWatcher: context canceled
+2026/09/24 06:38:03 router: enumerating tailscale0 addresses for cleanup failed: failed to look up link "tailscale0": Link not found
+2026/09/24 06:38:03 wgengine.NewUserspaceEngine(tun "tailscale0") ...
+2026/09/24 06:38:03 dns: [rc=unknown ret=direct]
+2026/09/24 06:38:03 dns: using "direct" mode
+2026/09/24 06:38:03 dns: using *dns.directManager
+2026/09/24 06:38:03 link state: interfaces.State{defaultRoute=eth0 ifs={eth0:[192.168.18.8/24 2001:1284:f514:63bd:8c3d:4120:3261:9c6/64 llu6]} v4=true v6=true}
+2026/09/24 06:38:03 magicsock: [warning] failed to force-set UDP read buffer size to 7340032: operation not permitted; using kernel default values (impacts throughput only)
+2026/09/24 06:38:03 magicsock: [warning] failed to force-set UDP write buffer size to 7340032: operation not permitted; using kernel default values (impacts throughput only)
+2026/09/24 06:38:03 router: portUpdate(port=33319, network=udp6)
+2026/09/24 06:38:03 router: using firewall mode pref 
+2026/09/24 06:38:03 magicsock: [warning] failed to force-set UDP read buffer size to 7340032: operation not permitted; using kernel default values (impacts throughput only)
+2026/09/24 06:38:03 magicsock: [warning] failed to force-set UDP write buffer size to 7340032: operation not permitted; using kernel default values (impacts throughput only)
+2026/09/24 06:38:03 magicsock: disco key = d:1c028448d8489360
+2026/09/24 06:38:03 Creating WireGuard device...
+2026/09/24 06:38:03 Bringing WireGuard device up...
+2026/09/24 06:38:03 Bringing router up...
+2026/09/24 06:38:03 external route: up
+2026/09/24 06:38:03 router: default choosing iptables
+2026/09/24 06:38:03 router: netfilter running in iptables mode v6 = true, v6filter = true, v6nat = true
+2026/09/24 06:38:03 router: portUpdate(port=51601, network=udp4)
+2026/09/24 06:38:03 Clearing router settings...
+2026/09/24 06:38:03 Starting network monitor...
+2026/09/24 06:38:03 Engine created.
+2026/09/24 06:38:03 monitor: gateway and self IP changed: gw=192.168.18.1 self=192.168.18.8
+2026/09/24 06:38:03 pm: using backend prefs for "profile-0877": Prefs{ra=true dns=true want=true routes=[] statefulFiltering=false nf=on host="systech-control" update=check Persist{o=, n=[Hpvf4] u="systech.cwb@gmail.com" ak=-}}
+2026/09/24 06:38:03 envknob: TS_NO_LOGS_NO_SUPPORT="true"
+2026/09/24 06:38:03 logpolicy: using system state directory "/workspace/.local/share/tailscale"
+2026/09/24 06:38:03 linkChange: in state NoState; PAC or proxyConfig changed; updating routes
+2026/09/24 06:38:03 got LocalBackend in 47ms
+2026/09/24 06:38:03 Start
+2026/09/24 06:38:03 ipnext: "conn25": skipping extension
+2026/09/24 06:38:03 taildrop: Taildrop disabled; no state directory
+2026/09/24 06:38:03 taildrop: no Taildrop directory configured
+2026/09/24 06:38:03 ipnext: active extensions: captiveportal, acme, portlist, posture, clientupdate, relayserver, routecheck, serviceclientprefs, taildrop
+2026/09/24 06:38:03 profile data directory: profile local data storage unavailable
+2026/09/24 06:38:03 cannot fetch existing TKA state; no state directory for tailnet-lock
+2026/09/24 06:38:03 Backend: logs: be:4bc8217d0c756b6a5b730a74c7564a4141f8f62f9429cf78717bcdcd980edcaf fe:
+2026/09/24 06:38:03 control: client.Login(0)
+2026/09/24 06:38:03 control: doLogin(regen=false, hasUrl=false)
+2026/09/24 06:38:03 health(warnable=warming-up): error: Tailscale is starting. Please wait.
+2026/09/24 06:38:03 control: control server key from https://controlplane.tailscale.com: ts2021=[fSeS+], legacy=[nlFWp]
+2026/09/24 06:38:03 control: RegisterReq: onode= node=[Hpvf4] fup=false nks=false
+2026/09/24 06:38:04 control: RegisterReq: got response; nodeKeyExpired=false, machineAuthorized=true; authURL=false
+2026/09/24 06:38:04 cannot fetch existing TKA state; no state directory for tailnet-lock
+2026/09/24 06:38:04 control: netmap: got new dial plan from control
+2026/09/24 06:38:04 cannot fetch existing TKA state; no state directory for tailnet-lock
+2026/09/24 06:38:04 magicsock: new contact: control-netmap usec=1567073 cached=false
+2026/09/24 06:38:04 active login: systech.cwb@gmail.com
+2026/09/24 06:38:04 netmap: suggested exit node: no preferred DERP, try again later
+2026/09/24 06:38:04 Switching ipn state NoState -> Starting (WantRunning=true, nm=true)
+2026/09/24 06:38:04 magicsock: SetPrivateKey called (init)
+2026/09/24 06:38:04 wgengine: Reconfig: configuring router
+2026/09/24 06:38:04 monitor: RTM_NEWROUTE: src=, dst=10.10.10.0/24, gw=, outif=3, table=52
+2026/09/24 06:38:04 router: enabling connmark-based rp_filter workaround
+2026/09/24 06:38:04 router: warning: failed to enable src_valid_mark: sysctl(net.ipv4.conf.all.src_valid_mark=1): open /proc/sys/net/ipv4/conf/all/src_valid_mark: read-only file system
+2026/09/24 06:38:04 wgengine: Reconfig: user dialer
+2026/09/24 06:38:04 tsdial: bart table size: 5
+2026/09/24 06:38:04 wgengine: Reconfig: configuring DNS
+2026/09/24 06:38:04 dns: Set: {DefaultResolvers:[] Routes:{tailb7481.ts.net.:[] ts.net.:[199.247.155.53 2620:111:8007::53]}+65arpa SearchDomains:[tailb7481.ts.net.] Hosts:0}
+2026/09/24 06:38:04 dns: Resolvercfg: {Routes:{.:[169.254.1.1 192.168.18.1] ts.net.:[199.247.155.53 2620:111:8007::53]} Hosts:0 LocalDomains:[tailb7481.ts.net.]+65arpa}
+2026/09/24 06:38:04 dns: OScfg: {Nameservers:[100.100.100.100 fd7a:115c:a1e0::53] SearchDomains:[tailb7481.ts.net.] }
+2026/09/24 06:38:04 rename of "/etc/resolv.conf" to "/etc/resolv.pre-tailscale-backup.conf" failed (rename /etc/resolv.conf /etc/resolv.pre-tailscale-backup.conf: permission denied), falling back to copy+delete
+2026/09/24 06:38:04 health(warnable=dns-set-os-config-failed): error: Tailscale failed to set the DNS configuration of your device: writing to "/etc/resolv.pre-tailscale-backup.conf" in rename of "/etc/resolv.conf": open /etc/resolv.pre-tailscale-backup.conf: permission denied
+2026/09/24 06:38:04 peerapi: serving on http://100.97.171.2:64523
+2026/09/24 06:38:04 peerapi: serving on http://[fd7a:115c:a1e0::9137:ab03]:40607
+2026/09/24 06:38:04 health(warnable=dns): error: writing to "/etc/resolv.pre-tailscale-backup.conf" in rename of "/etc/resolv.conf": open /etc/resolv.pre-tailscale-backup.conf: permission denied
+2026/09/24 06:38:05 netcheck: DetectCaptivePortal(found=false)
+2026/09/24 06:38:05 magicsock: home DERP changing from derp-0 [0ms] to derp-11 [15ms] (forced=false)
+2026/09/24 06:38:05 magicsock: home is now derp-11 (sao)
+2026/09/24 06:38:05 update netmap cache: profile local data storage unavailable
+2026/09/24 06:38:05 magicsock: adding connection to derp-11 for home-keep-alive
+2026/09/24 06:38:05 magicsock: 1 active derp conns: derp-11=cr0s,wr0s
+2026/09/24 06:38:05 derphttp.Client.Connect: connecting to derp-11 (sao)
+2026/09/24 06:38:05 control: NetInfo: NetInfo{varies=false ipv6=true ipv6os=true udp=true icmpv4=false derp=#11 portmap= link="" firewallmode="ipt-default"}
+2026/09/24 06:38:05 magicsock: endpoints changed: 177.220.178.127:4459 (stun), [2001:1284:f514:63bd:8c3d:4120:3261:9c6]:33319 (stun), 192.168.18.8:51601 (local), [2001:1284:f514:63bd:8c3d:4120:3261:9c6]:51601 (local)
+2026/09/24 06:38:05 Switching ipn state Starting -> Running (WantRunning=true, nm=true)
+2026/09/24 06:38:05 health(warnable=warming-up): ok
+2026/09/24 06:38:05 localapi: [POST] /localapi/v0/check-prefs
+2026/09/24 06:38:05 localapi: [POST] /localapi/v0/start
+2026/09/24 06:38:05 control: client.Shutdown ...
+2026/09/24 06:38:05 control: updateRoutine: exiting
+2026/09/24 06:38:05 control: authRoutine: exiting
+2026/09/24 06:38:05 control: mapRoutine: exiting
+2026/09/24 06:38:05 control: Client.Shutdown done.
+2026/09/24 06:38:05 Start
+2026/09/24 06:38:05 magicsock: derp-11 connected; connGen=1
+2026/09/24 06:38:05 Start: updated prefs: Prefs{ra=true dns=true want=true routes=[] statefulFiltering=false nf=on host="systech-control" update=check Persist{o=, n=[Hpvf4] u="systech.cwb@gmail.com" ak=-}}, reason: [opts.UpdatePrefs]
+2026/09/24 06:38:05 taildrop: Taildrop disabled; no state directory
+2026/09/24 06:38:05 taildrop: no Taildrop directory configured
+2026/09/24 06:38:05 profile data directory: profile local data storage unavailable
+2026/09/24 06:38:05 cannot fetch existing TKA state; no state directory for tailnet-lock
+2026/09/24 06:38:05 Backend: logs: be:4bc8217d0c756b6a5b730a74c7564a4141f8f62f9429cf78717bcdcd980edcaf fe:
+2026/09/24 06:38:05 control: client.Login(0)
+2026/09/24 06:38:05 Switching ipn state NoState -> Starting (WantRunning=true, nm=true)
+2026/09/24 06:38:05 Switching ipn state Starting -> Running (WantRunning=true, nm=true)
+2026/09/24 06:38:05 control: doLogin(regen=false, hasUrl=false)
+2026/09/24 06:38:06 control: NetInfo: NetInfo{varies=false ipv6=true ipv6os=true udp=true icmpv4=false derp=#11 portmap= link="" firewallmode="ipt-default"}
+2026/09/24 06:38:06 control: control server key from https://controlplane.tailscale.com: ts2021=[fSeS+], legacy=[nlFWp]
+2026/09/24 06:38:06 control: RegisterReq: onode= node=[Hpvf4] fup=false nks=false
+2026/09/24 06:38:06 control: controlhttp: forcing port 443 dial due to recent noise dial
+2026/09/24 06:38:07 control: RegisterReq: got response; nodeKeyExpired=false, machineAuthorized=true; authURL=false
+2026/09/24 06:38:07 cannot fetch existing TKA state; no state directory for tailnet-lock
+2026/09/24 06:38:07 [RATELIMIT] format("cannot fetch existing TKA state; no state directory for tailnet-lock")
+2026/09/24 06:38:07 control: netmap: got new dial plan from control
+2026/09/24 06:38:07 using tailnet default auto-update setting: false
+2026/09/24 06:38:07 EditPrefs: MaskedPrefs{AutoUpdate={Apply=false}}
+2026/09/24 06:38:07 taildrop: Taildrop disabled; no state directory
+2026/09/24 06:38:07 taildrop: no Taildrop directory configured
+2026/09/24 06:42:24 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 10.10.10.1:41641 mtu=1360 tx=a972dff99209
+2026/09/24 06:42:24 magicsock: new contact: peer=[7pBLK] usec=260973324 cached=false via=direct
+2026/09/24 06:43:10 netcheck: DetectCaptivePortal(found=false)
+2026/09/24 06:43:55 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=56537ed4a954
+2026/09/24 06:46:33 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=458fd9bf0d60
+2026/09/24 06:47:01 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=d48346b9e0af
+2026/09/24 06:47:59 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=fc7de1d80a33
+2026/09/24 06:51:10 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=f141e1b44b2b
+2026/09/24 06:51:10 netcheck: DetectCaptivePortal(found=false)
+2026/09/24 06:51:10 magicsock: endpoints changed: 177.220.178.127:4297 (stun), [2001:1284:f514:63bd:8c3d:4120:3261:9c6]:33319 (stun), 192.168.18.8:51601 (local), [2001:1284:f514:63bd:8c3d:4120:3261:9c6]:51601 (local)
+2026/09/24 06:53:05 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 10.10.10.1:41641 mtu=1360 tx=f2b54d6e21c7
+2026/09/24 06:54:45 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=8534a2cc18b5
+2026/09/24 06:56:32 netcheck: DetectCaptivePortal(found=false)
+2026/09/24 07:09:48 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=f51a08a7e50d
+2026/09/24 07:09:49 netcheck: DetectCaptivePortal(found=false)
+2026/09/24 07:09:49 magicsock: endpoints changed: 177.220.178.127:4115 (stun), [2001:1284:f514:63bd:8c3d:4120:3261:9c6]:33319 (stun), 192.168.18.8:51601 (local), [2001:1284:f514:63bd:8c3d:4120:3261:9c6]:51601 (local)
+2026/09/24 07:13:25 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=4a41c3801edc
+2026/09/24 07:13:25 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 10.10.10.1:41641 mtu=1360 tx=cf01e3c96c82
+2026/09/24 07:14:46 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=150c7318be9c
+2026/09/24 07:15:04 netcheck: DetectCaptivePortal(found=false)
+2026/09/24 07:18:28 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=e8fa105715b4
+2026/09/24 07:18:28 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 10.10.10.1:41641 mtu=1360 tx=d223cd34a187
+2026/09/24 07:20:18 netcheck: DetectCaptivePortal(found=false)
+2026/09/24 07:21:11 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 10.10.10.1:41641 mtu=1360 tx=35240f73c110
+2026/09/24 07:24:31 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=52c4542f4e5c
+2026/09/24 07:25:28 netcheck: DetectCaptivePortal(found=false)
+2026/09/24 07:26:51 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 10.10.10.1:41641 mtu=1360 tx=60e24b40dda9
+2026/09/24 07:26:52 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=31286825d684
