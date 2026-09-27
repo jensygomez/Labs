@@ -5,12 +5,28 @@ noul.py - Módulo de validación binaria (Sí/No) para TypeSafe System One.
 import json
 from api_client import get_client, get_model_name
 
+def read_multiline(prompt: str) -> str:
+    """Lee texto multilínea (útil para pegar tickets/logs largos).
+    Termina al encontrar una línea vacía."""
+    print(prompt)
+    print(" (Pega tu texto. Cuando termines, presiona Enter en una línea vacía)")
+    lines = []
+    while True:
+        try:
+            line = input("> " if not lines else "  ")
+        except EOFError:
+            break
+        if line == "":
+            break
+        lines.append(line)
+    return "\n".join(lines)
+
 def run_noul():
     print("\n" + "="*70)
     print(" 🛡️  MÓDULO NOUL: Validación Binaria (Sí/No) Calibrada")
     print("="*70)
 
-    state = input("\n1️⃣  [CONTEXTO/STATE] El texto o situación a evaluar:\n> ").strip()
+    state = read_multiline("\n1️⃣  [CONTEXTO/STATE] El texto o situación a evaluar:").strip()
     question = input("\n2️⃣  [PREGUNTA] ¿Qué debemos validar? (ej: ¿El mensaje pide credenciales?):\n> ").strip()
     focus = input("\n3️⃣  [ENFOQUE] (Opcional) ¿En qué detalle específico fijarnos?:\n> ").strip()
     true_criteria = input("\n4️⃣  [CRITERIO TRUE] ¿Cuándo es SÍ?:\n> ").strip()
