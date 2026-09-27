@@ -13,7 +13,7 @@ from auth import get_api_key
 BASE_URL = "https://api.ai.kodekloud.com/v1"
 
 # Modelo por defecto usado por jev-cli (noul/choice/score)
-DEFAULT_MODEL = "kodekey-pro"
+DEFAULT_MODEL = "typesafe/jev-1.13.0"
 
 def get_client(model_name: str = DEFAULT_MODEL) -> OpenAI:
     """Cliente OpenAI autenticado con la API Key propia de `model_name`."""
