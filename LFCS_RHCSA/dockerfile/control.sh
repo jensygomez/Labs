@@ -39,5 +39,8 @@ podman run -it --rm \
   -e GIT_SSH_COMMAND="ssh -F /workspace/.ssh/config" \
   -e ANSIBLE_SSH_ARGS="-F /workspace/.ssh/config -o IdentitiesOnly=yes" \
   -e ANSIBLE_SSH_COMMON_ARGS="-F /workspace/.ssh/config" \
+    # ... (otras variables -e que ya tienes) ...
+  -e KODEKEY_API_KEY="${KODEKEY_API_KEY:-}" \
+  -e OPENAI_BASE_URL="https://api.ai.kodekloud.com/v1" \
   $IMAGE_NAME \
   /bin/bash
