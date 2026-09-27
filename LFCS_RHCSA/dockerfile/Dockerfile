@@ -83,9 +83,7 @@ RUN chmod +x /usr/local/lib/jev-cli/main.py && \
 COPY dockerfile/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Copiamos el script de Python y lo hacemos un comando global ejecutable
-COPY dockerfile/jev-helper.py /usr/local/bin/jev-helper
-RUN chmod +x /usr/local/bin/jev-helper
+
 
 # ==========================================
 # 8. Directorio de trabajo final

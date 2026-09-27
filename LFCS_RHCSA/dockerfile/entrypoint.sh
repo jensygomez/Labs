@@ -178,28 +178,17 @@ fi
 # ==========================================
 export LAB_PASS='LabPassword123!'
 
-# Ejecutar el comando pasado, normalmente /bin/bash
-
-
-# ==========================================
-# CONVENIENCIA PARA TESTING DE LABORATORIO
-# ==========================================
-export LAB_PASS='LabPassword123!'
-
-# ==========================================
-# LANZAMIENTO DEL ASISTENTE JEV (Opcional)
-# ==========================================
 echo ""
 echo "============================================================"
 echo " 🚀 ¡Bienvenido al Nodo de Control K8s (Podman)!"
-echo " 💡 Escribe 'jev-helper' en cualquier momento para usar la IA."
+echo " 💡 Escribe 'jev-cli' en cualquier momento para usar la IA."
 echo "============================================================"
 read -p "¿Deseas iniciar el asistente de IA (JEV) ahora? (y/N): " START_JEV
 echo ""
 
 if [[ "$START_JEV" == "y" || "$START_JEV" == "Y" ]]; then
-  echo "Iniciando JEV Helper..."
-  jev-helper
+  echo "Iniciando JEV CLI..."
+  jev-cli
   echo ""
   echo "✅ Asistente finalizado. Volviendo a la terminal normal..."
 fi
