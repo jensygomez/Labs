@@ -33,11 +33,12 @@ RUN curl -fsSL https://get.opentofu.org/install-opentofu.sh -o install-opentofu.
     && ./install-opentofu.sh --install-method deb \
     && rm install-opentofu.sh
 
+   
 # ==========================================
-# 3. Ansible (+ argcomplete, PyYAML y zabbix-utils)
+# 3. Ansible + OpenAI SDK (+ argcomplete, PyYAML y zabbix-utils)
 # ==========================================
 RUN pip3 install --no-cache-dir --upgrade pip && \
-    pip3 install --no-cache-dir ansible ansible-lint argcomplete PyYAML zabbix-utils
+    pip3 install --no-cache-dir ansible ansible-lint argcomplete PyYAML zabbix-utils openai
 
 # ==========================================
 # 4. Crear el usuario jensyg con HOME=/workspace
