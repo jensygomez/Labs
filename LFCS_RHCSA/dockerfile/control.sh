@@ -7,9 +7,9 @@ set -e
 IMAGE_NAME="k8s-control"
 CONTAINER_NAME="k8s-control-container"
 
-# Verificar si la clave está en el entorno. Si no, pedirla de forma segura.
+# Verificar si la clave está en el entorno del host. Si no, pedirla de forma segura.
 if [ -z "$KODEKEY_API_KEY" ]; then
-  echo "⚠️  KODEKEY_API_KEY no detectada en el entorno."
+  echo "⚠️  KODEKEY_API_KEY no detectada en el entorno del host."
   echo "   (Recuerda que esta clave rota semanalmente por seguridad)."
   read -s -p "   Pega tu nueva KODEKEY_API_KEY aquí: " KODEKEY_API_KEY
   echo "" # Salto de línea tras la entrada oculta
@@ -45,7 +45,6 @@ podman run -it --rm \
   -w "/workspace/terraform" \
   -e HOME=/workspace \
   -e KODEKEY_API_KEY="$KODEKEY_API_KEY" \
-  -e OPENAI_BASE_URL="https://api.ai.kodekloud.com/v1" \
   -e ANSIBLE_HOST_KEY_CHECKING=False \
   -e ANSIBLE_CONFIG=/workspace/ansible/ansible.cfg \
   -e GIT_SSH_COMMAND="ssh -F /workspace/.ssh/config" \

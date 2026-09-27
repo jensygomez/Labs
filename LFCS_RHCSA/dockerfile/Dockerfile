@@ -71,6 +71,13 @@ COPY dockerfile/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # ==========================================
+# 6.5 Integración de jev-cli (TypeSafe System One)
+# ==========================================
+COPY dockerfile/jev-cli /usr/local/lib/jev-cli
+RUN chmod +x /usr/local/lib/jev-cli/main.py && \
+    ln -s /usr/local/lib/jev-cli/main.py /usr/local/bin/jev-cli
+    
+# ==========================================
 # 7. EntryPoint e Integración de JEV Helper
 # ==========================================
 COPY dockerfile/entrypoint.sh /usr/local/bin/entrypoint.sh
