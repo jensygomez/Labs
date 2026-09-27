@@ -2,11 +2,22 @@
 set -e
 
 # ==========================================
-# 1. CONFIGURACIÓN DE ENTORNO
+# 1. CONFIGURACIÓN DE ENTORNO Y CLAVE API
 # ==========================================
-export TF_VAR_proxmox_api_url="https://100.93.29.93:8006/" # Ajusta si tu IP cambió
-IMAGE_NAME="lfcs-control"
-CONTAINER_NAME="lfcs-control-container"
+IMAGE_NAME="k8s-control"
+CONTAINER_NAME="k8s-control-container"
+
+# Verificar si la clave está en el entorno. Si no, pedirla de forma segura.
+if [ -z "$KODEKEY_API_KEY" ]; then
+  echo "⚠️  KODEKEY_API_KEY no detectada en el entorno."
+  echo "   (Recuerda que esta clave rota semanalmente por seguridad)."
+  read -s -p "   Pega tu nueva KODEKEY_API_KEY aquí: " KODEKEY_API_KEY
+  echo "" # Salto de línea tras la entrada oculta
+  if [ -z "$KODEKEY_API_KEY" ]; then
+    echo "❌ Error: No se proporcionó una clave. Abortando."
+    exit 1
+  fi
+fi
 
 # ==========================================
 # 2. CONSTRUCCIÓN DE IMAGEN
@@ -21,8 +32,8 @@ fi
 # ==========================================
 # 3. EJECUCIÓN DEL CONTENEDOR
 # ==========================================
-echo "🚀 Lanzando nodo de control LFCS con Podman..."
-echo "📂 Directorio de trabajo: $(pwd)/Linux_Foundation/terraform"
+echo "🚀 Lanzando nodo de control Kubernetes con Podman..."
+echo "📂 Directorio de trabajo: $(pwd)/terraform"
 
 podman run -it --rm \
   --name $CONTAINER_NAME \
@@ -31,16 +42,14 @@ podman run -it --rm \
   --cap-add=NET_ADMIN \
   --cap-add=NET_RAW \
   -v "$(pwd):/workspace:Z" \
-  -w "/workspace/001-Linux_Foundation/terraform" \
+  -w "/workspace/terraform" \
   -e HOME=/workspace \
-  -e TF_VAR_proxmox_api_url \
+  -e KODEKEY_API_KEY="$KODEKEY_API_KEY" \
+  -e OPENAI_BASE_URL="https://api.ai.kodekloud.com/v1" \
   -e ANSIBLE_HOST_KEY_CHECKING=False \
-  -e ANSIBLE_CONFIG=/workspace/001-Linux_Foundation/ansible/ansible.cfg \
+  -e ANSIBLE_CONFIG=/workspace/ansible/ansible.cfg \
   -e GIT_SSH_COMMAND="ssh -F /workspace/.ssh/config" \
   -e ANSIBLE_SSH_ARGS="-F /workspace/.ssh/config -o IdentitiesOnly=yes" \
   -e ANSIBLE_SSH_COMMON_ARGS="-F /workspace/.ssh/config" \
-    # ... (otras variables -e que ya tienes) ...
-  -e KODEKEY_API_KEY="${KODEKEY_API_KEY:-}" \
-  -e OPENAI_BASE_URL="https://api.ai.kodekloud.com/v1" \
   $IMAGE_NAME \
   /bin/bash
