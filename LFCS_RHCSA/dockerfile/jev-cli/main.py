@@ -10,7 +10,7 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from noul import run_noul
-# from choice import run_choice  # Próximamente
+from choice import run_choice
 # from score import run_score    # Próximamente
 
 def main():
