@@ -5,42 +5,53 @@ import json
 import re
 from openai import OpenAI
 
-# 1. CONFIGURACIÓN DE LA API (KodeKey)
+# 1. CONFIGURACIÓN DE LA API
 API_KEY = os.environ.get("KODEKEY_API_KEY")
 BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.ai.kodekloud.com/v1")
 
 if not API_KEY:
-    print("❌ Error: La variable KODEKEY_API_KEY no está disponible en el contenedor.")
+    print("❌ Error: KODEKEY_API_KEY no está disponible.")
+    print("   Ejecuta: export KODEKEY_API_KEY='tu_nueva_clave' en tu host.")
     sys.exit(1)
 
 client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
 
-# 2. RECOLECCIÓN DE DATOS INTERACTIVA
+# Nombre exacto del modelo según la documentación oficial de KodeKey (minúsculas y guiones)
+DEFAULT_MODEL = "gpt-6-luna"
+
+# 2. RECOLECCIÓN DE DATOS
 def get_user_input():
     print("\n" + "="*70)
     print(" 🤖 JEV HELPER: Preprocesamiento y Generación de IaC")
     print("="*70)
     problem = input("\n1️⃣  [PROBLEMA] Describe el objetivo técnico o tarea:\n> ").strip()
-    context = input("\n2️⃣  [CONTEXTO] Restricciones del entorno (ej. rutas, OS, versiones):\n> ").strip()
-    options = input("\n3️⃣  [OPCIONES] Caminos o alternativas a evaluar (separados por coma):\n> ").strip()
-    coding_model = input("\n4️⃣  [MODELO DE CÓDIGO] (ej. GPT-6 Luna, Claude Sonnet 5) [Default: GPT-6 Luna]:\n> ").strip() or "GPT-6 Luna"
-    return problem, context, options, coding_model
+    context = input("\n2️⃣  [CONTEXTO] Restricciones del entorno (OS, rutas, idempotencia, etc.):\n> ").strip()
+    options = input("\n3️⃣  [OPCIONES] Alternativas a evaluar (separadas por coma):\n> ").strip()
+    
+    # Preguntamos el modelo, pero sugerimos el correcto por defecto
+    model_input = input(f"\n4️⃣  [MODELO] (Default: {DEFAULT_MODEL}):\n> ").strip()
+    model_name = model_input if model_input else DEFAULT_MODEL
+    
+    return problem, context, options, model_name
 
-# 3. FASE 1: PREPROCESAMIENTO CON JEV
-def analyze_with_jev(problem, context, options):
-    print("\n⏳ [JEV 1.13.0] Analizando contexto masivo y evaluando opciones...")
-    system_prompt = """Eres JEV, un motor de análisis técnico especializado en DevOps e IaC.
+# 3. FASE 1: PREPROCESAMIENTO (Análisis)
+def analyze_with_jev(problem, context, options, model_name):
+    print(f"\n⏳ [{model_name}] Analizando contexto y evaluando opciones...")
+    system_prompt = """Eres un motor de análisis técnico especializado en DevOps e IaC.
 Devuelve TU RESPUESTA EXCLUSIVAMENTE en formato JSON válido. Sin markdown (```json), sin texto extra.
 Estructura JSON exacta:
 {
   "analysis": "Breve análisis técnico, identificando riesgos o dependencias clave.",
   "recommended_option": "La mejor opción elegida, con justificación de 1 frase.",
-  "optimized_prompt_for_coder": "Prompt altamente detallado y optimizado, listo para un modelo de código. Incluye tarea exacta, contexto depurado, opción elegida y mejores prácticas de seguridad/idempotencia."
+  "optimized_prompt_for_coder": "Prompt altamente detallado y optimizado para un modelo de código. Incluye tarea exacta, contexto depurado, opción elegida y mejores prácticas de seguridad/idempotencia."
 }"""
     try:
         response = client.chat.completions.create(
-            model="Jev 1.13.0",
-            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": f"PROBLEMA: {problem}\n\nCONTEXTO: {context}\n\nOPCIONES: {options}"}],
+            model=model_name,
+            messages=[
+                {"role": "system", "content": system_prompt}, 
+                {"role": "user", "content": f"PROBLEMA: {problem}\n\nCONTEXTO: {context}\n\nOPCIONES: {options}"}
+            ],
             temperature=0.2
         )
         raw_content = response.choices[0].message.content
@@ -48,7 +59,8 @@ Estructura JSON exacta:
         clean_json = re.sub(r'\s*```$', '', clean_json, flags=re.IGNORECASE)
         return json.loads(clean_json)
     except Exception as e:
-        print(f"\n❌ Error en JEV: {e}\nRespuesta cruda: {raw_content if 'raw_content' in locals() else 'N/A'}")
+        print(f"\n❌ Error en Fase 1: {e}")
+        print("💡 NOTA: Si el error dice 'only access models=[kodekey-pro]', tu plan actual requiere usar 'kodekey-pro' como modelo.")
         sys.exit(1)
 
 # 4. FASE 2: GENERACIÓN DE CÓDIGO
@@ -58,24 +70,30 @@ def generate_code(optimized_prompt, model_name):
     try:
         response = client.chat.completions.create(
             model=model_name,
-            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": optimized_prompt}],
+            messages=[
+                {"role": "system", "content": system_prompt}, 
+                {"role": "user", "content": optimized_prompt}
+            ],
             temperature=0.1
         )
         return response.choices[0].message.content
     except Exception as e:
-        print(f"\n❌ Error en generación de código: {e}")
+        print(f"\n❌ Error en Fase 2: {e}")
         sys.exit(1)
 
 # 5. EJECUCIÓN PRINCIPAL
 if __name__ == "__main__":
-    problem, context, options, coding_model = get_user_input()
-    jev_result = analyze_with_jev(problem, context, options)
+    problem, context, options, model_name = get_user_input()
     
-    print("\n" + "="*70 + "\n 📊 RESULTADO DEL ANÁLISIS DE JEV\n" + "="*70)
+    # Fase 1
+    jev_result = analyze_with_jev(problem, context, options, model_name)
+    
+    print("\n" + "="*70 + "\n 📊 RESULTADO DEL ANÁLISIS\n" + "="*70)
     print(f"🔍 Análisis: {jev_result['analysis']}")
     print(f"✅ Opción Recomendada: {jev_result['recommended_option']}\n" + "="*70)
     
-    final_code = generate_code(jev_result['optimized_prompt_for_coder'], coding_model)
+    # Fase 2
+    final_code = generate_code(jev_result['optimized_prompt_for_coder'], model_name)
     
     print("\n" + "="*70 + "\n 💻 CÓDIGO GENERADO\n" + "="*70)
     print(final_code + "\n" + "="*70)
