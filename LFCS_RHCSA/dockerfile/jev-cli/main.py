@@ -18,7 +18,7 @@ def main():
     print(" 🤖 JEV-CLI: Interfaz Modular para TypeSafe System One")
     print("="*70)
     print(" 1. Noul  (Validación Sí/No con probabilidad)")
-    print(" 2. Choice (Elegir la mejor opción entre varias) [Próximamente]")
+    print(" 2. Choice (Elegir la mejor opción entre varias)")
     print(" 3. Score  (Evaluar nivel/escala de algo) [Próximamente]")
     print(" 0. Salir")
     print("="*70)
@@ -28,7 +28,7 @@ def main():
     if choice == "1":
         run_noul()
     elif choice == "2":
-        print("\n🚧 Módulo Choice en construcción. Próximamente.")
+        run_choice()
     elif choice == "3":
         print("\n🚧 Módulo Score en construcción. Próximamente.")
     elif choice == "0":
