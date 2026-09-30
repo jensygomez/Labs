@@ -122,3 +122,15 @@ TPM: error opening: stat /dev/tpmrm0: no such file or directory
 2026/09/30 09:31:07 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=4d49e7b067e8
 2026/09/30 09:32:53 netcheck: DetectCaptivePortal(found=false)
 2026/09/30 09:38:00 netcheck: DetectCaptivePortal(found=false)
+2026/09/30 11:36:55 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=f368aba96271
+2026/09/30 11:36:56 netcheck: DetectCaptivePortal(found=false)
+2026/09/30 11:36:56 magicsock: endpoints changed: 177.92.48.74:13099 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/09/30 13:37:37 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=1eab58e9e6ce
+2026/09/30 13:37:37 netcheck: DetectCaptivePortal(found=false)
+2026/09/30 13:37:37 magicsock: endpoints changed: 177.92.48.74:13072 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/09/30 13:37:38 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 10.10.10.1:41641 mtu=1360 tx=7232d4369f85
+2026/09/30 15:37:48 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=7477ccaed234
+2026/09/30 15:37:49 netcheck: DetectCaptivePortal(found=false)
+2026/09/30 15:37:49 magicsock: endpoints changed: 177.92.48.74:13349 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/09/30 15:39:57 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=bae21127bd62
+2026/09/30 15:39:57 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 10.10.10.1:41641 mtu=1360 tx=1521122bad4e
