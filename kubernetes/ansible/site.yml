@@ -35,3 +35,22 @@
   tasks:
     - name: "kubeadm join"
       ansible.builtin.import_tasks: roles/k8s_workers.yml
+      
+- name: "Unir los Workers al Cluster"
+  hosts: k8s_workers
+  become: true
+  tasks:
+    - name: "kubeadm join"
+      ansible.builtin.import_tasks: roles/k8s_workers.yml
+
+- name: "Etiquetar los workers con su rol"
+  hosts: k8s_control_plane
+  become: true
+  become_user: ansible
+  tasks:
+    - name: "Etiquetar los nodos worker"
+      ansible.builtin.command: >
+        kubectl --kubeconfig=/home/ansible/.kube/config
+        label node {{ item }} node-role.kubernetes.io/worker=worker --overwrite
+      loop: "{{ groups['k8s_workers'] }}"
+      changed_when: true    

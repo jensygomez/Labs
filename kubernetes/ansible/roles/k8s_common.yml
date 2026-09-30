@@ -38,6 +38,24 @@
     - net.bridge.bridge-nf-call-ip6tables
     - net.ipv4.ip_forward
 
+- name: "Instalar herramientas de trabajo y troubleshooting"
+  ansible.builtin.dnf:
+    name:
+      - vim-enhanced
+      - bash-completion
+      - git
+      - jq
+      - tmux
+      - tree
+      - wget
+      - lsof
+      - tcpdump
+      - bind-utils      # dig, nslookup
+      - net-tools       # netstat, ifconfig
+      - nmap-ncat       # nc, para probar puertos
+      - iproute-tc      # tc, kubeadm lo pide en preflight
+    state: present
+
 - name: "Agregar repo de Docker (para containerd.io)"
   ansible.builtin.yum_repository:
     name: docker-ce
@@ -94,7 +112,29 @@
     enabled: true
     state: started
 
-- name: "Configurar alias kb y autocompletado de kubectl"
+- name: "Configurar crictl para containerd"
+  ansible.builtin.copy:
+    dest: /etc/crictl.yaml
+    mode: '0644'
+    content: |
+      runtime-endpoint: unix:///run/containerd/containerd.sock
+      image-endpoint: unix:///run/containerd/containerd.sock
+
+- name: "Configurar vim para editar YAML"
+  ansible.builtin.copy:
+    dest: /home/ansible/.vimrc
+    owner: ansible
+    group: ansible
+    mode: '0644'
+    content: |
+      set expandtab
+      set tabstop=2
+      set shiftwidth=2
+      set number
+      syntax on
+      autocmd FileType yaml setlocal ai ts=2 sw=2 et cursorcolumn
+
+- name: "Configurar alias kb, autocompletado y atajos de kubectl"
   ansible.builtin.blockinfile:
     path: /etc/bashrc
     marker: "# {mark} KUBECTL ALIAS"
@@ -102,3 +142,6 @@
       alias kb=kubectl
       source <(kubectl completion bash)
       complete -o default -F __start_kubectl kb
+      export do="--dry-run=client -o yaml"
+      export now="--force --grace-period 0"
+      alias vi=vim

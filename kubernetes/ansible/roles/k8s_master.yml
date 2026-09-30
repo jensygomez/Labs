@@ -44,11 +44,4 @@
     join_command: "{{ join_command_raw.stdout }}"
     
 
-- name: "Etiquetar los nodos worker con su rol"
-  become: true
-  become_user: ansible
-  ansible.builtin.command: >
-    kubectl --kubeconfig=/home/ansible/.kube/config
-    label node {{ item }} node-role.kubernetes.io/worker=worker --overwrite
-  loop: "{{ groups['k8s_workers'] }}"
-  changed_when: true
+

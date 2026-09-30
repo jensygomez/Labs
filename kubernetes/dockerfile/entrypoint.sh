@@ -129,24 +129,30 @@ EOF
 # INICIO DE TAILSCALE (Nativo en el contenedor)
 # ==========================================
 if [ -n "$TAILSCALE_AUTH_KEY" ]; then
-  echo "🌐 Iniciando Tailscale..."
-  mkdir -p /workspace/.tailscale_state
+  echo "🔗 Conectando a Tailscale..."
+  
+  tailscaled \
+    --no-logs-no-support \
+    --state=/workspace/.tailscale_state/tailscaled.state \
+    --socket=/workspace/.tailscale_state/tailscaled.sock \
+    > /workspace/.tailscale_state/tailscaled.log 2>&1 &
+  
+  TS_SOCKET="/workspace/.tailscale_state/tailscaled.sock"
+  export TS_SOCKET
 
-  tailscaled --state=/workspace/.tailscale_state/tailscaled.state \
-             --socket=/workspace/.tailscale_state/tailscaled.sock &
-  sleep 3
-
-  export TS_SOCKET=/workspace/.tailscale_state/tailscaled.sock
+  # Esperar un momento a que el socket esté listo
+  sleep 2
 
   if tailscale --socket="$TS_SOCKET" up --authkey="$TAILSCALE_AUTH_KEY" \
                --accept-routes \
                --hostname=k8s-control; then
     echo "✅ Tailscale conectado exitosamente."
   else
-    echo "⚠️  Tailscale falló al conectar. Continuando sin VPN (revisa el log arriba)."
+    echo "⚠️  Tailscale falló al conectar. Continuando sin VPN."
+    echo "   Revisa: /workspace/.tailscale_state/tailscaled.log"
   fi
 else
-  echo "⚠️ TAILSCALE_AUTH_KEY no encontrada en el Vault. Tailscale no se iniciará."
+  echo "⚠️  TAILSCALE_AUTH_KEY no definida. Omitiendo conexión VPN."
 fi
 
 # ==========================================
