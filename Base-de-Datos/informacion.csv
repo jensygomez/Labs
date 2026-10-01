@@ -1,75 +1,307 @@
 Module,Title,Difficulty,Level,Duration,Date
-Introduction,Course Introduction,1,L1,3,2026-09-23
-Introduction,Course Pre-Requisites,1,L1,2,2026-09-24
-Introduction,Article: How to Reach Out to KodeKloud and Engage with the Community,1,L1,2,2026-09-25
-Core Components,Core Components Introduction,1,L1,1,2026-09-26
-Core Components,Article: Create playbooks to configure systems to a specified state,1,L1,2,2026-09-27
-Core Components,Playbook run options,1,L1,2,2026-09-28
-Core Components,Lab Introduction Demo,1,L1,7,2026-09-29
-Core Components,Labs - Playbooks,2,L1,10,2026-09-30
-Core Components,Facts,1,L1,5,2026-10-01
-Core Components,Labs - Facts,2,L1,10,2026-10-02
-Core Components,Configuration files,1,L1,10,2026-10-03
-Core Components,Labs - Configuration Files,2,L1,10,2026-10-04
-Core Components,Lab: YAML,2,L1,10,2026-10-05
-Core Components,Article: Course Resource,1,L1,2,2026-10-06
-Core Components,Article: Notes available at KodeKloud Notes,1,L1,2,2026-10-07
-Install and Configure,Install required packages create static host inventory file create config file,1,L1,5,2026-10-08
-Install and Configure,Labs - Install,2,L1,10,2026-10-09
-Install and Configure,Create and distribute SSH keys to managed nodes,1,L1,6,2026-10-10
-Install and Configure,Labs - Distribute SSH Keys,2,L1,10,2026-10-11
-Install and Configure,Validate a working configuration using ad-hoc Ansible commands,1,L1,2,2026-10-12
-Install and Configure,Labs - Adhoc Commands,2,L1,10,2026-10-13
-Install and Configure,Create simple shell scripts that run ad hoc Ansible commands,1,L1,2,2026-10-14
-Install and Configure,Labs - Shell Scripts,2,L1,10,2026-10-15
-Install and Configure,Privilege Escalation,1,L1,6,2026-10-16
-Install and Configure,Frequently Asked Questions,1,L1,7,2026-10-17
-Install and Configure,Labs - YAML Syntax and Errors in Playbooks,2,L1,10,2026-10-18
-Ansible Modules,Additional Modules,1,L1,10,2026-10-19
-Ansible Modules,Labs - Modules - Packages,2,L1,10,2026-10-20
-Ansible Modules,Labs - Modules - Services,2,L1,10,2026-10-21
-Ansible Modules,Labs - Modules - Firewalls rules,2,L1,10,2026-10-22
-Ansible Modules,Labs - Modules - Filecontent,2,L1,10,2026-10-23
-Ansible Modules,Labs - Modules - Archiving,2,L1,10,2026-10-24
-Ansible Modules,Labs - Modules - Scheduled Tasks,2,L1,10,2026-10-25
-Ansible Modules,Labs - Modules - Users and groups,2,L1,10,2026-10-26
-Ansible Modules,Project Introduction,1,L1,7,2026-10-27
-Ansible Modules,Project Demo,1,L1,12,2026-10-28
-Ansible Modules,Article: Project - Environment Setup,1,L1,2,2026-10-29
-Ansible Modules,Article: Project - Playbook,1,L1,2,2026-10-30
-Variables and Jinja2,Variable Precedence,1,L1,3,2026-10-31
-Variables and Jinja2,Variable Scope,1,L1,2,2026-11-01
-Variables and Jinja2,Use variables to retrieve the results of running commands,1,L1,3,2026-11-02
-Variables and Jinja2,Labs - Variable Register,2,L1,10,2026-11-03
-Variables and Jinja2,Magic Variables,1,L1,4,2026-11-04
-Variables and Jinja2,Labs - Magic Variables,2,L1,10,2026-11-05
-Variables and Jinja2,Jinja2 Basics,1,L1,6,2026-11-06
-Variables and Jinja2,Labs - Jinja2 - Basics,2,L1,10,2026-11-07
-Variables and Jinja2,Jinja2 in Ansible,1,L1,3,2026-11-08
-Variables and Jinja2,Labs - Jinja2 - Ansible,2,L1,10,2026-11-09
-Variables and Jinja2,Create and use templates to create customized configuration files,1,L1,5,2026-11-10
-Variables and Jinja2,Labs - Jinja2 - Templates,2,L1,10,2026-11-11
-Variables and Jinja2,Labs - Project - Variables and Jinja2 Templates,2,L1,10,2026-11-12
-Playbook Flow,Article - Loops,1,L1,2,2026-11-13
-Playbook Flow,Use conditionals to control play execution,1,L1,4,2026-11-14
-Playbook Flow,Lab - Conditionals,2,L1,10,2026-11-15
-Playbook Flow,Blocks,1,L1,2,2026-11-16
-Playbook Flow,Labs - Blocks,2,L1,10,2026-11-17
-Playbook Flow,Configure error handling,1,L1,5,2026-11-18
-Playbook Flow,Labs - Error Handling,2,L1,10,2026-11-19
-Playbook Flow,Manage parallelism,1,L1,5,2026-11-20
-Playbook Flow,Labs - Parellelism,2,L1,10,2026-11-21
-Include and Roles,Ansible File Separation,1,L1,5,2026-11-22
-Include and Roles,Labs - File Separation,2,L1,10,2026-11-23
-Include and Roles,Labs - Project - File Separation,2,L1,10,2026-11-24
-Include and Roles,Ansible Roles,1,L1,8,2026-11-25
-Include and Roles,Labs - Roles,2,L1,10,2026-11-26
-Include and Roles,Labs - Project - Roles creation,2,L1,10,2026-11-27
-Other Topics,Ansible Vault,1,L1,3,2026-11-28
-Other Topics,Labs - Vault,2,L1,10,2026-11-29
-Other Topics,Dynamic Inventory,1,L1,9,2026-11-30
-Other Topics,Labs - Dynamic Inventory,2,L1,10,2026-12-01
-Mock Exams,Lab: Mock Exam - 1,3,L1,10,2026-12-02
-Mock Exams,Lab: Mock Exam - 2,3,L1,10,2026-12-03
-Mock Exams,Lab: Mock Exam - 3,3,L1,10,2026-12-04
-Mock Exams,Lab: Mock Exam - 4,3,L1,10,2026-12-05
+Introduction,Course Introduction,1,L1,4,2026-10-02
+Introduction,Certification,1,L1,3,2026-10-03
+Introduction,Article: Discount & Certification Details,1,L1,0,2026-10-04
+Introduction,Article: How to Reach Out to KodeKloud and Engage with the Community,1,L1,0,2026-10-05
+Core Concepts,Core Concepts - Section Introduction,1,L1,1,2026-10-06
+Core Concepts,Cluster Architecture,1,L1,9,2026-10-07
+Core Concepts,Docker-vs-ContainerD,1,L1,13,2026-10-08
+Core Concepts,A Note on Docker Deprecation,1,L1,3,2026-10-09
+Core Concepts,etcd for Beginners,1,L1,8,2026-10-10
+Core Concepts,etcd in Kubernetes,1,L1,4,2026-10-11
+Core Concepts,Article: etcd – Commands (Optional),1,L1,0,2026-10-12
+Core Concepts,Kube API Server,1,L1,5,2026-10-13
+Core Concepts,Kube Controller Manager,1,L1,5,2026-10-14
+Core Concepts,Kube Scheduler,1,L1,4,2026-10-15
+Core Concepts,Kubelet,1,L1,2,2026-10-16
+Core Concepts,Kube Proxy,1,L1,4,2026-10-17
+Core Concepts,Pods,1,L1,10,2026-10-18
+Core Concepts,Pods With YAML,1,L1,7,2026-10-19
+Core Concepts,Demo - Pods With YAML,1,L1,7,2026-10-20
+Core Concepts,Practice Test Introduction,1,L1,6,2026-10-21
+Core Concepts,Lab - Pods,2,L1,5,2026-10-22
+Core Concepts,Solution - Pods (optional),1,L1,12,2026-10-23
+Core Concepts,ReplicaSets,1,L1,17,2026-10-24
+Core Concepts,Lab - ReplicaSets,2,L1,5,2026-10-25
+Core Concepts,Solution - ReplicaSets (optional),1,L1,15,2026-10-26
+Core Concepts,Deployments,1,L1,5,2026-10-27
+Core Concepts,Article: Certification Tip!,1,L1,0,2026-10-28
+Core Concepts,Article : Deployments,1,L1,0,2026-10-29
+Core Concepts,Solution: Deployment(optional),1,L1,8,2026-10-30
+Core Concepts,Services,1,L1,14,2026-10-31
+Core Concepts,Services Cluster IP,1,L1,5,2026-11-01
+Core Concepts,Services - Loadbalancer,1,L1,4,2026-11-02
+Core Concepts,Lab - Services,2,L1,5,2026-11-03
+Core Concepts,Solution: Services (optional),1,L1,10,2026-11-04
+Core Concepts,Namespaces,1,L1,9,2026-11-05
+Core Concepts,Lab - Namespaces,2,L1,5,2026-11-06
+Core Concepts,Solution: Namespaces (optional),1,L1,6,2026-11-07
+Core Concepts,Imperative vs Declarative,1,L1,14,2026-11-08
+Core Concepts,Article: Certification Tips - Imperative Commands With Kubectl,1,L1,0,2026-11-09
+Core Concepts,Kubectl Explain Command,1,L1,2,2026-11-10
+Core Concepts,Lab - Imperative Commands,2,L1,5,2026-11-11
+Core Concepts,Solution: Imperative Commands (optional),1,L1,14,2026-11-12
+Core Concepts,Kubectl Apply Command,1,L1,5,2026-11-13
+Core Concepts,A Quick Reminder,1,L1,2,2026-11-14
+Core Concepts,Article: Notes available at KodeKloud Notes,1,L1,0,2026-11-15
+Core Concepts,Article: Reference Notes for lectures and labs,1,L1,0,2026-11-16
+Scheduling,Scheduling - Section Introduction,1,L1,1,2026-11-17
+Scheduling,Manual Scheduling,1,L1,3,2026-11-18
+Scheduling,Article: Manual Scheduling,1,L1,0,2026-11-19
+Scheduling,Solution: Manual Scheduling (optional),1,L1,7,2026-11-20
+Scheduling,Labels and Selectors,1,L1,6,2026-11-21
+Scheduling,Lab - Labels and Selectors,2,L1,5,2026-11-22
+Scheduling,Solution: Labels and Selectors,1,L1,6,2026-11-23
+Scheduling,Taints and Tolerations,1,L1,10,2026-11-24
+Scheduling,Lab - Taints and Tolerations,2,L1,5,2026-11-25
+Scheduling,Solution - Taints and Toleration (Optional),1,L1,11,2026-11-26
+Scheduling,Node Selectors,1,L1,4,2026-11-27
+Scheduling,Node Affinity,1,L1,8,2026-11-28
+Scheduling,Lab - Node Affinity,2,L1,5,2026-11-29
+Scheduling,Solution - Node Affinity (Optional),1,L1,11,2026-11-30
+Scheduling,Taints and Tolerations vs Node Affinity,1,L1,3,2026-12-01
+Scheduling,Resource Requirements,1,L1,15,2026-12-02
+Scheduling,Article: A Quick Note on editing Pods and Deployments,1,L1,0,2026-12-03
+Scheduling,Article: Resource Limits,1,L1,0,2026-12-04
+Scheduling,Solution: Resource Limits,1,L1,6,2026-12-05
+Scheduling,DaemonSets,1,L1,5,2026-12-06
+Scheduling,Lab - DaemonSets,2,L1,5,2026-12-07
+Scheduling,Solution: DaemonSets (optional),1,L1,6,2026-12-08
+Scheduling,Static Pods,1,L1,9,2026-12-09
+Scheduling,Lab - Static Pods,2,L1,5,2026-12-10
+Scheduling,Solution - Static Pods (Optional),1,L1,15,2026-12-11
+Scheduling,Priority Classes,1,L1,7,2026-12-12
+Scheduling,Lab - Priority Classes,2,L1,5,2026-12-13
+Scheduling,Multiple Schedulers,1,L1,10,2026-12-14
+Scheduling,Lab - Multiple Schedulers,2,L1,5,2026-12-15
+Scheduling,Solution - Multiple Scheduler,1,L1,7,2026-12-16
+Scheduling,Configuring Scheduler Profiles,1,L1,10,2026-12-17
+Scheduling,Article: References,1,L1,0,2026-12-18
+Scheduling,(2025 Updates) Admission Controllers,1,L1,8,2026-12-19
+Scheduling,Lab - Admission Controllers,2,L1,5,2026-12-20
+Scheduling,Solution: Admission Controllers,1,L1,7,2026-12-21
+Scheduling,Validating and Mutating Admission Controllers,1,L1,11,2026-12-22
+Scheduling,Lab - Validating and Mutating Admission Controllers,2,L1,5,2026-12-23
+Scheduling,Solution: Validating and Mutating Admission Controllers,1,L1,8,2026-12-24
+Logging & Monitoring,Logging and Monitoring - Section Introduction,1,L1,1,2026-12-25
+Logging & Monitoring,Monitoring Cluster Components,1,L1,4,2026-12-26
+Logging & Monitoring,Lab - Monitoring Cluster Components,2,L1,5,2026-12-27
+Logging & Monitoring,Solution: Monitor Cluster Components,1,L1,5,2026-12-28
+Logging & Monitoring,Managing Application Logs,1,L1,3,2026-12-29
+Logging & Monitoring,Lab - Managing Application Logs,2,L1,5,2026-12-30
+Logging & Monitoring,Solution: Logging : (Optional),1,L1,3,2026-12-31
+Application Lifecycle Management,Application Lifecycle Management - Section Introduction,1,L1,1,2027-01-01
+Application Lifecycle Management,Rolling Updates and Rollbacks,1,L1,7,2027-01-02
+Application Lifecycle Management,Lab - Rolling Updates and Rollbacks,2,L1,5,2027-01-03
+Application Lifecycle Management,Solution: Rolling update,1,L1,10,2027-01-04
+Application Lifecycle Management,Article: Configure Applications,1,L1,0,2027-01-05
+Application Lifecycle Management,Commands and Arguments in Docker,1,L1,8,2027-01-06
+Application Lifecycle Management,Commands and Arguments in Kubernetes,1,L1,3,2027-01-07
+Application Lifecycle Management,Lab - Commands and Arguments,2,L1,5,2027-01-08
+Application Lifecycle Management,Solution - Commands and Arguments (Optional),1,L1,20,2027-01-09
+Application Lifecycle Management,Configuring Environment Variables in Applications,1,L1,2,2027-01-10
+Application Lifecycle Management,Configuring ConfigMaps in Applications,1,L1,6,2027-01-11
+Application Lifecycle Management,Lab - Env Variables,2,L1,5,2027-01-12
+Application Lifecycle Management,Solution - Env Variables (Optional),1,L1,9,2027-01-13
+Application Lifecycle Management,Secrets,1,L1,6,2027-01-14
+Application Lifecycle Management,Lab - Secrets,2,L1,5,2027-01-15
+Application Lifecycle Management,Article: Additional Resource,1,L1,0,2027-01-16
+Application Lifecycle Management,Solution - Secrets (Optional),1,L1,10,2027-01-17
+Application Lifecycle Management,Demo Encrypting Secret Data at Rest,1,L1,19,2027-01-18
+Application Lifecycle Management,Article: A note on Secrets,1,L1,0,2027-01-19
+Application Lifecycle Management,Multi-Container Pods,1,L1,3,2027-01-20
+Application Lifecycle Management,Multi-Container Pods Design Patterns,1,L1,7,2027-01-21
+Application Lifecycle Management,Lab - Multi Container Pods,2,L1,5,2027-01-22
+Application Lifecycle Management,Article: Init Containers,1,L1,0,2027-01-23
+Application Lifecycle Management,Lab - Init Containers,2,L1,5,2027-01-24
+Application Lifecycle Management,Solution - Init Containers (Optional),1,L1,11,2027-01-25
+Application Lifecycle Management,Article: Self-Healing Applications,1,L1,0,2027-01-26
+Application Lifecycle Management,Introduction to Autoscaling (2025 Updates),1,L1,6,2027-01-27
+Application Lifecycle Management,Horizontal Pod Autoscaler (HPA) (2025 Updates),1,L1,6,2027-01-28
+Application Lifecycle Management,Lab - Manual Scaling,2,L1,5,2027-01-29
+Application Lifecycle Management,Lab - HPA,2,L1,5,2027-01-30
+Application Lifecycle Management,In-place Resize of Pods (2025 Updates),1,L1,4,2027-01-31
+Application Lifecycle Management,Vertical Pod Autoscaling (VPA) (2025 Updates),1,L1,10,2027-02-01
+Application Lifecycle Management,Lab - Install VPA,2,L1,5,2027-02-02
+Application Lifecycle Management,Lab - Modifying CPU resources in VPA,2,L1,5,2027-02-03
+Cluster Maintenance,Cluster Maintenance - Section Introduction,1,L1,2,2027-02-04
+Cluster Maintenance,OS Upgrades,1,L1,4,2027-02-05
+Cluster Maintenance,Lab - OS Upgrades,2,L1,5,2027-02-06
+Cluster Maintenance,Solution - OS Upgrades (optional),1,L1,11,2027-02-07
+Cluster Maintenance,Kubernetes Releases,1,L1,3,2027-02-08
+Cluster Maintenance,Article: References,1,L1,0,2027-02-09
+Cluster Maintenance,Cluster Upgrade Introduction,1,L1,12,2027-02-10
+Cluster Maintenance,Demo - Cluster Upgrade,1,L1,19,2027-02-11
+Cluster Maintenance,Lab - Cluster Upgrade Process,2,L1,5,2027-02-12
+Cluster Maintenance,Solution: Cluster Upgrade Process,1,L1,17,2027-02-13
+Cluster Maintenance,Backup and Restore Methods,1,L1,7,2027-02-14
+Cluster Maintenance,Article: Working with ETCDCTL and ETCDUTL,1,L1,0,2027-02-15
+Cluster Maintenance,Lab - Backup and Restore Methods,2,L1,5,2027-02-16
+Cluster Maintenance,Article: Certification Exam Tip!,1,L1,0,2027-02-17
+Cluster Maintenance,Article: References,1,L1,0,2027-02-18
+Security,Security - Section Introduction,1,L1,3,2027-02-19
+Security,Kubernetes Security Primitives,1,L1,4,2027-02-20
+Security,Authentication,1,L1,6,2027-02-21
+Security,TLS Introduction,1,L1,2,2027-02-22
+Security,TLS Basics,1,L1,21,2027-02-23
+Security,TLS in Kubernetes,1,L1,8,2027-02-24
+Security,TLS in Kubernetes - Certificate Creation,1,L1,11,2027-02-25
+Security,View Certificate Details,1,L1,5,2027-02-26
+Security,Article: Certificate Health Check Spreadsheet,1,L1,0,2027-02-27
+Security,Lab - View Certificate Details,2,L1,5,2027-02-28
+Security,Solution - View Certification Details,1,L1,22,2027-03-01
+Security,Certificates API,1,L1,7,2027-03-02
+Security,Lab - Certificates API,2,L1,5,2027-03-03
+Security,Solution - Certificates API,1,L1,8,2027-03-04
+Security,KubeConfig,1,L1,9,2027-03-05
+Security,Lab - KubeConfig,2,L1,5,2027-03-06
+Security,Solution - KubeConfig,1,L1,9,2027-03-07
+Security,API Groups,1,L1,6,2027-03-08
+Security,Authorization,1,L1,8,2027-03-09
+Security,Role-Based Access Controls,1,L1,5,2027-03-10
+Security,Lab - Role-Based Access Controls,2,L1,5,2027-03-11
+Security,Role-Based Access Controls,1,L1,14,2027-03-12
+Security,Cluster Roles,1,L1,5,2027-03-13
+Security,Lab - Cluster Roles,2,L1,5,2027-03-14
+Security,Solution - Cluster Roles,1,L1,12,2027-03-15
+Security,Service Accounts,1,L1,9,2027-03-16
+Security,Lab - Service Accounts,2,L1,5,2027-03-17
+Security,Solution- Service Accounts,1,L1,8,2027-03-18
+Security,Image Security,1,L1,5,2027-03-19
+Security,Lab - Image Security,2,L1,5,2027-03-20
+Security,Solution - Image Security,1,L1,7,2027-03-21
+Security,Prerequisite - Security in Docker,1,L1,6,2027-03-22
+Security,Security Contexts,1,L1,2,2027-03-23
+Security,Lab - Security Contexts,2,L1,5,2027-03-24
+Security,Solution - Security Contexts,1,L1,6,2027-03-25
+Security,Network Policies,1,L1,9,2027-03-26
+Security,Developing Network Policies,1,L1,11,2027-03-27
+Security,Lab - Network Policies,2,L1,5,2027-03-28
+Security,Solution - Network Policies (optional),1,L1,15,2027-03-29
+Security,Article: Kubectx and Kubens – Command line Utilities,1,L1,0,2027-03-30
+Security,Custom Resource Definition (CRD) (2025 Updates),1,L1,12,2027-03-31
+Security,Lab: Custom Resource Definition (2025 Updates),2,L1,5,2027-04-01
+Security,Custom Controllers (2025 Updates),1,L1,4,2027-04-02
+Security,Operator Framework (2025 Updates),1,L1,3,2027-04-03
+Security,Article: Optional Resource: External Secrets Operator,1,L1,0,2027-04-04
+Storage,Storage - Section Introduction,1,L1,1,2027-04-05
+Storage,Docker Storage - Introduction,1,L1,1,2027-04-06
+Storage,Storage in Docker,1,L1,13,2027-04-07
+Storage,Volume Driver Plugins in Docker,1,L1,2,2027-04-08
+Storage,Container Storage Interface,1,L1,4,2027-04-09
+Storage,Volumes,1,L1,5,2027-04-10
+Storage,Persistent Volumes,1,L1,4,2027-04-11
+Storage,Persistent Volume Claims,1,L1,5,2027-04-12
+Storage,Article: Using PVC in Pods,1,L1,0,2027-04-13
+Storage,Lab - Persistent Volume Claims,2,L1,5,2027-04-14
+Storage,Solution - Persistent Volumes and Persistent Volume Claims (optional),1,L1,19,2027-04-15
+Storage,Storage Class,1,L1,4,2027-04-16
+Storage,Lab - Storage Class,2,L1,5,2027-04-17
+Storage,Solution - Storage Class,1,L1,11,2027-04-18
+Networking,Networking - Introduction,1,L1,3,2027-04-19
+Networking,Prerequisite Switching Routing Gateways CNI in kubernetes,1,L1,13,2027-04-20
+Networking,Prerequisite DNS,1,L1,15,2027-04-21
+Networking,Article: Prerequisite - CoreDNS,1,L1,0,2027-04-22
+Networking,Prerequisite Network Namespaces,1,L1,16,2027-04-23
+Networking,Article: FAQ,1,L1,0,2027-04-24
+Networking,Prerequisite Docker Networking,1,L1,8,2027-04-25
+Networking,Prerequisite CNI,1,L1,7,2027-04-26
+Networking,Cluster Networking,1,L1,3,2027-04-27
+Networking,Article: Important Note about CNI and CKA Exam,1,L1,0,2027-04-28
+Networking,Lab - Explore Environment,2,L1,5,2027-04-29
+Networking,Solution - Explore Environment (optional),1,L1,9,2027-04-30
+Networking,Pod Networking,1,L1,10,2027-05-01
+Networking,CNI in kubernetes,1,L1,4,2027-05-02
+Networking,Lab - Test CNI,2,L1,5,2027-05-03
+Networking,Solution - Explore CNI (optional),1,L1,3,2027-05-04
+Networking,ipam,1,L1,3,2027-05-05
+Networking,Lab - Networking CNIs,2,L1,5,2027-05-06
+Networking,Service Networking,1,L1,9,2027-05-07
+Networking,Lab - Service Networking,2,L1,5,2027-05-08
+Networking,Solution - Service Networking (optional),1,L1,6,2027-05-09
+Networking,DNS in kubernetes,1,L1,6,2027-05-10
+Networking,CoreDNS in Kubernetes,1,L1,7,2027-05-11
+Networking,Lab - CoreDNS in Kubernetes,2,L1,5,2027-05-12
+Networking,Solution - Explore DNS (optional),1,L1,16,2027-05-13
+Networking,Ingress,1,L1,23,2027-05-14
+Networking,Article: Ingress,1,L1,0,2027-05-15
+Networking,Article: Ingress - Annotations and rewrite-target,1,L1,0,2027-05-16
+Networking,Lab - CKA - Ingress Networking - 1,2,L1,5,2027-05-17
+Networking,Solution - Ingress Networking - 1 (optional),1,L1,16,2027-05-18
+Networking,Lab - CKA Ingress Networking - 2,2,L1,5,2027-05-19
+Networking,Solution - Ingress Networking - 2 (optional),1,L1,15,2027-05-20
+Networking,Introduction to Gateway API (2025 Updates),1,L1,9,2027-05-21
+Networking,Article: Practical Guide to Gateway API (2025 Updates),1,L1,0,2027-05-22
+Networking,Lab - Gateway API (2025 Updates),2,L1,5,2027-05-23
+Design and Install a Kubernetes Cluster,Designing a Kubernetes Cluster,1,L1,6,2027-05-24
+Design and Install a Kubernetes Cluster,Choosing Kubernetes Infrastructure,1,L1,6,2027-05-25
+Design and Install a Kubernetes Cluster,Configuring High Availability,1,L1,8,2027-05-26
+Design and Install a Kubernetes Cluster,etcd in HA,1,L1,13,2027-05-27
+Design and Install a Kubernetes Cluster,Article: Important Update: Kubernetes the Hard Way,1,L1,0,2027-05-28
+Install "Kubernetes the kubeadm way",Deployment With kubeadm - Introduction,1,L1,3,2027-05-29
+Install "Kubernetes the kubeadm way",Article: Resources,1,L1,0,2027-05-30
+Install "Kubernetes the kubeadm way",Deployment With Kubeadm - Provision VMs With Vagrant,1,L1,6,2027-05-31
+Install "Kubernetes the kubeadm way",Demo - Deployment With Kubeadm,1,L1,26,2027-06-01
+Install "Kubernetes the kubeadm way",Lab - Deploy a Kubernetes Cluster using Kubeadm,2,L1,5,2027-06-02
+Install "Kubernetes the kubeadm way",Solution - Install a Kubernetes Cluster using kubeadm,1,L1,10,2027-06-03
+Helm Basics (2025 Updates),Helm - Introduction,1,L1,7,2027-06-04
+Helm Basics (2025 Updates),Installation and Configuration,1,L1,2,2027-06-05
+Helm Basics (2025 Updates),Lab: Installing Helm,2,L1,5,2027-06-06
+Helm Basics (2025 Updates),A quick note about Helm2 vs Helm3,1,L1,9,2027-06-07
+Helm Basics (2025 Updates),Helm Components,1,L1,8,2027-06-08
+Helm Basics (2025 Updates),Helm charts,1,L1,8,2027-06-09
+Helm Basics (2025 Updates),Working with Helm: basics,1,L1,7,2027-06-10
+Helm Basics (2025 Updates),Customizing chart parameters,1,L1,5,2027-06-11
+Helm Basics (2025 Updates),Lab: using Helm to deploy a chart,2,L1,5,2027-06-12
+Helm Basics (2025 Updates),Lifecycle management with Helm,1,L1,8,2027-06-13
+Helm Basics (2025 Updates),Lab: upgrading a helm chart,2,L1,5,2027-06-14
+Kustomize Basics (2025 Updates),Kustomize Problem Statement and Ideology,1,L1,9,2027-06-15
+Kustomize Basics (2025 Updates),Kustomize vs Helm,1,L1,5,2027-06-16
+Kustomize Basics (2025 Updates),Installation/Setup,1,L1,2,2027-06-17
+Kustomize Basics (2025 Updates),The kustomization.yaml File,1,L1,4,2027-06-18
+Kustomize Basics (2025 Updates),Kustomize Output,1,L1,3,2027-06-19
+Kustomize Basics (2025 Updates),Kustomize ApiVersion and Kind,1,L1,1,2027-06-20
+Kustomize Basics (2025 Updates),Managing Directories,1,L1,7,2027-06-21
+Kustomize Basics (2025 Updates),Managing Directories Demo,1,L1,10,2027-06-22
+Kustomize Basics (2025 Updates),Lab: Managing Directories(Kustomize),2,L1,5,2027-06-23
+Kustomize Basics (2025 Updates),Common Transformers,1,L1,4,2027-06-24
+Kustomize Basics (2025 Updates),Image Transformers,1,L1,3,2027-06-25
+Kustomize Basics (2025 Updates),Transformers Demo,1,L1,12,2027-06-26
+Kustomize Basics (2025 Updates),Lab: Transformers,2,L1,5,2027-06-27
+Kustomize Basics (2025 Updates),Patches Intro,1,L1,9,2027-06-28
+Kustomize Basics (2025 Updates),Different Types of Patches,1,L1,2,2027-06-29
+Kustomize Basics (2025 Updates),Patches Dictionary,1,L1,7,2027-06-30
+Kustomize Basics (2025 Updates),Patches List,1,L1,7,2027-07-01
+Kustomize Basics (2025 Updates),Lab: Patches,2,L1,5,2027-07-02
+Kustomize Basics (2025 Updates),Overlays,1,L1,6,2027-07-03
+Kustomize Basics (2025 Updates),Lab: Overlay,2,L1,5,2027-07-04
+Kustomize Basics (2025 Updates),Components,1,L1,9,2027-07-05
+Kustomize Basics (2025 Updates),Lab: Components,2,L1,5,2027-07-06
+Troubleshooting,Troubleshooting - Section Introduction,1,L1,1,2027-07-07
+Troubleshooting,Application Failure,1,L1,3,2027-07-08
+Troubleshooting,Lab - Application Failure,2,L1,5,2027-07-09
+Troubleshooting,Solution - Application Failure,1,L1,29,2027-07-10
+Troubleshooting,Control Plane Failure,1,L1,2,2027-07-11
+Troubleshooting,Lab - Control Plane Failure,2,L1,5,2027-07-12
+Troubleshooting,Solution: Control Plane Failure,1,L1,16,2027-07-13
+Troubleshooting,Worker Node Failure,1,L1,2,2027-07-14
+Troubleshooting,Lab - Worker Node Failure,2,L1,5,2027-07-15
+Troubleshooting,Solutions - Worker Node Failure,1,L1,11,2027-07-16
+Troubleshooting,Network Troubleshooting,1,L1,12,2027-07-17
+Troubleshooting,Lab - Troubleshoot Network,2,L1,5,2027-07-18
+Other Topics,Article: Prerequisites - JSON Path,1,L1,0,2027-07-19
+Other Topics,JSON Path in Kubernetes,1,L1,12,2027-07-20
+Other Topics,Lab - JSON Path in Kubernetes,2,L1,5,2027-07-21
+Lightning Labs,Article: Lightning Lab Introduction,1,L1,0,2027-07-22
+Lightning Labs,Lab: Lightning Lab - 1,2,L1,5,2027-07-23
+Mock Exams,Article: Mock Exam - Introduction,1,L1,0,2027-07-24
+Mock Exams,Lab: Mock Exam - 1,3,L1,5,2027-07-25
+Mock Exams,Mock Exam-1: Step-by-Step Solutions,1,L1,33,2027-07-26
+Mock Exams,Lab: Mock Exam - 2,3,L1,5,2027-07-27
+Mock Exams,Mock Exam-2: Step-by-Step Solutions,1,L1,56,2027-07-28
+Mock Exams,Lab: Mock Exam - 3,3,L1,5,2027-07-29
+Mock Exams,Mock Exam-3: Step-by-Step Solutions,1,L1,49,2027-07-30
+Mock Exams,What's Next?,1,L1,8,2027-07-31
+Mock Exams,Article: All the Best!,1,L1,0,2027-08-01
+Mock Exams,Article: Continue Your Preparation with Our Ultimate Mock Exam!,1,L1,0,2027-08-02
+Mock Exams,Article: Kubernetes Update and Project Videos - Your Essential Guide,1,L1,0,2027-08-03
