@@ -43,7 +43,7 @@ variable "cluster_nodes" {
     role        = string
   }))
   default = {
-    "k8s-master"   = { vmid = 610, ip = "10.10.10.61/24", cores = 2, memory = 2048, role = "master" }
+    "k8s-master"   = { vmid = 610, ip = "10.10.10.61/24", cores = 2, memory = 4096, role = "master" }
     "k8s-worker01" = { vmid = 611, ip = "10.10.10.62/24", cores = 2, memory = 4096, role = "worker" }
     "k8s-worker02" = { vmid = 612, ip = "10.10.10.63/24", cores = 2, memory = 4096, role = "worker" }
   }

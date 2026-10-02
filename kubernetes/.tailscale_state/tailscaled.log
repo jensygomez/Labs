@@ -274,3 +274,6 @@ TPM: error opening: stat /dev/tpmrm0: no such file or directory
 2026/10/02 04:21:53 netcheck: DetectCaptivePortal(found=false)
 2026/10/02 04:22:40 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=9d9d4a83c3ac
 2026/10/02 04:22:40 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 10.10.10.1:41641 mtu=1360 tx=9814d037c4b5
+2026/10/02 05:12:33 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=f8b087f458ac
+2026/10/02 05:12:33 netcheck: DetectCaptivePortal(found=false)
+2026/10/02 05:12:33 magicsock: endpoints changed: 177.92.48.74:13343 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
