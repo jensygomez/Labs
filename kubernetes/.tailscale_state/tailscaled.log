@@ -193,3 +193,71 @@ TPM: error opening: stat /dev/tpmrm0: no such file or directory
 2026/10/01 07:38:59 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=a4ce6fdbe9ac
 2026/10/01 07:39:00 netcheck: DetectCaptivePortal(found=false)
 2026/10/01 07:39:00 magicsock: endpoints changed: 177.92.48.74:13203 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/01 07:58:37 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=e1e152f11486
+2026/10/01 07:58:38 netcheck: DetectCaptivePortal(found=false)
+2026/10/01 07:58:38 magicsock: endpoints changed: 177.92.48.74:13308 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/01 09:39:08 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=b420c3e32327
+2026/10/01 09:39:09 netcheck: DetectCaptivePortal(found=false)
+2026/10/01 09:39:09 magicsock: endpoints changed: 177.92.48.74:13040 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/01 09:39:10 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 10.10.10.1:41641 mtu=1360 tx=84d95f8c23ef
+2026/10/01 10:00:57 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=9d0fda36f6ee
+2026/10/01 10:00:58 netcheck: DetectCaptivePortal(found=false)
+2026/10/01 10:00:58 magicsock: endpoints changed: 177.92.48.74:13105 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/01 11:39:17 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=c032a6e9a6ff
+2026/10/01 11:39:18 netcheck: DetectCaptivePortal(found=false)
+2026/10/01 11:39:18 magicsock: endpoints changed: 177.92.48.74:13050 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/01 11:39:19 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 10.10.10.1:41641 mtu=1360 tx=7e09ae1e5359
+2026/10/01 12:03:17 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=eebd1cc02f22
+2026/10/01 12:03:18 netcheck: DetectCaptivePortal(found=false)
+2026/10/01 12:03:18 magicsock: endpoints changed: 177.92.48.74:13321 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/01 13:39:26 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 10.10.10.1:41641 mtu=1360 tx=f4aeca71088b
+2026/10/01 13:39:27 netcheck: DetectCaptivePortal(found=false)
+2026/10/01 13:39:27 magicsock: endpoints changed: 177.92.48.74:13301 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/01 14:05:37 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=d83444c332a2
+2026/10/01 14:05:38 netcheck: DetectCaptivePortal(found=false)
+2026/10/01 14:05:38 magicsock: endpoints changed: 177.92.48.74:13341 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/01 15:39:35 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 10.10.10.1:41641 mtu=1360 tx=baf55224ac26
+2026/10/01 15:39:36 netcheck: DetectCaptivePortal(found=false)
+2026/10/01 15:39:36 magicsock: endpoints changed: 177.92.48.74:13013 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/01 15:39:36 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=91264b05b992
+2026/10/01 16:07:57 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 10.10.10.1:41641 mtu=1360 tx=0d50ba663e6b
+2026/10/01 16:07:58 netcheck: DetectCaptivePortal(found=false)
+2026/10/01 16:07:58 magicsock: endpoints changed: 177.92.48.74:13111 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/01 16:07:59 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=35ba5221132b
+2026/10/01 17:39:44 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=5ff3de61349b
+2026/10/01 17:39:45 netcheck: DetectCaptivePortal(found=false)
+2026/10/01 17:39:45 magicsock: endpoints changed: 177.92.48.74:13171 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/01 17:39:47 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 10.10.10.1:41641 mtu=1360 tx=d18e31598552
+2026/10/01 18:10:17 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=009e98a8beb2
+2026/10/01 18:10:18 netcheck: DetectCaptivePortal(found=false)
+2026/10/01 18:10:18 magicsock: endpoints changed: 177.92.48.74:13043 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/01 19:39:53 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=ebd5d37df70f
+2026/10/01 19:39:54 netcheck: DetectCaptivePortal(found=false)
+2026/10/01 19:39:54 magicsock: endpoints changed: 177.92.48.74:13296 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/01 20:12:37 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=c97a3c8058b4
+2026/10/01 20:12:38 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 10.10.10.1:41641 mtu=1360 tx=998caec2422e
+2026/10/01 20:12:38 netcheck: DetectCaptivePortal(found=false)
+2026/10/01 20:12:38 magicsock: endpoints changed: 177.92.48.74:13278 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/01 21:40:02 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=fc455a71cde7
+2026/10/01 21:40:03 netcheck: DetectCaptivePortal(found=false)
+2026/10/01 21:40:03 magicsock: endpoints changed: 177.92.48.74:13027 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/01 22:14:57 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=2086dc3151ee
+2026/10/01 22:14:58 netcheck: DetectCaptivePortal(found=false)
+2026/10/01 22:14:58 magicsock: endpoints changed: 177.92.48.74:13185 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/01 23:40:11 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 10.10.10.1:41641 mtu=1360 tx=4040b431bd06
+2026/10/01 23:40:12 netcheck: DetectCaptivePortal(found=false)
+2026/10/01 23:40:12 magicsock: endpoints changed: 177.92.48.74:13225 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/01 23:40:13 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=341036a276f2
+2026/10/01 23:55:51 control: sleeping for server-requested 4.354837931s ...
+2026/10/01 23:55:55 cannot fetch existing TKA state; no state directory for tailnet-lock
+2026/10/01 23:57:25 control: netmap: got new dial plan from control
+2026/10/01 23:57:25 cannot fetch existing TKA state; no state directory for tailnet-lock
+2026/10/02 00:17:17 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=fefb0e10384f
+2026/10/02 00:17:18 netcheck: DetectCaptivePortal(found=false)
+2026/10/02 00:17:18 magicsock: endpoints changed: 177.92.48.74:13072 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/02 01:40:20 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=b4351272dd16
+2026/10/02 01:40:21 netcheck: DetectCaptivePortal(found=false)
+2026/10/02 01:40:21 magicsock: endpoints changed: 177.92.48.74:13150 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/02 02:19:37 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=e54de39ce8ce
+2026/10/02 02:19:38 netcheck: DetectCaptivePortal(found=false)
+2026/10/02 02:19:38 magicsock: endpoints changed: 177.92.48.74:13115 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
