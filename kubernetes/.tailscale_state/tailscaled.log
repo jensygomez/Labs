@@ -277,3 +277,9 @@ TPM: error opening: stat /dev/tpmrm0: no such file or directory
 2026/10/02 05:12:33 magicsock: disco: node [7pBLK] d:a92cca80e60bbe0c now using 192.168.18.100:41641 mtu=1360 tx=f8b087f458ac
 2026/10/02 05:12:33 netcheck: DetectCaptivePortal(found=false)
 2026/10/02 05:12:33 magicsock: endpoints changed: 177.92.48.74:13343 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/02 21:23:48 control: netmap: got new dial plan from control
+2026/10/02 21:23:48 cannot fetch existing TKA state; no state directory for tailnet-lock
+2026/10/03 00:13:13 control: sleeping for server-requested 4.729271244s ...
+2026/10/03 00:13:18 cannot fetch existing TKA state; no state directory for tailnet-lock
+2026/10/03 00:14:35 control: netmap: got new dial plan from control
+2026/10/03 00:14:35 cannot fetch existing TKA state; no state directory for tailnet-lock
