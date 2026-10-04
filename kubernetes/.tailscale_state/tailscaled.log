@@ -283,3 +283,47 @@ TPM: error opening: stat /dev/tpmrm0: no such file or directory
 2026/10/03 00:13:18 cannot fetch existing TKA state; no state directory for tailnet-lock
 2026/10/03 00:14:35 control: netmap: got new dial plan from control
 2026/10/03 00:14:35 cannot fetch existing TKA state; no state directory for tailnet-lock
+2026/10/03 23:35:12 magicsock: [0x3c1c1d6a14a0] derp.Recv(derp-11): derp.Recv: read tcp6 [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:50906->[2600:3c0d::2000:3bff:fe44:6166]:443: i/o timeout
+2026/10/03 23:35:12 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/03 23:35:12 magicsock: derp-11 connected; connGen=2
+2026/10/03 23:35:12 netcheck: DetectCaptivePortal(found=false)
+2026/10/03 23:35:12 magicsock: endpoints changed: 177.92.50.41:10434 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:40187 (stun), 192.168.18.8:36375 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:36375 (local)
+2026/10/03 23:35:14 control: map response long-poll timed out!
+2026/10/03 23:35:14 Received error: PollNetMap: context canceled
+2026/10/03 23:35:21 health(warnable=mapresponse-timeout): error: Tailscale hasn't received a network map from the coordination server in 2m7s.
+2026/10/03 23:37:12 control: map response long-poll timed out!
+2026/10/03 23:37:12 control: lite map update error after 2m0.022s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/03 23:37:14 control: map response long-poll timed out!
+2026/10/03 23:37:14 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/03 23:39:13 control: map response long-poll timed out!
+2026/10/03 23:39:13 control: lite map update error after 2m0.004s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/03 23:39:14 control: map response long-poll timed out!
+2026/10/03 23:39:14 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/03 23:41:13 control: map response long-poll timed out!
+2026/10/03 23:41:13 control: lite map update error after 2m0.003s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/03 23:41:14 control: map response long-poll timed out!
+2026/10/03 23:41:14 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/03 23:43:13 control: map response long-poll timed out!
+2026/10/03 23:43:13 control: lite map update error after 2m0.002s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/03 23:43:14 control: map response long-poll timed out!
+2026/10/03 23:43:14 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/03 23:44:13 health(warnable=not-in-map-poll): error: Unable to connect to the Tailscale coordination server to synchronize the state of your tailnet. Peer reachability might degrade over time.
+2026/10/03 23:45:13 control: map response long-poll timed out!
+2026/10/03 23:45:13 control: lite map update error after 2m0.002s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/03 23:45:14 control: map response long-poll timed out!
+2026/10/03 23:45:15 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/03 23:47:13 control: map response long-poll timed out!
+2026/10/03 23:47:13 control: lite map update error after 2m0.002s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/03 23:47:15 control: map response long-poll timed out!
+2026/10/03 23:47:15 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/03 23:49:13 control: map response long-poll timed out!
+2026/10/03 23:49:13 control: lite map update error after 2m0.002s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/03 23:49:15 control: map response long-poll timed out!
+2026/10/03 23:49:16 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/03 23:50:48 control: lite map update error after 1m34.184s: Post "https://controlplane.tailscale.com/machine/map": read tcp 192.168.18.8:46566->192.200.0.101:443: read: connection reset by peer
+2026/10/03 23:50:49 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": read tcp 192.168.18.8:46566->192.200.0.101:443: read: connection reset by peer
+2026/10/03 23:50:49 control: controlhttp: forcing port 443 dial due to recent noise dial
+2026/10/03 23:50:49 health(warnable=not-in-map-poll): ok
+2026/10/03 23:50:49 control: netmap: got new dial plan from control
+2026/10/03 23:50:49 cannot fetch existing TKA state; no state directory for tailnet-lock
+2026/10/03 23:50:49 health(warnable=mapresponse-timeout): ok
