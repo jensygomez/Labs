@@ -339,3 +339,11 @@ TPM: error opening: stat /dev/tpmrm0: no such file or directory
 2026/10/04 14:24:35 control: controlhttp: forcing port 443 dial due to recent noise dial
 2026/10/04 14:24:35 control: netmap: got new dial plan from control
 2026/10/04 14:24:35 cannot fetch existing TKA state; no state directory for tailnet-lock
+2026/10/05 15:34:06 control: map response long-poll timed out!
+2026/10/05 15:34:06 Received error: PollNetMap: context canceled
+2026/10/05 15:34:06 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": read tcp [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:48778->[2606:b740:49::101]:80: read: connection reset by peer
+2026/10/05 15:34:07 control: controlhttp: forcing port 443 dial due to recent noise dial
+2026/10/05 15:34:07 control: netmap: got new dial plan from control
+2026/10/05 15:34:07 cannot fetch existing TKA state; no state directory for tailnet-lock
+2026/10/05 18:59:07 control: netmap: got new dial plan from control
+2026/10/05 18:59:07 cannot fetch existing TKA state; no state directory for tailnet-lock
