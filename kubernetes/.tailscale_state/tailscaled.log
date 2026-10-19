@@ -146,3 +146,9 @@ TPM: error opening: stat /dev/tpmrm0: no such file or directory
 2026/10/19 06:38:52 magicsock: endpoints changed: 177.92.51.66:1174 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
 2026/10/19 06:38:53 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=13cce0baf261
 2026/10/19 06:41:35 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 10.10.10.1:41641 mtu=1360 tx=835c1f6bb079
+2026/10/19 08:39:00 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=51fabb077586
+2026/10/19 08:39:01 netcheck: DetectCaptivePortal(found=false)
+2026/10/19 08:39:01 magicsock: endpoints changed: 177.92.51.66:1257 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/19 08:43:55 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=4d357143117c
+2026/10/19 08:43:55 magicsock: endpoints changed: 177.92.51.66:1339 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:58489 (stun), 177.92.51.66:1257 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/19 08:44:19 netcheck: DetectCaptivePortal(found=false)
