@@ -152,3 +152,149 @@ TPM: error opening: stat /dev/tpmrm0: no such file or directory
 2026/10/19 08:43:55 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=4d357143117c
 2026/10/19 08:43:55 magicsock: endpoints changed: 177.92.51.66:1339 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:58489 (stun), 177.92.51.66:1257 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
 2026/10/19 08:44:19 netcheck: DetectCaptivePortal(found=false)
+2026/10/19 10:39:09 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=c2c4ed8891b1
+2026/10/19 10:39:09 netcheck: DetectCaptivePortal(found=false)
+2026/10/19 10:39:09 magicsock: endpoints changed: 177.92.51.66:1374 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/19 10:46:15 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=25945bea0600
+2026/10/19 10:46:16 netcheck: DetectCaptivePortal(found=false)
+2026/10/19 10:46:16 magicsock: endpoints changed: 177.92.51.66:1126 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/19 10:46:16 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 10.10.10.1:41641 mtu=1360 tx=93f02e34c889
+2026/10/19 12:39:18 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=7bbff8be4e65
+2026/10/19 12:39:18 netcheck: DetectCaptivePortal(found=false)
+2026/10/19 12:39:18 magicsock: endpoints changed: 177.92.51.66:1288 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/19 12:39:19 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 10.10.10.1:41641 mtu=1360 tx=281f8b831ec5
+2026/10/19 12:48:35 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=74b0717d58b3
+2026/10/19 12:48:36 netcheck: DetectCaptivePortal(found=false)
+2026/10/19 12:48:36 magicsock: endpoints changed: 177.92.51.66:1206 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/19 14:39:27 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=0e1602508d8d
+2026/10/19 14:39:27 netcheck: DetectCaptivePortal(found=false)
+2026/10/19 14:39:27 magicsock: endpoints changed: 177.92.51.66:1213 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/19 14:50:55 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=649ebc1ca656
+2026/10/19 14:50:56 netcheck: DetectCaptivePortal(found=false)
+2026/10/19 14:50:56 magicsock: endpoints changed: 177.92.51.66:1145 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/19 14:50:56 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 10.10.10.1:41641 mtu=1360 tx=dfb1b9bd33fc
+2026/10/19 16:39:36 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=a4249f649083
+2026/10/19 16:39:37 netcheck: DetectCaptivePortal(found=false)
+2026/10/19 16:39:37 magicsock: endpoints changed: 177.92.51.66:1078 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/19 16:53:15 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=150fd2dca327
+2026/10/19 16:53:16 netcheck: DetectCaptivePortal(found=false)
+2026/10/19 16:53:16 magicsock: endpoints changed: 177.92.51.66:1062 (stun), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/19 16:53:17 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 10.10.10.1:41641 mtu=1360 tx=9c66cfaba97a
+2026/10/19 17:33:14 magicsock: [0xc6d392f6160] derp.Recv(derp-11): derp.Recv: read tcp6 [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:45374->[2600:3c0d::2000:3bff:fe44:6166]:443: i/o timeout
+2026/10/19 17:33:14 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/19 17:33:15 magicsock: derp-11 connected; connGen=2
+2026/10/19 17:33:15 netcheck: DetectCaptivePortal(found=false)
+2026/10/19 17:33:15 magicsock: endpoints changed: 177.220.182.244:8377 (stun), [2001:1284:f50e:927e:e34c:fbf5:2293:3319]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/19 17:33:37 control: map response long-poll timed out!
+2026/10/19 17:33:37 Received error: PollNetMap: context canceled
+2026/10/19 17:35:15 control: map response long-poll timed out!
+2026/10/19 17:35:15 control: lite map update error after 2m0.002s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 17:35:37 control: map response long-poll timed out!
+2026/10/19 17:35:37 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 17:37:15 control: map response long-poll timed out!
+2026/10/19 17:37:15 control: lite map update error after 2m0.004s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 17:37:37 control: map response long-poll timed out!
+2026/10/19 17:37:37 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 17:39:15 control: map response long-poll timed out!
+2026/10/19 17:39:15 control: lite map update error after 2m0.003s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 17:39:37 control: map response long-poll timed out!
+2026/10/19 17:39:38 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 17:41:15 control: map response long-poll timed out!
+2026/10/19 17:41:15 control: lite map update error after 2m0.003s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 17:41:38 control: map response long-poll timed out!
+2026/10/19 17:41:38 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 17:42:02 health(warnable=not-in-map-poll): error: Unable to connect to the Tailscale coordination server to synchronize the state of your tailnet. Peer reachability might degrade over time.
+2026/10/19 17:43:16 control: map response long-poll timed out!
+2026/10/19 17:43:16 control: lite map update error after 2m0.003s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 17:43:38 control: map response long-poll timed out!
+2026/10/19 17:43:38 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 17:45:16 control: map response long-poll timed out!
+2026/10/19 17:45:16 control: lite map update error after 2m0.002s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 17:45:38 control: map response long-poll timed out!
+2026/10/19 17:45:39 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 17:47:16 control: map response long-poll timed out!
+2026/10/19 17:47:16 control: lite map update error after 2m0.003s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 17:47:39 control: map response long-poll timed out!
+2026/10/19 17:47:39 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 17:48:53 control: lite map update error after 1m36.138s: Post "https://controlplane.tailscale.com/machine/map": read tcp [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:54510->[2606:b740:49::111]:443: read: connection reset by peer
+2026/10/19 17:48:54 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": read tcp [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:54510->[2606:b740:49::111]:443: read: connection reset by peer
+2026/10/19 17:48:54 control: controlhttp: forcing port 443 dial due to recent noise dial
+2026/10/19 17:48:55 health(warnable=not-in-map-poll): ok
+2026/10/19 17:48:55 control: netmap: got new dial plan from control
+2026/10/19 17:48:55 cannot fetch existing TKA state; no state directory for tailnet-lock
+2026/10/19 17:49:04 cannot fetch existing TKA state; no state directory for tailnet-lock
+2026/10/19 18:38:49 control: map response long-poll timed out!
+2026/10/19 18:38:49 Received error: PollNetMap: context canceled
+2026/10/19 18:38:51 magicsock: [0xc6d392f6160] derp.Recv(derp-11): derp.Recv: read tcp6 [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:55806->[2600:3c0d::2000:3bff:fe44:6166]:443: i/o timeout
+2026/10/19 18:38:51 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/19 18:38:51 magicsock: derp-11 connected; connGen=3
+2026/10/19 18:38:52 netcheck: DetectCaptivePortal(found=false)
+2026/10/19 18:38:52 magicsock: endpoints changed: 177.220.177.127:2261 (stun), [2001:1284:f514:34d3:b20c:b69b:f28d:9d5a]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/19 18:39:45 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=1f3f06c11d5d
+2026/10/19 18:39:45 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 10.10.10.1:41641 mtu=1360 tx=b147fd963d6d
+2026/10/19 18:40:49 control: map response long-poll timed out!
+2026/10/19 18:40:50 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 18:40:52 control: map response long-poll timed out!
+2026/10/19 18:40:52 control: lite map update error after 2m0.003s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 18:42:50 control: map response long-poll timed out!
+2026/10/19 18:42:50 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 18:42:52 control: map response long-poll timed out!
+2026/10/19 18:42:52 control: lite map update error after 2m0.003s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 18:44:50 control: map response long-poll timed out!
+2026/10/19 18:44:50 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 18:44:52 control: map response long-poll timed out!
+2026/10/19 18:44:52 control: lite map update error after 2m0.002s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 18:46:50 control: map response long-poll timed out!
+2026/10/19 18:46:50 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 18:46:52 control: map response long-poll timed out!
+2026/10/19 18:46:52 control: lite map update error after 2m0.003s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 18:47:02 health(warnable=not-in-map-poll): error: Unable to connect to the Tailscale coordination server to synchronize the state of your tailnet. Peer reachability might degrade over time.
+2026/10/19 18:48:50 control: map response long-poll timed out!
+2026/10/19 18:48:50 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 18:48:52 control: map response long-poll timed out!
+2026/10/19 18:48:52 control: lite map update error after 2m0.002s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 18:50:50 control: map response long-poll timed out!
+2026/10/19 18:50:51 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 18:50:52 control: map response long-poll timed out!
+2026/10/19 18:50:52 control: lite map update error after 2m0.003s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 18:52:51 control: map response long-poll timed out!
+2026/10/19 18:52:51 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 18:52:53 control: map response long-poll timed out!
+2026/10/19 18:52:53 control: lite map update error after 2m0.003s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 18:54:51 control: map response long-poll timed out!
+2026/10/19 18:54:52 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 18:54:53 control: map response long-poll timed out!
+2026/10/19 18:54:53 control: lite map update error after 2m0.001s: Post "https://controlplane.tailscale.com/machine/map": context canceled
+2026/10/19 18:55:12 control: lite map update error after 18.369s: Post "https://controlplane.tailscale.com/machine/map": read tcp [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:45180->[2606:b740:49::101]:80: read: connection reset by peer
+2026/10/19 18:55:13 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": read tcp [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:45180->[2606:b740:49::101]:80: read: connection reset by peer
+2026/10/19 18:55:13 control: controlhttp: forcing port 443 dial due to recent noise dial
+2026/10/19 18:55:14 control: netmap: got new dial plan from control
+2026/10/19 18:55:14 health(warnable=not-in-map-poll): ok
+2026/10/19 18:55:14 cannot fetch existing TKA state; no state directory for tailnet-lock
+2026/10/19 18:55:35 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=80d2ed9ab37b
+2026/10/19 18:55:36 netcheck: DetectCaptivePortal(found=false)
+2026/10/19 18:55:36 magicsock: endpoints changed: 177.220.177.127:2378 (stun), [2001:1284:f514:34d3:b20c:b69b:f28d:9d5a]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/19 18:55:36 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 10.10.10.1:41641 mtu=1360 tx=daabb8c27588
+2026/10/19 20:39:54 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=75f98239721b
+2026/10/19 20:39:54 netcheck: DetectCaptivePortal(found=false)
+2026/10/19 20:39:54 magicsock: endpoints changed: 177.220.177.127:2243 (stun), [2001:1284:f514:34d3:b20c:b69b:f28d:9d5a]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/19 20:57:55 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=5822142d2454
+2026/10/19 20:57:56 netcheck: DetectCaptivePortal(found=false)
+2026/10/19 20:57:56 magicsock: endpoints changed: 177.220.177.127:2210 (stun), [2001:1284:f514:34d3:b20c:b69b:f28d:9d5a]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/19 22:40:03 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 10.10.10.1:41641 mtu=1360 tx=9cabb0802308
+2026/10/19 22:40:04 netcheck: DetectCaptivePortal(found=false)
+2026/10/19 22:40:04 magicsock: endpoints changed: 177.220.177.127:2360 (stun), [2001:1284:f514:34d3:b20c:b69b:f28d:9d5a]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/19 23:00:15 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=5314eac06dd1
+2026/10/19 23:00:16 netcheck: DetectCaptivePortal(found=false)
+2026/10/19 23:00:16 magicsock: endpoints changed: 177.220.177.127:2264 (stun), [2001:1284:f514:34d3:b20c:b69b:f28d:9d5a]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/19 23:00:16 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 10.10.10.1:41641 mtu=1360 tx=d3d1a555d868
+2026/10/20 00:40:12 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 10.10.10.1:41641 mtu=1360 tx=9ef4d9a1c40d
+2026/10/20 00:40:13 netcheck: DetectCaptivePortal(found=false)
+2026/10/20 00:40:13 magicsock: endpoints changed: 177.220.177.127:2487 (stun), [2001:1284:f514:34d3:b20c:b69b:f28d:9d5a]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/20 01:02:35 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=ab1120fb4322
+2026/10/20 01:02:36 netcheck: DetectCaptivePortal(found=false)
+2026/10/20 01:02:36 magicsock: endpoints changed: 177.220.177.127:2361 (stun), [2001:1284:f514:34d3:b20c:b69b:f28d:9d5a]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/20 01:02:36 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 10.10.10.1:41641 mtu=1360 tx=cd5bfc2f7e61
+2026/10/20 02:40:21 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 10.10.10.1:41641 mtu=1360 tx=14fdec3bedd7
+2026/10/20 02:40:21 netcheck: DetectCaptivePortal(found=false)
+2026/10/20 02:40:21 magicsock: endpoints changed: 177.220.177.127:2187 (stun), [2001:1284:f514:34d3:b20c:b69b:f28d:9d5a]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
