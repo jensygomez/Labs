@@ -308,3 +308,10 @@ TPM: error opening: stat /dev/tpmrm0: no such file or directory
 2026/10/20 05:07:15 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=41387ab3bcdb
 2026/10/20 05:07:16 netcheck: DetectCaptivePortal(found=false)
 2026/10/20 05:07:16 magicsock: endpoints changed: 177.220.177.127:2284 (stun), [2001:1284:f514:34d3:b20c:b69b:f28d:9d5a]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/20 06:40:38 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=a7662665f6f3
+2026/10/20 06:40:39 netcheck: DetectCaptivePortal(found=false)
+2026/10/20 06:40:39 magicsock: endpoints changed: 177.220.177.127:2189 (stun), [2001:1284:f514:34d3:b20c:b69b:f28d:9d5a]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
+2026/10/20 06:40:40 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 10.10.10.1:41641 mtu=1360 tx=73f14715bfe8
+2026/10/20 07:09:35 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=8ecbf90a1dc5
+2026/10/20 07:09:36 netcheck: DetectCaptivePortal(found=false)
+2026/10/20 07:09:36 magicsock: endpoints changed: 177.220.177.127:2542 (stun), [2001:1284:f514:34d3:b20c:b69b:f28d:9d5a]:58489 (stun), 192.168.18.8:38201 (local), [2001:1284:f514:90ba:6d20:e800:20b5:fb93]:38201 (local)
