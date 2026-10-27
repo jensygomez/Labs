@@ -1,3 +1,4 @@
+# roles/dns.yml
 - name: "Generar registros /etc/hosts desde el inventario"
   ansible.builtin.blockinfile:
     path: /etc/hosts
@@ -5,7 +6,7 @@
     unsafe_writes: true
     block: |
       {% for host in groups['all'] %}
-      {% if hostvars[host].ansible_host is defined %}
+      {% if hostvars[host].ansible_host is defined and host != inventory_hostname %}
       {{ hostvars[host].ansible_host }} {{ host }} {{ host }}.k8s.local
       {% endif %}
       {% endfor %}

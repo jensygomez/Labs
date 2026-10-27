@@ -12,7 +12,7 @@
 ~h
 # Command Line History (newest to oldest):
 :wq
-|2,0,1790191527,,"wq"
+|2,0,1793118152,,"wq"
 :q!
 |2,0,1790187984,,"q!"
 
@@ -25,38 +25,89 @@
 # Debug Line History (newest to oldest):
 
 # Registers:
+""-	CHAR	0
+	l
+|3,1,36,0,1,0,1793118150,"l"
 
 # File marks:
-'0  5  40  ~/ansible/roles/k8s_workers.yml
-|4,48,5,40,1790191527,"~/ansible/roles/k8s_workers.yml"
-'1  44  48  ~/ansible/roles/k8s_master.yml
-|4,49,44,48,1790191485,"~/ansible/roles/k8s_master.yml"
-'2  101  21  ~/ansible/roles/k8s_common.yml
-|4,50,101,21,1790191449,"~/ansible/roles/k8s_common.yml"
-'3  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
-|4,51,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
-'4  1  0  ~/.vault_pass.txt
-|4,52,1,0,1790188984,"~/.vault_pass.txt"
-'5  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,53,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
-'6  10  17  ~/terraform/kubernetes/ansible/roles/dns.yml
-|4,54,10,17,1790188847,"~/terraform/kubernetes/ansible/roles/dns.yml"
-'7  19  26  ~/terraform/kubernetes/ansible/ansible.cfg
-|4,55,19,26,1790188795,"~/terraform/kubernetes/ansible/ansible.cfg"
-'8  1  6  ~/terraform/kubernetes/ansible/inventories/production/static.yml
-|4,56,1,6,1790188764,"~/terraform/kubernetes/ansible/inventories/production/static.yml"
-'9  12  11  ~/terraform/inventory.tmpl
-|4,57,12,11,1790188659,"~/terraform/inventory.tmpl"
+'0  2  46  ~/ansible/ansible.cfg
+|4,48,2,46,1793118152,"~/ansible/ansible.cfg"
+'1  7  0  ~/ansible/inventories/production/static.yml
+|4,49,7,0,1793118125,"~/ansible/inventories/production/static.yml"
+'2  5  40  ~/ansible/roles/k8s_workers.yml
+|4,50,5,40,1790191527,"~/ansible/roles/k8s_workers.yml"
+'3  44  48  ~/ansible/roles/k8s_master.yml
+|4,51,44,48,1790191485,"~/ansible/roles/k8s_master.yml"
+'4  101  21  ~/ansible/roles/k8s_common.yml
+|4,52,101,21,1790191449,"~/ansible/roles/k8s_common.yml"
+'5  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,53,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+'6  1  0  ~/.vault_pass.txt
+|4,54,1,0,1790188984,"~/.vault_pass.txt"
+'7  6  8  ~/terraform/kubernetes/ansible/site.yml
+|4,55,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
+'8  10  17  ~/terraform/kubernetes/ansible/roles/dns.yml
+|4,56,10,17,1790188847,"~/terraform/kubernetes/ansible/roles/dns.yml"
+'9  19  26  ~/terraform/kubernetes/ansible/ansible.cfg
+|4,57,19,26,1790188795,"~/terraform/kubernetes/ansible/ansible.cfg"
 
 # Jumplist (newest first):
+-'  2  46  ~/ansible/ansible.cfg
+|4,39,2,46,1793118152,"~/ansible/ansible.cfg"
+-'  1  0  ~/ansible/ansible.cfg
+|4,39,1,0,1793118142,"~/ansible/ansible.cfg"
+-'  7  0  ~/ansible/inventories/production/static.yml
+|4,39,7,0,1793118125,"~/ansible/inventories/production/static.yml"
+-'  7  0  ~/ansible/inventories/production/static.yml
+|4,39,7,0,1793118125,"~/ansible/inventories/production/static.yml"
+-'  1  0  ~/ansible/inventories/production/static.yml
+|4,39,1,0,1793118112,"~/ansible/inventories/production/static.yml"
+-'  1  0  ~/ansible/inventories/production/static.yml
+|4,39,1,0,1793118112,"~/ansible/inventories/production/static.yml"
 -'  5  40  ~/ansible/roles/k8s_workers.yml
 |4,39,5,40,1790191527,"~/ansible/roles/k8s_workers.yml"
+-'  5  40  ~/ansible/roles/k8s_workers.yml
+|4,39,5,40,1790191527,"~/ansible/roles/k8s_workers.yml"
+-'  5  40  ~/ansible/roles/k8s_workers.yml
+|4,39,5,40,1790191527,"~/ansible/roles/k8s_workers.yml"
+-'  5  40  ~/ansible/roles/k8s_workers.yml
+|4,39,5,40,1790191527,"~/ansible/roles/k8s_workers.yml"
+-'  1  0  ~/ansible/roles/k8s_workers.yml
+|4,39,1,0,1790191506,"~/ansible/roles/k8s_workers.yml"
+-'  1  0  ~/ansible/roles/k8s_workers.yml
+|4,39,1,0,1790191506,"~/ansible/roles/k8s_workers.yml"
+-'  1  0  ~/ansible/roles/k8s_workers.yml
+|4,39,1,0,1790191506,"~/ansible/roles/k8s_workers.yml"
 -'  1  0  ~/ansible/roles/k8s_workers.yml
 |4,39,1,0,1790191506,"~/ansible/roles/k8s_workers.yml"
 -'  44  48  ~/ansible/roles/k8s_master.yml
 |4,39,44,48,1790191485,"~/ansible/roles/k8s_master.yml"
 -'  44  48  ~/ansible/roles/k8s_master.yml
 |4,39,44,48,1790191485,"~/ansible/roles/k8s_master.yml"
+-'  44  48  ~/ansible/roles/k8s_master.yml
+|4,39,44,48,1790191485,"~/ansible/roles/k8s_master.yml"
+-'  44  48  ~/ansible/roles/k8s_master.yml
+|4,39,44,48,1790191485,"~/ansible/roles/k8s_master.yml"
+-'  44  48  ~/ansible/roles/k8s_master.yml
+|4,39,44,48,1790191485,"~/ansible/roles/k8s_master.yml"
+-'  44  48  ~/ansible/roles/k8s_master.yml
+|4,39,44,48,1790191485,"~/ansible/roles/k8s_master.yml"
+-'  44  48  ~/ansible/roles/k8s_master.yml
+|4,39,44,48,1790191485,"~/ansible/roles/k8s_master.yml"
+-'  44  48  ~/ansible/roles/k8s_master.yml
+|4,39,44,48,1790191485,"~/ansible/roles/k8s_master.yml"
+-'  1  0  ~/ansible/roles/k8s_master.yml
+|4,39,1,0,1790191477,"~/ansible/roles/k8s_master.yml"
+-'  1  0  ~/ansible/roles/k8s_master.yml
+|4,39,1,0,1790191477,"~/ansible/roles/k8s_master.yml"
+-'  1  0  ~/ansible/roles/k8s_master.yml
+|4,39,1,0,1790191477,"~/ansible/roles/k8s_master.yml"
+-'  1  0  ~/ansible/roles/k8s_master.yml
+|4,39,1,0,1790191477,"~/ansible/roles/k8s_master.yml"
+-'  1  0  ~/ansible/roles/k8s_master.yml
+|4,39,1,0,1790191477,"~/ansible/roles/k8s_master.yml"
+-'  1  0  ~/ansible/roles/k8s_master.yml
+|4,39,1,0,1790191477,"~/ansible/roles/k8s_master.yml"
 -'  1  0  ~/ansible/roles/k8s_master.yml
 |4,39,1,0,1790191477,"~/ansible/roles/k8s_master.yml"
 -'  1  0  ~/ansible/roles/k8s_master.yml
@@ -69,6 +120,54 @@
 |4,39,101,21,1790191449,"~/ansible/roles/k8s_common.yml"
 -'  101  21  ~/ansible/roles/k8s_common.yml
 |4,39,101,21,1790191449,"~/ansible/roles/k8s_common.yml"
+-'  101  21  ~/ansible/roles/k8s_common.yml
+|4,39,101,21,1790191449,"~/ansible/roles/k8s_common.yml"
+-'  101  21  ~/ansible/roles/k8s_common.yml
+|4,39,101,21,1790191449,"~/ansible/roles/k8s_common.yml"
+-'  101  21  ~/ansible/roles/k8s_common.yml
+|4,39,101,21,1790191449,"~/ansible/roles/k8s_common.yml"
+-'  101  21  ~/ansible/roles/k8s_common.yml
+|4,39,101,21,1790191449,"~/ansible/roles/k8s_common.yml"
+-'  101  21  ~/ansible/roles/k8s_common.yml
+|4,39,101,21,1790191449,"~/ansible/roles/k8s_common.yml"
+-'  101  21  ~/ansible/roles/k8s_common.yml
+|4,39,101,21,1790191449,"~/ansible/roles/k8s_common.yml"
+-'  101  21  ~/ansible/roles/k8s_common.yml
+|4,39,101,21,1790191449,"~/ansible/roles/k8s_common.yml"
+-'  101  21  ~/ansible/roles/k8s_common.yml
+|4,39,101,21,1790191449,"~/ansible/roles/k8s_common.yml"
+-'  101  21  ~/ansible/roles/k8s_common.yml
+|4,39,101,21,1790191449,"~/ansible/roles/k8s_common.yml"
+-'  101  21  ~/ansible/roles/k8s_common.yml
+|4,39,101,21,1790191449,"~/ansible/roles/k8s_common.yml"
+-'  101  21  ~/ansible/roles/k8s_common.yml
+|4,39,101,21,1790191449,"~/ansible/roles/k8s_common.yml"
+-'  101  21  ~/ansible/roles/k8s_common.yml
+|4,39,101,21,1790191449,"~/ansible/roles/k8s_common.yml"
+-'  1  0  ~/ansible/roles/k8s_common.yml
+|4,39,1,0,1790191440,"~/ansible/roles/k8s_common.yml"
+-'  1  0  ~/ansible/roles/k8s_common.yml
+|4,39,1,0,1790191440,"~/ansible/roles/k8s_common.yml"
+-'  1  0  ~/ansible/roles/k8s_common.yml
+|4,39,1,0,1790191440,"~/ansible/roles/k8s_common.yml"
+-'  1  0  ~/ansible/roles/k8s_common.yml
+|4,39,1,0,1790191440,"~/ansible/roles/k8s_common.yml"
+-'  1  0  ~/ansible/roles/k8s_common.yml
+|4,39,1,0,1790191440,"~/ansible/roles/k8s_common.yml"
+-'  1  0  ~/ansible/roles/k8s_common.yml
+|4,39,1,0,1790191440,"~/ansible/roles/k8s_common.yml"
+-'  1  0  ~/ansible/roles/k8s_common.yml
+|4,39,1,0,1790191440,"~/ansible/roles/k8s_common.yml"
+-'  1  0  ~/ansible/roles/k8s_common.yml
+|4,39,1,0,1790191440,"~/ansible/roles/k8s_common.yml"
+-'  1  0  ~/ansible/roles/k8s_common.yml
+|4,39,1,0,1790191440,"~/ansible/roles/k8s_common.yml"
+-'  1  0  ~/ansible/roles/k8s_common.yml
+|4,39,1,0,1790191440,"~/ansible/roles/k8s_common.yml"
+-'  1  0  ~/ansible/roles/k8s_common.yml
+|4,39,1,0,1790191440,"~/ansible/roles/k8s_common.yml"
+-'  1  0  ~/ansible/roles/k8s_common.yml
+|4,39,1,0,1790191440,"~/ansible/roles/k8s_common.yml"
 -'  1  0  ~/ansible/roles/k8s_common.yml
 |4,39,1,0,1790191440,"~/ansible/roles/k8s_common.yml"
 -'  1  0  ~/ansible/roles/k8s_common.yml
@@ -93,6 +192,54 @@
 |4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
 -'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
 |4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
+-'  1  87  ~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml
+|4,39,1,87,1790189359,"~/.ansible/tmp/ansible-local-2717n5_u1y4/tmpwe6h9dpl.yml"
 -'  1  0  ~/.vault_pass.txt
 |4,39,1,0,1790188984,"~/.vault_pass.txt"
 -'  1  0  ~/.vault_pass.txt
@@ -105,152 +252,18 @@
 |4,39,1,0,1790188984,"~/.vault_pass.txt"
 -'  1  0  ~/.vault_pass.txt
 |4,39,1,0,1790188984,"~/.vault_pass.txt"
--'  1  0  ~/.vault_pass.txt
-|4,39,1,0,1790188984,"~/.vault_pass.txt"
--'  1  0  ~/.vault_pass.txt
-|4,39,1,0,1790188984,"~/.vault_pass.txt"
--'  1  0  ~/.vault_pass.txt
-|4,39,1,0,1790188984,"~/.vault_pass.txt"
--'  1  0  ~/.vault_pass.txt
-|4,39,1,0,1790188984,"~/.vault_pass.txt"
--'  1  0  ~/.vault_pass.txt
-|4,39,1,0,1790188984,"~/.vault_pass.txt"
--'  1  0  ~/.vault_pass.txt
-|4,39,1,0,1790188984,"~/.vault_pass.txt"
--'  1  0  ~/.vault_pass.txt
-|4,39,1,0,1790188984,"~/.vault_pass.txt"
--'  1  0  ~/.vault_pass.txt
-|4,39,1,0,1790188984,"~/.vault_pass.txt"
--'  1  0  ~/.vault_pass.txt
-|4,39,1,0,1790188984,"~/.vault_pass.txt"
--'  1  0  ~/.vault_pass.txt
-|4,39,1,0,1790188984,"~/.vault_pass.txt"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  6  8  ~/terraform/kubernetes/ansible/site.yml
-|4,39,6,8,1790188878,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
--'  1  0  ~/terraform/kubernetes/ansible/site.yml
-|4,39,1,0,1790188871,"~/terraform/kubernetes/ansible/site.yml"
 
 # History of marks within files (newest to oldest):
+
+> ~/ansible/ansible.cfg
+	*	1793118151	0
+	"	2	46
+	.	2	47
+	+	2	47
+
+> ~/ansible/inventories/production/static.yml
+	*	1793118125	0
+	"	7	0
 
 > ~/ansible/roles/k8s_workers.yml
 	*	1790191526	0

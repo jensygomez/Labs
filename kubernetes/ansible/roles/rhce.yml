@@ -1,25 +1,38 @@
 ---
 # roles/rhce.yml
 # Preparación base para laboratorio RHCE (EX294)
-# Asume: usuario 'ansible' ya inyectado por cloud-init con NOPASSWD y SSH key
-# Se aplica a: rhce_control + rhce_managed (todos los nodos del lab)
+# Precondición: usuario 'ansible' ya existe (inyectado por cloud-init)
+#               con NOPASSWD y SSH key pública.
+# Aplica a: rhce_control + rhce_managed
 
-- name: "Verificar que el usuario ansible existe (inyectado por cloud-init)"
+# ============================================================
+# Validaciones (fallan temprano si el cloud-init no corrió bien)
+# ============================================================
+- name: "Validar que el usuario ansible existe"
   ansible.builtin.getent:
     database: passwd
     key: ansible
-  register: ansible_user_check
-  failed_when: ansible_user_check.ansible_facts.getent_passwd.ansible is not defined
+  register: _ansible_user_check
 
-- name: "Asegurar sudoers NOPASSWD para ansible (idempotente)"
-  ansible.builtin.copy:
-    dest: /etc/sudoers.d/ansible
-    content: "ansible ALL=(ALL) NOPASSWD: ALL\n"
-    owner: root
-    group: root
-    mode: "0440"
-    validate: "visudo -cf %s"
+- name: "Fallar si el usuario ansible no existe"
+  ansible.builtin.assert:
+    that:
+      - "'ansible' in (_ansible_user_check.ansible_facts.getent_passwd | default({}))"
+    fail_msg: "El usuario 'ansible' no existe. Verifica que cloud-init corrió correctamente."
+    success_msg: "Usuario ansible OK."
 
+- name: "Validar que ansible tiene sudo NOPASSWD"
+  ansible.builtin.command:
+    cmd: sudo -n true
+  become: true
+  become_user: ansible
+  changed_when: false
+  register: _sudo_check
+  failed_when: _sudo_check.rc != 0
+
+# ============================================================
+# Paquetes base y servicios
+# ============================================================
 - name: "Instalar paquetes base del laboratorio RHCE"
   ansible.builtin.dnf:
     name:
@@ -40,36 +53,28 @@
       - python3-pip
     state: present
 
-- name: "Habilitar y arrancar firewalld (RHCE trabaja con firewalld)"
+- name: "Habilitar y arrancar firewalld"
   ansible.builtin.systemd:
     name: firewalld
     enabled: true
     state: started
 
-- name: "Habilitar y arrancar qemu-guest-agent (ya viene del cloud-init)"
+- name: "Habilitar y arrancar qemu-guest-agent"
   ansible.builtin.systemd:
     name: qemu-guest-agent
     enabled: true
     state: started
 
+# ============================================================
+# Hostname (el /etc/hosts lo maneja dns_nodes.yml en site.yml,
+# NO se duplica aquí)
+# ============================================================
 - name: "Configurar hostname al inventory_hostname"
   ansible.builtin.hostname:
     name: "{{ inventory_hostname }}"
-    use: systemd
-
-- name: "Configurar /etc/hosts con todos los nodos del lab"
-  ansible.builtin.blockinfile:
-    path: /etc/hosts
-    marker: "# {mark} ANSIBLE MANAGED RHCE LAB"
-    block: |
-      {% for host in groups['all'] %}
-      {% if hostvars[host].ansible_host is defined %}
-      {{ hostvars[host].ansible_host }} {{ host }} {{ host }}.lab.local
-      {% endif %}
-      {% endfor %}
 
 # ============================================================
-# Solo en el nodo de CONTROL: instalar ansible-core y colecciones
+# Solo en el nodo de CONTROL: ansible-core + colecciones
 # ============================================================
 - name: "Control | Instalar ansible-core y rhel-system-roles"
   ansible.builtin.dnf:
@@ -79,20 +84,28 @@
     state: present
   when: inventory_hostname in groups['rhce_control']
 
+- name: "Control | Crear directorio de colecciones para ansible"
+  ansible.builtin.file:
+    path: /home/ansible/.ansible/collections
+    state: directory
+    owner: ansible
+    group: ansible
+    mode: "0755"
+  when: inventory_hostname in groups['rhce_control']
+
 - name: "Control | Instalar colecciones requeridas por EX294"
   ansible.builtin.command:
-    cmd: "ansible-galaxy collection install {{ item }} --force-with-deps"
+    cmd: "ansible-galaxy collection install {{ item }}"
     creates: "/home/ansible/.ansible/collections/ansible_collections/{{ item.split('.')[0] }}/{{ item.split('.')[1] }}"
   loop:
     - ansible.posix
     - ansible.utils
     - community.general
-    - redhat.rhel_system_roles
   become: true
   become_user: ansible
   when: inventory_hostname in groups['rhce_control']
 
-- name: "Control | Configurar ansible.cfg base para el usuario ansible"
+- name: "Control | Configurar ansible.cfg para el usuario ansible"
   ansible.builtin.copy:
     dest: /home/ansible/.ansible.cfg
     owner: ansible

@@ -1,13 +1,43 @@
 ---
-- name: "Preparación base RHCE (control + managed)"
+# ============================================================
+# Play 1: Poblar /etc/hosts del CONTENEDOR (k8s-control)
+# Solo dns.yml, nada más. El contenedor no debe recibir roles completos.
+# ============================================================
+- name: "Actualizar /etc/hosts del contenedor (acceso cómodo por nombre desde la laptop)"
+  hosts: control
+  gather_facts: false
+  become: true
+  tasks:
+    - name: "Generar registros /etc/hosts desde el inventario"
+      ansible.builtin.import_tasks: roles/dns.yml
+
+# ============================================================
+# Play 2: Poblar /etc/hosts de los nodos REMOTOS (VMs)
+# Excluye el contenedor para no duplicar el bloque
+# ============================================================
+- name: "Actualizar /etc/hosts en las VMs del lab"
+  hosts: all:!control
+  become: true
+  tasks:
+    - name: "Generar registros /etc/hosts desde el inventario"
+      ansible.builtin.import_tasks: roles/dns.yml
+
+# ============================================================
+# Play 3: Preparación base RHCE (solo VMs, nunca el contenedor)
+# ============================================================
+- name: "Preparación base RHCE"
   hosts: rhce_control:rhce_managed
   become: true
   tasks:
     - name: "Aplicar rol base RHCE"
       ansible.builtin.import_tasks: roles/rhce.yml
-      
+
+# ============================================================
+# Play 4+: Kubernetes
+# ============================================================
+
 - name: "Aprovisionamiento del Cluster de Kubernetes"
-  hosts: all
+  hosts: k8s_control_plane:k8s_workers
   become: true
   vars:
     k8s_version: "v1.36"
@@ -42,7 +72,6 @@
   tasks:
     - name: "kubeadm join"
       ansible.builtin.import_tasks: roles/k8s_workers.yml
-      
 
 - name: "Etiquetar los workers con su rol"
   hosts: k8s_control_plane
@@ -54,4 +83,4 @@
         kubectl --kubeconfig=/home/ansible/.kube/config
         label node {{ item }} node-role.kubernetes.io/worker=worker --overwrite
       loop: "{{ groups['k8s_workers'] }}"
-      changed_when: true    
+      changed_when: true
