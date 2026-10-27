@@ -5,6 +5,7 @@ resource "proxmox_download_file" "almalinux_cloud_image" {
   node_name    = var.target_node
   url          = "https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/AlmaLinux-9-GenericCloud-latest.x86_64.qcow2"
   file_name    = "almalinux-9-cloudinit.iso"
+  overwrite    = false
 }
 
 # Snippet de Cloud-Init (uno por VM)
@@ -104,6 +105,10 @@ resource "proxmox_virtual_environment_vm" "lab_vms" {
     }
     user_data_file_id = proxmox_virtual_environment_file.cloud_user_config[each.key].id
     meta_data_file_id = proxmox_virtual_environment_file.cloud_meta_config[each.key].id
+  }
+  # Una VM ya creada no debe reconstruirse porque la imagen base cambie
+  lifecycle {
+    ignore_changes = [disk[0].file_id]
   }
 }
 

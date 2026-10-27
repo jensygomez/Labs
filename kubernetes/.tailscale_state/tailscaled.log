@@ -115,3 +115,6 @@ TPM: error opening: stat /dev/tpmrm0: no such file or directory
 2026/10/27 15:01:23 taildrop: no Taildrop directory configured
 2026/10/27 15:03:36 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=9cedc1592025
 2026/10/27 15:03:36 magicsock: new contact: peer=[7pBLK] usec=135972709 cached=false via=direct
+2026/10/27 15:08:00 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=e6f7c9430263
+2026/10/27 15:08:01 netcheck: DetectCaptivePortal(found=false)
+2026/10/27 15:09:54 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=1477144ad058
