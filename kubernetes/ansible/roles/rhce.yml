@@ -30,6 +30,7 @@
   register: _sudo_check
   failed_when: _sudo_check.rc != 0
 
+
 # ============================================================
 # Paquetes base y servicios
 # ============================================================
@@ -134,3 +135,11 @@
     group: ansible
     mode: "0755"
   when: inventory_hostname in groups['rhce_control']
+ 
+ - name: "Crear /root/.ansible/tmp con permisos correctos"
+  ansible.builtin.file:
+    path: /root/.ansible/tmp
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
