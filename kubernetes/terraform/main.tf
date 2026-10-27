@@ -9,7 +9,7 @@ resource "proxmox_download_file" "almalinux_cloud_image" {
 
 # Snippet de Cloud-Init (uno por VM)
 resource "proxmox_virtual_environment_file" "cloud_user_config" {
-  for_each     = var.cluster_nodes
+  for_each     = local.cluster_nodes
   content_type = "snippets"
   datastore_id = "local"
   node_name    = var.target_node
@@ -39,7 +39,7 @@ resource "proxmox_virtual_environment_file" "cloud_user_config" {
 
 # Snippet de Meta-Data (fix del bug "hostname: localhost")
 resource "proxmox_virtual_environment_file" "cloud_meta_config" {
-  for_each     = var.cluster_nodes
+  for_each     = local.cluster_nodes
   content_type = "snippets"
   datastore_id = "local"
   node_name    = var.target_node
@@ -52,9 +52,9 @@ resource "proxmox_virtual_environment_file" "cloud_meta_config" {
   }
 }
 
-# Cluster de VMs Kubernetes (master + workers)
-resource "proxmox_virtual_environment_vm" "k8s_cluster" {
-  for_each  = var.cluster_nodes
+# VMs del laboratorio activo (Kubernetes, RHCSA o RHCE según var.lab)
+resource "proxmox_virtual_environment_vm" "lab_vms" {
+  for_each  = local.cluster_nodes
   name      = each.key
   node_name = var.target_node
   vm_id     = each.value.vmid
@@ -79,7 +79,7 @@ resource "proxmox_virtual_environment_vm" "k8s_cluster" {
     size         = each.value.disk_size
   }
 
-  # Discos extra opcionales (ej. para storage de PVs más adelante)
+  # Discos extra opcionales (ej. LVM/Stratis en RHCSA, PVs en Kubernetes)
   dynamic "disk" {
     for_each = [for idx, size in each.value.extra_disks : { index = idx + 1, size = size }]
     content {
@@ -107,21 +107,29 @@ resource "proxmox_virtual_environment_vm" "k8s_cluster" {
   }
 }
 
+# Evita que tofu destruya el cluster actual por el cambio de nombre del recurso
+moved {
+  from = proxmox_virtual_environment_vm.k8s_cluster
+  to   = proxmox_virtual_environment_vm.lab_vms
+}
+
 # ============================================================
-# Inventario de Ansible — preparado pero comentado hasta que
+# Inventario de Ansible (generado según el lab activo)
 # ============================================================
 resource "local_file" "ansible_inventory" {
   content = templatefile("${path.module}/inventory.tmpl", {
     nodes = {
-      for k, vm in proxmox_virtual_environment_vm.k8s_cluster : k => {
+      for k, vm in proxmox_virtual_environment_vm.lab_vms : k => {
         name = k
-        ip   = split("/", var.cluster_nodes[k].ip)[0]
-        role = var.cluster_nodes[k].role
+        ip   = split("/", local.cluster_nodes[k].ip)[0]
+        role = local.cluster_nodes[k].role
       }
     }
     role_group_map = {
-      master = "k8s_control_plane"
-      worker = "k8s_workers"
+      master  = "k8s_control_plane"
+      worker  = "k8s_workers"
+      server  = "rhel_servers"
+      managed = "rhce_managed"
     }
   })
   filename = "${path.module}/../ansible/inventories/production/hosts.yml"
