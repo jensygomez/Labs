@@ -1,4 +1,11 @@
 ---
+- name: "Preparación base RHCE (control + managed)"
+  hosts: rhce_control:rhce_managed
+  become: true
+  tasks:
+    - name: "Aplicar rol base RHCE"
+      ansible.builtin.import_tasks: roles/rhce.yml
+      
 - name: "Aprovisionamiento del Cluster de Kubernetes"
   hosts: all
   become: true
@@ -36,12 +43,6 @@
     - name: "kubeadm join"
       ansible.builtin.import_tasks: roles/k8s_workers.yml
       
-- name: "Unir los Workers al Cluster"
-  hosts: k8s_workers
-  become: true
-  tasks:
-    - name: "kubeadm join"
-      ansible.builtin.import_tasks: roles/k8s_workers.yml
 
 - name: "Etiquetar los workers con su rol"
   hosts: k8s_control_plane

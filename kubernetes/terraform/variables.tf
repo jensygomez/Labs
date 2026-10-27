@@ -65,9 +65,10 @@ variable "all_nodes" {
     "rhcsa-server1" = { lab = "rhcsa", vmid = 710, ip = "10.10.10.71/24", cores = 2, memory = 2048, extra_disks = [5, 5, 5], role = "server" }
     "rhcsa-server2" = { lab = "rhcsa", vmid = 711, ip = "10.10.10.72/24", cores = 2, memory = 2048, extra_disks = [5], role = "server" }
 
-    # --- RHCE: nodos gestionados (el control node es tu contenedor) ---
-    "rhce-node1" = { lab = "rhce", vmid = 811, ip = "10.10.10.82/24", cores = 1, memory = 1536, role = "managed" }
-    "rhce-node2" = { lab = "rhce", vmid = 812, ip = "10.10.10.83/24", cores = 1, memory = 1536, role = "managed" }
-    "rhce-node3" = { lab = "rhce", vmid = 813, ip = "10.10.10.84/24", cores = 1, memory = 1536, role = "managed" }
+    # --- RHCE: nodo de control y nodos gestionados ---
+    "rhce-control" = { lab = "rhce", vmid = 810, ip = "10.10.10.80/24", cores = 2, memory = 2048, role = "control" }
+    "rhce-node1"   = { lab = "rhce", vmid = 811, ip = "10.10.10.82/24", cores = 1, memory = 2048, role = "managed" }
+    "rhce-node2"   = { lab = "rhce", vmid = 812, ip = "10.10.10.83/24", cores = 1, memory = 2048, role = "managed" }
+    "rhce-node3"   = { lab = "rhce", vmid = 813, ip = "10.10.10.84/24", cores = 1, memory = 2048, role = "managed" }
   }
 }

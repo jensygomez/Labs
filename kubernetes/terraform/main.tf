@@ -134,6 +134,7 @@ resource "local_file" "ansible_inventory" {
       master  = "k8s_control_plane"
       worker  = "k8s_workers"
       server  = "rhel_servers"
+      control = "rhce_control"
       managed = "rhce_managed"
     }
   })
