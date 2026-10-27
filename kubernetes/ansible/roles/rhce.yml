@@ -136,7 +136,7 @@
     mode: "0755"
   when: inventory_hostname in groups['rhce_control']
  
- - name: "Crear /root/.ansible/tmp con permisos correctos"
+- name: "Crear /root/.ansible/tmp con permisos correctos"
   ansible.builtin.file:
     path: /root/.ansible/tmp
     state: directory
