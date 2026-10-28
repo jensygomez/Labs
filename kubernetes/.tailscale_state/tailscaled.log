@@ -182,3 +182,93 @@ TPM: error opening: stat /dev/tpmrm0: no such file or directory
 2026/10/28 13:59:24 netcheck: DetectCaptivePortal(found=false)
 2026/10/28 14:00:38 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=00948740b69a
 2026/10/28 14:01:47 magicsock: disco: node [7pBLK] d:3336760440e53e4e now using 192.168.18.100:41641 mtu=1360 tx=d1e9eaea23ae
+2026/10/28 14:10:02 magicsock: [0x2ab7bf1d71e0] derp.Recv(derp-11): derp.Recv: read tcp6 [2001:1284:f514:34d3:b27:4fe7:437f:6922]:40580->[2600:3c0d::2000:3bff:fe44:6166]:443: i/o timeout
+2026/10/28 14:10:02 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/28 14:10:05 netcheck: netcheck: UDP is blocked, trying HTTPS
+2026/10/28 14:10:05 netcheck: UDP is blocked, trying ICMP
+2026/10/28 14:10:06 netcheck: DetectCaptivePortal(found=false)
+2026/10/28 14:10:07 magicsock: [0x2ab7bf1d71e0] derp.Recv(derp-11): derphttp.Client.Recv connect to region 11 (sao): context deadline exceeded
+2026/10/28 14:10:07 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/28 14:10:07 control: NetInfo: NetInfo{varies= ipv6=false ipv6os=true udp=false icmpv4=false derp=#11 portmap= link="" firewallmode="ipt-default"}
+2026/10/28 14:10:07 magicsock: endpoints changed: 192.168.18.102:52895 (local), [2001:1284:f514:34d3:b27:4fe7:437f:6922]:52895 (local)
+2026/10/28 14:10:10 netcheck: netcheck: UDP is blocked, trying HTTPS
+2026/10/28 14:10:10 netcheck: UDP is blocked, trying ICMP
+2026/10/28 14:10:11 magicsock: [0x2ab7bf1d71e0] derp.Recv(derp-11): derphttp.Client.Recv connect to region 11 (sao): context deadline exceeded
+2026/10/28 14:10:11 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/28 14:10:12 health(warnable=no-derp-connection): error: Tailscale could not connect to the 'São Paulo' relay server. Your Internet connection might be down, or the server might be temporarily unavailable.
+2026/10/28 14:10:12 health: connectivity impacted; triggering captive portal detection
+2026/10/28 14:10:15 netcheck: netcheck: UDP is blocked, trying HTTPS
+2026/10/28 14:10:15 netcheck: UDP is blocked, trying ICMP
+2026/10/28 14:10:16 magicsock: [0x2ab7bf1d71e0] derp.Recv(derp-11): derphttp.Client.Recv connect to region 11 (sao): context deadline exceeded
+2026/10/28 14:10:16 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/28 14:10:19 DetectCaptivePortal(found=false)
+2026/10/28 14:10:20 netcheck: UDP is blocked, trying ICMP
+2026/10/28 14:10:20 netcheck: netcheck: UDP is blocked, trying HTTPS
+2026/10/28 14:10:21 magicsock: [0x2ab7bf1d71e0] derp.Recv(derp-11): derphttp.Client.Recv connect to region 11 (sao): context deadline exceeded
+2026/10/28 14:10:21 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/28 14:10:25 netcheck: netcheck: UDP is blocked, trying HTTPS
+2026/10/28 14:10:25 netcheck: UDP is blocked, trying ICMP
+2026/10/28 14:10:25 magicsock: [0x2ab7bf1d71e0] derp.Recv(derp-11): derphttp.Client.Recv connect to region 11 (sao): context deadline exceeded
+2026/10/28 14:10:26 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/28 14:10:30 magicsock: [0x2ab7bf1d71e0] derp.Recv(derp-11): derphttp.Client.Recv connect to region 11 (sao): context deadline exceeded
+2026/10/28 14:10:30 netcheck: netcheck: UDP is blocked, trying HTTPS
+2026/10/28 14:10:30 netcheck: UDP is blocked, trying ICMP
+2026/10/28 14:10:31 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/28 14:10:35 netcheck: netcheck: UDP is blocked, trying HTTPS
+2026/10/28 14:10:35 netcheck: UDP is blocked, trying ICMP
+2026/10/28 14:10:35 magicsock: [0x2ab7bf1d71e0] derp.Recv(derp-11): derphttp.Client.Recv connect to region 11 (sao): context deadline exceeded
+2026/10/28 14:10:36 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/28 14:10:40 netcheck: netcheck: UDP is blocked, trying HTTPS
+2026/10/28 14:10:40 netcheck: UDP is blocked, trying ICMP
+2026/10/28 14:10:41 magicsock: [0x2ab7bf1d71e0] derp.Recv(derp-11): derphttp.Client.Recv connect to region 11 (sao): context deadline exceeded
+2026/10/28 14:10:41 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/28 14:10:43 control: map response long-poll timed out!
+2026/10/28 14:10:43 health(warnable=no-derp-connection): ok
+2026/10/28 14:10:43 Received error: PollNetMap: context canceled
+2026/10/28 14:10:45 netcheck: netcheck: UDP is blocked, trying HTTPS
+2026/10/28 14:10:45 netcheck: UDP is blocked, trying ICMP
+2026/10/28 14:10:46 magicsock: [0x2ab7bf1d71e0] derp.Recv(derp-11): derphttp.Client.Recv connect to region 11 (sao): context deadline exceeded
+2026/10/28 14:10:47 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/28 14:10:50 netcheck: netcheck: UDP is blocked, trying HTTPS
+2026/10/28 14:10:50 netcheck: UDP is blocked, trying ICMP
+2026/10/28 14:10:51 magicsock: [0x2ab7bf1d71e0] derp.Recv(derp-11): derphttp.Client.Recv connect to region 11 (sao): context deadline exceeded
+2026/10/28 14:10:51 health(warnable=mapresponse-timeout): error: Tailscale hasn't received a network map from the coordination server in 2m8s.
+2026/10/28 14:10:53 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/28 14:10:55 netcheck: netcheck: UDP is blocked, trying HTTPS
+2026/10/28 14:10:55 netcheck: UDP is blocked, trying ICMP
+2026/10/28 14:10:57 magicsock: [0x2ab7bf1d71e0] derp.Recv(derp-11): derphttp.Client.Recv connect to region 11 (sao): context deadline exceeded
+2026/10/28 14:10:58 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/28 14:11:00 netcheck: netcheck: UDP is blocked, trying HTTPS
+2026/10/28 14:11:00 netcheck: UDP is blocked, trying ICMP
+2026/10/28 14:11:03 magicsock: [0x2ab7bf1d71e0] derp.Recv(derp-11): derphttp.Client.Recv connect to region 11 (sao): context deadline exceeded
+2026/10/28 14:11:04 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/28 14:11:06 netcheck: netcheck: UDP is blocked, trying HTTPS
+2026/10/28 14:11:06 netcheck: UDP is blocked, trying ICMP
+2026/10/28 14:11:08 magicsock: [0x2ab7bf1d71e0] derp.Recv(derp-11): derphttp.Client.Recv connect to region 11 (sao): context deadline exceeded
+2026/10/28 14:11:10 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/28 14:11:11 netcheck: netcheck: UDP is blocked, trying HTTPS
+2026/10/28 14:11:11 netcheck: UDP is blocked, trying ICMP
+2026/10/28 14:11:15 magicsock: [0x2ab7bf1d71e0] derp.Recv(derp-11): derphttp.Client.Recv connect to region 11 (sao): context deadline exceeded
+2026/10/28 14:11:16 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/28 14:11:18 netcheck: netcheck: UDP is blocked, trying HTTPS
+2026/10/28 14:11:18 netcheck: UDP is blocked, trying ICMP
+2026/10/28 14:11:20 magicsock: [0x2ab7bf1d71e0] derp.Recv(derp-11): derphttp.Client.Recv connect to region 11 (sao): context deadline exceeded
+2026/10/28 14:11:22 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/28 14:11:23 netcheck: netcheck: UDP is blocked, trying HTTPS
+2026/10/28 14:11:23 netcheck: UDP is blocked, trying ICMP
+2026/10/28 14:11:27 magicsock: [0x2ab7bf1d71e0] derp.Recv(derp-11): derphttp.Client.Recv connect to region 11 (sao): context deadline exceeded
+2026/10/28 14:11:29 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/28 14:11:30 netcheck: netcheck: UDP is blocked, trying HTTPS
+2026/10/28 14:11:30 netcheck: UDP is blocked, trying ICMP
+2026/10/28 14:11:34 magicsock: [0x2ab7bf1d71e0] derp.Recv(derp-11): derphttp.Client.Recv connect to region 11 (sao): context deadline exceeded
+2026/10/28 14:11:37 netcheck: netcheck: UDP is blocked, trying HTTPS
+2026/10/28 14:11:37 netcheck: UDP is blocked, trying ICMP
+2026/10/28 14:11:38 derphttp.Client.Recv: connecting to derp-11 (sao)
+2026/10/28 14:11:40 magicsock: derp-11 connected; connGen=2
+2026/10/28 14:12:03 control: lite map update error after 1m56.072s: Post "https://controlplane.tailscale.com/machine/map": read tcp [2001:1284:f514:34d3:b27:4fe7:437f:6922]:34622->[2606:b740:49::101]:80: read: connection reset by peer
+2026/10/28 14:12:03 Received error: PollNetMap: Post "https://controlplane.tailscale.com/machine/map": read tcp [2001:1284:f514:34d3:b27:4fe7:437f:6922]:34622->[2606:b740:49::101]:80: read: connection reset by peer
+2026/10/28 14:12:04 control: controlhttp: forcing port 443 dial due to recent noise dial
+2026/10/28 14:12:04 control: netmap: got new dial plan from control
+2026/10/28 14:12:04 health(warnable=mapresponse-timeout): ok
+2026/10/28 14:12:04 cannot fetch existing TKA state; no state directory for tailnet-lock
+2026/10/28 14:12:04 netmap: suggested exit node: no preferred DERP, try again later
