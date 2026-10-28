@@ -1,0 +1,141 @@
+---
+# roles/rhcsa.yml
+# Preparación base para laboratorio RHCSA (EX200)
+# Precondición: usuario 'ansible' ya existe (inyectado por cloud-init)
+#               con NOPASSWD y SSH key pública.
+# Aplica a: rhcsa_nodes (rhcsa-server1, rhcsa-server2)
+#
+# IMPORTANTE: este rol NO instala Ansible (no se usa en EX200).
+#             NO toca los discos extra (deben quedar libres para LVM/Stratis/swap).
+#             NO escribe /etc/hosts (lo hace dns_nodes.yml en site.yml).
+
+# ============================================================
+# Validaciones (fallan temprano si el cloud-init no corrió bien)
+# ============================================================
+- name: "Validar que el usuario ansible existe"
+  ansible.builtin.getent:
+    database: passwd
+    key: ansible
+  register: _ansible_user_check
+
+- name: "Fallar si el usuario ansible no existe"
+  ansible.builtin.assert:
+    that:
+      - "'ansible' in (_ansible_user_check.ansible_facts.getent_passwd | default({}))"
+    fail_msg: "El usuario 'ansible' no existe. Verifica que cloud-init corrió correctamente."
+    success_msg: "Usuario ansible OK."
+
+- name: "Validar que ansible tiene sudo NOPASSWD"
+  ansible.builtin.command:
+    cmd: sudo -n true
+  become: true
+  become_user: ansible
+  changed_when: false
+  register: _sudo_check
+  failed_when: _sudo_check.rc != 0
+
+# ============================================================
+# Paquetes base del temario EX200
+# ============================================================
+- name: "Instalar paquetes base del laboratorio RHCSA"
+  ansible.builtin.dnf:
+    name:
+      # Herramientas generales
+      - vim-enhanced
+      - bash-completion
+      - git
+      - jq
+      - tmux
+      - tree
+      - wget
+      - lsof
+      - tcpdump
+      - bind-utils
+      - net-tools
+      - nmap-ncat
+      # Firewalld (temario)
+      - firewalld
+      # Contenedores (temario: podman, buildah, skopeo)
+      - podman
+      - buildah
+      - skopeo
+      # Performance (temario: tuned)
+      - tuned
+      # NTP (temario: chrony)
+      - chrony
+      # SELinux (temario: semanage, setsebool, restorecon)
+      - policycoreutils-python-utils
+      - setools-console
+      # Storage (temario: LVM, Stratis)
+      - lvm2
+      - stratis-cli
+      - stratisd
+      # Cockpit (opcional, a veces el examen lo pide)
+      - cockpit
+      - cockpit-storaged
+      # Python (por si el alumno escribe scripts)
+      - python3
+      - python3-pip
+    state: present
+
+# ============================================================
+# Servicios base
+# ============================================================
+- name: "Habilitar y arrancar firewalld"
+  ansible.builtin.systemd:
+    name: firewalld
+    enabled: true
+    state: started
+
+- name: "Habilitar y arrancar chronyd (NTP)"
+  ansible.builtin.systemd:
+    name: chronyd
+    enabled: true
+    state: started
+
+- name: "Habilitar y arrancar tuned (performance)"
+  ansible.builtin.systemd:
+    name: tuned
+    enabled: true
+    state: started
+
+- name: "Habilitar y arrancar qemu-guest-agent"
+  ansible.builtin.systemd:
+    name: qemu-guest-agent
+    enabled: true
+    state: started
+
+- name: "Habilitar cockpit.socket (opcional, para practicar web console)"
+  ansible.builtin.systemd:
+    name: cockpit.socket
+    enabled: true
+    state: started
+
+# ============================================================
+# Hostname
+# ============================================================
+- name: "Configurar hostname al inventory_hostname"
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+# ============================================================
+# Directorio de práctica
+# ============================================================
+- name: "Crear directorio de práctica RHCSA"
+  ansible.builtin.file:
+    path: /home/ansible/rhcsa-lab
+    state: directory
+    owner: ansible
+    group: ansible
+    mode: "0755"
+
+# ============================================================
+# Ajuste de /root/.ansible/tmp (evita el warning de Ansible)
+# ============================================================
+- name: "Crear /root/.ansible/tmp con permisos correctos"
+  ansible.builtin.file:
+    path: /root/.ansible/tmp
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"

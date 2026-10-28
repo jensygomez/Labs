@@ -33,7 +33,17 @@
       ansible.builtin.import_tasks: roles/rhce.yml
 
 # ============================================================
-# Play 4+: Kubernetes
+# Play 4: Lab RHCSA (EX200) — preparación base
+# ============================================================
+- name: "Preparación base RHCSA"
+  hosts: rhel_servers        # o rhcsa_nodes si haces el cambio de role_group_map
+  become: true
+  tasks:
+    - name: "Aplicar rol base RHCSA"
+      ansible.builtin.import_tasks: roles/rhcsa.yml
+
+# ============================================================
+# Play 5: Kubernetes
 # ============================================================
 
 - name: "Aprovisionamiento del Cluster de Kubernetes"
